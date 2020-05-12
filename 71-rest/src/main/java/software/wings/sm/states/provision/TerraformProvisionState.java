@@ -33,6 +33,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
@@ -86,6 +87,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
@@ -463,7 +465,7 @@ public abstract class TerraformProvisionState extends State {
     Map<String, String> textVariables = null;
     Map<String, EncryptedDataDetail> encryptedTextVariables = null;
     if (isNotEmpty(allVariables)) {
-      textVariables = infrastructureProvisionerService.extractTextVariables(allVariables, context);
+      textVariables = infrastructureProvisionerService.extractUnresolvedTextVariables(allVariables);
       encryptedTextVariables =
           infrastructureProvisionerService.extractEncryptedTextVariables(allVariables, context.getAppId());
     }
@@ -480,6 +482,7 @@ public abstract class TerraformProvisionState extends State {
             .appId(executionContext.getAppId())
             .currentStateFileId(fileId)
             .entityId(entityId)
+            .rawVariables(allVariables)
             .command(command())
             .commandUnit(commandUnit())
             .sourceRepoSettingId(element.getSourceRepoSettingId())
@@ -509,6 +512,7 @@ public abstract class TerraformProvisionState extends State {
 
   protected ExecutionResponse createAndRunTask(String activityId, ExecutionContextImpl executionContext,
       TerraformProvisionParameters parameters, String delegateTag) {
+    int expressionFunctorToken = HashGenerator.generateIntegerHash();
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(requireNonNull(executionContext.getApp()).getAccountId())
@@ -521,11 +525,19 @@ public abstract class TerraformProvisionState extends State {
                       .taskType(TERRAFORM_PROVISION_TASK.name())
                       .parameters(new Object[] {parameters})
                       .timeout(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES)))
+                      .expressionFunctorToken(expressionFunctorToken)
                       .build())
             .build();
 
-    String delegateTaskId = delegateService.queueTask(delegateTask);
+    ScriptStateExecutionData stateExecutionData = ScriptStateExecutionData.builder().activityId(activityId).build();
+    StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
+                                                      .stateExecutionData(stateExecutionData)
+                                                      .adoptDelegateDecryption(true)
+                                                      .expressionFunctorToken(expressionFunctorToken)
+                                                      .build();
+    renderDelegateTask(executionContext, delegateTask, stateExecutionContext);
 
+    String delegateTaskId = delegateService.queueTask(delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activityId))
@@ -559,6 +571,7 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedVariables = null;
     Map<String, String> backendConfigs = null;
     Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
+    List<NameValuePair> rawVariablesList = new ArrayList<>();
 
     if (this instanceof DestroyTerraformProvisionState && fileId != null) {
       FileMetadata fileMetadata = fileService.getFileMetadata(fileId, FileBucket.TERRAFORM_STATE);
@@ -566,17 +579,17 @@ public abstract class TerraformProvisionState extends State {
       if (fileMetadata != null && fileMetadata.getMetadata() != null) {
         Map<String, Object> rawVariables = (Map<String, Object>) fileMetadata.getMetadata().get(VARIABLES_KEY);
         if (isNotEmpty(rawVariables)) {
-          variables =
-              infrastructureProvisionerService.extractTextVariables(rawVariables.entrySet()
-                                                                        .stream()
-                                                                        .map(entry
-                                                                            -> NameValuePair.builder()
-                                                                                   .valueType("TEXT")
-                                                                                   .name(entry.getKey())
-                                                                                   .value((String) entry.getValue())
-                                                                                   .build())
-                                                                        .collect(toList()),
-                  context);
+          List<NameValuePair> rawVariablesListText = rawVariables.entrySet()
+                                                         .stream()
+                                                         .map(entry
+                                                             -> NameValuePair.builder()
+                                                                    .valueType("TEXT")
+                                                                    .name(entry.getKey())
+                                                                    .value((String) entry.getValue())
+                                                                    .build())
+                                                         .collect(toList());
+          rawVariablesList.addAll(rawVariablesListText);
+          variables = infrastructureProvisionerService.extractUnresolvedTextVariables(rawVariablesListText);
         }
 
         Map<String, Object> rawBackendConfigs =
@@ -598,17 +611,18 @@ public abstract class TerraformProvisionState extends State {
         Map<String, Object> rawEncryptedVariables =
             (Map<String, Object>) fileMetadata.getMetadata().get(ENCRYPTED_VARIABLES_KEY);
         if (isNotEmpty(rawEncryptedVariables)) {
+          List<NameValuePair> rawVariablesListEncryptedText = rawEncryptedVariables.entrySet()
+                                                                  .stream()
+                                                                  .map(entry
+                                                                      -> NameValuePair.builder()
+                                                                             .valueType("ENCRYPTED_TEXT")
+                                                                             .name(entry.getKey())
+                                                                             .value((String) entry.getValue())
+                                                                             .build())
+                                                                  .collect(toList());
+          rawVariablesList.addAll(rawVariablesListEncryptedText);
           encryptedVariables = infrastructureProvisionerService.extractEncryptedTextVariables(
-              rawEncryptedVariables.entrySet()
-                  .stream()
-                  .map(entry
-                      -> NameValuePair.builder()
-                             .valueType("ENCRYPTED_TEXT")
-                             .name(entry.getKey())
-                             .value((String) entry.getValue())
-                             .build())
-                  .collect(toList()),
-              context.getAppId());
+              rawVariablesListEncryptedText, context.getAppId());
         }
 
         Map<String, Object> rawEncryptedBackendConfigs =
@@ -640,8 +654,9 @@ public abstract class TerraformProvisionState extends State {
     } else {
       List<NameValuePair> validVariables =
           validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
+      rawVariablesList.addAll(validVariables);
 
-      variables = infrastructureProvisionerService.extractTextVariables(validVariables, context);
+      variables = infrastructureProvisionerService.extractUnresolvedTextVariables(validVariables);
       encryptedVariables =
           infrastructureProvisionerService.extractEncryptedTextVariables(validVariables, context.getAppId());
 
@@ -668,6 +683,7 @@ public abstract class TerraformProvisionState extends State {
             .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
             .scriptPath(path)
             .variables(variables)
+            .rawVariables(rawVariablesList)
             .encryptedVariables(encryptedVariables)
             .backendConfigs(backendConfigs)
             .encryptedBackendConfigs(encryptedBackendConfigs)

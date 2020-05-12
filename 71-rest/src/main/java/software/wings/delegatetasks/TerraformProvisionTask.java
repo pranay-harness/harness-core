@@ -34,7 +34,6 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.NullInputStream;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -107,7 +106,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
   @Override
   public TerraformExecutionData run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
+    return run((TerraformProvisionParameters) parameters);
   }
 
   @Override
@@ -369,20 +368,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             planLogFile, new ByteArrayInputStream(planLogOutputStream.getPlanLog().getBytes(StandardCharsets.UTF_8)));
       }
 
-      List<NameValuePair> variableList = new ArrayList<>();
-      if (isNotEmpty(parameters.getVariables())) {
-        for (Entry<String, String> variable : parameters.getVariables().entrySet()) {
-          variableList.add(new NameValuePair(variable.getKey(), variable.getValue(), Type.TEXT.name()));
-        }
-      }
-
-      if (isNotEmpty(parameters.getEncryptedVariables())) {
-        for (Entry<String, EncryptedDataDetail> encVariable : parameters.getEncryptedVariables().entrySet()) {
-          variableList.add(new NameValuePair(
-              encVariable.getKey(), encVariable.getValue().getEncryptedData().getUuid(), Type.ENCRYPTED_TEXT.name()));
-        }
-      }
-
       List<NameValuePair> backendConfigs = new ArrayList<>();
       if (isNotEmpty(parameters.getBackendConfigs())) {
         for (Entry<String, String> entry : parameters.getBackendConfigs().entrySet()) {
@@ -404,7 +389,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .planLogFileId(APPLY == parameters.getCommand() ? planLogFile.getFileId() : null)
               .commandExecuted(parameters.getCommand())
               .sourceRepoReference(sourceRepoReference)
-              .variables(variableList)
+              .variables(parameters.getRawVariables())
               .backendConfigs(backendConfigs)
               .targets(parameters.getTargets())
               .tfVarFiles(parameters.getTfVarFiles())

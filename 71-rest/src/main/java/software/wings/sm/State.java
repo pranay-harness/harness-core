@@ -5,8 +5,11 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.serializer.MapperUtils;
 import lombok.experimental.FieldNameConstants;
 import software.wings.beans.EntityType;
@@ -312,5 +315,15 @@ public abstract class State {
 
   public void parseProperties(Map<String, Object> properties) {
     MapperUtils.mapObject(properties, this);
+  }
+
+  protected void renderDelegateTask(
+      ExecutionContext context, DelegateTask task, StateExecutionContext stateExecutionContext) {
+    context.resetPreparedCache();
+    if (task.getData().getParameters().length == 1 && task.getData().getParameters()[0] instanceof TaskParameters) {
+      task.setWorkflowExecutionId(context.getWorkflowExecutionId());
+      ExpressionReflectionUtils.applyExpression(
+          task.getData().getParameters()[0], value -> context.renderExpression(value, stateExecutionContext));
+    }
   }
 }

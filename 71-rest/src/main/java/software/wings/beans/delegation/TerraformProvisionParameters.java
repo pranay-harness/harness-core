@@ -2,10 +2,14 @@ package software.wings.beans.delegation;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.ActivityAccess;
+import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.Expression;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Value;
 import software.wings.beans.GitConfig;
+import software.wings.beans.NameValuePair;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 
 import java.util.List;
@@ -14,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 @Value
 @Builder
-public class TerraformProvisionParameters implements ExecutionCapabilityDemander {
+public class TerraformProvisionParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   public static final long TIMEOUT_IN_MINUTES = 100;
   public static final String TERRAFORM = "terraform";
 
@@ -37,7 +41,8 @@ public class TerraformProvisionParameters implements ExecutionCapabilityDemander
   private final String sourceRepoBranch;
   List<EncryptedDataDetail> sourceRepoEncryptionDetails;
   private final String scriptPath;
-  private final Map<String, String> variables;
+  private final List<NameValuePair> rawVariables;
+  @Expression private final Map<String, String> variables;
   private final Map<String, EncryptedDataDetail> encryptedVariables;
 
   private final Map<String, String> backendConfigs;
