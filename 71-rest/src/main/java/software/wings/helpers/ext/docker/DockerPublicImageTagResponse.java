@@ -1,11 +1,15 @@
 package software.wings.helpers.ext.docker;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Getter;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DockerPublicImageTagResponse {

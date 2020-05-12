@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.collect.artifacts;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
@@ -10,6 +11,7 @@ import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
@@ -55,6 +57,7 @@ import java.util.Optional;
  * Helper class that has common collection logic that's used by all the artifact collection tasks.
  * @author rktummala
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class ArtifactCollectionTaskHelper {

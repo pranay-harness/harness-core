@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.bamboo;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
@@ -14,6 +17,7 @@ import java.util.Map;
 /**
  * Created by anubhaw on 11/29/16.
  */
+@OwnedBy(CDC)
 public interface BambooService {
   /**
    * Gets job keys.

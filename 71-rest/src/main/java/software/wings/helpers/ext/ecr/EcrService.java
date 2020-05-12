@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.ecr;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -9,6 +12,7 @@ import java.util.List;
 /**
  * Created by brett on 7/15/17
  */
+@OwnedBy(CDC)
 public interface EcrService {
   /**
    * Gets builds.

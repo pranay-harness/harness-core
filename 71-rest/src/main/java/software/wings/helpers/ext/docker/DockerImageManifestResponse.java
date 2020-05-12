@@ -1,8 +1,10 @@
 package software.wings.helpers.ext.docker;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.serializer.JsonUtils;
 import lombok.Data;
 
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@OwnedBy(CDC)
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DockerImageManifestResponse {

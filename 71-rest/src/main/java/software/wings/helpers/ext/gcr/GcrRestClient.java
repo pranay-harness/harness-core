@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.gcr;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
@@ -9,6 +12,7 @@ import software.wings.helpers.ext.gcr.GcrServiceImpl.GcrImageTagResponse;
 /**
  * Created by brett on 8/2/17
  */
+@OwnedBy(CDC)
 public interface GcrRestClient {
   @GET("/v2/{imageName}/tags/list")
   Call<GcrImageTagResponse> listImageTags(

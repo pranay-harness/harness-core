@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.validation.Validator.equalCheck;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
@@ -7,6 +8,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 /**
  * Created by brett on 7/16/17.
  */
+@OwnedBy(CDC)
 @Singleton
 public class EcrClassicBuildServiceImpl implements EcrClassicBuildService {
   @Inject private EcrClassicService ecrClassicService;

@@ -1,5 +1,6 @@
 package io.harness.workers.background.critical.iterator;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -12,6 +13,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.codahale.metrics.InstrumentedExecutorService;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
@@ -37,6 +39,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class ArtifactCollectionHandler implements Handler<ArtifactStream> {

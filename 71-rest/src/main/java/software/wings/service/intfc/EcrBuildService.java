@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.TaskType;
@@ -13,6 +16,7 @@ import java.util.Map;
 /**
  * Created by brett on 7/16/17.
  */
+@OwnedBy(CDC)
 public interface EcrBuildService extends BuildService<AwsConfig> {
   /**
    * Gets builds.

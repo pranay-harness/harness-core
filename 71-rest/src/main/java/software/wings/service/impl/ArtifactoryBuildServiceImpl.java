@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
@@ -11,6 +12,7 @@ import static software.wings.utils.ArtifactType.DOCKER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -35,6 +37,7 @@ import javax.ws.rs.NotSupportedException;
 /**
  * Created by sgurubelli on 6/28/17.
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {

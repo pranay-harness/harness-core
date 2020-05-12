@@ -1,8 +1,11 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.DelegateTaskType;
@@ -12,6 +15,7 @@ import software.wings.service.intfc.CustomBuildService;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Singleton
 public class CustomBuildServiceImpl implements CustomBuildService {
   @Inject private CustomRepositoryService customRepositoryService;

@@ -1,11 +1,13 @@
 package software.wings.helpers.ext.azure.devops;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.Http;
 import lombok.experimental.UtilityClass;
 import okhttp3.OkHttpClient;
@@ -25,6 +27,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(CDC)
 @UtilityClass
 public class AzureArtifactsServiceHelper {
   private static final int CONNECT_TIMEOUT = 5;

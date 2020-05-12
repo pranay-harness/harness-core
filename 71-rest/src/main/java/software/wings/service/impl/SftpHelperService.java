@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.artifact.ArtifactUtilities.getFileParentPath;
 import static io.harness.artifact.ArtifactUtilities.getFileSearchPattern;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -9,6 +10,7 @@ import com.google.api.client.util.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import net.schmizz.sshj.DefaultConfig;
@@ -31,6 +33,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class SftpHelperService {

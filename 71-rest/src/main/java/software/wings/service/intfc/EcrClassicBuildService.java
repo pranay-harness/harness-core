@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.TaskType;
@@ -13,6 +16,7 @@ import java.util.Map;
 /**
  * Created by brett on 7/16/17.
  */
+@OwnedBy(CDC)
 public interface EcrClassicBuildService extends BuildService<EcrConfig> {
   /**
    * Gets builds.

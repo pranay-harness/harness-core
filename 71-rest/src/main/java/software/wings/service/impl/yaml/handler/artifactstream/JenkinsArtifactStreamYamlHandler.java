@@ -1,7 +1,10 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -9,6 +12,7 @@ import software.wings.beans.yaml.ChangeContext;
 /**
  * @author rktummala on 10/09/17
  */
+@OwnedBy(CDC)
 @Singleton
 public class JenkinsArtifactStreamYamlHandler
     extends ArtifactStreamYamlHandler<JenkinsArtifactStream.Yaml, JenkinsArtifactStream> {

@@ -1,5 +1,8 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig.Yaml;
@@ -7,6 +10,7 @@ import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 public class AmazonS3HelmRepoConfigYamlHandler extends HelmRepoYamlHandler<Yaml, AmazonS3HelmRepoConfig> {
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {

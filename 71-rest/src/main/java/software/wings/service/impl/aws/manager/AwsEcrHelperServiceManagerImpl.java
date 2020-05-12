@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -7,6 +8,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
@@ -28,6 +30,7 @@ import software.wings.service.intfc.aws.manager.AwsEcrHelperServiceManager;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(CDC)
 @Singleton
 public class AwsEcrHelperServiceManagerImpl implements AwsEcrHelperServiceManager {
   private static final long TIME_OUT_IN_MINUTES = 2;

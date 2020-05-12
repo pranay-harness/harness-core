@@ -1,7 +1,10 @@
 package software.wings.graphql.datafetcher.artifactSource;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import software.wings.beans.artifact.ArtifactStream;
@@ -15,6 +18,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@OwnedBy(CDC)
 public class ServiceArtifactSourceConnectionDataFetcher
     extends AbstractArrayDataFetcher<QLArtifactSource, QLArtifactSourceQueryParam> {
   @Inject ArtifactStreamService artifactStreamService;

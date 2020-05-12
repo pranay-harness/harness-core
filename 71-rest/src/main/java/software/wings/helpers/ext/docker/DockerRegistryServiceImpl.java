@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.docker;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
@@ -8,6 +9,7 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -44,6 +46,7 @@ import java.util.function.Function;
 /**
  * Created by anubhaw on 1/6/17.
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class DockerRegistryServiceImpl implements DockerRegistryService {

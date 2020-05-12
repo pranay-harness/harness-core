@@ -1,10 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.validation.Validator.equalCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -24,6 +26,7 @@ import java.util.Optional;
 /**
  * Created by sgurubelli on 12/15/17.
  */
+@OwnedBy(CDC)
 @Singleton
 public class AmiBuildServiceImpl implements AmiBuildService {
   @Inject private AmiService amiService;

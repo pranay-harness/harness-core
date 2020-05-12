@@ -1,9 +1,11 @@
 package software.wings.helpers.ext.jenkins;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.offbytwo.jenkins.client.JenkinsHttpClient;
 import com.offbytwo.jenkins.client.PreemptiveAuth;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.Http;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpRequestInterceptor;
@@ -22,6 +24,7 @@ import java.net.URI;
  * Created by sgurubelli on 8/14/17.
  * To accept Untrusted certificates from delegate
  */
+@OwnedBy(CDC)
 public class CustomJenkinsHttpClient extends JenkinsHttpClient {
   public CustomJenkinsHttpClient(URI uri, HttpClientBuilder builder) {
     super(uri, builder);

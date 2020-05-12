@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.TaskType;
@@ -13,6 +16,7 @@ import java.util.Map;
 /**
  * @author rktummala on 7/30/17.
  */
+@OwnedBy(CDC)
 public interface AmazonS3BuildService extends BuildService<AwsConfig> {
   @Override
   @DelegateTaskType(TaskType.AMAZON_S3_GET_PLANS)

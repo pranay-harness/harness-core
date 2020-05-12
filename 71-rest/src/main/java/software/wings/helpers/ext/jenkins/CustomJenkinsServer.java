@@ -1,16 +1,20 @@
 package software.wings.helpers.ext.jenkins;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.client.JenkinsHttpClient;
 import com.offbytwo.jenkins.client.util.EncodingUtils;
 import com.offbytwo.jenkins.model.FolderJob;
 import com.offbytwo.jenkins.model.JobWithDetails;
+import io.harness.annotations.dev.OwnedBy;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpResponseException;
 import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
 
 import java.io.IOException;
 
+@OwnedBy(CDC)
 public class CustomJenkinsServer extends JenkinsServer {
   private JenkinsHttpClient client;
 

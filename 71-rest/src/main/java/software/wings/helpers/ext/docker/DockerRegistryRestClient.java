@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.docker;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
@@ -10,6 +13,7 @@ import retrofit2.http.Url;
 import software.wings.helpers.ext.docker.DockerRegistryServiceImpl.DockerImageTagResponse;
 import software.wings.helpers.ext.docker.DockerRegistryServiceImpl.DockerRegistryToken;
 
+@OwnedBy(CDC)
 public interface DockerRegistryRestClient {
   //  https://auth.docker.io/token?service=registry.docker.io&scope=repository:samalba/my-app:pull,push
 

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.validation.Validator.equalCheck;
@@ -9,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -29,6 +31,7 @@ import java.util.Optional;
 /**
  * Created by anubhaw on 11/22/16.
  */
+@OwnedBy(CDC)
 @Singleton
 public class BambooBuildServiceImpl implements BambooBuildService {
   @Inject private BambooService bambooService;

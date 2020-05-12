@@ -1,11 +1,13 @@
 package software.wings.helpers.ext.sftp;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -17,6 +19,7 @@ import software.wings.service.impl.SftpHelperService;
 import java.util.Collections;
 import java.util.List;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class SftpServiceImpl implements SftpService {

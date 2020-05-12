@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
@@ -16,6 +17,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -57,6 +59,7 @@ import java.util.Map;
 /**
  * Created by sgurubelli on 8/28/17.
  */
+@OwnedBy(CDC)
 @Slf4j
 public class BambooState extends State {
   @Attributes(title = "Bamboo Server") private String bambooConfigId;

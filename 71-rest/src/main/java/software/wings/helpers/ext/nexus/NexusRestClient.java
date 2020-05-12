@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.annotations.dev.OwnedBy;
 import org.sonatype.nexus.rest.model.ContentListResourceResponse;
 import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
 import retrofit2.Call;
@@ -18,6 +21,7 @@ import java.util.Map;
 /**
  * Created by srinivas on 3/30/17.
  */
+@OwnedBy(CDC)
 public interface NexusRestClient {
   /**
    * List project plans call.

@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.network.Http.connectableHttpUrl;
@@ -11,6 +12,7 @@ import static software.wings.helpers.ext.helm.HelmConstants.HELM_PATH_PLACEHOLDE
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.WingsException;
@@ -40,6 +42,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+@OwnedBy(CDC)
 @Slf4j
 public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   private static final String UNHANDLED_CONFIG_MSG = "Unhandled type of helm repo config. Type : ";

@@ -1,11 +1,15 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 
+@OwnedBy(CDC)
 @Singleton
 public class AzureArtifactsArtifactStreamYamlHandler
     extends ArtifactStreamYamlHandler<Yaml, AzureArtifactsArtifactStream> {

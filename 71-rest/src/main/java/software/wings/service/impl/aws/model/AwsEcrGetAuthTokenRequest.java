@@ -1,5 +1,8 @@
 package software.wings.service.impl.aws.model;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +11,7 @@ import software.wings.beans.AwsConfig;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class AwsEcrGetAuthTokenRequest extends AwsEcrRequest {

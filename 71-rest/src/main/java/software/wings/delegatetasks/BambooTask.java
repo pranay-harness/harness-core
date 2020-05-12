@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
@@ -8,6 +9,7 @@ import static software.wings.sm.states.BambooState.BambooExecutionResponse;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -29,6 +31,7 @@ import java.util.function.Supplier;
 /**
  * Created by sgurubelli on 8/29/17.
  */
+@OwnedBy(CDC)
 @Slf4j
 public class BambooTask extends AbstractDelegateRunnableTask {
   @Inject private BambooService bambooService;

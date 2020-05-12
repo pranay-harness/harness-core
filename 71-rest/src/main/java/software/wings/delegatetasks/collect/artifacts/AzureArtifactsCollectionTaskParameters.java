@@ -1,5 +1,8 @@
 package software.wings.delegatetasks.collect.artifacts;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -16,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 public class AzureArtifactsCollectionTaskParameters implements TaskParameters, ExecutionCapabilityDemander {

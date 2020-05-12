@@ -1,7 +1,9 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import software.wings.beans.config.ArtifactoryConfig;
 
@@ -12,6 +14,7 @@ import java.util.function.Consumer;
 /**
  * Created by brett on 11/2/17
  */
+@OwnedBy(CDC)
 public class ArtifactoryValidation extends AbstractDelegateValidateTask {
   public ArtifactoryValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {

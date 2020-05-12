@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.ecr;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
@@ -9,6 +10,7 @@ import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.ListImagesRequest;
 import com.amazonaws.services.ecr.model.ListImagesResult;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.artifact.EcrArtifactStream;
@@ -22,6 +24,7 @@ import java.util.List;
 /**
  * Created by brett on 7/15/17
  */
+@OwnedBy(CDC)
 @Singleton
 public class EcrClassicServiceImpl implements EcrClassicService {
   @Inject private AwsHelperService awsHelperService;

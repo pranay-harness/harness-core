@@ -1,9 +1,11 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -12,6 +14,7 @@ import software.wings.utils.RepositoryFormat;
 /**
  * @author rktummala on 10/09/17
  */
+@OwnedBy(CDC)
 @Singleton
 public class NexusArtifactStreamYamlHandler
     extends ArtifactStreamYamlHandler<NexusArtifactStream.Yaml, NexusArtifactStream> {

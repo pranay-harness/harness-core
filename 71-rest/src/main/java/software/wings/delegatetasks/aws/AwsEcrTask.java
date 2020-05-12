@@ -1,9 +1,11 @@
 package software.wings.delegatetasks.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
@@ -24,6 +26,7 @@ import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@OwnedBy(CDC)
 @Slf4j
 public class AwsEcrTask extends AbstractDelegateRunnableTask {
   @Inject private AwsEcrHelperServiceDelegate ecrServiceDelegate;

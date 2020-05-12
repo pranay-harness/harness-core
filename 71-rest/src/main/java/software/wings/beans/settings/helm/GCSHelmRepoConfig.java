@@ -1,7 +1,10 @@
 package software.wings.beans.settings.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import lombok.Builder;
@@ -19,6 +22,7 @@ import software.wings.yaml.setting.HelmRepoYaml;
 import java.util.ArrayList;
 import java.util.List;
 
+@OwnedBy(CDC)
 @JsonTypeName("GCS_HELM_REPO")
 @Data
 @Builder
