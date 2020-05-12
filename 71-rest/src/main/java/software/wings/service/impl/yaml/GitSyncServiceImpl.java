@@ -56,6 +56,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -397,7 +398,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   private ChangeSetDTO makeDTOForRunningChangeSet(
       YamlChangeSet yamlChangeSet, YamlGitConfig yamlGitConfig, String accountId) {
     String gitConnectorName =
-        getGitConnectorNameFromId(yamlChangeSet.getGitSyncMetadata().getGitConnectorId(), accountId);
+        safelyGetGitConnectorNameFromId(yamlChangeSet.getGitSyncMetadata().getGitConnectorId(), accountId);
     GitDetail gitDetail = buildGitDetail(yamlGitConfig, gitConnectorName);
     RunningChangesetInformation runningChangesetInformation = RunningChangesetInformation.builder()
                                                                   .startedRunningAt(yamlChangeSet.getLastUpdatedAt())
@@ -410,7 +411,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   private ChangeSetDTO makeDTOForQueuedChangeSet(
       YamlChangeSet yamlChangeSet, YamlGitConfig yamlGitConfig, String accountId) {
     String gitConnectorName =
-        getGitConnectorNameFromId(yamlChangeSet.getGitSyncMetadata().getGitConnectorId(), accountId);
+        safelyGetGitConnectorNameFromId(yamlChangeSet.getGitSyncMetadata().getGitConnectorId(), accountId);
     GitDetail gitDetail = buildGitDetail(yamlGitConfig, gitConnectorName);
     QueuedChangesetInformation queuedChangesetInformation =
         QueuedChangesetInformation.builder().queuedAt(yamlChangeSet.getCreatedAt()).build();
@@ -429,13 +430,20 @@ public class GitSyncServiceImpl implements GitSyncService {
         .build();
   }
 
-  private String getGitConnectorNameFromId(String gitConnectorId, String accountId) {
+  private String safelyGetGitConnectorNameFromId(String gitConnectorId, String accountId) {
+    SettingAttribute gitConnector = getGitConnectorFromId(gitConnectorId, accountId);
+    if (gitConnector == null) {
+      return UNKNOWN_GIT_CONNECTOR;
+    }
+    return Optional.ofNullable(gitConnector.getName()).orElse(UNKNOWN_GIT_CONNECTOR);
+  }
+
+  private SettingAttribute getGitConnectorFromId(String gitConnectorId, String accountId) {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .filter(ACCOUNT_ID_KEY, accountId)
         .filter(ID_KEY, gitConnectorId)
         .project(SettingAttributeKeys.uuid, true)
         .project(SettingAttributeKeys.name, true)
-        .get()
-        .getName();
+        .get();
   }
 }
