@@ -9,6 +9,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
+import software.wings.beans.HarnessTagType;
 import software.wings.security.PermissionAttribute.Action;
 
 import java.util.Collection;
@@ -20,7 +21,11 @@ import javax.validation.constraints.NotNull;
 public interface HarnessTagService {
   HarnessTag create(HarnessTag tag);
   HarnessTag update(HarnessTag tag);
+
   HarnessTag get(@NotBlank String accountId, @NotBlank String key);
+
+  HarnessTag get(@NotBlank String accountId, @NotBlank String key, HarnessTagType tagType);
+
   HarnessTag getTagWithInUseValues(@NotBlank String accountId, @NotBlank String key);
   PageResponse<HarnessTag> list(PageRequest<HarnessTag> request);
   void delete(@NotBlank String accountId, @NotBlank String key);
