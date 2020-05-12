@@ -131,6 +131,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
@@ -1942,13 +1943,16 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       throw new InvalidArgumentsException(Pair.of("args", "Delegate task has null account ID"));
     }
 
-    List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(task.getAccountId());
+    BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
 
+    List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(task.getAccountId(), batch);
     logger.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
 
     List<String> eligibleDelegates = activeDelegates.stream()
-                                         .filter(delegateId -> assignDelegateService.canAssign(null, delegateId, task))
+                                         .filter(delegateId -> assignDelegateService.canAssign(batch, delegateId, task))
                                          .collect(toList());
+
+    delegateSelectionLogsService.save(batch);
 
     if (activeDelegates.isEmpty()) {
       logger.info("No delegates are active for the account");

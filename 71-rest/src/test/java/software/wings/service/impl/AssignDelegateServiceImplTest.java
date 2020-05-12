@@ -74,7 +74,9 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by brett on 7/26/17
@@ -811,7 +813,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   public void shouldRetrieveNoActiveDelegates() {
     String accountId = generateUuid();
 
-    List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(accountId);
+    List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(accountId, null);
     assertThat(activeDelegates).isNotNull();
     assertThat(activeDelegates).isEmpty();
   }
@@ -839,11 +841,25 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                  .status(Delegate.Status.WAITING_FOR_APPROVAL)
                                  .build();
 
-    wingsPersistence.save(Arrays.asList(activeDelegate1, activeDelegate2, disconnectedDelegate, wapprDelegate));
+    Delegate deletedDelegate =
+        createDelegateBuilder().accountId(accountId).uuid(generateUuid()).status(Delegate.Status.DELETED).build();
 
-    List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(accountId);
+    wingsPersistence.save(
+        Arrays.asList(activeDelegate1, activeDelegate2, disconnectedDelegate, wapprDelegate, deletedDelegate));
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
+
+    List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(accountId, batch);
     assertThat(activeDelegates).isNotNull();
     assertThat(activeDelegates.size()).isEqualTo(2);
     assertThat(activeDelegates.containsAll(Arrays.asList(activeDelegate1Id, activeDelegate2Id))).isTrue();
+
+    Set<String> disconnectedDelegates = new HashSet<>();
+    disconnectedDelegates.add(disconnectedDelegate.getUuid());
+    verify(delegateSelectionLogsService).logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
+
+    Set<String> wapprDelegates = new HashSet<>();
+    wapprDelegates.add(wapprDelegate.getUuid());
+    verify(delegateSelectionLogsService).logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(wapprDelegates));
   }
 }

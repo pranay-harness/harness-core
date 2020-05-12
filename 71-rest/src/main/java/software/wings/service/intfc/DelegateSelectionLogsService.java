@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.DelegateScope;
@@ -10,7 +11,7 @@ import java.util.Set;
 public interface DelegateSelectionLogsService {
   void save(BatchDelegateSelectionLog batch);
 
-  BatchDelegateSelectionLog createBatch(String taskId);
+  BatchDelegateSelectionLog createBatch(DelegateTask task);
 
   void logCanAssign(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 

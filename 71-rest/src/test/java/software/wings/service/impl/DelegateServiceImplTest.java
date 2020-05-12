@@ -89,7 +89,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = getDelegateTask();
     when(assignDelegateService.canAssign(any(BatchDelegateSelectionLog.class), anyString(), any())).thenReturn(true);
-    when(assignDelegateService.retrieveActiveDelegates(delegateTask.getAccountId()))
+    when(assignDelegateService.retrieveActiveDelegates(
+             eq(delegateTask.getAccountId()), any(BatchDelegateSelectionLog.class)))
         .thenReturn(List.of(delegate.getUuid()));
     Thread thread = new Thread(() -> {
       await().atMost(5L, TimeUnit.SECONDS).until(() -> isNotEmpty(delegateService.syncTaskWaitMap));
