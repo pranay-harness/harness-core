@@ -19,6 +19,7 @@ type GcpOrganization {
   organizationId: String
   organizationName: String
   serviceAccount: String
+  gcpBillingAccounts: [GcpBillingAccount] @dataFetcher(name: gcpBillingAccount)
 }
 
 type GcpBillingAccount {
