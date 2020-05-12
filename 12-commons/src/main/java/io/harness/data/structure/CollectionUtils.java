@@ -56,6 +56,14 @@ public class CollectionUtils {
     return collection == null ? new ArrayList<>() : collection;
   }
 
+  public static <T> List<T> nullIfEmpty(List<T> collection) {
+    return collection == null || collection.isEmpty() ? null : collection;
+  }
+
+  public static <K, V> Map<K, V> nullIfEmptyMap(Map<K, V> map) {
+    return map == null || map.isEmpty() ? null : map;
+  }
+
   public static Set<String> trimmedLowercaseSet(Collection<String> strings) {
     if (strings == null) {
       return null;
