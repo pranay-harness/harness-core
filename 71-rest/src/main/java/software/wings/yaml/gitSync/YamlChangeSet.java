@@ -1,5 +1,7 @@
 package software.wings.yaml.gitSync;
 
+import com.google.common.collect.ImmutableList;
+
 import io.harness.annotation.HarnessEntity;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -68,7 +70,8 @@ public class YamlChangeSet extends Base {
   private GitSyncMetadata gitSyncMetadata;
 
   public enum Status { QUEUED, RUNNING, FAILED, COMPLETED, SKIPPED }
-
+  public static final List<Status> terminalStatusList =
+      ImmutableList.of(Status.FAILED, Status.COMPLETED, Status.SKIPPED);
   @Builder
   public YamlChangeSet(String appId, String accountId, List<GitFileChange> gitFileChanges, Status status,
       boolean gitToHarness, boolean forcePush, long queuedOn, boolean fullSync, String parentYamlChangeSetId,

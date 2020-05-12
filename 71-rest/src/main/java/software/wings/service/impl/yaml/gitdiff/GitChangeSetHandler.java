@@ -3,7 +3,10 @@ package software.wings.service.impl.yaml.gitdiff;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptySet;
+import static java.util.Optional.ofNullable;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.collections4.MapUtils.emptyIfNull;
@@ -34,6 +37,7 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlService;
+import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
@@ -44,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class GitChangeSetHandler {
@@ -52,15 +57,24 @@ public class GitChangeSetHandler {
   @Transient @Inject private WingsPersistence wingsPersistence;
   @Transient @Inject private YamlDirectoryService yamlDirectoryService;
   @Transient @Inject private AppService appService;
-  @Inject GitSyncService gitSyncService;
+  @Transient @Inject GitSyncService gitSyncService;
+  @Transient @Inject ChangeSetRequestTimeFilter changeSetRequestTimeFilter;
 
   public Map<String, ChangeWithErrorMsg> ingestGitYamlChangs(String accountId, GitDiffResult gitDiffResult) {
     // Mark invalid files as SKIPPED
     final List<GitFileChange> gitDiffResultChangeSet = gitDiffResult.getGitFileChanges();
-    List<GitFileChange> gitFileChangeList = obtainValidGitFileChangesBasedOnYamlGitConfig(
+
+    final List<GitFileChange> validFilesBasedOnYamlGitConfigFilter = obtainValidGitFileChangesBasedOnYamlGitConfig(
         gitDiffResult.getYamlGitConfig(), gitDiffResultChangeSet, accountId);
+
     gitSyncService.logActivityForSkippedFiles(
-        gitFileChangeList, gitDiffResult, "application folder configured incorrectly", accountId);
+        validFilesBasedOnYamlGitConfigFilter, gitDiffResult, "application folder configured incorrectly", accountId);
+
+    final List<GitFileChange> validFilesAfterChangeRequestTimeFilter =
+        applyChangeRequestTimeFilterAndLogActivity(validFilesBasedOnYamlGitConfigFilter, accountId);
+
+    final List<GitFileChange> gitFileChangeList = validFilesAfterChangeRequestTimeFilter;
+
     applySyncFromGit(gitFileChangeList);
 
     try {
@@ -86,7 +100,36 @@ public class GitChangeSetHandler {
 
       return failedYamlFileChangeMap;
     }
-    return Collections.EMPTY_MAP;
+    return Collections.emptyMap();
+  }
+
+  private List<GitFileChange> applyChangeRequestTimeFilterAndLogActivity(
+      List<GitFileChange> gitFileChanges, String accountId) {
+    final YamlFilterResult yamlFilterResult = changeSetRequestTimeFilter.filterFiles(gitFileChanges, accountId);
+    logFileActivityForSkippedFiles(
+        gitFileChanges, emptyIfNull(yamlFilterResult.getExcludedFilePathWithReasonMap()), accountId);
+    return yamlFilterResult.getFilteredFiles();
+  }
+
+  private void logFileActivityForSkippedFiles(
+      List<GitFileChange> allGitFileChanges, Map<String, String> excludedFilePathWithReasonMap, String accountId) {
+    final Map<String, GitFileChange> allFilesPathToObjectMapping =
+        allGitFileChanges.stream().collect(Collectors.toMap(GitFileChange::getFilePath, identity()));
+
+    excludedFilePathWithReasonMap.forEach((filePath, skipMessage) -> {
+      final GitFileChange gitFileChange = allFilesPathToObjectMapping.get(filePath);
+      if (filePartOfSameCommit(gitFileChange)) {
+        gitSyncService.logActivityForFiles(gitFileChange.getProcessingCommitId(),
+            Collections.singletonList(gitFileChange.getFilePath()), GitFileActivity.Status.SKIPPED, skipMessage,
+            accountId);
+      }
+    }
+
+    );
+  }
+
+  private boolean filePartOfSameCommit(GitFileChange gitFileChange) {
+    return !ofNullable(gitFileChange.getChangeFromAnotherCommit()).orElse(FALSE);
   }
 
   private void populatateYamlGitconfigInError(

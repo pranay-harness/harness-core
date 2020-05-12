@@ -84,7 +84,7 @@ public class GitChangeSetRunnableNewTest extends WingsBaseTest {
 
     final YamlChangeSet gtohChangesetQ2 =
         yamlChangeSetService.save(YamlChangeSet.builder()
-                                      .fullSync(true)
+                                      .fullSync(false)
                                       .status(QUEUED)
                                       .accountId(ACCOUNT_ID)
                                       .gitToHarness(true)
@@ -96,7 +96,7 @@ public class GitChangeSetRunnableNewTest extends WingsBaseTest {
 
     final YamlChangeSet gtohChangesetQ3 =
         yamlChangeSetService.save(YamlChangeSet.builder()
-                                      .fullSync(true)
+                                      .fullSync(false)
                                       .status(QUEUED)
                                       .accountId(ACCOUNT_ID)
                                       .gitToHarness(true)
