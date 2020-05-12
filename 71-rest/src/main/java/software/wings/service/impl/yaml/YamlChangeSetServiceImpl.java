@@ -41,6 +41,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.service.intfc.yaml.YamlSuccessfulChangeService;
 import software.wings.yaml.gitSync.GitSyncMetadata;
 import software.wings.yaml.gitSync.GitSyncMetadata.GitSyncMetadataKeys;
 import software.wings.yaml.gitSync.YamlChangeSet;
@@ -67,12 +68,26 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private YamlGitService yamlGitService;
+  @Inject private YamlSuccessfulChangeService yamlSuccessfulChangeService;
   private static final Integer MAX_RETRY_COUNT = 3;
 
   @Override
   public YamlChangeSet save(YamlChangeSet yamlChangeSet) {
     populateGitSyncMetadata(yamlChangeSet);
-    return wingsPersistence.saveAndGet(YamlChangeSet.class, yamlChangeSet);
+    final String savedId = wingsPersistence.save(yamlChangeSet);
+    final YamlChangeSet savedYamlChangeSet = wingsPersistence.get(YamlChangeSet.class, savedId);
+    onYamlChangeSetSave(savedYamlChangeSet);
+    return savedYamlChangeSet;
+  }
+
+  private void onYamlChangeSetSave(YamlChangeSet savedYamlChangeSet) {
+    try {
+      if (isGitSyncConfiguredForChangeSet(savedYamlChangeSet)) {
+        yamlSuccessfulChangeService.updateOnHarnessChangeSet(savedYamlChangeSet);
+      }
+    } catch (Exception e) {
+      logger.error("error while processing onYamlChangeSetSave event", e);
+    }
   }
   @Override
   public void populateGitSyncMetadata(YamlChangeSet yamlChangeSet) {
@@ -133,6 +148,10 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
           .build();
     }
     return yamlGitConfigs.get(0);
+  }
+
+  private boolean isGitSyncConfiguredForChangeSet(YamlChangeSet yamlChangeSet) {
+    return yamlChangeSet.getGitSyncMetadata() != null;
   }
 
   @Override

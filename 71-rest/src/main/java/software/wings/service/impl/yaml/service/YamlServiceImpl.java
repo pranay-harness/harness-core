@@ -129,6 +129,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.service.intfc.yaml.YamlResourceService;
+import software.wings.service.intfc.yaml.YamlSuccessfulChangeService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.yaml.BaseYaml;
@@ -195,6 +196,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private YamlPushService yamlPushService;
   @Inject private HarnessTagYamlHelper harnessTagYamlHelper;
   @Inject private GitSyncService gitSyncService;
+  @Inject YamlSuccessfulChangeService yamlSuccessfulChangeService;
 
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
 
@@ -682,6 +684,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     if (isChangeFromGit(change)) {
       gitSyncService.logActivityForFiles(((GitFileChange) change).getProcessingCommitId(),
           Arrays.asList(change.getFilePath()), GitFileActivity.Status.SUCCESS, "", accountId);
+
+      yamlSuccessfulChangeService.updateOnSuccessfulGitChangeProcessing((GitFileChange) change, accountId);
     }
   }
 

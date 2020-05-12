@@ -443,6 +443,9 @@ import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffRequest;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
+import software.wings.beans.yaml.GitSuccessFulChangeDetail;
+import software.wings.beans.yaml.HarnessSuccessFulChangeDetail;
+import software.wings.beans.yaml.YamlSuccessfulChange;
 import software.wings.collect.ArtifactCollectionCallback;
 import software.wings.collect.CollectEvent;
 import software.wings.delegatetasks.buildsource.BuildSourceCallback;
@@ -1027,6 +1030,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ImportedTemplate.class);
     set.add(CeExceptionRecord.class);
     set.add(ScopedEntity.class);
+    set.add(YamlSuccessfulChange.class);
   }
 
   @Override
@@ -1545,5 +1549,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("yaml.errorhandling.HarnessToGitErrorDetails", HarnessToGitErrorDetails.class);
     w.put(
         smss + "SpotinstTrafficShiftAlbSwapRoutesExecutionData", SpotinstTrafficShiftAlbSwapRoutesExecutionData.class);
+    w.put("beans.yaml.GitSuccessFulChangeDetail", GitSuccessFulChangeDetail.class);
+    w.put("beans.yaml.HarnessSuccessFulChangeDetail", HarnessSuccessFulChangeDetail.class);
   }
 }
