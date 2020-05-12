@@ -38,7 +38,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 
 import java.util.List;
-import java.util.Map;
 
 public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
   @Getter @Setter @Attributes(title = "Rollback all phases at once") private boolean rollbackAllPhasesAtOnce;
@@ -71,10 +70,11 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
     int newAsgFinalDesiredCount;
     if (rollbackAllPhasesAtOnce) {
       AwsAmiPreDeploymentData preDeploymentData = serviceSetupElement.getPreDeploymentData();
-      Map<String, Integer> asgNameToDesiredCapacity = preDeploymentData.getAsgNameToDesiredCapacity();
-      if (isNotEmpty(asgNameToDesiredCapacity)) {
-        asgNameToDesiredCapacity.forEach(
-            (key, value) -> oldAsgCounts.add(AwsAmiResizeData.builder().asgName(key).desiredCount(value).build()));
+      if (isNotEmpty(preDeploymentData.getOldAsgName())) {
+        oldAsgCounts.add(AwsAmiResizeData.builder()
+                             .asgName(preDeploymentData.getOldAsgName())
+                             .desiredCount(preDeploymentData.getPreDeploymentDesiredCapacity())
+                             .build());
       }
       newAgName = serviceSetupElement.getNewAutoScalingGroupName();
       newAsgFinalDesiredCount = 0;

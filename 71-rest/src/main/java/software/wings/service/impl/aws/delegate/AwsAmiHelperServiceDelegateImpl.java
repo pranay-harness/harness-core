@@ -11,12 +11,18 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Log.LogColor.Yellow;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MIN_INSTANCES;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_NAME;
 import static software.wings.utils.AsgConvention.getRevisionFromTag;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -41,6 +47,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
@@ -62,9 +69,7 @@ import software.wings.utils.AsgConvention;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -225,9 +230,9 @@ public class AwsAmiHelperServiceDelegateImpl
 
       if (isNotEmpty(oldAsgName)) {
         logCallback.saveExecutionLog(format("Upgrading old Asg: [%s] back to initial state", oldAsgName));
-        int desiredCount = preDeploymentData.getPreDeploymentDesiredCapacity(oldAsgName);
-        int minCount = preDeploymentData.getPreDeploymentMinCapacity(oldAsgName);
-        List<String> oldScalingPolicyJSONs = preDeploymentData.getScalingPolicyJSONForAsg(oldAsgName);
+        int desiredCount = preDeploymentData.getPreDeploymentDesiredCapacity();
+        int minCount = preDeploymentData.getPreDeploymentMinCapacity();
+        List<String> oldScalingPolicyJSONs = preDeploymentData.getPreDeploymenyScalingPolicyJSON();
 
         awsAsgHelperServiceDelegate.clearAllScalingPoliciesForAsg(
             awsConfig, encryptionDetails, region, oldAsgName, logCallback);
@@ -467,11 +472,13 @@ public class AwsAmiHelperServiceDelegateImpl
         awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
             encryptionDetails, region, count.getAsgName(), count.getDesiredCount(), executionLogCallback,
             autoScalingSteadyStateTimeout);
-        if (preDeploymentData.hasAsgReachedPreDeploymentCount(count.getAsgName(), count.getDesiredCount())) {
-          awsAsgHelperServiceDelegate.setMinInstancesForAsg(awsConfig, encryptionDetails, region, count.getAsgName(),
-              preDeploymentData.getPreDeploymentMinCapacity(count.getAsgName()), executionLogCallback);
-        }
+
         if (rollback) {
+          if (preDeploymentData.hasAsgReachedPreDeploymentCount(count.getDesiredCount())) {
+            awsAsgHelperServiceDelegate.setMinInstancesForAsg(awsConfig, encryptionDetails, region, count.getAsgName(),
+                preDeploymentData.getPreDeploymentMinCapacity(), executionLogCallback);
+          }
+
           if (isNotEmpty(targetGroupsArns)) {
             targetGroupsArns.forEach(arn -> {
               executionLogCallback.saveExecutionLog(
@@ -489,10 +496,9 @@ public class AwsAmiHelperServiceDelegateImpl
                   region, classicLB, count.getAsgName(), autoScalingSteadyStateTimeout, executionLogCallback);
             });
           }
-          if (preDeploymentData.hasAsgReachedPreDeploymentCount(count.getAsgName(), count.getDesiredCount())) {
+          if (preDeploymentData.hasAsgReachedPreDeploymentCount(count.getDesiredCount())) {
             awsAsgHelperServiceDelegate.attachScalingPoliciesToAsg(awsConfig, encryptionDetails, region,
-                count.getAsgName(), preDeploymentData.getScalingPolicyJSONForAsg(count.getAsgName()),
-                executionLogCallback);
+                count.getAsgName(), preDeploymentData.getPreDeploymenyScalingPolicyJSON(), executionLogCallback);
           }
         } else {
           /**
@@ -501,8 +507,7 @@ public class AwsAmiHelperServiceDelegateImpl
            */
           if (newAsgFinalDesiredCount == desiredInstances && count.getDesiredCount() > 0) {
             awsAsgHelperServiceDelegate.attachScalingPoliciesToAsg(awsConfig, encryptionDetails, region,
-                count.getAsgName(), preDeploymentData.getScalingPolicyJSONForAsg(count.getAsgName()),
-                executionLogCallback);
+                count.getAsgName(), preDeploymentData.getPreDeploymenyScalingPolicyJSON(), executionLogCallback);
           }
         }
       });
@@ -534,6 +539,7 @@ public class AwsAmiHelperServiceDelegateImpl
           rollback, baseScalingPolicyJSONs, desiredInstances);
     }
   }
+
   @VisibleForTesting
   LaunchTemplateSpecification extractLaunchTemplateSpecFrom(AutoScalingGroup autoScalingGroup) {
     LaunchTemplateSpecification launchTemplateSpecification = null;
@@ -584,7 +590,6 @@ public class AwsAmiHelperServiceDelegateImpl
           request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion(), request.getInfraMappingId());
 
       logCallback.saveExecutionLog("Getting last deployed autoscaling group with non zero capacity");
-      String lastDeployedAsgName = getLastDeployedAsgNameWithNonZeroCapacity(harnessManagedAutoScalingGroups);
 
       Integer harnessRevision = getNewHarnessVersion(harnessManagedAutoScalingGroups);
       String region = request.getRegion();
@@ -592,10 +597,21 @@ public class AwsAmiHelperServiceDelegateImpl
       int minInstances;
       Integer maxInstances;
       int desiredInstances;
+
+      List<AutoScalingGroup> autoScalingGroupsWithNonZeroCount =
+          listAllExistingAsgsWithNonZeroCount(harnessManagedAutoScalingGroups);
+
+      AutoScalingGroup mostRecentActiveAsg =
+          getMostRecentActiveAsg(harnessManagedAutoScalingGroups, autoScalingGroupsWithNonZeroCount);
+
+      downsizeOrDeleteOlderAutoScalaingGroups(
+          awsConfig, encryptionDetails, request, harnessManagedAutoScalingGroups, mostRecentActiveAsg, logCallback);
+
+      String lastDeployedAsgName =
+          mostRecentActiveAsg == null ? StringUtils.EMPTY : mostRecentActiveAsg.getAutoScalingGroupName();
+
       if (request.isUseCurrentRunningCount()) {
-        AwsAsgGetRunningCountData currentlyRunningInstanceCount =
-            awsAsgHelperServiceDelegate.getCurrentlyRunningInstanceCount(
-                awsConfig, encryptionDetails, region, request.getInfraMappingId());
+        AwsAsgGetRunningCountData currentlyRunningInstanceCount = getAsgRunningCountData(mostRecentActiveAsg);
         logCallback.saveExecutionLog(
             format("Using currently running min: [%d], max: [%d], desired: [%d] from Asg: [%s]",
                 currentlyRunningInstanceCount.getAsgMin(), currentlyRunningInstanceCount.getAsgMax(),
@@ -630,6 +646,7 @@ public class AwsAmiHelperServiceDelegateImpl
           AwsAmiServiceSetupResponse.builder()
               .executionStatus(SUCCESS)
               .lastDeployedAsgName(lastDeployedAsgName)
+              .oldAsgNames(isNotBlank(lastDeployedAsgName) ? Arrays.asList(lastDeployedAsgName) : emptyList())
               .newAsgName(newAutoScalingGroupName)
               .harnessRevision(harnessRevision)
               .minInstances(minInstances)
@@ -648,11 +665,7 @@ public class AwsAmiHelperServiceDelegateImpl
               .baseAsgScalingPolicyJSONs(awsAsgHelperServiceDelegate.getScalingPolicyJSONs(
                   awsConfig, encryptionDetails, region, baseAutoScalingGroup.getAutoScalingGroupName(), logCallback));
 
-      populatePreDeploymentData(
-          awsConfig, encryptionDetails, region, harnessManagedAutoScalingGroups, builder, logCallback);
-      logCallback.saveExecutionLog("Sending request to delete old auto scaling groups to executor");
-      deleteOldHarnessManagedAutoScalingGroups(
-          encryptionDetails, region, awsConfig, harnessManagedAutoScalingGroups, lastDeployedAsgName, logCallback);
+      populatePreDeploymentData(awsConfig, encryptionDetails, region, mostRecentActiveAsg, builder, logCallback);
       logCallback.saveExecutionLog(
           format("Completed AWS AMI Setup with new autoScalingGroupName [%s]", newAutoScalingGroupName), INFO,
           CommandExecutionStatus.SUCCESS);
@@ -665,6 +678,105 @@ public class AwsAmiHelperServiceDelegateImpl
           .executionStatus(FAILED)
           .build();
     }
+  }
+
+  @VisibleForTesting
+  AutoScalingGroup getMostRecentActiveAsg(List<AutoScalingGroup> harnessManagedAutoScalingGroups,
+      List<AutoScalingGroup> autoScalingGroupsWithNonZeroCount) {
+    AutoScalingGroup mostRecentActiveAsg = null;
+
+    if (isNotEmpty(autoScalingGroupsWithNonZeroCount)) {
+      mostRecentActiveAsg = autoScalingGroupsWithNonZeroCount.get(0);
+    } else if (isNotEmpty(harnessManagedAutoScalingGroups)) {
+      mostRecentActiveAsg = harnessManagedAutoScalingGroups.get(0);
+    }
+
+    return mostRecentActiveAsg;
+  }
+
+  private List<AutoScalingGroup> listAllExistingAsgsWithNonZeroCount(
+      List<AutoScalingGroup> harnessManagedAutoScalingGroups) {
+    if (isEmpty(harnessManagedAutoScalingGroups)) {
+      return harnessManagedAutoScalingGroups;
+    }
+
+    return harnessManagedAutoScalingGroups.stream()
+        .filter(autoScalingGroup -> autoScalingGroup.getDesiredCapacity() > 0)
+        .sorted(Comparator.comparing(AutoScalingGroup::getCreatedTime).reversed())
+        .collect(toList());
+  }
+
+  @VisibleForTesting
+  void downsizeOrDeleteOlderAutoScalaingGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      AwsAmiServiceSetupRequest request, List<AutoScalingGroup> autoScalingGroups,
+      AutoScalingGroup mostRecentAsgWithNonZeroInstanceCount, ExecutionLogCallback executionLogCallback) {
+    if (isEmpty(autoScalingGroups) || mostRecentAsgWithNonZeroInstanceCount == null) {
+      return;
+    }
+
+    executionLogCallback.saveExecutionLog("# Downsizing older ASGs to 0");
+
+    int versionsRetained = 1;
+    try {
+      for (AutoScalingGroup autoScalingGroup : autoScalingGroups) {
+        if (mostRecentAsgWithNonZeroInstanceCount.getAutoScalingGroupName().equals(
+                autoScalingGroup.getAutoScalingGroupName())) {
+          executionLogCallback.saveExecutionLog(color(
+              "# Not changing Most Recent Active ASG: " + autoScalingGroup.getAutoScalingGroupName(), Yellow, Bold));
+        } else {
+          if (versionsRetained < MAX_OLD_ASG_VERSION_TO_KEEP) {
+            if (autoScalingGroup.getDesiredCapacity() > 0) {
+              downsizeAsgToZero(awsConfig, encryptionDetails, request, executionLogCallback, autoScalingGroup);
+            }
+            versionsRetained++;
+          } else {
+            logger.info("ASG Cleanup. Deleting ASG: " + autoScalingGroup.getAutoScalingGroupName());
+            executionLogCallback.saveExecutionLog(
+                color("# Deleting Existing ASG: " + autoScalingGroup.getAutoScalingGroupName(), Yellow, Bold));
+            downsizeAsgToZero(awsConfig, encryptionDetails, request, executionLogCallback, autoScalingGroup);
+            awsAsgHelperServiceDelegate.deleteAutoScalingGroups(awsConfig, encryptionDetails, request.getRegion(),
+                singletonList(autoScalingGroup), executionLogCallback);
+          }
+        }
+      }
+    } catch (Exception e) {
+      String msg = "Failed while downsizing/deleting older ASGs";
+      logger.error(msg, e);
+      executionLogCallback.saveExecutionLog(msg, ERROR);
+    }
+  }
+
+  private void downsizeAsgToZero(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      AwsAmiServiceSetupRequest request, ExecutionLogCallback executionLogCallback, AutoScalingGroup autoScalingGroup) {
+    executionLogCallback.saveExecutionLog(
+        color(format("# Resizing AutoScaling Group: [%s] to [%d]", autoScalingGroup.getAutoScalingGroupName(), 0),
+            Yellow, Bold));
+    awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(awsConfig, encryptionDetails, request.getRegion(),
+        autoScalingGroup.getAutoScalingGroupName(), 0, executionLogCallback);
+    awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails,
+        request.getRegion(), autoScalingGroup.getAutoScalingGroupName(), 0, executionLogCallback,
+        request.getAutoScalingSteadyStateTimeout());
+  }
+
+  @VisibleForTesting
+  AwsAsgGetRunningCountData getAsgRunningCountData(AutoScalingGroup autoScalingGroup) {
+    String asgName = DEFAULT_AMI_ASG_NAME;
+    int asgMin = DEFAULT_AMI_ASG_MIN_INSTANCES;
+    int asgMax = DEFAULT_AMI_ASG_MAX_INSTANCES;
+    int asgDesired = DEFAULT_AMI_ASG_DESIRED_INSTANCES;
+    if (autoScalingGroup != null) {
+      asgName = autoScalingGroup.getAutoScalingGroupName();
+      asgMin = autoScalingGroup.getMinSize();
+      asgMax = autoScalingGroup.getMaxSize();
+      asgDesired = autoScalingGroup.getDesiredCapacity();
+    }
+
+    return AwsAsgGetRunningCountData.builder()
+        .asgMin(asgMin)
+        .asgMax(asgMax)
+        .asgDesired(asgDesired)
+        .asgName(asgName)
+        .build();
   }
 
   private void createNewLaunchConfig(AwsAmiServiceSetupRequest request, ExecutionLogCallback logCallback,
@@ -708,58 +820,25 @@ public class AwsAmiHelperServiceDelegateImpl
 
   @VisibleForTesting
   void populatePreDeploymentData(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region,
-      List<AutoScalingGroup> harnessManagedAutoScalingGroups, AwsAmiServiceSetupResponseBuilder builder,
+      AutoScalingGroup mostRecentActiveAsg, AwsAmiServiceSetupResponseBuilder builder,
       ExecutionLogCallback logCallback) {
-    Map<String, Integer> minCapacityMap = new HashMap<>();
-    Map<String, Integer> desiredCapacityMap = new HashMap<>();
-    Map<String, List<String>> scalingPolicyJSONMap = new HashMap<>();
-    if (isNotEmpty(harnessManagedAutoScalingGroups)) {
-      harnessManagedAutoScalingGroups.forEach(group -> {
-        if (group.getDesiredCapacity() > 0) {
-          minCapacityMap.put(group.getAutoScalingGroupName(), group.getMinSize());
-          desiredCapacityMap.put(group.getAutoScalingGroupName(), group.getDesiredCapacity());
-          scalingPolicyJSONMap.put(group.getAutoScalingGroupName(),
-              awsAsgHelperServiceDelegate.getScalingPolicyJSONs(
-                  awsConfig, encryptedDataDetails, region, group.getAutoScalingGroupName(), logCallback));
-        }
-      });
-    }
-    builder.preDeploymentData(AwsAmiPreDeploymentData.builder()
-                                  .asgNameToDesiredCapacity(desiredCapacityMap)
-                                  .asgNameToMinCapacity(minCapacityMap)
-                                  .asgNameToScalingPolicyJSON(scalingPolicyJSONMap)
-                                  .build());
-    builder.oldAsgNames(com.google.common.collect.Lists.reverse(harnessManagedAutoScalingGroups.stream()
-                                                                    .filter(asg -> asg.getDesiredCapacity() > 0)
-                                                                    .map(AutoScalingGroup::getAutoScalingGroupName)
-                                                                    .collect(toList())));
-  }
+    List<String> autoScalaingPoliciesJson;
+    boolean mostRecentAsgAvailable = mostRecentActiveAsg != null;
 
-  private void deleteOldHarnessManagedAutoScalingGroups(List<EncryptedDataDetail> encryptionDetails, String region,
-      AwsConfig awsConfig, List<AutoScalingGroup> harnessAutoScalingGroups, String oldAutoScalingGroupName,
-      ExecutionLogCallback logCallback) {
-    try {
-      List<AutoScalingGroup> emptyHarnessAsgToBeDeleted =
-          harnessAutoScalingGroups.stream()
-              .filter(asg
-                  -> asg.getDesiredCapacity() == 0 && !asg.getAutoScalingGroupName().equals(oldAutoScalingGroupName))
-              .collect(toList());
-      if (emptyHarnessAsgToBeDeleted.size() >= MAX_OLD_ASG_VERSION_TO_KEEP) {
-        int startIdx = MAX_OLD_ASG_VERSION_TO_KEEP;
-        if (isNotBlank(oldAutoScalingGroupName)) {
-          startIdx--; // one is already counted as oldAutoScalingGroup
-        }
-        emptyHarnessAsgToBeDeleted = emptyHarnessAsgToBeDeleted.subList(startIdx, emptyHarnessAsgToBeDeleted.size());
-        logger.info("ASG Cleanup. Deleting following ASG [{}]", Joiner.on(",").join(emptyHarnessAsgToBeDeleted));
-        List<AutoScalingGroup> finalEmptyHarnessAsgToBeDeleted = emptyHarnessAsgToBeDeleted;
-        executorService.submit(()
-                                   -> awsAsgHelperServiceDelegate.deleteAutoScalingGroups(awsConfig, encryptionDetails,
-                                       region, finalEmptyHarnessAsgToBeDeleted, logCallback));
-      }
-    } catch (Exception ex) {
-      logger.error(
-          "Error in deleting old autoScaling groups [{}] [{}]", Joiner.on(",").join(harnessAutoScalingGroups), ex);
+    if (mostRecentAsgAvailable) {
+      autoScalaingPoliciesJson = awsAsgHelperServiceDelegate.getScalingPolicyJSONs(
+          awsConfig, encryptedDataDetails, region, mostRecentActiveAsg.getAutoScalingGroupName(), logCallback);
+    } else {
+      autoScalaingPoliciesJson = emptyList();
     }
+
+    builder.preDeploymentData(
+        AwsAmiPreDeploymentData.builder()
+            .minCapacity(mostRecentAsgAvailable ? mostRecentActiveAsg.getMinSize() : 0)
+            .desiredCapacity(mostRecentAsgAvailable ? mostRecentActiveAsg.getDesiredCapacity() : 0)
+            .scalingPolicyJSON(mostRecentAsgAvailable ? autoScalaingPoliciesJson : emptyList())
+            .oldAsgName(mostRecentAsgAvailable ? mostRecentActiveAsg.getAutoScalingGroupName() : StringUtils.EMPTY)
+            .build());
   }
 
   @VisibleForTesting
@@ -930,20 +1009,6 @@ public class AwsAmiHelperServiceDelegateImpl
       harnessRevision += 1; // bump it by 1
     }
     return harnessRevision;
-  }
-
-  @VisibleForTesting
-  String getLastDeployedAsgNameWithNonZeroCapacity(List<AutoScalingGroup> harnessManagedAutoScalingGroups) {
-    String oldAutoScalingGroupName = null;
-    if (isNotEmpty(harnessManagedAutoScalingGroups)) {
-      oldAutoScalingGroupName = harnessManagedAutoScalingGroups.stream()
-                                    .filter(hAsg -> hAsg.getDesiredCapacity() != 0)
-                                    .findFirst()
-                                    .orElse(harnessManagedAutoScalingGroups.get(
-                                        harnessManagedAutoScalingGroups.size() - 1)) // take the last deployed anyway
-                                    .getAutoScalingGroupName();
-    }
-    return oldAutoScalingGroupName;
   }
 
   @VisibleForTesting

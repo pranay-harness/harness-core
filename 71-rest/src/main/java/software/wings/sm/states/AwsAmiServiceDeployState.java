@@ -9,6 +9,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
@@ -17,6 +18,7 @@ import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
@@ -257,7 +259,7 @@ public class AwsAmiServiceDeployState extends State {
                                                                    .build());
     // If the deployment is of B/G type, we will not downscale the old ASGs.
     // For canary Wfs we will downscale old ASGs
-    List<AwsAmiResizeData> newDesiredCapacities = emptyList();
+    List<AwsAmiResizeData> newDesiredCapacities = new ArrayList<>();
     List<ContainerServiceData> oldInstanceData = newArrayList();
     List<String> classicLbs;
     List<String> targetGroupArns;
@@ -265,19 +267,18 @@ public class AwsAmiServiceDeployState extends State {
       classicLbs = infrastructureMapping.getStageClassicLoadBalancers();
       targetGroupArns = infrastructureMapping.getStageTargetGroupArns();
     } else {
-      newDesiredCapacities = getNewDesiredCounts(
-          totalNewInstancesToBeAdded, serviceSetupElement.getOldAsgNames(), existingDesiredCapacities);
-      if (isNotEmpty(newDesiredCapacities)) {
-        newDesiredCapacities.forEach(newDesiredCapacity -> {
-          String asgName = newDesiredCapacity.getAsgName();
-          int newCount = newDesiredCapacity.getDesiredCount();
-          Integer oldCount = existingDesiredCapacities.get(asgName);
-          if (oldCount == null) {
-            oldCount = 0;
-          }
-          oldInstanceData.add(
-              ContainerServiceData.builder().name(asgName).desiredCount(newCount).previousCount(oldCount).build());
-        });
+      AwsAmiResizeData awsAmiResizeData = getNewDesiredCounts(
+          totalNewInstancesToBeAdded, serviceSetupElement.getOldAutoScalingGroupName(), existingDesiredCapacities);
+      if (awsAmiResizeData != null) {
+        newDesiredCapacities.add(awsAmiResizeData);
+        String asgName = awsAmiResizeData.getAsgName();
+        int newCount = awsAmiResizeData.getDesiredCount();
+        Integer oldCount = existingDesiredCapacities.get(asgName);
+        if (oldCount == null) {
+          oldCount = 0;
+        }
+        oldInstanceData.add(
+            ContainerServiceData.builder().name(asgName).desiredCount(newCount).previousCount(oldCount).build());
       }
       classicLbs = infrastructureMapping.getClassicLoadBalancers();
       targetGroupArns = infrastructureMapping.getTargetGroupArns();
@@ -303,27 +304,24 @@ public class AwsAmiServiceDeployState extends State {
         .build();
   }
 
-  private List<AwsAmiResizeData> getNewDesiredCounts(
-      int instancesToBeAdded, List<String> oldAsgNames, Map<String, Integer> existingDesiredCapacities) {
-    int n = instancesToBeAdded;
-    List<AwsAmiResizeData> desiredCapacities = newArrayList();
-    if (isNotEmpty(oldAsgNames)) {
-      for (String oldAsgName : oldAsgNames) {
-        Integer n1 = existingDesiredCapacities.get(oldAsgName);
-        if (n1 == null) {
-          n1 = 0;
-        }
-        if (n1 <= n) {
-          n -= n1;
-          n1 = 0;
-        } else {
-          n1 -= n;
-          n = 0;
-        }
-        desiredCapacities.add(AwsAmiResizeData.builder().asgName(oldAsgName).desiredCount(n1).build());
+  @VisibleForTesting
+  AwsAmiResizeData getNewDesiredCounts(
+      int instancesToBeAdded, String oldAsgName, Map<String, Integer> existingDesiredCapacities) {
+    Integer desiredCountForOldAsg = 0;
+    if (isNotBlank(oldAsgName)) {
+      desiredCountForOldAsg = existingDesiredCapacities.get(oldAsgName);
+      if (desiredCountForOldAsg == null) {
+        desiredCountForOldAsg = 0;
       }
+      if (desiredCountForOldAsg <= instancesToBeAdded) {
+        desiredCountForOldAsg = 0;
+      } else {
+        desiredCountForOldAsg -= instancesToBeAdded;
+      }
+      return AwsAmiResizeData.builder().asgName(oldAsgName).desiredCount(desiredCountForOldAsg).build();
     }
-    return desiredCapacities;
+
+    return null;
   }
 
   protected void createAndQueueResizeTask(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,

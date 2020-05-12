@@ -25,7 +25,6 @@ import static org.mockito.Mockito.verify;
 import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.HARNESS_AUTOSCALING_GROUP_TAG;
 import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.NAME_TAG;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
@@ -136,10 +135,9 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
-    AwsAmiPreDeploymentData preDeploymentData = AwsAmiPreDeploymentData.builder()
-                                                    .asgNameToMinCapacity(ImmutableMap.of("Old_Asg", 0))
-                                                    .asgNameToDesiredCapacity(ImmutableMap.of("Old_Asg", 1))
-                                                    .build();
+    AwsAmiPreDeploymentData preDeploymentData =
+        AwsAmiPreDeploymentData.builder().oldAsgName("Old_Asg").desiredCapacity(1).minCapacity(0).build();
+
     AwsAmiSwitchRoutesRequest request = AwsAmiSwitchRoutesRequest.builder()
                                             .awsConfig(AwsConfig.builder().build())
                                             .encryptionDetails(emptyList())
@@ -329,15 +327,21 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = SATYAM)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testGetLastDeployedAsgNameWithNonZeroCapacity() {
+  public void testGetMostRecentActiveAsg() {
     List<AutoScalingGroup> groups =
         asList(new AutoScalingGroup().withDesiredCapacity(1).withAutoScalingGroupName("name1"),
             new AutoScalingGroup().withDesiredCapacity(0).withAutoScalingGroupName("name0"));
-    String groupName = awsAmiHelperServiceDelegate.getLastDeployedAsgNameWithNonZeroCapacity(groups);
-    assertThat(groupName).isNotNull();
-    assertThat(groupName).isEqualTo("name1");
+
+    List<AutoScalingGroup> groups1 =
+        asList(new AutoScalingGroup().withDesiredCapacity(0).withAutoScalingGroupName("name2"),
+            new AutoScalingGroup().withDesiredCapacity(0).withAutoScalingGroupName("name3"),
+            new AutoScalingGroup().withDesiredCapacity(0).withAutoScalingGroupName("name4"));
+
+    AutoScalingGroup mostRecentActiveAsg = awsAmiHelperServiceDelegate.getMostRecentActiveAsg(groups1, groups);
+    assertThat(mostRecentActiveAsg).isNotNull();
+    assertThat(mostRecentActiveAsg.getAutoScalingGroupName()).isEqualTo("name1");
   }
 
   @Test
@@ -405,18 +409,17 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testPopulatePreDeploymentData() {
     ExecutionLogCallback mockLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockLogCallback).saveExecutionLog(anyString(), any());
-    List<AutoScalingGroup> scalingGroups =
-        asList(new AutoScalingGroup().withAutoScalingGroupName("name_2").withDesiredCapacity(3).withMinSize(2),
-            new AutoScalingGroup().withAutoScalingGroupName("name_1").withDesiredCapacity(5).withMinSize(4));
+    AutoScalingGroup autoScalingGroup =
+        new AutoScalingGroup().withAutoScalingGroupName("name_2").withDesiredCapacity(3).withMinSize(2);
+
     AwsAmiServiceSetupResponseBuilder builder = AwsAmiServiceSetupResponse.builder();
     awsAmiHelperServiceDelegate.populatePreDeploymentData(
-        AwsConfig.builder().build(), emptyList(), "us-east-1", scalingGroups, builder, mockLogCallback);
+        AwsConfig.builder().build(), emptyList(), "us-east-1", autoScalingGroup, builder, mockLogCallback);
     AwsAmiServiceSetupResponse response = builder.build();
-    List<String> oldAsgNames = response.getOldAsgNames();
-    assertThat(oldAsgNames).isNotEmpty();
-    assertThat(oldAsgNames.size()).isEqualTo(2);
-    assertThat(oldAsgNames.get(0)).isEqualTo("name_1");
-    assertThat(oldAsgNames.get(1)).isEqualTo("name_2");
+    AwsAmiPreDeploymentData preDeploymentData = response.getPreDeploymentData();
+    assertThat(preDeploymentData.getOldAsgName()).isEqualTo("name_2");
+    assertThat(preDeploymentData.getMinCapacity()).isEqualTo(2);
+    assertThat(preDeploymentData.getDesiredCapacity()).isEqualTo(3);
   }
 
   @Test
