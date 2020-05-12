@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
-import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
@@ -25,18 +24,15 @@ import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import retrofit2.Call;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.TaskType;
+import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
-import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -50,7 +46,6 @@ import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -83,8 +78,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final int TWO_MINS_IN_SECONDS = 2 * 60;
 
   @Inject private NewRelicDelegateService newRelicDelegateService;
-  @Inject private MetricDataStoreService metricStoreService;
   @Inject private DelegateLogService delegateLogService;
+  @Inject private RequestExecutor requestExecutor;
 
   private int collectionWindow = 1;
 
@@ -284,54 +279,20 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return output;
     }
 
-    private String collect(Call<Object> request, String urlToLog, String bodyToLog) {
-      Response<Object> response;
+    private Map<String, String> getStringsToMask() {
+      Map<String, String> maskFields = new HashMap<>();
+      if (isNotEmpty(decryptedFields)) {
+        decryptedFields.forEach((k, v) -> { maskFields.put(v, "<" + k + ">"); });
+      }
+      return maskFields;
+    }
+
+    private String collect(Call<Object> request) {
       try {
-        if (urlToLog.contains("api_key")) {
-          Pattern batchPattern = Pattern.compile(DATADOG_API_MASK);
-          Matcher matcher = batchPattern.matcher(urlToLog);
-          while (matcher.find()) {
-            final String apiKey = matcher.group(1);
-            final String appKey = matcher.group(2);
-            urlToLog = urlToLog.replace(apiKey, "<apiKey>");
-            urlToLog = urlToLog.replace(appKey, "<appKey>");
-          }
-        }
         ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
-        apiCallLog.setTitle("Fetch request to " + urlToLog);
-        apiCallLog.addFieldToRequest(
-            ThirdPartyApiCallField.builder().name(URL_STRING).value(urlToLog).type(FieldType.URL).build());
-        apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        if (bodyToLog != null) {
-          apiCallLog.addFieldToRequest(
-              ThirdPartyApiCallField.builder().name("body").type(FieldType.TEXT).value(bodyToLog).build());
-        }
-        try {
-          response = request.execute();
-        } catch (Exception e) {
-          apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-          apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-          delegateLogService.save(getAccountId(), apiCallLog);
-          throw new WingsException("Unsuccessful response while fetching data from APM Provider. Error message: "
-              + e.getMessage() + " Request: " + urlToLog);
-        }
-        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        if (response.isSuccessful()) {
-          apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-          delegateLogService.save(getAccountId(), apiCallLog);
-          return JsonUtils.asJson(response.body());
-        } else {
-          String errorString = response.errorBody().string();
-          if (isEmpty(errorString)) {
-            errorString = response.body().toString();
-          }
-          logger.error(dataCollectionInfo.getStateType() + ": Request not successful. Reason: {}, {}", response.code(),
-              errorString);
-          apiCallLog.addFieldToResponse(response.code(), errorString, FieldType.TEXT);
-          delegateLogService.save(getAccountId(), apiCallLog);
-          throw new WingsException("Unsuccessful response while fetching data from APM Provider. Error code: "
-              + response.code() + ". Error: " + errorString);
-        }
+        apiCallLog.setTitle("Fetch request to: " + dataCollectionInfo.getBaseUrl());
+        Object response = requestExecutor.executeRequest(apiCallLog, request, getStringsToMask());
+        return JsonUtils.asJson(response);
       } catch (Exception e) {
         throw new WingsException("Error while fetching data. " + ExceptionUtils.getMessage(e), e);
       }
@@ -379,9 +340,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             callabels.add(
                 ()
                     -> new APMResponseParser.APMResponseData(canaryMetricInfo.getHostName(), DEFAULT_GROUP_NAME,
-                        collect(
-                            getAPMRestClient(baseUrl).collect(url, headersBiMap, optionsBiMap), baseUrl + url, null),
-                        metricInfos));
+                        collect(getAPMRestClient(baseUrl).collect(url, headersBiMap, optionsBiMap)), metricInfos));
 
           } else {
             resolvedBodies.forEach(resolvedBody -> {
@@ -389,8 +348,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                   ()
                       -> new APMResponseParser.APMResponseData(canaryMetricInfo.getHostName(), DEFAULT_GROUP_NAME,
                           collect(getAPMRestClient(baseUrl).postCollect(
-                                      url, headersBiMap, optionsBiMap, new JSONObject(resolvedBody).toMap()),
-                              baseUrl + url, resolvedBody),
+                              url, headersBiMap, optionsBiMap, new JSONObject(resolvedBody).toMap())),
                           metricInfos));
             });
           }
@@ -405,8 +363,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             curUrls.forEach(curUrl
                 -> callabels.add(()
                                      -> new APMResponseParser.APMResponseData(null, DEFAULT_GROUP_NAME,
-                                         collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap),
-                                             baseUrl + curUrl, null),
+                                         collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap)),
                                          metricInfos)));
           }
         } else {
@@ -423,16 +380,14 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                       ()
                           -> new APMResponseParser.APMResponseData(host, dataCollectionInfo.getHosts().get(host),
                               collect(
-                                  getAPMRestClient(baseUrl).postCollect(curUrl, headersBiMap, optionsBiMap, bodyMap),
-                                  baseUrl + curUrl, resolvedBody),
+                                  getAPMRestClient(baseUrl).postCollect(curUrl, headersBiMap, optionsBiMap, bodyMap)),
                               metricInfos)));
             } else {
               curUrls.forEach(curUrl
                   -> callabels.add(
                       ()
                           -> new APMResponseParser.APMResponseData(host, dataCollectionInfo.getHosts().get(host),
-                              collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap),
-                                  baseUrl + curUrl, null),
+                              collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap)),
                               metricInfos)));
             }
           }
@@ -447,8 +402,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                   -> callabels.add(
                       ()
                           -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index), DEFAULT_GROUP_NAME,
-                              collect(getAPMRestClient(baseUrl).collect(curUrls.get(index), headersBiMap, optionsBiMap),
-                                  baseUrl + curUrls.get(index), null),
+                              collect(
+                                  getAPMRestClient(baseUrl).collect(curUrls.get(index), headersBiMap, optionsBiMap)),
                               metricInfos)));
         } else {
           IntStream.range(0, curUrls.size()).forEach(index -> {
@@ -456,9 +411,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 -> callabels.add(
                     ()
                         -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index), DEFAULT_GROUP_NAME,
-                            collect(getAPMRestClient(baseUrl).postCollect(curUrls.get(index), headersBiMap,
-                                        optionsBiMap, new JSONObject(resolvedBody).toMap()),
-                                baseUrl + curUrls.get(index), resolvedBody),
+                            collect(getAPMRestClient(baseUrl).postCollect(
+                                curUrls.get(index), headersBiMap, optionsBiMap, new JSONObject(resolvedBody).toMap())),
                             metricInfos)));
           });
         }

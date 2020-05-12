@@ -1304,6 +1304,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           }
           long minuteForFeedbackAnalysis = feedbackAnalysisMinute.get();
 
+          if (!logsCVConfiguration.is247LogsV2()
+              && minuteForFeedbackAnalysis <= logsCVConfiguration.getBaselineEndMinute()) {
+            logger.info("We are skipping feedback analysis for {} for minute {} since it is in the baseline window.",
+                logsCVConfiguration.getUuid(), minuteForFeedbackAnalysis);
+            return;
+          }
           Map<FeedbackAction, List<CVFeedbackRecord>> feedbacks =
               logAnalysisService.getUserFeedback(cvConfiguration.getUuid(), null, cvConfiguration.getAppId());
           boolean areAllFeedbacksEmpty = feedbacks.entrySet().stream().allMatch(entry -> isEmpty(entry.getValue()));
@@ -2005,7 +2011,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           final SplunkAnalysisCluster splunkAnalysisCluster =
               analysisClusterMap.entrySet().iterator().next().getValue();
           if (splunkAnalysisCluster.getPriority() == null
-              || splunkAnalysisCluster.getPriority().compareTo(logsCVConfiguration.getAlertPriority()) >= 0) {
+              || splunkAnalysisCluster.getPriority().getScore() >= logsCVConfiguration.getAlertThreshold()) {
             verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlertWithTtl(
                 cvConfigId, OffsetDateTime.now().plusHours(2).toInstant().toEpochMilli(),
                 ContinuousVerificationAlertData.builder()
@@ -2025,7 +2031,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           final SplunkAnalysisCluster splunkAnalysisCluster =
               analysisClusterMap.entrySet().iterator().next().getValue();
           if (splunkAnalysisCluster.getPriority() == null
-              || splunkAnalysisCluster.getPriority().compareTo(logsCVConfiguration.getAlertPriority()) >= 0) {
+              || splunkAnalysisCluster.getPriority().getScore() >= logsCVConfiguration.getAlertThreshold()) {
             verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVAlertWithTtl(
                 cvConfigId, OffsetDateTime.now().plusHours(2).toInstant().toEpochMilli(),
                 ContinuousVerificationAlertData.builder()
