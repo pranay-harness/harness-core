@@ -22,6 +22,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.template.BaseTemplate;
+import software.wings.beans.template.ImportedTemplateMetadata;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.common.TemplateConstants;
@@ -175,7 +176,8 @@ public abstract class AbstractTemplateProcessor {
     if (phaseStep != null && phaseStep.getSteps() != null) {
       for (GraphNode step : phaseStep.getSteps()) {
         if (template.getUuid().equals(step.getTemplateUuid())
-            && (step.getTemplateVersion() == null || TemplateConstants.LATEST_TAG.equals(step.getTemplateVersion()))) {
+            && ((step.getTemplateVersion() == null || TemplateConstants.LATEST_TAG.equals(step.getTemplateVersion()))
+                   || (step.getTemplateVersion() == null || isDefaultVersionOfTemplateChanged(template)))) {
           GraphNode templateStep = (GraphNode) constructEntityFromTemplate(template, EntityType.WORKFLOW);
           step.setTemplateVariables(
               templateHelper.overrideVariables(templateStep.getTemplateVariables(), step.getTemplateVariables()));
@@ -184,5 +186,15 @@ public abstract class AbstractTemplateProcessor {
       }
     }
     return updateNeeded;
+  }
+
+  public boolean isDefaultVersionOfTemplateChanged(Template template) {
+    if (template.getTemplateMetadata() != null && template.getTemplateMetadata() instanceof ImportedTemplateMetadata) {
+      ImportedTemplateMetadata importedTemplateMetadata = (ImportedTemplateMetadata) template.getTemplateMetadata();
+      if (importedTemplateMetadata.getDefaultVersion() != null) {
+        return true;
+      }
+    }
+    return false;
   }
 }

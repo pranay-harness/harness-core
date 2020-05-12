@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.wings.beans.template.TemplateMetadata;
 import software.wings.beans.template.dto.ImportedTemplateDetails;
 import software.wings.common.Constants;
 import software.wings.sm.InstanceStatusSummary;
@@ -55,6 +56,7 @@ public class GraphNode {
   private String templateUuid;
   private String templateVersion;
   private ImportedTemplateDetails importedTemplateDetails;
+  private TemplateMetadata templateMetadata;
 
   @Default private Map<String, Object> properties = new HashMap<>();
 
@@ -84,6 +86,7 @@ public class GraphNode {
                                .templateVariables(templateVariables)
                                .templateUuid(templateUuid)
                                .templateVersion(templateVersion)
+                               .templateMetadata(templateMetadata)
                                .build();
     clonedNode.setProperties(getProperties());
     return clonedNode;

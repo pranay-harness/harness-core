@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface TemplateConstants {
   String LATEST_TAG = "latest";
+  String DEFAULT_TAG = "default";
   char PATH_DELIMITER = '/';
   String PREFIX_FOR_APP = "App";
   String APP_PREFIX = PREFIX_FOR_APP + PATH_DELIMITER;
@@ -88,6 +89,7 @@ public interface TemplateConstants {
    */
 
   String COPIED_TEMPLATE_METADATA = "COPIED_TEMPLATE_METADATA";
+  String IMPORTED_TEMPLATE_METADATA = "IMPORTED_TEMPLATE_METADATA";
 
   /**
    * Imported Template Details
