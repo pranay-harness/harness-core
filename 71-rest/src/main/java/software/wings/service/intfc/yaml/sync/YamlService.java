@@ -38,4 +38,6 @@ public interface YamlService<Y extends BaseYaml, B extends Base> {
   void sortByProcessingOrder(List<Change> changeList);
 
   BaseYaml getYamlForFilePath(String accountId, String yamlFilePath, String yamlSubType, String applicationId);
+
+  String obtainAppIdFromGitFileChange(String accountId, String yamlFilePath);
 }

@@ -50,6 +50,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
+import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.errorhandling.GitToHarnessErrorDetails;
 import software.wings.yaml.gitSync.GitWebhookRequestAttributes;
@@ -70,6 +71,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Mock private YamlChangeSetService yamlChangeSetService;
   @Mock private YamlGitService yamlGitService;
   @Mock private GitSyncErrorService gitSyncErrorService;
+  @Mock private GitSyncService gitSyncService;
 
   @InjectMocks
   private GitCommandCallback commandCallback =
@@ -260,5 +262,7 @@ public class GitCommandCallbackTest extends CategoryTest {
 
     diffCommandCallback.notify(map);
     verify(yamlGitService, times(1)).saveCommit(any(GitCommit.class));
+    verify(gitSyncService, times(1))
+        .createGitFileSummaryForFailedOrSkippedCommit(any(GitCommit.class), any(Boolean.class));
   }
 }

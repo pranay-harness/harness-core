@@ -3,8 +3,13 @@ package software.wings.service.impl.yaml;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.security.UserGroup.ACCOUNT_ID_KEY;
+import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
+import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitIdOfError;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitMessageOfError;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getYamlContentOfError;
@@ -19,10 +24,14 @@ import io.harness.data.structure.EmptyPredicate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Application;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.beans.GitDetail;
+import software.wings.beans.GitFileActivitySummary;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.yaml.GitDiffResult;
@@ -33,13 +42,12 @@ import software.wings.service.impl.yaml.gitsync.ChangeSetDTO;
 import software.wings.service.impl.yaml.gitsync.ChangesetInformation;
 import software.wings.service.impl.yaml.gitsync.QueuedChangesetInformation;
 import software.wings.service.impl.yaml.gitsync.RunningChangesetInformation;
-import software.wings.service.intfc.SettingsService;
+import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
-import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlGitConfigService;
-import software.wings.utils.AlertsUtils;
+import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitFileActivity.GitFileActivityBuilder;
@@ -54,6 +62,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -70,13 +79,12 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class GitSyncServiceImpl implements GitSyncService {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private AlertsUtils alertsUtils;
-  @Inject private GitSyncErrorService gitSyncErrorService;
-  @Inject private SettingsService settingsService;
   @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject private YamlGitConfigService yamlGitConfigService;
   @Inject private YamlGitService yamlGitService;
   @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private YamlService yamlService;
+  @Inject private YamlHelper yamlHelper;
 
   private static final String UNKNOWN_GIT_CONNECTOR = "Unknown Git Connector";
 
@@ -246,6 +254,11 @@ public class GitSyncServiceImpl implements GitSyncService {
   public void logActivityForGitOperation(List<GitFileChange> changeList, Status status, boolean isGitToHarness,
       boolean isFullSync, String message, String commitId) {
     try {
+      if (isEmpty(changeList)) {
+        return;
+      }
+      String accountId = changeList.get(0).getAccountId();
+      Map<String, String> fileNameAppIdMap = getAppIdsForTheGitFileChanges(changeList, accountId);
       final List<GitFileActivity> activities = changeList.stream()
                                                    .map(change
                                                        -> buildBaseGitFileActivity(change, commitId)
@@ -253,13 +266,34 @@ public class GitSyncServiceImpl implements GitSyncService {
                                                               .errorMessage(message)
                                                               .triggeredBy(getTriggeredBy(isGitToHarness, isFullSync))
                                                               .commitMessage(change.getCommitMessage())
+                                                              .appId(fileNameAppIdMap.get(change.getFilePath()))
                                                               .build())
                                                    .collect(toList());
-
       wingsPersistence.save(activities);
     } catch (Exception ex) {
       logger.error(String.format("Error while saving activities: %s", ex));
     }
+  }
+
+  Map<String, String> getAppIdsForTheGitFileChanges(List<GitFileChange> changeList, String accountId) {
+    Map<String, String> fileNameAppIdMap = new HashMap<>();
+    Map<String, String> appNameAppIdMap = new HashMap<>();
+    for (GitFileChange change : changeList) {
+      String fileName = change.getFilePath();
+      String appName = yamlHelper.getAppName(fileName);
+      if (appName == null) {
+        fileNameAppIdMap.put(fileName, GLOBAL_APP_ID);
+      } else {
+        if (appNameAppIdMap.containsKey(appName)) {
+          fileNameAppIdMap.put(fileName, appNameAppIdMap.get(appName));
+        } else {
+          String appId = yamlService.obtainAppIdFromGitFileChange(accountId, fileName);
+          appNameAppIdMap.put(appName, appId);
+          fileNameAppIdMap.put(fileName, appId);
+        }
+      }
+    }
+    return fileNameAppIdMap;
   }
 
   @Override
@@ -315,45 +349,79 @@ public class GitSyncServiceImpl implements GitSyncService {
                 : !processingCommitIdToPersist.equalsIgnoreCase(commitIdToPersist));
   }
 
-  public void addFileProcessingSummaryToGitCommit(
-      final String commitId, final String accountId, final List<GitFileChange> gitFileChanges) {
+  private GitFileActivitySummary buildBaseGitFileActivitySummary(
+      GitFileActivity gitFileActivity, String appId, Boolean gitToHarness, GitCommit.Status status) {
+    return GitFileActivitySummary.builder()
+        .accountId(gitFileActivity.getAccountId())
+        .appId(appId)
+        .commitId(gitFileActivity.getCommitId())
+        .gitConnectorId(gitFileActivity.getGitConnectorId())
+        .branchName(gitFileActivity.getBranchName())
+        .commitMessage(gitFileActivity.getCommitMessage())
+        .gitToHarness(gitToHarness)
+        .status(status)
+        .build();
+  }
+
+  private GitFileProcessingSummary createFileProcessingSummary(@NotEmpty List<GitFileActivity> gitFileActivites) {
+    final Map<Status, Long> statusToCountMap =
+        gitFileActivites.stream()
+            .map(gitFileActivity -> gitFileActivity.getStatus())
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+    final Long totalCount = statusToCountMap.values().stream().reduce(0L, Long::sum);
+
+    return GitFileProcessingSummary.builder()
+        .failureCount(statusToCountMap.getOrDefault(Status.FAILED, 0L))
+        .successCount(statusToCountMap.getOrDefault(Status.SUCCESS, 0L))
+        .skippedCount(statusToCountMap.getOrDefault(Status.SKIPPED, 0L))
+        .queuedCount(statusToCountMap.getOrDefault(Status.QUEUED, 0L))
+        .totalCount(totalCount)
+        .build();
+  }
+
+  public void createGitFileActivitySummaryForCommit(
+      final String commitId, final String accountId, Boolean gitToHarness, GitCommit.Status status) {
     try {
-      final Map<Status, Long> statusToCountMap =
-          wingsPersistence.createQuery(GitFileActivity.class)
-              .filter(ACCOUNT_ID_KEY, accountId)
-              .filter(GitFileActivityKeys.processingCommitId, commitId)
-              .project(GitFileActivityKeys.status, true)
-              .asList()
-              .stream()
-              .map(gitFileActivity -> gitFileActivity.getStatus())
-              .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-
-      final Long totalCount = statusToCountMap.values().stream().reduce(0L, Long::sum);
-
-      final Long otherCount =
-          gitFileChanges.stream()
-              .filter(gitFileChange -> Boolean.TRUE.equals(gitFileChange.getChangeFromAnotherCommit()))
-              .count();
-
-      final GitFileProcessingSummary gitFileProcessingSummary =
-          GitFileProcessingSummary.builder()
-              .failureCount(statusToCountMap.getOrDefault(Status.FAILED, 0L))
-              .successCount(statusToCountMap.getOrDefault(Status.SUCCESS, 0L))
-              .skippedCount(statusToCountMap.getOrDefault(Status.SKIPPED, 0L))
-              .queuedCount(statusToCountMap.getOrDefault(Status.QUEUED, 0L))
-              .totalCount(totalCount)
-              .originalCount(totalCount - otherCount)
-              .otherCount(otherCount)
-              .build();
-
-      wingsPersistence.update(wingsPersistence.createQuery(GitCommit.class)
-                                  .filter(ACCOUNT_ID_KEY, accountId)
-                                  .filter(GitCommitKeys.commitId, commitId),
-          wingsPersistence.createUpdateOperations(GitCommit.class)
-              .set(GitCommitKeys.fileProcessingSummary, gitFileProcessingSummary));
+      List<GitFileActivity> gitFileActivities = getFileActivitesForCommit(commitId, accountId);
+      if (isEmpty(gitFileActivities)) {
+        return;
+      }
+      Map<String, List<GitFileActivity>> appIdFileActivitesMap = groupFileActivitiesAccordingToAppId(gitFileActivities);
+      for (Map.Entry<String, List<GitFileActivity>> appIdFileChangeEntry : appIdFileActivitesMap.entrySet()) {
+        createGitFileActivitySummaryForApp(
+            appIdFileChangeEntry.getKey(), appIdFileChangeEntry.getValue(), gitToHarness, status);
+      }
     } catch (Exception ex) {
       logger.error(String.format("Error while saving git file processing summary for commitId: %s", commitId), ex);
     }
+  }
+
+  private List<GitFileActivity> getFileActivitesForCommit(String commitId, String accountId) {
+    return wingsPersistence.createQuery(GitFileActivity.class)
+        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(GitFileActivityKeys.commitId, commitId)
+        .asList();
+  }
+
+  private Map<String, List<GitFileActivity>> groupFileActivitiesAccordingToAppId(
+      List<GitFileActivity> gitFileActivities) {
+    if (isEmpty(gitFileActivities)) {
+      return new HashMap<>();
+    }
+    return gitFileActivities.stream().collect(Collectors.groupingBy(GitFileActivity::getAppId, Collectors.toList()));
+  }
+
+  private void createGitFileActivitySummaryForApp(
+      String appId, List<GitFileActivity> gitFileActivities, Boolean gitToHarness, GitCommit.Status status) {
+    if (isEmpty(gitFileActivities)) {
+      return;
+    }
+    GitFileActivity gitFileActivity = gitFileActivities.get(0);
+    GitFileActivitySummary gitFileActivitySummary =
+        buildBaseGitFileActivitySummary(gitFileActivity, appId, gitToHarness, status);
+    gitFileActivitySummary.setFileProcessingSummary(createFileProcessingSummary(gitFileActivities));
+    wingsPersistence.save(gitFileActivitySummary);
   }
 
   public void markRemainingFilesAsSkipped(String commitId, String accountId) {
@@ -445,5 +513,69 @@ public class GitSyncServiceImpl implements GitSyncService {
         .project(SettingAttributeKeys.uuid, true)
         .project(SettingAttributeKeys.name, true)
         .get();
+  }
+
+  public void createGitFileSummaryForFailedOrSkippedCommit(GitCommit gitCommit, boolean gitToHarness) {
+    List<GitFileActivitySummary> gitFileActiivitySummary = new ArrayList<>();
+    Set<String> appIds = yamlGitConfigService.getAppIdsForYamlGitConfig(gitCommit.getYamlGitConfigIds());
+    if (isEmpty(appIds)) {
+      return;
+    }
+    for (String appId : appIds) {
+      gitFileActiivitySummary.add(getGitFileActivitySummary(gitCommit, gitToHarness, appId));
+    }
+    wingsPersistence.save(gitFileActiivitySummary);
+  }
+
+  private GitFileActivitySummary getGitFileActivitySummary(GitCommit gitCommit, boolean gitToHarness, String appId) {
+    return GitFileActivitySummary.builder()
+        .accountId(gitCommit.getAccountId())
+        .appId(appId)
+        .commitId(gitCommit.getCommitId())
+        .gitConnectorId(gitCommit.getGitConnectorId())
+        .branchName(gitCommit.getBranchName())
+        .commitMessage(gitCommit.getCommitMessage())
+        .gitToHarness(gitToHarness)
+        .status(gitCommit.getStatus())
+        .build();
+  }
+
+  public void changeAppIdOfNewlyAddedFiles(
+      Set<String> nameOfNewAppsInCommit, String accountId, String processingCommitId) {
+    if (EmptyPredicate.isEmpty(nameOfNewAppsInCommit)) {
+      return;
+    }
+    Map<String, String> appNameAppIdMapOfNewAppsAdded = getAppNameAppIdMap(nameOfNewAppsInCommit, accountId);
+    try {
+      for (Map.Entry<String, String> appNameAppIdPair : appNameAppIdMapOfNewAppsAdded.entrySet()) {
+        UpdateOperations<GitFileActivity> op = wingsPersistence.createUpdateOperations(GitFileActivity.class)
+                                                   .set(GitFileActivityKeys.appId, appNameAppIdPair.getValue());
+        wingsPersistence.update(wingsPersistence.createQuery(GitFileActivity.class)
+                                    .filter(ACCOUNT_ID_KEY, accountId)
+                                    .filter(GitFileActivityKeys.processingCommitId, processingCommitId)
+                                    .field(GitFileActivityKeys.filePath)
+                                    .startsWith(getAppNamePrefix(appNameAppIdPair.getKey())),
+            op);
+      }
+    } catch (Exception ex) {
+      logger.error(String.format("Error while updating appId for commitId: %s, appSet: %s, exception: %s",
+          processingCommitId, nameOfNewAppsInCommit.toString(), ex.getMessage()));
+    }
+  }
+
+  private String getAppNamePrefix(String appName) {
+    return SETUP_FOLDER + PATH_DELIMITER + APPLICATIONS_FOLDER + PATH_DELIMITER + appName + PATH_DELIMITER;
+  }
+
+  private Map<String, String> getAppNameAppIdMap(Set<String> appNames, String accountId) {
+    if (isEmpty(appNames)) {
+      return Collections.emptyMap();
+    }
+    List<Application> applications = wingsPersistence.createQuery(Application.class)
+                                         .filter(ACCOUNT_ID_KEY, accountId)
+                                         .field(ApplicationKeys.name)
+                                         .in(appNames)
+                                         .asList();
+    return applications.stream().collect(toMap(app -> app.getName(), app -> app.getUuid()));
   }
 }

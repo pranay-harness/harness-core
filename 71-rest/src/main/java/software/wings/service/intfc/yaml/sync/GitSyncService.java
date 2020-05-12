@@ -12,6 +12,7 @@ import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitFileActivity.Status;
 
 import java.util.List;
+import java.util.Set;
 
 public interface GitSyncService {
   /**
@@ -67,13 +68,12 @@ public interface GitSyncService {
   void logActivityForSkippedFiles(
       List<GitFileChange> validChangeList, GitDiffResult gitDiffResult, String message, String accountId);
 
-  /**
-   *
-   * @param commitId
+  /**q
+   *  @param commitId
    * @param accountId
-   * @param gitFileChanges
    */
-  void addFileProcessingSummaryToGitCommit(String commitId, String accountId, List<GitFileChange> gitFileChanges);
+  void createGitFileActivitySummaryForCommit(
+      String commitId, String accountId, Boolean gitToHarness, GitCommit.Status status);
 
   /**
    * @param commitId
@@ -83,5 +83,9 @@ public interface GitSyncService {
 
   List<GitFileActivity> getActivitiesForGitSyncErrors(List<GitSyncError> errors, Status status);
 
+  void createGitFileSummaryForFailedOrSkippedCommit(GitCommit gitCommit, boolean gitToHarness);
+
   List<ChangeSetDTO> getCommitsWhichAreBeingProcessed(String accountId, String appId, int count, Boolean gitToHarness);
+
+  void changeAppIdOfNewlyAddedFiles(Set<String> nameOfTheNewAppsAdded, String accountId, String processingCommitId);
 }

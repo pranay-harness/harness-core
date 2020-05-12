@@ -4,6 +4,8 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.beans.Base.APP_ID_KEY;
+import static software.wings.beans.Base.ID_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -132,5 +134,17 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     } else {
       throw new UnexpectedException(String.format("No account exists with the id %s", accountId));
     }
+  }
+
+  public Set<String> getAppIdsForYamlGitConfig(List<String> yamlGitConfigIds) {
+    List<YamlGitConfig> yamlGitConfigs = wingsPersistence.createQuery(YamlGitConfig.class)
+                                             .field(ID_KEY)
+                                             .in(yamlGitConfigIds)
+                                             .project(APP_ID_KEY, true)
+                                             .asList();
+    if (isEmpty(yamlGitConfigs)) {
+      return Collections.emptySet();
+    }
+    return yamlGitConfigs.stream().map(config -> config.getAppId()).collect(Collectors.toSet());
   }
 }

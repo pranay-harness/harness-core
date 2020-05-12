@@ -1,17 +1,21 @@
 package software.wings.yaml.gitSync;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.Base;
 import software.wings.beans.yaml.Change.ChangeType;
 /**
  * @author vardanb
@@ -29,11 +33,11 @@ import software.wings.beans.yaml.Change.ChangeType;
 })
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "GitFileActivityKeys")
 @Entity(value = "gitFileActivity")
 @HarnessEntity(exportable = false)
-public class GitFileActivity extends Base {
+public class GitFileActivity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  @Id private String uuid;
   private String accountId;
   private String filePath;
   private String fileContent;
@@ -45,6 +49,9 @@ public class GitFileActivity extends Base {
   private TriggeredBy triggeredBy;
   private boolean changeFromAnotherCommit;
   private String commitMessage;
+  private String appId;
+  private long createdAt;
+  private long lastUpdatedAt;
   private String gitConnectorId;
   private String branchName;
   @Transient private String connectorName;

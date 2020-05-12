@@ -44,13 +44,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.persistence.CreatedAtAware;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.beans.Application;
 import software.wings.beans.User;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
@@ -66,8 +64,6 @@ import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.yaml.GitSyncErrorStatus;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats.GitToHarnessErrorCommitStatsKeys;
-import software.wings.service.impl.yaml.service.YamlHelper;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
@@ -107,8 +103,6 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private WingsPersistence wingsPersistence;
   private YamlGitService yamlGitService;
-  private YamlHelper yamlHelper;
-  private AppService appService;
   private YamlService yamlService;
   private GitSyncService gitSyncService;
   private AlertsUtils alertsUtils;
@@ -118,13 +112,10 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   @Inject
   public GitSyncErrorServiceImpl(WingsPersistence wingsPersistence, YamlGitService yamlGitService,
-      YamlHelper yamlHelper, AppService appService, YamlService yamlService, GitSyncService gitSyncService,
-      AlertsUtils alertsUtils, AuthService authService, YamlGitConfigService yamlGitConfigService,
-      GitConfigHelperService gitConfigHelperService) {
+      YamlService yamlService, GitSyncService gitSyncService, AlertsUtils alertsUtils, AuthService authService,
+      YamlGitConfigService yamlGitConfigService, GitConfigHelperService gitConfigHelperService) {
     this.wingsPersistence = wingsPersistence;
     this.yamlGitService = yamlGitService;
-    this.yamlHelper = yamlHelper;
-    this.appService = appService;
     this.yamlService = yamlService;
     this.gitSyncService = gitSyncService;
     this.alertsUtils = alertsUtils;
@@ -521,7 +512,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                                          .filter(GitSyncErrorKeys.yamlFilePath, failedChange.getFilePath());
     addHarnessToGitErrorFilter(fetchQuery);
 
-    String appId = obtainAppIdFromGitFileChange(failedChange.getAccountId(), failedChange.getFilePath());
+    String appId = yamlService.obtainAppIdFromGitFileChange(failedChange.getAccountId(), failedChange.getFilePath());
     logger.info(String.format("Upsert haress to git issue for file: %s", failedChange.getFilePath()));
     GitFileChange failedGitFileChange = (GitFileChange) failedChange;
     UpdateOperations<GitSyncError> failedUpdateOperations =
@@ -548,7 +539,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     addGitToHarnessErrorFilter(fetchQuery);
 
     GitFileChange failedGitFileChange = (GitFileChange) failedChange;
-    String appId = obtainAppIdFromGitFileChange(failedChange.getAccountId(), failedChange.getFilePath());
+    String appId = yamlService.obtainAppIdFromGitFileChange(failedChange.getAccountId(), failedChange.getFilePath());
     logger.info("Upsert git to harness sync issue for file: [{}]", failedChange.getFilePath());
 
     UpdateOperations<GitSyncError> failedUpdateOperations =
@@ -598,22 +589,6 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     failedUpdateOperations.set(GitSyncErrorKeys.additionalErrorDetails, gitToHarnessErrorDetails);
     fetchQuery.project(GitSyncError.ID_KEY, true);
     wingsPersistence.upsert(fetchQuery, failedUpdateOperations, upsertReturnNewOptions);
-  }
-
-  private String obtainAppIdFromGitFileChange(String accountId, String yamlFilePath) {
-    String appId = GLOBAL_APP_ID;
-
-    // Fetch appName from yamlPath, e.g. Setup/Applications/App1/Services/S1/index.yaml -> App1,
-    // Setup/Artifact Servers/server.yaml -> null
-    String appName = yamlHelper.getAppName(yamlFilePath);
-    if (StringUtils.isNotBlank(appName)) {
-      Application app = appService.getAppByName(accountId, appName);
-      if (app != null) {
-        appId = app.getUuid();
-      }
-    }
-
-    return appId;
   }
 
   private HarnessToGitErrorDetails getHarnessToGitErrorDetails(GitFileChange failedChange, boolean fullSyncPath) {

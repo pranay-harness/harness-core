@@ -253,8 +253,6 @@ gitCommits {"name": "status_1", "background": true} {"status": 1}
 gitFileActivity {"name": "accountId_filePath", "background": true} {"accountId": 1, "filePath": 1}
 gitFileActivity {"name": "accountId_procCommitId_filePath_status", "background": true} {"accountId": 1, "processingCommitId": 1, "filePath": 1, "status": 1}
 gitFileActivity {"name": "accountId_procCommitId_status", "background": true} {"accountId": 1, "processingCommitId": 1, "status": 1}
-gitFileActivity {"name": "appId_1", "background": true} {"appId": 1}
-gitFileActivity {"name": "createdAt_1", "background": true} {"createdAt": 1}
 gitSyncError {"name": "account_filepath_direction_idx", "unique": true} {"accountId": 1, "yamlFilePath": 1, "gitSyncDirection": 1}
 gitSyncError {"name": "appId_1", "background": true} {"appId": 1}
 gitSyncError {"name": "createdAt_1", "background": true} {"createdAt": 1}

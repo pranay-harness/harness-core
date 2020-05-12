@@ -105,7 +105,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.FeatureName;
 import software.wings.beans.User;
@@ -196,6 +198,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private YamlPushService yamlPushService;
   @Inject private HarnessTagYamlHelper harnessTagYamlHelper;
   @Inject private GitSyncService gitSyncService;
+  @Inject private YamlHelper yamlHelper;
   @Inject YamlSuccessfulChangeService yamlSuccessfulChangeService;
 
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
@@ -355,6 +358,22 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         logger.error("Exception while performing template sync for account {}", accountId, e);
       }
     });
+  }
+
+  public String obtainAppIdFromGitFileChange(String accountId, String yamlFilePath) {
+    String appId = GLOBAL_APP_ID;
+
+    // Fetch appName from yamlPath, e.g. Setup/Applications/App1/Services/S1/index.yaml -> App1,
+    // Setup/Artifact Servers/server.yaml -> null
+    String appName = yamlHelper.getAppName(yamlFilePath);
+    if (StringUtils.isNotBlank(appName)) {
+      Application app = appService.getAppByName(accountId, appName);
+      if (app != null) {
+        appId = app.getUuid();
+      }
+    }
+
+    return appId;
   }
 
   private void syncYamlForTemplates(String accountId) {
