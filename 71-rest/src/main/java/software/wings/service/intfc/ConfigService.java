@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.stream.BoundedInputStream;
@@ -19,6 +22,7 @@ import javax.validation.Valid;
 /**
  * Created by anubhaw on 4/25/16.
  */
+@OwnedBy(CDC)
 public interface ConfigService extends OwnedByService, OwnedByHost {
   /**
    * List.
