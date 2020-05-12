@@ -17,6 +17,7 @@ input CreateCloudProviderInput {
   pcfCloudProvider: PcfCloudProviderInput
   spotInstCloudProvider: SpotInstCloudProviderInput
   gcpCloudProvider: GcpCloudProviderInput
+  k8sCloudProvider: K8sCloudProviderInput
 }
 
 input UpdateCloudProviderInput {
@@ -26,6 +27,7 @@ input UpdateCloudProviderInput {
   pcfCloudProvider: PcfCloudProviderInput
   spotInstCloudProvider: SpotInstCloudProviderInput
   gcpCloudProvider: GcpCloudProviderInput
+  k8sCloudProvider: K8sCloudProviderInput
 }
 
 input DeleteCloudProviderInput {

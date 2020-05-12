@@ -22,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
@@ -33,12 +34,16 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLPcfCloudProviderIn
 import software.wings.graphql.schema.mutation.cloudProvider.QLSpotInstCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderPayload;
+import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLInheritClusterDetails;
+import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLK8sCloudProviderInput;
 import software.wings.graphql.schema.type.QLCloudProviderType;
 import software.wings.graphql.schema.type.QLEnvFilterType;
 import software.wings.graphql.schema.type.QLGenericFilterType;
 import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
+import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLSpotInstCloudProvider;
+import software.wings.graphql.schema.type.cloudProvider.k8s.QLClusterDetailsType;
 import software.wings.graphql.schema.type.secrets.QLAppEnvScope;
 import software.wings.graphql.schema.type.secrets.QLAppScopeFilter;
 import software.wings.graphql.schema.type.secrets.QLEnvScopeFilter;
@@ -196,6 +201,55 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
 
     assertThat(payload.getCloudProvider()).isNotNull();
     assertThat(payload.getCloudProvider()).isInstanceOf(QLGcpCloudProvider.class);
+    assertThat(payload.getCloudProvider().getId()).isEqualTo(CLOUD_PROVIDER_ID);
+  }
+
+  @Test
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void updateK8s() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
+                                   .withValue(KubernetesClusterConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CLOUD_PROVIDER_ID);
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute()
+                 .withUuid(CLOUD_PROVIDER_ID)
+                 .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
+                 .withValue(KubernetesClusterConfig.builder().accountId(ACCOUNT_ID).build())
+                 .build())
+        .when(settingsService)
+        .updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+
+    doNothing()
+        .when(settingServiceHelper)
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    QLUpdateCloudProviderPayload payload = dataFetcher.mutateAndFetch(
+        QLUpdateCloudProviderInput.builder()
+            .cloudProviderId(CLOUD_PROVIDER_ID)
+            .cloudProviderType(QLCloudProviderType.KUBERNETES_CLUSTER)
+            .k8sCloudProvider(
+                QLK8sCloudProviderInput.builder()
+                    .name(RequestField.ofNullable("K8S"))
+                    .usageScope(RequestField.ofNullable(usageScope()))
+                    .skipValidation(RequestField.ofNullable(Boolean.TRUE))
+                    .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.INHERIT_CLUSTER_DETAILS))
+                    .inheritClusterDetails(RequestField.ofNullable(
+                        QLInheritClusterDetails.builder().delegateName(RequestField.ofNullable("DELEGATE")).build()))
+                    .build())
+            .build(),
+        MutationContext.builder().accountId(ACCOUNT_ID).build());
+
+    verify(settingsService, times(1)).getByAccount(ACCOUNT_ID, CLOUD_PROVIDER_ID);
+    verify(settingsService, times(1)).updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+    verify(settingServiceHelper, times(1))
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    assertThat(payload.getCloudProvider()).isNotNull();
+    assertThat(payload.getCloudProvider()).isInstanceOf(QLKubernetesClusterCloudProvider.class);
     assertThat(payload.getCloudProvider().getId()).isEqualTo(CLOUD_PROVIDER_ID);
   }
 

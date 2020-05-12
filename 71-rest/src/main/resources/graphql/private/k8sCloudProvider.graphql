@@ -1,0 +1,66 @@
+input K8sCloudProviderInput {
+  name: String
+  usageScope: UsageScopeInput
+
+  clusterDetailsType: ClusterDetailsType
+  inheritClusterDetails: InheritClusterDetails
+  manualClusterDetails: ManualClusterDetails
+
+  skipValidation: Boolean
+}
+
+enum ClusterDetailsType {
+  INHERIT_CLUSTER_DETAILS
+  MANUAL_CLUSTER_DETAILS
+}
+
+input InheritClusterDetails {
+  delegateName: String
+}
+
+input ManualClusterDetails {
+  masterUrl: String
+
+  type: ManualClusterDetailsAuthenticationType
+  usernameAndPassword: UsernameAndPasswordAuthentication
+  serviceAccountToken: ServiceAccountToken
+  oidcToken: OIDCToken
+  none: None
+}
+
+enum ManualClusterDetailsAuthenticationType {
+  USERNAME_AND_PASSWORD
+  CLIENT_KEY_AND_CERTIFICATE
+  SERVICE_ACCOUNT_TOKEN
+  OIDC_TOKEN
+  NONE
+}
+
+input UsernameAndPasswordAuthentication {
+  userName: String
+  passwordSecretId: String
+}
+
+input ServiceAccountToken {
+  serviceAccountTokenSecretId: String
+}
+
+input OIDCToken {
+  identityProviderUrl: String
+  userName: String
+  passwordSecretId: String
+  clientIdSecretId: String
+  clientSecretSecretId: String
+  scopes: String
+}
+
+input None {
+  userName: String
+  passwordSecretId: String
+  caCertificateSecretId: String
+  clientCertificateSecretId: String
+  clientKeySecretId: String
+  clientKeyPassphraseSecretId: String
+  clientKeyAlgorithm: String
+  serviceAccountTokenSecretId: String
+}
