@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.artifact.ArtifactUtilities.getFileParentPath;
 import static io.harness.artifact.ArtifactUtilities.getFileSearchPattern;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -16,6 +17,7 @@ import com.hierynomus.smbj.auth.AuthenticationContext;
 import com.hierynomus.smbj.connection.Connection;
 import com.hierynomus.smbj.session.Session;
 import com.hierynomus.smbj.share.DiskShare;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -33,6 +35,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class SmbHelperService {

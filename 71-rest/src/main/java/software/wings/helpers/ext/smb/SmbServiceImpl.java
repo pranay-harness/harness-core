@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.smb;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 
@@ -8,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.hierynomus.mssmb2.SMBApiException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -21,6 +23,7 @@ import software.wings.service.impl.SmbHelperService;
 import java.util.Collections;
 import java.util.List;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class SmbServiceImpl implements SmbService {

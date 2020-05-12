@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.amazons3;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
@@ -15,6 +18,7 @@ import java.util.Map;
 /**
  * @author rktummala on 7/29/17.
  */
+@OwnedBy(CDC)
 public interface AmazonS3Service {
   /**
    * Get Repositories

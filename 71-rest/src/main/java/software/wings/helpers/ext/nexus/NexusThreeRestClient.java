@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -21,6 +24,7 @@ import java.util.List;
 /**
  * Created by sgurubelli on 11/16/17.
  */
+@OwnedBy(CDC)
 public interface NexusThreeRestClient {
   @Headers("Accept: application/json")
   @POST("service/extdirect")

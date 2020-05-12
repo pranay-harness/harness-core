@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.artifactSource;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.graphql.schema.type.artifactSource.QLACRArtifactSource;
@@ -19,6 +22,7 @@ import software.wings.graphql.schema.type.artifactSource.QLNexusArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLSFTPArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLSMBArtifactSource;
 
+@OwnedBy(CDC)
 public class ArtifactSourceController {
   private ArtifactSourceController() {}
 

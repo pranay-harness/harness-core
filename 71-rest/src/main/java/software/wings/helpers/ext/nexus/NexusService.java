@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
@@ -14,6 +17,7 @@ import java.util.Map;
 /**
  * Created by srinivas on 3/28/17.
  */
+@OwnedBy(CDC)
 public interface NexusService {
   /**
    * Get Repositories

@@ -1,10 +1,12 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream.DockerArtifactStreamBuilder;
@@ -18,6 +20,7 @@ import java.util.List;
 /**
  * @author rktummala on 10/09/17
  */
+@OwnedBy(CDC)
 @Singleton
 public class DockerArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, DockerArtifactStream> {
   @Inject private FeatureFlagService featureFlagService;

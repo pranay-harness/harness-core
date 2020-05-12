@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
@@ -17,6 +18,7 @@ import com.google.inject.Singleton;
 
 import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.JobWithDetails;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -47,6 +49,7 @@ import java.util.Optional;
 /**
  * Created by peeyushaggarwal on 5/13/16.
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class JenkinsBuildServiceImpl implements JenkinsBuildService {

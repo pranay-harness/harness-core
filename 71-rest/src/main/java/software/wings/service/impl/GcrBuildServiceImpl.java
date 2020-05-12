@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.equalCheck;
 
@@ -7,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 /**
  * Created by brett on 8/2/17
  */
+@OwnedBy(CDC)
 @Singleton
 public class GcrBuildServiceImpl implements GcrBuildService {
   @Inject private GcrService gcrService;

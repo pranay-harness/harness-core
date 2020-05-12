@@ -1,9 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -22,6 +25,7 @@ import java.util.Optional;
 /**
  * @author rktummala  on 7/30/17.
  */
+@OwnedBy(CDC)
 @Singleton
 public class AmazonS3BuildServiceImpl implements AmazonS3BuildService {
   @Inject private AmazonS3Service amazonS3Service;

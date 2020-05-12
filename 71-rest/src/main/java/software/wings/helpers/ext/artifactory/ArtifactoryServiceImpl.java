@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.artifactory;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
@@ -19,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import groovyx.net.http.HttpResponseException;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactUtilities;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -68,6 +70,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class ArtifactoryServiceImpl implements ArtifactoryService {

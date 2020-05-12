@@ -1,10 +1,12 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import software.wings.beans.SftpConfig;
 import software.wings.service.impl.SftpHelperService;
@@ -13,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+@OwnedBy(CDC)
 public class SftpValidation extends AbstractDelegateValidateTask {
   @Inject SftpHelperService sftpHelperService;
   public SftpValidation(

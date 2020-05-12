@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.azure.devops;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
@@ -11,6 +14,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDC)
 public interface AzureArtifactsService {
   boolean validateArtifactServer(
       AzureArtifactsConfig azureArtifactsConfig, List<EncryptedDataDetail> encryptionDetails, boolean validateUrl);

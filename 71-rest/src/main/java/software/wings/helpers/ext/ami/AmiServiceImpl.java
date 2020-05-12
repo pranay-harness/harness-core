@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.ami;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -12,6 +13,7 @@ import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Image;
 import com.amazonaws.services.ec2.model.Tag;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
 /**
  * Created by sgurubelli on 12/14/17.
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class AmiServiceImpl implements AmiService {

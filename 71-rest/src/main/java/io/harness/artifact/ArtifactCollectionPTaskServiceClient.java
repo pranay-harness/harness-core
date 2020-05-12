@@ -1,11 +1,13 @@
 package io.harness.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.exception.InvalidRequestException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -23,6 +25,7 @@ import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(CDC)
 @Slf4j
 public class ArtifactCollectionPTaskServiceClient
     implements PerpetualTaskServiceClient<ArtifactCollectionPTaskClientParams> {

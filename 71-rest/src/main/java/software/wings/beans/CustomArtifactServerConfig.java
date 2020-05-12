@@ -1,7 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +18,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @JsonTypeName("CUSTOM")
 @Data
 @Builder

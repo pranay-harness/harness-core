@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.TaskType;
@@ -12,6 +15,7 @@ import java.util.List;
 /**
  * Created by sgurubelli on 12/15/17.
  */
+@OwnedBy(CDC)
 public interface AmiBuildService extends BuildService<AwsConfig> {
   /**
    * Gets builds.

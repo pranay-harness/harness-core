@@ -1,8 +1,11 @@
 package software.wings.helpers.ext.jenkins;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
+import io.harness.annotations.dev.OwnedBy;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -15,6 +18,7 @@ import javax.annotation.Nullable;
 /**
  * Created by peeyushaggarwal on 5/12/16.
  */
+@OwnedBy(CDC)
 public interface Jenkins {
   /**
    * Gets the job.

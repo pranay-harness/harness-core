@@ -98,7 +98,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(developers = SHASWAT)
+  @Owner(developers = SHASWAT, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC4_createAndDeleteSplunkConnector() {
     String connectorName = CONNECTOR_SPLUNK_PREFIX + System.currentTimeMillis();

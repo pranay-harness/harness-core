@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -17,6 +20,7 @@ import java.util.Optional;
 /**
  * Created by srinivas on 3/31/17.
  */
+@OwnedBy(CDC)
 public interface NexusBuildService extends BuildService<NexusConfig> {
   @Override
   @DelegateTaskType(TaskType.NEXUS_GET_JOBS)

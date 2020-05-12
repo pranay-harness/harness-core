@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.bamboo;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.annotations.dev.OwnedBy;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -17,6 +20,7 @@ import java.util.Map;
 /**
  * Created by anubhaw on 11/29/16.
  */
+@OwnedBy(CDC)
 public interface BambooRestClient {
   /**
    * List projects with job details call.

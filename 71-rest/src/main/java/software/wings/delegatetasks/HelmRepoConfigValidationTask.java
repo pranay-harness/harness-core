@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
@@ -8,6 +9,7 @@ import static io.harness.govern.Switch.unhandled;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
@@ -31,6 +33,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@OwnedBy(CDC)
 @Slf4j
 public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
   private static final String WORKING_DIR_BASE = "./repository/helm-validation/";

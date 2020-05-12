@@ -1,9 +1,11 @@
 package software.wings.delegatetasks.collect.artifacts;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -23,6 +25,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@OwnedBy(CDC)
 @Slf4j
 public class AzureArtifactsCollectionTask extends AbstractDelegateRunnableTask {
   @Inject private AzureArtifactsService azureArtifactsService;

@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.gcr;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
@@ -12,6 +13,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -38,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author brett on 8/2/17
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class GcrServiceImpl implements GcrService {

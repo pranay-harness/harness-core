@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
@@ -9,6 +10,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -28,6 +30,7 @@ import java.util.Optional;
 /**
  * Created by anubhaw on 1/6/17.
  */
+@OwnedBy(CDC)
 @Singleton
 public class DockerBuildServiceImpl implements DockerBuildService {
   @Inject private DockerRegistryService dockerRegistryService;

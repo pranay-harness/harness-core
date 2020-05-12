@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.docker;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.DockerConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -10,6 +13,7 @@ import java.util.Map;
 /**
  * Created by anubhaw on 1/6/17.
  */
+@OwnedBy(CDC)
 public interface DockerRegistryService {
   int MAX_NO_OF_TAGS_PER_IMAGE = 10000;
 

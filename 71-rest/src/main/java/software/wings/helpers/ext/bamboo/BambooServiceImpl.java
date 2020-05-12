@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.bamboo;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
@@ -19,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.WingsException;
@@ -62,6 +64,7 @@ import java.util.regex.Pattern;
 /**
  * Created by anubhaw on 11/29/16.
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class BambooServiceImpl implements BambooService {

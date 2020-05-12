@@ -1,7 +1,10 @@
 package software.wings.delegatetasks.collect.artifacts;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
@@ -24,6 +27,7 @@ import java.util.function.Supplier;
 /**
  * Created by srinivas on 4/4/17.
  */
+@OwnedBy(CDC)
 @Slf4j
 public class NexusCollectionTask extends AbstractDelegateRunnableTask {
   @Inject private NexusService nexusService;

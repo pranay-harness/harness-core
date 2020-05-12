@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.artifactory;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
@@ -16,6 +19,7 @@ import java.util.Map;
 /**
  * Created by sgurubelli on 6/27/17.
  */
+@OwnedBy(CDC)
 public interface ArtifactoryService {
   List<BuildDetails> getBuilds(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds);
