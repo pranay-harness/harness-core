@@ -1217,11 +1217,12 @@ public abstract class AbstractAnalysisState extends State {
     } else {
       Set<String> allNodes =
           new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, false));
-      Set<String> newNodes = includePreviousPhaseNodes
+      testNodes = includePreviousPhaseNodes
           ? new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, true))
           : new HashSet<>(context.renderExpressionsForInstanceDetails(hostNameTemplate, true));
-      testNodes = newNodes;
-      controlNodes = Sets.difference(allNodes, newNodes);
+      Set<String> allPhaseNewNodes =
+          new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, true));
+      controlNodes = Sets.difference(allNodes, allPhaseNewNodes);
     }
     return NodePair.builder().controlNodes(controlNodes).testNodes(testNodes).build();
   }
