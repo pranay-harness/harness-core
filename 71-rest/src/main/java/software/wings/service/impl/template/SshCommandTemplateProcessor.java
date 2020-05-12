@@ -68,6 +68,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   private static final String TEMPLATE_UUID = "templateUuid";
   private static final String TEMPLATE_VERSION = "templateVersion";
   private static final String IMPORTED_TEMPLATE_DETAILS = "importedTemplateDetails";
+  private static final String TEMPLATE_METADATA = "templateMetadata";
   private static final String TEMPLATE_VARIABLES = "templateVariables";
 
   @Inject YamlHandlerFactory yamlHandlerFactory;
@@ -229,7 +230,8 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
       for (ServiceCommand serviceCommand : iterator) {
         try {
           String templateVersion = serviceCommand.getTemplateVersion();
-          if (templateVersion == null || templateVersion.equalsIgnoreCase(LATEST_TAG)) {
+          if (templateVersion == null || (templateVersion.equalsIgnoreCase(LATEST_TAG))
+              || isDefaultVersionOfTemplateChanged(template)) {
             logger.info("Updating the linked commands");
             serviceCommand.setSetAsDefault(true);
             setCommandFromTemplate(template, serviceCommand);
@@ -300,6 +302,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
             .withTemplateId(template.getUuid())
             .withTemplateVersion(String.valueOf(template.getVersion()))
             .withImportedTemplateVersion(template.getImportedTemplateDetails())
+            .withTemplateMetadata(template.getTemplateMetadata())
             .build();
       case WORKFLOW:
         return GraphNode.builder()
@@ -309,6 +312,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
             .templateVersion(String.valueOf(template.getVersion()))
             .templateVariables(template.getVariables())
             .importedTemplateDetails(template.getImportedTemplateDetails())
+            .templateMetadata(template.getTemplateMetadata())
             .build();
       default:
         throw new InvalidRequestException("Unsupported Entity Type");
@@ -328,7 +332,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   @Override
   public List<String> fetchTemplateProperties() {
     return asList(COMMAND_UNITS, REFERENCED_TEMPLATE_LIST, COMMAND_TYPE, COMMAND_PATH, VARIABLES, TEMPLATE_UUID,
-        TEMPLATE_VERSION, TEMPLATE_VARIABLES, IMPORTED_TEMPLATE_DETAILS);
+        TEMPLATE_VERSION, TEMPLATE_VARIABLES, IMPORTED_TEMPLATE_DETAILS, TEMPLATE_METADATA);
   }
 
   @Override

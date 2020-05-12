@@ -67,6 +67,7 @@ import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.CopiedTemplateMetadata;
 import software.wings.beans.template.ImportedTemplate;
 import software.wings.beans.template.ImportedTemplate.ImportedTemplateKeys;
+import software.wings.beans.template.ImportedTemplateMetadata;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
@@ -198,7 +199,6 @@ public class TemplateServiceImpl implements TemplateService {
         getImportedTemplateVersion(template.getImportedTemplateDetails(), template.getAccountId()));
 
     wingsPersistence.save(buildTemplateDetails(template, templateUuid));
-
     Template savedTemplate = get(templateUuid);
 
     auditServiceHelper.reportForAuditingUsingAccountId(savedTemplate.getAccountId(), null, savedTemplate, Type.CREATE);
@@ -243,8 +243,9 @@ public class TemplateServiceImpl implements TemplateService {
     PersistenceValidator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
 
     Template savedTemplate = get(template.getAccountId(), template.getUuid(), String.valueOf(template.getVersion()));
-    executorService.submit(() -> updateLinkedEntities(savedTemplate));
-
+    if (isDefaultChanged(oldTemplate, template)) {
+      executorService.submit(() -> updateLinkedEntities(savedTemplate));
+    }
     auditServiceHelper.reportForAuditingUsingAccountId(savedTemplate.getAccountId(), null, savedTemplate, Type.UPDATE);
 
     return savedTemplate;
@@ -391,6 +392,24 @@ public class TemplateServiceImpl implements TemplateService {
         }
       }
     }
+  }
+
+  private boolean isDefaultChanged(Template oldTemplate, Template template) {
+    if (template.getTemplateMetadata() != null && template.getTemplateMetadata() instanceof ImportedTemplateMetadata) {
+      if (oldTemplate.getTemplateMetadata() != null
+          && oldTemplate.getTemplateMetadata() instanceof ImportedTemplateMetadata) {
+        ImportedTemplateMetadata oldImportedTemplateMetadata =
+            (ImportedTemplateMetadata) oldTemplate.getTemplateMetadata();
+        ImportedTemplateMetadata importedTemplateMetadata = (ImportedTemplateMetadata) template.getTemplateMetadata();
+        if (oldImportedTemplateMetadata.getDefaultVersion() != null
+            && oldImportedTemplateMetadata.getDefaultVersion().equals(importedTemplateMetadata.getDefaultVersion())) {
+          return true;
+        }
+        return false;
+      }
+      return true;
+    }
+    return false;
   }
 
   private void processTemplateMetadata(Template template, boolean isUpdate) {

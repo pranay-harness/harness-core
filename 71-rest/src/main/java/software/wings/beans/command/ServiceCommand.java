@@ -16,6 +16,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EntityVersion;
+import software.wings.beans.template.TemplateMetadata;
 import software.wings.beans.template.dto.ImportedTemplateDetails;
 
 import java.util.HashMap;
@@ -52,6 +53,16 @@ public class ServiceCommand extends Base {
   @SchemaIgnore private String templateVersion;
 
   @SchemaIgnore private ImportedTemplateDetails importedTemplateDetails;
+
+  @SchemaIgnore private TemplateMetadata templateMetadata;
+
+  public TemplateMetadata getTemplateMetadata() {
+    return templateMetadata;
+  }
+
+  public void setTemplateMetadata(TemplateMetadata templateMetadata) {
+    this.templateMetadata = templateMetadata;
+  }
 
   @SchemaIgnore
   public String getTemplateVersion() {
@@ -307,6 +318,7 @@ public class ServiceCommand extends Base {
     private String templateUuid;
     private String templateVersion;
     private ImportedTemplateDetails importedTemplateDetails;
+    private TemplateMetadata templateMetadata;
 
     private Builder() {}
 
@@ -394,6 +406,11 @@ public class ServiceCommand extends Base {
       return this;
     }
 
+    public Builder withTemplateMetadata(TemplateMetadata templateMetadata) {
+      this.templateMetadata = templateMetadata;
+      return this;
+    }
+
     public Builder but() {
       return aServiceCommand()
           .withName(name)
@@ -430,6 +447,7 @@ public class ServiceCommand extends Base {
       serviceCommand.setTemplateUuid(templateUuid);
       serviceCommand.setTemplateVersion(templateVersion);
       serviceCommand.setImportedTemplateDetails(importedTemplateDetails);
+      serviceCommand.setTemplateMetadata(templateMetadata);
       return serviceCommand;
     }
   }
