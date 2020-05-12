@@ -4,14 +4,17 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitDetail;
+import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.exception.YamlProcessingException;
 import software.wings.service.impl.yaml.gitsync.ChangeSetDTO;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitFileActivity;
 import software.wings.yaml.gitSync.GitFileActivity.Status;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface GitSyncService {
@@ -56,7 +59,8 @@ public interface GitSyncService {
    * @param message
    * @param accountId
    */
-  void logActivityForFiles(String commitId, List<String> fileNames, Status status, String message, String accountId);
+  void updateStatusOfGitFileActivity(
+      String commitId, List<String> fileNames, Status status, String message, String accountId);
 
   /**
    *
@@ -82,6 +86,11 @@ public interface GitSyncService {
   void markRemainingFilesAsSkipped(String commitId, String accountId);
 
   List<GitFileActivity> getActivitiesForGitSyncErrors(List<GitSyncError> errors, Status status);
+
+  void logActivitiesForFailedChanges(Map<String, YamlProcessingException.ChangeWithErrorMsg> failedYamlFileChangeMap,
+      String accountId, boolean isFullSync, String commitMessage);
+
+  void onGitFileProcessingSuccess(Change change, String accountId);
 
   void createGitFileSummaryForFailedOrSkippedCommit(GitCommit gitCommit, boolean gitToHarness);
 

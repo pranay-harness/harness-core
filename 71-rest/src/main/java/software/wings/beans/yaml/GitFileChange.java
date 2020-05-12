@@ -18,7 +18,7 @@ public class GitFileChange extends Change {
   private String objectId;
   private transient YamlGitConfig yamlGitConfig;
   private String processingCommitId;
-  private Boolean changeFromAnotherCommit;
+  private boolean changeFromAnotherCommit;
   private Long commitTimeMs;
   private Long processingCommitTimeMs;
   private String commitMessage;
@@ -34,7 +34,7 @@ public class GitFileChange extends Change {
     @JsonIgnore @SchemaIgnore private boolean syncFromGit;
     private transient YamlGitConfig yamlGitConfig;
     private String processingCommitId;
-    private Boolean changeFromAnotherCommit;
+    private boolean changeFromAnotherCommit;
     private Long commitTimeMs;
     private Long processingCommitTimeMs;
     private String commitMessage;
@@ -90,7 +90,7 @@ public class GitFileChange extends Change {
       return this;
     }
 
-    public Builder withChangeFromAnotherCommit(Boolean changeFromAnotherCommit) {
+    public Builder withChangeFromAnotherCommit(boolean changeFromAnotherCommit) {
       this.changeFromAnotherCommit = changeFromAnotherCommit;
       return this;
     }

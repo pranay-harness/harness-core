@@ -9,6 +9,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.GitCommit.Status.COMPLETED;
 import static software.wings.beans.GitCommit.Status.FAILED;
+import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 
 import com.google.inject.Inject;
 
@@ -32,6 +33,7 @@ import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.YamlProcessingException;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.YamlGitConfigService;
 import software.wings.yaml.errorhandling.GitSyncError;
@@ -46,7 +48,9 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GitSyncServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private GitSyncServiceImpl gitSyncService;
@@ -57,6 +61,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   private String uuid = generateUuid();
   private String gitConnectorName = "gitConnectorName";
   private String repoURL = "https://abc.com";
+  String branchName1 = "branchName1";
   private String gitConnectorId;
 
   @Before
@@ -98,10 +103,9 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VARDAN_BANSAL)
+  @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
   public void test_fetchRepositories() {
-    String branchName1 = "branchName1";
     String applicationName = "app";
     String accountName = "account";
     final YamlGitConfig yamlGitConfig = YamlGitConfig.builder()
@@ -200,7 +204,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = VARDAN_BANSAL)
   @Category(UnitTests.class)
-  public void test_shouldLogActivityForFiles() {
+  public void test_shouldupdateStatusOfGitFileActivity() {
     final String commitId = "commitId";
     final String filePath = "file1.yaml";
     wingsPersistence.save(GitFileActivity.builder()
@@ -210,7 +214,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                               .filePath(filePath)
                               .status(Status.QUEUED)
                               .build());
-    gitSyncService.logActivityForFiles(commitId, Arrays.asList(filePath), Status.SUCCESS, "", accountId);
+    gitSyncService.updateStatusOfGitFileActivity(commitId, Arrays.asList(filePath), Status.SUCCESS, "", accountId);
     final GitFileActivity fileActivity = wingsPersistence.createQuery(GitFileActivity.class)
                                              .filter(GitFileActivityKeys.accountId, accountId)
                                              .filter(GitFileActivityKeys.processingCommitId, commitId)
@@ -403,5 +407,70 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                                              .get();
     assertThat(fileActivity).isNotNull();
     assertThat(fileActivity.getStatus()).isEqualTo(Status.SKIPPED);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void test_logActivitiesForFailedChanges() {
+    String errorMsg1 = "errorMessage1";
+    String errorMsg2 = "errorMessage2";
+    String commitId = "commitId";
+    String filePath1 = "filePath1";
+    String filePath2 = "filePath2";
+    String commitMessage = "commitMessage";
+    Map<String, YamlProcessingException.ChangeWithErrorMsg> failedYamlFileChangeMap = new HashMap<>();
+    YamlGitConfig yamlGitConfig =
+        YamlGitConfig.builder().gitConnectorId(gitConnectorId).branchName(branchName1).build();
+    GitFileChange change1 = GitFileChange.Builder.aGitFileChange()
+                                .withFilePath(filePath1)
+                                .withAccountId(accountId)
+                                .withCommitId(commitId)
+                                .withProcessingCommitId(commitId)
+                                .withCommitMessage(commitMessage)
+                                .withYamlGitConfig(yamlGitConfig)
+                                .withChangeFromAnotherCommit(false)
+                                .withSyncFromGit(true)
+                                .build();
+    failedYamlFileChangeMap.put(change1.getFilePath(),
+        YamlProcessingException.ChangeWithErrorMsg.builder().errorMsg(errorMsg1).change(change1).build());
+    GitFileChange change2 = GitFileChange.Builder.aGitFileChange()
+                                .withFilePath(filePath2)
+                                .withAccountId(accountId)
+                                .withCommitId(commitId)
+                                .withProcessingCommitId(commitId)
+                                .withCommitMessage(commitMessage)
+                                .withYamlGitConfig(yamlGitConfig)
+                                .withChangeFromAnotherCommit(false)
+                                .withSyncFromGit(true)
+                                .build();
+    failedYamlFileChangeMap.put(change2.getFilePath(),
+        YamlProcessingException.ChangeWithErrorMsg.builder().errorMsg(errorMsg2).change(change2).build());
+    gitSyncService.logActivityForGitOperation(
+        Arrays.asList(change1, change2), Status.QUEUED, true, false, "", commitId);
+    gitSyncService.logActivitiesForFailedChanges(failedYamlFileChangeMap, accountId, false, commitMessage);
+    List<GitFileActivity> gitFileActivities = wingsPersistence.createQuery(GitFileActivity.class)
+                                                  .filter(ACCOUNT_ID_KEY, accountId)
+                                                  .filter("commitId", commitId)
+                                                  .asList();
+    assertThat(gitFileActivities.size()).isEqualTo(2);
+    GitFileActivity fileActivity1 =
+        gitFileActivities.stream().filter(activity -> activity.getFilePath().equals(filePath1)).findFirst().get();
+    GitFileActivity fileActivity2 =
+        gitFileActivities.stream().filter(activity -> activity.getFilePath().equals(filePath2)).findFirst().get();
+
+    assertThat(fileActivity1.getAccountId()).isEqualTo(accountId);
+    assertThat(fileActivity1.getCommitId()).isEqualTo(commitId);
+    assertThat(fileActivity1.getGitConnectorId()).isEqualTo(gitConnectorId);
+    assertThat(fileActivity1.getBranchName()).isEqualTo(branchName1);
+    assertThat(fileActivity1.getCommitMessage()).isEqualTo(commitMessage);
+    assertThat(fileActivity1.getErrorMessage()).isEqualTo(errorMsg1);
+
+    assertThat(fileActivity2.getAccountId()).isEqualTo(accountId);
+    assertThat(fileActivity2.getCommitId()).isEqualTo(commitId);
+    assertThat(fileActivity2.getGitConnectorId()).isEqualTo(gitConnectorId);
+    assertThat(fileActivity2.getBranchName()).isEqualTo(branchName1);
+    assertThat(fileActivity2.getCommitMessage()).isEqualTo(commitMessage);
+    assertThat(fileActivity2.getErrorMessage()).isEqualTo(errorMsg2);
   }
 }

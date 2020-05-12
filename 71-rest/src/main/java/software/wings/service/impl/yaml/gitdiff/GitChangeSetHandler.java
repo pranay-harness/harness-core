@@ -93,7 +93,8 @@ public class GitChangeSetHandler {
       final Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap = ex.getFailedYamlFileChangeMap();
       populatateYamlGitconfigInError(failedYamlFileChangeMap, gitDiffResult.getYamlGitConfig());
       yamlGitService.processFailedChanges(accountId, failedYamlFileChangeMap, true);
-
+      gitSyncService.logActivitiesForFailedChanges(
+          failedYamlFileChangeMap, accountId, false, gitDiffResult.getCommitMessage());
       removeGitSyncErrorsForSuccessfulFiles(gitFileChangeList, ex.getFailedYamlFileChangeMap().keySet(), accountId);
       // Add to gitCommits a failed commit.
       saveProcessedCommit(gitDiffResult, accountId, COMPLETED_WITH_ERRORS);
@@ -119,7 +120,7 @@ public class GitChangeSetHandler {
     excludedFilePathWithReasonMap.forEach((filePath, skipMessage) -> {
       final GitFileChange gitFileChange = allFilesPathToObjectMapping.get(filePath);
       if (filePartOfSameCommit(gitFileChange)) {
-        gitSyncService.logActivityForFiles(gitFileChange.getProcessingCommitId(),
+        gitSyncService.updateStatusOfGitFileActivity(gitFileChange.getProcessingCommitId(),
             Collections.singletonList(gitFileChange.getFilePath()), GitFileActivity.Status.SKIPPED, skipMessage,
             accountId);
       }
@@ -129,7 +130,7 @@ public class GitChangeSetHandler {
   }
 
   private boolean filePartOfSameCommit(GitFileChange gitFileChange) {
-    return !ofNullable(gitFileChange.getChangeFromAnotherCommit()).orElse(FALSE);
+    return !ofNullable(gitFileChange.isChangeFromAnotherCommit()).orElse(FALSE);
   }
 
   private void populatateYamlGitconfigInError(

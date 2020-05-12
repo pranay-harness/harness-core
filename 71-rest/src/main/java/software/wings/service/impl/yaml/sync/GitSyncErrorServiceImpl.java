@@ -558,7 +558,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     GitToHarnessErrorDetails gitToHarnessErrorDetails = getGitToHarnessErrorDetails(failedGitFileChange);
     final GitSyncError previousGitSyncError = fetchQuery.get();
     if (previousGitSyncError != null) {
-      if (!failedGitFileChange.getChangeFromAnotherCommit()) {
+      if (!failedGitFileChange.isChangeFromAnotherCommit()) {
         GitToHarnessErrorDetails oldGitToHarnessErrorDetails =
             (GitToHarnessErrorDetails) previousGitSyncError.getAdditionalErrorDetails();
         // Reading the previous errors of the file
