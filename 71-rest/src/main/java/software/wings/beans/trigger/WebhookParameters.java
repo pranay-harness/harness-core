@@ -53,6 +53,12 @@ public class WebhookParameters {
   public static final String GH_RELEASE_COMMITISH = "${release.target_commitish}";
   public static final String GH_RELEASE_PRERELEASE = "${release.prerelease}";
 
+  // Git Hub package event suggestions
+  public static final String GH_PACKAGE_ID = "${package.id}";
+  public static final String GH_PACKAGE_NAME = "${package.name}";
+  public static final String GH_PACKAGE_TYPE = "${package.package_type}";
+  public static final String GH_PACKAGE_HTML_URL = "${package.html_url}";
+
   // Git Hub Push event suggestions
   public static final String GH_PUSH_REF = "${ref}";
   public static final String GH_PUSH_REF_BRANCH = "${ref.split('refs/heads/')[1]}";
@@ -105,6 +111,15 @@ public class WebhookParameters {
     return releaseSuggestions;
   }
 
+  public static List<String> gitHubPackageExpressions() {
+    List<String> packageSuggestions = new ArrayList<>();
+    packageSuggestions.add(GH_PACKAGE_NAME);
+    packageSuggestions.add(GH_PACKAGE_TYPE);
+    packageSuggestions.add(GH_PACKAGE_ID);
+    packageSuggestions.add(GH_PACKAGE_HTML_URL);
+    return packageSuggestions;
+  }
+
   public static List<String> gitHubPushEventExpressions() {
     List<String> pushSuggestions = new ArrayList<>();
     pushSuggestions.add(GH_PUSH_REF);
@@ -143,6 +158,8 @@ public class WebhookParameters {
             return gitHubPushEventExpressions();
           case RELEASE:
             return gitHubReleaseExpressions();
+          case PACKAGE:
+            return gitHubPackageExpressions();
           default:
             return new ArrayList<>();
         }

@@ -12,7 +12,7 @@ import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.beans.trigger.PrAction;
+import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.ReleaseAction;
 import software.wings.beans.trigger.TriggerCondition;
 import software.wings.beans.trigger.WebHookTriggerCondition;
@@ -22,6 +22,7 @@ import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHandler;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,8 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true)
 @Singleton
 public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<WebhookEventTriggerConditionYaml> {
+  private static final String PACKAGE_STRING = "package:";
+  private static final String SPLITTER = ":";
   @Override
   public WebhookEventTriggerConditionYaml toYaml(TriggerCondition bean, String appId) {
     WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) bean;
@@ -64,8 +67,8 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
 
     if (EmptyPredicate.isNotEmpty(webhookConditionYaml.getRepositoryType())) {
       if (webhookConditionYaml.getRepositoryType().equals(GITHUB.name())) {
-        webHookTriggerCondition.setActions(
-            getPRActionTypes(webhookConditionYaml.getAction(), webhookConditionYaml.getRepositoryType()));
+        webHookTriggerCondition.setActions(getPRActionTypes(webhookConditionYaml.getAction(),
+            webhookConditionYaml.getRepositoryType(), webhookConditionYaml.getEventType()));
         webHookTriggerCondition.setReleaseActions(
             getReleaseActionTypes(webhookConditionYaml.getReleaseActions(), webhookConditionYaml.getRepositoryType()));
       } else if (webhookConditionYaml.getRepositoryType().equals(BITBUCKET.name())) {
@@ -115,10 +118,13 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
     return eventTypes.stream().map(WebhookEventType::find).collect(Collectors.toList());
   }
 
-  private List<PrAction> getPRActionTypes(List<String> actions, String webhookSource) {
+  private List<GithubAction> getPRActionTypes(List<String> actions, String webhookSource, List<String> eventType) {
     if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
         && webhookSource.equals(GITHUB.name())) {
-      return actions.stream().map(PrAction::find).collect(Collectors.toList());
+      if (eventType != null && eventType.contains("package")) {
+        return actions.stream().map(action -> GithubAction.find(PACKAGE_STRING + action)).collect(Collectors.toList());
+      }
+      return actions.stream().map(GithubAction::find).collect(Collectors.toList());
     } else {
       return null;
     }
@@ -154,7 +160,17 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
     if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource() != null
         && webHookTriggerCondition.getWebhookSource() == GITHUB) {
       if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getActions())) {
-        return webHookTriggerCondition.getActions().stream().map(PrAction::getValue).collect(Collectors.toList());
+        if (webHookTriggerCondition.getEventTypes() != null
+            && webHookTriggerCondition.getEventTypes().contains(WebhookEventType.PACKAGE)) {
+          List<String> yamlActions = new ArrayList<>();
+          for (GithubAction githubAction : webHookTriggerCondition.getActions()) {
+            if (githubAction.getValue() != null && githubAction.getValue().split(SPLITTER).length > 1) {
+              yamlActions.add(githubAction.getValue().split(SPLITTER)[1]);
+            }
+          }
+          return yamlActions;
+        }
+        return webHookTriggerCondition.getActions().stream().map(GithubAction::getValue).collect(Collectors.toList());
       } else {
         return null;
       }

@@ -15,7 +15,8 @@ public enum WebhookEventType {
   DELETE("On Delete", "delete"),
   ANY("Any", "any"),
   OTHER("Other", "other"),
-  RELEASE("On Release", "release");
+  RELEASE("On Release", "release"),
+  PACKAGE("On Package", "package");
 
   @Getter private String displayName;
   @Getter private String value;
