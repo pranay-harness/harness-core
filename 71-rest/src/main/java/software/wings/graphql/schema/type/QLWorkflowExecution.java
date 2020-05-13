@@ -1,5 +1,8 @@
 package software.wings.graphql.schema.type;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -10,6 +13,7 @@ import software.wings.security.annotations.Scope;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "QLWorkflowExecutionKeys")

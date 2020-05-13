@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
@@ -45,6 +46,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -127,6 +129,7 @@ import javax.validation.executable.ValidateOnExecution;
 /**
  * Created by anubhaw on 10/26/16.
  */
+@OwnedBy(CDC)
 @Singleton
 @ValidateOnExecution
 @Slf4j

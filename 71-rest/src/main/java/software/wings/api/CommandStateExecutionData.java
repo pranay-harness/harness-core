@@ -1,5 +1,6 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -7,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import lombok.Data;
@@ -36,6 +38,7 @@ import java.util.Map;
 /**
  * Created by peeyushaggarwal on 6/17/16.
  */
+@OwnedBy(CDC)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)

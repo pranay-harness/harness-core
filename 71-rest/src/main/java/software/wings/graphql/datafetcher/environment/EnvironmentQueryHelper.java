@@ -1,10 +1,12 @@
 package software.wings.graphql.datafetcher.environment;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ import java.util.Set;
 /**
  * @author rktummala on 07/12/19
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class EnvironmentQueryHelper {

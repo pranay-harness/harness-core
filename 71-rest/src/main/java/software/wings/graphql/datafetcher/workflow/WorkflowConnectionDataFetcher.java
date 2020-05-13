@@ -1,11 +1,13 @@
 package software.wings.graphql.datafetcher.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.graphql.utils.nameservice.NameService.application;
 import static software.wings.graphql.utils.nameservice.NameService.workflow;
 
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -28,6 +30,7 @@ import software.wings.security.annotations.AuthRule;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Slf4j
 public class WorkflowConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLWorkflowFilter, QLNoOpSortCriteria, QLWorkflowConnection> {

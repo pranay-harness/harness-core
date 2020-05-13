@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutput;
 import software.wings.beans.ElementExecutionSummary;
@@ -14,6 +17,7 @@ import java.util.Map;
 /**
  * Created by rishi on 1/19/17.
  */
+@OwnedBy(CDC)
 public class PhaseExecutionData extends ElementStateExecutionData implements SweepingOutput {
   public static final String SWEEPING_OUTPUT_NAME = "phaseExecutionData";
 

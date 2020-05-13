@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.servicenow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl.getBaseUrl;
@@ -12,6 +13,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
@@ -45,6 +47,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@OwnedBy(CDC)
 @Slf4j
 public class ServicenowTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;

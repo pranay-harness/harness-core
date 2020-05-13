@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.Outcome;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -25,6 +28,7 @@ import javax.xml.parsers.ParserConfigurationException;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

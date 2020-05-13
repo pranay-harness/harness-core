@@ -1,8 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationWorkflowType;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 
@@ -15,6 +17,7 @@ import java.util.Set;
 /**
  * Created by sgurubelli on 5/16/17.
  */
+@OwnedBy(CDC)
 @JsonTypeName("BASIC")
 public class BasicOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
   public BasicOrchestrationWorkflow() {

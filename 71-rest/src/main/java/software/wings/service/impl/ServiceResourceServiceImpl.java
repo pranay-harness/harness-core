@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -59,6 +60,7 @@ import com.google.inject.Singleton;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -229,6 +231,7 @@ import javax.validation.executable.ValidateOnExecution;
 /**
  * Created by anubhaw on 3/25/16.
  */
+@OwnedBy(CDC)
 @ValidateOnExecution
 @Singleton
 @Slf4j

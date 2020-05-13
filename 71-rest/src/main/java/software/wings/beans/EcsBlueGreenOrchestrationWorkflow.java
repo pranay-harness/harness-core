@@ -1,8 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(CDC)
 @JsonTypeName("BLUE_GREEN_ECS")
 @EqualsAndHashCode(callSuper = true)
 public class EcsBlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkflow {

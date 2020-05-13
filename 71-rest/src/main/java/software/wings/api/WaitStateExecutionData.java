@@ -4,6 +4,9 @@
 
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import software.wings.sm.StateExecutionData;
 
@@ -14,6 +17,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 public class WaitStateExecutionData extends StateExecutionData implements Outcome {
   private long duration;
   private long wakeupTs;

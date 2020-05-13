@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -12,6 +15,7 @@ import software.wings.sm.StateExecutionData;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

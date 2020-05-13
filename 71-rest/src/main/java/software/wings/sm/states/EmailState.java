@@ -4,6 +4,7 @@
 
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;
 
@@ -11,6 +12,7 @@ import com.google.common.base.Splitter;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ import java.util.List;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Attributes
 @Slf4j
 public class EmailState extends State {

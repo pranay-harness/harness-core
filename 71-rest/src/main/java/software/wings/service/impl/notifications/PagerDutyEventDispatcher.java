@@ -1,11 +1,13 @@
 package software.wings.service.impl.notifications;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.model.EventType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Notification;
@@ -17,6 +19,7 @@ import software.wings.service.intfc.pagerduty.PagerDutyService;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class PagerDutyEventDispatcher {
