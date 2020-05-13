@@ -208,6 +208,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class UserServiceImpl implements UserService {
   static final String ADD_TO_ACCOUNT_OR_GROUP_EMAIL_TEMPLATE_NAME = "add_group";
+  static final String USER_PASSWORD_CHANGED_EMAIL_TEMPLATE_NAME = "password_changed";
   private static final String ADD_ACCOUNT_EMAIL_TEMPLATE_NAME = "add_account";
   public static final String SIGNUP_EMAIL_TEMPLATE_NAME = "signup";
   public static final String INVITE_EMAIL_TEMPLATE_NAME = "invite";
@@ -1694,6 +1695,22 @@ public class UserServiceImpl implements UserService {
     return true;
   }
 
+  private void sendPasswordChangeEmail(User user) {
+    Map<String, Object> templateModel = new HashMap<>();
+    templateModel.put("name", user.getName());
+    templateModel.put("email", user.getEmail());
+    List<String> toList = new ArrayList<>();
+    toList.add(user.getEmail());
+    EmailData emailData = EmailData.builder()
+                              .to(toList)
+                              .templateName(USER_PASSWORD_CHANGED_EMAIL_TEMPLATE_NAME)
+                              .templateModel(templateModel)
+                              .build();
+    emailData.setCc(Collections.emptyList());
+    emailData.setRetries(2);
+    emailNotificationService.send(emailData);
+  }
+
   @Override
   public boolean updatePassword(String resetPasswordToken, char[] password) {
     String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
@@ -1707,7 +1724,8 @@ public class UserServiceImpl implements UserService {
       verifier.verify(resetPasswordToken);
       JWT decode = JWT.decode(resetPasswordToken);
       String email = decode.getClaim("email").asString();
-      resetUserPassword(email, password, decode.getIssuedAt().getTime());
+      User user = resetUserPassword(email, password, decode.getIssuedAt().getTime());
+      sendPasswordChangeEmail(user);
     } catch (UnsupportedEncodingException exception) {
       throw new GeneralException("Invalid reset password link");
     } catch (JWTVerificationException exception) {
@@ -1745,7 +1763,7 @@ public class UserServiceImpl implements UserService {
     return logoutResponse;
   }
 
-  private void resetUserPassword(String email, char[] password, long tokenIssuedAt) {
+  private User resetUserPassword(String email, char[] password, long tokenIssuedAt) {
     User user = getUserByEmail(email);
     if (user == null) {
       throw new InvalidRequestException("Email doesn't exist");
@@ -1760,6 +1778,7 @@ public class UserServiceImpl implements UserService {
             .set("passwordExpired", false)
             .set("passwordChangedAt", System.currentTimeMillis()));
     executorService.submit(() -> authService.invalidateAllTokensForUser(user.getUuid()));
+    return user;
   }
 
   @Override
@@ -1806,6 +1825,7 @@ public class UserServiceImpl implements UserService {
   /**
    * Checks if the user's default account has 2FA enabled account wide. If yes, then setup 2FA for the user if not
    * already set
+   *
    * @param user
    * @param account
    */
