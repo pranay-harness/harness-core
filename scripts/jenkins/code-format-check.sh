@@ -46,6 +46,6 @@ echo "Protobuf completed"
 
 find . -iname "*.graphql" | xargs -L 1 prettier --write --print-width=120
 
-find . -iname "*.java" | xargs clang-format -i
+ find . \( -iname "*.java" -o -iname "*.proto" \) | xargs clang-format -i
 
 git diff --exit-code

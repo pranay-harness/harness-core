@@ -6,3 +6,8 @@ Language: Cpp
 ---
 Language: Java
 ColumnLimit: 120
+
+
+---
+
+Language: Proto
