@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
@@ -8,6 +9,7 @@ import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuild
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.annotations.dev.OwnedBy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,6 +20,7 @@ import java.util.Set;
 /**
  * Created by sgurubelli on 11/14/17.
  */
+@OwnedBy(CDC)
 @JsonTypeName("BUILD")
 public class BuildWorkflow extends CanaryOrchestrationWorkflow {
   public BuildWorkflow() {

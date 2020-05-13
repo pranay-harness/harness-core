@@ -1,10 +1,12 @@
 package software.wings.graphql.datafetcher.execution;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import java.util.List;
 import java.util.Set;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class ExecutionQueryHelper {

@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import software.wings.sm.StateExecutionData;
@@ -9,6 +12,7 @@ import java.util.Map;
 /**
  * Created by anubhaw on 10/26/16.
  */
+@OwnedBy(CDC)
 public class EnvStateExecutionData extends StateExecutionData {
   private String workflowId;
   private String workflowExecutionId;

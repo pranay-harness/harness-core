@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -44,6 +45,7 @@ import com.google.common.base.Joiner;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +64,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @JsonTypeName("CANARY")
 @Slf4j
 public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {

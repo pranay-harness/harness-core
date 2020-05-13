@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import software.wings.beans.ElementExecutionSummary;
@@ -16,6 +19,7 @@ import java.util.Map;
 /**
  * Created by rishi on 1/19/17.
  */
+@OwnedBy(CDC)
 public class PhaseStepExecutionData extends ElementStateExecutionData implements DelegateTaskNotifyResponseData {
   private PhaseStepType phaseStepType;
   private boolean stepsInParallel;

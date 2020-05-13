@@ -1,7 +1,10 @@
 package software.wings.graphql.datafetcher.execution;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -21,6 +24,7 @@ import software.wings.graphql.schema.type.QLWorkflowExecution.QLWorkflowExecutio
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
+@OwnedBy(CDC)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class ExecutionDataFetcher extends AbstractObjectDataFetcher<QLExecution, QLExecutionQueryParameters> {

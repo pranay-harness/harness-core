@@ -1,10 +1,12 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
@@ -13,6 +15,7 @@ import java.util.Map;
 /**
  * Created by peeyushaggarwal on 5/26/16.
  */
+@OwnedBy(CDC)
 public class EmailStateExecutionData extends StateExecutionData {
   private String toAddress;
   private String ccAddress;

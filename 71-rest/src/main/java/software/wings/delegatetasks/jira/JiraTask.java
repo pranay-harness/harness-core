@@ -1,7 +1,10 @@
 package software.wings.delegatetasks.jira;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
@@ -55,6 +58,7 @@ import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@OwnedBy(CDC)
 @Slf4j
 public class JiraTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;

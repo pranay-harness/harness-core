@@ -1,11 +1,15 @@
 package software.wings.beans.servicenow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 
 import java.util.Map;
 
+@OwnedBy(CDC)
 public class ServiceNowCreateUpdateParams {
   @Getter @Setter private ServiceNowAction action;
   @Getter @Setter String snowConnectorId;

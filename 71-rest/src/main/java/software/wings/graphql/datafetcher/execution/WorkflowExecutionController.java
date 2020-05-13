@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.execution;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -10,6 +11,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
@@ -72,6 +74,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class WorkflowExecutionController {

@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
 import software.wings.sm.ContextElement;
@@ -7,6 +10,7 @@ import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
 
+@OwnedBy(CDC)
 public class SkipStateExecutionData extends StateExecutionData {
   private String skipAssertionExpression;
 

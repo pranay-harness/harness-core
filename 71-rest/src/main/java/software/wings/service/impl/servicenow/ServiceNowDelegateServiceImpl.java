@@ -1,5 +1,6 @@
 package software.wings.service.impl.servicenow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
 import static io.harness.exception.WingsException.USER;
 
@@ -7,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -37,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService {

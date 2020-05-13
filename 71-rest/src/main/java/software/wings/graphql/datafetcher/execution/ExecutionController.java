@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.execution;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -13,6 +14,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import graphql.GraphQLContext;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.InvalidRequestException;
@@ -45,6 +47,7 @@ import java.util.Map;
  * workflow and workflow execution.
  * Ideally, we should have two separate adapters.
  */
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class ExecutionController {

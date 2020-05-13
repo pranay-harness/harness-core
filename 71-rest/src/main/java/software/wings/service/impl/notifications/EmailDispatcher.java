@@ -1,5 +1,6 @@
 package software.wings.service.impl.notifications;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.NotificationConstants.ABORTED_COLOR;
@@ -12,6 +13,7 @@ import static software.wings.common.NotificationMessageResolver.getDecoratedNoti
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@OwnedBy(CDC)
 @Singleton
 public class EmailDispatcher {
   private static final Logger log = LoggerFactory.getLogger(EmailDispatcher.class);

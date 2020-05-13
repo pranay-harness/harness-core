@@ -1,9 +1,11 @@
 package software.wings.graphql.datafetcher.execution;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -21,6 +23,7 @@ import software.wings.service.intfc.AppService;
 import java.util.Collections;
 import java.util.List;
 
+@OwnedBy(CDC)
 @Slf4j
 public class StartExecutionDataFetcher extends BaseMutatorDataFetcher<QLStartExecutionInput, QLStartExecutionPayload> {
   @Inject PipelineExecutionController pipelineExecutionController;

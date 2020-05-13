@@ -1,7 +1,10 @@
 package software.wings.graphql.datafetcher.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
@@ -18,6 +21,7 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
+@OwnedBy(CDC)
 @Slf4j
 public class PipelineDataFetcher extends AbstractObjectDataFetcher<QLPipeline, QLPipelineQueryParameters> {
   public static final String PIPELINE_DOES_NOT_EXIST_MSG = "Pipeline does not exist";
