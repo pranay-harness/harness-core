@@ -16,9 +16,9 @@ import lombok.experimental.FieldNameConstants;
  * Node is a level : nodeId, nodeExecutionInstanceId
  */
 @OwnedBy(CDC)
+@Redesign
 @Value
 @Builder
-@Redesign
 @FieldNameConstants(innerTypeName = "LevelExecutionKeys")
 public class LevelExecution {
   String setupId;

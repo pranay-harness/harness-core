@@ -12,6 +12,7 @@ import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.resume.EngineWaitRetryCallback;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputInstance;
 import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspection;
 import io.harness.waiter.ListNotifyResponseData;
@@ -33,6 +34,7 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     set.add(SweepingOutputInstance.class);
     set.add(WaitInstance.class);
     set.add(DelayEvent.class);
+    set.add(ExecutionSweepingOutputInstance.class);
   }
 
   @Override
