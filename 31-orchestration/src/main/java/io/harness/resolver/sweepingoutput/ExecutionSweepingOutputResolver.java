@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import com.mongodb.DuplicateKeyException;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Ambiance.AmbianceKeys;
 import io.harness.annotations.Redesign;
@@ -37,7 +38,12 @@ public class ExecutionSweepingOutputResolver implements Resolver<SweepingOutput>
 
   @Override
   public SweepingOutput consume(@NotNull Ambiance ambiance, @NotNull String name, @NotNull SweepingOutput value) {
-    hPersistence.save(ExecutionSweepingOutputInstance.builder().ambiance(ambiance).name(name).value(value).build());
+    try {
+      hPersistence.save(ExecutionSweepingOutputInstance.builder().ambiance(ambiance).name(name).value(value).build());
+    } catch (DuplicateKeyException ex) {
+      throw new InvalidRequestException(format("Sweeping output with name %s is already saved", name), ex);
+    }
+
     return value;
   }
 
