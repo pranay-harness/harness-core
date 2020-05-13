@@ -21,7 +21,6 @@ import io.harness.resolvers.Resolver;
 import io.harness.state.io.StateTransput;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @OwnedBy(CDC)
@@ -33,16 +32,16 @@ public class EngineObtainmentHelper {
 
   public List<StateTransput> obtainInputs(
       Ambiance ambiance, List<RefObject> refObjects, List<? extends StateTransput> additionalInputs) {
-    if (isEmpty(refObjects)) {
-      return Collections.emptyList();
-    }
     List<StateTransput> inputs = new ArrayList<>();
-    for (RefObject refObject : refObjects) {
-      Resolver resolver = resolverRegistry.obtain(refObject.getRefType());
-      inputs.add(resolver.resolve(ambiance, refObject));
-    }
+
     if (additionalInputs != null) {
       inputs.addAll(additionalInputs);
+    }
+    if (!isEmpty(refObjects)) {
+      for (RefObject refObject : refObjects) {
+        Resolver resolver = resolverRegistry.obtain(refObject.getRefType());
+        inputs.add(resolver.resolve(ambiance, refObject));
+      }
     }
     return inputs;
   }

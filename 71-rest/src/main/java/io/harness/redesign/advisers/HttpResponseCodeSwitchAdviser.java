@@ -8,7 +8,7 @@ import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
-import io.harness.adviser.impl.success.NextStepAdvise;
+import io.harness.adviser.NextStepAdvise;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;

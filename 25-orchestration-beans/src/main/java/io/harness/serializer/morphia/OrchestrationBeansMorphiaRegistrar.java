@@ -2,16 +2,21 @@ package io.harness.serializer.morphia;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.adviser.AdviserParameters;
 import io.harness.ambiance.dev.DefaultLevel;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.Outcome;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.facilitator.DefaultFacilitatorParams;
+import io.harness.facilitator.FacilitatorParameters;
 import io.harness.interrupts.Interrupt;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plan.Plan;
 import io.harness.state.core.fork.ForkStateParameters;
+import io.harness.state.io.StateParameters;
+import io.harness.state.io.StateTransput;
 
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +30,11 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PlanExecution.class);
     set.add(Interrupt.class);
     set.add(OutcomeInstance.class);
+    set.add(StateTransput.class);
+    set.add(FacilitatorParameters.class);
+    set.add(AdviserParameters.class);
+    set.add(StateParameters.class);
+    set.add(Outcome.class);
   }
 
   @Override

@@ -1,7 +1,6 @@
-package io.harness.adviser.impl.ignore;
+package io.harness.adviser.impl.fail;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static java.util.Collections.disjoint;
 
 import com.google.common.base.Preconditions;
 
@@ -13,29 +12,26 @@ import io.harness.adviser.NextStepAdvise;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.state.io.StateResponse;
 
 @OwnedBy(CDC)
 @Redesign
 @Produces(Adviser.class)
-public class IgnoreAdviser implements Adviser {
+public class OnFailAdviser implements Adviser {
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
-    IgnoreAdviserParameters parameters =
-        (IgnoreAdviserParameters) Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
     StateResponse stateResponse = advisingEvent.getStateResponse();
-    StateResponse.FailureInfo failureInfo = stateResponse.getFailureInfo();
-    if (failureInfo == null) {
+    if (stateResponse.getStatus() != NodeExecutionStatus.FAILED) {
       return null;
     }
-    if (!disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypes())) {
-      return NextStepAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
-    }
-    return null;
+    OnFailAdviserParameters parameters =
+        (OnFailAdviserParameters) Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
+    return NextStepAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
   }
 
   @Override
   public AdviserType getType() {
-    return AdviserType.builder().type(AdviserType.IGNORE).build();
+    return AdviserType.builder().type(AdviserType.ON_FAIL).build();
   }
 }
