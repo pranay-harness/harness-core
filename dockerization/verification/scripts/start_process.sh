@@ -13,6 +13,11 @@ fi
 
 echo "Using memory " $MEMORY
 
+if [[ -z "$COMMAND" ]]; then
+   export COMMAND=server
+fi
+
+
 if [[ -z "$CAPSULE_JAR" ]]; then
    export CAPSULE_JAR=/opt/harness/verification-capsule.jar
 fi
@@ -29,7 +34,7 @@ fi
 
 
 if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETES_ONPREM" ]]; then
-    java $JAVA_OPTS -jar $CAPSULE_JAR /opt/harness/verification-config.yml
+    java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/verification-config.yml
 else
-    java $JAVA_OPTS -jar $CAPSULE_JAR /opt/harness/verification-config.yml > /opt/harness/logs/verification.log 2>&1
+    java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/verification-config.yml > /opt/harness/logs/verification.log 2>&1
 fi
