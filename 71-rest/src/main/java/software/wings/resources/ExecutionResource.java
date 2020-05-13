@@ -95,7 +95,6 @@ public class ExecutionResource {
   @Inject private AuthHandler authHandler;
   @Inject private AuthService authService;
   @Inject @Named(DeploymentHistoryFeature.FEATURE_NAME) private RestrictedFeature deploymentHistoryFeature;
-  @Inject private PipelineResumeUtils pipelineResumeUtils;
 
   /**
    * List.
@@ -153,7 +152,7 @@ public class ExecutionResource {
         -> pageRequest.addFilter(WorkflowExecutionKeys.startTs, GE,
             EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(val, "UTC")));
 
-    pipelineResumeUtils.addLatestPipelineResumeFilter(accountId, pageRequest);
+    PipelineResumeUtils.addLatestPipelineResumeFilter(pageRequest);
     final PageResponse<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, false);
 
