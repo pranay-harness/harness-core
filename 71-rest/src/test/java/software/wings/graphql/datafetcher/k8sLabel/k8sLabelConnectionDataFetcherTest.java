@@ -156,8 +156,8 @@ public class k8sLabelConnectionDataFetcherTest extends AbstractDataFetcherTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testGetWorkloadNamesFromLabels() {
-    Set<String> workloadNames =
-        k8sLabelHelper.getWorkloadNamesWithNamespacesFromLabels(ACCOUNT_ID, getTestLabelFilter("key", "value"));
+    Set<String> workloadNames = k8sLabelHelper.getWorkloadNamesWithNamespacesFromLabels(
+        ACCOUNT_ID, CLUSTER_ID, getTestLabelFilter("key", "value"));
     assertThat(workloadNames).hasSize(1);
     assertThat(workloadNames.contains("testWorkload" + BillingStatsDefaultKeys.TOKEN + NAMESPACE)).isTrue();
   }
@@ -167,7 +167,7 @@ public class k8sLabelConnectionDataFetcherTest extends AbstractDataFetcherTest {
   @Category(UnitTests.class)
   public void testGetWorkloadNamesFromLabelsWithFailingFilterConditions() {
     Set<String> workloadNames = k8sLabelHelper.getWorkloadNamesWithNamespacesFromLabels(
-        ACCOUNT_ID, getTestLabelFilter("different key", "value"));
+        ACCOUNT_ID, CLUSTER_ID, getTestLabelFilter("different key", "value"));
     assertThat(workloadNames).hasSize(0);
   }
 

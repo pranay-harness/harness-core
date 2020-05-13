@@ -30,14 +30,17 @@ public class K8sWorkloadDao {
   }
 
   // to get the workloads with at least one of the label(key:value) present
-  public List<K8sWorkload> list(String accountId, Map<String, List<String>> labels) {
+  public List<K8sWorkload> list(String accountId, String clusterId, Map<String, List<String>> labels) {
     if (labels == null) {
       return new ArrayList<>();
     }
     labels = labels.entrySet().stream().collect(Collectors.toMap(e -> encode(e.getKey()), Map.Entry::getValue));
 
-    Query<K8sWorkload> query =
-        persistence.createQuery(K8sWorkload.class, excludeValidate).field(K8sWorkloadKeys.accountId).equal(accountId);
+    Query<K8sWorkload> query = persistence.createQuery(K8sWorkload.class, excludeValidate)
+                                   .field(K8sWorkloadKeys.accountId)
+                                   .equal(accountId)
+                                   .field(K8sWorkloadKeys.clusterId)
+                                   .equal(clusterId);
     List<Criteria> criteriaList = new ArrayList<>();
 
     labels.forEach(

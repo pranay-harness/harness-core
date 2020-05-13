@@ -862,9 +862,10 @@ public class BillingDataQueryBuilder {
           }
         } else if (type == QLBillingDataFilterType.Label) {
           QLBillingDataLabelFilter labelFilter = filter.getLabel();
+          String clusterId = getClusterIdFromFilters(filters);
           if (labelFilter != null) {
             Set<String> workloadNamesWithNamespaces =
-                k8sLabelHelper.getWorkloadNamesWithNamespacesFromLabels(accountId, labelFilter);
+                k8sLabelHelper.getWorkloadNamesWithNamespacesFromLabels(accountId, clusterId, labelFilter);
             Set<String> workloadNames = new HashSet<>();
             Set<String> namespaces = new HashSet<>();
             workloadNamesWithNamespaces.forEach(workloadNameWithNamespace -> {
@@ -955,5 +956,14 @@ public class BillingDataQueryBuilder {
 
   protected boolean isGroupByEntityPresent(List<QLCCMEntityGroupBy> groupByList, QLCCMEntityGroupBy entityGroupBy) {
     return groupByList.stream().anyMatch(groupBy -> groupBy == entityGroupBy);
+  }
+
+  protected String getClusterIdFromFilters(List<QLBillingDataFilter> filters) {
+    for (QLBillingDataFilter filter : filters) {
+      if (filter.getCluster() != null) {
+        return filter.getCluster().getValues()[0];
+      }
+    }
+    return "";
   }
 }

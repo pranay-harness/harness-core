@@ -16,7 +16,8 @@ import java.util.Set;
 public class K8sLabelHelper {
   @Inject private K8sWorkloadDao k8sWorkloadDao;
 
-  public Set<String> getWorkloadNamesWithNamespacesFromLabels(String accountId, QLBillingDataLabelFilter labelFilter) {
+  public Set<String> getWorkloadNamesWithNamespacesFromLabels(
+      String accountId, String clusterId, QLBillingDataLabelFilter labelFilter) {
     Map<String, List<String>> labels = new HashMap<>();
     labelFilter.getLabels().forEach(label -> {
       String labelName = label.getName();
@@ -26,7 +27,7 @@ public class K8sLabelHelper {
         labels.put(labelName, label.getValues());
       }
     });
-    List<K8sWorkload> workloads = k8sWorkloadDao.list(accountId, labels);
+    List<K8sWorkload> workloads = k8sWorkloadDao.list(accountId, clusterId, labels);
     Set<String> workloadNamesWithNamespaces = new HashSet<>();
     workloads.forEach(workload
         -> workloadNamesWithNamespaces.add(

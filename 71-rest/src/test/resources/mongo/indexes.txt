@@ -315,7 +315,7 @@ instanceStats {"name": "accountId_timestamp_unique_idx", "unique": true} {"accou
 instanceStats {"name": "appId_1", "background": true} {"appId": 1}
 instanceStats {"name": "createdAt_1", "background": true} {"createdAt": 1}
 instanceStats {"name": "timestamp_1", "background": true} {"timestamp": 1}
-k8sWorkload {"name": "accountId_labels", "background": true} {"accountId": 1, "labels": 1}
+k8sWorkload {"name": "accountId_clusterId_labels", "background": true} {"accountId": 1, "clusterId": 1, "labels": 1}
 k8sWorkload {"name": "accountId_name_clusterId_namespace", "background": true} {"accountId": 1, "name": 1, "clusterId": 1, "namespace": 1}
 k8sWorkload {"name": "accountId_name_labels", "background": true} {"accountId": 1, "name": 1, "labels": 1}
 k8sWorkload {"name": "no_dup_cluster", "unique": true} {"clusterId": 1, "uid": 1}
