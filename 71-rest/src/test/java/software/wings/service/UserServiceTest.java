@@ -1239,6 +1239,7 @@ public class UserServiceTest extends WingsBaseTest {
     userService.updatePassword(token, USER_PASSWORD);
 
     verify(query, times(1)).filter("email", USER_EMAIL);
+    verify(emailDataNotificationService).send(any());
     verify(authService).invalidateAllTokensForUser(USER_ID);
     verify(wingsPersistence).update(eq(userBuilder.uuid(USER_ID).build()), any(UpdateOperations.class));
     verify(updateOperations).set(eq("passwordHash"), anyString());
