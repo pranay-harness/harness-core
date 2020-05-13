@@ -110,7 +110,7 @@
                         </entry>
                         <entry>
                             <key>Args</key>
-                            <value>server $*</value>
+                            <value>$*</value>
                         </entry>
                     </manifest>
                     <execPluginConfig>root</execPluginConfig>
