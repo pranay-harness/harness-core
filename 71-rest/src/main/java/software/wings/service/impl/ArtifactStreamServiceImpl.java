@@ -252,6 +252,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
       long totalArtifactCount = artifactQuery.count();
       if (totalArtifactCount == 0L) {
+        if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, accountId)) {
+          if (artifactStream.isArtifactStreamParameterized()) {
+            artifactStream.setArtifactCount(totalArtifactCount);
+            newArtifactStreams.add(artifactStream);
+          }
+        }
         continue;
       }
 
@@ -1390,5 +1396,22 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     });
 
     return listByIds(artifactStreamIds);
+  }
+
+  @Override
+  public List<String> getArtifactStreamParameters(String artifactStreamId) {
+    ArtifactStream artifactStream = get(artifactStreamId);
+    if (artifactStream == null) {
+      throw new InvalidRequestException(format("Artifact stream with id [%s] not found", artifactStreamId));
+    }
+    if (!artifactStream.isArtifactStreamParameterized()) {
+      throw new InvalidRequestException(format("Artifact stream with id [%s] not parameterized", artifactStreamId));
+    }
+    if (!featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, artifactStream.getAccountId())) {
+      throw new InvalidRequestException(
+          format("Artifact stream with id [%s] does not support parameterized fields", artifactStreamId));
+    }
+    validateIfNexus2AndParameterized(artifactStream, artifactStream.getAccountId());
+    return artifactStream.fetchArtifactStreamParameters();
   }
 }

@@ -20,9 +20,11 @@ import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -212,6 +214,51 @@ public class NexusArtifactStream extends ArtifactStream {
       return validateParameters(jobname, imageName, dockerRegistryUrl);
     }
     return false;
+  }
+
+  @Override
+  public List<String> fetchArtifactStreamParameters() {
+    List<String> parameters = new ArrayList<>();
+    if (isNotEmpty(jobname)) {
+      extractStringsMatchingPattern(jobname, parameters);
+    }
+    String repoFormat = getRepositoryFormat();
+    if (RepositoryFormat.maven.name().equals(repoFormat)) {
+      if (isNotEmpty(groupId)) {
+        extractStringsMatchingPattern(groupId, parameters);
+      }
+      if (isNotEmpty(artifactPaths) && isNotEmpty(artifactPaths.get(0))) {
+        extractStringsMatchingPattern(artifactPaths.get(0), parameters);
+      }
+      if (isNotEmpty(extension)) {
+        extractStringsMatchingPattern(extension, parameters);
+      }
+      if (isNotEmpty(classifier)) {
+        extractStringsMatchingPattern(classifier, parameters);
+      }
+    } else if (RepositoryFormat.nuget.name().equals(repoFormat) || RepositoryFormat.npm.name().equals(repoFormat)) {
+      if (isNotEmpty(packageName)) {
+        extractStringsMatchingPattern(packageName, parameters);
+      }
+    } else if (RepositoryFormat.docker.name().equals(repoFormat)) {
+      if (isNotEmpty(imageName)) {
+        extractStringsMatchingPattern(imageName, parameters);
+      }
+      if (isNotEmpty(dockerRegistryUrl)) {
+        extractStringsMatchingPattern(dockerRegistryUrl, parameters);
+      }
+    }
+    return parameters;
+  }
+
+  private static void extractStringsMatchingPattern(String parameter, List<String> parameters) {
+    String[] paths = parameter.split("/");
+    for (String path : paths) {
+      Matcher matcher = extractParametersPattern.matcher(path);
+      while (matcher.find()) {
+        parameters.add(matcher.group(1));
+      }
+    }
   }
 
   @Data

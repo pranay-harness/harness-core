@@ -73,6 +73,7 @@ public abstract class ArtifactStream
     extends Base implements AccountAccess, ArtifactSourceable, PersistentRegularIterable, NameAccess, KeywordsAware {
   protected static final String dateFormat = "HHMMSS";
   protected static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^.{}\\s-]*}");
+  protected static final Pattern extractParametersPattern = Pattern.compile("\\$\\{(.*?)}");
 
   @Transient private String artifactStreamId;
   private String artifactStreamType;
@@ -172,6 +173,10 @@ public abstract class ArtifactStream
       }
     }
     return found;
+  }
+
+  public List<String> fetchArtifactStreamParameters() {
+    return new ArrayList<>();
   }
 
   @Override
