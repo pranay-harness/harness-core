@@ -21,6 +21,7 @@ import static io.harness.pcf.model.PcfConstants.HEALTH_CHECK_HTTP_ENDPOINT_MANIF
 import static io.harness.pcf.model.PcfConstants.HEALTH_CHECK_TYPE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.HOSTS_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.HOST_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.IMAGE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.INSTANCE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.MEMORY_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.NAME_MANIFEST_YML_ELEMENT;
@@ -36,8 +37,10 @@ import static io.harness.pcf.model.PcfConstants.ROUTE_PATH_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.SERVICES_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.STACK_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.TIMEOUT_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.USERNAME_MANIFEST_YML_ELEMENT;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.LogColor.Gray;
 import static software.wings.beans.Log.LogColor.White;
@@ -77,7 +80,11 @@ import org.cloudfoundry.operations.applications.InstanceDetail;
 import org.jetbrains.annotations.NotNull;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -573,8 +580,8 @@ public class PcfCommandTaskHelper {
     return builder.toString();
   }
 
-  public String generateManifestYamlForPush(PcfCreateApplicationRequestData requestData)
-      throws PivotalClientApiException {
+  public String generateManifestYamlForPush(PcfCommandSetupRequest pcfCommandSetupRequest,
+      PcfCreateApplicationRequestData requestData) throws PivotalClientApiException {
     // Substitute name,
     String manifestYaml = requestData.getSetupRequest().getManifestYaml();
 
@@ -602,7 +609,7 @@ public class PcfCommandTaskHelper {
 
     // Update Name only if vars file is not present, legacy
     applicationToBeUpdated.put(NAME_MANIFEST_YML_ELEMENT, requestData.getNewReleaseName());
-    applicationToBeUpdated.put(PATH_MANIFEST_YML_ELEMENT, requestData.getArtifactPath());
+    updateArtifactDetails(requestData, pcfCommandSetupRequest, applicationToBeUpdated);
     applicationToBeUpdated.put(INSTANCE_MANIFEST_YML_ELEMENT, 0);
 
     // Update routes.
@@ -626,6 +633,36 @@ public class PcfCommandTaskHelper {
                                               .toString(),
           e);
     }
+  }
+
+  void updateArtifactDetails(PcfCreateApplicationRequestData requestData, PcfCommandSetupRequest pcfCommandSetupRequest,
+      TreeMap<String, Object> applicationToBeUpdated) {
+    if (!pcfCommandSetupRequest.getArtifactStreamAttributes().isDockerBasedDeployment()) {
+      applicationToBeUpdated.put(PATH_MANIFEST_YML_ELEMENT, requestData.getArtifactPath());
+    } else {
+      Map<String, Object> dockerDetails = new HashMap<>();
+      ArtifactStreamAttributes artifactStreamAttributes = pcfCommandSetupRequest.getArtifactStreamAttributes();
+      String dockerImagePath = artifactStreamAttributes.getMetadata().get(IMAGE_MANIFEST_YML_ELEMENT);
+      String username = getUsername(pcfCommandSetupRequest);
+      dockerDetails.put(IMAGE_MANIFEST_YML_ELEMENT, dockerImagePath);
+      if (!isEmpty(username)) {
+        dockerDetails.put(USERNAME_MANIFEST_YML_ELEMENT, username);
+      }
+      applicationToBeUpdated.put(DOCKER_MANIFEST_YML_ELEMENT, dockerDetails);
+    }
+  }
+
+  private String getUsername(PcfCommandSetupRequest pcfCommandSetupRequest) {
+    String username = "";
+    SettingAttribute serverSetting = pcfCommandSetupRequest.getArtifactStreamAttributes().getServerSetting();
+    if (serverSetting.getValue() instanceof DockerConfig) {
+      DockerConfig dockerConfig = (DockerConfig) serverSetting.getValue();
+      username = isEmpty(dockerConfig.getPassword()) ? EMPTY : dockerConfig.getUsername();
+    } else if (serverSetting.getValue() instanceof AwsConfig) {
+      AwsConfig awsConfig = (AwsConfig) serverSetting.getValue();
+      username = isEmpty(awsConfig.getSecretKey()) ? EMPTY : awsConfig.getAccessKey();
+    }
+    return username;
   }
 
   // Add Env Variable marking this deployment version as Inactive

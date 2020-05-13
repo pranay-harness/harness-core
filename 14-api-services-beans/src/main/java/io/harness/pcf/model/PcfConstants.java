@@ -8,6 +8,7 @@ public interface PcfConstants {
   String CF_HOME = "CF_HOME";
   String CF_USERNAME = "CF_USERNAME";
   String CF_PASSWORD = "CF_PASSWORD";
+  String CF_DOCKER_CREDENTIALS = "CF_DOCKER_PASSWORD";
   String CF_PLUGIN_HOME = "CF_PLUGIN_HOME";
   String SYS_VAR_CF_PLUGIN_HOME = "harness.pcf.plugin.home";
   String CF_COMMAND_FOR_CHECKING_AUTOSCALAR = "cf plugins | grep autoscaling-apps";
@@ -42,6 +43,8 @@ public interface PcfConstants {
   String COMMAND_MANIFEST_YML_ELEMENT = "command";
   String DISK_QUOTA_MANIFEST_YML_ELEMENT = "disk_quota";
   String DOCKER_MANIFEST_YML_ELEMENT = "docker";
+  String IMAGE_MANIFEST_YML_ELEMENT = "image";
+  String USERNAME_MANIFEST_YML_ELEMENT = "username";
   String DOMAINS_MANIFEST_YML_ELEMENT = "domains";
   String ENV_MANIFEST_YML_ELEMENT = "env";
   String HEALTH_CHECK_HTTP_ENDPOINT_MANIFEST_YML_ELEMENT = "health-check-http-endpoint";

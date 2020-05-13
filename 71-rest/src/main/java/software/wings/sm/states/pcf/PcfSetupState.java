@@ -16,6 +16,10 @@ import static software.wings.beans.command.PcfDummyCommandUnit.CheckExistingApps
 import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
 import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
+import static software.wings.settings.SettingValue.SettingVariableTypes.ACR;
+import static software.wings.settings.SettingValue.SettingVariableTypes.DOCKER;
+import static software.wings.settings.SettingValue.SettingVariableTypes.ECR;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GCR;
 import static software.wings.utils.Misc.normalizeExpression;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -83,6 +87,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -276,6 +281,8 @@ public class PcfSetupState extends State {
         ArtifactMetadataKeys.artifactFileName, artifactFileNameForSource(artifact, artifactStreamAttributes));
     artifactStreamAttributes.getMetadata().put(
         ArtifactMetadataKeys.artifactPath, artifactPathForSource(artifact, artifactStreamAttributes));
+    artifactStreamAttributes.setDockerBasedDeployment(
+        isDockerBasedDeployment(artifactStreamAttributes.getArtifactStreamType()));
 
     PcfCommandRequest commandRequest =
         PcfCommandSetupRequest.builder()
@@ -355,6 +362,11 @@ public class PcfSetupState extends State {
         .stateExecutionData(stateExecutionData)
         .async(true)
         .build();
+  }
+
+  private boolean isDockerBasedDeployment(String artifactStreamType) {
+    SettingVariableTypes registryType = SettingVariableTypes.valueOf(artifactStreamType);
+    return registryType == DOCKER || registryType == ECR || registryType == GCR || registryType == ACR;
   }
 
   @VisibleForTesting
