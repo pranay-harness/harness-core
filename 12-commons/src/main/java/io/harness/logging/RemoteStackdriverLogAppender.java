@@ -1,6 +1,7 @@
 package io.harness.logging;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Localhost.getLocalHostName;
@@ -16,6 +17,7 @@ import com.google.cloud.logging.LoggingOptions;
 import com.google.cloud.logging.LoggingOptions.Builder;
 import com.google.cloud.logging.Payload.JsonPayload;
 import com.google.cloud.logging.Severity;
+import com.google.cloud.logging.Synchronicity;
 import com.google.cloud.logging.v2.LoggingSettings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
@@ -61,6 +63,8 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   private final LogLines logLines = new LogLines();
   private final ExecutorService appenderPool = Executors.newSingleThreadExecutor(
       new ThreadFactoryBuilder().setNameFormat("remote-stackdriver-log-appender").build());
+  private final ExecutorService executorService = Executors.newSingleThreadExecutor(
+      new ThreadFactoryBuilder().setNameFormat("remote-stackdriver-log-writer").build());
   private final VersionInfoManager versionInfoManager = new VersionInfoManager();
   private final String processId =
       Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
@@ -184,8 +188,16 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
                            .build());
         }
         logQueue.drainTo(logLines.getLines(), MAX_BATCH_SIZE);
-        logging.write(logLines.getLines(), WriteOption.logName(LOG_NAME),
-            WriteOption.resource(MonitoredResource.newBuilder("global").build()), WriteOption.labels(getLogLabels()));
+        executorService.submit(() -> {
+          try {
+            logging.write(logLines.getLines(), WriteOption.logName(LOG_NAME),
+                WriteOption.resource(MonitoredResource.newBuilder("global").build()),
+                WriteOption.labels(getLogLabels()));
+          } catch (Exception ex) {
+            ignoredOnPurpose(ex);
+            logger.warn(ex.getMessage());
+          }
+        });
       } catch (Exception ex) {
         logger.error("Failed to submit logs.", ex);
       } finally {
@@ -241,6 +253,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
 
     try {
       logging = loggingOptionsBuilder.build().getService();
+      logging.setWriteSynchronicity(Synchronicity.SYNC);
     } catch (Exception e) {
       logger.error("Failed to build Logging client for StackdriverLogging", e);
     }
