@@ -94,6 +94,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlService yamlService;
   @Inject private YamlHelper yamlHelper;
+  @Inject private YamlSuccessfulChangeServiceImpl yamlSuccessfulChangeService;
 
   private static final String UNKNOWN_GIT_CONNECTOR = "Unknown Git Connector";
 
@@ -272,6 +273,8 @@ public class GitSyncServiceImpl implements GitSyncService {
         updateStatusOfGitFileActivity(((GitFileChange) change).getProcessingCommitId(),
             Arrays.asList(change.getFilePath()), GitFileActivity.Status.SUCCESS, "", accountId);
       }
+
+      yamlSuccessfulChangeService.updateOnSuccessfulGitChangeProcessing(gitFileChange, accountId);
     }
   }
 
