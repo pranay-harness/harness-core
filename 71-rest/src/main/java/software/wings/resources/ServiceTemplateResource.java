@@ -59,7 +59,7 @@ public class ServiceTemplateResource {
   @GET
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ALL_APP_ENTITIES)
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<PageResponse<ServiceTemplate>> list(@QueryParam("envId") String envId,
       @QueryParam("appId") String appId, @BeanParam PageRequest<ServiceTemplate> pageRequest,
       @QueryParam("details") @DefaultValue("true") boolean details) {

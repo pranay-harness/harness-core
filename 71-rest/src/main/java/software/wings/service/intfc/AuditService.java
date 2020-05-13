@@ -37,7 +37,6 @@ public interface AuditService extends EntityCrudOperationObserver {
    * @return the string
    */
   String create(AuditHeader header, RequestType requestType, InputStream inputStream);
-
   /**
    * Finalize.
    *
