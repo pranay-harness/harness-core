@@ -1,4 +1,4 @@
-package software.wings.beans;
+package io.harness.delegate.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;

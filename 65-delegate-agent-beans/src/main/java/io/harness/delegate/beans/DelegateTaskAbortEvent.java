@@ -1,10 +1,7 @@
-package software.wings.beans;
+package io.harness.delegate.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-/**
- * Created by peeyushaggarwal on 1/26/17.
- */
 @JsonTypeName("DelegateTaskAbortEvent")
 public class DelegateTaskAbortEvent extends DelegateTaskEvent {
   public static final class Builder {

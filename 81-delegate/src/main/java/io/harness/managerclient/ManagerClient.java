@@ -1,9 +1,12 @@
 package io.harness.managerclient;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
+import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
@@ -21,9 +24,6 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
-import software.wings.beans.DelegateConnectionHeartbeat;
-import software.wings.beans.DelegateProfileParams;
-import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Log;
 import software.wings.delegatetasks.DelegateFile;
