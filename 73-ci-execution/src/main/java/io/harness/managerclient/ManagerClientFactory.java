@@ -41,6 +41,7 @@ public class ManagerClientFactory implements Provider<ManagerCIResource> {
     Retrofit retrofit = new Retrofit.Builder()
                             .baseUrl(baseUrl)
                             .client(getUnsafeOkHttpClient())
+                            .addConverterFactory(new KryoConverterFactory())
                             .addConverterFactory(JacksonConverterFactory.create(objectMapper))
                             .build();
     return retrofit.create(ManagerCIResource.class);

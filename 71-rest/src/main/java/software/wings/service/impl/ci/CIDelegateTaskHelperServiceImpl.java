@@ -1,6 +1,10 @@
 package software.wings.service.impl.ci;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.common.CICommonPodConstants.NAMESPACE;
+import static software.wings.common.CICommonPodConstants.POD_NAME;
+import static software.wings.common.CICommonPodConstants.STEP_EXEC;
+import static software.wings.common.CICommonPodConstants.STEP_EXEC_WORKING_DIR;
 
 import com.google.inject.Inject;
 
@@ -17,45 +21,52 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.ci.CIK8BuildTaskParams;
-import software.wings.beans.ci.pod.CIContainerType;
+import software.wings.beans.ci.CIK8CleanupTaskParams;
+import software.wings.beans.ci.K8ExecCommandParams;
+import software.wings.beans.ci.K8ExecuteCommandTaskParams;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
-import software.wings.beans.container.ImageDetails;
+import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+/**
+ * Send CI pipeline tasks to delegate, It sends following tasks taking input from CI
+ *     - Build Pod
+ *     - Execute command on Pod
+ *     - Delete Pod
+ *
+ *     Currently SecretManager and SettingsService can not be injected due to subsequent dependencies
+ *     We have to remove this code when delegate microservice will be ready
+ */
 
 @Slf4j
 public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperService {
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
   @Inject private DelegateService delegateService;
-  private static final String accountId = "kmpySmUISimoRrJL6NL73w";
+  private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
+  private static final String BRANCH = "master";
 
-  /* TODO Send task params from CI directly instead of hardcoding it here require
-       Before doing above, we have to expose api for fetching SettingAttribute and SecretManager
-       and implement serialization
-  */
   @Override
-  public ResponseData setBuildEnv(CIK8BuildTaskParams cik8BuildTaskParams) {
-    SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, "gitRepo");
+  public K8sTaskExecutionResponse setBuildEnv(
+      String k8ConnectorName, String gitConnectorName, CIK8PodParams<CIK8ContainerParams> podParams) {
+    SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(ACCOUNT_ID, gitConnectorName);
     GitFetchFilesConfig gitFetchFilesConfig = null;
     if (cloudProvider != null) {
       GitConfig gitConfig = (GitConfig) cloudProvider.getValue();
       List<EncryptedDataDetail> gitEncryptedDataDetails = secretManager.getEncryptionDetails(gitConfig);
       gitFetchFilesConfig = GitFetchFilesConfig.builder()
                                 .encryptedDataDetails(gitEncryptedDataDetails)
-                                .gitFileConfig(GitFileConfig.builder().branch("master").build())
+                                .gitFileConfig(GitFileConfig.builder().branch(BRANCH).build())
                                 .gitConfig(gitConfig)
                                 .build();
     }
-    SettingAttribute googleCloud = settingsService.getSettingAttributeByName(accountId, "kubernetes_clusterqqq");
+    SettingAttribute googleCloud = settingsService.getSettingAttributeByName(ACCOUNT_ID, k8ConnectorName);
     KubernetesClusterConfig kubernetesClusterConfig = null;
     List<EncryptedDataDetail> encryptedDataDetails = null;
     KubernetesConfig kubernetesConfig = null;
@@ -64,59 +75,119 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
       kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(null);
       encryptedDataDetails = secretManager.getEncryptionDetails(kubernetesClusterConfig);
     }
-    String stepExecVolumeName = "step-exec";
-    String stepExecWorkingDir = "workspace";
-    String podName = "pod1";
-    String namespace = "default";
 
-    ImageDetails imageDetails = ImageDetails.builder()
-                                    .name("maven")
-                                    .tag("3.6.3-jdk-8")
-                                    .registryUrl("https://index.docker.io/v1/")
-                                    .username("shubham149")
-                                    .build();
+    CIK8PodParams<CIK8ContainerParams> podParamsWithGitDetails =
+        CIK8PodParams.<CIK8ContainerParams>builder()
+            .name(POD_NAME)
+            .namespace(NAMESPACE)
+            .stepExecVolumeName(STEP_EXEC)
+            .stepExecWorkingDir(STEP_EXEC_WORKING_DIR)
+            .gitFetchFilesConfig(gitFetchFilesConfig)
+            .containerParamsList(podParams.getContainerParamsList())
+            .build();
 
-    Map<String, String> map = new HashMap<>();
-    map.put(stepExecVolumeName, "/step-exec");
-
-    CIK8ContainerParams ctr = CIK8ContainerParams.builder()
-                                  .name("build-setup")
-                                  .containerType(CIContainerType.STEP_EXECUTOR)
-                                  .commands(Arrays.asList("/bin/sh", "-c"))
-                                  .args(Arrays.asList("trap : TERM INT; (while true; do sleep 1000; done) & wait"))
-                                  .imageDetails(imageDetails)
-                                  .volumeToMountPath(map)
-                                  .build();
-
-    CIK8PodParams<CIK8ContainerParams> podParams = CIK8PodParams.<CIK8ContainerParams>builder()
-                                                       .name(podName)
-                                                       .namespace(namespace)
-                                                       .stepExecVolumeName(stepExecVolumeName)
-                                                       .stepExecWorkingDir(stepExecWorkingDir)
-                                                       .gitFetchFilesConfig(gitFetchFilesConfig)
-                                                       .containerParamsList(Arrays.asList(ctr))
-                                                       .build();
     try {
       ResponseData responseData = delegateService.executeTask(
           DelegateTask.builder()
-              .accountId(accountId)
+              .accountId(ACCOUNT_ID)
               .appId(GLOBAL_APP_ID)
-              //   .async(false)
               .data(TaskData.builder()
                         .taskType(TaskType.CI_BUILD.name())
+                        .async(false)
                         .parameters(new Object[] {CIK8BuildTaskParams.builder()
                                                       .gitFetchFilesConfig(gitFetchFilesConfig)
                                                       .encryptionDetails(encryptedDataDetails)
                                                       .kubernetesConfig(kubernetesConfig)
-                                                      .cik8PodParams(podParams)
+                                                      .cik8PodParams(podParamsWithGitDetails)
+                                                      .build()})
+                        .timeout(TimeUnit.SECONDS.toMillis(600))
+                        .build())
+              .build());
+      logger.info(responseData.toString());
+
+      if (responseData instanceof K8sTaskExecutionResponse) {
+        return (K8sTaskExecutionResponse) responseData;
+      }
+    } catch (Exception e) {
+      logger.error("Failed to execute delegate task to setup build", e);
+    }
+
+    return null;
+  }
+
+  @Override
+  public K8sTaskExecutionResponse executeBuildCommand(String k8ConnectorName, K8ExecCommandParams params) {
+    SettingAttribute googleCloud = settingsService.getSettingAttributeByName(ACCOUNT_ID, k8ConnectorName);
+    KubernetesClusterConfig kubernetesClusterConfig = null;
+    List<EncryptedDataDetail> encryptedDataDetails = null;
+    KubernetesConfig kubernetesConfig = null;
+    if (googleCloud != null) {
+      kubernetesClusterConfig = (KubernetesClusterConfig) googleCloud.getValue();
+      kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(null);
+      encryptedDataDetails = secretManager.getEncryptionDetails(kubernetesClusterConfig);
+    }
+
+    try {
+      ResponseData responseData = delegateService.executeTask(
+          DelegateTask.builder()
+              .accountId(ACCOUNT_ID)
+              .appId(GLOBAL_APP_ID)
+              .data(TaskData.builder()
+                        .taskType(TaskType.EXECUTE_COMMAND.name())
+                        .async(false)
+                        .parameters(new Object[] {K8ExecuteCommandTaskParams.builder()
+                                                      .encryptionDetails(encryptedDataDetails)
+                                                      .kubernetesConfig(kubernetesConfig)
+                                                      .k8ExecCommandParams(params)
+                                                      .build()})
+                        .timeout(TimeUnit.SECONDS.toMillis(3600))
+                        .build())
+              .build());
+      logger.info(responseData.toString());
+      if (responseData instanceof K8sTaskExecutionResponse) {
+        return (K8sTaskExecutionResponse) responseData;
+      }
+    } catch (Exception e) {
+      logger.error("Failed to execute delegate task for build execution", e);
+    }
+    return null;
+  }
+
+  @Override
+  public K8sTaskExecutionResponse cleanupEnv(String k8ConnectorName) {
+    SettingAttribute googleCloud = settingsService.getSettingAttributeByName(ACCOUNT_ID, k8ConnectorName);
+    KubernetesClusterConfig kubernetesClusterConfig = null;
+    List<EncryptedDataDetail> encryptedDataDetails = null;
+    KubernetesConfig kubernetesConfig = null;
+    if (googleCloud != null) {
+      kubernetesClusterConfig = (KubernetesClusterConfig) googleCloud.getValue();
+      kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(null);
+      encryptedDataDetails = secretManager.getEncryptionDetails(kubernetesClusterConfig);
+    }
+
+    try {
+      ResponseData responseData = delegateService.executeTask(
+          DelegateTask.builder()
+              .accountId(ACCOUNT_ID)
+              .appId(GLOBAL_APP_ID)
+              .data(TaskData.builder()
+                        .taskType(TaskType.CI_CLEANUP.name())
+                        .async(false)
+                        .parameters(new Object[] {CIK8CleanupTaskParams.builder()
+                                                      .encryptionDetails(encryptedDataDetails)
+                                                      .kubernetesConfig(kubernetesConfig)
+                                                      .podName(POD_NAME)
+                                                      .namespace(NAMESPACE)
                                                       .build()})
                         .timeout(TimeUnit.SECONDS.toMillis(60))
                         .build())
               .build());
       logger.info(responseData.toString());
-      return responseData;
+      if (responseData instanceof K8sTaskExecutionResponse) {
+        return (K8sTaskExecutionResponse) responseData;
+      }
     } catch (Exception e) {
-      logger.error("Failed to execute delegate task", e);
+      logger.error("Failed to cleanup pod", e);
     }
     return null;
   }

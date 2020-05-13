@@ -24,21 +24,34 @@ public class CIExecutionPlanTestHelper {
   private static final String BUILD_STAGE_NAME = "buildStage";
   private static final String ENV_SETUP_NAME = "envSetupName";
   private static final String BUILD_SCRIPT = "mvn clean install";
-  private List<ScriptInfo> getBuildCommandSteps() {
+  private static final String POD_NAME = "Pod1";
+
+  public List<ScriptInfo> getBuildCommandSteps() {
     return asList(ScriptInfo.builder().scriptString(BUILD_SCRIPT).build());
+  }
+
+  public K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfo() {
+    List<PodSetupInfo> pods = new ArrayList<>();
+    pods.add(PodSetupInfo.builder()
+                 .name(POD_NAME)
+                 .podSetupParams(PodSetupInfo.PodSetupParams.builder()
+                                     .containerDefinitionInfos(Arrays.asList(ContainerDefinitionInfo.builder().build()))
+                                     .build())
+                 .build());
+    return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
+  }
+
+  public BuildEnvSetupStepInfo getBuildEnvSetupStepInfo() {
+    return BuildEnvSetupStepInfo.builder().identifier(ENV_SETUP_NAME).buildJobEnvInfo(getCIBuildJobEnvInfo()).build();
   }
 
   public StepGraph getStepsGraph() {
     return StepGraph.builder()
-        .ciSteps(asList(CIStep.builder()
-                            .stepInfo(BuildEnvSetupStepInfo.builder()
-                                          .name(ENV_SETUP_NAME)
-                                          .buildJobEnvInfo(getCIBuildJobEnvInfo())
-                                          .build())
-                            .stepMetadata(StepMetadata.builder().build())
-                            .build(),
+        .ciSteps(asList(
+            CIStep.builder().stepInfo(getBuildEnvSetupStepInfo()).stepMetadata(StepMetadata.builder().build()).build(),
             CIStep.builder()
-                .stepInfo(TestStepInfo.builder().name(BUILD_STAGE_NAME).scriptInfos(getBuildCommandSteps()).build())
+                .stepInfo(
+                    TestStepInfo.builder().identifier(BUILD_STAGE_NAME).scriptInfos(getBuildCommandSteps()).build())
                 .stepMetadata(StepMetadata.builder().build())
                 .build()))
         .build();
@@ -46,15 +59,5 @@ public class CIExecutionPlanTestHelper {
 
   private BuildJobEnvInfo getCIBuildJobEnvInfo() {
     return K8BuildJobEnvInfo.builder().podsSetupInfo(getCIPodsSetupInfo()).build();
-  }
-
-  private K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfo() {
-    List<PodSetupInfo> pods = new ArrayList<>();
-    pods.add(PodSetupInfo.builder()
-                 .podSetupParams(PodSetupInfo.PodSetupParams.builder()
-                                     .containerDefinitionInfos(Arrays.asList(ContainerDefinitionInfo.builder().build()))
-                                     .build())
-                 .build());
-    return K8BuildJobEnvInfo.PodsSetupInfo.builder().pods(pods).build();
   }
 }

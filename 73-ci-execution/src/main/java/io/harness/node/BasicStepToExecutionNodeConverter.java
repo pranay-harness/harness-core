@@ -13,6 +13,9 @@ import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.ExecutionNode;
 import io.harness.redesign.levels.StepLevel;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Converts a step to execution Node by adding SYNC facilitators and ON_SUCCESS advisers
  */
@@ -22,13 +25,13 @@ public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeCon
   @Override
   public ExecutionNode convertStep(CIStep step, String nextStepUuid) {
     return ExecutionNode.builder()
-        .name(step.getStepInfo().getStepName())
+        .name(step.getStepInfo().getStepIdentifier())
         .uuid(step.getStepMetadata().getUuid())
         .stateType(step.getStepInfo().getStateType())
         .levelType(StepLevel.LEVEL_TYPE)
         .stateParameters(step.getStepInfo())
         .facilitatorObtainment(getFacilitatorsFromMetaData(step.getStepMetadata()))
-        .adviserObtainment(getAdviserObtainmentFromMetaData(step.getStepMetadata(), nextStepUuid))
+        .adviserObtainments(getAdviserObtainmentFromMetaData(step.getStepMetadata(), nextStepUuid))
         .build();
   }
 
@@ -36,16 +39,16 @@ public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeCon
     return FacilitatorObtainment.builder().type(FacilitatorType.builder().type(FacilitatorType.SYNC).build()).build();
   }
 
-  private AdviserObtainment getAdviserObtainmentFromMetaData(StepMetadata stepMetadata, String nextStepUuid) {
-    AdviserObtainment adviserObtainment = null;
+  private List<AdviserObtainment> getAdviserObtainmentFromMetaData(StepMetadata stepMetadata, String nextStepUuid) {
+    List<AdviserObtainment> adviserObtainments = new ArrayList<>();
 
     if (!StepGraph.isNILStepUuId(nextStepUuid)) {
-      adviserObtainment = AdviserObtainment.builder()
-                              .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
-                              .parameters(OnSuccessAdviserParameters.builder().nextNodeId(nextStepUuid).build())
-                              .build();
+      adviserObtainments.add(AdviserObtainment.builder()
+                                 .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                 .parameters(OnSuccessAdviserParameters.builder().nextNodeId(nextStepUuid).build())
+                                 .build());
     }
 
-    return adviserObtainment;
+    return adviserObtainments;
   }
 }

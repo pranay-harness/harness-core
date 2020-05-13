@@ -1,5 +1,9 @@
 package io.harness.beans.environment.pod.container;
 
+/**
+ * Type of each container inside the pod for running CI job
+ */
+
 public enum ContainerType {
   STEP_EXECUTOR(ContainerSource.BUILD_JOB);
   ContainerSource containerSource;

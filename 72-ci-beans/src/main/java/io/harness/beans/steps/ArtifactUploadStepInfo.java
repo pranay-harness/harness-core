@@ -18,7 +18,7 @@ public class ArtifactUploadStepInfo implements StepInfo {
   @NotNull private StateType stateType = StateType.builder().type(StepType.UPLOAD_ARTIFACT.name()).build();
   private ArtifactUploadInfo artifactUploadInfo;
 
-  @NotNull private String name;
+  @NotNull private String identifier;
 
   @Override
   public StepType getType() {
@@ -26,7 +26,7 @@ public class ArtifactUploadStepInfo implements StepInfo {
   }
 
   @Override
-  public String getStepName() {
-    return name;
+  public String getStepIdentifier() {
+    return identifier;
   }
 }

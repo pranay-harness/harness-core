@@ -14,6 +14,7 @@ import io.harness.state.io.StateParameters;
   , @JsonSubTypes.Type(value = BuildEnvSetupStepInfo.class, name = "SETUP_ENV"),
       @JsonSubTypes.Type(value = BuildStepInfo.class, name = "BUILD"),
       @JsonSubTypes.Type(value = ArtifactUploadStepInfo.class, name = "UPLOAD_ARTIFACT"),
+      @JsonSubTypes.Type(value = CleanupStepInfo.class, name = "CLEANUP"),
       @JsonSubTypes.Type(value = TestStepInfo.class, name = "TEST")
 })
 public interface StepInfo extends StateParameters, BaseStepTemplate {
@@ -21,5 +22,5 @@ public interface StepInfo extends StateParameters, BaseStepTemplate {
 
   StateType getStateType();
 
-  String getStepName();
+  String getStepIdentifier();
 }
