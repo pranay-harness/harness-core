@@ -7,7 +7,6 @@ import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Ambiance.AmbianceKeys;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.Outcome;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.persistence.CreatedAtAware;
@@ -37,7 +36,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Redesign
 @FieldNameConstants(innerTypeName = "NodeExecutionKeys")
-@Entity(value = "nodeExecutions", noClassnameStored = true)
+@Entity(value = "nodeExecutions")
 @Converters({DurationConverter.class})
 public final class NodeExecution implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   // Immutable
@@ -65,8 +64,6 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
 
   // Applicable only for child/children states
   @Singular List<StateTransput> additionalInputs;
-
-  @Singular List<Outcome> outcomes;
 
   @Singular List<String> retryIds;
 

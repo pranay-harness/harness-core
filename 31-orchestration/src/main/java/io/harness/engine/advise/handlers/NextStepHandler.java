@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import io.harness.adviser.impl.success.NextStepAdvise;
+import io.harness.adviser.NextStepAdvise;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.EngineObtainmentHelper;

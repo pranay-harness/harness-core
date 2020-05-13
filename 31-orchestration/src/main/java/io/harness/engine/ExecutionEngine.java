@@ -107,10 +107,9 @@ public class ExecutionEngine implements Engine {
 
   public void startNodeExecution(Ambiance ambiance) {
     // Update to Running Status
-    NodeExecution nodeExecution =
-        Preconditions.checkNotNull(hPersistence.createQuery(NodeExecution.class)
-                                       .filter(NodeExecutionKeys.uuid, ambiance.obtainCurrentRuntimeId())
-                                       .get());
+    NodeExecution nodeExecution = hPersistence.createQuery(NodeExecution.class)
+                                      .filter(NodeExecutionKeys.uuid, ambiance.obtainCurrentRuntimeId())
+                                      .get();
     ExecutionNode node = nodeExecution.getNode();
     // Facilitate and execute
     List<StateTransput> inputs =

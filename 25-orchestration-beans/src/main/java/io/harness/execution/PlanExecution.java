@@ -31,7 +31,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Redesign
 @FieldNameConstants(innerTypeName = "PlanExecutionKeys")
-@Entity(value = "planExecutions", noClassnameStored = true)
+@Entity(value = "planExecutions")
 public final class PlanExecution implements PersistentRegularIterable, CreatedAtAware, CreatedAtAccess, CreatedByAware,
                                             CreatedByAccess, UpdatedAtAware, UuidAccess {
   public static final Duration TTL = ofDays(21);
