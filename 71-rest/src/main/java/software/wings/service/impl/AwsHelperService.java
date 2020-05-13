@@ -162,6 +162,7 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder
 import io.harness.aws.AwsCallTracker;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.AwsAutoScaleException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -339,7 +340,8 @@ public class AwsHelperService {
     return (AmazonCloudFormationClient) builder.build();
   }
 
-  private AmazonAutoScalingClient getAmazonAutoScalingClient(Regions region, AwsConfig awsConfig) {
+  @VisibleForTesting
+  AmazonAutoScalingClient getAmazonAutoScalingClient(Regions region, AwsConfig awsConfig) {
     AmazonAutoScalingClientBuilder builder = AmazonAutoScalingClientBuilder.standard().withRegion(region);
     attachCredentials(builder, awsConfig);
     return (AmazonAutoScalingClient) builder.build();
@@ -527,8 +529,7 @@ public class AwsHelperService {
       throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND)
           .addParam("message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof AmazonAutoScalingException) {
-      logger.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
-      throw amazonServiceException;
+      throw new AwsAutoScaleException(amazonServiceException.getMessage(), ErrorCode.GENERAL_ERROR, USER);
     } else if (amazonServiceException instanceof AmazonECSException
         || amazonServiceException instanceof AmazonECRException) {
       if (amazonServiceException instanceof ClientException) {
