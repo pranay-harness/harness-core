@@ -6,6 +6,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.resolvers.Resolver;
+
 @OwnedBy(CDC)
 public interface OutcomeService extends Resolver<Outcome> {
   // TODO => Improve this evaluate if this is even needed
