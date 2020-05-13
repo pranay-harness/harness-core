@@ -24,22 +24,9 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-class ManagerClientX509TrustManager implements X509TrustManager {
-  @Override
-  public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-    return new java.security.cert.X509Certificate[] {};
-  }
-
-  @Override
-  public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-
-  @Override
-  public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-}
-
 public class ManagerClientFactory implements Provider<ManagerClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
-      ImmutableList.of(new ManagerClientX509TrustManager());
+      ImmutableList.of(new DelegateAgentManagerClientX509TrustManager());
 
   private static boolean sendVersionHeader = true;
 
