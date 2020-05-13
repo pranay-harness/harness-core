@@ -44,7 +44,7 @@ public class K8sWorkloadDaoTest extends WingsBaseTest {
   public void shouldListAllWorkloadsWithLabelFilter() {
     Map<String, List<String>> labels = new HashMap<>();
     labels.put("key", Arrays.asList("value"));
-    List<K8sWorkload> workloads = k8sWorkloadDao.list(ACCOUNT_ID, labels);
+    List<K8sWorkload> workloads = k8sWorkloadDao.list(ACCOUNT_ID, CLUSTER_ID, labels);
     assertThat(workloads).hasSize(1);
     assertThat(workloads.get(0).getName()).isEqualTo("testWorkload");
     assertThat(workloads.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -63,7 +63,7 @@ public class K8sWorkloadDaoTest extends WingsBaseTest {
   public void shouldNotListWorkloadsWithLabelFilter() {
     Map<String, List<String>> labels = new HashMap<>();
     labels.put("different key", Arrays.asList("different value"));
-    List<K8sWorkload> workloads = k8sWorkloadDao.list(ACCOUNT_ID, labels);
+    List<K8sWorkload> workloads = k8sWorkloadDao.list(ACCOUNT_ID, CLUSTER_ID, labels);
     assertThat(workloads).hasSize(0);
   }
 
