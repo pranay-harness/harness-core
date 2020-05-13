@@ -11,6 +11,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CEGcpConfig;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
@@ -52,6 +53,8 @@ public class CeConnectorDataFetcher
           .crossAccountRoleArn(ceAwsConfig.getAwsCrossAccountAttributes().getCrossAccountRoleArn())
           .infraType(QLInfraTypesEnum.AWS)
           .ceHealthStatus(CEHealthStatus.builder().isHealthy(true).build());
+    } else if (settingAttribute.getValue() instanceof CEGcpConfig) {
+      qlCEConnectorBuilder.infraType(QLInfraTypesEnum.GCP);
     }
     return qlCEConnectorBuilder.build();
   }

@@ -91,6 +91,7 @@ input CESetupFilter {
 
 enum infraTypesEnum {
   AWS
+  GCP
 }
 
 enum accountStatusEnum {

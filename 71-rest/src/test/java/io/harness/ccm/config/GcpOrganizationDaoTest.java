@@ -56,9 +56,9 @@ public class GcpOrganizationDaoTest extends WingsBaseTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testGet() {
-    String uuid = gcpOrganizationDao.save(gcpOrganization1);
-    GcpOrganization gcpOrganization = gcpOrganizationDao.get(uuid);
-    assertThat(gcpOrganization.getUuid()).isEqualTo(uuid);
+    GcpOrganization upsertedGcpOrganization = gcpOrganizationDao.upsert(gcpOrganization1);
+    GcpOrganization gcpOrganization = gcpOrganizationDao.get(upsertedGcpOrganization.getUuid());
+    assertThat(gcpOrganization.getUuid()).isEqualTo(upsertedGcpOrganization.getUuid());
   }
 
   @Test

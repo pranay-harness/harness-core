@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.ccm.config.GcpOrganization.GcpOrganizationKeys;
 import io.harness.persistence.HPersistence;
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -38,9 +39,7 @@ public class GcpOrganizationDao {
   }
 
   public GcpOrganization get(String uuid) {
-    Query<GcpOrganization> query =
-        persistence.createQuery(GcpOrganization.class).field(GcpOrganizationKeys.uuid).equal(uuid);
-    return query.get();
+    return persistence.createQuery(GcpOrganization.class).filter(GcpOrganizationKeys.uuid, new ObjectId(uuid)).get();
   }
 
   public List<GcpOrganization> list(String accountId) {

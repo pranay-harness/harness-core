@@ -8,6 +8,7 @@ import io.harness.ccm.billing.graphql.GcpBillingAccountQueryArguments;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpBillingAccountDTO;
 import io.harness.ccm.config.GcpBillingAccountService;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractArrayDataFetcher;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class GcpBillingAccountDataFetcher
     extends AbstractArrayDataFetcher<GcpBillingAccountDTO, GcpBillingAccountQueryArguments> {
   @Inject GcpBillingAccountService gcpBillingAccountService;

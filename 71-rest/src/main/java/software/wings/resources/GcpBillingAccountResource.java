@@ -9,6 +9,7 @@ import io.harness.ccm.config.GcpBillingAccountService;
 import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.List;
@@ -21,6 +22,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+@Slf4j
 @Api("billing-accounts")
 @Path("/billing-accounts")
 @Produces("application/json")
@@ -38,9 +40,12 @@ public class GcpBillingAccountResource {
   @POST
   @Timed
   @ExceptionMetered
-  public RestResponse<String> save(@QueryParam("accountId") String accountId, GcpBillingAccount billingAccount) {
+  public RestResponse<GcpBillingAccount> save(
+      @QueryParam("accountId") String accountId, GcpBillingAccount billingAccount) {
     billingAccount.setAccountId(accountId);
-    return new RestResponse<>(gcpBillingAccountService.create(billingAccount));
+    GcpBillingAccount gcpBillingAccount;
+    gcpBillingAccount = gcpBillingAccountService.create(billingAccount);
+    return new RestResponse<>(gcpBillingAccount);
   }
 
   @POST
