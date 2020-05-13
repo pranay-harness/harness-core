@@ -20,7 +20,7 @@ public class TestStepInfo implements StepInfo {
   @javax.validation.constraints.NotNull
   private StateType stateType = StateType.builder().type(StepType.TEST.name()).build();
 
-  @NotEmpty private String name;
+  @NotEmpty private String identifier;
   @NotEmpty private String numParallel;
   private List<ScriptInfo> scriptInfos;
 
@@ -30,7 +30,7 @@ public class TestStepInfo implements StepInfo {
   }
 
   @Override
-  public String getStepName() {
-    return name;
+  public String getStepIdentifier() {
+    return identifier;
   }
 }

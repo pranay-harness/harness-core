@@ -7,15 +7,21 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.ci.pod.ContainerResourceParams;
+
+/**
+ * Stores all details require to spawn container
+ */
 
 @Data
 @Value
 @Builder
 public class ContainerDefinitionInfo implements UuidAccess {
   private String uuid = generateUuid();
-  @NotEmpty private String settingId;
-  private ContainerImageDetails containerImageDetails;
-  private ContainerType containerType;
+  @NotEmpty private String name;
+  @NotEmpty private ContainerImageDetails containerImageDetails;
+  @NotEmpty private ContainerType containerType;
+  @NotEmpty private ContainerResourceParams containerResourceParams;
 
   @Override
   public String getUuid() {

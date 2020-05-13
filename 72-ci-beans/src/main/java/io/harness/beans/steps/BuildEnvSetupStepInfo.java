@@ -18,7 +18,9 @@ public class BuildEnvSetupStepInfo implements StepInfo {
   @NotNull public static final StateType stateType = StateType.builder().type(StepType.SETUP_ENV.name()).build();
 
   @NotNull private BuildJobEnvInfo buildJobEnvInfo;
-  @NotNull private String name;
+  @NotNull private String gitConnectorIdentifier;
+
+  @NotNull private String identifier;
 
   @Override
   public StepType getType() {
@@ -31,7 +33,7 @@ public class BuildEnvSetupStepInfo implements StepInfo {
   }
 
   @Override
-  public String getStepName() {
-    return name;
+  public String getStepIdentifier() {
+    return identifier;
   }
 }

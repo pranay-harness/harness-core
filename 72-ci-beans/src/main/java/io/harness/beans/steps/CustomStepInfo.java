@@ -18,9 +18,9 @@ import javax.validation.constraints.NotNull;
 @Builder
 public class CustomStepInfo implements StepInfo {
   @NotNull private StepType type = StepType.CUSTOM;
-  @NotNull private StateType stateType = StateType.builder().type(StepType.CUSTOM.name()).build();
+  @NotNull public static final StateType stateType = StateType.builder().type(StepType.CUSTOM.name()).build();
 
-  @NotEmpty private String name;
+  @NotEmpty private String identifier;
   private List<ScriptInfo> scriptInfos = new ArrayList<>();
 
   @Override
@@ -29,7 +29,12 @@ public class CustomStepInfo implements StepInfo {
   }
 
   @Override
-  public String getStepName() {
-    return name;
+  public StateType getStateType() {
+    return stateType;
+  }
+
+  @Override
+  public String getStepIdentifier() {
+    return identifier;
   }
 }

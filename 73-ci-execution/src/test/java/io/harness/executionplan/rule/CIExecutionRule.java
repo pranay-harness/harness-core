@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import io.harness.CIExecutionServiceModule;
+import io.harness.CIExecutionTestRule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ServersModule;
@@ -16,6 +17,7 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import org.junit.Rule;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -33,7 +35,7 @@ import java.util.List;
 public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
   private AdvancedDatastore datastore;
-
+  @Rule public CIExecutionTestRule testRule = new CIExecutionTestRule();
   public CIExecutionRule(ClosingFactory closingFactory) {
     this.closingFactory = closingFactory;
   }
@@ -45,13 +47,13 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
     List<Module> modules = new ArrayList();
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(mongoTypeModule(annotations));
+    modules.add(new CIExecutionTestRule());
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
       }
     });
-
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
