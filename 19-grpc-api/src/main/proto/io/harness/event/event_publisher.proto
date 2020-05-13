@@ -23,4 +23,5 @@ message PublishMessage {
   string category = 5;
 }
 
-message PublishResponse {}
+message PublishResponse {
+}

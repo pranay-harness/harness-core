@@ -30,7 +30,6 @@ message LogAnalysisCluster {
   repeated int32 anomalous_counts = 21;
   repeated string diff_tags = 22;
   repeated LogAnalysisMessageFrequency message_frequencies = 23;
-
 }
 
 message Pattern {

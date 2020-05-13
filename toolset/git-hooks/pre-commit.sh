@@ -42,7 +42,7 @@ else
     fi
 
     #do the formatting
-    for file in `git diff-index --cached --name-only $against | grep "\.java$"`
+    for file in `git diff-index --cached --name-only $against | grep -E '\.(proto|java)$'`
     do
         if [ -e "${file}" ]
         then

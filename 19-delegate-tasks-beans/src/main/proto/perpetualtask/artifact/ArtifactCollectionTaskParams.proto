@@ -4,5 +4,5 @@ option java_multiple_files = true;
 
 message ArtifactCollectionTaskParams {
   string artifact_stream_id = 1;
-  bytes  build_source_params = 2;
+  bytes build_source_params = 2;
 }
