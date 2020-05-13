@@ -889,7 +889,6 @@ public class PipelineServiceTest extends WingsBaseTest {
                             .appId(APP_ID)
                             .uuid(PIPELINE_ID)
                             .pipelineStages(asList(pipelineStage))
-
                             .build();
 
     Map<String, Object> properties2 = new HashMap<>();
@@ -926,7 +925,8 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(pipelines.get(1).isValid()).isEqualTo(false);
     assertThat(pipelines.get(1).getValidationMessage()).isNotEmpty();
     assertThat(pipelines.get(1).isHasSshInfraMapping()).isEqualTo(false);
-    verify(workflowExecutionService, times(2)).listExecutions(workflowExecutionPageRequest, false, false, false, false);
+    verify(workflowExecutionService, times(2))
+        .listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false), eq(false));
   }
 
   private PipelineStage prepareTemplatedStage(Map<String, Object> properties) {
@@ -1066,7 +1066,8 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(pipelines.get(0).isValid()).isEqualTo(true);
     assertThat(pipelines.get(0).isHasSshInfraMapping()).isEqualTo(true);
 
-    verify(workflowExecutionService, times(1)).listExecutions(workflowExecutionPageRequest, false, false, false, false);
+    verify(workflowExecutionService, times(1))
+        .listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false), eq(false));
   }
 
   @Test

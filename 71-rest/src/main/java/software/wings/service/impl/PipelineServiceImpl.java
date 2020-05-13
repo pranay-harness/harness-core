@@ -155,7 +155,6 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private CounterSyncer counterSyncer;
   @Inject private EventPublishHelper eventPublishHelper;
-  @Inject private PipelineResumeUtils pipelineResumeUtils;
 
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
@@ -190,7 +189,7 @@ public class PipelineServiceImpl implements PipelineService {
                                                               .addFilter("workflowId", EQ, pipeline.getUuid())
                                                               .addFilter("appId", EQ, pipeline.getAppId())
                                                               .build();
-        pipelineResumeUtils.addLatestPipelineResumeFilter(pipeline.getAccountId(), innerPageRequest);
+        PipelineResumeUtils.addLatestPipelineResumeFilter(innerPageRequest);
         try {
           List<WorkflowExecution> workflowExecutions =
               workflowExecutionService.listExecutions(innerPageRequest, false, false, false, false).getResponse();

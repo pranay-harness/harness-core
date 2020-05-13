@@ -34,7 +34,6 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -45,7 +44,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -58,7 +56,6 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.states.ApprovalResumeState.ApprovalResumeStateKeys;
@@ -72,17 +69,11 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Mock private WingsPersistence mockWingsPersistence;
   @Mock private PipelineService pipelineService;
   @Mock private AuthHandler authHandler;
-  @Mock private FeatureFlagService featureFlagService;
 
   @Inject @InjectMocks private PipelineResumeUtils pipelineResumeUtils;
 
-  private static String pipelineId = generateUuid();
-  private static String pipelineResumeId = generateUuid();
-
-  @Before
-  public void setUp() {
-    when(featureFlagService.isEnabled(eq(FeatureName.PIPELINE_RESUME), eq(ACCOUNT_ID))).thenReturn(true);
-  }
+  private static final String pipelineId = generateUuid();
+  private static final String pipelineResumeId = generateUuid();
 
   @Test
   @Owner(developers = GARVIT)
@@ -575,15 +566,6 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testCheckPipelineResumeAvailableForFFOff() {
-    when(featureFlagService.isEnabled(eq(FeatureName.PIPELINE_RESUME), eq(ACCOUNT_ID))).thenReturn(false);
-    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
-    pipelineResumeUtils.checkPipelineResumeAvailable(workflowExecution);
-  }
-
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
   public void testCheckPipelineResumeAvailableForSuccessfulExecution() {
     WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     workflowExecution.setStatus(ExecutionStatus.SUCCESS);
@@ -617,15 +599,6 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     pipelineResumeUtils.checkPipelineResumeHistoryAvailable(workflowExecution);
 
     workflowExecution = prepareNonLatestResumedFailedPipelineExecution();
-    pipelineResumeUtils.checkPipelineResumeHistoryAvailable(workflowExecution);
-  }
-
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
-  public void testCheckPipelineResumeHistoryAvailableForFFOff() {
-    when(featureFlagService.isEnabled(eq(FeatureName.PIPELINE_RESUME), eq(ACCOUNT_ID))).thenReturn(false);
-    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     pipelineResumeUtils.checkPipelineResumeHistoryAvailable(workflowExecution);
   }
 
@@ -705,12 +678,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   public void testAddLatestPipelineResumeFilter() {
     PageRequest<WorkflowExecution> pageRequest = aPageRequest().addFilter(ACCOUNT_ID, Operator.EQ, ACCOUNT_ID).build();
 
-    when(featureFlagService.isEnabled(eq(FeatureName.PIPELINE_RESUME), eq(ACCOUNT_ID))).thenReturn(false);
-    pipelineResumeUtils.addLatestPipelineResumeFilter(ACCOUNT_ID, pageRequest);
-    assertThat(pageRequest.getFilters().size()).isEqualTo(1);
-
-    when(featureFlagService.isEnabled(eq(FeatureName.PIPELINE_RESUME), eq(ACCOUNT_ID))).thenReturn(true);
-    pipelineResumeUtils.addLatestPipelineResumeFilter(ACCOUNT_ID, pageRequest);
+    PipelineResumeUtils.addLatestPipelineResumeFilter(pageRequest);
     assertThat(pageRequest.getFilters().size()).isEqualTo(2);
 
     SearchFilter searchFilter = pageRequest.getFilters().get(1);

@@ -12,7 +12,6 @@ import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
-import static software.wings.beans.FeatureName.PIPELINE_RESUME;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
 import static software.wings.sm.StateType.ENV_RESUME_STATE;
@@ -32,7 +31,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -46,7 +44,6 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -74,7 +71,6 @@ public class PipelineResumeUtils {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PipelineService pipelineService;
   @Inject private AuthHandler authHandler;
-  @Inject private FeatureFlagService featureFlagService;
 
   public Pipeline getPipelineForResume(String appId, int parallelIndexToResume, WorkflowExecution prevWorkflowExecution,
       ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap) {
@@ -328,9 +324,6 @@ public class PipelineResumeUtils {
 
   @VisibleForTesting
   public void checkPipelineResumeAvailable(WorkflowExecution prevWorkflowExecution) {
-    if (!featureFlagService.isEnabled(PIPELINE_RESUME, prevWorkflowExecution.getAccountId())) {
-      throw new InvalidRequestException("Pipeline resume feature is unavailable");
-    }
     if (prevWorkflowExecution.getWorkflowType() != PIPELINE) {
       throw new InvalidRequestException(
           format("Pipeline resume not available for workflow executions: %s", prevWorkflowExecution.getUuid()));
@@ -348,9 +341,6 @@ public class PipelineResumeUtils {
 
   @VisibleForTesting
   public void checkPipelineResumeHistoryAvailable(WorkflowExecution prevWorkflowExecution) {
-    if (!featureFlagService.isEnabled(PIPELINE_RESUME, prevWorkflowExecution.getAccountId())) {
-      throw new InvalidRequestException("Pipeline resume feature is unavailable");
-    }
     if (prevWorkflowExecution.getWorkflowType() != PIPELINE) {
       throw new InvalidRequestException(
           format("Pipeline resume not available for workflow executions: %s", prevWorkflowExecution.getUuid()));
@@ -403,15 +393,13 @@ public class PipelineResumeUtils {
     }
   }
 
-  public void addLatestPipelineResumeFilter(String accountId, PageRequest<WorkflowExecution> pageRequest) {
-    if (featureFlagService.isEnabled(FeatureName.PIPELINE_RESUME, accountId)) {
-      pageRequest.addFilter("", OR,
-          SearchFilter.builder().fieldName(WorkflowExecutionKeys.pipelineResumeId).op(NOT_EXISTS).build(),
-          SearchFilter.builder()
-              .fieldName(WorkflowExecutionKeys.latestPipelineResume)
-              .op(EQ)
-              .fieldValues(new Object[] {Boolean.TRUE})
-              .build());
-    }
+  public static void addLatestPipelineResumeFilter(PageRequest<WorkflowExecution> pageRequest) {
+    pageRequest.addFilter("", OR,
+        SearchFilter.builder().fieldName(WorkflowExecutionKeys.pipelineResumeId).op(NOT_EXISTS).build(),
+        SearchFilter.builder()
+            .fieldName(WorkflowExecutionKeys.latestPipelineResume)
+            .op(EQ)
+            .fieldValues(new Object[] {Boolean.TRUE})
+            .build());
   }
 }
