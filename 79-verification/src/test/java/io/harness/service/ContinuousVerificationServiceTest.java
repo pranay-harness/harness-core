@@ -1733,8 +1733,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     long startMin = getFlooredTime(currentMinute, 60, true);
     LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
     cvConfiguration.setBaselineStartMinute(startMin);
-    cvConfiguration.setBaselineEndMinute(startMin + 60);
-
+    cvConfiguration.setBaselineEndMinute(startMin + 30);
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfiguration));
     int analysisMinute = (int) cvConfiguration.getBaselineEndMinute() + 15;
 
     LogMLAnalysisRecord logAnalysisRecord = LogMLAnalysisRecord.builder()

@@ -7,6 +7,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -33,7 +34,8 @@ public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
   private Map<String, Object> body;
   private int collectionFrequency;
   private String hostnameSeparator;
-  private boolean shouldDoHostBasedFiltering = true;
+
+  @Default private boolean shouldDoHostBasedFiltering = true;
   private boolean fixedHostName;
   // initial delay in LogDataCollectionInfo is not used because we want this value to be default to DELAY_MINUTE instead
   // of 0 Also this is done to reduce risk refactoring and touching more code. Not adding it to builder because this is

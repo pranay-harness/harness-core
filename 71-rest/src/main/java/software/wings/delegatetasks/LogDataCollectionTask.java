@@ -253,11 +253,14 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
           for (Map.Entry<String, Map<String, ResponseMapper>> logDataInfo :
               dataCollectionInfo.getLogResponseDefinition().entrySet()) {
             List<LogElement> logs = new ArrayList<>();
+            String tempHost = dataCollectionInfo.getHosts().iterator().next();
+
             // go fetch the logs first
-            dataCollectionInfo.getHosts().forEach(host -> {
+            if (!dataCollectionInfo.isShouldDoHostBasedFiltering()) {
+              // this query is not host based. So we should not make one call per host
               String searchResponse = fetchLogs(logDataInfo.getKey(), dataCollectionInfo.getHeaders(),
-                  dataCollectionInfo.getOptions(), dataCollectionInfo.getBody(), dataCollectionInfo.getQuery(), host,
-                  dataCollectionInfo.getHostnameSeparator());
+                  dataCollectionInfo.getOptions(), dataCollectionInfo.getBody(), dataCollectionInfo.getQuery(),
+                  tempHost, dataCollectionInfo.getHostnameSeparator());
 
               LogResponseParser.LogResponseData data = new LogResponseParser.LogResponseData(searchResponse,
                   dataCollectionInfo.getHosts(), dataCollectionInfo.isShouldDoHostBasedFiltering(),
@@ -265,10 +268,23 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
               // parse the results that were fetched.
               List<LogElement> curLogs = new LogResponseParser().extractLogs(data);
               logs.addAll(curLogs);
-            });
+            } else {
+              dataCollectionInfo.getHosts().forEach(host -> {
+                String searchResponse = fetchLogs(logDataInfo.getKey(), dataCollectionInfo.getHeaders(),
+                    dataCollectionInfo.getOptions(), dataCollectionInfo.getBody(), dataCollectionInfo.getQuery(), host,
+                    dataCollectionInfo.getHostnameSeparator());
+
+                LogResponseParser.LogResponseData data = new LogResponseParser.LogResponseData(searchResponse,
+                    dataCollectionInfo.getHosts(), dataCollectionInfo.isShouldDoHostBasedFiltering(),
+                    dataCollectionInfo.isFixedHostName(), logDataInfo.getValue());
+                // parse the results that were fetched.
+                List<LogElement> curLogs = new LogResponseParser().extractLogs(data);
+                logs.addAll(curLogs);
+              });
+            }
 
             int i = 0;
-            String tempHost = dataCollectionInfo.getHosts().iterator().next();
+
             for (LogElement log : logs) {
               log.setLogCollectionMinute(logCollectionMinute);
               log.setClusterLabel(String.valueOf(i++));

@@ -110,6 +110,7 @@ public class LogDataCollectionTaskTest extends CategoryTest {
         .headers(header)
         .stateExecutionId("12345asdaf")
         .baseUrl("http://ec2-34-227-84-170.compute-1.amazonaws.com:9200/integration-test/")
+        .shouldDoHostBasedFiltering(true)
         .build();
   }
 
@@ -157,6 +158,64 @@ public class LogDataCollectionTaskTest extends CategoryTest {
     ArgumentCaptor<Call> requestCaptor = ArgumentCaptor.forClass(Call.class);
 
     verify(requestExecutor, times(3))
+        .executeRequest(any(ThirdPartyApiCallLog.class), requestCaptor.capture(), maskPatternsCaptor.capture());
+    List<Map> maskPatterns = maskPatternsCaptor.getAllValues();
+    List<Call> callsList = requestCaptor.getAllValues();
+    maskPatterns.forEach(
+        maskPatternsMap -> assertThat(((Map<String, String>) maskPatternsMap).containsKey("decryptedApiKey")).isTrue());
+    callsList.forEach(call -> assertThat(call.request().url().toString().contains("apiKey=decryptedApiKey")));
+
+    verify(logAnalysisStoreService, times(1))
+        .save(any(StateType.class), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
+            anyString(), anyString(), any(List.class));
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testFetchLogs_shouldNotInspectHosts() throws Exception {
+    // setup
+    String textLoad = Resources.toString(
+        LogResponseParserTest.class.getResource("/apm/elkMultipleHitsResponse.json"), Charsets.UTF_8);
+    String searchUrl = "_search?pretty=true&q=*&size=5";
+    Map<String, ResponseMapper> responseMappers = new HashMap<>();
+    responseMappers.put("timestamp",
+        CustomLogVerificationState.ResponseMapper.builder()
+            .fieldName("timestamp")
+            .jsonPath(Arrays.asList("hits.hits[*]._source.timestamp"))
+            .timestampFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+            .build());
+    responseMappers.put("host",
+        CustomLogVerificationState.ResponseMapper.builder()
+            .fieldName("host")
+            .jsonPath(Arrays.asList("hits.hits[*]._source.host"))
+            .build());
+    responseMappers.put("logMessage",
+        CustomLogVerificationState.ResponseMapper.builder()
+            .fieldName("logMessage")
+            .jsonPath(Arrays.asList("hits.hits[*]._source.title"))
+            .build());
+    Map<String, Map<String, ResponseMapper>> logDefinition = new HashMap<>();
+    logDefinition.put(searchUrl, responseMappers);
+    setup(logDefinition, new HashSet<>(Arrays.asList("test.hostname.2", "test.hostname.22", "test.hostname.12")));
+    doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
+    when(logAnalysisStoreService.save(any(StateType.class), anyString(), anyString(), anyString(), anyString(),
+             anyString(), anyString(), anyString(), anyString(), any(List.class)))
+        .thenReturn(true);
+    when(requestExecutor.executeRequest(any(), any(), any())).thenReturn(textLoad);
+    dataCollectionInfo.setShouldDoHostBasedFiltering(false);
+    // execute
+    DataCollectionTaskResult taskResult = dataCollectionTask.initDataCollection(dataCollectionInfo);
+    Runnable r = dataCollectionTask.getDataCollector(taskResult);
+    r.run();
+
+    // verify
+    // verify
+    ArgumentCaptor<Map> maskPatternsCaptor = ArgumentCaptor.forClass(Map.class);
+    ArgumentCaptor<Call> requestCaptor = ArgumentCaptor.forClass(Call.class);
+
+    // since the flag is set in datacollectionInfo, the number of invocations should be 1 only.
+    verify(requestExecutor, times(1))
         .executeRequest(any(ThirdPartyApiCallLog.class), requestCaptor.capture(), maskPatternsCaptor.capture());
     List<Map> maskPatterns = maskPatternsCaptor.getAllValues();
     List<Call> callsList = requestCaptor.getAllValues();
