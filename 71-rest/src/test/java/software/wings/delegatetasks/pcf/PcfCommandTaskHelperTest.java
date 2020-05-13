@@ -527,62 +527,62 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
 
     PcfCommandSetupRequest pcfCommandSetupRequest =
         PcfCommandSetupRequest.builder().routeMaps(routes).manifestYaml(MANIFEST_YAML).build();
-
+    pcfCommandSetupRequest.setArtifactStreamAttributes(ArtifactStreamAttributes.builder().build());
     PcfCreateApplicationRequestData requestData = generatePcfCreateApplicationRequestData(pcfCommandSetupRequest);
 
     // 1. Replace ${ROUTE_MAP with routes from setupRequest}
     pcfCommandSetupRequest.setManifestYaml(MANIFEST_YAML);
     pcfCommandSetupRequest.setRouteMaps(routes);
-    String finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(requestData);
+    String finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData);
     assertThat(finalManifest).isEqualTo(MANIFEST_YAML_LOCAL_RESOLVED);
 
     // 2. Replace ${ROUTE_MAP with routes from setupRequest}
     pcfCommandSetupRequest.setManifestYaml(MANIFEST_YAML);
     pcfCommandSetupRequest.setRouteMaps(tempRoutes);
-    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(requestData);
+    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData);
     assertThat(finalManifest).isEqualTo(MANIFEST_YAML_LOCAL_WITH_TEMP_ROUTES_RESOLVED);
 
     // 3. Simulation of BG, manifest contains final routes, but they should be replaced with tempRoutes,
     // which are mentioned in PcfSetupRequest
     pcfCommandSetupRequest.setManifestYaml(MANIFEST_YAML_LOCAL_EXTENDED);
     pcfCommandSetupRequest.setRouteMaps(tempRoutes);
-    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(requestData);
+    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData);
     assertThat(finalManifest).isEqualTo(MANIFEST_YAML_LOCAL_WITH_TEMP_ROUTES_RESOLVED);
 
     // 4. Manifest contains no-route = true, ignore routes in setupRequest
     pcfCommandSetupRequest.setManifestYaml(MANIFEST_YAML_NO_ROUTE);
     pcfCommandSetupRequest.setRouteMaps(tempRoutes);
-    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(requestData);
+    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData);
     assertThat(finalManifest).isEqualTo(MANIFEST_YAML_NO_ROUTE_RESOLVED);
 
     // 5. use random-route when no-routes are provided.
     pcfCommandSetupRequest.setManifestYaml(MANIFEST_YAML);
     pcfCommandSetupRequest.setRouteMaps(null);
-    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(requestData);
+    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData);
     assertThat(finalManifest).isEqualTo(MANIFEST_YAML_RESOLVED_WITH_RANDOM_ROUTE);
 
     // 6. use random-route when no-routes are provided.
     pcfCommandSetupRequest.setManifestYaml(MANIFEST_YAML);
     pcfCommandSetupRequest.setRouteMaps(emptyList());
-    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(requestData);
+    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData);
     assertThat(finalManifest).isEqualTo(MANIFEST_YAML_RESOLVED_WITH_RANDOM_ROUTE);
 
     // 7. use random-route when no-routes are provided.
     pcfCommandSetupRequest.setManifestYaml(MANIFEST_YAML_RANDOM_ROUTE);
     pcfCommandSetupRequest.setRouteMaps(null);
-    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(requestData);
+    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData);
     assertThat(finalManifest).isEqualTo(MANIFEST_YAML_RANDON_ROUTE_RESOLVED);
 
     // 8. use random-route when no-routes are provided.
     pcfCommandSetupRequest.setManifestYaml(MANIFEST_YAML_RANDOM_ROUTE_WITH_HOST);
     pcfCommandSetupRequest.setRouteMaps(null);
-    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(requestData);
+    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData);
     assertThat(finalManifest).isEqualTo(MANIFEST_YAML_RANDON_ROUTE_RESOLVED);
 
     // 9
     pcfCommandSetupRequest.setManifestYaml(MANIFEST_YAML_EXTENDED_SUPPORT_REMOTE);
     pcfCommandSetupRequest.setRouteMaps(routes);
-    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(requestData);
+    finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData);
     assertThat(finalManifest).isEqualTo(MANIFEST_YAML_EXTENDED_SUPPORT_REMOTE_RESOLVED);
   }
 

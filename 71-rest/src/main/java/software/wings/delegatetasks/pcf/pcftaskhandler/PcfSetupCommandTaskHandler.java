@@ -32,8 +32,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.PivotalClientApiException;
@@ -44,6 +46,7 @@ import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
+import software.wings.settings.SettingValue;
 import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 
@@ -76,6 +79,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
     encryptionService.decrypt(pcfConfig, encryptedDataDetails);
     PcfCommandSetupRequest pcfCommandSetupRequest = (PcfCommandSetupRequest) pcfCommandRequest;
+    decryptArtifactRepositoryPassword(pcfCommandSetupRequest);
     File artifactFile = null;
     File workingDirectory = null;
 
@@ -133,7 +137,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
       Integer totalPreviousInstanceCount = CollectionUtils.isEmpty(previousReleases)
           ? Integer.valueOf(0)
-          : previousReleases.stream().mapToInt(ApplicationSummary ::getInstances).sum();
+          : previousReleases.stream().mapToInt(ApplicationSummary::getInstances).sum();
 
       Integer instanceCountForMostRecentVersion = CollectionUtils.isEmpty(previousReleases)
           ? Integer.valueOf(0)
@@ -142,22 +146,25 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       // New appName to be created
       String newReleaseName =
           ServiceVersionConvention.getServiceName(pcfCommandSetupRequest.getReleaseNamePrefix(), releaseRevision);
-
-      artifactFile = fetchArtifactFileForDeployment(pcfCommandSetupRequest, workingDirectory, executionLogCallback);
+      if (!pcfCommandSetupRequest.getArtifactStreamAttributes().isDockerBasedDeployment()) {
+        artifactFile = fetchArtifactFileForDeployment(pcfCommandSetupRequest, workingDirectory, executionLogCallback);
+      }
 
       boolean varsYmlPresent = checkIfVarsFilePresent(pcfCommandSetupRequest);
-      PcfCreateApplicationRequestData requestData = PcfCreateApplicationRequestData.builder()
-                                                        .pcfRequestConfig(pcfRequestConfig)
-                                                        .artifactPath(artifactFile.getAbsolutePath())
-                                                        .configPathVar(workingDirectory.getAbsolutePath())
-                                                        .setupRequest(pcfCommandSetupRequest)
-                                                        .newReleaseName(newReleaseName)
-                                                        .pcfManifestFileData(pcfManifestFileData)
-                                                        .varsYmlFilePresent(varsYmlPresent)
-                                                        .build();
+      PcfCreateApplicationRequestData requestData =
+          PcfCreateApplicationRequestData.builder()
+              .pcfRequestConfig(pcfRequestConfig)
+              .artifactPath(artifactFile == null ? null : artifactFile.getAbsolutePath())
+              .configPathVar(workingDirectory.getAbsolutePath())
+              .setupRequest(pcfCommandSetupRequest)
+              .newReleaseName(newReleaseName)
+              .pcfManifestFileData(pcfManifestFileData)
+              .varsYmlFilePresent(varsYmlPresent)
+              .build();
 
       // Generate final manifest Yml needed for push.
-      requestData.setFinalManifestYaml(pcfCommandTaskHelper.generateManifestYamlForPush(requestData));
+      requestData.setFinalManifestYaml(
+          pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData));
       // Create manifest.yaml file
       prepareManifestYamlFile(requestData);
       // create vars file if needed
@@ -215,6 +222,16 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       removeTempFilesCreated((PcfCommandSetupRequest) pcfCommandRequest, executionLogCallback, artifactFile,
           workingDirectory, pcfManifestFileData);
       executionLogCallback.saveExecutionLog("#----------  Cleaning up temporary files completed", INFO, SUCCESS);
+    }
+  }
+
+  private void decryptArtifactRepositoryPassword(PcfCommandSetupRequest pcfCommandSetupRequest) {
+    ArtifactStreamAttributes artifactStreamAttributes = pcfCommandSetupRequest.getArtifactStreamAttributes();
+    if (artifactStreamAttributes.isDockerBasedDeployment()) {
+      SettingValue settingValue = artifactStreamAttributes.getServerSetting().getValue();
+      List<EncryptedDataDetail> artifactServerEncryptedDataDetails =
+          pcfCommandSetupRequest.getArtifactStreamAttributes().getArtifactServerEncryptedDataDetails();
+      encryptionService.decrypt((EncryptableSetting) settingValue, artifactServerEncryptedDataDetails);
     }
   }
 

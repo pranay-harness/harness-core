@@ -7,6 +7,7 @@ import static io.harness.pcf.model.PcfConstants.APP_TOKEN;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_APP_LOG_TAILING;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_APP_AUTOSCALAR_BINDING;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCALAR;
+import static io.harness.pcf.model.PcfConstants.CF_DOCKER_CREDENTIALS;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
 import static io.harness.pcf.model.PcfConstants.CF_PASSWORD;
 import static io.harness.pcf.model.PcfConstants.CF_PLUGIN_HOME;
@@ -89,6 +90,10 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.LogOutputStream;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
@@ -714,12 +719,13 @@ public class PcfClientImpl implements PcfClient {
       String finalFilePath, PcfCreateApplicationRequestData requestData)
       throws InterruptedException, TimeoutException, IOException {
     executionLogCallback.saveExecutionLog("# Performing \"cf push\"");
+    Map<String, String> environmentMapForPcfExecutor = getEnvironmentMapForPcfPush(requestData);
     String command = constructCfPushCommand(requestData, finalFilePath);
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .timeout(pcfRequestConfig.getTimeOutIntervalInMins(), TimeUnit.MINUTES)
                                           .command(BIN_SH, "-c", command)
                                           .readOutput(true)
-                                          .environment(getEnvironmentMapForPcfExecutor(requestData.getConfigPathVar()))
+                                          .environment(environmentMapForPcfExecutor)
                                           .redirectOutput(new LogOutputStream() {
                                             @Override
                                             protected void processLine(String line) {
@@ -734,6 +740,18 @@ public class PcfClientImpl implements PcfClient {
       executionLogCallback.saveExecutionLog(format(SUCCESS, Bold, Green));
     }
     return result;
+  }
+
+  private Map<String, String> getEnvironmentMapForPcfPush(PcfCreateApplicationRequestData requestData) {
+    Map<String, String> environmentMapForPcfExecutor = getEnvironmentMapForPcfExecutor(requestData.getConfigPathVar());
+    ArtifactStreamAttributes artifactStreamAttributes = requestData.getSetupRequest().getArtifactStreamAttributes();
+    if (artifactStreamAttributes.isDockerBasedDeployment()) {
+      char[] password = getPassword(artifactStreamAttributes);
+      if (!isEmpty(password)) {
+        environmentMapForPcfExecutor.put(CF_DOCKER_CREDENTIALS, String.valueOf(password));
+      }
+    }
+    return environmentMapForPcfExecutor;
   }
 
   private String constructCfPushCommand(PcfCreateApplicationRequestData requestData, String finalFilePath) {
@@ -752,6 +770,19 @@ public class PcfClientImpl implements PcfClient {
     }
 
     return builder.toString();
+  }
+
+  private char[] getPassword(ArtifactStreamAttributes artifactStreamAttributes) {
+    char[] password = null;
+    SettingAttribute serverSetting = artifactStreamAttributes.getServerSetting();
+    if (serverSetting.getValue() instanceof DockerConfig) {
+      DockerConfig dockerConfig = (DockerConfig) serverSetting.getValue();
+      password = dockerConfig.getPassword();
+    } else if (serverSetting.getValue() instanceof AwsConfig) {
+      AwsConfig awsConfig = (AwsConfig) serverSetting.getValue();
+      password = awsConfig.getSecretKey();
+    }
+    return password;
   }
 
   @VisibleForTesting

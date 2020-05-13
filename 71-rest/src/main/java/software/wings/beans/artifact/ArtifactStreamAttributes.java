@@ -70,6 +70,7 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private String packageId;
   private String packageName;
   private List<String> artifactPaths;
+  private boolean dockerBasedDeployment;
 
   // These fields are used only during artifact collection and cleanup.
   private boolean isCollection;
