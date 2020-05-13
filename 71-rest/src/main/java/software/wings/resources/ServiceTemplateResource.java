@@ -1,6 +1,8 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static software.wings.security.PermissionAttribute.Action.READ;
+import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 
 import com.google.inject.Inject;
@@ -14,7 +16,6 @@ import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ServiceTemplate;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
@@ -59,7 +60,7 @@ public class ServiceTemplateResource {
   @GET
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+  @AuthRule(permissionType = ENV, action = READ)
   public RestResponse<PageResponse<ServiceTemplate>> list(@QueryParam("envId") String envId,
       @QueryParam("appId") String appId, @BeanParam PageRequest<ServiceTemplate> pageRequest,
       @QueryParam("details") @DefaultValue("true") boolean details) {
