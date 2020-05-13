@@ -93,7 +93,7 @@ public class ConfigResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ALL_APP_ENTITIES, action = Action.CREATE)
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<String> save(@QueryParam("appId") String appId, @QueryParam("entityId") String entityId,
       @QueryParam("entityType") EntityType entityType, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("fileName") String fileName, @BeanParam ConfigFile configFile) {
@@ -151,7 +151,7 @@ public class ConfigResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ALL_APP_ENTITIES, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse update(@QueryParam("appId") String appId, @PathParam("configId") String configId,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
@@ -187,7 +187,7 @@ public class ConfigResource {
   @Path("{configId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ALL_APP_ENTITIES, action = Action.DELETE)
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
     configService.delete(appId, configId);
     return new RestResponse();

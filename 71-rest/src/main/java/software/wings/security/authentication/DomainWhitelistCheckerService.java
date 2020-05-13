@@ -58,7 +58,7 @@ public class DomainWhitelistCheckerService {
     return true;
   }
 
-  public boolean isDomainWhitelisted(User user, Account account) {
+  boolean isDomainWhitelisted(User user, Account account) {
     if (null == account) {
       logger.warn("Account received was null for user with UUID {}", user.getUuid());
       return false;

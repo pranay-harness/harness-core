@@ -63,6 +63,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
         if (!domainWhitelistCheckerService.isDomainWhitelisted(user, account)) {
           domainWhitelistCheckerService.throwDomainWhitelistFilterException();
         }
+        logger.info("Authenticating via SAML for user in account {}", account.getUuid());
         SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(account.getUuid());
 
         // Occurs when SAML settings are being tested before being enabled
