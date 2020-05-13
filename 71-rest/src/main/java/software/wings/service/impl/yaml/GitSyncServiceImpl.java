@@ -274,7 +274,7 @@ public class GitSyncServiceImpl implements GitSyncService {
             Arrays.asList(change.getFilePath()), GitFileActivity.Status.SUCCESS, "", accountId);
       }
 
-      yamlSuccessfulChangeService.updateOnSuccessfulGitChangeProcessing((GitFileChange) change, accountId);
+      yamlSuccessfulChangeService.updateOnSuccessfulGitChangeProcessing(gitFileChange, accountId);
     }
   }
 
