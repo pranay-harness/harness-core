@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -17,8 +19,10 @@ import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.Activity;
+import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesRequest;
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesResult;
+import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudformation.model.CreateStackRequest;
 import com.amazonaws.services.cloudformation.model.DeleteStackRequest;
@@ -31,17 +35,26 @@ import com.amazonaws.services.cloudformation.model.StackEvent;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.AwsAutoScaleException;
+import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.LogCallback;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -273,5 +286,52 @@ public class AwsHelperServiceTest extends WingsBaseTest {
 
     assertThat(completedActivities.size()).isEqualTo(1);
     assertThat(completedActivities).contains("TestID2");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldHandleAutoScaleException() throws IllegalAccessException {
+    String accessKey = "qwer";
+    char[] secretKey = "pqrs".toCharArray();
+    String autoScalingGroupName = "ASG Name";
+    String region = "us-west-1";
+
+    AmazonAutoScalingException awsAsException =
+        new AmazonAutoScalingException("New SetDesiredCapacity value 2 is above max value 1 for the AutoScalingGroup.");
+    awsAsException.setServiceName("AmazonAutoScaling");
+    awsAsException.setStatusCode(400);
+    awsAsException.setRequestId("730a9748-4935-485e-a525-3fb0052af1fe");
+    awsAsException.setErrorCode("ValidationError");
+
+    SetDesiredCapacityRequest request =
+        new SetDesiredCapacityRequest().withAutoScalingGroupName(autoScalingGroupName).withDesiredCapacity(1);
+    AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
+    DescribeScalingActivitiesResult describeScalingActivitiesResult = mock(DescribeScalingActivitiesResult.class);
+    when(mockClient.describeScalingActivities(any(DescribeScalingActivitiesRequest.class)))
+        .thenReturn(describeScalingActivitiesResult);
+    doThrow(awsAsException).when(mockClient).setDesiredCapacity(request);
+
+    EncryptionService mockEncryptionService = mock(EncryptionService.class);
+    EncryptableSetting encryptableSetting = mock(EncryptableSetting.class);
+    doReturn(encryptableSetting).when(mockEncryptionService).decrypt(any(), any());
+
+    AwsHelperService service = spy(new AwsHelperService());
+    doReturn(mockClient).when(service).getAmazonAutoScalingClient(any(), any());
+    FieldUtils.writeField(service, "encryptionService", mockEncryptionService, true);
+
+    AwsCallTracker mockTracker = mock(AwsCallTracker.class);
+    doNothing().when(mockTracker).trackCFCall(anyString());
+    on(service).set("tracker", mockTracker);
+
+    try {
+      service.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+          AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build(), Collections.emptyList(), region,
+          autoScalingGroupName, Integer.valueOf(1), new ManagerExecutionLogCallback(), 30);
+    } catch (AwsAutoScaleException autoScaleException) {
+      assertThat(awsAsException.getMessage()).isEqualTo(autoScaleException.getMessage());
+      assertThat(ErrorCode.GENERAL_ERROR).isEqualTo(autoScaleException.getCode());
+      assertThat(WingsException.USER).isEqualTo(autoScaleException.getReportTargets());
+    }
   }
 }
