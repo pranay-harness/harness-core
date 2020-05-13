@@ -214,4 +214,18 @@ public class ArtifactStreamResource {
 
     return new RestResponse<>(artifactStreamService.listArtifactStreamSummary(appId));
   }
+
+  /**
+   * List summary.
+   *
+   * @param id the artifactstream id
+   * @return the rest response
+   */
+  @GET
+  @Path("{id}/parameters")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> listArtifactStreamParameters(@PathParam("id") String id) {
+    return new RestResponse<>(artifactStreamService.getArtifactStreamParameters(id));
+  }
 }

@@ -90,4 +90,6 @@ public interface ArtifactStreamService extends OwnedByService {
   boolean pruneArtifactStream(ArtifactStream artifactStream);
 
   boolean attachPerpetualTaskId(ArtifactStream artifactStream, String perpetualTaskId);
+
+  List<String> getArtifactStreamParameters(String artifactStreamId);
 }
