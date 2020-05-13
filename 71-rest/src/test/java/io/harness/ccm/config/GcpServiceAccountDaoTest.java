@@ -28,7 +28,7 @@ public class GcpServiceAccountDaoTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSaveAndGet() {
     gcpServiceAccountDao.save(gcpServiceAccount);
-    GcpServiceAccount result = gcpServiceAccountDao.get(serviceAccountId);
+    GcpServiceAccount result = gcpServiceAccountDao.getByServiceAccountId(serviceAccountId);
     assertThat(result).isEqualToIgnoringGivenFields(gcpServiceAccount, "uuid");
   }
 }

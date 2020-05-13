@@ -13,7 +13,7 @@ public class GcpServiceAccountDao {
     return persistence.save(gcpServiceAccount);
   }
 
-  public GcpServiceAccount get(String serviceAccountId) {
+  public GcpServiceAccount getByServiceAccountId(String serviceAccountId) {
     Query<GcpServiceAccount> query = persistence.createQuery(GcpServiceAccount.class)
                                          .field(GcpServiceAccountKeys.serviceAccountId)
                                          .equal(serviceAccountId);

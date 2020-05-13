@@ -5,9 +5,14 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.cloud.bigquery.BigQuery;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.GcpServiceAccountService;
+import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountBuilder;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -17,21 +22,28 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.ValidationResult;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 public class GcpBillingAccountServiceImplTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
+
   private String billingAccountUuid = "BILLING_ACCOUNT_UUID";
   private String organizationSettingId = "ORGANIZATION_SETTING_ID";
   private String impersonatedServiceAccount = "impersonate-account-1@ccm-play.iam.gserviceaccount.com";
   private GcpOrganization gcpOrganization;
-  private String accessToken =
-      "ya29.c.KrwCxwfePEABHM3IrQLAqofwSrYad2i0NLiJoZ0Dcb9EY5Ik4igM3sJ4V6DSZS5n2im7XXYBZS2rnScjS5ne-YMHprcRnuhbTuT-LLi3Z9LLHccrbU6RSAFN0TDwbun1zxFEkiiyk84L-TW-a-mAxFYJxs9TtmM6RMrF1mklT-dv4NxrYhA0GBbGlYaBETmVgButyW9iwW3ZDrTx1KI9iT3IWJys7kP2geZ-dfaLfpwpSn3wdOX1GBKEQIoqnmQFvxpvLPerZohuowPdkJz6Hy5_9qScjJbRnBPhQqNPTQp8-9L5jLUXdwJaHMBFo0DWcZRAg6QrIWq0cd6xwKKgvZ8r332bvr5y_ZVecosr7CwaWDmBktJ-Nt41FGLqnYoQYihnHhLPQsJ89i4Dw7qjnDsykm1Bw1B6p6Gf24StwQ";
+
+  private GcpBillingAccount gcpBillingAccount;
+  private String bqProjectId = "BQ_PROJECT_ID";
+  private String bqDatasetId = "BQ_DATASET_ID";
+
   @Mock private GcpBillingAccountDao gcpBillingAccountDao;
   @Mock private GcpOrganizationService gcpOrganizationService;
   @Mock private GcpServiceAccountService gcpServiceAccountService;
+  @Mock private BigQueryService bigQueryService;
+  @Mock private BigQuery bigQuery;
   @InjectMocks private GcpBillingAccountServiceImpl gcpBillingAccountService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -39,6 +51,35 @@ public class GcpBillingAccountServiceImplTest extends CategoryTest {
   public void setUp() throws GeneralSecurityException, IOException {
     gcpOrganization = GcpOrganization.builder().serviceAccountEmail(impersonatedServiceAccount).build();
     when(gcpOrganizationService.get(eq(organizationSettingId))).thenReturn(gcpOrganization);
+
+    gcpBillingAccount = getGcpBillingAccount(organizationSettingId);
+    when(bigQueryService.get(eq(bqProjectId), eq(impersonatedServiceAccount))).thenReturn(bigQuery);
+    when(bigQueryService.canAccessDataset(eq(bigQuery), eq(bqProjectId), eq(bqDatasetId)))
+        .thenReturn(ValidationResult.builder().valid(true).build());
+  }
+
+  private GcpBillingAccount getGcpBillingAccount(String organizationSettingId) {
+    GcpBillingAccountBuilder builder = GcpBillingAccount.builder().bqProjectId(bqProjectId).bqDatasetId(bqDatasetId);
+    if (organizationSettingId != null) {
+      builder.organizationSettingId(organizationSettingId);
+    }
+    return builder.build();
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldCreateForValidBillingAccount() {
+    gcpBillingAccountService.create(gcpBillingAccount);
+    verify(gcpBillingAccountDao).upsert(gcpBillingAccount);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldNotCreateForInvalidBillingAccount() {
+    GcpBillingAccount gcpBillingAccount = getGcpBillingAccount(null);
+    gcpBillingAccountService.create(gcpBillingAccount);
   }
 
   @Test

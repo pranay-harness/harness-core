@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.service.intfc.AccountService;
 
+import java.io.IOException;
+
 @Slf4j
 @Singleton
 public class CEGcpServiceAccountServiceImpl implements CEGcpServiceAccountService {
@@ -31,30 +33,33 @@ public class CEGcpServiceAccountServiceImpl implements CEGcpServiceAccountServic
     String displayName = getServiceAccountDisplayName(account);
     ServiceAccount serviceAccount = gcpServiceAccountService.create(serviceAccountId, displayName);
     if (serviceAccount != null) {
-      return gcpServiceAccountDao.save(GcpServiceAccount.builder()
-                                           .serviceAccountId(serviceAccountId)
-                                           .gcpUniqueId(serviceAccount.getUniqueId())
-                                           .accountId(accountId)
-                                           .email(serviceAccount.getEmail())
-                                           .build());
+      gcpServiceAccountDao.save(GcpServiceAccount.builder()
+                                    .serviceAccountId(serviceAccountId)
+                                    .gcpUniqueId(serviceAccount.getUniqueId())
+                                    .accountId(accountId)
+                                    .email(serviceAccount.getEmail())
+                                    .build());
+      return serviceAccount.getEmail();
     }
     return null;
   }
 
   @Override
-  public GcpServiceAccount getDefaultServiceAccount(String accountId) {
-    GcpServiceAccount gcpServiceAccount = get(accountId);
+  public GcpServiceAccount getDefaultServiceAccount(String accountId) throws IOException {
+    GcpServiceAccount gcpServiceAccount = getByAccountId(accountId);
     if (gcpServiceAccount == null) {
-      create(accountId);
-      gcpServiceAccount = get(accountId);
+      String serviceAccountEmail = create(accountId);
+      gcpServiceAccountService.setIamPolicy(serviceAccountEmail);
+      gcpServiceAccount = getByAccountId(accountId);
     }
     return gcpServiceAccount;
   }
 
-  private GcpServiceAccount get(String accountId) {
+  @Override
+  public GcpServiceAccount getByAccountId(String accountId) {
     Account account = accountService.get(accountId);
     String serviceAccountId = getServiceAccountId(account);
-    return gcpServiceAccountDao.get(serviceAccountId);
+    return gcpServiceAccountDao.getByServiceAccountId(serviceAccountId);
   }
 
   private String getServiceAccountId(Account account) {

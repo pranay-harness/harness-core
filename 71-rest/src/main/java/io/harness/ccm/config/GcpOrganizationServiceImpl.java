@@ -1,5 +1,6 @@
 package io.harness.ccm.config;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
@@ -7,7 +8,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import lombok.extern.slf4j.Slf4j;
-import org.postgresql.shaded.com.ongres.scram.common.util.Preconditions;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ValidationResult;
@@ -21,11 +21,14 @@ import java.util.List;
 public class GcpOrganizationServiceImpl implements GcpOrganizationService {
   private GcpOrganizationDao gcpOrganizationDao;
   private SettingsService settingsService;
+  private CEGcpServiceAccountService ceGcpServiceAccountService;
 
   @Inject
-  public GcpOrganizationServiceImpl(GcpOrganizationDao gcpOrganizationDao, SettingsService settingsService) {
+  public GcpOrganizationServiceImpl(GcpOrganizationDao gcpOrganizationDao, SettingsService settingsService,
+      CEGcpServiceAccountService ceGcpServiceAccountService) {
     this.gcpOrganizationDao = gcpOrganizationDao;
     this.settingsService = settingsService;
+    this.ceGcpServiceAccountService = ceGcpServiceAccountService;
   }
 
   @Override
@@ -36,8 +39,10 @@ public class GcpOrganizationServiceImpl implements GcpOrganizationService {
 
   @Override
   public GcpOrganization upsert(GcpOrganization organization) {
-    Preconditions.checkNotEmpty(organization.getServiceAccountEmail(),
-        format("The organization %s is missing service account.", organization.getOrganizationName()));
+    GcpServiceAccount gcpServiceAccount = ceGcpServiceAccountService.getByAccountId(organization.getAccountId());
+    checkArgument(
+        null != gcpServiceAccount && organization.getServiceAccountEmail().equals(gcpServiceAccount.getEmail()),
+        format("The organization %s is missing a valid service account.", organization.getOrganizationName()));
     if (null
         == settingsService.getByName(organization.getAccountId(), GLOBAL_APP_ID, organization.getOrganizationName())) {
       settingsService.save(toSettingAttribute(organization));
@@ -58,6 +63,9 @@ public class GcpOrganizationServiceImpl implements GcpOrganizationService {
 
   @Override
   public GcpOrganization get(String uuid) {
+    if (uuid == null) {
+      return null;
+    }
     return gcpOrganizationDao.get(uuid);
   }
 

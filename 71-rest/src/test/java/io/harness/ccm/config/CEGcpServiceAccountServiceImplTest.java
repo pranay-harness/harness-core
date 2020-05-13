@@ -20,6 +20,8 @@ import org.mockito.junit.MockitoRule;
 import software.wings.beans.Account;
 import software.wings.service.intfc.AccountService;
 
+import java.io.IOException;
+
 public class CEGcpServiceAccountServiceImplTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
   private String accountName = "ACCOUNT_NAME";
@@ -41,13 +43,13 @@ public class CEGcpServiceAccountServiceImplTest extends CategoryTest {
     when(accountService.get(eq(accountId))).thenReturn(account);
 
     gcpServiceAccount = GcpServiceAccount.builder().build();
-    when(gcpServiceAccountDao.get(eq(serviceAccountId))).thenReturn(gcpServiceAccount);
+    when(gcpServiceAccountDao.getByServiceAccountId(eq(serviceAccountId))).thenReturn(gcpServiceAccount);
   }
 
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldGetDefaultServiceAccountIfAlreadyCreate() {
+  public void shouldGetDefaultServiceAccountIfAlreadyCreate() throws IOException {
     GcpServiceAccount gcpServiceAccount = ceGcpServiceAccountService.getDefaultServiceAccount(accountId);
     assertThat(gcpServiceAccount).isEqualToComparingFieldByField(this.gcpServiceAccount);
   }
@@ -55,8 +57,10 @@ public class CEGcpServiceAccountServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldGetDefaultServiceAccountIfNotYetCreated() {
-    when(gcpServiceAccountDao.get(eq(serviceAccountId))).thenReturn(null).thenReturn(gcpServiceAccount);
+  public void shouldGetDefaultServiceAccountIfNotYetCreated() throws IOException {
+    when(gcpServiceAccountDao.getByServiceAccountId(eq(serviceAccountId)))
+        .thenReturn(null)
+        .thenReturn(gcpServiceAccount);
     GcpServiceAccount gcpServiceAccount = ceGcpServiceAccountService.getDefaultServiceAccount(accountId);
     assertThat(gcpServiceAccount).isEqualToComparingFieldByField(this.gcpServiceAccount);
   }

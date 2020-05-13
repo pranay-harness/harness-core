@@ -28,6 +28,7 @@ import software.wings.service.intfc.SettingsService;
 
 public class GcpOrganizationServiceImplTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
+  private String gcpOrganizationId1 = "GCP_ORGANIZATION_ID_1";
   private String organizationName1 = "ORGANIZATION_NAME_1";
   private String organizationName2 = "ORGANIZATION_NAME_2";
   private String serviceAccountEmail1 = "SERVICE_ACCOUNT_EMAIL_1";
@@ -41,6 +42,7 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
   @Mock private GcpOrganizationDao gcpOrganizationDao;
   @Mock private GcpServiceAccountService gcpServiceAccountService;
   @Mock private SettingsService settingsService;
+  @Mock private CEGcpServiceAccountService ceGcpServiceAccountService;
   @InjectMocks private GcpOrganizationServiceImpl gcpOrganizationService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -54,14 +56,17 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
     gcpOrganization2 = GcpOrganization.builder().accountId(accountId).organizationName(organizationName2).build();
     serviceAccount.setEmail(serviceAccountEmail);
     when(gcpServiceAccountService.create(anyString(), anyString())).thenReturn(serviceAccount);
-    when(gcpOrganizationDao.upsert(any(GcpOrganization.class))).thenReturn(GcpOrganization.builder().build());
+    when(ceGcpServiceAccountService.getByAccountId(eq(accountId)))
+        .thenReturn(GcpServiceAccount.builder().email(serviceAccountEmail).build());
+    when(gcpOrganizationDao.upsert(any(GcpOrganization.class)))
+        .thenReturn(GcpOrganization.builder().serviceAccountEmail(serviceAccountEmail).build());
     when(gcpOrganizationDao.save(any(GcpOrganization.class))).thenReturn("GCP_ORGANIZATION_UUID");
   }
 
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void testCreate() {
+  public void shouldUpsert() {
     gcpOrganizationService.upsert(gcpOrganization1);
     verify(gcpOrganizationDao).upsert(gcpOrganizationCaptor.capture());
     assertThat(gcpOrganizationCaptor.getValue().getServiceAccountEmail()).isEqualTo(serviceAccountEmail);
@@ -71,8 +76,8 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testGet() {
-    gcpOrganizationService.upsert(gcpOrganization1);
-    verify(gcpOrganizationDao).upsert(eq(gcpOrganization1));
+    gcpOrganizationService.get(gcpOrganizationId1);
+    verify(gcpOrganizationDao).get(eq(gcpOrganizationId1));
   }
 
   @Test
