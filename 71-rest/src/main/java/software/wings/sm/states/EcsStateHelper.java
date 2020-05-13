@@ -4,9 +4,11 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.deployment.InstanceDetails.InstanceType.AWS;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
@@ -25,11 +27,13 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.deployment.InstanceDetails;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -38,6 +42,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
@@ -50,6 +55,7 @@ import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -73,6 +79,7 @@ import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
+import software.wings.cloudprovider.ContainerInfo;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
@@ -90,6 +97,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -111,6 +119,7 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class EcsStateHelper {
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   public ContainerSetupParams buildContainerSetupParams(
       ExecutionContext context, EcsSetupStateConfig ecsSetupStateConfig) {
@@ -598,6 +607,17 @@ public class EcsStateHelper {
         setNewInstanceFlag(instanceElements, true, finalInstanceElements);
 
         listParam = InstanceElementListParam.builder().instanceElements(finalInstanceElements).build();
+
+        List<InstanceElement> allInstanceElements =
+            getAllInstanceElements(context, containerDeploymentHelper, deployResponse, finalInstanceElements);
+        // This sweeping element will be used by verification or other consumers.
+        sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                       .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+                                       .value(InstanceInfoVariables.builder()
+                                                  .instanceElements(allInstanceElements)
+                                                  .instanceDetails(generateEcsInstanceDetails(allInstanceElements))
+                                                  .build())
+                                       .build());
       }
 
       executionData.setOldInstanceData(deployResponse.getOldInstanceData());
@@ -615,6 +635,74 @@ public class EcsStateHelper {
         .contextElement(listParam)
         .notifyElement(listParam)
         .build();
+  }
+
+  private List<InstanceDetails> generateEcsInstanceDetails(List<InstanceElement> allInstanceElements) {
+    if (isEmpty(allInstanceElements)) {
+      return emptyList();
+    }
+
+    return allInstanceElements.stream()
+        .filter(instanceElement -> instanceElement != null)
+        .map(instanceElement
+            -> InstanceDetails.builder()
+                   .instanceType(AWS)
+                   .newInstance(instanceElement.isNewInstance())
+                   .hostName(instanceElement.getHostName())
+                   .aws(InstanceDetails.AWS.builder()
+                            .ec2Instance(
+                                instanceElement.getHost() != null ? instanceElement.getHost().getEc2Instance() : null)
+                            .publicDns(
+                                instanceElement.getHost() != null ? instanceElement.getHost().getPublicDns() : null)
+                            .instanceId(
+                                instanceElement.getHost() != null ? instanceElement.getHost().getInstanceId() : null)
+                            .ip(instanceElement.getHost() != null ? instanceElement.getHost().getIp() : null)
+                            .dockerId(instanceElement.getEcsContainerDetails() != null
+                                    ? instanceElement.getEcsContainerDetails().getDockerId()
+                                    : null)
+                            .completeDockerId(instanceElement.getEcsContainerDetails() != null
+                                    ? instanceElement.getEcsContainerDetails().getCompleteDockerId()
+                                    : null)
+                            .taskId(instanceElement.getEcsContainerDetails() != null
+                                    ? instanceElement.getEcsContainerDetails().getTaskId()
+                                    : null)
+                            .containerInstanceId(instanceElement.getEcsContainerDetails() != null
+                                    ? instanceElement.getEcsContainerDetails().getContainerInstanceId()
+                                    : null)
+                            .containerInstanceArn(instanceElement.getEcsContainerDetails() != null
+                                    ? instanceElement.getEcsContainerDetails().getContainerInstanceArn()
+                                    : null)
+                            .containerId(instanceElement.getEcsContainerDetails() != null
+                                    ? instanceElement.getEcsContainerDetails().getContainerId()
+                                    : null)
+                            .ecsServiceName(instanceElement.getEcsContainerDetails() != null
+                                    ? instanceElement.getEcsContainerDetails().getEcsServiceName()
+                                    : null)
+                            .build())
+                   .build())
+        .collect(toList());
+  }
+
+  @NotNull
+  private List<InstanceElement> getAllInstanceElements(ExecutionContext context,
+      ContainerDeploymentManagerHelper containerDeploymentHelper, EcsServiceDeployResponse deployResponse,
+      List<InstanceElement> finalInstanceElements) {
+    List<InstanceElement> allInstanceElements = new ArrayList<>();
+    allInstanceElements.addAll(finalInstanceElements);
+
+    List<ContainerInfo> previousContainerInfos = deployResponse.getPreviousContainerInfos();
+
+    List<InstanceStatusSummary> instanceStatusSummariesForPreviousContainers = new ArrayList<>();
+
+    if (isNotEmpty(previousContainerInfos)) {
+      instanceStatusSummariesForPreviousContainers.addAll(
+          containerDeploymentHelper.getInstanceStatusSummaries(context, previousContainerInfos));
+      allInstanceElements.addAll(instanceStatusSummariesForPreviousContainers.stream()
+                                     .map(instanceStatusSummary -> instanceStatusSummary.getInstanceElement())
+                                     .collect(toList()));
+    }
+
+    return allInstanceElements;
   }
 
   public String createAndQueueDelegateTaskForEcsServiceDeploy(EcsDeployDataBag deployDataBag,

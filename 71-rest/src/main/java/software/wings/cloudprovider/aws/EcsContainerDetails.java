@@ -13,4 +13,5 @@ public class EcsContainerDetails {
   private String containerId;
   private String containerInstanceId;
   private String containerInstanceArn;
+  private String ecsServiceName;
 }

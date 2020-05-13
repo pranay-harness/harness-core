@@ -45,6 +45,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -60,6 +61,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
+import software.wings.api.HostElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -80,6 +82,7 @@ import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.cloudprovider.aws.EcsContainerDetails;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsListenerUpdateRequestConfigData;
@@ -95,6 +98,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -105,6 +109,7 @@ import java.util.Map;
 
 public class EcsStateHelperTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private SweepingOutputService sweepingOutputService;
   @Inject @InjectMocks private EcsStateHelper helper;
 
   @Test
@@ -493,14 +498,21 @@ public class EcsStateHelperTest extends WingsBaseTest {
                     .build())
             .build();
     ContainerDeploymentManagerHelper mockHelper = mock(ContainerDeploymentManagerHelper.class);
-    doReturn(
-        singletonList(anInstanceStatusSummary()
-                          .withInstanceElement(anInstanceElement().dockerId("DockerId").hostName("HostName").build())
-                          .build()))
+    doReturn(singletonList(anInstanceStatusSummary()
+                               .withInstanceElement(anInstanceElement()
+                                                        .dockerId("DockerId")
+                                                        .hostName("HostName")
+                                                        .host(HostElement.builder().build())
+                                                        .ecsContainerDetails(EcsContainerDetails.builder().build())
+                                                        .build())
+                               .build()))
         .doReturn(emptyList())
         .when(mockHelper)
         .getInstanceStatusSummaries(any(), anyList());
     ActivityService mockService = mock(ActivityService.class);
+    doReturn(null).when(sweepingOutputService).save(any());
+    doReturn("").when(mockContext).appendStateExecutionId(anyString());
+    doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(any());
     ExecutionResponse response = helper.handleDelegateResponseForEcsDeploy(
         mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse), false, mockService, null, mockHelper);
     assertThat(response).isNotNull();

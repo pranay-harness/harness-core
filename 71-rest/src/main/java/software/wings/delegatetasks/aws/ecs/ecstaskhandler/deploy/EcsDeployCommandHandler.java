@@ -160,6 +160,7 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
         executionDataBuilder.containerInfos(
             containerInfos.stream().filter(ContainerInfo::isNewContainer).collect(toList()));
       } else {
+        containerInfos.forEach(containerInfo -> containerInfo.setNewContainer(false));
         executionDataBuilder.previousContainerInfos(containerInfos);
       }
       ecsDeployCommandTaskHelper.logContainerInfos(containerInfos, executionLogCallback);
