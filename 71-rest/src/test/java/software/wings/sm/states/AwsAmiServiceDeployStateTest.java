@@ -48,6 +48,7 @@ import com.google.common.collect.Lists;
 import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -129,6 +130,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   @Mock private AwsAsgHelperServiceManager mockAwsAsgHelperServiceManager;
   @Mock private ServiceTemplateHelper mockServiceTemplateHelper;
   @Mock private AwsStateHelper mockAwsStateHelper;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   @InjectMocks private AwsAmiServiceDeployState state = new AwsAmiServiceDeployState("stateName");
 
@@ -286,6 +288,9 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     doReturn("hostName").when(mockAwsHelperService).getHostnameFromConvention(anyMap(), anyString());
     Host host = aHost().withUuid(HOST_ID).build();
     doReturn(host).when(mockHostService).saveHost(any());
+    doReturn(null).when(sweepingOutputService).save(any());
+    doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(any());
+    doReturn("").when(mockContext).appendStateExecutionId(anyString());
     ExecutionResponse response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
