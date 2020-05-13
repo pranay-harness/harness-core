@@ -23,7 +23,6 @@ import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
-import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -230,7 +229,7 @@ public class ConfigResource {
   @Path("/entity/{entityId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ALL_APP_ENTITIES, action = Action.DELETE)
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse deleteByEntity(@QueryParam("appId") String appId,
       @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("templateId") String templateId,
       @PathParam("entityId") String entityId) {
