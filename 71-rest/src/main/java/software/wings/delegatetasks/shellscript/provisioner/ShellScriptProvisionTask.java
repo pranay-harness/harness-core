@@ -63,7 +63,7 @@ public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
     File outputFile = null;
     try {
       ShellScriptProvisionParameters parameters = (ShellScriptProvisionParameters) taskParameters;
-      String outputPath = getOutputPath(parameters.getEntityId());
+      String outputPath = getOutputPath(parameters.getWorkflowExecutionId());
       saveExecutionLog(parameters,
           "\"" + PROVISIONER_OUTPUT_PATH_KEY + "\" has been initialized to \"" + outputPath + "\"",
           CommandExecutionStatus.RUNNING);

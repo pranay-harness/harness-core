@@ -122,6 +122,7 @@ public class OwnerRule implements TestRule {
   public static final String PRABU = "prabu.rajendran";
   public static final String PHOENIKX = "nikhil.ranjan";
   public static final String SHUBHAM = "shubham.agrawal";
+  public static final String ABOSII = "alexandru.bosii";
   public static final String ACASIAN = "alexandru.casian";
   public static final String ANIL = "anil.chowdhury";
   public static final String VGLIJIN = "vasile.glijin";
@@ -202,6 +203,7 @@ public class OwnerRule implements TestRule {
                   .team(CONTINUOUS_INTEGRATION)
                   .jira("5e47234c2a59dc0c8fe4ccb8")
                   .build())
+          .put(ABOSII, defaultDevInfo(ABOSII).slack("U01321VFH1A").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(ACASIAN, defaultDevInfo(ACASIAN).slack("U012UEVAPAR").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(VGLIJIN, defaultDevInfo(VGLIJIN).slack("U012W2S777V").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(UNKNOWN, DevInfo.builder().email("n/a").slack("channel").build())
