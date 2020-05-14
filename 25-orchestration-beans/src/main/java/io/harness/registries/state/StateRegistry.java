@@ -2,6 +2,8 @@ package io.harness.registries.state;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
@@ -20,10 +22,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @OwnedBy(CDC)
 @Redesign
 @Singleton
-public class StateRegistry implements Registry<StateType, State> {
-  Map<StateType, State> registry = new ConcurrentHashMap<>();
+public class StateRegistry implements Registry<StateType, Class<? extends State>> {
+  @Inject private Injector injector;
 
-  public void register(@NonNull StateType stateType, @NonNull State state) {
+  Map<StateType, Class<? extends State>> registry = new ConcurrentHashMap<>();
+
+  public void register(@NonNull StateType stateType, @NonNull Class<? extends State> state) {
     if (registry.containsKey(stateType)) {
       throw new DuplicateRegistryException(getType(), "State Already Registered with this type: " + stateType);
     }
@@ -32,7 +36,7 @@ public class StateRegistry implements Registry<StateType, State> {
 
   public State obtain(@NonNull StateType stateType) {
     if (registry.containsKey(stateType)) {
-      return registry.get(stateType);
+      return injector.getInstance(registry.get(stateType));
     }
     throw new UnregisteredKeyAccessException(getType(), "No State registered for type: " + stateType);
   }

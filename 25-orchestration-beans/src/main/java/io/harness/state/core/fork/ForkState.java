@@ -27,7 +27,7 @@ import java.util.Map;
 @Redesign
 @Produces(State.class)
 public class ForkState implements State, ChildrenExecutable {
-  public static final String STATE_TYPE = "FORK";
+  public static final StateType STATE_TYPE = StateType.builder().type("FORK").build();
 
   @Override
   public ChildrenExecutableResponse obtainChildren(
@@ -55,6 +55,6 @@ public class ForkState implements State, ChildrenExecutable {
 
   @Override
   public StateType getType() {
-    return StateType.builder().type(STATE_TYPE).build();
+    return STATE_TYPE;
   }
 }

@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import io.harness.OrchestrationBeansTest;
 import io.harness.ambiance.Ambiance;
@@ -28,21 +27,19 @@ import java.util.List;
 
 public class FacilitatorRegistryTest extends OrchestrationBeansTest {
   @Inject private FacilitatorRegistry facilitatorRegistry;
-  @Inject private Injector injector;
 
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
     FacilitatorType facilitatorType = FacilitatorType.builder().type("Type1").build();
-    facilitatorRegistry.register(facilitatorType, injector.getInstance(Type1Facilitator.class));
+    facilitatorRegistry.register(facilitatorType, Type1Facilitator.class);
     Facilitator facilitator = facilitatorRegistry.obtain(facilitatorType);
     assertThat(facilitator).isNotNull();
     assertThat(facilitator.getType()).isEqualTo(facilitatorType);
     Type1Facilitator type1Adviser = (Type1Facilitator) facilitator;
 
-    assertThatThrownBy(
-        () -> facilitatorRegistry.register(facilitatorType, injector.getInstance(Type1Facilitator.class)))
+    assertThatThrownBy(() -> facilitatorRegistry.register(facilitatorType, Type1Facilitator.class))
         .isInstanceOf(DuplicateRegistryException.class);
 
     assertThatThrownBy(() -> facilitatorRegistry.obtain(FacilitatorType.builder().type(FacilitatorType.SKIP).build()))

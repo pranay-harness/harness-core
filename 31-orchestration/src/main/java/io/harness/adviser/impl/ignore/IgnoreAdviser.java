@@ -19,6 +19,8 @@ import io.harness.state.io.StateResponse;
 @Redesign
 @Produces(Adviser.class)
 public class IgnoreAdviser implements Adviser {
+  public static final AdviserType ADVISER_TYPE = AdviserType.builder().type(AdviserType.IGNORE).build();
+
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
     IgnoreAdviserParameters parameters =
@@ -36,6 +38,6 @@ public class IgnoreAdviser implements Adviser {
 
   @Override
   public AdviserType getType() {
-    return AdviserType.builder().type(AdviserType.IGNORE).build();
+    return ADVISER_TYPE;
   }
 }

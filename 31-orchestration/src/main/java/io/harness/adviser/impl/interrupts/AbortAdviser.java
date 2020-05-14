@@ -12,6 +12,8 @@ import io.harness.annotations.dev.OwnedBy;
 @OwnedBy(CDC)
 @Redesign
 public class AbortAdviser implements Adviser {
+  public static final AdviserType ADVISER_TYPE = AdviserType.builder().type(AdviserType.ABORT).build();
+
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
     return null;
@@ -19,6 +21,6 @@ public class AbortAdviser implements Adviser {
 
   @Override
   public AdviserType getType() {
-    return AdviserType.builder().type(AdviserType.ABORT).build();
+    return ADVISER_TYPE;
   }
 }

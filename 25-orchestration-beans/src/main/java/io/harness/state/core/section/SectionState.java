@@ -21,7 +21,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Produces(State.class)
 public class SectionState implements State, ChildExecutable {
-  public static final String STATE_TYPE = "SECTION";
+  public static final StateType STATE_TYPE = StateType.builder().type("SECTION").build();
 
   @Override
   public ChildExecutableResponse obtainChild(
@@ -42,6 +42,6 @@ public class SectionState implements State, ChildExecutable {
 
   @Override
   public StateType getType() {
-    return StateType.builder().type(STATE_TYPE).build();
+    return STATE_TYPE;
   }
 }

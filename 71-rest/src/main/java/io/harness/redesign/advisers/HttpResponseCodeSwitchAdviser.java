@@ -24,9 +24,11 @@ import java.util.Map;
 @ExcludeRedesign
 @Produces(Adviser.class)
 public class HttpResponseCodeSwitchAdviser implements Adviser {
+  public static final AdviserType ADVISER_TYPE = AdviserType.builder().type("HTTP_RESPONSE_CODE_SWITCH").build();
+
   @Override
   public AdviserType getType() {
-    return AdviserType.builder().type("HTTP_RESPONSE_CODE_SWITCH").build();
+    return ADVISER_TYPE;
   }
 
   @Override

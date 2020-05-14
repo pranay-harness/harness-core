@@ -19,9 +19,12 @@ import java.util.List;
 @Redesign
 @Produces(Facilitator.class)
 public class ChildrenFacilitator implements Facilitator {
+  public static final FacilitatorType FACILITATOR_TYPE =
+      FacilitatorType.builder().type(FacilitatorType.CHILDREN).build();
+
   @Override
   public FacilitatorType getType() {
-    return FacilitatorType.builder().type(FacilitatorType.CHILDREN).build();
+    return FACILITATOR_TYPE;
   }
 
   @Override

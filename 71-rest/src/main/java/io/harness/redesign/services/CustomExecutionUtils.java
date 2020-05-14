@@ -119,7 +119,7 @@ public class CustomExecutionUtils {
                   .uuid(waitNodeId)
                   .name("Wait Node")
                   .levelType(StepLevel.LEVEL_TYPE)
-                  .stateType(StateType.builder().type("WAIT").build())
+                  .stateType(StateType.builder().type("WAIT_STATE").build())
                   .stateParameters(WaitStateParameters.builder().waitDurationSeconds(5).build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
