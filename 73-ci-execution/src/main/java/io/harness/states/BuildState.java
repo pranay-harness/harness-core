@@ -46,8 +46,8 @@ public class BuildState implements State, SyncExecutable {
     try {
       BuildStepInfo buildStepInfo = (BuildStepInfo) parameters;
 
-      String stdoutFilePath = MOUNT_PATH + "/stdout";
-      String stderrFilePath = MOUNT_PATH + "/stderr";
+      String relStdoutFilePath = "/stdout";
+      String relStderrFilePath = "/stderr";
       Integer commandTimeoutSecs = 3600;
       List<String> commandList = buildStepInfo.getScriptInfos()
                                      .stream()
@@ -57,8 +57,9 @@ public class BuildState implements State, SyncExecutable {
       K8ExecCommandParams k8ExecCommandParams = K8ExecCommandParams.builder()
                                                     .podName(POD_NAME)
                                                     .containerName(CONTAINER_NAME)
-                                                    .stdoutFilePath(stdoutFilePath)
-                                                    .stderrFilePath(stderrFilePath)
+                                                    .mountPath(MOUNT_PATH)
+                                                    .relStdoutFilePath(relStdoutFilePath)
+                                                    .relStderrFilePath(relStderrFilePath)
                                                     .commandTimeoutSecs(commandTimeoutSecs)
                                                     .scriptType(ShellScriptType.DASH)
                                                     .commands(commandList)
