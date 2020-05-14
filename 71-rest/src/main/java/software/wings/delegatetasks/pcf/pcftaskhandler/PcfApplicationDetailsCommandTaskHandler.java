@@ -36,7 +36,12 @@ public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandl
       throw new InvalidArgumentsException(Pair.of("pcfCommandRequest", "Must be instance of PcfInstanceSyncRequest"));
     }
     PcfCommandExecutionResponse pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder().build();
-    PcfInstanceSyncResponse pcfInstanceSyncResponse = PcfInstanceSyncResponse.builder().build();
+    PcfInstanceSyncResponse pcfInstanceSyncResponse =
+        PcfInstanceSyncResponse.builder()
+            .organization(pcfCommandRequest.getOrganization())
+            .name(((PcfInstanceSyncRequest) pcfCommandRequest).getPcfApplicationName())
+            .space(pcfCommandRequest.getSpace())
+            .build();
     pcfCommandExecutionResponse.setPcfCommandResponse(pcfInstanceSyncResponse);
     try {
       PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();

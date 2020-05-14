@@ -4,14 +4,17 @@ import static io.harness.exception.WingsException.EVERYBODY;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.AmiDeploymentType.SPOTINST;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.UnexpectedException;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.utils.Utils;
+
+import java.util.Set;
 
 @Singleton
 public class InstanceHandlerFactory {
@@ -77,7 +80,13 @@ public class InstanceHandlerFactory {
       case PHYSICAL_DATA_CENTER_WINRM:
         return null;
       default:
-        throw new WingsException("No handler defined for infra mapping type: " + infraMappingType);
+        throw new UnexpectedException("No handler defined for infra mapping type: " + infraMappingType);
     }
+  }
+
+  public Set<InstanceHandler> getAllInstanceHandlers() {
+    return Sets.newHashSet(containerInstanceHandler, awsInstanceHandler, awsAmiInstanceHandler,
+        awsCodeDeployInstanceHandler, pcfInstanceHandler, azureInstanceHandler, spotinstAmiInstanceHandler,
+        awsLambdaInstanceHandler);
   }
 }

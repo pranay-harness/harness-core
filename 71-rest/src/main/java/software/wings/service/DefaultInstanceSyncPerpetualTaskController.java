@@ -1,3 +1,0 @@
-package software.wings.service;
-
-public class DefaultInstanceSyncPerpetualTaskController implements InstanceSyncPerpetualTaskController {}

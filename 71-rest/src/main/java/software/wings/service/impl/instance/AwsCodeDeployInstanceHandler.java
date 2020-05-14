@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.singletonList;
 import static java.util.function.Function.identity;
+import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_CODE_DEPLOY_DEPLOYMENTS;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -22,6 +23,7 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CodeDeployInfrastructureMapping;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
@@ -94,7 +96,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
   }
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) {
+  public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
     syncInstancesInternal(appId, infraMappingId, null, false);
   }
 
@@ -218,6 +220,11 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
       OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {
     syncInstancesInternal(deploymentSummaries.iterator().next().getAppId(),
         deploymentSummaries.iterator().next().getInfraMappingId(), deploymentSummaries, rollback);
+  }
+
+  @Override
+  public FeatureName getFeatureFlagToStopIteratorBasedInstanceSync() {
+    return STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_CODE_DEPLOY_DEPLOYMENTS;
   }
 
   @Override

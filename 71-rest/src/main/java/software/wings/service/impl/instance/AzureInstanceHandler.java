@@ -17,6 +17,7 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
@@ -39,7 +40,7 @@ public class AzureInstanceHandler extends InstanceHandler {
   @Inject protected AzureHelperService azureHelperService;
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) {
+  public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
 
@@ -124,6 +125,11 @@ public class AzureInstanceHandler extends InstanceHandler {
   public void handleNewDeployment(
       List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
     // Not Implemented
+  }
+
+  @Override
+  public FeatureName getFeatureFlagToStopIteratorBasedInstanceSync() {
+    return FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AZURE_INFRA_DEPLOYMENTS;
   }
 
   @Override

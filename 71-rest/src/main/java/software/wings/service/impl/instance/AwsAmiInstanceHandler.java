@@ -3,6 +3,7 @@ package software.wings.service.impl.instance;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_AMI_DEPLOYMENTS;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
@@ -24,6 +25,7 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
@@ -48,7 +50,7 @@ import java.util.Optional;
 @Slf4j
 public class AwsAmiInstanceHandler extends AwsInstanceHandler {
   @Override
-  public void syncInstances(String appId, String infraMappingId) {
+  public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
     // Key - Auto scaling group with revision, Value - Instance
     Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
     syncInstancesInternal(appId, infraMappingId, asgInstanceMap, null, false);
@@ -116,6 +118,11 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
 
     syncInstancesInternal(deploymentSummaries.iterator().next().getAppId(),
         deploymentSummaries.iterator().next().getInfraMappingId(), asgInstanceMap, deploymentSummaries, rollback);
+  }
+
+  @Override
+  public FeatureName getFeatureFlagToStopIteratorBasedInstanceSync() {
+    return STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_AMI_DEPLOYMENTS;
   }
 
   /**

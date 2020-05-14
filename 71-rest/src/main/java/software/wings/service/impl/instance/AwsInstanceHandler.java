@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
+import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_SSH_DEPLOYMENTS;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -25,6 +26,7 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
@@ -58,7 +60,7 @@ public class AwsInstanceHandler extends InstanceHandler {
   @Inject protected AwsInfrastructureProvider awsInfrastructureProvider;
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) {
+  public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
     // Key - Auto scaling group with revision, Value - Instance
     Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
 
@@ -109,6 +111,11 @@ public class AwsInstanceHandler extends InstanceHandler {
     throw WingsException.builder()
         .message("Deployments should be handled at InstanceHelper for aws ssh type except for with ASG.")
         .build();
+  }
+
+  @Override
+  public FeatureName getFeatureFlagToStopIteratorBasedInstanceSync() {
+    return STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_SSH_DEPLOYMENTS;
   }
 
   @Override

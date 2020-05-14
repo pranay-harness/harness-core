@@ -355,6 +355,8 @@ import software.wings.service.impl.instance.CloudToHarnessMappingServiceImpl;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl;
 import software.wings.service.impl.instance.DeploymentServiceImpl;
 import software.wings.service.impl.instance.InstanceServiceImpl;
+import software.wings.service.impl.instance.InstanceSyncPerpetualTaskService;
+import software.wings.service.impl.instance.InstanceSyncPerpetualTaskServiceImpl;
 import software.wings.service.impl.instance.ServerlessDashboardServiceImpl;
 import software.wings.service.impl.instance.ServerlessInstanceServiceImpl;
 import software.wings.service.impl.instance.licensing.InstanceLimitProviderImpl;
@@ -737,6 +739,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(StatisticsService.class).to(StatisticsServiceImpl.class);
     bind(DashboardStatisticsService.class).to(DashboardStatisticsServiceImpl.class);
     bind(InstanceService.class).to(InstanceServiceImpl.class);
+    bind(InstanceSyncPerpetualTaskService.class).to(InstanceSyncPerpetualTaskServiceImpl.class);
     bind(BuildSourceService.class).to(BuildSourceServiceImpl.class);
     bind(ServiceVariableService.class).to(ServiceVariableServiceImpl.class);
     bind(AccountService.class).to(AccountServiceImpl.class);

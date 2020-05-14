@@ -12,6 +12,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_CONTAINER_DEPLOYMENTS;
 import static software.wings.beans.container.Label.Builder.aLabel;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -44,6 +45,7 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.FeatureName;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.WorkflowExecution;
@@ -102,7 +104,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
   @Inject private transient K8sStateHelper k8sStateHelper;
   @Inject private WingsPersistence wingsPersistence;
   @Override
-  public void syncInstances(String appId, String infraMappingId) {
+  public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
     // Key - containerSvcName, Value - Instances
     syncInstancesInternal(appId, infraMappingId, ArrayListMultimap.create(), null, false);
   }
@@ -472,6 +474,11 @@ public class ContainerInstanceHandler extends InstanceHandler {
     }
 
     syncInstancesInternal(appId, infraMappingId, containerSvcNameInstanceMap, deploymentSummaries, rollback);
+  }
+
+  @Override
+  public FeatureName getFeatureFlagToStopIteratorBasedInstanceSync() {
+    return STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_CONTAINER_DEPLOYMENTS;
   }
 
   private void validateDeploymentInfos(List<DeploymentSummary> deploymentSummaries) {

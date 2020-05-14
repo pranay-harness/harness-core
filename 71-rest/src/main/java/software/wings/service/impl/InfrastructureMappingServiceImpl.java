@@ -57,6 +57,7 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.data.structure.CollectionUtils;
@@ -1108,6 +1109,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public InfrastructureMapping get(String appId, String infraMappingId) {
     return wingsPersistence.getWithAppId(InfrastructureMapping.class, appId, infraMappingId);
+  }
+
+  @Override
+  public List<InfrastructureMapping> get(String appId) {
+    PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", SearchFilter.Operator.EQ, appId);
+    PageResponse<InfrastructureMapping> result = list(pageRequest);
+    return result.getResponse();
   }
 
   void handlePcfInfraMapping(Map<String, Object> keyValuePairs, PcfInfrastructureMapping pcfInfrastructureMapping) {

@@ -1,15 +1,23 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANKIT;
 import static java.util.Arrays.asList;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_NAME;
@@ -38,6 +46,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +61,7 @@ import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
@@ -61,6 +71,9 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
+import software.wings.helpers.ext.pcf.PcfAppNotFoundException;
+import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
+import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.service.impl.PcfHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -85,7 +98,6 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
   @Mock EnvironmentService environmentService;
   @Mock ServiceResourceService serviceResourceService;
   @Mock DeploymentService deploymentService;
-  @InjectMocks @Inject private InstanceHelper instanceHelper;
   @InjectMocks @Inject PcfInstanceHandler pcfInstanceHandler;
 
   @Before
@@ -137,7 +149,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSyncInstances() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(
+    final List<Instance> instances =
         asList(Instance.builder()
                    .uuid(INSTANCE_1_ID)
                    .accountId(ACCOUNT_ID)
@@ -181,9 +193,9 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
                                   .instanceIndex(PCF_INSTANCE_INDEX_1)
                                   .id(PCF_APP_GUID_1 + ":" + PCF_INSTANCE_INDEX_1)
                                   .build())
-                .build()));
+                .build());
 
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
     List<PcfInstanceInfo> pcfInstanceInfos = Arrays.asList(PcfInstanceInfo.builder()
                                                                .organization(ORGANIZATION)
@@ -206,7 +218,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
         .when(pcfHelperService)
         .getApplicationDetails(anyString(), anyString(), anyString(), any(), any());
 
-    pcfInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
+    pcfInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.MANUAL);
 
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
@@ -385,5 +397,59 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
     assertThat(capturedInstances.get(2).getInstanceType()).isEqualTo(InstanceType.PCF_INSTANCE);
     assertThat(capturedInstances.get(2).getLastArtifactBuildNum()).isEqualTo("1");
     assertThat(capturedInstances.get(2).getLastArtifactName()).isEqualTo("old");
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(UnitTests.class)
+  public void testGetStatusWhenSuccessResponse() {
+    InfrastructureMapping infrastructureMapping = mock(InfrastructureMapping.class);
+    when(infrastructureMapping.getUuid()).thenReturn("ID");
+
+    PcfCommandExecutionResponse pcfCommandExecutionResponse = getPcfCommandExecutionResponse(SUCCESS);
+    when(pcfHelperService.getInstanceCount(pcfCommandExecutionResponse)).thenReturn(1);
+
+    Status status = pcfInstanceHandler.getStatus(infrastructureMapping, pcfCommandExecutionResponse);
+    assertTrue(status.isSuccess());
+    assertTrue(status.isRetryable());
+    assertTrue(isEmpty(status.getErrorMessage()));
+
+    when(pcfHelperService.getInstanceCount(pcfCommandExecutionResponse)).thenReturn(0);
+    status = pcfInstanceHandler.getStatus(infrastructureMapping, pcfCommandExecutionResponse);
+    assertTrue(status.isSuccess());
+    assertFalse(status.isRetryable());
+    assertTrue(isEmpty(status.getErrorMessage()));
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(UnitTests.class)
+  @SuppressWarnings("unchecked")
+  public void testGetStatusWhenSuccessFailure() throws Exception {
+    InfrastructureMapping infrastructureMapping = mock(InfrastructureMapping.class);
+    when(infrastructureMapping.getUuid()).thenReturn("ID");
+
+    PcfCommandExecutionResponse pcfCommandExecutionResponse = getPcfCommandExecutionResponse(FAILURE);
+
+    Status status = pcfInstanceHandler.getStatus(infrastructureMapping, pcfCommandExecutionResponse);
+    assertFalse(status.isSuccess());
+    assertTrue(status.isRetryable());
+
+    when(pcfHelperService.validatePcfInstanceSyncResponse(any(), any(), any(), any()))
+        .thenThrow(PcfAppNotFoundException.class);
+    status = pcfInstanceHandler.getStatus(infrastructureMapping, pcfCommandExecutionResponse);
+    assertFalse(status.isSuccess());
+    assertFalse(status.isRetryable());
+  }
+
+  private PcfCommandExecutionResponse getPcfCommandExecutionResponse(
+      CommandExecutionResult.CommandExecutionStatus commandExecutionStatus) {
+    PcfInstanceSyncResponse pcfInstanceSyncResponse =
+        PcfInstanceSyncResponse.builder().commandExecutionStatus(commandExecutionStatus).build();
+
+    return PcfCommandExecutionResponse.builder()
+        .pcfCommandResponse(pcfInstanceSyncResponse)
+        .commandExecutionStatus(commandExecutionStatus)
+        .build();
   }
 }

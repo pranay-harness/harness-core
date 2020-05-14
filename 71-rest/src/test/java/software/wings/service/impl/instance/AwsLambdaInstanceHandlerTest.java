@@ -311,7 +311,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
     doNothing()
         .when(awsLambdaInstanceHandler)
         .syncInstancesInternal(anyString(), anyString(), anyListOf(DeploymentSummary.class));
-    awsLambdaInstanceHandler.syncInstances("appid", "innfraid");
+    awsLambdaInstanceHandler.syncInstances("appid", "innfraid", InstanceSyncFlow.MANUAL);
 
     verify(awsLambdaInstanceHandler, times(1))
         .syncInstancesInternal(anyString(), anyString(), anyListOf(DeploymentSummary.class));

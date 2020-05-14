@@ -187,10 +187,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSyncInstances_instanceSync() throws Exception {
-    PageResponse<Instance> pageResponse = new PageResponse<>();
-    setPageResponse(pageResponse);
-
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(getInstances()).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
     doReturn(new DescribeInstancesResult()).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
     doReturn(emptyList())
         .when(mockAwsEc2HelperServiceManager)
@@ -209,7 +206,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
         .when(mockAwsAsgHelperServiceManager)
         .listAutoScalingGroupInstances(any(), anyList(), anyString(), anyString(), anyString());
 
-    awsAmiInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
+    awsAmiInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.MANUAL);
 
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
@@ -218,8 +215,8 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     assertThat(idTobeDeleted.contains(instance3.getInstanceId())).isTrue();
   }
 
-  private void setPageResponse(PageResponse<Instance> pageResponse) {
-    pageResponse.setResponse(asList(
+  private List<Instance> getInstances() {
+    return asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -296,7 +293,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
                               .ec2Instance(null /*for NPE issue we saw in prod*/)
                               .hostPublicDns(PUBLIC_DNS_4)
                               .build())
-            .build()));
+            .build());
   }
 
   // 3 existing instances, 1 EC2, 2 AMI,
@@ -321,9 +318,9 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
         .when(deploymentService)
         .get(any(DeploymentSummary.class));
 
-    setPageResponse(pageResponse);
+    getInstances();
 
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(getInstances()).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
     doReturn(new DescribeInstancesResult()).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
     doReturn(emptyList())
         .when(mockAwsEc2HelperServiceManager)

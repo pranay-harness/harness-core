@@ -69,7 +69,6 @@ import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
-import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
@@ -168,8 +167,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(
+    final List<Instance> instances = asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -184,7 +182,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
             .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP1).build())
             .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
             .containerInstanceKey(ContainerInstanceKey.builder().containerId("taskARN:0").build())
-            .instanceInfo(EcsContainerInfo.Builder.anEcsContainerInfo()
+            .instanceInfo(Builder.anEcsContainerInfo()
                               .withClusterName("ECSCluster")
                               .withServiceName("service_a_1")
                               .withStartedAt(0)
@@ -192,15 +190,15 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                               .withTaskArn("taskARN:0")
                               .withTaskDefinitionArn("taskDefinitionArn")
                               .build())
-            .build()));
+            .build());
 
     ContainerSyncResponse containerSyncResponse =
         ContainerSyncResponse.builder().containerInfoList(Collections.emptyList()).build();
 
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
     doReturn(containerSyncResponse).when(containerSync).getInstances(any(), anyList());
 
-    containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
+    containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.MANUAL);
     assertionsForDelete(INSTANCE_1_ID);
   }
 
@@ -214,7 +212,8 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .get(anyString(), anyString());
 
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(
+
+    final List<Instance> instances = asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -230,7 +229,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
             .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
             .containerInstanceKey(ContainerInstanceKey.builder().containerId("taskARN:0").build())
             .lastWorkflowExecutionId("id")
-            .instanceInfo(EcsContainerInfo.Builder.anEcsContainerInfo()
+            .instanceInfo(Builder.anEcsContainerInfo()
                               .withClusterName("ECSCluster")
                               .withServiceName("service_a_1")
                               .withStartedAt(0)
@@ -238,7 +237,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                               .withTaskArn("taskARN:0")
                               .withTaskDefinitionArn("taskDefinitionArn")
                               .build())
-            .build()));
+            .build());
 
     ContainerSyncResponse containerSyncResponse = ContainerSyncResponse.builder()
                                                       .containerInfoList(asList(Builder.anEcsContainerInfo()
@@ -257,10 +256,10 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                                                               .build()))
                                                       .build();
 
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
     doReturn(containerSyncResponse).when(containerSync).getInstances(any(), anyList());
 
-    containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
+    containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.MANUAL);
     assertionsForSave("taskARN:2", InstanceType.ECS_CONTAINER_INSTANCE);
   }
 
@@ -273,7 +272,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .get(anyString(), anyString());
 
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(
+    final List<Instance> instances = asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -288,7 +287,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
             .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP1).build())
             .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
             .containerInstanceKey(ContainerInstanceKey.builder().containerId("taskARN:0").build())
-            .instanceInfo(EcsContainerInfo.Builder.anEcsContainerInfo()
+            .instanceInfo(Builder.anEcsContainerInfo()
                               .withClusterName("ECSCluster")
                               .withServiceName("service_b_1")
                               .withStartedAt(0)
@@ -296,9 +295,9 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                               .withTaskArn("taskARN:0")
                               .withTaskDefinitionArn("taskDefinitionArn")
                               .build())
-            .build()));
+            .build());
 
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
     doReturn(ContainerSyncResponse.builder().containerInfoList(Collections.EMPTY_LIST).build())
         .when(containerSync)
         .getInstances(any(), anyList());
@@ -327,10 +326,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(Collections.EMPTY_LIST);
-
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(Collections.emptyList()).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
     doReturn(ContainerSyncResponse.builder()
                  .containerInfoList(asList(Builder.anEcsContainerInfo()
                                                .withClusterName(ECS_CLUSTER)
@@ -369,7 +365,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(containerSync)
         .getInstances(any(), anyList());
 
-    containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
+    containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.MANUAL);
     // assertions(containerId, instanceType, false);
   }
 
@@ -401,7 +397,8 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .get(anyString(), anyString());
 
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(
+
+    final List<Instance> instances = asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -422,19 +419,19 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                               .controllerName("controllerName:0")
                               .podName("pod:0")
                               .build())
-            .build()));
+            .build());
 
     ContainerSyncResponse containerSyncResponse =
         ContainerSyncResponse.builder().containerInfoList(Collections.EMPTY_LIST).build();
 
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
     doReturn(ContainerSyncResponse.builder().containerInfoList(asList()).build())
         .doReturn(containerSyncResponse)
         .when(containerSync)
         .getInstances(any(), anyList());
 
-    containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
+    containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.MANUAL);
     assertionsForDelete(INSTANCE_1_ID);
   }
 
@@ -447,7 +444,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .get(anyString(), anyString());
 
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(
+    final List<Instance> instances = asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -469,7 +466,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                               .controllerName("controllerName:0")
                               .podName("pod:0")
                               .build())
-            .build()));
+            .build());
 
     ContainerSyncResponse containerSyncResponse = ContainerSyncResponse.builder()
                                                       .containerInfoList(asList(KubernetesContainerInfo.builder()
@@ -486,10 +483,10 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                                                               .build()))
                                                       .build();
 
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
     doReturn(containerSyncResponse).when(containerSync).getInstances(any(), anyList());
 
-    containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
+    containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.MANUAL);
     assertionsForSave("pod:1", KUBERNETES_CONTAINER_INSTANCE);
   }
 
@@ -502,7 +499,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .get(anyString(), anyString());
 
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(
+    final List<Instance> instances = asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -524,9 +521,9 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                               .namespace("default")
                               .podName("pod:0")
                               .build())
-            .build()));
+            .build());
 
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
     doReturn(ContainerSyncResponse.builder().containerInfoList(asList()).build())
         .when(containerSync)
@@ -558,10 +555,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(Collections.EMPTY_LIST);
-
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(Collections.emptyList()).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
     doReturn(ContainerSyncResponse.builder()
                  .containerInfoList(asList(KubernetesContainerInfo.builder()
                                                .clusterName(KUBE_CLUSTER)
@@ -613,8 +607,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(
+    final List<Instance> instances = asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -635,9 +628,9 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                               .controllerName("controllerName:0")
                               .podName("pod:0")
                               .build())
-            .build()));
+            .build());
 
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
     doReturn(ContainerSyncResponse.builder().containerInfoList(asList()).build())
         .doReturn(ContainerSyncResponse.builder()
@@ -720,9 +713,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testNewDeployment_AddNewInstance_K8sV2() throws Exception {
-    PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(Collections.EMPTY_LIST);
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(Collections.emptyList()).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
     doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
         .when(infraMappingService)

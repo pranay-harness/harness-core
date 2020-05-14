@@ -12,6 +12,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
+import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_AMI_SPOT_INST_DEPLOYMENTS;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
@@ -30,6 +31,7 @@ import software.wings.api.SpotinstAmiDeploymentInfo;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
@@ -58,7 +60,7 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler {
   @Inject private SpotinstHelperServiceManager spotinstHelperServiceManager;
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) {
+  public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
     AwsAmiInfrastructureMapping infrastructureMapping = getInfraMapping(appId, infraMappingId);
     SettingAttribute spotinstSettingAttribute = settingsService.get(infrastructureMapping.getSpotinstCloudProvider());
     SpotInstConfig spotinstConfig = (SpotInstConfig) spotinstSettingAttribute.getValue();
@@ -118,6 +120,11 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler {
                   .orElse(null),
               infrastructureMapping));
     }
+  }
+
+  @Override
+  public FeatureName getFeatureFlagToStopIteratorBasedInstanceSync() {
+    return STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_AMI_SPOT_INST_DEPLOYMENTS;
   }
 
   @VisibleForTesting

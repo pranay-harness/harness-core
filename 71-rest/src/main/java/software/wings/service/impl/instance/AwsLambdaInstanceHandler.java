@@ -13,6 +13,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.joda.time.Seconds.secondsBetween;
+import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_LAMBDA_DEPLOYMENTS;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -47,6 +48,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.Service;
@@ -96,7 +98,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
   @Inject DelegateProxyFactory delegateProxyFactory;
 
   @Override
-  public void syncInstances(String appId, String infraMappingId) {
+  public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
     syncInstancesInternal(appId, infraMappingId, emptyList());
   }
 
@@ -371,6 +373,11 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
       final String infraMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
       syncInstancesInternal(appId, infraMappingId, deploymentSummaries);
     }
+  }
+
+  @Override
+  public FeatureName getFeatureFlagToStopIteratorBasedInstanceSync() {
+    return STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_LAMBDA_DEPLOYMENTS;
   }
 
   @VisibleForTesting

@@ -21,7 +21,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
-import software.wings.service.PcfInstanceSyncConstants;
+import software.wings.service.InstanceSyncConstants;
 
 import java.time.Instant;
 import java.util.List;
@@ -55,7 +55,7 @@ public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
             .organization(orgName)
             .space(space)
             .pcfCommandType(PcfCommandRequest.PcfCommandType.APP_DETAILS)
-            .timeoutIntervalInMin(PcfInstanceSyncConstants.TIMEOUT_SECONDS / 60)
+            .timeoutIntervalInMin(InstanceSyncConstants.TIMEOUT_SECONDS / 60)
             .build();
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
         pcfDelegateTaskHelper.getPcfCommandExecutionResponse(pcfInstanceSyncRequest, encryptedDataDetailList);
@@ -72,9 +72,9 @@ public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
           "Failed to publish the instance collection result to manager for application name {} and PerpetualTaskId {}",
           applicationName, taskId.getId(), ex);
     }
-    logger.info("Published instanceSync successfully for perp task: {}", taskId);
     CommandExecutionResult.CommandExecutionStatus commandExecutionStatus =
         pcfCommandExecutionResponse.getCommandExecutionStatus();
+    logger.info("Published instanceSync successfully for perp task: {}, state: {}", taskId, commandExecutionStatus);
     return getPerpetualTaskResponse(pcfCommandExecutionResponse, commandExecutionStatus);
   }
 
@@ -83,11 +83,11 @@ public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
     PerpetualTaskState taskState;
     String message;
     if (CommandExecutionResult.CommandExecutionStatus.FAILURE.equals(commandExecutionStatus)) {
-      taskState = PerpetualTaskState.TASK_RUN_SUCCEEDED;
-      message = PerpetualTaskState.TASK_RUN_SUCCEEDED.name();
-    } else {
       taskState = PerpetualTaskState.TASK_RUN_FAILED;
       message = pcfCommandExecutionResponse.getErrorMessage();
+    } else {
+      taskState = PerpetualTaskState.TASK_RUN_SUCCEEDED;
+      message = PerpetualTaskState.TASK_RUN_SUCCEEDED.name();
     }
 
     return PerpetualTaskResponse.builder()

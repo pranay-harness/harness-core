@@ -551,6 +551,7 @@ import software.wings.service.impl.event.AlertEvent;
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 import software.wings.service.impl.instana.InstanaDataCollectionInfo;
+import software.wings.service.impl.instance.InstanceSyncPerpetualTaskInfo;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
@@ -1033,6 +1034,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ImportedTemplate.class);
     set.add(CeExceptionRecord.class);
     set.add(ScopedEntity.class);
+    set.add(InstanceSyncPerpetualTaskInfo.class);
     set.add(YamlSuccessfulChange.class);
   }
 

@@ -1,10 +1,14 @@
 package software.wings.service.impl;
 
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse.builder;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.beans.DelegateTask;
@@ -19,6 +23,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.PcfConfig;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
+import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.ArrayList;
@@ -47,5 +52,22 @@ public class PcfHelperServiceTest extends WingsBaseTest {
     List<EncryptedDataDetail> parameter = (List<EncryptedDataDetail>) (delegateTask.getData().getParameters()[1]);
     assertThat(parameter).isNotEmpty();
     assertThat(parameter.get(0).getFieldName()).isEqualTo("password");
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(UnitTests.class)
+  public void testInstancesCount() {
+    List<String> instances = new ArrayList<>();
+    instances.add("DummyInstanceId1");
+    instances.add("DummyInstanceId2");
+
+    PcfInstanceSyncResponse pcfInstanceSyncResponse = builder().instanceIndicesx(instances).build();
+    PcfCommandExecutionResponse response = PcfCommandExecutionResponse.builder()
+                                               .commandExecutionStatus(SUCCESS)
+                                               .pcfCommandResponse(pcfInstanceSyncResponse)
+                                               .build();
+
+    assertEquals(2, pcfHelperService.getInstanceCount(response));
   }
 }

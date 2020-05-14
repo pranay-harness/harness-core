@@ -5,7 +5,6 @@ import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.A
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.USER_GROUP_ID;
 
 import groovyx.net.http.URIBuilder;
-import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import software.wings.utils.WingsIntegrationTestConstants;
@@ -55,7 +54,7 @@ public class LdapUrlHelper implements WingsIntegrationTestConstants {
     try {
       return new URIBuilder(url).addQueryParam(ACCOUNT_ID_PARAM, ACCOUNT_ID).toString();
     } catch (URISyntaxException e) {
-      throw new WingsException("Ldap Integration test failed.", e);
+      throw new RuntimeException("Ldap Integration test failed.", e);
     }
   }
 
@@ -63,7 +62,7 @@ public class LdapUrlHelper implements WingsIntegrationTestConstants {
     try {
       return new URIBuilder(url).addQueryParam(ACCOUNT_ID_PARAM, ACCOUNT_ID).addQueryParam(param, value).toString();
     } catch (URISyntaxException e) {
-      throw new WingsException("Ldap Integration test failed.", e);
+      throw new RuntimeException("Ldap Integration test failed.", e);
     }
   }
 }
