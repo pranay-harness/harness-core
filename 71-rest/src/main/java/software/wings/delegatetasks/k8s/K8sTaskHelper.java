@@ -884,8 +884,9 @@ public class K8sTaskHelper {
             executeShellCommand(k8sDelegateTaskParams.getWorkingDirectory(), goTemplateCommand, logErrorStream);
 
         if (processResult.getExitValue() != 0) {
-          throw new WingsException(format("Failed to render template for %s. Error %s", manifestFile.getFileName(),
-              processResult.getOutput().getUTF8()));
+          throw new InvalidRequestException(format("Failed to render template for %s. Error %s",
+                                                manifestFile.getFileName(), processResult.getOutput().getUTF8()),
+              USER);
         }
 
         result.add(ManifestFile.builder()
@@ -1367,15 +1368,15 @@ public class K8sTaskHelper {
 
   private String getHostFromRoute(List<DestinationWeight> routes) {
     if (isEmpty(routes)) {
-      throw new WingsException("No routes exist in VirtualService", USER);
+      throw new InvalidRequestException("No routes exist in VirtualService", USER);
     }
 
     if (null == routes.get(0).getDestination()) {
-      throw new WingsException("No destination exist in VirtualService", USER);
+      throw new InvalidRequestException("No destination exist in VirtualService", USER);
     }
 
     if (isBlank(routes.get(0).getDestination().getHost())) {
-      throw new WingsException("No host exist in VirtualService", USER);
+      throw new InvalidRequestException("No host exist in VirtualService", USER);
     }
 
     return routes.get(0).getDestination().getHost();
@@ -1439,15 +1440,16 @@ public class K8sTaskHelper {
     List<TLSRoute> tls = virtualService.getSpec().getTls();
 
     if (isEmpty(http)) {
-      throw new WingsException("Http route is not present in VirtualService. Only Http routes are allowed", USER);
+      throw new InvalidRequestException(
+          "Http route is not present in VirtualService. Only Http routes are allowed", USER);
     }
 
     if (isNotEmpty(tcp) || isNotEmpty(tls)) {
-      throw new WingsException("Only Http routes are allowed in VirtualService for Traffic split", USER);
+      throw new InvalidRequestException("Only Http routes are allowed in VirtualService for Traffic split", USER);
     }
 
     if (http.size() > 1) {
-      throw new WingsException("Only one route is allowed in VirtualService", USER);
+      throw new InvalidRequestException("Only one route is allowed in VirtualService", USER);
     }
   }
 
@@ -1469,7 +1471,7 @@ public class K8sTaskHelper {
       String msg = "More than one DestinationRule found. Only one DestinationRule can be marked with annotation "
           + HarnessAnnotations.managed + ": true";
       executionLogCallback.saveExecutionLog(msg + "\n", ERROR, FAILURE);
-      throw new WingsException(msg, USER);
+      throw new InvalidRequestException(msg, USER);
     }
 
     KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
@@ -1517,7 +1519,7 @@ public class K8sTaskHelper {
       String msg = "\nMore than one VirtualService found. Only one VirtualService can be marked with annotation "
           + HarnessAnnotations.managed + ": true";
       executionLogCallback.saveExecutionLog(msg + "\n", ERROR, FAILURE);
-      throw new WingsException(msg, USER);
+      throw new InvalidRequestException(msg, USER);
     }
 
     KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());

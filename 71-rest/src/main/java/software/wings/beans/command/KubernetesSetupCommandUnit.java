@@ -965,8 +965,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       try {
         configMap = KubernetesHelper.loadYaml(setupParams.getConfigMapYaml());
         if (configMap == null) {
-          throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-              .addParam("args", "Couldn't parse Config Map YAML: " + setupParams.getConfigMapYaml());
+          throw new InvalidArgumentsException(
+              "Couldn't parse Config Map YAML: " + setupParams.getConfigMapYaml(), USER);
         }
         ObjectMeta configMapMeta = Optional.ofNullable(configMap.getMetadata()).orElse(new ObjectMeta());
         configMapMeta.setName(configMapName);
@@ -1075,8 +1075,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     try {
       Ingress ingress = KubernetesHelper.loadYaml(ingressYaml);
       if (ingress == null) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-            .addParam("args", "Couldn't parse Ingress YAML: " + ingressYaml);
+        throw new InvalidArgumentsException("Couldn't parse Ingress YAML: " + ingressYaml, USER);
       }
       ingress.getMetadata().setName(ingressName);
       ingress.getMetadata().setNamespace(namespace);
@@ -1329,8 +1328,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       try {
         configMap = KubernetesHelper.loadYaml(configMapYaml);
       } catch (Exception e) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-            .addParam("args", "Couldn't parse configMap YAML: " + configMapYaml);
+        throw new InvalidArgumentsException("Couldn't parse configMap YAML: " + configMapYaml, e, USER);
       }
       executionLogCallback.saveExecutionLog("Setting configMap:\n\n" + toDisplayYaml(configMap));
       kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
@@ -1355,8 +1353,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       try {
         secretMap = KubernetesHelper.loadYaml(secretMapYaml);
       } catch (Exception e) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-            .addParam("args", "Couldn't parse secretMap YAML: " + controllerName);
+        throw new InvalidArgumentsException("Couldn't parse secretMap YAML: " + controllerName, e, USER);
       }
       executionLogCallback.saveExecutionLog("Setting secretMap:\n\n"
           + toDisplayYaml(new SecretBuilder()
@@ -1387,8 +1384,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       try {
         controller = KubernetesHelper.loadYaml(controllerYaml);
       } catch (Exception e) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-            .addParam("args", "Couldn't parse controller YAML: " + controllerYaml);
+        throw new InvalidArgumentsException("Couldn't parse controller YAML: " + controllerYaml, e, USER);
       }
       executionLogCallback.saveExecutionLog("Rolling back controller " + controllerName);
       executionLogCallback.saveExecutionLog("Setting controller:\n\n" + toDisplayYaml(controller));
@@ -1706,8 +1702,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       try {
         Service service = KubernetesHelper.loadYaml(serviceSpecification.getServiceYaml());
         if (service == null) {
-          throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-              .addParam("args", "Couldn't parse Service YAML: " + serviceSpecification.getServiceYaml());
+          throw new InvalidArgumentsException(
+              "Couldn't parse Service YAML: " + serviceSpecification.getServiceYaml(), USER);
         }
 
         if (service.getMetadata() == null) {
@@ -1722,7 +1718,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         executionLogCallback.saveExecutionLog("Setting service:\n\n" + toDisplayYaml(service));
         return service;
       } catch (Exception e) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", ExceptionUtils.getMessage(e));
+        throw new InvalidArgumentsException(ExceptionUtils.getMessage(e), e, null);
       }
     } else {
       ServiceSpecBuilder spec =

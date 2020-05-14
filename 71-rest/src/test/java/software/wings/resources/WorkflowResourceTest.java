@@ -5,8 +5,8 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -144,7 +144,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
    * Should read workflow.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void shouldReadWorkflow() {
     when(WORKFLOW_SERVICE.readWorkflow(APP_ID, WORKFLOW_ID, null)).thenReturn(WORKFLOW);
