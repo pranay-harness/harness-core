@@ -1135,6 +1135,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.TerraformApplyMarkerParam", TerraformApplyMarkerParam.class);
     w.put("api.TerraformExecutionData", TerraformExecutionData.class);
     w.put("api.TerraformOutputInfoElement", TerraformOutputInfoElement.class);
+    w.put("api.ServiceArtifactElement", ServiceArtifactElement.class);
+    w.put("api.ServiceArtifactElements", ServiceArtifactElements.class);
     w.put("api.artifact.ServiceArtifactElement", ServiceArtifactElement.class);
     w.put("api.artifact.ServiceArtifactElements", ServiceArtifactElements.class);
     w.put("api.artifact.ServiceArtifactVariableElement", ServiceArtifactVariableElement.class);
