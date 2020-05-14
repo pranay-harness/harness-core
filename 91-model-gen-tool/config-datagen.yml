@@ -208,7 +208,7 @@ jreConfigs:
     jreTarPath: jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
 
 cdnConfig:
-  url: https://storage-qa.harness.io
+  url: https://qa.harness.io
   keyName: storage-qa-private
   keySecret: cdnSignedUrlKey
   delegateJarPath: private/shared/delegates/builds/oracle-8u191/%s/delegate.jar

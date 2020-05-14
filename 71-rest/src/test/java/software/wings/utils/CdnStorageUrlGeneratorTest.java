@@ -26,7 +26,7 @@ public class CdnStorageUrlGeneratorTest extends WingsBaseTest {
   private static final String DELEGATE_JAR_VERSION = "50300";
   private static final String WATCHER_JAR_VERSION = "50100";
 
-  private static final String CDN_URL = "https://storage-qa.harness.io";
+  private static final String CDN_URL = "https://qa.harness.io";
   private static final String KEY_NAME = "storage-qa-private";
   private static final String DELEGATE_JAR_PATH = "private/shared/delegates/builds/oracle-8u191/%s/delegate.jar";
   private static final String WATCHER_JAR_BASE_PATH = "public/shared/watchers/builds";
