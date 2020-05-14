@@ -1,8 +1,10 @@
 package software.wings.delegatetasks.shellscript.provisioner;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.verify;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -12,12 +14,16 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.TaskType;
+import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
+import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
@@ -28,6 +34,7 @@ import java.util.Map;
 public class ShellScriptProvisionTaskTest extends WingsBaseTest {
   @Mock private EncryptionService encryptionService;
   @Mock private ShellExecutorFactory shellExecutorFactory;
+  @Mock private DelegateLogService logService;
 
   @InjectMocks
   private ShellScriptProvisionTask shellScriptProvisionTask =
@@ -60,5 +67,23 @@ public class ShellScriptProvisionTaskTest extends WingsBaseTest {
 
     assertThat(shellScriptProvisionTask.getCombinedVariablesMap(textVariables, encryptedVariables))
         .isEqualTo(expectedCombinedMap);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldUseWorkflowExecutionIdAsOutputPath() {
+    ShellScriptProvisionParameters taskParameters = ShellScriptProvisionParameters.builder()
+                                                        .accountId("account-id")
+                                                        .workflowExecutionId("workflow-execution-id")
+                                                        .build();
+    ArgumentCaptor<ShellExecutorConfig> shellExecutorConfigArgumentCaptor =
+        ArgumentCaptor.forClass(ShellExecutorConfig.class);
+
+    shellScriptProvisionTask.run(taskParameters);
+
+    verify(shellExecutorFactory).getExecutor(shellExecutorConfigArgumentCaptor.capture());
+    assertThat(shellExecutorConfigArgumentCaptor.getValue().getEnvironment().values())
+        .anyMatch(item -> item.endsWith("workflow-execution-id/output.json"));
   }
 }

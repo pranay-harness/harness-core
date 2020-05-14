@@ -97,6 +97,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
             .commandUnit(COMMAND_UNIT)
             .entityId(infrastructureProvisionerService.getEntityId(
                 provisionerId, Objects.requireNonNull(((ExecutionContextImpl) context).getEnv()).getUuid()))
+            .workflowExecutionId(context.getWorkflowExecutionId())
             .build();
 
     DelegateTask delegateTask = DelegateTask.builder()

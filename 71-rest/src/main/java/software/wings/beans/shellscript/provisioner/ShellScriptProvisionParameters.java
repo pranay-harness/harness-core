@@ -24,6 +24,7 @@ public class ShellScriptProvisionParameters implements TaskParameters, ActivityA
   private Map<String, String> textVariables;
   private Map<String, EncryptedDataDetail> encryptedVariables;
   private String entityId;
+  private String workflowExecutionId;
 
   private String accountId;
   private String appId;
