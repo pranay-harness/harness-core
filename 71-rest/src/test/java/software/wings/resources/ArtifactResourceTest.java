@@ -3,7 +3,6 @@ package software.wings.resources;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -161,7 +160,7 @@ public class ArtifactResourceTest extends CategoryTest {
    * Should update artifact.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldUpdateArtifact() {
     Artifact artifact = anArtifact().withAccountId(ACCOUNT_ID).withAppId(APP_ID).withUuid(ARTIFACT_ID).build();

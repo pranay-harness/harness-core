@@ -38,6 +38,11 @@ public class InvalidArgumentsException extends WingsException {
     super.param(ARGS_ARG, message);
   }
 
+  public InvalidArgumentsException(String message, Throwable t, EnumSet<ReportTarget> reportTargets) {
+    super(message, t, INVALID_ARGUMENT, Level.ERROR, reportTargets, null);
+    super.param(ARGS_ARG, message);
+  }
+
   public InvalidArgumentsException(String message, EnumSet<ReportTarget> reportTargets, Throwable cause) {
     super(message, cause, INVALID_ARGUMENT, Level.ERROR, reportTargets, null);
     super.param(ARGS_ARG, message);

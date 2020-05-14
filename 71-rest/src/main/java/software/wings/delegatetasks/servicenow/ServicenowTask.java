@@ -21,6 +21,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
@@ -85,7 +86,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
       default:
         String errorMsg = "Invalid ServiceNow delegate Task Action " + parameters.getAction();
         logger.error(errorMsg);
-        throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER).addParam("message", errorMsg);
+        throw new InvalidRequestException(errorMsg, ErrorCode.SERVICENOW_ERROR, WingsException.USER);
     }
   }
 
@@ -237,8 +238,8 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
   private ResponseData updateAllChangeTaskTickets(ServiceNowTaskParameters parameters) {
     if (!parameters.getFields().containsKey(ServiceNowFields.CHANGE_REQUEST_NUMBER)
         || EmptyPredicate.isEmpty(parameters.getFields().get(ServiceNowFields.CHANGE_REQUEST_NUMBER))) {
-      throw new WingsException(SERVICENOW_ERROR, USER)
-          .addParam("message", "Change Request Number is required to update change tasks");
+      throw new InvalidRequestException(
+          "Change Request Number is required to update change tasks", SERVICENOW_ERROR, USER);
     }
 
     List<String> changeTaskIdsToUpdate = fetchChangeTasksFromCR(parameters);

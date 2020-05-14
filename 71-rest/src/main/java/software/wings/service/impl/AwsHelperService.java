@@ -4,6 +4,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
+import static io.harness.eraro.ErrorCode.INVALID_CLOUD_PROVIDER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -211,7 +212,7 @@ public class AwsHelperService {
       getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig).describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
-        throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER).addParam("message", "Invalid AWS credentials.");
+        throw new InvalidRequestException("Invalid AWS credentials", INVALID_CLOUD_PROVIDER, USER);
       }
     }
     return true;
@@ -225,7 +226,7 @@ public class AwsHelperService {
       tracker.trackEC2Call("Describe Regions");
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
-        throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER).addParam("message", "Invalid AWS credentials.");
+        throw new InvalidRequestException("Invalid AWS credentials", ErrorCode.INVALID_CLOUD_PROVIDER, USER);
       }
     }
   }
@@ -510,9 +511,9 @@ public class AwsHelperService {
           amazonClientException, USER);
     } else {
       logger.error("Unhandled aws exception");
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED)
-          .addParam("message",
-              amazonClientException.getMessage() != null ? amazonClientException.getMessage() : "Exception Message");
+      throw new InvalidRequestException(
+          amazonClientException.getMessage() != null ? amazonClientException.getMessage() : "Exception Message",
+          ErrorCode.AWS_ACCESS_DENIED, USER);
     }
   }
 

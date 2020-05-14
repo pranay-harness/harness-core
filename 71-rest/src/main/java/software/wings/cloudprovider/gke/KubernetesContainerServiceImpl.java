@@ -297,9 +297,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               // error code 0 means connectivity issue. It will retry.
               switch (code) {
                 case SC_UNAUTHORIZED:
-                  throw new WingsException(INVALID_CREDENTIAL, USER, e);
+                  throw new InvalidRequestException("Invalid credentials", e, INVALID_CREDENTIAL, USER);
                 case SC_FORBIDDEN:
-                  throw new WingsException(ACCESS_DENIED, USER, e);
+                  throw new InvalidRequestException("Access Denied", e, ACCESS_DENIED, USER);
                 default:
                   logger.warn("Got KubernetesClientException with error code {}", code);
                   break;
