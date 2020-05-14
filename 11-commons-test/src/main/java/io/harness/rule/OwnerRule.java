@@ -124,6 +124,7 @@ public class OwnerRule implements TestRule {
   public static final String SHUBHAM = "shubham.agrawal";
   public static final String ACASIAN = "alexandru.casian";
   public static final String ANIL = "anil.chowdhury";
+  public static final String VGLIJIN = "vasile.glijin";
   @Deprecated public static final String UNKNOWN = "unknown";
 
   private static DevInfoBuilder defaultDevInfo(String user) {
@@ -202,6 +203,7 @@ public class OwnerRule implements TestRule {
                   .jira("5e47234c2a59dc0c8fe4ccb8")
                   .build())
           .put(ACASIAN, defaultDevInfo(ACASIAN).slack("U012UEVAPAR").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
+          .put(VGLIJIN, defaultDevInfo(VGLIJIN).slack("U012W2S777V").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(UNKNOWN, DevInfo.builder().email("n/a").slack("channel").build())
           .build();
 

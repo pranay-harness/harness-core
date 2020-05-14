@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 7/20/18.
@@ -175,7 +176,7 @@ public class BuildSourceCallback implements NotifyCallback {
   @Override
   public void notify(Map<String, ResponseData> response) {
     ResponseData notifyResponseData = response.values().iterator().next();
-    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    ArtifactStream artifactStream = getArtifactStreamOrThrow();
     logger.info("In notify for artifact stream id: [{}]", artifactStreamId);
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new ArtifactStreamLogContext(
@@ -233,7 +234,7 @@ public class BuildSourceCallback implements NotifyCallback {
   @Override
   public void notifyError(Map<String, ResponseData> response) {
     ResponseData notifyResponseData = response.values().iterator().next();
-    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    ArtifactStream artifactStream = getArtifactStreamOrThrow();
 
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       logger.info("Request failed :[{}]", ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
@@ -257,5 +258,14 @@ public class BuildSourceCallback implements NotifyCallback {
     return builds.stream()
         .map(buildDetails -> artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, buildDetails)))
         .collect(Collectors.toList());
+  }
+
+  @NotNull
+  private ArtifactStream getArtifactStreamOrThrow() {
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    if (artifactStream == null) {
+      throw new ArtifactStreamNotFound(artifactStreamId);
+    }
+    return artifactStream;
   }
 }
