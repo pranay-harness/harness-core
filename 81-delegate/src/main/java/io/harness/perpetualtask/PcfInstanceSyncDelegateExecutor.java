@@ -9,7 +9,7 @@ import com.google.protobuf.ByteString;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.managerclient.ManagerClient;
-import io.harness.perpetualtask.instanceSync.PcfInstanceSyncPerpetualTaskParamsOuterClass.PcfInstanceSyncPerpetualTaskParams;
+import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskParamsOuterClass.PcfInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import io.jsonwebtoken.lang.Collections;
@@ -65,7 +65,7 @@ public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
     try {
       int instanceSize = Collections.size(pcfInstanceSyncResponse.getInstanceIndices());
       logger.info("Found {} number of instances pcf deployment", instanceSize);
-      execute(managerClient.publishPcfInstanceSyncResult(
+      execute(managerClient.publishInstanceSyncResult(
           taskId.getId(), pcfConfig.getAccountId(), pcfCommandExecutionResponse));
     } catch (Exception ex) {
       logger.error(

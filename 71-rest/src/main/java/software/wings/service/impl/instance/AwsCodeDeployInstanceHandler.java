@@ -191,7 +191,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
       });
     }
 
-    handleEc2InstanceSync(ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region);
+    handleEc2InstanceSync(ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region, Optional.empty(), true);
   }
 
   private Instance buildInstanceUsingEc2Instance(String instanceUuid,

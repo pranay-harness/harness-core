@@ -82,10 +82,10 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
     AwsAmiInfrastructureMapping amiInfraMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
     String region = amiInfraMapping.getRegion();
 
-    handleEc2InstanceSync(ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region);
+    handleEc2InstanceSync(ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region, Optional.empty(), true);
 
     handleAsgInstanceSync(region, asgInstanceMap, awsConfig, encryptedDataDetails, infrastructureMapping,
-        asgNamesDeploymentSummaryMap, true, rollbak);
+        asgNamesDeploymentSummaryMap, true, rollbak, Optional.empty());
   }
 
   private Map<String, DeploymentSummary> getDeploymentSummaryMap(List<DeploymentSummary> newDeploymentSummaries) {

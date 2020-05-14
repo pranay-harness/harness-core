@@ -136,7 +136,8 @@ public class InstanceSyncPerpetualTaskServiceImplTest extends WingsBaseTest {
     ImmutableList<DeploymentSummary> deploymentSummaries = ImmutableList.of(mock(DeploymentSummary.class));
     PerpetualTaskRecord record = mock(PerpetualTaskRecord.class);
     when(perpetualTaskService.getTaskRecord(PERPETUAL_TASK_ID_1)).thenReturn(record);
-    when(perpetualTaskCreator.createPerpetualTasksForNewDeployment(deploymentSummaries, ImmutableList.of(record)))
+    when(perpetualTaskCreator.createPerpetualTasksForNewDeployment(
+             deploymentSummaries, ImmutableList.of(record), infrastructureMapping))
         .thenReturn(ImmutableList.of(PERPETUAL_TASK_ID_2));
 
     instanceSyncPerpetualTaskService.createPerpetualTasksForNewDeployment(infrastructureMapping, deploymentSummaries);

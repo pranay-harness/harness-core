@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package io.harness.perpetualtask.instanceSync;
+package io.harness.perpetualtask.instancesync;
 
 message PcfInstanceSyncPerpetualTaskParams {
   string infraMappingId = 1;

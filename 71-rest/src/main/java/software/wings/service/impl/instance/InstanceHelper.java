@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.util.Collections.emptyList;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
@@ -204,6 +205,9 @@ public class InstanceHelper {
               }
             }
           }
+        }
+        if (AWS_SSH.getName().equals(infrastructureMapping.getInfraMappingType())) {
+          createPerpetualTaskForNewDeploymentIfEnabled(infrastructureMapping, emptyList());
         }
         instanceService.saveOrUpdate(instanceList);
       } else {

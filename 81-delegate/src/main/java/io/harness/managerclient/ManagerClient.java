@@ -8,6 +8,7 @@ import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
 import okhttp3.MultipartBody;
@@ -29,7 +30,6 @@ import software.wings.beans.Log;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -139,6 +139,6 @@ public interface ManagerClient {
       @Query("accountId") String accountId, @Body BuildSourceExecutionResponse buildSourceExecutionResponse);
 
   @POST("agent/delegates/instance-sync/{perpetualTaskId}")
-  Call<RestResponse<Boolean>> publishPcfInstanceSyncResult(@Path("perpetualTaskId") String perpetualTaskId,
-      @Query("accountId") String accountId, @Body PcfCommandExecutionResponse pcfCommandExecutionResponse);
+  Call<RestResponse<Boolean>> publishInstanceSyncResult(@Path("perpetualTaskId") String perpetualTaskId,
+      @Query("accountId") String accountId, @Body ResponseData responseData);
 }

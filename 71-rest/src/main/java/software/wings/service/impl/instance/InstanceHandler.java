@@ -77,6 +77,7 @@ public abstract class InstanceHandler {
   public static final String AUTO_SCALE = "AUTO_SCALE";
 
   public abstract void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow);
+
   public abstract void handleNewDeployment(
       List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo);
 

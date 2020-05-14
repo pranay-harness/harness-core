@@ -8,4 +8,5 @@ public final class InstanceSyncConstants {
   public static final String INFRASTRUCTURE_MAPPING_ID = "infrastructureMappingId";
   public static final int TIMEOUT_SECONDS = 600;
   public static final int INTERVAL_MINUTES = 10;
+  public static final int VALIDATION_TIMEOUT_MINUTES = 2;
 }
