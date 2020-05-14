@@ -17,6 +17,8 @@ import io.harness.annotations.dev.OwnedBy;
 @Redesign
 @Produces(Adviser.class)
 public class OnSuccessAdviser implements Adviser {
+  public static final AdviserType ADVISER_TYPE = AdviserType.builder().type(AdviserType.ON_SUCCESS).build();
+
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
     OnSuccessAdviserParameters parameters =
@@ -26,6 +28,6 @@ public class OnSuccessAdviser implements Adviser {
 
   @Override
   public AdviserType getType() {
-    return AdviserType.builder().type(AdviserType.ON_SUCCESS).build();
+    return ADVISER_TYPE;
   }
 }

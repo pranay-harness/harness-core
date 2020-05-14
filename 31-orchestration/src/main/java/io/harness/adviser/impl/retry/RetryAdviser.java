@@ -21,6 +21,8 @@ import io.harness.execution.NodeExecution;
 public class RetryAdviser implements Adviser {
   @Inject AmbianceHelper ambianceHelper;
 
+  public static final AdviserType ADVISER_TYPE = AdviserType.builder().type(AdviserType.RETRY).build();
+
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
     RetryAdviserParameters parameters = (RetryAdviserParameters) advisingEvent.getAdviserParameters();
@@ -36,6 +38,6 @@ public class RetryAdviser implements Adviser {
 
   @Override
   public AdviserType getType() {
-    return AdviserType.builder().type(AdviserType.RETRY).build();
+    return ADVISER_TYPE;
   }
 }

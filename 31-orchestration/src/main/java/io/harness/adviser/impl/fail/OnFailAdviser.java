@@ -19,6 +19,8 @@ import io.harness.state.io.StateResponse;
 @Redesign
 @Produces(Adviser.class)
 public class OnFailAdviser implements Adviser {
+  public static final AdviserType ADVISER_TYPE = AdviserType.builder().type(AdviserType.ON_FAIL).build();
+
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
     StateResponse stateResponse = advisingEvent.getStateResponse();
@@ -32,6 +34,6 @@ public class OnFailAdviser implements Adviser {
 
   @Override
   public AdviserType getType() {
-    return AdviserType.builder().type(AdviserType.ON_FAIL).build();
+    return ADVISER_TYPE;
   }
 }

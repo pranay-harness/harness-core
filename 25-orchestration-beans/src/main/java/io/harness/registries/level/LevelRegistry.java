@@ -2,6 +2,8 @@ package io.harness.registries.level;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.ambiance.Level;
@@ -21,10 +23,12 @@ import javax.validation.Valid;
 @OwnedBy(CDC)
 @Redesign
 @Singleton
-public class LevelRegistry implements Registry<LevelType, Level> {
-  Map<LevelType, Level> registry = new ConcurrentHashMap<>();
+public class LevelRegistry implements Registry<LevelType, Class<? extends Level>> {
+  @Inject private Injector injector;
 
-  public void register(@NonNull LevelType levelType, @Valid Level level) {
+  Map<LevelType, Class<? extends Level>> registry = new ConcurrentHashMap<>();
+
+  public void register(@NonNull LevelType levelType, @Valid Class<? extends Level> level) {
     if (registry.containsKey(levelType)) {
       throw new DuplicateRegistryException(getType(), "Level Already Registered with this name: " + levelType);
     }
@@ -33,7 +37,7 @@ public class LevelRegistry implements Registry<LevelType, Level> {
 
   public Level obtain(@NonNull LevelType levelType) {
     if (registry.containsKey(levelType)) {
-      return registry.get(levelType);
+      return injector.getInstance(registry.get(levelType));
     }
     throw new UnregisteredKeyAccessException(getType(), "No Level registered for name: " + levelType);
   }

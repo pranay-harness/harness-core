@@ -23,7 +23,7 @@ import java.util.List;
 @Redesign
 @Produces(State.class)
 public class DummyState implements State, SyncExecutable {
-  public static final String STATE_TYPE = "DUMMY";
+  public static final StateType STATE_TYPE = StateType.builder().type("DUMMY").build();
 
   @Override
   public StateResponse executeSync(
@@ -34,6 +34,6 @@ public class DummyState implements State, SyncExecutable {
 
   @Override
   public StateType getType() {
-    return StateType.builder().type(STATE_TYPE).build();
+    return STATE_TYPE;
   }
 }

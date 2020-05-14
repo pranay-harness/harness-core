@@ -39,7 +39,8 @@ import java.util.Map;
 @ExcludeRedesign
 @Produces(State.class)
 public class BasicHttpState implements State, AsyncExecutable {
-  public static final String STATE_TYPE = "BASIC_HTTP";
+  public static final StateType STATE_TYPE = StateType.builder().type("BASIC_HTTP").build();
+  ;
 
   @Inject private DelegateService delegateService;
 
@@ -104,6 +105,6 @@ public class BasicHttpState implements State, AsyncExecutable {
 
   @Override
   public StateType getType() {
-    return StateType.builder().type(STATE_TYPE).build();
+    return STATE_TYPE;
   }
 }

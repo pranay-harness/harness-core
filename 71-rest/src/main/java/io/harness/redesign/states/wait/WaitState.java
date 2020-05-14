@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 @ExcludeRedesign
 @Produces(State.class)
 public class WaitState implements State, AsyncExecutable {
-  public static final String STATE_TYPE = "WAIT";
+  public static final StateType STATE_TYPE = StateType.builder().type("WAIT_STATE").build();
 
   @Inject @Named("waitStateResumer") @Transient private ScheduledExecutorService executorService;
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -68,6 +68,6 @@ public class WaitState implements State, AsyncExecutable {
 
   @Override
   public StateType getType() {
-    return StateType.builder().type(STATE_TYPE).build();
+    return STATE_TYPE;
   }
 }

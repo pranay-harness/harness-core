@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import io.harness.OrchestrationBeansTest;
 import io.harness.category.element.UnitTests;
@@ -22,18 +21,17 @@ import org.junit.experimental.categories.Category;
 
 public class StateRegistryTest extends OrchestrationBeansTest {
   @Inject private StateRegistry stateRegistry;
-  @Inject private Injector injector;
 
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
     StateType stateType = StateType.builder().type("DUMMY_TEST").build();
-    stateRegistry.register(stateType, injector.getInstance(DummyState.class));
+    stateRegistry.register(stateType, DummyState.class);
     State state = stateRegistry.obtain(stateType);
     assertThat(state).isNotNull();
 
-    assertThatThrownBy(() -> stateRegistry.register(stateType, injector.getInstance(DummyState.class)))
+    assertThatThrownBy(() -> stateRegistry.register(stateType, DummyState.class))
         .isInstanceOf(DuplicateRegistryException.class);
 
     assertThatThrownBy(() -> stateRegistry.obtain(StateType.builder().type("RANDOM").build()))
