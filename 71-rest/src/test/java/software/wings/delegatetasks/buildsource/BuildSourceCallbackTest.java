@@ -2,7 +2,10 @@ package software.wings.delegatetasks.buildsource;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.VGLIJIN;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.util.Maps.newHashMap;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.never;
@@ -25,7 +28,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.assertj.core.util.Maps;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -69,7 +71,6 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
                                                      .serviceId(SERVICE_ID)
                                                      .imageName("image_name")
                                                      .build();
-
   private final ArtifactStream ARTIFACT_STREAM_UNSTABLE = DockerArtifactStream.builder()
                                                               .uuid(ARTIFACT_STREAM_ID_2)
                                                               .sourceName(ARTIFACT_STREAM_NAME)
@@ -82,8 +83,8 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   private static final BuildDetails BUILD_DETAILS_1 = aBuildDetails().withNumber("1").build();
   private static final BuildDetails BUILD_DETAILS_2 = aBuildDetails().withNumber("2").build();
 
-  private static final Artifact ARTIFACT_1 = anArtifact().withMetadata(Maps.newHashMap("buildNo", "1")).build();
-  private static final Artifact ARTIFACT_2 = anArtifact().withMetadata(Maps.newHashMap("buildNo", "2")).build();
+  private static final Artifact ARTIFACT_1 = anArtifact().withMetadata(newHashMap("buildNo", "1")).build();
+  private static final Artifact ARTIFACT_2 = anArtifact().withMetadata(newHashMap("buildNo", "2")).build();
 
   @Before
   public void setupMocks() {
@@ -175,7 +176,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
     BuildSourceExecutionResponse buildSourceExecutionResponse = prepareBuildSourceExecutionResponse(true);
     buildSourceExecutionResponse.getBuildSourceResponse().setBuildDetails(null);
 
-    buildSourceCallback.notify(Maps.newHashMap("", buildSourceExecutionResponse));
+    buildSourceCallback.notify(newHashMap("", buildSourceExecutionResponse));
     verify(executorService, times(1)).submit(any(Runnable.class));
     verify(artifactStreamService, times(1)).get(any());
     verify(artifactStreamService, never()).updateCollectionStatus(any(), any(), any());
@@ -190,7 +191,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
     buildSourceExecutionResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
     buildSourceExecutionResponse.getBuildSourceResponse().setBuildDetails(null);
 
-    buildSourceCallback.notify(Maps.newHashMap("", buildSourceExecutionResponse));
+    buildSourceCallback.notify(newHashMap("", buildSourceExecutionResponse));
     verify(executorService, never()).submit(any(Runnable.class));
     verify(artifactStreamService, times(1)).get(any());
     verify(artifactStreamService, times(1)).updateFailedCronAttempts(any(), any(), anyInt());
@@ -201,7 +202,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testNotifyOnErrorNotifyResponseDataResponse() {
     buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
-    buildSourceCallback.notify(Maps.newHashMap("", ErrorNotifyResponseData.builder().build()));
+    buildSourceCallback.notify(newHashMap("", ErrorNotifyResponseData.builder().build()));
     verify(executorService, never()).submit(any(Runnable.class));
     verify(artifactStreamService, times(2)).get(any());
     verify(artifactStreamService, times(1)).updateFailedCronAttempts(any(), any(), anyInt());
@@ -216,10 +217,30 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
     BuildSourceExecutionResponse buildSourceExecutionResponse = prepareBuildSourceExecutionResponse(true);
     buildSourceExecutionResponse.getBuildSourceResponse().setBuildDetails(null);
 
-    buildSourceCallback.notify(Maps.newHashMap("", prepareBuildSourceExecutionResponse(true)));
+    buildSourceCallback.notify(newHashMap("", prepareBuildSourceExecutionResponse(true)));
     verify(executorService, times(1)).submit(any(Runnable.class));
     verify(artifactStreamService, times(1)).get(any());
     verify(artifactStreamService, never()).updateCollectionStatus(any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = VGLIJIN)
+  @Category(UnitTests.class)
+  public void testNotifyThrowsArtifactStreamNotFound() {
+    buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(null);
+    assertThatThrownBy(() -> buildSourceCallback.notify(newHashMap("", prepareBuildSourceExecutionResponse(true))))
+        .isInstanceOf(ArtifactStreamNotFound.class);
+  }
+
+  @Test
+  @Owner(developers = VGLIJIN)
+  @Category(UnitTests.class)
+  public void testNotifyErrorThrowsArtifactStreamNotFound() {
+    buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(null);
+    assertThatThrownBy(() -> buildSourceCallback.notifyError(newHashMap("", prepareBuildSourceExecutionResponse(true))))
+        .isInstanceOf(ArtifactStreamNotFound.class);
   }
 
   private BuildSourceExecutionResponse prepareBuildSourceExecutionResponse(boolean stable) {
