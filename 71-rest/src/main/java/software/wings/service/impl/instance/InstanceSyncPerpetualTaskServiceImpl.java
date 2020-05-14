@@ -69,7 +69,7 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
 
     List<String> newPerpetualTaskIds =
         handler.getInstanceSyncPerpetualTaskCreator().createPerpetualTasksForNewDeployment(
-            deploymentSummaries, existingTasks);
+            deploymentSummaries, existingTasks, infrastructureMapping);
 
     save(infrastructureMapping.getAccountId(), infrastructureMapping.getUuid(), newPerpetualTaskIds);
   }

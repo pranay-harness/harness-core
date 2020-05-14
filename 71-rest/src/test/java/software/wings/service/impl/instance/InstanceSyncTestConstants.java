@@ -110,4 +110,6 @@ public class InstanceSyncTestConstants {
   public static final String ASG_1 = "ASG1";
   public static final String ECS_CLUSTER = "ECSCluster";
   public static final String KUBE_CLUSTER = "kubeCluster";
+
+  public static final String PERPETUAL_TASK_ID = "perp-task_id";
 }

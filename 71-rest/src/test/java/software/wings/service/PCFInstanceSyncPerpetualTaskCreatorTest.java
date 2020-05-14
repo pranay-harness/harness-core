@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.PcfDeploymentInfo;
+import software.wings.beans.PcfInfrastructureMapping;
 
 import java.util.Collections;
 import java.util.List;
@@ -43,7 +44,7 @@ public class PCFInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
                 PcfDeploymentInfo.builder().applicationGuild("guid").applicationName("applicationName").build())
             .build();
     List<String> tasks = pcfInstanceSyncPerpetualTaskCreator.createPerpetualTasksForNewDeployment(
-        Collections.singletonList(deploymentSummary), Collections.emptyList());
+        Collections.singletonList(deploymentSummary), Collections.emptyList(), new PcfInfrastructureMapping());
     assertEquals(1, tasks.size());
   }
 }

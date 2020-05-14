@@ -4,8 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toSet;
-import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_SSH_DEPLOYMENTS;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -13,8 +13,12 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
+import io.harness.perpetualtask.instancesync.AwsSshPerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.jsonwebtoken.lang.Collections;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
@@ -37,8 +41,11 @@ import software.wings.beans.infrastructure.instance.info.AutoScalingGroupInstanc
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
+import software.wings.service.AwsSshInstanceSyncPerpetualTaskCreator;
+import software.wings.service.InstanceSyncPerpetualTaskCreator;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;
+import software.wings.service.impl.aws.model.AwsEc2ListInstancesResponse;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 
 import java.util.Collection;
@@ -54,13 +61,85 @@ import java.util.stream.Collectors;
  */
 @Singleton
 @Slf4j
-public class AwsInstanceHandler extends InstanceHandler {
+public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncByPerpetualTaskHandler {
   @Inject protected AwsHelperService awsHelperService;
   @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
   @Inject protected AwsInfrastructureProvider awsInfrastructureProvider;
+  @Inject private AwsSshPerpetualTaskServiceClient perpetualTaskServiceClient;
+  @Inject private AwsSshInstanceSyncPerpetualTaskCreator perpetualTaskCreator;
 
   @Override
   public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
+    syncInstancesInternal(appId, infraMappingId, Optional.empty(), instanceSyncFlow);
+  }
+
+  @Override
+  public void processInstanceSyncResponseFromPerpetualTask(
+      InfrastructureMapping infrastructureMapping, ResponseData response) {
+    syncInstancesInternal(infrastructureMapping.getAppId(), infrastructureMapping.getUuid(),
+        Optional.of((AwsEc2ListInstancesResponse) response), InstanceSyncFlow.PERPETUAL_TASK);
+  }
+
+  @Override
+  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+    AwsEc2ListInstancesResponse awsResponse = (AwsEc2ListInstancesResponse) response;
+    boolean success = awsResponse.getExecutionStatus() == ExecutionStatus.SUCCESS;
+    String errorMessage = success ? null : awsResponse.getErrorMessage();
+    boolean canDeleteTask = success && Collections.isEmpty(awsResponse.getInstances());
+    if (canDeleteTask) {
+      logger.info("Got 0 instances. Infrastructure Mapping : [{}]", infrastructureMapping.getUuid());
+    }
+    return Status.builder().success(success).errorMessage(errorMessage).retryable(!canDeleteTask).build();
+  }
+
+  @Override
+  public void handleNewDeployment(
+      List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
+    // All the new deployments are either handled at ASGInstanceHandler(for Aws ssh with asg) or InstanceHelper (for Aws
+    // ssh with or without filter)
+    throw WingsException.builder()
+        .message("Deployments should be handled at InstanceHelper for aws ssh type except for with ASG.")
+        .build();
+  }
+
+  @Override
+  public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
+      PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
+      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact) {
+    // All the new deployments are either handled at ASGInstanceHandler(for Aws ssh with asg) or InstanceHelper (for Aws
+    // ssh with or without filter)
+    throw WingsException.builder()
+        .message("Deployments should be handled at InstanceHelper for aws ssh type except for with ASG.")
+        .build();
+  }
+
+  @Override
+  public DeploymentKey generateDeploymentKey(DeploymentInfo deploymentInfo) {
+    return null;
+  }
+
+  @Override
+  protected void setDeploymentKey(DeploymentSummary deploymentSummary, DeploymentKey deploymentKey) {
+    // Do Nothing
+  }
+
+  @Override
+  public FeatureName getFeatureFlagToStopIteratorBasedInstanceSync() {
+    return FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_SSH_DEPLOYMENTS;
+  }
+
+  @Override
+  public FeatureName getFeatureFlagToEnablePerpetualTaskForInstanceSync() {
+    return FeatureName.MOVE_AWS_SSH_INSTANCE_SYNC_TO_PERPETUAL_TASK;
+  }
+
+  @Override
+  public InstanceSyncPerpetualTaskCreator getInstanceSyncPerpetualTaskCreator() {
+    return perpetualTaskCreator;
+  }
+
+  void syncInstancesInternal(String appId, String infraMappingId, Optional<AwsEc2ListInstancesResponse> response,
+      InstanceSyncFlow instanceSyncFlow) {
     // Key - Auto scaling group with revision, Value - Instance
     Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
 
@@ -86,57 +165,30 @@ public class AwsInstanceHandler extends InstanceHandler {
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) cloudProviderSetting.getValue(), null, null);
 
-    String region = awsInfraMapping.getRegion();
+    final String region = awsInfraMapping.getRegion();
+    final Optional<List<com.amazonaws.services.ec2.model.Instance>> instances =
+        response.map(AwsEc2ListInstancesResponse::getInstances);
+    boolean canUpdateDb = canUpdateInstancesInDb(instanceSyncFlow, infrastructureMapping.getAccountId());
+
+    logger.info("[AWS-SSH Instance sync]: can update db : {} flow: {}", canUpdateDb, instanceSyncFlow);
 
     // Check if the instances are still running. These instances were either the ones that were stored with the old
     // schema or the instances created using aws infra mapping with filter.
     if (ec2InstanceIdInstanceMap.size() > 0) {
       if (awsInfraMapping.getAwsInstanceFilter() != null) {
         handleEc2InstanceSyncWithAwsInfraMapping(
-            ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region, awsInfraMapping);
+            ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region, awsInfraMapping, instances, canUpdateDb);
       } else {
-        handleEc2InstanceSync(ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region);
+        handleEc2InstanceSync(
+            ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region, instances, canUpdateDb);
       }
     }
 
-    handleAsgInstanceSync(
-        region, asgInstanceMap, awsConfig, encryptedDataDetails, infrastructureMapping, null, true, false);
-  }
-
-  @Override
-  public void handleNewDeployment(
-      List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
-    // All the new deployments are either handled at ASGInstanceHandler(for Aws ssh with asg) or InstanceHelper (for Aws
-    // ssh with or without filter)
-    throw WingsException.builder()
-        .message("Deployments should be handled at InstanceHelper for aws ssh type except for with ASG.")
-        .build();
-  }
-
-  @Override
-  public FeatureName getFeatureFlagToStopIteratorBasedInstanceSync() {
-    return STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_SSH_DEPLOYMENTS;
-  }
-
-  @Override
-  public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
-      PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
-      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact) {
-    // All the new deployments are either handled at ASGInstanceHandler(for Aws ssh with asg) or InstanceHelper (for Aws
-    // ssh with or without filter)
-    throw WingsException.builder()
-        .message("Deployments should be handled at InstanceHelper for aws ssh type except for with ASG.")
-        .build();
-  }
-
-  @Override
-  public DeploymentKey generateDeploymentKey(DeploymentInfo deploymentInfo) {
-    return null;
-  }
-
-  @Override
-  protected void setDeploymentKey(DeploymentSummary deploymentSummary, DeploymentKey deploymentKey) {
-    // Do Nothing
+    // For AWS SSH, this method call is a NOOP. So we are not invoking this in the new perpetual task flow
+    if (instanceSyncFlow != InstanceSyncFlow.PERPETUAL_TASK) {
+      handleAsgInstanceSync(
+          region, asgInstanceMap, awsConfig, encryptedDataDetails, infrastructureMapping, null, true, false, instances);
+    }
   }
 
   protected void loadInstanceMapBasedOnType(String appId, String infraMappingId,
@@ -160,7 +212,8 @@ public class AwsInstanceHandler extends InstanceHandler {
 
   protected void handleAsgInstanceSync(String region, Multimap<String, Instance> asgInstanceMap, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, InfrastructureMapping infrastructureMapping,
-      Map<String, DeploymentSummary> asgNameDeploymentSummaryMap, boolean isAmi, boolean rollback) {
+      Map<String, DeploymentSummary> asgNameDeploymentSummaryMap, boolean isAmi, boolean rollback,
+      Optional<List<com.amazonaws.services.ec2.model.Instance>> instances) {
     // This is to handle the case of the instances stored in the new schema.
     if (asgInstanceMap.size() > 0) {
       asgInstanceMap.keySet().forEach(autoScalingGroupName -> {
@@ -276,17 +329,23 @@ public class AwsInstanceHandler extends InstanceHandler {
     builder.instanceInfo(instanceInfo);
   }
 
-  private void handleEc2InstanceSyncWithAwsInfraMapping(Map<String, Instance> ec2InstanceIdInstanceMap,
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region,
-      AwsInfrastructureMapping awsInfrastructureMapping) {
+  @VisibleForTesting
+  void handleEc2InstanceSyncWithAwsInfraMapping(Map<String, Instance> ec2InstanceIdInstanceMap, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String region, AwsInfrastructureMapping awsInfrastructureMapping,
+      Optional<List<com.amazonaws.services.ec2.model.Instance>> instances, boolean canUpdateDb) {
     List<com.amazonaws.services.ec2.model.Instance> activeInstanceList =
-        awsInfrastructureProvider.listFilteredInstances(awsInfrastructureMapping, awsConfig, encryptedDataDetails);
+        instances.orElseGet(()
+                                -> awsInfrastructureProvider.listFilteredInstances(
+                                    awsInfrastructureMapping, awsConfig, encryptedDataDetails));
 
-    deleteRunningEc2InstancesFromMap(ec2InstanceIdInstanceMap, activeInstanceList);
+    if (canUpdateDb) {
+      deleteRunningEc2InstancesFromMap(ec2InstanceIdInstanceMap, activeInstanceList);
+    }
   }
 
   protected void handleEc2InstanceSync(Map<String, Instance> ec2InstanceIdInstanceMap, AwsConfig awsConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String region) {
+      List<EncryptedDataDetail> encryptedDataDetails, String region,
+      Optional<List<com.amazonaws.services.ec2.model.Instance>> instances, boolean canUpdateDb) {
     // Check if the instances are still running. These instances were the ones that were stored with the old schema.
     if (ec2InstanceIdInstanceMap.size() > 0) {
       // we do not want to use any special filter here, if awsFilter is null then,
@@ -297,9 +356,13 @@ public class AwsInstanceHandler extends InstanceHandler {
                                                               .withDeploymentType(DeploymentType.SSH.name())
                                                               .build();
       List<com.amazonaws.services.ec2.model.Instance> activeInstanceList =
-          awsInfrastructureProvider.listFilteredInstances(awsInfrastructureMapping, awsConfig, encryptedDataDetails);
+          instances.orElseGet(()
+                                  -> awsInfrastructureProvider.listFilteredInstances(
+                                      awsInfrastructureMapping, awsConfig, encryptedDataDetails));
 
-      deleteRunningEc2InstancesFromMap(ec2InstanceIdInstanceMap, activeInstanceList);
+      if (canUpdateDb) {
+        deleteRunningEc2InstancesFromMap(ec2InstanceIdInstanceMap, activeInstanceList);
+      }
     }
   }
 

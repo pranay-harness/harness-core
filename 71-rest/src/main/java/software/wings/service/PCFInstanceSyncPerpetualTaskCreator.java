@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient.PCF_APPLICATION_NAME;
 import static java.util.stream.Collectors.toSet;
 
@@ -30,8 +31,8 @@ public class PCFInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetua
   @Inject PcfInstanceSyncPerpetualTaskClient pcfPerpetualTaskClient;
 
   @Override
-  public List<String> createPerpetualTasksForNewDeployment(
-      List<DeploymentSummary> deploymentSummaries, List<PerpetualTaskRecord> existingPerpetualTaskRecords) {
+  public List<String> createPerpetualTasksForNewDeployment(List<DeploymentSummary> deploymentSummaries,
+      List<PerpetualTaskRecord> existingPerpetualTaskRecords, InfrastructureMapping infrastructureMapping) {
     String appId = deploymentSummaries.iterator().next().getAppId();
     String infrastructureMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
     String accountId = deploymentSummaries.iterator().next().getAccountId();
@@ -49,7 +50,8 @@ public class PCFInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetua
   }
 
   private Set<String> getApplicationNames(List<PerpetualTaskRecord> perpetualTaskRecords) {
-    return perpetualTaskRecords.stream()
+    return emptyIfNull(perpetualTaskRecords)
+        .stream()
         .map(perpetualTaskRecord -> perpetualTaskRecord.getClientContext().getClientParams().get(PCF_APPLICATION_NAME))
         .collect(toSet());
   }

@@ -11,6 +11,7 @@ import io.harness.persistence.UuidAware;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -29,7 +30,7 @@ public class InstanceSyncPerpetualTaskInfo implements PersistentEntity, UuidAwar
   @Id String uuid;
   @Indexed String accountId;
   @Indexed String infrastructureMappingId;
-  List<String> perpetualTaskIds;
+  @Singular List<String> perpetualTaskIds;
   long createdAt;
   long lastUpdatedAt;
 }

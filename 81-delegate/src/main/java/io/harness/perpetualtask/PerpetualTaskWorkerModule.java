@@ -1,6 +1,6 @@
 package io.harness.perpetualtask;
 
-import static io.harness.perpetualtask.instanceSync.PcfInstanceSyncPerpetualTaskParamsOuterClass.PcfInstanceSyncPerpetualTaskParams;
+import static io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskParamsOuterClass.PcfInstanceSyncPerpetualTaskParams;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -18,6 +18,7 @@ import io.harness.perpetualtask.ecs.EcsPerpetualTaskExecutor;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskParams;
 import io.harness.perpetualtask.example.SamplePerpetualTaskExecutor;
 import io.harness.perpetualtask.example.SamplePerpetualTaskParams;
+import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPTParamsOuterClass;
 import io.harness.perpetualtask.k8s.watch.ClusterEventWatcher;
 import io.harness.perpetualtask.k8s.watch.K8SWatchTaskExecutor;
 import io.harness.perpetualtask.k8s.watch.K8sWatchTaskParams;
@@ -38,6 +39,8 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
     mapBinder.addBinding(ArtifactCollectionTaskParams.class.getSimpleName()).to(ArtifactPerpetualTaskExecutor.class);
     mapBinder.addBinding(PcfInstanceSyncPerpetualTaskParams.class.getSimpleName())
         .to(PcfInstanceSyncDelegateExecutor.class);
+    mapBinder.addBinding(AwsSshInstanceSyncPTParamsOuterClass.AwsSshInstanceSyncPTParams.class.getSimpleName())
+        .to(AwsSshInstanceSyncExecutor.class);
 
     install(new FactoryModuleBuilder()
                 .implement(PodWatcher.class, PodWatcher.class)
