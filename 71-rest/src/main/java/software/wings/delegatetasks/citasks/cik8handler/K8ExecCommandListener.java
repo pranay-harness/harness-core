@@ -4,7 +4,8 @@ package software.wings.delegatetasks.citasks.cik8handler;
  * Listener that processes watch channel events of K8 command execution including opening, closure and failure events.
  */
 
-import io.fabric8.kubernetes.client.dsl.ExecWatch;
+import static java.lang.String.format;
+
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 
@@ -43,12 +44,11 @@ public class K8ExecCommandListener implements ExecCommandListener {
   }
 
   /**
-   * Waits for the command to execute and return the executed command's status code.
+   * Waits for the command to execute and returns whether the command is executed or not.
    */
-  public boolean getReturnStatus(ExecWatch watch, Integer timeoutSecs) throws InterruptedException, TimeoutException {
+  public boolean isCommandExecutionComplete(Integer timeoutSecs) throws InterruptedException, TimeoutException {
     if (!execWait.tryAcquire((long) timeoutSecs, TimeUnit.SECONDS)) {
-      watch.close();
-      throw new TimeoutException("Failed to wait for command to finish");
+      throw new TimeoutException(format("Command execution failed to complete in  %d", timeoutSecs));
     }
 
     return cmdStatus.get();

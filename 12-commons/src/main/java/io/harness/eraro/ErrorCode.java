@@ -414,6 +414,8 @@ public enum ErrorCode {
 
   POD_NOT_FOUND_ERROR,
 
+  COMMAND_EXECUTION_ERROR,
+
   ENGINE_REGISTRY_EXCEPTION;
 
   private Status status = BAD_REQUEST;

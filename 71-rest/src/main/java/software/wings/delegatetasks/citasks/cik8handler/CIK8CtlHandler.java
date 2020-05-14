@@ -17,9 +17,11 @@ import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import io.harness.exception.PodNotFoundException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.threading.Sleeper;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
 import software.wings.beans.container.ImageDetails;
 
+import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -29,6 +31,7 @@ import java.util.concurrent.TimeoutException;
  */
 
 @Singleton
+@Slf4j
 public class CIK8CtlHandler {
   @Inject private SecretSpecBuilder secretSpecBuilder;
   @Inject Provider<ExecCommandListener> execListenerProvider;
@@ -92,16 +95,37 @@ public class CIK8CtlHandler {
   /**
    * Executes a command or a list of commands on a container in a pod.
    */
-  public boolean executeCommand(KubernetesClient kubernetesClient, String podName, String containerName,
-      String namespace, String[] commands, Integer timeoutSecs) throws InterruptedException, TimeoutException {
+  public K8ExecCommandResponse executeCommand(KubernetesClient kubernetesClient, String podName, String containerName,
+      String namespace, String[] commands, Integer timeoutSecs) throws InterruptedException {
     ExecCommandListener execListener = execListenerProvider.get();
-    ExecWatch watch = kubernetesClient.pods()
-                          .inNamespace(namespace)
-                          .withName(podName)
-                          .inContainer(containerName)
-                          .redirectingInput()
-                          .usingListener(execListener)
-                          .exec(commands);
-    return execListener.getReturnStatus(watch, timeoutSecs);
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+    try (ExecWatch watch = kubernetesClient.pods()
+                               .inNamespace(namespace)
+                               .withName(podName)
+                               .inContainer(containerName)
+                               .writingOutput(outputStream)
+                               .usingListener(execListener)
+                               .exec(commands)) {
+      ExecCommandStatus execCommandStatus = getCmdExecutionStatus(execListener, timeoutSecs);
+      return K8ExecCommandResponse.builder().outputStream(outputStream).execCommandStatus(execCommandStatus).build();
+    }
+  }
+
+  private ExecCommandStatus getCmdExecutionStatus(ExecCommandListener execCommandListener, Integer timeoutSecs)
+      throws InterruptedException {
+    ExecCommandStatus execCommandStatus;
+    try {
+      boolean isCommandCompleted = execCommandListener.isCommandExecutionComplete(timeoutSecs);
+      if (isCommandCompleted) {
+        execCommandStatus = ExecCommandStatus.SUCCESS;
+      } else {
+        execCommandStatus = ExecCommandStatus.ERROR;
+      }
+    } catch (TimeoutException e) {
+      logger.warn("Failed to execute command with error: ", e);
+      execCommandStatus = ExecCommandStatus.TIMEOUT;
+    }
+    return execCommandStatus;
   }
 }

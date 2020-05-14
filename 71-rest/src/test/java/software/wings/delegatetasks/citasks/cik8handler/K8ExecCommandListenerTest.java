@@ -93,7 +93,7 @@ public class K8ExecCommandListenerTest extends WingsBaseTest {
     status.set(true);
     wait.release();
 
-    assertTrue(k8ExecCommandListener.getReturnStatus(watch, timeoutSecs));
+    assertTrue(k8ExecCommandListener.isCommandExecutionComplete(timeoutSecs));
   }
 
   @Test()
@@ -108,7 +108,7 @@ public class K8ExecCommandListenerTest extends WingsBaseTest {
     status.set(false);
     wait.release();
 
-    assertFalse(k8ExecCommandListener.getReturnStatus(watch, timeoutSecs));
+    assertFalse(k8ExecCommandListener.isCommandExecutionComplete(timeoutSecs));
   }
 
   @Test(expected = TimeoutException.class)
@@ -123,6 +123,6 @@ public class K8ExecCommandListenerTest extends WingsBaseTest {
     status.set(false);
     doNothing().when(watch).close();
 
-    k8ExecCommandListener.getReturnStatus(watch, smallTimeoutSec);
+    k8ExecCommandListener.isCommandExecutionComplete(smallTimeoutSec);
   }
 }

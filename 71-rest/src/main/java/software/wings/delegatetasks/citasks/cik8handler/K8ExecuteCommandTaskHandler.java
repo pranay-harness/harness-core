@@ -53,18 +53,19 @@ public class K8ExecuteCommandTaskHandler implements ExecuteCommandTaskHandler {
     List<String> commands = k8ExecCommandParams.getCommands();
 
     K8sTaskExecutionResponse result;
-    try (AutoLogContext ignore1 = new K8LogContext(podName, containerName, OVERRIDE_ERROR)) {
+    try (AutoLogContext ignore = new K8LogContext(podName, containerName, OVERRIDE_ERROR)) {
       Config config = kubernetesHelperService.getConfig(kubernetesConfig, encryptedDataDetails, StringUtils.EMPTY);
       OkHttpClient okHttpClient = kubernetesHelperService.createHttpClientWithProxySetting(config);
       try (DefaultKubernetesClient kubernetesClient = new DefaultKubernetesClient(okHttpClient, config)) {
-        boolean returnStatus = k8CommandExecutor.executeCommand(kubernetesClient, k8ExecCommandParams);
-        if (returnStatus) {
+        ExecCommandStatus status = k8CommandExecutor.executeCommand(kubernetesClient, k8ExecCommandParams);
+        if (status == ExecCommandStatus.SUCCESS) {
           logger.info("Successfully executed commands {} on container {} of pod {}", commands, containerName, podName);
           result = K8sTaskExecutionResponse.builder()
                        .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
                        .build();
         } else {
-          logger.info("Failed to execute commands {} on container {} of pod {}", commands, containerName, podName);
+          logger.info("Failed to execute commands {} on container {} of pod {} with status {}", commands, containerName,
+              podName, status);
           result = K8sTaskExecutionResponse.builder()
                        .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.FAILURE)
                        .build();
