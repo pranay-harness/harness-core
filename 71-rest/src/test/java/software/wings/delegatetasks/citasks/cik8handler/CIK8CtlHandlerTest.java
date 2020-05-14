@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.SHUBHAM;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -33,6 +34,7 @@ import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.TtyExecErrorable;
 import io.fabric8.kubernetes.client.dsl.TtyExecOutputErrorable;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.PodNotFoundException;
@@ -72,6 +74,7 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
   private ContainerResource<String, LogWatch, InputStream, PipedOutputStream, OutputStream, PipedInputStream, String,
       ExecWatch> mockContainerNamed;
   @Mock private TtyExecOutputErrorable<String, OutputStream, PipedInputStream, ExecWatch> mockRedirectedInput;
+  @Mock private TtyExecErrorable<String, OutputStream, PipedInputStream, ExecWatch> mockWritingOutput;
   @Mock private Execable<String, ExecWatch> mockExecable;
   @Mock private ExecWatch mockExecWatch;
 
@@ -216,7 +219,7 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
     verify(mockSecretSpecBuilder).getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace);
   }
 
-  @Test(expected = TimeoutException.class)
+  @Test()
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void executeCommandWithTimeoutError() throws TimeoutException, InterruptedException {
@@ -228,12 +231,15 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
     when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
     when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
     when(mockPodNamed.inContainer(containerName)).thenReturn(mockContainerNamed);
-    when(mockContainerNamed.redirectingInput()).thenReturn(mockRedirectedInput);
-    when(mockRedirectedInput.usingListener(execCommandListener)).thenReturn(mockExecable);
+    when(mockContainerNamed.writingOutput(any())).thenReturn(mockWritingOutput);
+    when(mockWritingOutput.usingListener(execCommandListener)).thenReturn(mockExecable);
     when(mockExecable.exec(commands)).thenReturn(mockExecWatch);
-    when(execCommandListener.getReturnStatus(mockExecWatch, timeoutSecs)).thenThrow(TimeoutException.class);
+    when(execCommandListener.isCommandExecutionComplete(timeoutSecs)).thenThrow(TimeoutException.class);
+    doNothing().when(mockExecWatch).close();
 
-    cik8CtlHandler.executeCommand(client, podName, containerName, namespace, commands, timeoutSecs);
+    K8ExecCommandResponse response =
+        cik8CtlHandler.executeCommand(client, podName, containerName, namespace, commands, timeoutSecs);
+    assertEquals(ExecCommandStatus.TIMEOUT, response.getExecCommandStatus());
   }
 
   @Test(expected = InterruptedException.class)
@@ -248,10 +254,11 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
     when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
     when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
     when(mockPodNamed.inContainer(containerName)).thenReturn(mockContainerNamed);
-    when(mockContainerNamed.redirectingInput()).thenReturn(mockRedirectedInput);
-    when(mockRedirectedInput.usingListener(execCommandListener)).thenReturn(mockExecable);
+    when(mockContainerNamed.writingOutput(any())).thenReturn(mockWritingOutput);
+    when(mockWritingOutput.usingListener(execCommandListener)).thenReturn(mockExecable);
     when(mockExecable.exec(commands)).thenReturn(mockExecWatch);
-    when(execCommandListener.getReturnStatus(mockExecWatch, timeoutSecs)).thenThrow(InterruptedException.class);
+    when(execCommandListener.isCommandExecutionComplete(timeoutSecs)).thenThrow(InterruptedException.class);
+    doNothing().when(mockExecWatch).close();
 
     cik8CtlHandler.executeCommand(client, podName, containerName, namespace, commands, timeoutSecs);
   }
@@ -268,12 +275,15 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
     when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
     when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
     when(mockPodNamed.inContainer(containerName)).thenReturn(mockContainerNamed);
-    when(mockContainerNamed.redirectingInput()).thenReturn(mockRedirectedInput);
-    when(mockRedirectedInput.usingListener(execCommandListener)).thenReturn(mockExecable);
+    when(mockContainerNamed.writingOutput(any())).thenReturn(mockWritingOutput);
+    when(mockWritingOutput.usingListener(execCommandListener)).thenReturn(mockExecable);
     when(mockExecable.exec(commands)).thenReturn(mockExecWatch);
-    when(execCommandListener.getReturnStatus(mockExecWatch, timeoutSecs)).thenReturn(false);
+    when(execCommandListener.isCommandExecutionComplete(timeoutSecs)).thenReturn(false);
+    doNothing().when(mockExecWatch).close();
 
-    assertFalse(cik8CtlHandler.executeCommand(client, podName, containerName, namespace, commands, timeoutSecs));
+    K8ExecCommandResponse response =
+        cik8CtlHandler.executeCommand(client, podName, containerName, namespace, commands, timeoutSecs);
+    assertEquals(ExecCommandStatus.ERROR, response.getExecCommandStatus());
   }
 
   @Test()
@@ -288,11 +298,15 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
     when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
     when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
     when(mockPodNamed.inContainer(containerName)).thenReturn(mockContainerNamed);
-    when(mockContainerNamed.redirectingInput()).thenReturn(mockRedirectedInput);
-    when(mockRedirectedInput.usingListener(execCommandListener)).thenReturn(mockExecable);
+    when(mockContainerNamed.writingOutput(any())).thenReturn(mockWritingOutput);
+    when(mockWritingOutput.usingListener(execCommandListener)).thenReturn(mockExecable);
     when(mockExecable.exec(commands)).thenReturn(mockExecWatch);
-    when(execCommandListener.getReturnStatus(mockExecWatch, timeoutSecs)).thenReturn(true);
-    assertTrue(cik8CtlHandler.executeCommand(client, podName, containerName, namespace, commands, timeoutSecs));
+    when(execCommandListener.isCommandExecutionComplete(timeoutSecs)).thenReturn(true);
+    doNothing().when(mockExecWatch).close();
+
+    K8ExecCommandResponse response =
+        cik8CtlHandler.executeCommand(client, podName, containerName, namespace, commands, timeoutSecs);
+    assertEquals(ExecCommandStatus.SUCCESS, response.getExecCommandStatus());
   }
 
   @Test(expected = PodNotFoundException.class)

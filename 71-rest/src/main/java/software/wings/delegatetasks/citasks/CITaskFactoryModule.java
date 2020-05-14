@@ -4,6 +4,8 @@ import com.google.inject.AbstractModule;
 
 import io.harness.threading.Sleeper;
 import io.harness.threading.ThreadSleeper;
+import io.harness.time.ClockTimer;
+import io.harness.time.Timer;
 import software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandler;
 import software.wings.delegatetasks.citasks.cik8handler.CIK8CleanupTaskHandler;
 import software.wings.delegatetasks.citasks.cik8handler.ExecCommandListener;
@@ -18,5 +20,6 @@ public class CITaskFactoryModule extends AbstractModule {
     bind(ExecCommandListener.class).to(K8ExecCommandListener.class);
     bind(CICleanupTaskHandler.class).to(CIK8CleanupTaskHandler.class);
     bind(Sleeper.class).to(ThreadSleeper.class);
+    bind(Timer.class).to(ClockTimer.class);
   }
 }

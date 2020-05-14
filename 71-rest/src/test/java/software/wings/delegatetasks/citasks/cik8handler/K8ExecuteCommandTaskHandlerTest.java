@@ -32,6 +32,7 @@ import software.wings.delegatetasks.citasks.ExecuteCommandTaskHandler;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.impl.KubernetesHelperService;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -42,6 +43,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
   @InjectMocks private K8ExecuteCommandTaskHandler k8ExecuteCommandTaskHandler;
 
   private static final String MASTER_URL = "http://masterUrl/";
+  private static final String mountPath = "/step";
   private static final String namespace = "default";
   private static final String podName = "pod";
   private static final String containerName = "container";
@@ -61,8 +63,9 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
                                                   .podName(podName)
                                                   .commands(commands)
                                                   .containerName(containerName)
-                                                  .stdoutFilePath(stdoutFilePath)
-                                                  .stderrFilePath(stderrFilePath)
+                                                  .mountPath(mountPath)
+                                                  .relStdoutFilePath(stdoutFilePath)
+                                                  .relStderrFilePath(stderrFilePath)
                                                   .namespace(namespace)
                                                   .commandTimeoutSecs(cmdTimeoutSecs)
                                                   .scriptType(ShellScriptType.DASH)
@@ -77,7 +80,8 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void executeTaskInternalWithK8Error() throws TimeoutException, InterruptedException {
+  public void executeTaskInternalWithK8Error()
+      throws TimeoutException, InterruptedException, UnsupportedEncodingException {
     K8ExecuteCommandTaskParams params = getExecCmdTaskParams();
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
@@ -97,7 +101,8 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void executeTaskInternalWithTimeoutError() throws TimeoutException, InterruptedException {
+  public void executeTaskInternalWithTimeoutError()
+      throws TimeoutException, InterruptedException, UnsupportedEncodingException {
     K8ExecuteCommandTaskParams params = getExecCmdTaskParams();
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
@@ -115,7 +120,8 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void executeTaskInternalWithInterruptedError() throws TimeoutException, InterruptedException {
+  public void executeTaskInternalWithInterruptedError()
+      throws TimeoutException, InterruptedException, UnsupportedEncodingException {
     K8ExecuteCommandTaskParams params = getExecCmdTaskParams();
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
@@ -135,7 +141,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void executeTaskInternalSuccess() throws TimeoutException, InterruptedException {
+  public void executeTaskInternalSuccess() throws TimeoutException, InterruptedException, UnsupportedEncodingException {
     K8ExecuteCommandTaskParams params = getExecCmdTaskParams();
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
@@ -144,7 +150,8 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
              params.getKubernetesConfig(), params.getEncryptionDetails(), StringUtils.EMPTY))
         .thenReturn(config);
     when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
-    when(k8CommandExecutor.executeCommand(any(), eq(params.getK8ExecCommandParams()))).thenReturn(true);
+    when(k8CommandExecutor.executeCommand(any(), eq(params.getK8ExecCommandParams())))
+        .thenReturn(ExecCommandStatus.SUCCESS);
 
     K8sTaskExecutionResponse response = k8ExecuteCommandTaskHandler.executeTaskInternal(params);
     assertEquals(CommandExecutionResult.CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
@@ -153,7 +160,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void executeTaskInternalFailure() throws TimeoutException, InterruptedException {
+  public void executeTaskInternalFailure() throws TimeoutException, InterruptedException, UnsupportedEncodingException {
     K8ExecuteCommandTaskParams params = getExecCmdTaskParams();
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
@@ -162,7 +169,8 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
              params.getKubernetesConfig(), params.getEncryptionDetails(), StringUtils.EMPTY))
         .thenReturn(config);
     when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
-    when(k8CommandExecutor.executeCommand(any(), eq(params.getK8ExecCommandParams()))).thenReturn(false);
+    when(k8CommandExecutor.executeCommand(any(), eq(params.getK8ExecCommandParams())))
+        .thenReturn(ExecCommandStatus.FAILURE);
 
     K8sTaskExecutionResponse response = k8ExecuteCommandTaskHandler.executeTaskInternal(params);
     assertEquals(CommandExecutionResult.CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
