@@ -44,7 +44,6 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Reservation;
-import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -183,8 +182,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSyncInstances_syncJob() throws Exception {
-    PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(
+    final List<Instance> instances = asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -232,9 +230,9 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
             .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
             .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
             .instanceInfo(Ec2InstanceInfo.builder().ec2Instance(instance3).hostPublicDns(PUBLIC_DNS_3).build())
-            .build()));
+            .build());
 
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
     DescribeInstancesResult result = new DescribeInstancesResult();
     Collection<Reservation> reservations = new ArrayList<>();
@@ -245,7 +243,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
         .when(mockAwsEc2HelperServiceManager)
         .listEc2Instances(any(), any(), any(), any(), anyString());
 
-    awsCodeDeployInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
+    awsCodeDeployInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.MANUAL);
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
@@ -262,10 +260,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSyncInstances_NewDeployment() throws Exception {
-    PageResponse<Instance> pageResponse = new PageResponse<>();
-    setPageResponse(pageResponse);
-
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(getInstances()).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
     com.amazonaws.services.ec2.model.Instance ec2Instance2 = new com.amazonaws.services.ec2.model.Instance();
     ec2Instance2.setPrivateDnsName(PRIVATE_DNS_3);
     ec2Instance2.setInstanceId(INSTANCE_3_ID);
@@ -308,8 +303,8 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     assertThat(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName())).isTrue();
   }
 
-  private void setPageResponse(PageResponse<Instance> pageResponse) {
-    pageResponse.setResponse(asList(
+  private List<Instance> getInstances() {
+    return asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -341,7 +336,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
             .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
             .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
             .instanceInfo(Ec2InstanceInfo.builder().ec2Instance(instance2).hostPublicDns(PUBLIC_DNS_2).build())
-            .build()));
+            .build());
   }
 
   // 3 existing instances
@@ -362,10 +357,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
         .when(deploymentService)
         .get(any(DeploymentSummary.class));
 
-    PageResponse<Instance> pageResponse = new PageResponse<>();
-    setPageResponse(pageResponse);
-
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(getInstances()).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
     com.amazonaws.services.ec2.model.Instance ec2Instance2 = new com.amazonaws.services.ec2.model.Instance();
     ec2Instance2.setPrivateDnsName(PRIVATE_DNS_3);
     ec2Instance2.setInstanceId(INSTANCE_3_ID);

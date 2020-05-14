@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -14,7 +16,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.TaskType;
@@ -81,23 +82,21 @@ public class PcfHelperService {
   public List<PcfInstanceInfo> getApplicationDetails(String pcfApplicationName, String organization, String space,
       PcfConfig pcfConfig, PcfCommandExecutionResponse pcfCommandExecutionPerpTaskResponse)
       throws PcfAppNotFoundException {
-    PcfCommandExecutionResponse pcfCommandExecutionResponse;
+    PcfCommandExecutionResponse pcfCommandExecutionResponse = pcfCommandExecutionPerpTaskResponse;
 
     try {
       List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
 
-      if (pcfCommandExecutionPerpTaskResponse == null) {
+      if (pcfCommandExecutionResponse == null) {
         pcfCommandExecutionResponse =
             executeTaskOnDelegate(pcfApplicationName, organization, space, pcfConfig, encryptionDetails);
-      } else {
-        pcfCommandExecutionResponse = pcfCommandExecutionPerpTaskResponse;
       }
 
       PcfInstanceSyncResponse pcfInstanceSyncResponse =
           validatePcfInstanceSyncResponse(pcfApplicationName, organization, space, pcfCommandExecutionResponse);
 
       // creates the response based on the count of instances it has got.
-      if (CollectionUtils.isNotEmpty(pcfInstanceSyncResponse.getInstanceIndices())) {
+      if (isNotEmpty(pcfInstanceSyncResponse.getInstanceIndices())) {
         return getPcfInstanceInfoList(pcfInstanceSyncResponse);
       }
 
@@ -105,7 +104,7 @@ public class PcfHelperService {
       throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", "Failed to fetch app details for PCF");
     }
 
-    return Collections.EMPTY_LIST;
+    return Collections.emptyList();
   }
 
   private PcfCommandExecutionResponse executeTaskOnDelegate(String pcfApplicationName, String organization,
@@ -369,5 +368,12 @@ public class PcfHelperService {
       logger.warn(pcfCommandExecutionResponse.getErrorMessage());
       throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
     }
+  }
+
+  public int getInstanceCount(PcfCommandExecutionResponse pcfCommandExecutionResponse) {
+    PcfInstanceSyncResponse pcfInstanceSyncResponse =
+        (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
+
+    return emptyIfNull(pcfInstanceSyncResponse.getInstanceIndices()).size();
   }
 }

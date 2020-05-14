@@ -3,15 +3,17 @@ package software.wings.service.impl.instance;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.validation.Validator.notNullCheck;
+import static software.wings.service.impl.instance.InstanceSyncFlow.ITERATOR;
+import static software.wings.service.impl.instance.InstanceSyncFlow.MANUAL;
+import static software.wings.service.impl.instance.InstanceSyncFlow.NEW_DEPLOYMENT;
+import static software.wings.service.impl.instance.InstanceSyncFlow.PERPETUAL_TASK;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
-import io.harness.beans.PageRequest;
-import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
+import io.harness.perpetualtask.PerpetualTaskService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.DeploymentInfo;
@@ -21,6 +23,7 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
@@ -32,6 +35,7 @@ import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -67,25 +71,39 @@ public abstract class InstanceHandler {
   @Inject protected ServiceResourceService serviceResourceService;
   @Inject protected InstanceUtils instanceUtil;
   @Inject protected DeploymentService deploymentService;
+  @Inject protected FeatureFlagService featureFlagService;
+  @Inject protected PerpetualTaskService perpetualTaskService;
 
   public static final String AUTO_SCALE = "AUTO_SCALE";
 
-  public abstract void syncInstances(String appId, String infraMappingId);
+  public abstract void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow);
   public abstract void handleNewDeployment(
       List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo);
+
+  public boolean canUpdateInstancesInDb(InstanceSyncFlow instanceSyncFlow, String accountId) {
+    if (instanceSyncFlow == NEW_DEPLOYMENT || instanceSyncFlow == MANUAL) {
+      return true;
+    }
+
+    boolean isPerpetualTaskEnabled = false;
+
+    if (this instanceof InstanceSyncByPerpetualTaskHandler) {
+      InstanceSyncByPerpetualTaskHandler handler = (InstanceSyncByPerpetualTaskHandler) this;
+      isPerpetualTaskEnabled =
+          featureFlagService.isEnabled(handler.getFeatureFlagToEnablePerpetualTaskForInstanceSync(), accountId);
+    }
+
+    return isPerpetualTaskEnabled ? instanceSyncFlow == PERPETUAL_TASK : instanceSyncFlow == ITERATOR;
+  }
+
+  public abstract FeatureName getFeatureFlagToStopIteratorBasedInstanceSync();
 
   public abstract Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact);
 
-  // todo -- aman this has been moved to the instanceService. Once all the perpetual tasks are moved
-  // delete this method and use it from instance sync.
   protected List<Instance> getInstances(String appId, String infraMappingId) {
-    PageRequest<Instance> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("infraMappingId", Operator.EQ, infraMappingId);
-    pageRequest.addFilter("appId", Operator.EQ, appId);
-    PageResponse<Instance> pageResponse = instanceService.list(pageRequest);
-    return pageResponse.getResponse();
+    return instanceService.getInstancesForAppAndInframapping(appId, infraMappingId);
   }
 
   public abstract DeploymentKey generateDeploymentKey(DeploymentInfo deploymentInfo);

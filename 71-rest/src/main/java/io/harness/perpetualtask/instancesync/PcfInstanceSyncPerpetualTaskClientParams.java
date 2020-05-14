@@ -1,4 +1,4 @@
-package io.harness.perpetualtask.instanceSync;
+package io.harness.perpetualtask.instancesync;
 
 import io.harness.perpetualtask.PerpetualTaskClientParams;
 import lombok.AccessLevel;
@@ -11,7 +11,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PcfInstanceSyncPerpTaskClientParams implements PerpetualTaskClientParams {
+public class PcfInstanceSyncPerpetualTaskClientParams implements PerpetualTaskClientParams {
+  String accountId;
   String inframappingId;
   String applicationName;
   String appId;

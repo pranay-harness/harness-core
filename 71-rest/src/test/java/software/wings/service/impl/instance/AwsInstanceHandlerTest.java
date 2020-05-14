@@ -83,6 +83,7 @@ import software.wings.service.intfc.security.SecretManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 public class AwsInstanceHandlerTest extends WingsBaseTest {
@@ -174,7 +175,7 @@ public class AwsInstanceHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSyncInstances_instanceSync() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(
+    final List<Instance> instances = asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -222,9 +223,9 @@ public class AwsInstanceHandlerTest extends WingsBaseTest {
             .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
             .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
             .instanceInfo(Ec2InstanceInfo.builder().ec2Instance(instance3).hostPublicDns(PUBLIC_DNS_3).build())
-            .build()));
+            .build());
 
-    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
     DescribeInstancesResult result = new DescribeInstancesResult();
     Collection<Reservation> reservations = new ArrayList<>();
     reservations.add(new Reservation().withInstances(new com.amazonaws.services.ec2.model.Instance[] {instance1}));
@@ -234,7 +235,7 @@ public class AwsInstanceHandlerTest extends WingsBaseTest {
         .when(mockAwsEc2HelperServiceManager)
         .listEc2Instances(any(), any(), any(), any(), anyString());
 
-    awsInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
+    awsInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.MANUAL);
 
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());

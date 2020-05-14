@@ -173,6 +173,7 @@ import software.wings.service.impl.event.DeploymentTimeSeriesEventListener;
 import software.wings.service.impl.infrastructuredefinition.InfrastructureDefinitionServiceImpl;
 import software.wings.service.impl.instance.DeploymentEventListener;
 import software.wings.service.impl.instance.InstanceEventListener;
+import software.wings.service.impl.instance.InstanceSyncPerpetualTaskMigrationJob;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.impl.trigger.ScheduleTriggerHandler;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
@@ -572,6 +573,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(SettingAttributesSecretReferenceFeatureFlagJob.class));
     environment.lifecycle().manage(injector.getInstance(ArtifactStreamPTaskJob.class));
+    environment.lifecycle().manage(injector.getInstance(InstanceSyncPerpetualTaskMigrationJob.class));
     if (configuration.isSearchEnabled()) {
       environment.lifecycle().manage(injector.getInstance(ElasticsearchSyncService.class));
     }

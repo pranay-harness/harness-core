@@ -7,6 +7,10 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
+import static software.wings.service.InstanceSyncConstants.HARNESS_ACCOUNT_ID;
+import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
+import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
+import static software.wings.service.impl.instance.InstanceSyncFlow.MANUAL;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -20,9 +24,12 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.validation.Validator;
@@ -54,7 +61,6 @@ import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
-import software.wings.service.InstanceSyncController;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -80,6 +86,7 @@ import software.wings.utils.Utils;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -110,8 +117,9 @@ public class InstanceHelper {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private DeploymentService deploymentService;
   @Inject private ExecutorService executorService;
+  @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private InstanceSyncController instanceSyncController;
+  @Inject private InstanceSyncPerpetualTaskService instanceSyncPerpetualTaskService;
 
   /**
    * The phaseExecutionData is used to process the instance information that is used by the service and infra
@@ -482,7 +490,7 @@ public class InstanceHelper {
       if (isSupported(infrastructureMappingType)) {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMapping);
         instanceHandler.handleNewDeployment(deploymentSummaries, isRollback, onDemandRollbackInfo);
-        instanceSyncController.createPerpetualTaskForNewDeployment(infrastructureMappingType, deploymentSummaries);
+        createPerpetualTaskForNewDeploymentIfEnabled(infraMapping, deploymentSummaries);
         logger.info("Handled deployment event for infraMappingId [{}] successfully", infraMappingId);
       } else {
         logger.info("Skipping deployment event for infraMappingId [{}]", infraMappingId);
@@ -506,11 +514,8 @@ public class InstanceHelper {
 
   @VisibleForTesting
   boolean isSupported(InfrastructureMappingType infrastructureMappingType) {
-    if (PHYSICAL_DATA_CENTER_SSH == infrastructureMappingType
-        || PHYSICAL_DATA_CENTER_WINRM == infrastructureMappingType) {
-      return false;
-    }
-    return true;
+    return PHYSICAL_DATA_CENTER_SSH != infrastructureMappingType
+        && PHYSICAL_DATA_CENTER_WINRM != infrastructureMappingType;
   }
 
   public boolean isDeployPhaseStep(PhaseStepType phaseStepType) {
@@ -575,7 +580,7 @@ public class InstanceHelper {
         ManualSyncJob.builder().uuid(syncJobId).accountId(accountId).appId(appId).build());
     executorService.submit(() -> {
       try {
-        syncNow(appId, infrastructureMapping);
+        syncNow(appId, infrastructureMapping, MANUAL);
       } finally {
         instanceService.deleteManualSyncJob(appId, syncJobId);
       }
@@ -583,7 +588,7 @@ public class InstanceHelper {
     return syncJobId;
   }
 
-  public void syncNow(String appId, InfrastructureMapping infraMapping) {
+  public void syncNow(String appId, InfrastructureMapping infraMapping, InstanceSyncFlow instanceSyncFlow) {
     if (infraMapping == null) {
       return;
     }
@@ -603,18 +608,13 @@ public class InstanceHelper {
           return;
         }
         logger.info("Instance sync started for infraMapping");
-        instanceHandler.syncInstances(appId, infraMappingId);
+        instanceHandler.syncInstances(appId, infraMappingId, instanceSyncFlow);
         instanceService.updateSyncSuccess(appId, infraMapping.getServiceId(), infraMapping.getEnvId(), infraMappingId,
             infraMapping.getDisplayName(), System.currentTimeMillis());
         logger.info("Instance sync completed for infraMapping");
       } catch (Exception ex) {
         logger.warn("Instance sync failed for infraMapping", ex);
-        String errorMsg;
-        if (ex instanceof WingsException) {
-          errorMsg = ex.getMessage();
-        } else {
-          errorMsg = ex.getMessage() != null ? ex.getMessage() : "Unknown error";
-        }
+        String errorMsg = getErrorMsg(ex);
 
         instanceService.handleSyncFailure(appId, infraMapping.getServiceId(), infraMapping.getEnvId(), infraMappingId,
             infraMapping.getDisplayName(), System.currentTimeMillis(), errorMsg);
@@ -624,5 +624,126 @@ public class InstanceHelper {
 
   public List<Boolean> getManualSyncJobsStatus(String accountId, Set<String> manualSyncJobIdSet) {
     return instanceService.getManualSyncJobsStatus(accountId, manualSyncJobIdSet);
+  }
+
+  public boolean shouldSkipIteratorInstanceSync(InfrastructureMapping infrastructureMapping) {
+    Optional<InstanceHandler> instanceHandler = getInstanceHandler(infrastructureMapping);
+    return instanceHandler.isPresent()
+        && featureFlagService.isEnabled(instanceHandler.get().getFeatureFlagToStopIteratorBasedInstanceSync(),
+               infrastructureMapping.getAccountId());
+  }
+
+  @VisibleForTesting
+  void createPerpetualTaskForNewDeploymentIfEnabled(
+      InfrastructureMapping infrastructureMapping, List<DeploymentSummary> deploymentSummaries) {
+    if (isInstanceSyncByPerpetualTaskEnabled(infrastructureMapping)) {
+      logger.info("Creating Perpetual tasks for new deployment for account: [{}] and infrastructure mapping [{}]",
+          infrastructureMapping.getAccountId(), infrastructureMapping.getUuid());
+      instanceSyncPerpetualTaskService.createPerpetualTasksForNewDeployment(infrastructureMapping, deploymentSummaries);
+    }
+  }
+
+  private boolean isInstanceSyncByPerpetualTaskEnabled(InfrastructureMapping infrastructureMapping) {
+    Optional<InstanceHandler> instanceHandler = getInstanceHandler(infrastructureMapping);
+    if (!instanceHandler.isPresent()) {
+      return false;
+    }
+
+    if (instanceHandler.get() instanceof InstanceSyncByPerpetualTaskHandler) {
+      InstanceSyncByPerpetualTaskHandler handler = (InstanceSyncByPerpetualTaskHandler) instanceHandler.get();
+      return featureFlagService.isEnabled(
+          handler.getFeatureFlagToEnablePerpetualTaskForInstanceSync(), infrastructureMapping.getAccountId());
+    }
+
+    return false;
+  }
+
+  public void processInstanceSyncResponseFromPerpetualTask(String perpetualTaskId, ResponseData response) {
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(perpetualTaskId);
+    Map<String, String> clientParams = perpetualTaskRecord.getClientContext().getClientParams();
+
+    String accountId = clientParams.get(HARNESS_ACCOUNT_ID);
+    String appId = clientParams.get(HARNESS_APPLICATION_ID);
+    String infrastructureMappingId = clientParams.get(INFRASTRUCTURE_MAPPING_ID);
+
+    InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infrastructureMappingId);
+    if (infrastructureMapping == null) {
+      logger.info(
+          "Handling Instance sync response. Infrastructure Mapping does not exist for Id : [{}]. Deleting Perpetual Tasks ",
+          infrastructureMappingId);
+      instanceSyncPerpetualTaskService.deletePerpetualTasks(accountId, infrastructureMappingId);
+      return;
+    }
+
+    logger.info("Handling Instance sync response. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+        infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
+
+    try (AcquiredLock<?> lock = persistentLocker.tryToAcquireLock(
+             InfrastructureMapping.class, infrastructureMapping.getUuid(), Duration.ofSeconds(180))) {
+      if (lock == null) {
+        logger.warn(
+            "Couldn't acquire lock on Infrastructure Mapping. Infrastructure Mapping : [{}], Application Id : [{}]",
+            infrastructureMappingId, appId);
+        return;
+      }
+      handleInstanceSyncResponseFromPerpetualTask(infrastructureMapping, perpetualTaskRecord, response);
+    }
+
+    logger.info("Handled Instance sync response successfully. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+        infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
+  }
+
+  private void handleInstanceSyncResponseFromPerpetualTask(
+      InfrastructureMapping infrastructureMapping, PerpetualTaskRecord perpetualTaskRecord, ResponseData response) {
+    Optional<InstanceHandler> instanceHandler = getInstanceHandler(infrastructureMapping);
+    if (!instanceHandler.isPresent() || !isInstanceSyncByPerpetualTaskEnabled(infrastructureMapping)) {
+      return;
+    }
+
+    InstanceSyncByPerpetualTaskHandler handler = (InstanceSyncByPerpetualTaskHandler) instanceHandler.get();
+
+    try {
+      handler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, response);
+    } catch (Exception ex) {
+      logger.error("Error handling Instance sync response. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+          infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
+      String errorMsg = getErrorMsg(ex);
+
+      boolean stopSync = instanceService.handleSyncFailure(infrastructureMapping.getAppId(),
+          infrastructureMapping.getServiceId(), infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(),
+          infrastructureMapping.getDisplayName(), System.currentTimeMillis(), errorMsg);
+
+      if (stopSync) {
+        logger.info("Sync Failure. Deleting Perpetual Tasks. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+            infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
+        instanceSyncPerpetualTaskService.deletePerpetualTasks(infrastructureMapping);
+      }
+
+      throw ex;
+    } finally {
+      Status status = handler.getStatus(infrastructureMapping, response);
+      if (!status.isRetryable()) {
+        logger.info(
+            "Task Not Retryable. Deleting Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+            infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
+        instanceSyncPerpetualTaskService.deletePerpetualTask(
+            infrastructureMapping.getAccountId(), infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
+      } else if (!status.isSuccess()) {
+        logger.info("Sync Failure. Reset Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+            infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
+        instanceSyncPerpetualTaskService.resetPerpetualTask(
+            infrastructureMapping.getAccountId(), perpetualTaskRecord.getUuid());
+      }
+    }
+  }
+
+  private String getErrorMsg(Exception ex) {
+    String errorMsg;
+    if (ex instanceof WingsException) {
+      errorMsg = ex.getMessage();
+    } else {
+      errorMsg = ex.getMessage() != null ? ex.getMessage() : "Unknown error";
+    }
+    return errorMsg;
   }
 }

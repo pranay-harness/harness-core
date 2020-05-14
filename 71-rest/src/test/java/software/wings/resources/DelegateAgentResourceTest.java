@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static javax.ws.rs.client.Entity.entity;
@@ -22,6 +23,7 @@ import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -40,9 +42,10 @@ import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
-import software.wings.service.impl.instance.PcfInstanceHandler;
+import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.utils.ResourceTestRule;
@@ -62,7 +65,7 @@ public class DelegateAgentResourceTest {
   private static WingsPersistence wingsPersistence = mock(WingsPersistence.class);
   private static DelegateRequestRateLimiter delegateRequestRateLimiter = mock(DelegateRequestRateLimiter.class);
   private static SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
-  private static PcfInstanceHandler pcfInstanceSyncResponseHandler = mock(PcfInstanceHandler.class);
+  private static InstanceHelper instanceSyncResponseHandler = mock(InstanceHelper.class);
   private static ArtifactCollectionResponseHandler artifactCollectionResponseHandler =
       mock(ArtifactCollectionResponseHandler.class);
 
@@ -78,7 +81,7 @@ public class DelegateAgentResourceTest {
       ResourceTestRule.builder()
           .addResource(
               new DelegateAgentResource(delegateService, accountService, wingsPersistence, delegateRequestRateLimiter,
-                  subdomainUrlHelper, artifactCollectionResponseHandler, pcfInstanceSyncResponseHandler))
+                  subdomainUrlHelper, artifactCollectionResponseHandler, instanceSyncResponseHandler))
           .addResource(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -199,5 +202,22 @@ public class DelegateAgentResourceTest {
 
     verify(artifactCollectionResponseHandler, atLeastOnce())
         .processArtifactCollectionResult(buildSourceExecutionResponse);
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(UnitTests.class)
+  public void shouldProcessInstanceSyncResponse() {
+    ResponseData responseData = PcfCommandExecutionResponse.builder().commandExecutionStatus(SUCCESS).build();
+    String perpetualTaskId = "12345679";
+
+    RestResponse<Boolean> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/instance-sync/12345679?accountId=" + ACCOUNT_ID)
+            .request()
+            .post(entity(responseData, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+
+    verify(instanceSyncResponseHandler, atLeastOnce())
+        .processInstanceSyncResponseFromPerpetualTask(perpetualTaskId, responseData);
   }
 }

@@ -1,10 +1,12 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static java.util.Arrays.asList;
+import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -15,15 +17,29 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
+import static software.wings.service.InstanceSyncConstants.HARNESS_ACCOUNT_ID;
+import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
+import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.WingsException;
+import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.exception.GeneralException;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskType;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.StringUtils;
@@ -56,10 +72,13 @@ import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.PcfConfig;
+import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -77,6 +96,8 @@ import software.wings.beans.infrastructure.instance.key.deployment.ContainerDepl
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
+import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
+import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AppService;
@@ -94,11 +115,15 @@ import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.PhaseStepSubWorkflow;
+import software.wings.utils.WingsTestConstants;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -126,9 +151,12 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Mock private ExecutionContext context;
   @Mock private ContainerSync containerSync;
   @Mock private DeploymentService deploymentService;
-  @Mock FeatureFlagService featureFlagService;
+  @Mock private InstanceSyncPerpetualTaskService instanceSyncPerpetualTaskService;
+  @Inject private FeatureFlagService featureFlagService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private SettingsService settingsService;
+  @Mock private PerpetualTaskService perpetualTaskService;
+  @Mock private PersistentLocker persistentLocker;
   @InjectMocks @Spy WorkflowStandardParams workflowStandardParams;
 
   @InjectMocks @Inject private AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
@@ -230,6 +258,9 @@ public class InstanceHelperTest extends WingsBaseTest {
     names.add("name1");
     names.add("name2");
     doReturn(names).when(containerSync).getControllerNames(any(), any(), any());
+
+    AcquiredLock<?> acquiredLock = mock(AcquiredLock.class);
+    when(persistentLocker.tryToAcquireLock(any(), any(), any())).thenReturn(acquiredLock);
   }
 
   @Test
@@ -855,11 +886,16 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     doReturn(new InstanceHandler() {
       @Override
-      public void syncInstances(String appId, String infraMappingId) {}
+      public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {}
 
       @Override
       public void handleNewDeployment(
           List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {}
+
+      @Override
+      public FeatureName getFeatureFlagToStopIteratorBasedInstanceSync() {
+        return null;
+      }
 
       @Override
       public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
@@ -911,13 +947,18 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     doReturn(new InstanceHandler() {
       @Override
-      public void syncInstances(String appId, String infraMappingId) {
-        throw WingsException.builder().message("cannot connect").build();
+      public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
+        throw new GeneralException("cannot connect");
       }
 
       @Override
       public void handleNewDeployment(
           List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {}
+
+      @Override
+      public FeatureName getFeatureFlagToStopIteratorBasedInstanceSync() {
+        return null;
+      }
 
       @Override
       public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
@@ -1002,5 +1043,152 @@ public class InstanceHelperTest extends WingsBaseTest {
         instanceHelper.hasDeploymentKey(
             DeploymentSummary.builder().awsLambdaDeploymentKey(AwsLambdaDeploymentKey.builder().build()).build()))
         .isTrue();
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(UnitTests.class)
+  public void test_shouldSkipIteratorInstanceSync() {
+    featureFlagService.enableAccount(FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_PCF_DEPLOYMENTS, ACCOUNT_ID);
+
+    InfrastructureMapping infrastructureMapping = mock(InfrastructureMapping.class);
+    when(infrastructureMapping.getInfraMappingType()).thenReturn(InfrastructureMappingType.PCF_PCF.getName());
+    when(infrastructureMapping.getAccountId()).thenReturn(WingsTestConstants.ACCOUNT_ID);
+
+    assertTrue(instanceHelper.shouldSkipIteratorInstanceSync(infrastructureMapping));
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(UnitTests.class)
+  public void test_createPerpetualTaskForNewDeploymentIfFFDisabled() {
+    InfrastructureMapping infrastructureMapping = getMockInfrastructureMapping();
+
+    List<DeploymentSummary> deploymentSummaries = Collections.emptyList();
+    instanceHelper.createPerpetualTaskForNewDeploymentIfEnabled(infrastructureMapping, deploymentSummaries);
+
+    verifyZeroInteractions(instanceSyncPerpetualTaskService);
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(UnitTests.class)
+  public void test_createPerpetualTaskForNewDeploymentIfFFEnabled() {
+    InfrastructureMapping infrastructureMapping = getMockInfrastructureMapping();
+
+    featureFlagService.enableAccount(FeatureName.MOVE_PCF_INSTANCE_SYNC_TO_PERPETUAL_TASK, ACCOUNT_ID);
+
+    List<DeploymentSummary> deploymentSummaries = Collections.emptyList();
+    instanceHelper.createPerpetualTaskForNewDeploymentIfEnabled(infrastructureMapping, deploymentSummaries);
+
+    verify(instanceSyncPerpetualTaskService, times(1))
+        .createPerpetualTasksForNewDeployment(infrastructureMapping, deploymentSummaries);
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(UnitTests.class)
+  public void test_processInstanceSyncResponseFromPerpetualTaskIfInfraMappingNotPresent() {
+    String perpetualTaskId = "PtId";
+    PerpetualTaskRecord perpetualTaskRecord = getPerpetualTaskRecord(perpetualTaskId);
+    when(perpetualTaskService.getTaskRecord(perpetualTaskId)).thenReturn(perpetualTaskRecord);
+
+    featureFlagService.enableAccount(FeatureName.MOVE_PCF_INSTANCE_SYNC_TO_PERPETUAL_TASK, ACCOUNT_ID);
+
+    when(infraMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(null);
+
+    instanceHelper.processInstanceSyncResponseFromPerpetualTask(perpetualTaskId, mock(ResponseData.class));
+
+    verify(instanceSyncPerpetualTaskService, times(1)).deletePerpetualTasks(ACCOUNT_ID, INFRA_MAPPING_ID);
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(UnitTests.class)
+  public void test_processInstanceSyncResponseFromPerpetualTaskIfInfraMappingPresent() {
+    String perpetualTaskId = "PtId";
+    PerpetualTaskRecord perpetualTaskRecord = getPerpetualTaskRecord(perpetualTaskId);
+    when(perpetualTaskService.getTaskRecord(perpetualTaskId)).thenReturn(perpetualTaskRecord);
+
+    featureFlagService.enableAccount(FeatureName.MOVE_PCF_INSTANCE_SYNC_TO_PERPETUAL_TASK, ACCOUNT_ID);
+
+    InfrastructureMapping infrastructureMapping = getMockInfrastructureMapping();
+    when(infraMappingService.get(WingsTestConstants.APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
+
+    PcfConfig pcfConfig = mock(PcfConfig.class);
+    SettingAttribute settingAttribute = mock(SettingAttribute.class);
+    when(settingsService.get(anyString())).thenReturn(settingAttribute);
+    when(settingAttribute.getValue()).thenReturn(pcfConfig);
+
+    instanceHelper.processInstanceSyncResponseFromPerpetualTask(
+        perpetualTaskId, getPcfCommandExecutionResponse(CommandExecutionResult.CommandExecutionStatus.SUCCESS));
+    Mockito.verifyZeroInteractions(instanceSyncPerpetualTaskService);
+
+    instanceHelper.processInstanceSyncResponseFromPerpetualTask(
+        perpetualTaskId, getPcfCommandExecutionResponse(CommandExecutionResult.CommandExecutionStatus.FAILURE));
+    verify(instanceSyncPerpetualTaskService, times(1)).resetPerpetualTask(ACCOUNT_ID, perpetualTaskId);
+  }
+
+  @Test(expected = Exception.class)
+  @Owner(developers = ANKIT)
+  @Category(UnitTests.class)
+  public void test_processInstanceSyncResponseFromPerpetualTaskIfInfraMappingPresentButExceptionProcessingResponse() {
+    String perpetualTaskId = "PtId";
+    PerpetualTaskRecord perpetualTaskRecord = getPerpetualTaskRecord(perpetualTaskId);
+    when(perpetualTaskService.getTaskRecord(perpetualTaskId)).thenReturn(perpetualTaskRecord);
+
+    featureFlagService.enableAccount(FeatureName.MOVE_PCF_INSTANCE_SYNC_TO_PERPETUAL_TASK, ACCOUNT_ID);
+
+    InfrastructureMapping infrastructureMapping = getMockInfrastructureMapping();
+    when(infraMappingService.get(WingsTestConstants.APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
+
+    when(instanceService.handleSyncFailure(
+             anyString(), anyString(), anyString(), anyString(), anyString(), anyLong(), anyString()))
+        .thenReturn(true);
+
+    instanceHelper.processInstanceSyncResponseFromPerpetualTask(
+        perpetualTaskId, getPcfCommandExecutionResponse(CommandExecutionResult.CommandExecutionStatus.SUCCESS));
+    verify(instanceSyncPerpetualTaskService, times(1)).deletePerpetualTasks(infrastructureMapping);
+  }
+
+  private InfrastructureMapping getMockInfrastructureMapping() {
+    InfrastructureMapping infrastructureMapping = mock(PcfInfrastructureMapping.class);
+    when(infrastructureMapping.getUuid()).thenReturn(INFRA_MAPPING_ID);
+    when(infrastructureMapping.getAccountId()).thenReturn(WingsTestConstants.ACCOUNT_ID);
+    when(infrastructureMapping.getAppId()).thenReturn(WingsTestConstants.APP_ID);
+    when(infrastructureMapping.getInfraMappingType()).thenReturn(InfrastructureMappingType.PCF_PCF.getName());
+    return infrastructureMapping;
+  }
+
+  private PerpetualTaskRecord getPerpetualTaskRecord(String id) {
+    Map<String, String> clientParams = new HashMap<>();
+    clientParams.put(HARNESS_ACCOUNT_ID, ACCOUNT_ID);
+    clientParams.put(HARNESS_APPLICATION_ID, WingsTestConstants.APP_ID);
+    clientParams.put(INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID);
+
+    return PerpetualTaskRecord.builder()
+        .uuid(id)
+        .accountId(WingsTestConstants.ACCOUNT_ID)
+        .perpetualTaskType(PerpetualTaskType.PCF_INSTANCE_SYNC)
+        .clientContext(new PerpetualTaskClientContext(clientParams))
+        .build();
+  }
+
+  private PcfCommandExecutionResponse getPcfCommandExecutionResponse(
+      CommandExecutionResult.CommandExecutionStatus commandExecutionStatus) {
+    PcfInstanceSyncResponse pcfInstanceSyncResponse = PcfInstanceSyncResponse.builder()
+                                                          .commandExecutionStatus(commandExecutionStatus)
+                                                          .instanceIndicesx(Arrays.asList("Idx1", "Idx2"))
+                                                          .build();
+
+    PcfCommandExecutionResponse response = PcfCommandExecutionResponse.builder()
+                                               .pcfCommandResponse(pcfInstanceSyncResponse)
+                                               .commandExecutionStatus(commandExecutionStatus)
+                                               .build();
+
+    if (commandExecutionStatus == CommandExecutionResult.CommandExecutionStatus.FAILURE) {
+      response.setErrorMessage("error msg");
+    }
+    return response;
   }
 }

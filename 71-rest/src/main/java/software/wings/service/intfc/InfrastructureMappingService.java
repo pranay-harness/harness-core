@@ -50,6 +50,8 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
 
   InfrastructureMapping get(String appId, String infraMappingId);
 
+  List<InfrastructureMapping> get(String appId);
+
   @ValidationGroups(Update.class) InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping);
 
   @ValidationGroups(Update.class)

@@ -312,7 +312,7 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   @Override
-  public void handleSyncFailure(String appId, String serviceId, String envId, String infraMappingId,
+  public boolean handleSyncFailure(String appId, String serviceId, String envId, String infraMappingId,
       String infraMappingName, long timestamp, String errorMsg) {
     SyncStatus syncStatus = getSyncStatus(appId, serviceId, envId, infraMappingId);
     if (syncStatus != null) {
@@ -321,11 +321,12 @@ public class InstanceServiceImpl implements InstanceService {
             infraMappingId);
         wingsPersistence.delete(SyncStatus.class, syncStatus.getUuid());
         pruneByInfrastructureMapping(appId, infraMappingId);
-        return;
+        return false;
       }
     }
 
     updateSyncFailure(appId, serviceId, envId, infraMappingId, infraMappingName, timestamp, errorMsg);
+    return true;
   }
 
   private void updateSyncFailure(String appId, String serviceId, String envId, String infraMappingId,
@@ -388,5 +389,14 @@ public class InstanceServiceImpl implements InstanceService {
     pageRequest.addFilter("appId", Operator.EQ, appId);
     PageResponse<Instance> pageResponse = list(pageRequest);
     return pageResponse.getResponse();
+  }
+
+  @Override
+  public long getInstanceCount(String appId, String infraMappingId) {
+    return wingsPersistence.createQuery(Instance.class)
+        .filter(InstanceKeys.appId, appId)
+        .filter(InstanceKeys.infraMappingId, infraMappingId)
+        .filter(InstanceKeys.isDeleted, Boolean.FALSE)
+        .count();
   }
 }

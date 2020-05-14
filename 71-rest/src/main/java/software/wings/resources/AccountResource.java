@@ -17,7 +17,6 @@ import io.harness.account.ProvisionStep;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
@@ -45,7 +44,6 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
-import software.wings.service.InstanceSyncController;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
@@ -86,7 +84,6 @@ public class AccountResource {
   @Inject private FeatureService featureService;
   @Inject @Named("BackgroundJobScheduler") private transient PersistentScheduler jobScheduler;
   @Inject private GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler;
-  @Inject InstanceSyncController instanceSyncController;
 
   @GET
   @Path("{accountId}/status")
@@ -440,17 +437,5 @@ public class AccountResource {
       @PathParam("accountId") @NotEmpty String accountId, @NotNull SubdomainUrl subdomainUrl) {
     String userId = UserThreadLocal.get().getUuid();
     return new RestResponse<>(accountService.addSubdomainUrl(userId, accountId, subdomainUrl));
-  }
-
-  @POST
-  @Path("{accountId}/enable-perpetual-task")
-  public RestResponse<Boolean> enablePerpetualTask(@PathParam("accountId") @NotEmpty String accountId,
-      @QueryParam("inframappingType") @NotEmpty String inframappingType) {
-    RestResponse<Boolean> response =
-        accountPermissionUtils.checkIfHarnessUser("User not allowed to disable cloud cost for the account.");
-    if (response != null) {
-      throw new UnauthorizedException("User not authorized", WingsException.USER);
-    }
-    return new RestResponse<>(instanceSyncController.enablePerpetualTaskForAccount(accountId, inframappingType));
   }
 }

@@ -1,12 +1,12 @@
-package io.harness.perpetualtask.instanceSync;
+package io.harness.perpetualtask.instancesync;
 
-import static io.harness.validation.Validator.notNullCheck;
+import static io.harness.perpetualtask.PerpetualTaskType.PCF_INSTANCE_SYNC;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.InfrastructureMapping.ID_KEY;
-import static software.wings.service.PcfInstanceSyncConstants.APPLICATION_ID;
-import static software.wings.service.PcfInstanceSyncConstants.APPLICATION_NAME;
-import static software.wings.service.PcfInstanceSyncConstants.INTERVAL_MINUTES;
-import static software.wings.service.PcfInstanceSyncConstants.TIMEOUT_SECONDS;
+import static software.wings.service.InstanceSyncConstants.HARNESS_ACCOUNT_ID;
+import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
+import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
+import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
+import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -16,22 +16,17 @@ import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
-import io.harness.exception.WingsException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
-import io.harness.perpetualtask.PerpetualTaskState;
-import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.instanceSync.PcfInstanceSyncPerpetualTaskParamsOuterClass.PcfInstanceSyncPerpetualTaskParams;
-import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -50,28 +45,31 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PcfInstanceSyncPerpTaskClient implements PerpetualTaskServiceClient<PcfInstanceSyncPerpTaskClientParams> {
-  static final boolean ALLOW_DUPLICATE_FALSE = false;
+public class PcfInstanceSyncPerpetualTaskClient
+    implements PerpetualTaskServiceClient<PcfInstanceSyncPerpetualTaskClientParams> {
+  public static final String PCF_APPLICATION_NAME = "pcfApplicationName";
+
   @Inject PerpetualTaskService perpetualTaskService;
   @Inject SecretManager secretManager;
   @Inject SettingsService settingsService;
   @Inject InfrastructureMappingService infraMappingService;
 
   @Override
-  public String create(String accountId, PcfInstanceSyncPerpTaskClientParams clientParams) {
-    Map<String, String> clientParamMap = new HashMap<>();
-    clientParamMap.put(ID_KEY, clientParams.getInframappingId());
-    clientParamMap.put(APPLICATION_ID, clientParams.getAppId());
-    clientParamMap.put(APPLICATION_NAME, clientParams.getApplicationName());
+  public String create(String accountId, PcfInstanceSyncPerpetualTaskClientParams clientParams) {
+    Map<String, String> paramMap = new HashMap<>();
+    paramMap.put(HARNESS_ACCOUNT_ID, clientParams.getAccountId());
+    paramMap.put(INFRASTRUCTURE_MAPPING_ID, clientParams.getInframappingId());
+    paramMap.put(HARNESS_APPLICATION_ID, clientParams.getAppId());
+    paramMap.put(PCF_APPLICATION_NAME, clientParams.getApplicationName());
 
-    PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(clientParamMap);
+    PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(paramMap);
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
                                          .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
                                          .build();
-    return perpetualTaskService.createTask(
-        PerpetualTaskType.PCF_INSTANCE_SYNC, accountId, clientContext, schedule, ALLOW_DUPLICATE_FALSE);
+
+    return perpetualTaskService.createTask(PCF_INSTANCE_SYNC, accountId, clientContext, schedule, false);
   }
 
   @Override
@@ -126,7 +124,7 @@ public class PcfInstanceSyncPerpTaskClient implements PerpetualTaskServiceClient
                                                 .organization(perpetualTaskParams.getOrgName())
                                                 .space(perpetualTaskParams.getSpace())
                                                 .pcfCommandType(PcfCommandRequest.PcfCommandType.APP_DETAILS)
-                                                .timeoutIntervalInMin(TIMEOUT_SECONDS / 60)
+                                                .timeoutIntervalInMin((int) TimeUnit.SECONDS.toMinutes(TIMEOUT_SECONDS))
                                                 .build(),
                       encryptionDetails})
                   .timeout(TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS))
@@ -137,23 +135,18 @@ public class PcfInstanceSyncPerpTaskClient implements PerpetualTaskServiceClient
   @VisibleForTesting
   PcfInstanceSyncPTDelegateParams getPcfInstanceSyncPTDelegateParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
-    return getPerpetualTaskParams(
-        clientParams.get(ID_KEY), clientParams.get(APPLICATION_NAME), clientParams.get(APPLICATION_ID));
+    return getPerpetualTaskParams(clientParams.get(INFRASTRUCTURE_MAPPING_ID), clientParams.get(PCF_APPLICATION_NAME),
+        clientParams.get(HARNESS_APPLICATION_ID));
   }
 
   @Override
   public void onTaskStateChange(
       String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse) {
-    if (newPerpetualTaskResponse.getPerpetualTaskState().equals(PerpetualTaskState.TASK_RUN_FAILED)) {
-      logger.info(
-          "Resetting the perpetual task: {}, state: {}", taskId, newPerpetualTaskResponse.getPerpetualTaskState());
-      PerpetualTaskRecord taskRecord = perpetualTaskService.getTaskRecord(taskId);
-      perpetualTaskService.resetTask(taskRecord.getAccountId(), taskId);
-    }
+    // Instance Sync Perpetual Task Framework takes care of this via Perpetual Task Response
   }
 
   private PcfInstanceSyncPTDelegateParams getPerpetualTaskParamsInternal(
-      PcfInfrastructureMapping pcfInfrastructureMapping, String applicationName, String appId) {
+      PcfInfrastructureMapping pcfInfrastructureMapping, String applicationName) {
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
     PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
     return PcfInstanceSyncPTDelegateParams.builder()
@@ -167,16 +160,9 @@ public class PcfInstanceSyncPerpTaskClient implements PerpetualTaskServiceClient
 
   private PcfInstanceSyncPTDelegateParams getPerpetualTaskParams(
       String infraMappingId, String applicationName, String appId) {
-    InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
-    notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
+    PcfInfrastructureMapping pcfInfrastructureMapping =
+        (PcfInfrastructureMapping) infraMappingService.get(appId, infraMappingId);
 
-    if (!(infrastructureMapping instanceof PcfInfrastructureMapping)) {
-      String msg =
-          "Incompatible infra mapping type. Expecting PCF type. Found:" + infrastructureMapping.getInfraMappingType();
-      logger.error(msg);
-      throw WingsException.builder().message(msg).build();
-    }
-    PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
-    return getPerpetualTaskParamsInternal(pcfInfrastructureMapping, applicationName, appId);
+    return getPerpetualTaskParamsInternal(pcfInfrastructureMapping, applicationName);
   }
 }

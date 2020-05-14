@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.RAMA;
+import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -123,12 +124,17 @@ public class InstanceServiceTest extends WingsBaseTest {
                              .build();
     Instance savedInstance2 = instanceService.save(instance2);
 
-    PageResponse pageResponse = instanceService.list(
+    PageResponse<Instance> pageResponse = instanceService.list(
         PageRequestBuilder.aPageRequest().addFilter("accountId", Operator.EQ, GLOBAL_ACCOUNT_ID).build());
     assertThat(pageResponse).isNotNull();
     List<Instance> instanceList = pageResponse.getResponse();
     assertThat(instanceList).isNotNull();
     assertThat(instanceList).hasSize(2);
+
+    instanceList = instanceService.getInstancesForAppAndInframapping(GLOBAL_APP_ID, INFRA_MAPPING_ID);
+    assertThat(instanceList).hasSize(2);
+
+    assertEquals(2, instanceService.getInstanceCount(GLOBAL_APP_ID, INFRA_MAPPING_ID));
   }
 
   @Test

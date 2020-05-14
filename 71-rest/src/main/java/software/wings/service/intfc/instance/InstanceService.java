@@ -108,17 +108,17 @@ public interface InstanceService
       String appId, String serviceId, String envId, String infraMappingId, String infraMappingName, long timestamp);
 
   /**
-   *
-   * @param appId the app id
+   *  @param appId the app id
    * @param serviceId the service id
    * @param envId the env id
    * @param infraMappingId the infra mapping id
    * @param infraMappingName the infra mapping name
    * @param timestamp failure sync timestamp
    * @param errorMsg  failure reason
+   * @return
    */
-  void handleSyncFailure(String appId, String serviceId, String envId, String infraMappingId, String infraMappingName,
-      long timestamp, String errorMsg);
+  boolean handleSyncFailure(String appId, String serviceId, String envId, String infraMappingId,
+      String infraMappingName, long timestamp, String errorMsg);
   /**
    *
    * @param appId
@@ -134,4 +134,6 @@ public interface InstanceService
   List<Boolean> getManualSyncJobsStatus(String accountId, Set<String> manualJobIdSet);
 
   List<Instance> getInstancesForAppAndInframapping(String appId, String infraMappingId);
+
+  long getInstanceCount(String appId, String infraMappingId);
 }
