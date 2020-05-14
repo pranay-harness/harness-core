@@ -76,7 +76,6 @@ import migrations.all.UpdateInstanceInfoWithLastArtifactIdMigration;
 import migrations.all.UpdateWorkflowExecutionAccountId;
 import migrations.all.UpdateWorkflowExecutionDuration;
 import migrations.all.WFEAddDeploymentMetaData;
-import migrations.seedata.IISInstallCommandV5Migration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -218,7 +217,6 @@ public class MigrationBackgroundList {
         .add(Pair.of(126, DeleteInvalidServiceGuardConfigs.class))
         .add(Pair.of(127, AddAccountIdToTimeSeriesAnomaliesRecordMigration.class))
         .add(Pair.of(128, AddAccountidToTimeSeriesMLScores.class))
-        .add(Pair.of(129, IISInstallCommandV5Migration.class))
         .build();
   }
 }
