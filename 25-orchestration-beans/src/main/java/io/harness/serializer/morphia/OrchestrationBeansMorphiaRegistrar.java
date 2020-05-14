@@ -14,6 +14,8 @@ import io.harness.facilitator.FacilitatorParameters;
 import io.harness.interrupts.Interrupt;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plan.Plan;
+import io.harness.references.OutcomeRefObject;
+import io.harness.references.RefObject;
 import io.harness.state.core.fork.ForkStateParameters;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateTransput;
@@ -35,6 +37,7 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(AdviserParameters.class);
     set.add(StateParameters.class);
     set.add(Outcome.class);
+    set.add(RefObject.class);
   }
 
   @Override
@@ -43,7 +46,8 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
       map.put(PKG_HARNESS + name, clazz);
     };
     h.put("state.core.fork.ForkStateParameters", ForkStateParameters.class);
-    h.put("facilitate.DefaultFacilitatorParams", DefaultFacilitatorParams.class);
+    h.put("facilitator.DefaultFacilitatorParams", DefaultFacilitatorParams.class);
     h.put("ambiance.dev.DefaultLevel", DefaultLevel.class);
+    h.put("references.OutcomeRefObject", OutcomeRefObject.class);
   }
 }
