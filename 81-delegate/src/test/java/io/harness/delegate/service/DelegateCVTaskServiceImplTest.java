@@ -19,8 +19,8 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.managerclient.VerificationServiceClient;
 import io.harness.rule.Owner;
-import io.harness.verification.VerificationServiceClient;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;

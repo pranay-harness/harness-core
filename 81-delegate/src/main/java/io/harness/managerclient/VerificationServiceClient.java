@@ -1,4 +1,4 @@
-package io.harness.verification;
+package io.harness.managerclient;
 
 import io.harness.rest.RestResponse;
 import retrofit2.Call;

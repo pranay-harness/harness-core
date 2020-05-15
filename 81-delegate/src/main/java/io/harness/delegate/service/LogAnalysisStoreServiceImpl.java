@@ -5,7 +5,7 @@ import static io.harness.network.SafeHttpCall.execute;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.verification.VerificationServiceClient;
+import io.harness.managerclient.VerificationServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.service.impl.analysis.LogElement;

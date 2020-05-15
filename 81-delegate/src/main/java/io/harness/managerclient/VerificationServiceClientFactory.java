@@ -1,4 +1,4 @@
-package io.harness.verification;
+package io.harness.managerclient;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Provider;
@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.harness.managerclient.DelegateAuthInterceptor;
 import io.harness.network.Http;
 import io.harness.security.TokenGenerator;
 import okhttp3.ConnectionPool;
@@ -20,26 +19,9 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-/**
- * Created by raghu on 11/29/16.
- */
-
-class ManagerClientX509TrustManager implements X509TrustManager {
-  @Override
-  public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-    return new java.security.cert.X509Certificate[] {};
-  }
-
-  @Override
-  public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-
-  @Override
-  public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-}
-
 public class VerificationServiceClientFactory implements Provider<VerificationServiceClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
-      ImmutableList.of(new ManagerClientX509TrustManager());
+      ImmutableList.of(new DelegateAgentManagerClientX509TrustManager());
 
   private String baseUrl;
   private TokenGenerator tokenGenerator;

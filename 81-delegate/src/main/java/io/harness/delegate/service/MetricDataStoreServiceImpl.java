@@ -6,8 +6,8 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.managerclient.VerificationServiceClient;
 import io.harness.rest.RestResponse;
-import io.harness.verification.VerificationServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.MetricDataStoreService;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;

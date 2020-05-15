@@ -12,6 +12,7 @@ import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -55,6 +56,7 @@ public class CdnStorageUrlGeneratorTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
+  @Ignore("We should not have unit tests that make API calls")
   public void testGetDelegateJarUrl() throws IOException {
     String delegateJarUrl = cdnStorageUrlGenerator.getDelegateJarUrl(DELEGATE_JAR_VERSION);
 
@@ -73,6 +75,7 @@ public class CdnStorageUrlGeneratorTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
+  @Ignore("We should not have unit tests that make API calls")
   public void testWatcherJarUrl() throws IOException {
     String watcherJarUrl = cdnStorageUrlGenerator.getWatcherJarUrl(WATCHER_JAR_VERSION);
 
@@ -82,6 +85,7 @@ public class CdnStorageUrlGeneratorTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
+  @Ignore("We should not have unit tests that make API calls")
   public void testGetWatcherMetaDataFileUrl() throws IOException {
     String env = "qa";
     assertWatcherMetaDataFileExists(env, false);

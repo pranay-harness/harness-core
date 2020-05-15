@@ -13,12 +13,6 @@ import retrofit2.Retrofit;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-/**
- * Moved class from 81-delegate.
- * Not removed from 81-delegate because of unknown side effects
- * TODO Remove KryoConverterFactory from 81-delegate and use this
- */
-
 public class KryoConverterFactory extends Factory {
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-kryo");
 
