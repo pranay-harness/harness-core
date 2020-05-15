@@ -351,7 +351,7 @@ public class K8sStateHelper {
     InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
     if (infrastructureDefinition == null) {
       throw new InvalidRequestException(
-          format("Infra mapping not found for appId %s infraMappingId %s", appId, infraDefinitionId));
+          format("Infra definition not found for appId %s infraDefinitionId %s", appId, infraDefinitionId));
     }
 
     return doManifestsUseArtifactInternal(appId, serviceId, infrastructureDefinition.getEnvId());
@@ -506,11 +506,6 @@ public class K8sStateHelper {
   public ContainerInfrastructureMapping getContainerInfrastructureMapping(ExecutionContext context) {
     return (ContainerInfrastructureMapping) infrastructureMappingService.get(
         context.getAppId(), context.fetchInfraMappingId());
-  }
-
-  public Environment getEnvironment(ExecutionContext context) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    return workflowStandardParams.getEnv();
   }
 
   public ExecutionResponse queueK8sDelegateTask(ExecutionContext context, K8sTaskParameters k8sTaskParameters) {
@@ -681,20 +676,6 @@ public class K8sStateHelper {
           throw new WingsException("Unhandled task type " + taskType);
       }
 
-    } catch (WingsException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
-    }
-  }
-
-  public ExecutionResponse executeWrapperWithoutManifest(K8sStateExecutor k8sStateExecutor, ExecutionContext context) {
-    try {
-      k8sStateExecutor.validateParameters(context);
-
-      Activity activity = createK8sActivity(context, k8sStateExecutor.commandName(), k8sStateExecutor.stateType(),
-          activityService, k8sStateExecutor.commandUnitList(false));
-      return k8sStateExecutor.executeK8sTask(context, activity.getUuid());
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
