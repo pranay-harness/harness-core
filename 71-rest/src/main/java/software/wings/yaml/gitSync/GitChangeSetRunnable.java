@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
 public class GitChangeSetRunnable implements Runnable {
   public static final List<Status> RUNNING_STATUS_LIST = singletonList(Status.RUNNING);
   //  marking this 1 for now to suit migration. Should be increases to a higher number once migration succeeds
-  public static final int MAX_RUNNING_CHANGESETS_FOR_ACCOUNT = 1;
+  public static final int MAX_RUNNING_CHANGESETS_FOR_ACCOUNT = 5;
   private static final AtomicLong lastTimestampForStuckJobCheck = new AtomicLong(0);
 
   @Inject private YamlGitService yamlGitSyncService;
