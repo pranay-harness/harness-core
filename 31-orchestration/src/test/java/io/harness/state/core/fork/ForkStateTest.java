@@ -1,4 +1,4 @@
-package io.harness.core.fork;
+package io.harness.state.core.fork;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
@@ -16,8 +16,6 @@ import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.rule.Owner;
 import io.harness.state.StateType;
-import io.harness.state.core.fork.ForkState;
-import io.harness.state.core.fork.ForkStateParameters;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
 import io.harness.state.io.StatusNotifyResponseData;
