@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -28,10 +29,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Singleton
-public class PerpetualTaskWorker extends AbstractScheduledService {
+public class PerpetualTaskWorker {
   @Getter private Set<PerpetualTaskId> assignedTasks;
   @Getter private final Map<PerpetualTaskId, PerpetualTaskHandle> runningTaskMap = new ConcurrentHashMap<>();
   private ScheduledExecutorService scheduledService;
@@ -41,6 +44,25 @@ public class PerpetualTaskWorker extends AbstractScheduledService {
   private final PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient;
   private Map<String, PerpetualTaskExecutor> factoryMap;
 
+  private AtomicBoolean running = new AtomicBoolean(false);
+  private final AtomicReference<PerpetualTaskWorkerService> svcHolder = new AtomicReference<>();
+
+  private class PerpetualTaskWorkerService extends AbstractScheduledService {
+    PerpetualTaskWorkerService() {
+      addListener(new LoggingListener(this), MoreExecutors.directExecutor());
+    }
+
+    @Override
+    protected void runOneIteration() {
+      handleTasks();
+    }
+
+    @Override
+    protected Scheduler scheduler() {
+      return backoffScheduler;
+    }
+  }
+
   @Inject
   public PerpetualTaskWorker(PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient,
       Map<String, PerpetualTaskExecutor> factoryMap, TimeLimiter timeLimiter) {
@@ -48,7 +70,6 @@ public class PerpetualTaskWorker extends AbstractScheduledService {
     this.timeLimiter = timeLimiter;
     this.perpetualTaskServiceGrpcClient = perpetualTaskServiceGrpcClient;
     scheduledService = new ManagedScheduledExecutorService("perpetual-task-worker");
-    addListener(new LoggingListener(this), MoreExecutors.directExecutor());
     backoffScheduler = new BackoffScheduler(getClass().getSimpleName(), Duration.ofMinutes(4), Duration.ofMinutes(14));
   }
 
@@ -132,13 +153,19 @@ public class PerpetualTaskWorker extends AbstractScheduledService {
     }
   }
 
-  @Override
-  protected void runOneIteration() throws Exception {
-    handleTasks();
+  public void start() {
+    if (running.compareAndSet(false, true)) {
+      PerpetualTaskWorkerService perpetualTaskWorkerService = new PerpetualTaskWorkerService();
+      perpetualTaskWorkerService.startAsync();
+      this.svcHolder.set(perpetualTaskWorkerService);
+    }
   }
-
-  @Override
-  protected Scheduler scheduler() {
-    return backoffScheduler;
+  public void stop() {
+    if (running.compareAndSet(true, false)) {
+      PerpetualTaskWorkerService perpetualTaskWorkerService = this.svcHolder.get();
+      perpetualTaskWorkerService.stopAsync().awaitTerminated();
+      this.assignedTasks = Collections.emptySet();
+      this.stopCancelledTasks();
+    }
   }
 }
