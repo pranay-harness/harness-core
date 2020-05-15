@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.AwsCodeDeployRequestElement.AWS_CODE_DEPLOY_REQUEST_PARAM;
@@ -18,6 +19,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -35,6 +37,7 @@ import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
@@ -60,6 +63,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
@@ -117,6 +121,8 @@ public class AwsCodeDeployState extends State {
   @Inject protected transient InfrastructureMappingService infrastructureMappingService;
   @Inject protected transient ServiceTemplateService serviceTemplateService;
   @Inject protected transient SecretManager secretManager;
+  @Inject private SweepingOutputService sweepingOutputService;
+  @Inject private AwsStateHelper awsStateHelper;
 
   public AwsCodeDeployState(String name) {
     super(name, StateType.AWS_CODEDEPLOY_STATE.name());
@@ -343,6 +349,7 @@ public class AwsCodeDeployState extends State {
                                             .withUuid(serviceTemplateKey.getId().toString())
                                             .withServiceElement(phaseElement.getServiceElement())
                                             .build())
+                .newInstance(true)
                 .build();
         instanceElements.add(instanceElement);
 
@@ -355,6 +362,18 @@ public class AwsCodeDeployState extends State {
       commandStateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
       commandStateExecutionData.setCodeDeployDeploymentId(commandExecutionData.getDeploymentId());
       commandStateExecutionData.setDelegateMetaInfo(commandExecutionResult.getDelegateMetaInfo());
+
+      if (isNotEmpty(instanceElements)) {
+        // This sweeping element will be used by verification or other consumers.
+        sweepingOutputService.save(
+            context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+                .value(InstanceInfoVariables.builder()
+                           .instanceElements(instanceElements)
+                           .instanceDetails(awsStateHelper.generateAmInstanceDetails(instanceElements))
+                           .build())
+                .build());
+      }
     }
 
     return ExecutionResponse.builder()
