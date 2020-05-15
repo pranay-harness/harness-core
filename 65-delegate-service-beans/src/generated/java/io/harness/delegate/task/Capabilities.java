@@ -4,6 +4,10 @@
 package io.harness.delegate.task;
 
 /**
+ * <pre>
+ * List of all capabilities needed for the task
+ * </pre>
+ *
  * Protobuf type {@code io.harness.delegate.task.Capabilities}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:Capabilities.java.pb.meta")
@@ -43,10 +47,10 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
             break;
           case 10: {
             if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-              list_ = new java.util.ArrayList<io.harness.delegate.task.Capability>();
+              list_ = new java.util.ArrayList<io.harness.delegate.capability.Capability>();
               mutable_bitField0_ |= 0x00000001;
             }
-            list_.add(input.readMessage(io.harness.delegate.task.Capability.parser(), extensionRegistry));
+            list_.add(input.readMessage(io.harness.delegate.capability.Capability.parser(), extensionRegistry));
             break;
           }
           default: {
@@ -82,35 +86,35 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
   }
 
   public static final int LIST_FIELD_NUMBER = 1;
-  private java.util.List<io.harness.delegate.task.Capability> list_;
+  private java.util.List<io.harness.delegate.capability.Capability> list_;
   /**
-   * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+   * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
    */
-  public java.util.List<io.harness.delegate.task.Capability> getListList() {
+  public java.util.List<io.harness.delegate.capability.Capability> getListList() {
     return list_;
   }
   /**
-   * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+   * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
    */
-  public java.util.List<? extends io.harness.delegate.task.CapabilityOrBuilder> getListOrBuilderList() {
+  public java.util.List<? extends io.harness.delegate.capability.CapabilityOrBuilder> getListOrBuilderList() {
     return list_;
   }
   /**
-   * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+   * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
    */
   public int getListCount() {
     return list_.size();
   }
   /**
-   * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+   * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
    */
-  public io.harness.delegate.task.Capability getList(int index) {
+  public io.harness.delegate.capability.Capability getList(int index) {
     return list_.get(index);
   }
   /**
-   * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+   * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
    */
-  public io.harness.delegate.task.CapabilityOrBuilder getListOrBuilder(int index) {
+  public io.harness.delegate.capability.CapabilityOrBuilder getListOrBuilder(int index) {
     return list_.get(index);
   }
 
@@ -255,6 +259,10 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
     return builder;
   }
   /**
+   * <pre>
+   * List of all capabilities needed for the task
+   * </pre>
+   *
    * Protobuf type {@code io.harness.delegate.task.Capabilities}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
@@ -428,21 +436,22 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
     }
     private int bitField0_;
 
-    private java.util.List<io.harness.delegate.task.Capability> list_ = java.util.Collections.emptyList();
+    private java.util.List<io.harness.delegate.capability.Capability> list_ = java.util.Collections.emptyList();
     private void ensureListIsMutable() {
       if (!((bitField0_ & 0x00000001) != 0)) {
-        list_ = new java.util.ArrayList<io.harness.delegate.task.Capability>(list_);
+        list_ = new java.util.ArrayList<io.harness.delegate.capability.Capability>(list_);
         bitField0_ |= 0x00000001;
       }
     }
 
-    private com.google.protobuf.RepeatedFieldBuilderV3<io.harness.delegate.task.Capability,
-        io.harness.delegate.task.Capability.Builder, io.harness.delegate.task.CapabilityOrBuilder> listBuilder_;
+    private com.google.protobuf.RepeatedFieldBuilderV3<io.harness.delegate.capability.Capability,
+        io.harness.delegate.capability.Capability.Builder, io.harness.delegate.capability.CapabilityOrBuilder>
+        listBuilder_;
 
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public java.util.List<io.harness.delegate.task.Capability> getListList() {
+    public java.util.List<io.harness.delegate.capability.Capability> getListList() {
       if (listBuilder_ == null) {
         return java.util.Collections.unmodifiableList(list_);
       } else {
@@ -450,7 +459,7 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
     public int getListCount() {
       if (listBuilder_ == null) {
@@ -460,9 +469,9 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public io.harness.delegate.task.Capability getList(int index) {
+    public io.harness.delegate.capability.Capability getList(int index) {
       if (listBuilder_ == null) {
         return list_.get(index);
       } else {
@@ -470,9 +479,9 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public Builder setList(int index, io.harness.delegate.task.Capability value) {
+    public Builder setList(int index, io.harness.delegate.capability.Capability value) {
       if (listBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -486,9 +495,9 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public Builder setList(int index, io.harness.delegate.task.Capability.Builder builderForValue) {
+    public Builder setList(int index, io.harness.delegate.capability.Capability.Builder builderForValue) {
       if (listBuilder_ == null) {
         ensureListIsMutable();
         list_.set(index, builderForValue.build());
@@ -499,9 +508,9 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public Builder addList(io.harness.delegate.task.Capability value) {
+    public Builder addList(io.harness.delegate.capability.Capability value) {
       if (listBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -515,9 +524,9 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public Builder addList(int index, io.harness.delegate.task.Capability value) {
+    public Builder addList(int index, io.harness.delegate.capability.Capability value) {
       if (listBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -531,9 +540,9 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public Builder addList(io.harness.delegate.task.Capability.Builder builderForValue) {
+    public Builder addList(io.harness.delegate.capability.Capability.Builder builderForValue) {
       if (listBuilder_ == null) {
         ensureListIsMutable();
         list_.add(builderForValue.build());
@@ -544,9 +553,9 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public Builder addList(int index, io.harness.delegate.task.Capability.Builder builderForValue) {
+    public Builder addList(int index, io.harness.delegate.capability.Capability.Builder builderForValue) {
       if (listBuilder_ == null) {
         ensureListIsMutable();
         list_.add(index, builderForValue.build());
@@ -557,9 +566,9 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public Builder addAllList(java.lang.Iterable<? extends io.harness.delegate.task.Capability> values) {
+    public Builder addAllList(java.lang.Iterable<? extends io.harness.delegate.capability.Capability> values) {
       if (listBuilder_ == null) {
         ensureListIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(values, list_);
@@ -570,7 +579,7 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
     public Builder clearList() {
       if (listBuilder_ == null) {
@@ -583,7 +592,7 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
     public Builder removeList(int index) {
       if (listBuilder_ == null) {
@@ -596,15 +605,15 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public io.harness.delegate.task.Capability.Builder getListBuilder(int index) {
+    public io.harness.delegate.capability.Capability.Builder getListBuilder(int index) {
       return getListFieldBuilder().getBuilder(index);
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public io.harness.delegate.task.CapabilityOrBuilder getListOrBuilder(int index) {
+    public io.harness.delegate.capability.CapabilityOrBuilder getListOrBuilder(int index) {
       if (listBuilder_ == null) {
         return list_.get(index);
       } else {
@@ -612,9 +621,9 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public java.util.List<? extends io.harness.delegate.task.CapabilityOrBuilder> getListOrBuilderList() {
+    public java.util.List<? extends io.harness.delegate.capability.CapabilityOrBuilder> getListOrBuilderList() {
       if (listBuilder_ != null) {
         return listBuilder_.getMessageOrBuilderList();
       } else {
@@ -622,29 +631,29 @@ public final class Capabilities extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public io.harness.delegate.task.Capability.Builder addListBuilder() {
-      return getListFieldBuilder().addBuilder(io.harness.delegate.task.Capability.getDefaultInstance());
+    public io.harness.delegate.capability.Capability.Builder addListBuilder() {
+      return getListFieldBuilder().addBuilder(io.harness.delegate.capability.Capability.getDefaultInstance());
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public io.harness.delegate.task.Capability.Builder addListBuilder(int index) {
-      return getListFieldBuilder().addBuilder(index, io.harness.delegate.task.Capability.getDefaultInstance());
+    public io.harness.delegate.capability.Capability.Builder addListBuilder(int index) {
+      return getListFieldBuilder().addBuilder(index, io.harness.delegate.capability.Capability.getDefaultInstance());
     }
     /**
-     * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+     * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
      */
-    public java.util.List<io.harness.delegate.task.Capability.Builder> getListBuilderList() {
+    public java.util.List<io.harness.delegate.capability.Capability.Builder> getListBuilderList() {
       return getListFieldBuilder().getBuilderList();
     }
-    private com.google.protobuf.RepeatedFieldBuilderV3<io.harness.delegate.task.Capability,
-        io.harness.delegate.task.Capability.Builder, io.harness.delegate.task.CapabilityOrBuilder>
+    private com.google.protobuf.RepeatedFieldBuilderV3<io.harness.delegate.capability.Capability,
+        io.harness.delegate.capability.Capability.Builder, io.harness.delegate.capability.CapabilityOrBuilder>
     getListFieldBuilder() {
       if (listBuilder_ == null) {
-        listBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<io.harness.delegate.task.Capability,
-            io.harness.delegate.task.Capability.Builder, io.harness.delegate.task.CapabilityOrBuilder>(
+        listBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<io.harness.delegate.capability.Capability,
+            io.harness.delegate.capability.Capability.Builder, io.harness.delegate.capability.CapabilityOrBuilder>(
             list_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
         list_ = null;
       }

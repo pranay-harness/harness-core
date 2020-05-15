@@ -1,7 +1,10 @@
 # to be used when building in Jenkins
 FROM ubuntu:18.04
 
-RUN apt-get update && apt-get -y upgrade && apt-get -y install apt-utils curl unzip apt-transport-https gnupg2
+RUN apt-get update && \
+    apt-get -y upgrade && \
+    apt-get -y install apt-utils curl unzip apt-transport-https gnupg2 && \
+    apt-get clean
 
 RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 

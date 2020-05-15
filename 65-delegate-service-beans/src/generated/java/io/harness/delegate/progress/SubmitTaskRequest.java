@@ -66,6 +66,19 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
 
             break;
           }
+          case 26: {
+            io.harness.delegate.task.Capabilities.Builder subBuilder = null;
+            if (capabilities_ != null) {
+              subBuilder = capabilities_.toBuilder();
+            }
+            capabilities_ = input.readMessage(io.harness.delegate.task.Capabilities.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(capabilities_);
+              capabilities_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -140,6 +153,27 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     return getDetails();
   }
 
+  public static final int CAPABILITIES_FIELD_NUMBER = 3;
+  private io.harness.delegate.task.Capabilities capabilities_;
+  /**
+   * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+   */
+  public boolean hasCapabilities() {
+    return capabilities_ != null;
+  }
+  /**
+   * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+   */
+  public io.harness.delegate.task.Capabilities getCapabilities() {
+    return capabilities_ == null ? io.harness.delegate.task.Capabilities.getDefaultInstance() : capabilities_;
+  }
+  /**
+   * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+   */
+  public io.harness.delegate.task.CapabilitiesOrBuilder getCapabilitiesOrBuilder() {
+    return getCapabilities();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -161,6 +195,9 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     if (details_ != null) {
       output.writeMessage(2, getDetails());
     }
+    if (capabilities_ != null) {
+      output.writeMessage(3, getCapabilities());
+    }
     unknownFields.writeTo(output);
   }
 
@@ -176,6 +213,9 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     }
     if (details_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getDetails());
+    }
+    if (capabilities_ != null) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, getCapabilities());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -204,6 +244,12 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
       if (!getDetails().equals(other.getDetails()))
         return false;
     }
+    if (hasCapabilities() != other.hasCapabilities())
+      return false;
+    if (hasCapabilities()) {
+      if (!getCapabilities().equals(other.getCapabilities()))
+        return false;
+    }
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -223,6 +269,10 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     if (hasDetails()) {
       hash = (37 * hash) + DETAILS_FIELD_NUMBER;
       hash = (53 * hash) + getDetails().hashCode();
+    }
+    if (hasCapabilities()) {
+      hash = (37 * hash) + CAPABILITIES_FIELD_NUMBER;
+      hash = (53 * hash) + getCapabilities().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -349,6 +399,12 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
         details_ = null;
         detailsBuilder_ = null;
       }
+      if (capabilitiesBuilder_ == null) {
+        capabilities_ = null;
+      } else {
+        capabilities_ = null;
+        capabilitiesBuilder_ = null;
+      }
       return this;
     }
 
@@ -388,6 +444,11 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
         result.details_ = details_;
       } else {
         result.details_ = detailsBuilder_.build();
+      }
+      if (capabilitiesBuilder_ == null) {
+        result.capabilities_ = capabilities_;
+      } else {
+        result.capabilities_ = capabilitiesBuilder_.build();
       }
       onBuilt();
       return result;
@@ -436,6 +497,9 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
       }
       if (other.hasDetails()) {
         mergeDetails(other.getDetails());
+      }
+      if (other.hasCapabilities()) {
+        mergeCapabilities(other.getCapabilities());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -690,6 +754,119 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
         details_ = null;
       }
       return detailsBuilder_;
+    }
+
+    private io.harness.delegate.task.Capabilities capabilities_;
+    private com.google.protobuf
+        .SingleFieldBuilderV3<io.harness.delegate.task.Capabilities, io.harness.delegate.task.Capabilities.Builder,
+            io.harness.delegate.task.CapabilitiesOrBuilder> capabilitiesBuilder_;
+    /**
+     * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+     */
+    public boolean hasCapabilities() {
+      return capabilitiesBuilder_ != null || capabilities_ != null;
+    }
+    /**
+     * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+     */
+    public io.harness.delegate.task.Capabilities getCapabilities() {
+      if (capabilitiesBuilder_ == null) {
+        return capabilities_ == null ? io.harness.delegate.task.Capabilities.getDefaultInstance() : capabilities_;
+      } else {
+        return capabilitiesBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+     */
+    public Builder setCapabilities(io.harness.delegate.task.Capabilities value) {
+      if (capabilitiesBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        capabilities_ = value;
+        onChanged();
+      } else {
+        capabilitiesBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+     */
+    public Builder setCapabilities(io.harness.delegate.task.Capabilities.Builder builderForValue) {
+      if (capabilitiesBuilder_ == null) {
+        capabilities_ = builderForValue.build();
+        onChanged();
+      } else {
+        capabilitiesBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+     */
+    public Builder mergeCapabilities(io.harness.delegate.task.Capabilities value) {
+      if (capabilitiesBuilder_ == null) {
+        if (capabilities_ != null) {
+          capabilities_ =
+              io.harness.delegate.task.Capabilities.newBuilder(capabilities_).mergeFrom(value).buildPartial();
+        } else {
+          capabilities_ = value;
+        }
+        onChanged();
+      } else {
+        capabilitiesBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+     */
+    public Builder clearCapabilities() {
+      if (capabilitiesBuilder_ == null) {
+        capabilities_ = null;
+        onChanged();
+      } else {
+        capabilities_ = null;
+        capabilitiesBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+     */
+    public io.harness.delegate.task.Capabilities.Builder getCapabilitiesBuilder() {
+      onChanged();
+      return getCapabilitiesFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+     */
+    public io.harness.delegate.task.CapabilitiesOrBuilder getCapabilitiesOrBuilder() {
+      if (capabilitiesBuilder_ != null) {
+        return capabilitiesBuilder_.getMessageOrBuilder();
+      } else {
+        return capabilities_ == null ? io.harness.delegate.task.Capabilities.getDefaultInstance() : capabilities_;
+      }
+    }
+    /**
+     * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.task.Capabilities,
+        io.harness.delegate.task.Capabilities.Builder, io.harness.delegate.task.CapabilitiesOrBuilder>
+    getCapabilitiesFieldBuilder() {
+      if (capabilitiesBuilder_ == null) {
+        capabilitiesBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.task.Capabilities,
+            io.harness.delegate.task.Capabilities.Builder, io.harness.delegate.task.CapabilitiesOrBuilder>(
+            getCapabilities(), getParentForChildren(), isClean());
+        capabilities_ = null;
+      }
+      return capabilitiesBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

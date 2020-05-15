@@ -32,4 +32,17 @@ public interface SubmitTaskRequestOrBuilder extends
    * <code>.io.harness.delegate.task.Details details = 2;</code>
    */
   io.harness.delegate.task.DetailsOrBuilder getDetailsOrBuilder();
+
+  /**
+   * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+   */
+  boolean hasCapabilities();
+  /**
+   * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+   */
+  io.harness.delegate.task.Capabilities getCapabilities();
+  /**
+   * <code>.io.harness.delegate.task.Capabilities capabilities = 3;</code>
+   */
+  io.harness.delegate.task.CapabilitiesOrBuilder getCapabilitiesOrBuilder();
 }

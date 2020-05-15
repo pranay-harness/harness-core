@@ -8,23 +8,23 @@ public interface CapabilitiesOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.task.Capabilities)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+   * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
    */
-  java.util.List<io.harness.delegate.task.Capability> getListList();
+  java.util.List<io.harness.delegate.capability.Capability> getListList();
   /**
-   * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+   * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
    */
-  io.harness.delegate.task.Capability getList(int index);
+  io.harness.delegate.capability.Capability getList(int index);
   /**
-   * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+   * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
    */
   int getListCount();
   /**
-   * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+   * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
    */
-  java.util.List<? extends io.harness.delegate.task.CapabilityOrBuilder> getListOrBuilderList();
+  java.util.List<? extends io.harness.delegate.capability.CapabilityOrBuilder> getListOrBuilderList();
   /**
-   * <code>repeated .io.harness.delegate.task.Capability list = 1;</code>
+   * <code>repeated .io.harness.delegate.capability.Capability list = 1;</code>
    */
-  io.harness.delegate.task.CapabilityOrBuilder getListOrBuilder(int index);
+  io.harness.delegate.capability.CapabilityOrBuilder getListOrBuilder(int index);
 }

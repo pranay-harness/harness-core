@@ -4,6 +4,11 @@
 package io.harness.delegate.task;
 
 /**
+ * <pre>
+ * Represents a map of arbitrary key and value pairs that make sense on the task setup level They are pass through for
+ * the delegate system
+ * </pre>
+ *
  * Protobuf type {@code io.harness.delegate.task.SetupAbstractions}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:SetupAbstractions.java.pb.meta")
@@ -41,12 +46,12 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
             break;
           case 10: {
             if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-              map_ = com.google.protobuf.MapField.newMapField(MapDefaultEntryHolder.defaultEntry);
+              values_ = com.google.protobuf.MapField.newMapField(ValuesDefaultEntryHolder.defaultEntry);
               mutable_bitField0_ |= 0x00000001;
             }
-            com.google.protobuf.MapEntry<java.lang.String, java.lang.String> map__ =
-                input.readMessage(MapDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
-            map_.getMutableMap().put(map__.getKey(), map__.getValue());
+            com.google.protobuf.MapEntry<java.lang.String, java.lang.String> values__ =
+                input.readMessage(ValuesDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+            values_.getMutableMap().put(values__.getKey(), values__.getValue());
             break;
           }
           default: {
@@ -76,7 +81,7 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
   protected com.google.protobuf.MapField internalGetMapField(int number) {
     switch (number) {
       case 1:
-        return internalGetMap();
+        return internalGetValues();
       default:
         throw new RuntimeException("Invalid map field number: " + number);
     }
@@ -89,69 +94,69 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
             io.harness.delegate.task.SetupAbstractions.class, io.harness.delegate.task.SetupAbstractions.Builder.class);
   }
 
-  public static final int MAP_FIELD_NUMBER = 1;
-  private static final class MapDefaultEntryHolder {
+  public static final int VALUES_FIELD_NUMBER = 1;
+  private static final class ValuesDefaultEntryHolder {
     static final com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
         defaultEntry = com.google.protobuf.MapEntry.<java.lang.String, java.lang.String>newDefaultInstance(
-        io.harness.delegate.task.Task.internal_static_io_harness_delegate_task_SetupAbstractions_MapEntry_descriptor,
+        io.harness.delegate.task.Task.internal_static_io_harness_delegate_task_SetupAbstractions_ValuesEntry_descriptor,
         com.google.protobuf.WireFormat.FieldType.STRING, "", com.google.protobuf.WireFormat.FieldType.STRING, "");
   }
-  private com.google.protobuf.MapField<java.lang.String, java.lang.String> map_;
-  private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetMap() {
-    if (map_ == null) {
-      return com.google.protobuf.MapField.emptyMapField(MapDefaultEntryHolder.defaultEntry);
+  private com.google.protobuf.MapField<java.lang.String, java.lang.String> values_;
+  private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetValues() {
+    if (values_ == null) {
+      return com.google.protobuf.MapField.emptyMapField(ValuesDefaultEntryHolder.defaultEntry);
     }
-    return map_;
+    return values_;
   }
 
-  public int getMapCount() {
-    return internalGetMap().getMap().size();
+  public int getValuesCount() {
+    return internalGetValues().getMap().size();
   }
   /**
-   * <code>map&lt;string, string&gt; map = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1;</code>
    */
 
-  public boolean containsMap(java.lang.String key) {
+  public boolean containsValues(java.lang.String key) {
     if (key == null) {
       throw new java.lang.NullPointerException();
     }
-    return internalGetMap().getMap().containsKey(key);
+    return internalGetValues().getMap().containsKey(key);
   }
   /**
-   * Use {@link #getMapMap()} instead.
+   * Use {@link #getValuesMap()} instead.
    */
   @java.
   lang.Deprecated
-  public java.util.Map<java.lang.String, java.lang.String> getMap() {
-    return getMapMap();
+  public java.util.Map<java.lang.String, java.lang.String> getValues() {
+    return getValuesMap();
   }
   /**
-   * <code>map&lt;string, string&gt; map = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1;</code>
    */
 
-  public java.util.Map<java.lang.String, java.lang.String> getMapMap() {
-    return internalGetMap().getMap();
+  public java.util.Map<java.lang.String, java.lang.String> getValuesMap() {
+    return internalGetValues().getMap();
   }
   /**
-   * <code>map&lt;string, string&gt; map = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1;</code>
    */
 
-  public java.lang.String getMapOrDefault(java.lang.String key, java.lang.String defaultValue) {
+  public java.lang.String getValuesOrDefault(java.lang.String key, java.lang.String defaultValue) {
     if (key == null) {
       throw new java.lang.NullPointerException();
     }
-    java.util.Map<java.lang.String, java.lang.String> map = internalGetMap().getMap();
+    java.util.Map<java.lang.String, java.lang.String> map = internalGetValues().getMap();
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
   /**
-   * <code>map&lt;string, string&gt; map = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1;</code>
    */
 
-  public java.lang.String getMapOrThrow(java.lang.String key) {
+  public java.lang.String getValuesOrThrow(java.lang.String key) {
     if (key == null) {
       throw new java.lang.NullPointerException();
     }
-    java.util.Map<java.lang.String, java.lang.String> map = internalGetMap().getMap();
+    java.util.Map<java.lang.String, java.lang.String> map = internalGetValues().getMap();
     if (!map.containsKey(key)) {
       throw new java.lang.IllegalArgumentException();
     }
@@ -174,7 +179,7 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
     com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
-        output, internalGetMap(), MapDefaultEntryHolder.defaultEntry, 1);
+        output, internalGetValues(), ValuesDefaultEntryHolder.defaultEntry, 1);
     unknownFields.writeTo(output);
   }
 
@@ -185,13 +190,13 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
       return size;
 
     size = 0;
-    for (java.util.Map.Entry<java.lang.String, java.lang.String> entry : internalGetMap().getMap().entrySet()) {
-      com.google.protobuf.MapEntry<java.lang.String, java.lang.String> map__ =
-          MapDefaultEntryHolder.defaultEntry.newBuilderForType()
+    for (java.util.Map.Entry<java.lang.String, java.lang.String> entry : internalGetValues().getMap().entrySet()) {
+      com.google.protobuf.MapEntry<java.lang.String, java.lang.String> values__ =
+          ValuesDefaultEntryHolder.defaultEntry.newBuilderForType()
               .setKey(entry.getKey())
               .setValue(entry.getValue())
               .build();
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, map__);
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, values__);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -208,7 +213,7 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
     }
     io.harness.delegate.task.SetupAbstractions other = (io.harness.delegate.task.SetupAbstractions) obj;
 
-    if (!internalGetMap().equals(other.internalGetMap()))
+    if (!internalGetValues().equals(other.internalGetValues()))
       return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
@@ -222,9 +227,9 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    if (!internalGetMap().getMap().isEmpty()) {
-      hash = (37 * hash) + MAP_FIELD_NUMBER;
-      hash = (53 * hash) + internalGetMap().hashCode();
+    if (!internalGetValues().getMap().isEmpty()) {
+      hash = (37 * hash) + VALUES_FIELD_NUMBER;
+      hash = (53 * hash) + internalGetValues().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -304,6 +309,11 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
     return builder;
   }
   /**
+   * <pre>
+   * Represents a map of arbitrary key and value pairs that make sense on the task setup level They are pass through for
+   * the delegate system
+   * </pre>
+   *
    * Protobuf type {@code io.harness.delegate.task.SetupAbstractions}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
@@ -317,7 +327,7 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
     protected com.google.protobuf.MapField internalGetMapField(int number) {
       switch (number) {
         case 1:
-          return internalGetMap();
+          return internalGetValues();
         default:
           throw new RuntimeException("Invalid map field number: " + number);
       }
@@ -326,7 +336,7 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
     protected com.google.protobuf.MapField internalGetMutableMapField(int number) {
       switch (number) {
         case 1:
-          return internalGetMutableMap();
+          return internalGetMutableValues();
         default:
           throw new RuntimeException("Invalid map field number: " + number);
       }
@@ -355,7 +365,7 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      internalGetMutableMap().clear();
+      internalGetMutableValues().clear();
       return this;
     }
 
@@ -386,8 +396,8 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
     public io.harness.delegate.task.SetupAbstractions buildPartial() {
       io.harness.delegate.task.SetupAbstractions result = new io.harness.delegate.task.SetupAbstractions(this);
       int from_bitField0_ = bitField0_;
-      result.map_ = internalGetMap();
-      result.map_.makeImmutable();
+      result.values_ = internalGetValues();
+      result.values_.makeImmutable();
       onBuilt();
       return result;
     }
@@ -430,7 +440,7 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
     public Builder mergeFrom(io.harness.delegate.task.SetupAbstractions other) {
       if (other == io.harness.delegate.task.SetupAbstractions.getDefaultInstance())
         return this;
-      internalGetMutableMap().mergeFrom(other.internalGetMap());
+      internalGetMutableValues().mergeFrom(other.internalGetValues());
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
       return this;
@@ -459,92 +469,92 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
     }
     private int bitField0_;
 
-    private com.google.protobuf.MapField<java.lang.String, java.lang.String> map_;
-    private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetMap() {
-      if (map_ == null) {
-        return com.google.protobuf.MapField.emptyMapField(MapDefaultEntryHolder.defaultEntry);
+    private com.google.protobuf.MapField<java.lang.String, java.lang.String> values_;
+    private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetValues() {
+      if (values_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(ValuesDefaultEntryHolder.defaultEntry);
       }
-      return map_;
+      return values_;
     }
-    private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetMutableMap() {
+    private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetMutableValues() {
       onChanged();
       ;
-      if (map_ == null) {
-        map_ = com.google.protobuf.MapField.newMapField(MapDefaultEntryHolder.defaultEntry);
+      if (values_ == null) {
+        values_ = com.google.protobuf.MapField.newMapField(ValuesDefaultEntryHolder.defaultEntry);
       }
-      if (!map_.isMutable()) {
-        map_ = map_.copy();
+      if (!values_.isMutable()) {
+        values_ = values_.copy();
       }
-      return map_;
+      return values_;
     }
 
-    public int getMapCount() {
-      return internalGetMap().getMap().size();
+    public int getValuesCount() {
+      return internalGetValues().getMap().size();
     }
     /**
-     * <code>map&lt;string, string&gt; map = 1;</code>
+     * <code>map&lt;string, string&gt; values = 1;</code>
      */
 
-    public boolean containsMap(java.lang.String key) {
+    public boolean containsValues(java.lang.String key) {
       if (key == null) {
         throw new java.lang.NullPointerException();
       }
-      return internalGetMap().getMap().containsKey(key);
+      return internalGetValues().getMap().containsKey(key);
     }
     /**
-     * Use {@link #getMapMap()} instead.
+     * Use {@link #getValuesMap()} instead.
      */
     @java.
     lang.Deprecated
-    public java.util.Map<java.lang.String, java.lang.String> getMap() {
-      return getMapMap();
+    public java.util.Map<java.lang.String, java.lang.String> getValues() {
+      return getValuesMap();
     }
     /**
-     * <code>map&lt;string, string&gt; map = 1;</code>
+     * <code>map&lt;string, string&gt; values = 1;</code>
      */
 
-    public java.util.Map<java.lang.String, java.lang.String> getMapMap() {
-      return internalGetMap().getMap();
+    public java.util.Map<java.lang.String, java.lang.String> getValuesMap() {
+      return internalGetValues().getMap();
     }
     /**
-     * <code>map&lt;string, string&gt; map = 1;</code>
+     * <code>map&lt;string, string&gt; values = 1;</code>
      */
 
-    public java.lang.String getMapOrDefault(java.lang.String key, java.lang.String defaultValue) {
+    public java.lang.String getValuesOrDefault(java.lang.String key, java.lang.String defaultValue) {
       if (key == null) {
         throw new java.lang.NullPointerException();
       }
-      java.util.Map<java.lang.String, java.lang.String> map = internalGetMap().getMap();
+      java.util.Map<java.lang.String, java.lang.String> map = internalGetValues().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, string&gt; map = 1;</code>
+     * <code>map&lt;string, string&gt; values = 1;</code>
      */
 
-    public java.lang.String getMapOrThrow(java.lang.String key) {
+    public java.lang.String getValuesOrThrow(java.lang.String key) {
       if (key == null) {
         throw new java.lang.NullPointerException();
       }
-      java.util.Map<java.lang.String, java.lang.String> map = internalGetMap().getMap();
+      java.util.Map<java.lang.String, java.lang.String> map = internalGetValues().getMap();
       if (!map.containsKey(key)) {
         throw new java.lang.IllegalArgumentException();
       }
       return map.get(key);
     }
 
-    public Builder clearMap() {
-      internalGetMutableMap().getMutableMap().clear();
+    public Builder clearValues() {
+      internalGetMutableValues().getMutableMap().clear();
       return this;
     }
     /**
-     * <code>map&lt;string, string&gt; map = 1;</code>
+     * <code>map&lt;string, string&gt; values = 1;</code>
      */
 
-    public Builder removeMap(java.lang.String key) {
+    public Builder removeValues(java.lang.String key) {
       if (key == null) {
         throw new java.lang.NullPointerException();
       }
-      internalGetMutableMap().getMutableMap().remove(key);
+      internalGetMutableValues().getMutableMap().remove(key);
       return this;
     }
     /**
@@ -552,28 +562,28 @@ public final class SetupAbstractions extends com.google.protobuf.GeneratedMessag
      */
     @java.
     lang.Deprecated
-    public java.util.Map<java.lang.String, java.lang.String> getMutableMap() {
-      return internalGetMutableMap().getMutableMap();
+    public java.util.Map<java.lang.String, java.lang.String> getMutableValues() {
+      return internalGetMutableValues().getMutableMap();
     }
     /**
-     * <code>map&lt;string, string&gt; map = 1;</code>
+     * <code>map&lt;string, string&gt; values = 1;</code>
      */
-    public Builder putMap(java.lang.String key, java.lang.String value) {
+    public Builder putValues(java.lang.String key, java.lang.String value) {
       if (key == null) {
         throw new java.lang.NullPointerException();
       }
       if (value == null) {
         throw new java.lang.NullPointerException();
       }
-      internalGetMutableMap().getMutableMap().put(key, value);
+      internalGetMutableValues().getMutableMap().put(key, value);
       return this;
     }
     /**
-     * <code>map&lt;string, string&gt; map = 1;</code>
+     * <code>map&lt;string, string&gt; values = 1;</code>
      */
 
-    public Builder putAllMap(java.util.Map<java.lang.String, java.lang.String> values) {
-      internalGetMutableMap().getMutableMap().putAll(values);
+    public Builder putAllValues(java.util.Map<java.lang.String, java.lang.String> values) {
+      internalGetMutableValues().getMutableMap().putAll(values);
       return this;
     }
     @java.lang.Override

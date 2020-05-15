@@ -43,30 +43,31 @@ public final class DelegateServiceOuterClass {
   static {
     java.lang.String[] descriptorData = {"\n\026delegate_service.proto\022\034io.harness.del"
         + "egate.progress\032\ntask.proto\032\016progress.pro"
-        + "to\"\220\001\n\021SubmitTaskRequest\022G\n\022setup_abstra"
+        + "to\"\316\001\n\021SubmitTaskRequest\022G\n\022setup_abstra"
         + "ctions\030\001 \001(\0132+.io.harness.delegate.task."
         + "SetupAbstractions\0222\n\007details\030\002 \001(\0132!.io."
-        + "harness.delegate.task.Details\"B\n\022SubmitT"
-        + "askResponse\022,\n\006taskId\030\001 \001(\0132\034.io.harness"
-        + ".delegate.task.Id\"A\n\021CancelTaskRequest\022,"
-        + "\n\006taskId\030\001 \001(\0132\034.io.harness.delegate.tas"
-        + "k.Id\"]\n\022CancelTaskResponse\022G\n\021canceled_a"
-        + "t_stage\030\001 \001(\0162,.io.harness.delegate.prog"
-        + "ress.ExecutionStage\"C\n\023TaskProgressReque"
-        + "st\022,\n\006taskId\030\001 \001(\0132\034.io.harness.delegate"
-        + ".task.Id\"`\n\024TaskProgressResponse\022H\n\022curr"
-        + "ently_at_stage\030\001 \001(\0162,.io.harness.delega"
-        + "te.progress.ExecutionStage2\352\002\n\017DelegateS"
-        + "ervice\022o\n\nSubmitTask\022/.io.harness.delega"
-        + "te.progress.SubmitTaskRequest\0320.io.harne"
-        + "ss.delegate.progress.SubmitTaskResponse\022"
-        + "o\n\nCancelTask\022/.io.harness.delegate.prog"
-        + "ress.CancelTaskRequest\0320.io.harness.dele"
-        + "gate.progress.CancelTaskResponse\022u\n\014Task"
-        + "Progress\0221.io.harness.delegate.progress."
-        + "TaskProgressRequest\0322.io.harness.delegat"
-        + "e.progress.TaskProgressResponseB\002P\001b\006pro"
-        + "to3"};
+        + "harness.delegate.task.Details\022<\n\014capabil"
+        + "ities\030\003 \001(\0132&.io.harness.delegate.task.C"
+        + "apabilities\"B\n\022SubmitTaskResponse\022,\n\006tas"
+        + "kId\030\001 \001(\0132\034.io.harness.delegate.task.Id\""
+        + "A\n\021CancelTaskRequest\022,\n\006taskId\030\001 \001(\0132\034.i"
+        + "o.harness.delegate.task.Id\"]\n\022CancelTask"
+        + "Response\022G\n\021canceled_at_stage\030\001 \001(\0162,.io"
+        + ".harness.delegate.progress.ExecutionStag"
+        + "e\"C\n\023TaskProgressRequest\022,\n\006taskId\030\001 \001(\013"
+        + "2\034.io.harness.delegate.task.Id\"`\n\024TaskPr"
+        + "ogressResponse\022H\n\022currently_at_stage\030\001 \001"
+        + "(\0162,.io.harness.delegate.progress.Execut"
+        + "ionStage2\352\002\n\017DelegateService\022o\n\nSubmitTa"
+        + "sk\022/.io.harness.delegate.progress.Submit"
+        + "TaskRequest\0320.io.harness.delegate.progre"
+        + "ss.SubmitTaskResponse\022o\n\nCancelTask\022/.io"
+        + ".harness.delegate.progress.CancelTaskReq"
+        + "uest\0320.io.harness.delegate.progress.Canc"
+        + "elTaskResponse\022u\n\014TaskProgress\0221.io.harn"
+        + "ess.delegate.progress.TaskProgressReques"
+        + "t\0322.io.harness.delegate.progress.TaskPro"
+        + "gressResponseB\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -89,6 +90,7 @@ public final class DelegateServiceOuterClass {
             new java.lang.String[] {
                 "SetupAbstractions",
                 "Details",
+                "Capabilities",
             });
     internal_static_io_harness_delegate_progress_SubmitTaskResponse_descriptor =
         getDescriptor().getMessageTypes().get(1);
