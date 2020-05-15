@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -62,7 +63,7 @@ public class CloudOverviewDataFetcherTest extends AbstractDataFetcherTest {
     when(preAggregateBillingService.getPreAggregateBillingOverview(
              anyList(), anyList(), anyList(), anyList(), any(), anyList()))
         .thenReturn(QLData);
-    when(cloudBillingHelper.getCloudProviderTableName()).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
+    when(cloudBillingHelper.getCloudProviderTableName(anyString())).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
   }
 
   @Test

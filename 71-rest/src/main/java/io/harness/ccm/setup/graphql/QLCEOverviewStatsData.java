@@ -13,4 +13,8 @@ import software.wings.security.annotations.Scope;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLCEOverviewStatsData {
   Boolean cloudConnectorsPresent;
+  Boolean awsConnectorsPresent;
+  Boolean gcpConnectorsPresent;
+  Boolean applicationDataPresent;
+  Boolean clusterDataPresent;
 }

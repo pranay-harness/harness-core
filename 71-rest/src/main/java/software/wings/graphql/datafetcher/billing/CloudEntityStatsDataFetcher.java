@@ -31,7 +31,7 @@ public class CloudEntityStatsDataFetcher
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort,
       Integer limit, Integer offset) {
-    String queryTableName = cloudBillingHelper.getCloudProviderTableName();
+    String queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId);
 
     aggregateFunction.add(CloudBillingAggregate.builder()
                               .operationType(QLCCMAggregateOperation.MIN)
