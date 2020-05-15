@@ -80,6 +80,10 @@ type eksCluster {
 
 type OverviewStatsData {
   cloudConnectorsPresent: Boolean
+  awsConnectorsPresent: Boolean
+  gcpConnectorsPresent: Boolean
+  applicationDataPresent: Boolean
+  clusterDataPresent: Boolean
 }
 
 input CESetupFilter {

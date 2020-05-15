@@ -29,7 +29,7 @@ public class CloudTimeSeriesStatsDataFetcher
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort,
       Integer limit, Integer offset) {
-    String queryTableName = cloudBillingHelper.getCloudProviderTableName();
+    String queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId);
 
     return preAggregateBillingService.getPreAggregateBillingTimeSeriesStats(
         Optional.ofNullable(aggregateFunction)

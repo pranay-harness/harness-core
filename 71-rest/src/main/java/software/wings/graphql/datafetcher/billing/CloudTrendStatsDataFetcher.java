@@ -27,7 +27,7 @@ public class CloudTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy, List<CloudBillingSortCriteria> sort) {
-    String queryTableName = cloudBillingHelper.getCloudProviderTableName();
+    String queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId);
 
     return preAggregateBillingService.getPreAggregateBillingTrendStats(Optional.ofNullable(aggregateFunction)
                                                                            .map(Collection::stream)
