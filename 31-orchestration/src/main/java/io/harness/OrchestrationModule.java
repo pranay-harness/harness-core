@@ -10,6 +10,8 @@ import com.google.inject.name.Names;
 import io.harness.engine.EngineObtainmentHelper;
 import io.harness.engine.EngineStatusHelper;
 import io.harness.engine.ExecutionEngine;
+import io.harness.engine.expresssions.EngineExpressionService;
+import io.harness.engine.expresssions.EngineExpressionServiceImpl;
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.services.OutcomeService;
 import io.harness.engine.services.impl.NodeExecutionServiceImpl;
@@ -44,6 +46,7 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
   protected void configure() {
     bind(StateInspectionService.class).to(StateInspectionServiceImpl.class);
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class);
+    bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
     bind(OutcomeService.class).to(OutcomeServiceImpl.class);
     bind(HPersistence.class).annotatedWith(Names.named("enginePersistence")).to(MongoPersistence.class);
     bind(ExecutionEngine.class).toInstance(new ExecutionEngine());

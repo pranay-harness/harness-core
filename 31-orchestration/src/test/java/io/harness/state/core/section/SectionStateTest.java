@@ -1,4 +1,4 @@
-package io.harness.core.section;
+package io.harness.state.core.section;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
@@ -15,8 +15,6 @@ import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.rule.Owner;
 import io.harness.state.StateType;
-import io.harness.state.core.section.SectionState;
-import io.harness.state.core.section.SectionStateParameters;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
 import io.harness.state.io.StatusNotifyResponseData;
