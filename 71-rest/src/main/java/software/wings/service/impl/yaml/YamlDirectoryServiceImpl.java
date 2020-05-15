@@ -2165,7 +2165,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
                       .addFilter(Template.ACCOUNT_ID_KEY, Operator.EQ, accountId)
                       .withLimit(UNLIMITED)
                       .build(),
-                Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), accountId)
+                Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), accountId, false)
             .getResponse());
 
     final Map<String, List<Template>> folderIdTemplateMap =

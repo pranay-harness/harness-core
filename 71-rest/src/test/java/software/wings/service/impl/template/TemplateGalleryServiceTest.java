@@ -315,7 +315,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
 
   private void assertTemplates(PageRequest<Template> pageRequest, String accountId) {
     List<Template> templates = templateService.list(
-        pageRequest, Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), accountId);
+        pageRequest, Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), accountId, false);
 
     assertThat(templates).isNotEmpty();
     assertThat(templates.stream()

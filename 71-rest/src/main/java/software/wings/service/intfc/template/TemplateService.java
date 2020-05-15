@@ -22,7 +22,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 public interface TemplateService extends OwnedByAccount, OwnedByApplication {
-  PageResponse<Template> list(PageRequest<Template> pageRequest, List<String> galleryKeys, String accountId);
+  PageResponse<Template> list(
+      PageRequest<Template> pageRequest, List<String> galleryKeys, String accountId, boolean defaultVersion);
 
   @ValidationGroups(Create.class) Template saveReferenceTemplate(Template template);
 
@@ -98,4 +99,6 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
   String getTemplateFolderPathString(Template template);
 
   String getYamlOfTemplate(String templateId, Long version);
+
+  String getYamlOfTemplate(String templateId, String version);
 }
