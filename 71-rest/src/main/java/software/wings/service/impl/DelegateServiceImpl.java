@@ -1603,6 +1603,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   private DelegateRegisterResponse registerResponseFromDelegate(Delegate delegate) {
+    if (delegate == null) {
+      return null;
+    }
+
     return DelegateRegisterResponse.builder()
         .delegateId(delegate.getUuid())
         .sequenceNum(delegate.getSequenceNum())
