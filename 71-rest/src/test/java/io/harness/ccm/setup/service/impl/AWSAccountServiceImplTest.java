@@ -12,6 +12,7 @@ import com.amazonaws.services.organizations.model.Account;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.CECloudAccountDao;
+import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.ccm.setup.service.support.intfc.AWSOrganizationHelperService;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -22,6 +23,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
@@ -38,6 +40,7 @@ public class AWSAccountServiceImplTest extends CategoryTest {
   @Mock private CECloudAccountDao ceCloudAccountDao;
   @Mock private AWSOrganizationHelperService awsOrganizationHelperService;
   @Mock private AwsCEInfraSetupHandler awsCEInfraSetupHandler;
+  @Mock private MainConfiguration configuration;
 
   @Captor private ArgumentCaptor<CECloudAccount> ceCloudCreateAccountArgumentCaptor;
 
@@ -51,7 +54,7 @@ public class AWSAccountServiceImplTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     awsAccountService = new AWSAccountServiceImpl(
-        awsOrganizationHelperService, settingsService, ceCloudAccountDao, awsCEInfraSetupHandler);
+        awsOrganizationHelperService, settingsService, ceCloudAccountDao, awsCEInfraSetupHandler, configuration);
   }
 
   @Test
@@ -67,6 +70,8 @@ public class AWSAccountServiceImplTest extends CategoryTest {
                      .withArn("arn:aws:organizations::424324243:account/o-tbm3caqef8/454324242")))
         .when(awsOrganizationHelperService)
         .listAwsAccounts(ceAwsConfig.getAwsCrossAccountAttributes());
+
+    doReturn(CESetUpConfig.builder().awsRoleName("harnessCERole").build()).when(configuration).getCeSetUpConfig();
 
     List<CECloudAccount> awsAccounts = awsAccountService.getAWSAccounts(ACCOUNT_ID, SETTING_ID, ceAwsConfig);
     assertThat(awsAccounts).hasSize(1);

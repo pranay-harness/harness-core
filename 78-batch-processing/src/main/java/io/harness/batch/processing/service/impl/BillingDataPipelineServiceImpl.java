@@ -79,7 +79,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
       + " AS awsBlendedCost, min(unblendedrate) AS awsUnblendedRate, sum(unblendedcost) AS awsUnblendedCost,"
       + " sum(unblendedcost) AS cost, productname AS awsServicecode, region, availabilityzone AS awsAvailabilityzone,"
       + " usageaccountid AS awsUsageaccountid, instancetype AS awsInstancetype, usagetype AS awsUsagetype,"
-      + " \"AWS\" AS cloudProvider FROM `%s.%s.awsCurTable_*` WHERE lineitemtype != 'Tax' AND _TABLE_SUFFIX ="
+      + " \"AWS\" AS cloudProvider FROM `%s.%s.awscur_*` WHERE lineitemtype != 'Tax' AND _TABLE_SUFFIX ="
       + " CONCAT(CAST(EXTRACT(YEAR from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),'_' , LPAD(CAST(EXTRACT(MONTH from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY))"
       + " as string),2,'0')) AND TIMESTAMP_TRUNC(usagestartdate, DAY) = TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY) GROUP"
       + " BY awsServicecode, region, awsAvailabilityzone, awsUsageaccountid, awsInstancetype, awsUsagetype, usagestartdate;";

@@ -4,7 +4,9 @@ import software.wings.api.DeploymentSummary;
 import software.wings.beans.Account;
 import software.wings.beans.ResourceLookup;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.instance.HarnessServiceInfo;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.time.Instant;
 import java.util.List;
@@ -28,8 +30,9 @@ public interface CloudToHarnessMappingService {
 
   List<DeploymentSummary> getDeploymentSummary(String accountId, String offset, Instant startTime, Instant endTime);
 
-  List<SettingAttribute> getSettingAttributes(String accountId, String category, String valueType);
+  List<SettingAttribute> getSettingAttributes(
+      String accountId, SettingCategory category, SettingVariableTypes valueType);
 
   List<SettingAttribute> getSettingAttributes(
-      String accountId, String category, String valueType, long startTime, long endTime);
+      String accountId, SettingCategory category, SettingVariableTypes valueType, long startTime, long endTime);
 }

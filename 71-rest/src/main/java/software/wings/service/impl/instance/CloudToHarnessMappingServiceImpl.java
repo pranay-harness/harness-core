@@ -20,11 +20,13 @@ import software.wings.beans.ResourceLookup;
 import software.wings.beans.ResourceLookup.ResourceLookupKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DeploymentService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -154,7 +156,8 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   }
 
   @Override
-  public List<SettingAttribute> getSettingAttributes(String accountId, String category, String valueType) {
+  public List<SettingAttribute> getSettingAttributes(
+      String accountId, SettingCategory category, SettingVariableTypes valueType) {
     List<SettingAttribute> settingAttributes = new ArrayList<>();
     try (HIterator<SettingAttribute> query =
              new HIterator<>(persistence.createQuery(SettingAttribute.class, excludeAuthority)
@@ -171,7 +174,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
 
   @Override
   public List<SettingAttribute> getSettingAttributes(
-      String accountId, String category, String valueType, long startTime, long endTime) {
+      String accountId, SettingCategory category, SettingVariableTypes valueType, long startTime, long endTime) {
     List<SettingAttribute> settingAttributes = new ArrayList<>();
     try (HIterator<SettingAttribute> query =
              new HIterator<>(persistence.createQuery(SettingAttribute.class, excludeAuthority)

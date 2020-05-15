@@ -58,6 +58,7 @@ ceSetUpConfig:
   masterAccountCloudFormationTemplateLink: masterAccountCloudFormationTemplateLinkPlaceHolder
   linkedAccountCloudFormationTemplateLink: cloudFormationTemplateLinkPlaceHolder
   gcpProjectId: gcpProjectIdPlaceHolder
+  awsRoleName: harnessContinuousEfficiencyRole
 
 mktPlaceConfig:
   awsAccessKey: awsMktPlaceAccessKeyPlaceHolder

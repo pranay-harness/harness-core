@@ -19,4 +19,5 @@ public class CESetUpConfig {
   private String masterAccountCloudFormationTemplateLink;
   private String linkedAccountCloudFormationTemplateLink;
   private String gcpProjectId;
+  private String awsRoleName;
 }

@@ -9,6 +9,7 @@ import io.harness.ccm.setup.service.support.intfc.AWSOrganizationHelperService;
 import io.harness.ccm.setup.util.InfraSetUpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
@@ -21,6 +22,7 @@ import java.util.List;
 
 @Slf4j
 public class AWSAccountServiceImpl implements AWSAccountService {
+  private final MainConfiguration configuration;
   private final SettingsService settingsService;
   private final CECloudAccountDao ceCloudAccountDao;
   private final AwsCEInfraSetupHandler awsCEInfraSetupHandler;
@@ -29,11 +31,12 @@ public class AWSAccountServiceImpl implements AWSAccountService {
   @Inject
   public AWSAccountServiceImpl(AWSOrganizationHelperService awsOrganizationHelperService,
       SettingsService settingsService, CECloudAccountDao ceCloudAccountDao,
-      AwsCEInfraSetupHandler awsCEInfraSetupHandler) {
+      AwsCEInfraSetupHandler awsCEInfraSetupHandler, MainConfiguration configuration) {
     this.awsOrganizationHelperService = awsOrganizationHelperService;
     this.settingsService = settingsService;
     this.ceCloudAccountDao = ceCloudAccountDao;
     this.awsCEInfraSetupHandler = awsCEInfraSetupHandler;
+    this.configuration = configuration;
   }
 
   @Override
@@ -50,7 +53,8 @@ public class AWSAccountServiceImpl implements AWSAccountService {
         AwsCrossAccountAttributes linkedAwsCrossAccountAttributes =
             AwsCrossAccountAttributes.builder()
                 .externalId(externalId)
-                .crossAccountRoleArn(InfraSetUpUtils.getLinkedAccountArn(awsAccountId))
+                .crossAccountRoleArn(InfraSetUpUtils.getLinkedAccountArn(
+                    awsAccountId, configuration.getCeSetUpConfig().getAwsRoleName()))
                 .build();
         CECloudAccount cloudAccount = CECloudAccount.builder()
                                           .accountId(accountId)
