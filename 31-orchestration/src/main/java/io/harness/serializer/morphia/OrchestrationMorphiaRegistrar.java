@@ -13,6 +13,7 @@ import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.resume.EngineWaitRetryCallback;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputInstance;
+import io.harness.state.core.fork.ForkStateParameters;
 import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspection;
 import io.harness.waiter.ListNotifyResponseData;
@@ -60,5 +61,8 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
 
     // Facilitator related classes
     h.put("delay.DelayEventNotifyData", DelayEventNotifyData.class);
+
+    // State Related Classes
+    h.put("state.core.fork.ForkStateParameters", ForkStateParameters.class);
   }
 }
