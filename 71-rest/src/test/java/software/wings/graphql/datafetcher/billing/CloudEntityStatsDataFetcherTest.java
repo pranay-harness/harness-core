@@ -60,7 +60,7 @@ public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
     sort.addAll(Arrays.asList(getAscBlended(), getAscTime(), getDescUnBlended()));
 
     when(preAggregateBillingService.getPreAggregateBillingEntityStats(
-             anyString(), anyList(), anyList(), anyList(), anyList(), any()))
+             anyString(), anyList(), anyList(), anyList(), anyList(), any(), anyList()))
         .thenReturn(PreAggregateBillingEntityStatsDTO.builder()
                         .stats(Arrays.asList(PreAggregateBillingEntityDataPoint.builder()
                                                  .awsService(SERVICE_NAME)

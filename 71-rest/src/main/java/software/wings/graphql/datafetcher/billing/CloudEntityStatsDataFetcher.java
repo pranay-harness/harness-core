@@ -24,12 +24,23 @@ public class CloudEntityStatsDataFetcher
   @Inject PreAggregateBillingService preAggregateBillingService;
   @Inject CloudBillingHelper cloudBillingHelper;
 
+  private static final String startTimeColumnNameConst = "startTime";
+
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort,
       Integer limit, Integer offset) {
     String queryTableName = cloudBillingHelper.getCloudProviderTableName();
+
+    aggregateFunction.add(CloudBillingAggregate.builder()
+                              .operationType(QLCCMAggregateOperation.MIN)
+                              .columnName(startTimeColumnNameConst)
+                              .build());
+    aggregateFunction.add(CloudBillingAggregate.builder()
+                              .operationType(QLCCMAggregateOperation.MAX)
+                              .columnName(startTimeColumnNameConst)
+                              .build());
 
     return preAggregateBillingService.getPreAggregateBillingEntityStats(accountId,
         Optional.ofNullable(aggregateFunction)
@@ -52,7 +63,7 @@ public class CloudEntityStatsDataFetcher
             .orElseGet(Stream::empty)
             .map(CloudBillingSortCriteria::toOrderObject)
             .collect(Collectors.toList()),
-        queryTableName);
+        queryTableName, filters);
   }
 
   @Override

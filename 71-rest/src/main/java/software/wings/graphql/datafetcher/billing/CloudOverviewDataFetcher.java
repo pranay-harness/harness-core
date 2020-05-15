@@ -48,7 +48,7 @@ public class CloudOverviewDataFetcher extends AbstractStatsDataFetcherWithAggreg
             .orElseGet(Stream::empty)
             .map(CloudBillingSortCriteria::toOrderObject)
             .collect(Collectors.toList()),
-        queryTableName);
+        queryTableName, filters);
   }
 
   @Override

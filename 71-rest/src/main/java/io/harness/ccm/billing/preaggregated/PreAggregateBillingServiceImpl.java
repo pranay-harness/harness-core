@@ -14,6 +14,7 @@ import io.harness.ccm.setup.CECloudAccountDao;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ce.CECloudAccount;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -60,12 +61,23 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   @Override
   public PreAggregateBillingEntityStatsDTO getPreAggregateBillingEntityStats(String accountId,
       List<SqlObject> aggregateFunction, List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort,
-      String queryTableName) {
+      String queryTableName, List<CloudBillingFilter> filters) {
     Preconditions.checkNotNull(
         groupByObjects, "Queries to getPreAggregateBillingEntityStats need at least one groupBy");
     String entityDataQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort, false);
     // Replacing the Default Table with the Table in the context
     entityDataQuery = entityDataQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
+    Map<String, String> linkedAccountMap =
+        isAWSLinkedAccountGroupByPresent(groupByObjects) ? linkedAccountsMap(accountId) : Collections.emptyMap();
+
+    List<CloudBillingFilter> trendFilters = dataHelper.getTrendFilters(filters);
+    Instant trendStartInstant =
+        Instant.ofEpochMilli(dataHelper.getStartTimeFilter(trendFilters).getValue().longValue());
+    String prevEntityDataQuery = dataHelper.getQuery(
+        aggregateFunction, groupByObjects, dataHelper.filtersToConditions(trendFilters), sort, false);
+    prevEntityDataQuery = prevEntityDataQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
+    Map<String, PreAggregatedCostData> idToPrevBillingAmountData = getPrevAggregatedEntityData(prevEntityDataQuery);
+
     logger.info("getPreAggregateBillingEntityStats Query {}", entityDataQuery);
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(entityDataQuery).build();
     TableResult result = null;
@@ -76,8 +88,22 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
       Thread.currentThread().interrupt();
       return null;
     }
-    return dataHelper.convertToPreAggregatesEntityData(result,
-        isAWSLinkedAccountGroupByPresent(groupByObjects) ? linkedAccountsMap(accountId) : Collections.emptyMap());
+    return dataHelper.convertToPreAggregatesEntityData(
+        result, linkedAccountMap, idToPrevBillingAmountData, filters, trendStartInstant);
+  }
+
+  private Map<String, PreAggregatedCostData> getPrevAggregatedEntityData(String prevEntityDataQuery) {
+    logger.info("getPreviousPreAggregateBillingEntityStats Query {}", prevEntityDataQuery);
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(prevEntityDataQuery).build();
+    TableResult result = null;
+    try {
+      result = bigQueryService.get().query(queryConfig);
+    } catch (InterruptedException e) {
+      logger.error("Failed to get getPreviousPreAggregateBillingEntityStats. {}", e);
+      Thread.currentThread().interrupt();
+      return null;
+    }
+    return dataHelper.convertToIdToPrevBillingData(result);
   }
 
   @Override
@@ -85,13 +111,19 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
       List<Condition> conditions, String queryTableName, List<CloudBillingFilter> filters) {
     PreAggregatedCostDataStats preAggregatedCostDataStats =
         getAggregatedCostData(aggregateFunction, conditions, queryTableName);
+    List<CloudBillingFilter> trendFilters = dataHelper.getTrendFilters(filters);
+    Instant trendStartInstant =
+        Instant.ofEpochMilli(dataHelper.getStartTimeFilter(trendFilters).getValue().longValue());
+    PreAggregatedCostDataStats prevPreAggregatedCostDataStats =
+        getAggregatedCostData(aggregateFunction, dataHelper.filtersToConditions(trendFilters), queryTableName);
     if (preAggregatedCostDataStats != null) {
       return PreAggregateBillingTrendStatsDTO.builder()
-          .blendedCost(
-              dataHelper.getCostBillingStats(preAggregatedCostDataStats.getBlendedCost(), filters, TOTAL_COST_LABEL))
-          .unBlendedCost(
-              dataHelper.getCostBillingStats(preAggregatedCostDataStats.getUnBlendedCost(), filters, TOTAL_COST_LABEL))
-          .cost(dataHelper.getCostBillingStats(preAggregatedCostDataStats.getCost(), filters, TOTAL_COST_LABEL))
+          .blendedCost(dataHelper.getCostBillingStats(preAggregatedCostDataStats.getBlendedCost(),
+              prevPreAggregatedCostDataStats.getBlendedCost(), filters, TOTAL_COST_LABEL, trendStartInstant))
+          .unBlendedCost(dataHelper.getCostBillingStats(preAggregatedCostDataStats.getUnBlendedCost(),
+              prevPreAggregatedCostDataStats.getUnBlendedCost(), filters, TOTAL_COST_LABEL, trendStartInstant))
+          .cost(dataHelper.getCostBillingStats(preAggregatedCostDataStats.getCost(),
+              prevPreAggregatedCostDataStats.getCost(), filters, TOTAL_COST_LABEL, trendStartInstant))
           .build();
     } else {
       return PreAggregateBillingTrendStatsDTO.builder().build();
@@ -137,11 +169,22 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
 
   @Override
   public PreAggregateCloudOverviewDataDTO getPreAggregateBillingOverview(List<SqlObject> aggregateFunction,
-      List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String queryTableName) {
+      List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String queryTableName,
+      List<CloudBillingFilter> filters) {
     String cloudOverviewQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort, false);
     // Replacing the Default Table with the Table in the context
     cloudOverviewQuery = cloudOverviewQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
     logger.info("getPreAggregateBillingOverview Query {}", cloudOverviewQuery);
+
+    List<CloudBillingFilter> trendFilters = dataHelper.getTrendFilters(filters);
+    Instant trendStartInstant =
+        Instant.ofEpochMilli(dataHelper.getStartTimeFilter(trendFilters).getValue().longValue());
+    String prevCloudOverviewQuery = dataHelper.getQuery(
+        aggregateFunction, groupByObjects, dataHelper.filtersToConditions(trendFilters), sort, false);
+    prevCloudOverviewQuery =
+        prevCloudOverviewQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
+    Map<String, PreAggregatedCostData> idToPrevOverviewAmountData = getPrevOverviewData(prevCloudOverviewQuery);
+
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(cloudOverviewQuery).build();
     TableResult result = null;
     try {
@@ -151,7 +194,21 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
       Thread.currentThread().interrupt();
       return null;
     }
-    return dataHelper.convertToPreAggregatesOverview(result);
+    return dataHelper.convertToPreAggregatesOverview(result, idToPrevOverviewAmountData, filters, trendStartInstant);
+  }
+
+  private Map<String, PreAggregatedCostData> getPrevOverviewData(String prevCloudOverviewQuery) {
+    logger.info("getPreviousPreAggregateBillingOverview Query {}", prevCloudOverviewQuery);
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(prevCloudOverviewQuery).build();
+    TableResult result = null;
+    try {
+      result = bigQueryService.get().query(queryConfig);
+    } catch (InterruptedException e) {
+      logger.error("Failed to get getPreviousPreAggregateBillingOverview. {}", e);
+      Thread.currentThread().interrupt();
+      return null;
+    }
+    return dataHelper.convertIdToPrevOverviewBillingData(result);
   }
 
   private Map<String, String> linkedAccountsMap(String harnessAccountId) {

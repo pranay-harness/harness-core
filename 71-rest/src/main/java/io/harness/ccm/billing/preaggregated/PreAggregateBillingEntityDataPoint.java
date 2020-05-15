@@ -1,9 +1,9 @@
 package io.harness.ccm.billing.preaggregated;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @Builder
 public class PreAggregateBillingEntityDataPoint {
   String id;
