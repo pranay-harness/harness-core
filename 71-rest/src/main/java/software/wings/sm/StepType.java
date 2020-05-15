@@ -472,8 +472,9 @@ public enum StepType {
       asList(PhaseType.NON_ROLLBACK)),
 
   // APM
-  APP_DYNAMICS(AppDynamicsState.class, APPDYNAMICS, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
-      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  APP_DYNAMICS(AppDynamicsState.class, APPDYNAMICS, asList(APM),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.SPOTINST_LISTENER_UPDATE), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   NEW_RELIC(NewRelicState.class, WorkflowServiceHelper.NEW_RELIC, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
       asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   INSTANA(InstanaState.class, WorkflowServiceHelper.INSTANA, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
@@ -499,8 +500,9 @@ public enum StepType {
       asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   BUG_SNAG(BugsnagState.class, WorkflowServiceHelper.BUG_SNAG, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
       asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)), //
-  ELK(ElkAnalysisState.class, WorkflowServiceHelper.ELK, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
-      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  ELK(ElkAnalysisState.class, WorkflowServiceHelper.ELK, asList(LOG),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.SPOTINST_LISTENER_UPDATE), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   SPLUNKV2(SplunkV2State.class, SPLUNK_V2, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
       asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   STACK_DRIVER_LOG(StackDriverLogState.class, STACKDRIVER_LOG, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
