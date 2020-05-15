@@ -12,5 +12,5 @@ import lombok.Value;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ImportedTemplateMetadata implements TemplateMetadata {
-  private String defaultVersion;
+  private Long defaultVersion;
 }

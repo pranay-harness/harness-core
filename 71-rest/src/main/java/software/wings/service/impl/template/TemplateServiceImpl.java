@@ -34,6 +34,7 @@ import static software.wings.beans.template.TemplateVersion.ChangeType.CREATED;
 import static software.wings.beans.template.TemplateVersion.TEMPLATE_UUID_KEY;
 import static software.wings.beans.template.VersionedTemplate.TEMPLATE_ID_KEY;
 import static software.wings.common.TemplateConstants.APP_PREFIX;
+import static software.wings.common.TemplateConstants.DEFAULT_TAG;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.IMPORTED_TEMPLATE_PREFIX;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
@@ -143,14 +144,15 @@ public class TemplateServiceImpl implements TemplateService {
   ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
   @Override
-  public PageResponse<Template> list(PageRequest<Template> pageRequest, List<String> galleryKeys, String accountId) {
+  public PageResponse<Template> list(
+      PageRequest<Template> pageRequest, List<String> galleryKeys, String accountId, boolean defaultVersion) {
     if (isNotEmpty(galleryKeys)) {
       addSearchFilterForGalleryIds(pageRequest, galleryKeys, accountId);
     }
     final PageResponse<Template> pageResponse = wingsPersistence.query(Template.class, pageRequest);
 
     for (Template template : pageResponse.getResponse()) {
-      setDetailsOfTemplate(template, null);
+      setDetailsOfTemplate(template, null, defaultVersion);
     }
 
     return pageResponse;
@@ -191,13 +193,13 @@ public class TemplateServiceImpl implements TemplateService {
     template.setVersion(1L);
     // Client side keyword generation.
     template.setKeywords(getKeywords(template));
+    processImportedTemplate(template, false);
 
     String templateUuid =
         PersistenceValidator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
 
     getTemplateVersionForCommand(template, templateUuid,
         getImportedTemplateVersion(template.getImportedTemplateDetails(), template.getAccountId()));
-
     wingsPersistence.save(buildTemplateDetails(template, templateUuid));
     Template savedTemplate = get(templateUuid);
 
@@ -215,7 +217,6 @@ public class TemplateServiceImpl implements TemplateService {
     setTemplateFolderForImportedTemplate(template);
     saveOrUpdate(template);
     processTemplate(template);
-
     Template oldTemplate = getOldTemplate(template.getImportedTemplateDetails(), template.getAccountId());
     notNullCheck("Template " + template.getName() + " does not exist", oldTemplate);
     template.setUuid(oldTemplate.getUuid());
@@ -239,6 +240,7 @@ public class TemplateServiceImpl implements TemplateService {
     newVersionedTemplate.setVersion(templateVersion.getVersion());
     newVersionedTemplate.setImportedTemplateVersion(templateVersion.getImportedTemplateVersion());
     saveVersionedTemplate(template, newVersionedTemplate);
+    processImportedTemplate(template, true);
 
     PersistenceValidator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
 
@@ -395,28 +397,52 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   private boolean isDefaultChanged(Template oldTemplate, Template template) {
-    if (template.getTemplateMetadata() != null && template.getTemplateMetadata() instanceof ImportedTemplateMetadata) {
-      if (oldTemplate.getTemplateMetadata() != null
-          && oldTemplate.getTemplateMetadata() instanceof ImportedTemplateMetadata) {
-        ImportedTemplateMetadata oldImportedTemplateMetadata =
-            (ImportedTemplateMetadata) oldTemplate.getTemplateMetadata();
-        ImportedTemplateMetadata importedTemplateMetadata = (ImportedTemplateMetadata) template.getTemplateMetadata();
-        if (oldImportedTemplateMetadata.getDefaultVersion() != null
-            && oldImportedTemplateMetadata.getDefaultVersion().equals(importedTemplateMetadata.getDefaultVersion())) {
-          return true;
-        }
-        return false;
-      }
+    Long oldVersion = null, newVersion = null;
+    if (oldTemplate.getTemplateMetadata() instanceof ImportedTemplateMetadata) {
+      oldVersion = ((ImportedTemplateMetadata) oldTemplate.getTemplateMetadata()).getDefaultVersion();
+    }
+    if (template.getTemplateMetadata() instanceof ImportedTemplateMetadata) {
+      newVersion = ((ImportedTemplateMetadata) template.getTemplateMetadata()).getDefaultVersion();
+    }
+
+    if ((oldVersion == null && newVersion != null)
+        || (oldVersion != null && newVersion != null && !oldVersion.equals(newVersion))) {
       return true;
     }
+
     return false;
+  }
+
+  private TemplateMetadata setCurrentTemplateVersionAsDefault(Template template) {
+    return ImportedTemplateMetadata.builder().defaultVersion(template.getVersion()).build();
+  }
+
+  private void processImportedTemplate(Template template, boolean isUpdate) {
+    if (template.getTemplateMetadata() == null) {
+      ImportedTemplateMetadata importedTemplateMetadata = ImportedTemplateMetadata.builder().build();
+      template.setTemplateMetadata(importedTemplateMetadata);
+    }
+    processTemplateMetadata(template, isUpdate);
   }
 
   private void processTemplateMetadata(Template template, boolean isUpdate) {
     if (template.getTemplateMetadata() instanceof CopiedTemplateMetadata) {
       processCopiedTemplate(template, isUpdate);
+    } else if (template.getTemplateMetadata() instanceof ImportedTemplateMetadata) {
+      processImportedTemplateMetadata(template, isUpdate);
     } else {
       throw new InvalidRequestException("Template Metadata handler not specified");
+    }
+  }
+
+  private void processImportedTemplateMetadata(Template template, boolean isUpdate) {
+    ImportedTemplateMetadata importedTemplateMetadata = (ImportedTemplateMetadata) template.getTemplateMetadata();
+    if (isUpdate) {
+      if (importedTemplateMetadata.getDefaultVersion() == null) {
+        template.setTemplateMetadata(getTemplateMetadata(template.getUuid()));
+      }
+    } else {
+      template.setTemplateMetadata(setCurrentTemplateVersionAsDefault(template));
     }
   }
 
@@ -554,7 +580,7 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   private void setTemplateDetails(Template template, String version) {
-    Long templateVersion = version == null || version.equals("latest") ? template.getVersion() : Long.valueOf(version);
+    Long templateVersion = fetchTemplateVersion(template, version);
     VersionedTemplate versionedTemplate =
         getVersionedTemplate(template.getAccountId(), template.getUuid(), templateVersion);
     notNullCheck(
@@ -601,6 +627,26 @@ public class TemplateServiceImpl implements TemplateService {
         .filter(TemplateVersionKeys.templateUuid, templateId)
         .filter(TemplateVersionKeys.version, version)
         .get();
+  }
+
+  private Long fetchTemplateVersion(Template template, String version) {
+    Long templateVersion = null;
+    if (DEFAULT_TAG.equals(version)) {
+      templateVersion = getDefaultVersion(template);
+    }
+    if (templateVersion == null) {
+      templateVersion = version == null || version.equals(LATEST_TAG) ? template.getVersion() : Long.valueOf(version);
+    }
+    return templateVersion;
+  }
+
+  private Long getDefaultVersion(Template template) {
+    Long version = null;
+    if (template.getTemplateMetadata() instanceof ImportedTemplateMetadata) {
+      version = ((ImportedTemplateMetadata) template.getTemplateMetadata()).getDefaultVersion();
+    }
+    notNullCheck("Template [" + template.getName() + "] with version default does not exist", version);
+    return version;
   }
 
   @Override
@@ -1051,6 +1097,15 @@ public class TemplateServiceImpl implements TemplateService {
     return addUserKeyWords(template.getKeywords(), generatedKeywords);
   }
 
+  private void setDetailsOfTemplate(Template template, String version, boolean defaultVersion) {
+    if (version != null || !defaultVersion) {
+      setDetailsOfTemplate(template, version);
+    }
+    if (importedTemplateService.isImported(template.getUuid(), template.getAccountId())) {
+      setDetailsOfTemplate(template, DEFAULT_TAG);
+    }
+  }
+
   private void setDetailsOfTemplate(Template template, String version) {
     if (importedTemplateService.isImported(template.getUuid(), template.getAccountId())) {
       setReferencedTemplateDetails(template, version);
@@ -1242,7 +1297,12 @@ public class TemplateServiceImpl implements TemplateService {
 
   @Override
   public String getYamlOfTemplate(String templateId, Long version) {
-    Template template = get(templateId, String.valueOf(version));
+    return getYamlOfTemplate(templateId, String.valueOf(version));
+  }
+
+  @Override
+  public String getYamlOfTemplate(String templateId, String version) {
+    Template template = get(templateId, version);
     YamlType yamlType;
     if (GLOBAL_APP_ID.equals(template.getAppId())) {
       yamlType = YamlType.GLOBAL_TEMPLATE_LIBRARY;

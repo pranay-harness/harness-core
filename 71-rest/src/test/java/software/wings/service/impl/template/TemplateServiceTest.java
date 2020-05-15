@@ -34,6 +34,7 @@ import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommand
 import static software.wings.beans.template.TemplateGallery.GalleryKey;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateFolderPath;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
+import static software.wings.common.TemplateConstants.HARNESS_COMMAND_LIBRARY_GALLERY;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.IMPORTED_TEMPLATE_PREFIX;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_V2_INSTALL_PATH;
@@ -68,6 +69,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.template.CopiedTemplateMetadata;
 import software.wings.beans.template.ImportedTemplate;
+import software.wings.beans.template.ImportedTemplateMetadata;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
@@ -220,7 +222,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
 
     PageRequest<Template> pageRequest = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
     List<Template> templates = templateService.list(pageRequest,
-        Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), GLOBAL_ACCOUNT_ID);
+        Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), GLOBAL_ACCOUNT_ID, false);
 
     assertThat(templates).isNotEmpty();
     Template template = templates.stream().findFirst().get();
@@ -728,7 +730,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
 
     PageRequest<Template> pageRequest = aPageRequest().addFilter("appId", EQ, APP_ID).build();
     List<Template> templates = templateService.list(pageRequest,
-        Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), GLOBAL_ACCOUNT_ID);
+        Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), GLOBAL_ACCOUNT_ID, false);
 
     assertThat(templates).isNotEmpty();
     Template template = templates.stream().findFirst().get();
@@ -1091,6 +1093,47 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Test
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
+  public void shouldGetAndListDefaultImportedTemplate() {
+    final String commandId = "COMMAND_ID";
+    final String commandStoreId = "COMMAND_STORE_ID";
+    saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId, "1.2", false);
+    Template template = getSshCommandTemplate();
+    template.setTemplateObject(SshCommandTemplate.builder().build());
+    saveImportedTemplate(template, commandId, commandStoreId, "1.3", true);
+    PageRequest<Template> pageRequest = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
+
+    List<Template> templates = templateService.list(
+        pageRequest, Collections.singletonList(HARNESS_COMMAND_LIBRARY_GALLERY), GLOBAL_ACCOUNT_ID, true);
+    assertThat(templates.get(0).getVersion()).isEqualTo(1L);
+
+    Template template_1 = templateService.get(template.getUuid(), "default");
+    assertThat(template_1.getVersion()).isEqualTo(1L);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void shouldUpdateDefaultVersionAndGetImportedTemplate() {
+    final String commandId = "COMMAND_ID";
+    final String commandStoreId = "COMMAND_STORE_ID";
+    saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId, "1.2", false);
+    Template template = getSshCommandTemplate();
+    template.setTemplateObject(SshCommandTemplate.builder().build());
+    template.setTemplateMetadata(ImportedTemplateMetadata.builder().defaultVersion(2L).build());
+    saveImportedTemplate(template, commandId, commandStoreId, "1.3", true);
+    PageRequest<Template> pageRequest = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
+
+    List<Template> templates = templateService.list(
+        pageRequest, Collections.singletonList(HARNESS_COMMAND_LIBRARY_GALLERY), GLOBAL_ACCOUNT_ID, true);
+    assertThat(templates.get(0).getVersion()).isEqualTo(2L);
+
+    Template template_1 = templateService.get(template.getUuid(), "default");
+    assertThat(template_1.getVersion()).isEqualTo(2L);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
   public void nonImportedTemplateShouldNotBeReturnedByListImportedTemplateVersions() {
     templateService.save(getSshCommandTemplate());
     ImportedCommand importedCommand =
@@ -1301,7 +1344,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
 
     // Case 0: empty input
     PageRequest<Template> pageRequest_0 = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
-    List<Template> templates_0 = templateService.list(pageRequest_0, EMPTY_LIST, GLOBAL_ACCOUNT_ID);
+    List<Template> templates_0 = templateService.list(pageRequest_0, EMPTY_LIST, GLOBAL_ACCOUNT_ID, false);
 
     assertThat(templates_0).isNotEmpty();
     assertThat(templates_0.stream()
@@ -1319,7 +1362,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
 
     // Case 1: null as input
     PageRequest<Template> pageRequest_1 = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
-    List<Template> templates_1 = templateService.list(pageRequest_1, null, GLOBAL_ACCOUNT_ID);
+    List<Template> templates_1 = templateService.list(pageRequest_1, null, GLOBAL_ACCOUNT_ID, false);
 
     assertThat(templates_1).isNotEmpty();
     assertThat(templates_1.stream()
@@ -1338,7 +1381,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     // Case 2: Single filter as input.
     PageRequest<Template> pageRequest_2 = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
     List<Template> templates_2 = templateService.list(pageRequest_2,
-        Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), GLOBAL_ACCOUNT_ID);
+        Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), GLOBAL_ACCOUNT_ID, false);
 
     assertThat(templates_2).isNotEmpty();
     assertThat(templates_2.stream()
@@ -1352,7 +1395,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     PageRequest<Template> pageRequest_3 = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
     List<Template> templates_3 = templateService.list(pageRequest_3,
         Arrays.asList(GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY.name(), GalleryKey.ACCOUNT_TEMPLATE_GALLERY.name()),
-        GLOBAL_ACCOUNT_ID);
+        GLOBAL_ACCOUNT_ID, false);
 
     assertThat(templates_3).isNotEmpty();
     assertThat(templates_3.stream()
@@ -1370,7 +1413,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
 
     // Case 4: inexistent galleryKey
     PageRequest<Template> pageRequest_4 = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
-    assertThatThrownBy(() -> templateService.list(pageRequest_4, Arrays.asList("random"), GLOBAL_ACCOUNT_ID));
+    assertThatThrownBy(() -> templateService.list(pageRequest_4, Arrays.asList("random"), GLOBAL_ACCOUNT_ID, false));
   }
 
   private Template saveImportedTemplate(
@@ -1399,7 +1442,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
       wingsPersistence.save(importedTemplate);
     }
 
-    return template;
+    return templateService.get(template.getUuid());
   }
 
   @Test

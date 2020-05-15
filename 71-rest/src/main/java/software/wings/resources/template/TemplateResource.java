@@ -48,11 +48,12 @@ public class TemplateResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Template>> list(@QueryParam("accountId") String accountId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") List<String> appIds,
-      @BeanParam PageRequest<Template> pageRequest, @QueryParam("galleryKeys") List<String> galleryKeys) {
+      @BeanParam PageRequest<Template> pageRequest, @QueryParam("galleryKeys") List<String> galleryKeys,
+      @QueryParam("defaultVersion") boolean defaultVersion) {
     if (isNotEmpty(appIds)) {
       pageRequest.addFilter(TemplateKeys.appId, IN, appIds.toArray());
     }
-    return new RestResponse<>(templateService.list(pageRequest, galleryKeys, accountId));
+    return new RestResponse<>(templateService.list(pageRequest, galleryKeys, accountId, defaultVersion));
   }
 
   /**
@@ -165,7 +166,7 @@ public class TemplateResource {
   @Timed
   @ExceptionMetered
   public RestResponse<String> getYaml(@QueryParam("accountId") String accountId,
-      @PathParam("templateId") String templateId, @PathParam("version") Long version) {
+      @PathParam("templateId") String templateId, @PathParam("version") String version) {
     return new RestResponse<>(templateService.getYamlOfTemplate(templateId, version));
   }
 }

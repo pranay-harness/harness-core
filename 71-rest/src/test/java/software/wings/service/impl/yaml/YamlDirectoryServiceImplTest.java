@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -96,7 +97,7 @@ public class YamlDirectoryServiceImplTest extends WingsBaseTest {
     final Template template1 = Template.builder().name("template1").folderId("root_folder").type(SHELL_SCRIPT).build();
     final Template template2 = Template.builder().folderId("root_folder").name("template2").type(SHELL_SCRIPT).build();
     PageResponse<Template> pageResponse = aPageResponse().withResponse(asList(template1, template2)).build();
-    doReturn(pageResponse).when(templateService).list(any(PageRequest.class), anyList(), anyString());
+    doReturn(pageResponse).when(templateService).list(any(PageRequest.class), anyList(), anyString(), anyBoolean());
     doReturn(GalleryKey.ACCOUNT_TEMPLATE_GALLERY).when(templateGalleryService).getAccountGalleryKey();
 
     final FolderNode folderNode = yamlDirectoryService.doTemplateLibraryForApp(application, directoryPath);
@@ -129,7 +130,7 @@ public class YamlDirectoryServiceImplTest extends WingsBaseTest {
     final Template template2 =
         Template.builder().folderId("child_folder").name("child_folder_template").type(SHELL_SCRIPT).build();
     PageResponse<Template> pageResponse = aPageResponse().withResponse(asList(template1, template2)).build();
-    doReturn(pageResponse).when(templateService).list(any(PageRequest.class), anyList(), anyString());
+    doReturn(pageResponse).when(templateService).list(any(PageRequest.class), anyList(), anyString(), anyBoolean());
     doReturn(GalleryKey.ACCOUNT_TEMPLATE_GALLERY).when(templateGalleryService).getAccountGalleryKey();
 
     TemplateFolder childFolder = TemplateFolder.builder().uuid("child_folder").name("child_folder_1").build();
