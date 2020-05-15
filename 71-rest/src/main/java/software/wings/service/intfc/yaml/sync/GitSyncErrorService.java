@@ -37,4 +37,6 @@ public interface GitSyncErrorService {
   PageResponse<GitProcessingError> fetchGitConnectivityIssues(PageRequest<GitProcessingError> req, String accountId);
 
   long getTotalGitErrorsCount(String accountId);
+
+  Integer getTotalGitCommitsWithErrors(String accountId, String appId);
 }

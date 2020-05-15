@@ -103,6 +103,21 @@ public class GitSyncResource {
   }
 
   /**
+   * List all commits count for git to harness errors
+   *
+   * @param accountId   the account id
+   * @param appId   the appId id
+   * @return the rest response
+   */
+  @GET
+  @Path("errors/gitToHarness/commits/count")
+  public RestResponse<Integer> listGitToHarnessErrorsCommits(
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("appId") String appId) {
+    Integer commitsCount = gitSyncErrorService.getTotalGitCommitsWithErrors(accountId, appId);
+    return new RestResponse<>(commitsCount);
+  }
+
+  /**
    * List all  git to harness errors for fileView
    *
    * @param pageRequest the page request
