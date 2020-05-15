@@ -1664,7 +1664,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     cvConfiguration.setBaselineEndMinute(startMin + 60);
 
     wingsPersistence.save(cvConfiguration);
-
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(cvConfiguration));
     LogMLAnalysisRecord logAnalysisRecord = LogMLAnalysisRecord.builder()
                                                 .appId(appId)
                                                 .cvConfigId(cvConfigId)
