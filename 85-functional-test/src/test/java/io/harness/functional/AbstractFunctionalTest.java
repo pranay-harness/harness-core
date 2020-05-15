@@ -12,6 +12,8 @@ import graphql.GraphQLContext;
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
+import io.harness.execution.PlanExecution;
+import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.multiline.MultilineStringMixin;
 import io.harness.rest.RestResponse;
 import io.harness.rule.FunctionalTestRule;
@@ -24,6 +26,7 @@ import io.harness.testframework.graphql.GraphQLTestMixin;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +55,9 @@ import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.GenericType;
 
@@ -183,6 +188,43 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     });
 
     return workflowExecutionService.getWorkflowExecution(appId, original.getUuid());
+  }
+
+  public PlanExecution executePlan(String bearerToken, String accountId, String appId, String planType) {
+    PlanExecution original = startPlanExecution(bearerToken, accountId, appId, planType);
+
+    final String finalStatusEnding = "ED";
+    Awaitility.await().atMost(15, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
+      final PlanExecution planExecution = getPlanExecution(original.getUuid());
+      return planExecution != null && planExecution.getStatus().name().endsWith(finalStatusEnding);
+    });
+
+    return getPlanExecution(original.getUuid());
+  }
+
+  private PlanExecution startPlanExecution(String bearerToken, String accountId, String appId, String planType) {
+    GenericType<RestResponse<PlanExecution>> returnType = new GenericType<RestResponse<PlanExecution>>() {};
+
+    Map<String, String> queryParams = new HashMap<>();
+    queryParams.put("accountId", accountId);
+    queryParams.put("appId", appId);
+
+    RestResponse<PlanExecution> response = Setup.portal()
+                                               .auth()
+                                               .oauth2(bearerToken)
+                                               .queryParams(queryParams)
+                                               .contentType(ContentType.JSON)
+                                               .get("/execute2/" + planType)
+                                               .as(returnType.getType());
+
+    return response.getResource();
+  }
+
+  private PlanExecution getPlanExecution(String uuid) {
+    return wingsPersistence.createQuery(PlanExecution.class)
+        .filter(PlanExecutionKeys.uuid, uuid)
+        .project(PlanExecutionKeys.status, true)
+        .get();
   }
 
   private AnalysisContext getWorkflowExecutionWithVerification(
