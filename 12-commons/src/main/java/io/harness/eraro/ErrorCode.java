@@ -416,7 +416,9 @@ public enum ErrorCode {
 
   COMMAND_EXECUTION_ERROR,
 
-  ENGINE_REGISTRY_EXCEPTION;
+  ENGINE_REGISTRY_EXCEPTION,
+
+  ENGINE_IO_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;

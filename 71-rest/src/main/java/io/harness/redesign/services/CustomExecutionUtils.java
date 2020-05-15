@@ -70,7 +70,7 @@ public class CustomExecutionUtils {
                       FacilitatorObtainment.builder()
                           .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
                           .parameters(
-                              DefaultFacilitatorParams.builder().waitDurationSeconds(Duration.ofSeconds(30)).build())
+                              DefaultFacilitatorParams.builder().waitDurationSeconds(Duration.ofSeconds(5)).build())
                           .build())
                   .build())
         .node(
