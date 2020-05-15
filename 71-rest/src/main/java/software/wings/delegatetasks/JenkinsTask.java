@@ -88,8 +88,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         try {
           logger.info("In Jenkins Task Triggering Job {}", jenkinsTaskParams.getJobName());
           logService.save(getAccountId(),
-              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
-                  LogLevel.INFO, "Triggering Jenkins Job : " + jenkinsTaskParams.getJobName(), RUNNING));
+              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
+                  jenkinsTaskParams.getAppId(), LogLevel.INFO,
+                  "Triggering Jenkins Job : " + jenkinsTaskParams.getJobName(), RUNNING));
 
           QueueReference queueItem = jenkins.trigger(jenkinsTaskParams.getJobName(), jenkinsTaskParams.getParameters());
           logger.info("Triggered Job successfully and queued Build  URL {} ",
@@ -100,8 +101,8 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
             jenkinsExecutionResponse.setQueuedBuildUrl(queueItem.getQueueItemUrlPart());
 
             logService.save(getAccountId(),
-                constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
-                    LogLevel.INFO,
+                constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
+                    jenkinsTaskParams.getAppId(), LogLevel.INFO,
                     "Triggered Job successfully and queued Build  URL : " + queueItem.getQueueItemUrlPart()
                         + " and remaining Time (sec): "
                         + (jenkinsTaskParams.getTimeout()
@@ -118,15 +119,15 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
           jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
         } catch (WingsException e) {
           logService.save(getAccountId(),
-              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
-                  LogLevel.ERROR, msg + e.toString(), FAILURE));
+              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
+                  jenkinsTaskParams.getAppId(), LogLevel.ERROR, msg + e.toString(), FAILURE));
           ExceptionLogger.logProcessedMessages(e, DELEGATE, logger);
           executionStatus = ExecutionStatus.FAILED;
           jenkinsExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
         } catch (Exception e) {
           logService.save(getAccountId(),
-              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
-                  LogLevel.ERROR, msg + e.toString(), FAILURE));
+              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
+                  jenkinsTaskParams.getAppId(), LogLevel.ERROR, msg + e.toString(), FAILURE));
           logger.error(msg, e);
           executionStatus = ExecutionStatus.FAILED;
           jenkinsExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
@@ -149,8 +150,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
                 "Error occurred while retrieving the build {} status.  Job might have been deleted between poll intervals",
                 jenkinsTaskParams.getQueuedBuildUrl());
             logService.save(getAccountId(),
-                constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
-                    LogLevel.INFO, "Failed to get the build status " + jenkinsTaskParams.getQueuedBuildUrl(),
+                constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
+                    jenkinsTaskParams.getAppId(), LogLevel.INFO,
+                    "Failed to get the build status " + jenkinsTaskParams.getQueuedBuildUrl(),
                     CommandExecutionStatus.FAILURE));
             jenkinsExecutionResponse.setErrorMessage(
                 "Failed to get the build status. Job might have been deleted between poll intervals.");
@@ -162,28 +164,29 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
           jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
 
           logService.save(getAccountId(),
-              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
-                  LogLevel.INFO,
+              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
+                  jenkinsTaskParams.getAppId(), LogLevel.INFO,
                   "Waiting for Jenkins task completion. Remaining time (sec): "
                       + (jenkinsTaskParams.getTimeout() - (System.currentTimeMillis() - jenkinsTaskParams.getStartTs()))
                           / 1000,
                   RUNNING));
 
-          BuildWithDetails jenkinsBuildWithDetails = waitForJobExecutionToFinish(
-              jenkinsBuild, jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName());
+          BuildWithDetails jenkinsBuildWithDetails = waitForJobExecutionToFinish(jenkinsBuild,
+              jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), jenkinsTaskParams.getAppId());
           jenkinsExecutionResponse.setJobUrl(jenkinsBuildWithDetails.getUrl());
 
           if (jenkinsTaskParams.isInjectEnvVars()) {
             logService.save(getAccountId(),
-                constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
-                    LogLevel.INFO, "Collecting environment variables for Jenkins task", RUNNING));
+                constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
+                    jenkinsTaskParams.getAppId(), LogLevel.INFO, "Collecting environment variables for Jenkins task",
+                    RUNNING));
 
             try {
               jenkinsExecutionResponse.setEnvVars(jenkins.getEnvVars(jenkinsBuildWithDetails.getUrl()));
             } catch (WingsException e) {
               logService.save(getAccountId(),
-                  constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
-                      LogLevel.ERROR,
+                  constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
+                      jenkinsTaskParams.getAppId(), LogLevel.ERROR,
                       (String) e.getParams().getOrDefault(
                           "message", "Failed to collect environment variables from Jenkins"),
                       FAILURE));
@@ -192,8 +195,8 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
           }
 
           logService.save(getAccountId(),
-              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
-                  LogLevel.INFO, "Jenkins task execution complete", SUCCESS));
+              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(),
+                  jenkinsTaskParams.getAppId(), LogLevel.INFO, "Jenkins task execution complete", SUCCESS));
 
           BuildResult buildResult = jenkinsBuildWithDetails.getResult();
           jenkinsExecutionResponse.setJenkinsResult(buildResult.toString());
@@ -234,8 +237,8 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     return jenkinsExecutionResponse;
   }
 
-  private BuildWithDetails waitForJobExecutionToFinish(Build jenkinsBuild, String activityId, String unitName)
-      throws IOException {
+  private BuildWithDetails waitForJobExecutionToFinish(
+      Build jenkinsBuild, String activityId, String unitName, String appId) throws IOException {
     BuildWithDetails jenkinsBuildWithDetails = null;
     AtomicInteger consoleLogsSent = new AtomicInteger();
     do {
@@ -243,7 +246,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       sleep(Duration.ofSeconds(5));
       try {
         jenkinsBuildWithDetails = jenkinsBuild.details();
-        saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, unitName, RUNNING);
+        saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, unitName, RUNNING, appId);
       } catch (IOException e) {
         if (e instanceof HttpResponseException) {
           if (((HttpResponseException) e).getStatusCode() == 404) {
@@ -275,7 +278,8 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
   }
 
   private void saveConsoleLogs(BuildWithDetails jenkinsBuildWithDetails, AtomicInteger consoleLogsAlreadySent,
-      String activityId, String stateName, CommandExecutionStatus commandExecutionStatus) throws IOException {
+      String activityId, String stateName, CommandExecutionStatus commandExecutionStatus, String appId)
+      throws IOException {
     String consoleOutputText = jenkinsBuildWithDetails.getConsoleOutputText();
     if (isNotBlank(consoleOutputText)) {
       String[] consoleLines = consoleOutputText.split("\r\n");
@@ -283,7 +287,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         Log log = aLog()
                       .withActivityId(activityId)
                       .withCommandUnitName(stateName)
-                      .withAppId(getAppId())
+                      .withAppId(appId)
                       .withLogLevel(LogLevel.INFO)
                       .withLogLine("-------------------------- truncating "
                           + (consoleLines.length - NUM_OF_LOGS_TO_KEEP) + " lines --------------------------")
@@ -297,7 +301,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         Log log = aLog()
                       .withActivityId(activityId)
                       .withCommandUnitName(stateName)
-                      .withAppId(getAppId())
+                      .withAppId(appId)
                       .withLogLevel(LogLevel.INFO)
                       .withLogLine(consoleLines[i])
                       .withExecutionResult(commandExecutionStatus)

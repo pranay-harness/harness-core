@@ -253,6 +253,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     }
 
     String infrastructureMappingId = context.fetchInfraMappingId();
+    String appId = ((ExecutionContextImpl) context).fetchRequiredApp().getAppId();
     JenkinsTaskParams jenkinsTaskParams = JenkinsTaskParams.builder()
                                               .jenkinsConfig(jenkinsConfig)
                                               .encryptedDataDetails(secretManager.getEncryptionDetails(
@@ -266,6 +267,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
                                               .injectEnvVars(injectEnvVars)
                                               .subTaskType(JenkinsSubTaskType.START_TASK)
                                               .queuedBuildUrl(null)
+                                              .appId(appId)
                                               .build();
 
     DelegateTask delegateTask =
@@ -335,7 +337,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
           .errorMessage("Jenkins Server was deleted. Please update with an appropriate server.")
           .build();
     }
-
+    String appId = ((ExecutionContextImpl) context).fetchRequiredApp().getAppId();
     JenkinsTaskParams jenkinsTaskParams = JenkinsTaskParams.builder()
                                               .jenkinsConfig(jenkinsConfig)
                                               .encryptedDataDetails(secretManager.getEncryptionDetails(
@@ -346,6 +348,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
                                               .injectEnvVars(injectEnvVars)
                                               .subTaskType(JenkinsSubTaskType.POLL_TASK)
                                               .queuedBuildUrl(jenkinsExecutionResponse.queuedBuildUrl)
+                                              .appId(appId)
                                               .build();
 
     String waitId = UUIDGenerator.generateUuid();
