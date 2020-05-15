@@ -635,7 +635,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     // pollingForTasks.set(false);
     try {
       DelegateParams delegateParams = builder.status(Status.ENABLED.name()).lastHeartBeat(clock.millis()).build();
-      socket.fire(delegateParams);
+      socket.fire(JsonUtils.asJson(delegateParams));
     } catch (IOException e) {
       logger.error("Error connecting", e);
     }
