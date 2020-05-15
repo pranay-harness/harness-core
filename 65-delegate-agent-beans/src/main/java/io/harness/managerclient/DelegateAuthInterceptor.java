@@ -1,6 +1,7 @@
 package io.harness.managerclient;
 
-import io.harness.delegate.service.DelegateAgentServiceImpl;
+import static io.harness.network.Localhost.getLocalHostName;
+
 import io.harness.security.TokenGenerator;
 import okhttp3.Interceptor;
 import okhttp3.Request;
@@ -8,10 +9,9 @@ import okhttp3.Response;
 
 import java.io.IOException;
 
-/**
- * Created by peeyushaggarwal on 12/5/16.
- */
 public class DelegateAuthInterceptor implements Interceptor {
+  private static final String HOST_NAME = getLocalHostName();
+
   private TokenGenerator tokenGenerator;
 
   public DelegateAuthInterceptor(TokenGenerator tokenGenerator) {
@@ -24,7 +24,7 @@ public class DelegateAuthInterceptor implements Interceptor {
     String host = chain.request().url().host();
     int port = chain.request().url().port();
 
-    String token = tokenGenerator.getToken(scheme, host, port, DelegateAgentServiceImpl.getHostName());
+    String token = tokenGenerator.getToken(scheme, host, port, HOST_NAME);
 
     Request request = chain.request();
     return chain.proceed(request.newBuilder().header("Authorization", "Delegate " + token).build());

@@ -3,8 +3,6 @@ package io.harness.managerclient;
 import com.google.inject.AbstractModule;
 
 import io.harness.security.TokenGenerator;
-import io.harness.verification.VerificationServiceClient;
-import io.harness.verification.VerificationServiceClientFactory;
 
 /**
  * Created by peeyushaggarwal on 11/29/16.
