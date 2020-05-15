@@ -483,4 +483,22 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
     assertThat(error.getConnectorName()).isEqualTo(settingName);
     assertThat(error.getMessage()).isEqualTo(errorMessage);
   }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void test_getTotalGitCommitsWithErrors() {
+    final GitToHarnessErrorDetails gitSyncErrorDetails =
+        GitToHarnessErrorDetails.builder().gitCommitId("commitId").previousErrors(Collections.emptyList()).build();
+    final GitSyncError gitSyncError = GitSyncError.builder()
+                                          .accountId(accountId)
+                                          .gitSyncDirection(GIT_TO_HARNESS.name())
+                                          .yamlFilePath("filePath")
+                                          .additionalErrorDetails(gitSyncErrorDetails)
+                                          .build();
+    gitSyncError.setAppId(appId);
+    wingsPersistence.save(gitSyncError);
+    int count = gitSyncErrorService.getTotalGitCommitsWithErrors(accountId, appId);
+    assertThat(count).isEqualTo(1);
+  }
 }

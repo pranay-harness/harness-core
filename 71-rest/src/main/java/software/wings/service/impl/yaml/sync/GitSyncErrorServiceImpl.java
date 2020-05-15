@@ -248,6 +248,33 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         .build();
   }
 
+  @Override
+  public Integer getTotalGitCommitsWithErrors(String accountId, String appId) {
+    final Query<GitSyncError> query =
+        wingsPersistence.createQuery(GitSyncError.class).filter(ACCOUNT_ID_KEY, accountId);
+
+    Boolean userHasAtleastOneGitConfigAccess = addAppFilterAndReturnTrueIfUserHasAnyAppAccess(query, appId, accountId);
+    if (!userHasAtleastOneGitConfigAccess) {
+      return 0;
+    }
+
+    addGitToHarnessErrorFilter(query);
+    List<GitToHarnessErrorCommitStats> commitsDetails = new ArrayList<>();
+    wingsPersistence.getDatastore(GitSyncError.class)
+        .createAggregation(GitSyncError.class)
+        .match(query)
+        .group(GitSyncErrorKeys.gitCommitId,
+            grouping(GitToHarnessErrorCommitStatsKeys.errorsForSummaryView,
+                grouping("$push", projection(GitSyncErrorKeys.yamlFilePath, GitSyncErrorKeys.yamlFilePath),
+                    projection(APP_ID_KEY, APP_ID_KEY))))
+        .project(projection("gitCommitId", "_id"), projection(GitToHarnessErrorCommitStatsKeys.errorsForSummaryView))
+        .aggregate(GitToHarnessErrorCommitStats.class)
+        .forEachRemaining(commit -> commitsDetails.add(commit));
+    List<GitToHarnessErrorCommitStats> actualCommitsForThatApp =
+        removeNewAppCommitsInCaseOfSetupFilter(commitsDetails, appId);
+    return isEmpty(actualCommitsForThatApp) ? 0 : actualCommitsForThatApp.size();
+  }
+
   private List<GitToHarnessErrorCommitStats> removeNewAppCommitsInCaseOfSetupFilter(
       List<GitToHarnessErrorCommitStats> gitCommitsDetails, String appId) {
     if (isEmpty(gitCommitsDetails) || !GLOBAL_APP_ID.equals(appId)) {
