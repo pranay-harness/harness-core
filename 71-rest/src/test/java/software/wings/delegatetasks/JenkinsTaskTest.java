@@ -1,8 +1,10 @@
 package software.wings.delegatetasks;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -15,6 +17,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Log.Builder.aLog;
 
 import com.google.inject.Inject;
 
@@ -26,6 +29,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -34,6 +38,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -41,6 +47,8 @@ import org.mockito.junit.MockitoRule;
 import software.wings.WingsBaseTest;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsSubTaskType;
+import software.wings.beans.Log;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.helpers.ext.jenkins.Jenkins;
@@ -65,6 +73,8 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Mock private EncryptionService encryptionService;
   @Mock private DelegateLogService logService;
   @Inject @InjectMocks JenkinsUtils jenkinsUtil;
+  @Captor private ArgumentCaptor<Log> logsCaptor;
+  @Captor private ArgumentCaptor<String> activityCaptor;
 
   private String jenkinsUrl = "http://jenkins";
   private String userName = "user1";
@@ -72,6 +82,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   private String jobName = "job1";
   private String activityId = "activityId";
   private String stateName = "jenkins_state";
+  private String appId = "testAppId";
   private JenkinsConfig jenkinsConfig =
       JenkinsConfig.builder().jenkinsUrl(jenkinsUrl).username(userName).password(password).build();
   private Map<String, String> parameters = new HashMap<>();
@@ -300,6 +311,20 @@ public class JenkinsTaskTest extends WingsBaseTest {
     assertThat(response.getErrorMessage()).isNotEmpty();
   }
 
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldPassAppIdForLoggingScopeTroughJenkinsTaskParams() {
+    JenkinsTaskParams jenkinsTaskParams = buildJenkinsTaskParams();
+    Log log =
+        constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), jenkinsTaskParams.getAppId(),
+            LogLevel.INFO, "Triggering Jenkins Job : " + jenkinsTaskParams.getJobName(), RUNNING);
+
+    logService.save(jenkinsTaskParams.getActivityId(), log);
+    verify(logService).save(activityCaptor.capture(), logsCaptor.capture());
+    assertThat(logsCaptor.getValue().getAppId()).isEqualTo(appId);
+  }
+
   // Helper functions
   private JenkinsTaskParams buildJenkinsTaskParams() {
     return JenkinsTaskParams.builder()
@@ -310,6 +335,19 @@ public class JenkinsTaskTest extends WingsBaseTest {
         .activityId(activityId)
         .filePathsForAssertion(assertions)
         .unitName(stateName)
+        .appId(appId)
+        .build();
+  }
+
+  private Log constructLog(String activityId, String stateName, String appId, LogLevel logLevel, String logLine,
+      CommandExecutionResult.CommandExecutionStatus commandExecutionStatus) {
+    return aLog()
+        .withActivityId(activityId)
+        .withCommandUnitName(stateName)
+        .withAppId(appId)
+        .withLogLevel(logLevel)
+        .withLogLine(logLine)
+        .withExecutionResult(commandExecutionStatus)
         .build();
   }
 }

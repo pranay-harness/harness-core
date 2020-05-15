@@ -18,19 +18,20 @@ import java.util.Map;
 @Data
 @Builder
 public class JenkinsTaskParams implements ExecutionCapabilityDemander {
-  JenkinsConfig jenkinsConfig;
-  List<EncryptedDataDetail> encryptedDataDetails;
-  String jobName;
-  Map<String, String> parameters;
-  Map<String, String> filePathsForAssertion;
-  String activityId;
-  String unitName;
-  boolean unstableSuccess;
-  boolean injectEnvVars;
-  JenkinsSubTaskType subTaskType;
-  String queuedBuildUrl;
-  long timeout;
-  long startTs;
+  private JenkinsConfig jenkinsConfig;
+  private List<EncryptedDataDetail> encryptedDataDetails;
+  private String jobName;
+  private Map<String, String> parameters;
+  private Map<String, String> filePathsForAssertion;
+  private String activityId;
+  private String unitName;
+  private boolean unstableSuccess;
+  private boolean injectEnvVars;
+  private JenkinsSubTaskType subTaskType;
+  private String queuedBuildUrl;
+  private long timeout;
+  private long startTs;
+  private String appId;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
