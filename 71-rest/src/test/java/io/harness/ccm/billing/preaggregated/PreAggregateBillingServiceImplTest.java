@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.Timestamp;
@@ -42,6 +43,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +58,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @InjectMocks PreAggregateBillingServiceImpl preAggregateBillingService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  private static final long currentMillis = Instant.now().toEpochMilli();
+  private static final long currentMillis = 1589328000000L;
   private static final String TABLE_NAME = "tableName";
   private static final String SERVICE_NAME = "service";
   private static final String CLOUD_PROVIDER = "AWS";
@@ -90,6 +92,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
     Condition endTimeCondition =
         BinaryCondition.lessThanOrEq(PreAggregatedTableSchema.startTime, Timestamp.of(calendar2.getTime()));
     conditions.addAll(Arrays.asList(startTimeCondition, endTimeCondition));
+    Map<String, PreAggregatedCostData> idToPrevCostMap = new HashMap<>();
 
     when(bigQueryService.get()).thenReturn(bigQuery);
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenReturn(tableResult);
@@ -97,13 +100,23 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
         .thenReturn(PreAggregatedTableSchema.defaultTableName);
     when(dataHelper.convertToPreAggregatesTimeSeriesData(tableResult))
         .thenReturn(PreAggregateBillingTimeSeriesStatsDTO.builder().stats(null).build());
+    doCallRealMethod().when(dataHelper).getTrendFilters(filters);
+    doCallRealMethod().when(dataHelper).getStartTimeFilter(anyList());
+    doCallRealMethod().when(dataHelper).getEndTimeFilter(anyList());
+    doCallRealMethod().when(dataHelper).getStartTimeBillingFilter(any());
+    doCallRealMethod().when(dataHelper).getEndTimeBillingFilter(any());
+    doCallRealMethod().when(dataHelper).filtersToConditions(anyList());
 
     when(ceCloudAccountDao.getByAWSAccountId(ACCOUNT_ID))
         .thenReturn(Collections.singletonList(
             CECloudAccount.builder().infraAccountId(AWS_ACCOUNT_ID).accountName(AWS_ACCOUNT_NAME).build()));
     Map<String, String> awsLinkedAccountMap = Collections.singletonMap(AWS_ACCOUNT_ID, AWS_ACCOUNT_NAME);
 
-    when(dataHelper.convertToPreAggregatesEntityData(tableResult, awsLinkedAccountMap))
+    when(dataHelper.convertToIdToPrevBillingData(tableResult)).thenReturn(idToPrevCostMap);
+    Instant trendStartTime = Instant.ofEpochSecond(1589155199);
+
+    when(dataHelper.convertToPreAggregatesEntityData(
+             tableResult, awsLinkedAccountMap, idToPrevCostMap, filters, Instant.ofEpochSecond(1589155199)))
         .thenReturn(
             PreAggregateBillingEntityStatsDTO.builder()
                 .stats(Arrays.asList(
@@ -113,8 +126,8 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
     // Setup for Trend Stats Test
     PreAggregatedCostData blendedCostData =
         PreAggregatedCostData.builder().cost(COST).maxStartTime(MIN_START_TIME).minStartTime(MAX_START_TIME).build();
-    filters.addAll(Arrays.asList(getCloudProviderFilter(new String[] {CLOUD_PROVIDER}), getPreAggStartTimeFilter(0L),
-        getPreAggEndTimeFilter(currentMillis)));
+    filters.addAll(Arrays.asList(getCloudProviderFilter(new String[] {CLOUD_PROVIDER}),
+        getPreAggStartTimeFilter(currentMillis - 86400000), getPreAggEndTimeFilter(currentMillis)));
 
     when(dataHelper.convertToAggregatedCostData(tableResult))
         .thenReturn(PreAggregatedCostDataStats.builder().blendedCost(blendedCostData).build());
@@ -122,13 +135,13 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
     PreAggregateCloudOverviewDataPoint preAggregateCloudOverviewDataPoint =
         PreAggregateCloudOverviewDataPoint.builder().name(NAME).cost(TOTAL_COST).trend(TREND).build();
 
-    when(dataHelper.convertToPreAggregatesOverview(tableResult))
+    when(dataHelper.convertToPreAggregatesOverview(tableResult, idToPrevCostMap, filters, trendStartTime))
         .thenReturn(PreAggregateCloudOverviewDataDTO.builder()
                         .totalCost(TOTAL_COST)
                         .data(Collections.singletonList(preAggregateCloudOverviewDataPoint))
                         .build());
 
-    when(dataHelper.getCostBillingStats(blendedCostData, filters, TOTAL_COST_LABEL))
+    when(dataHelper.getCostBillingStats(blendedCostData, blendedCostData, filters, TOTAL_COST_LABEL, trendStartTime))
         .thenReturn(QLBillingStatsInfo.builder()
                         .statsValue(STATS_VALUE)
                         .statsDescription(STATS_DESCRIPTION)
@@ -160,7 +173,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getPreAggregateEntitySeriesStats() {
     PreAggregateBillingEntityStatsDTO stats = preAggregateBillingService.getPreAggregateBillingEntityStats(
-        ACCOUNT_ID, null, groupByObjects, null, Collections.emptyList(), TABLE_NAME);
+        ACCOUNT_ID, null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, filters);
     assertThat(stats.getStats()).isNotNull();
     assertThat(stats.getStats().get(0).getAwsService()).isEqualTo(SERVICE_NAME);
     assertThat(stats.getStats().get(0).getAwsBlendedCost()).isEqualTo(COST);
@@ -171,7 +184,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getPreAggregateBillingOverviewTest() {
     PreAggregateCloudOverviewDataDTO stats = preAggregateBillingService.getPreAggregateBillingOverview(
-        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME);
+        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, filters);
     assertThat(stats.getData()).isNotNull();
     assertThat(stats.getTotalCost()).isEqualTo(TOTAL_COST);
     assertThat(stats.getData().get(0).getTrend()).isEqualTo(TREND);
@@ -185,7 +198,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   public void getPreAggregateBillingOverviewNegativeCase() throws InterruptedException {
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenThrow(new InterruptedException());
     PreAggregateCloudOverviewDataDTO stats = preAggregateBillingService.getPreAggregateBillingOverview(
-        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME);
+        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, filters);
     assertThat(stats).isNull();
   }
 
@@ -195,7 +208,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   public void getPreAggregateEntitySeriesStatsNegativeCase() throws InterruptedException {
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenThrow(new InterruptedException());
     PreAggregateBillingEntityStatsDTO stats = preAggregateBillingService.getPreAggregateBillingEntityStats(
-        ACCOUNT_ID, null, groupByObjects, null, Collections.emptyList(), TABLE_NAME);
+        ACCOUNT_ID, null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, filters);
     assertThat(stats).isNull();
   }
 

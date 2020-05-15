@@ -8,6 +8,7 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityC
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUnBlendedCost;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUsageType;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpCost;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpProduct;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRegion;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.maxPreAggStartTimeConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.minPreAggStartTimeConstant;
@@ -55,7 +56,9 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PreAggregatedBillingDataHelperTest extends CategoryTest {
   @Mock FieldValueList row;
@@ -71,13 +74,17 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
   private static final String CLOUD_PROVIDER = "AWS";
   private static final String BLENDED_COST_LABEL = "blended Cost";
   private static final String AWS_ACCOUNT_NAME = "awsAccountName";
-  private static final long currentMillis = Instant.now().toEpochMilli();
+  private static final long currentMillis = 1589328000000L;
   private static final long MIN_START_TIME = 0L;
   private static final long MAX_START_TIME = currentMillis;
   private static final Double COST = 1.4433;
   private static final Double UNBLENDED_COST = 2.0;
   private static final Double BLENDED_COST = 1.0;
   private static final Double GCP_COST = 3.0;
+  private List<CloudBillingFilter> filters = new ArrayList<>();
+  private static final Map<String, PreAggregatedCostData> idToPrevCostMap = new HashMap<>();
+  private static Instant trendStartTime;
+  private static PreAggregatedCostData preAggregatedCostData;
 
   @Before
   public void setup() {
@@ -96,12 +103,19 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
     when(row.get(entityConstantAwsService)).thenReturn(FieldValue.of(PRIMITIVE, entityConstantAwsService));
     when(row.get(entityConstantAwsUsageType)).thenReturn(FieldValue.of(PRIMITIVE, entityConstantAwsUsageType));
     when(row.get(entityConstantAwsInstanceType)).thenReturn(FieldValue.of(PRIMITIVE, null));
+    when(row.get(entityConstantGcpProduct)).thenReturn(FieldValue.of(PRIMITIVE, entityConstantGcpProduct));
 
     when(row.get(minPreAggStartTimeConstant)).thenReturn(FieldValue.of(PRIMITIVE, "0"));
     when(row.get(maxPreAggStartTimeConstant)).thenReturn(FieldValue.of(PRIMITIVE, "1586895998"));
     when(row.get(entityConstantAwsBlendedCost)).thenReturn(FieldValue.of(PRIMITIVE, "1.0"));
     when(row.get(entityConstantAwsUnBlendedCost)).thenReturn(FieldValue.of(PRIMITIVE, "2.0"));
     when(row.get(entityConstantGcpCost)).thenReturn(FieldValue.of(PRIMITIVE, "3.0"));
+
+    trendStartTime = Instant.ofEpochSecond(1589155199);
+    filters.addAll(
+        Arrays.asList(getPreAggStartTimeFilter(currentMillis - 86400000), getPreAggEndTimeFilter(currentMillis)));
+    preAggregatedCostData =
+        PreAggregatedCostData.builder().cost(COST).maxStartTime(MIN_START_TIME).minStartTime(MAX_START_TIME).build();
   }
 
   @Test
@@ -133,8 +147,9 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
     when(billingDataHelper.getRoundedDoubleValue(GCP_COST)).thenReturn(GCP_COST);
 
     List<PreAggregateBillingEntityDataPoint> dataPointList = new ArrayList<>();
-    dataHelper.processDataPointAndAppendToList(
-        fieldList, row, dataPointList, Collections.singletonMap(entityConstantAwsLinkedAccount, AWS_ACCOUNT_NAME));
+    dataHelper.processDataPointAndAppendToList(fieldList, row, dataPointList,
+        Collections.singletonMap(entityConstantAwsLinkedAccount, AWS_ACCOUNT_NAME), idToPrevCostMap, filters,
+        trendStartTime);
     assertThat(dataPointList.size()).isEqualTo(1);
     assertThat(dataPointList.get(0).getRegion()).isEqualTo(entityConstantRegion);
     assertThat(dataPointList.get(0).getAwsInstanceType()).isEqualTo(nullStringValueConstant);
@@ -160,6 +175,10 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
     PreAggregatedCostDataBuilder unBlendedCostDataBuilder = PreAggregatedCostData.builder();
     PreAggregatedCostDataBuilder blendedCostDataBuilder = PreAggregatedCostData.builder();
     PreAggregatedCostDataBuilder costDataBuilder = PreAggregatedCostData.builder();
+
+    when(billingDataHelper.getRoundedDoubleValue(UNBLENDED_COST)).thenReturn(UNBLENDED_COST);
+    when(billingDataHelper.getRoundedDoubleValue(BLENDED_COST)).thenReturn(BLENDED_COST);
+    when(billingDataHelper.getRoundedDoubleValue(GCP_COST)).thenReturn(GCP_COST);
 
     dataHelper.processTrendDataAndAppendToList(
         trendFieldList, row, blendedCostDataBuilder, unBlendedCostDataBuilder, costDataBuilder);
@@ -189,10 +208,25 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
     when(billingDataHelper.getTotalCostFormattedDate(Instant.ofEpochMilli(0L), true)).thenReturn("01 January, 1970");
     when(billingDataHelper.getTotalCostFormattedDate(Instant.ofEpochMilli(MAX_START_TIME / 1000), true))
         .thenReturn("01 January, 2020");
-    QLBillingStatsInfo stats = dataHelper.getCostBillingStats(blendedCostData, filters, BLENDED_COST_LABEL);
+    QLBillingStatsInfo stats = dataHelper.getCostBillingStats(
+        blendedCostData, preAggregatedCostData, filters, BLENDED_COST_LABEL, trendStartTime);
     assertThat(stats.getStatsDescription()).isEqualTo("of 01 January, 1970 - 01 January, 2020");
     assertThat(stats.getStatsLabel()).isEqualTo("blended Cost");
     assertThat(stats.getStatsValue()).isEqualTo("$1.44");
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void processDataPrevDataAndAppendToListTest() {
+    FieldList fieldList = FieldList.of(Field.newBuilder(maxPreAggStartTimeConstant, StandardSQLTypeName.STRING).build(),
+        Field.newBuilder(minPreAggStartTimeConstant, StandardSQLTypeName.STRING).build(),
+        Field.newBuilder(entityConstantGcpProduct, StandardSQLTypeName.FLOAT64).build(),
+        Field.newBuilder(entityConstantGcpCost, StandardSQLTypeName.FLOAT64).build());
+
+    dataHelper.processDataPrevDataAndAppendToList(fieldList, row, idToPrevCostMap);
+
+    assertThat(idToPrevCostMap.size()).isEqualTo(1);
   }
 
   @Test
