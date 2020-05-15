@@ -1,10 +1,11 @@
 package software.wings.graphql.datafetcher.execution;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.beans.WorkflowType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -61,8 +62,10 @@ public class ExecutionConnectionDataFetcher
      * the does not exist in the query
      */
 
-    for (QLExecutionFilter filter : filters) {
-      includePipelineId = includePipelineId || (filter.getPipelineExecution() != null);
+    if (isNotEmpty(filters)) {
+      for (QLExecutionFilter filter : filters) {
+        includePipelineId = includePipelineId || (filter.getPipelineExecution() != null);
+      }
     }
     if (!includePipelineId) {
       query.field(WorkflowExecutionKeys.pipelineExecutionId).doesNotExist();
@@ -97,7 +100,7 @@ public class ExecutionConnectionDataFetcher
   private List<QLExecutionFilter> addAppIdValidation(List<QLExecutionFilter> filters) {
     List<QLExecutionFilter> updatedFilters = filters != null ? new ArrayList<>(filters) : new ArrayList<>();
     boolean appIdFilterFound = false;
-    if (EmptyPredicate.isNotEmpty(filters)) {
+    if (isNotEmpty(filters)) {
       for (QLExecutionFilter filter : filters) {
         if (filter.getApplication() != null) {
           appIdFilterFound = true;
