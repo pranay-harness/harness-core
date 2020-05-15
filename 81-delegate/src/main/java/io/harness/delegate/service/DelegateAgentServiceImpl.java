@@ -746,9 +746,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     if (!delegateConfiguration.isPollForTasks()) {
       socket.close();
     }
-    if (perpetualTaskWorker != null) {
-      perpetualTaskWorker.stop();
-    }
   }
 
   private void resume() {
@@ -1011,6 +1008,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
         signalService.stop();
       });
+      if (perpetualTaskWorker != null) {
+        perpetualTaskWorker.stop();
+      }
     }
   }
 
