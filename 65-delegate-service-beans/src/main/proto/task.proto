@@ -5,26 +5,49 @@ package io.harness.delegate.task;
 option java_multiple_files = true;
 
 import "google/protobuf/duration.proto";
+import "capability.proto";
 
+// Task global unique identifier
 message Id {
   string id = 1;
 }
 
+// Represents a map of arbitrary key and value pairs that make sense on the task setup level They are pass through for
+// the delegate system
 message SetupAbstractions {
-  map<string, string> map = 1;
+  map<string, string> values = 1;
 }
 
+// Task details represent the object that will be propagated over the wire to the task executor Task executor needs to
+// be able to make sense of this data and accomplish the needed work from the task.
 message Details {
+  // Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+  // actual task executor. TODO: more details
   string type = 1;
-  bytes kryoParameters = 2;
+
+  // Delegate system allows several way to pass the task parameters
+  oneof Parameters {
+    // Using kryo java serialization, useful for java based task where java annotation play important role of
+    // determining encrypted fields and expressions.
+    bytes kryoParameters = 2;
+  }
+
+  // Execution time out determines for how long the task should be kept waited on to accomplish its work.
+  //
+  // NOTE: this time does not include the time the task was in the queue. This is determined independently.
   google.protobuf.Duration execution_timeout = 3;
-  int64 expression_functor_token = 4;
+
+  // Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+  // will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+  // task execution.
+  map<string, string> expressions = 4;
+
+  // The delegate system offers JIT secret decryption. This token allows for making sure that the expressions for
+  // obtaining secrets are system generated, and not a hack from customers input.
+  int64 expression_functor_token = 5;
 }
 
-message Capability {
-  bytes kryoCapability = 1;
-}
-
+// List of all capabilities needed for the task
 message Capabilities {
-  repeated Capability list = 1;
+  repeated capability.Capability list = 1;
 }

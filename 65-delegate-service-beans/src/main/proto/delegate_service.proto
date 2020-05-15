@@ -16,6 +16,7 @@ service DelegateService {
 message SubmitTaskRequest {
   task.SetupAbstractions setup_abstractions = 1;
   task.Details details = 2;
+  task.Capabilities capabilities = 3;
 }
 
 message SubmitTaskResponse {

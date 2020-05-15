@@ -4,6 +4,11 @@
 package io.harness.delegate.task;
 
 /**
+ * <pre>
+ * Task details represent the object that will be propagated over the wire to the task executor Task executor needs to
+ * be able to make sense of this data and accomplish the needed work from the task.
+ * </pre>
+ *
  * Protobuf type {@code io.harness.delegate.task.Details}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:Details.java.pb.meta")
@@ -17,7 +22,6 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
   }
   private Details() {
     type_ = "";
-    kryoParameters_ = com.google.protobuf.ByteString.EMPTY;
   }
 
   @java.
@@ -49,7 +53,8 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
             break;
           }
           case 18: {
-            kryoParameters_ = input.readBytes();
+            parametersCase_ = 2;
+            parameters_ = input.readBytes();
             break;
           }
           case 26: {
@@ -65,7 +70,17 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
 
             break;
           }
-          case 32: {
+          case 34: {
+            if (!((mutable_bitField0_ & 0x00000008) != 0)) {
+              expressions_ = com.google.protobuf.MapField.newMapField(ExpressionsDefaultEntryHolder.defaultEntry);
+              mutable_bitField0_ |= 0x00000008;
+            }
+            com.google.protobuf.MapEntry<java.lang.String, java.lang.String> expressions__ =
+                input.readMessage(ExpressionsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+            expressions_.getMutableMap().put(expressions__.getKey(), expressions__.getValue());
+            break;
+          }
+          case 40: {
             expressionFunctorToken_ = input.readInt64();
             break;
           }
@@ -90,6 +105,17 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
     return io.harness.delegate.task.Task.internal_static_io_harness_delegate_task_Details_descriptor;
   }
 
+  @SuppressWarnings({"rawtypes"})
+  @java.
+  lang.Override
+  protected com.google.protobuf.MapField internalGetMapField(int number) {
+    switch (number) {
+      case 4:
+        return internalGetExpressions();
+      default:
+        throw new RuntimeException("Invalid map field number: " + number);
+    }
+  }
   @java.
   lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
@@ -98,9 +124,51 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
             io.harness.delegate.task.Details.class, io.harness.delegate.task.Details.Builder.class);
   }
 
+  private int bitField0_;
+  private int parametersCase_ = 0;
+  private java.lang.Object parameters_;
+  public enum ParametersCase implements com
+  .google.protobuf.Internal.EnumLite {
+    KRYOPARAMETERS(2), PARAMETERS_NOT_SET(0);
+    private final int value;
+    private ParametersCase(int value) {
+      this.value = value;
+    }
+    /**
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static ParametersCase valueOf(int value) {
+      return forNumber(value);
+    }
+
+    public static ParametersCase forNumber(int value) {
+      switch (value) {
+        case 2:
+          return KRYOPARAMETERS;
+        case 0:
+          return PARAMETERS_NOT_SET;
+        default:
+          return null;
+      }
+    }
+    public int getNumber() {
+      return this.value;
+    }
+  };
+
+  public ParametersCase getParametersCase() {
+    return ParametersCase.forNumber(parametersCase_);
+  }
+
   public static final int TYPE_FIELD_NUMBER = 1;
   private volatile java.lang.Object type_;
   /**
+   * <pre>
+   * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+   * actual task executor. TODO: more details
+   * </pre>
+   *
    * <code>string type = 1;</code>
    */
   public java.lang.String getType() {
@@ -115,6 +183,11 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
     }
   }
   /**
+   * <pre>
+   * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+   * actual task executor. TODO: more details
+   * </pre>
+   *
    * <code>string type = 1;</code>
    */
   public com.google.protobuf.ByteString getTypeBytes() {
@@ -129,39 +202,159 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
   }
 
   public static final int KRYOPARAMETERS_FIELD_NUMBER = 2;
-  private com.google.protobuf.ByteString kryoParameters_;
   /**
+   * <pre>
+   * Using kryo java serialization, useful for java based task where java annotation play important role of
+   * determining encrypted fields and expressions.
+   * </pre>
+   *
    * <code>bytes kryoParameters = 2;</code>
    */
   public com.google.protobuf.ByteString getKryoParameters() {
-    return kryoParameters_;
+    if (parametersCase_ == 2) {
+      return (com.google.protobuf.ByteString) parameters_;
+    }
+    return com.google.protobuf.ByteString.EMPTY;
   }
 
   public static final int EXECUTION_TIMEOUT_FIELD_NUMBER = 3;
   private com.google.protobuf.Duration executionTimeout_;
   /**
+   * <pre>
+   * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+   * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+   * </pre>
+   *
    * <code>.google.protobuf.Duration execution_timeout = 3;</code>
    */
   public boolean hasExecutionTimeout() {
     return executionTimeout_ != null;
   }
   /**
+   * <pre>
+   * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+   * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+   * </pre>
+   *
    * <code>.google.protobuf.Duration execution_timeout = 3;</code>
    */
   public com.google.protobuf.Duration getExecutionTimeout() {
     return executionTimeout_ == null ? com.google.protobuf.Duration.getDefaultInstance() : executionTimeout_;
   }
   /**
+   * <pre>
+   * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+   * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+   * </pre>
+   *
    * <code>.google.protobuf.Duration execution_timeout = 3;</code>
    */
   public com.google.protobuf.DurationOrBuilder getExecutionTimeoutOrBuilder() {
     return getExecutionTimeout();
   }
 
-  public static final int EXPRESSION_FUNCTOR_TOKEN_FIELD_NUMBER = 4;
+  public static final int EXPRESSIONS_FIELD_NUMBER = 4;
+  private static final class ExpressionsDefaultEntryHolder {
+    static final com.google.protobuf.MapEntry<java.lang.String, java.lang.String> defaultEntry =
+        com.google.protobuf.MapEntry.<java.lang.String, java.lang.String>newDefaultInstance(
+            io.harness.delegate.task.Task.internal_static_io_harness_delegate_task_Details_ExpressionsEntry_descriptor,
+            com.google.protobuf.WireFormat.FieldType.STRING, "", com.google.protobuf.WireFormat.FieldType.STRING, "");
+  }
+  private com.google.protobuf.MapField<java.lang.String, java.lang.String> expressions_;
+  private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetExpressions() {
+    if (expressions_ == null) {
+      return com.google.protobuf.MapField.emptyMapField(ExpressionsDefaultEntryHolder.defaultEntry);
+    }
+    return expressions_;
+  }
+
+  public int getExpressionsCount() {
+    return internalGetExpressions().getMap().size();
+  }
+  /**
+   * <pre>
+   * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+   * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+   * task execution.
+   * </pre>
+   *
+   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   */
+
+  public boolean containsExpressions(java.lang.String key) {
+    if (key == null) {
+      throw new java.lang.NullPointerException();
+    }
+    return internalGetExpressions().getMap().containsKey(key);
+  }
+  /**
+   * Use {@link #getExpressionsMap()} instead.
+   */
+  @java.
+  lang.Deprecated
+  public java.util.Map<java.lang.String, java.lang.String> getExpressions() {
+    return getExpressionsMap();
+  }
+  /**
+   * <pre>
+   * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+   * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+   * task execution.
+   * </pre>
+   *
+   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   */
+
+  public java.util.Map<java.lang.String, java.lang.String> getExpressionsMap() {
+    return internalGetExpressions().getMap();
+  }
+  /**
+   * <pre>
+   * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+   * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+   * task execution.
+   * </pre>
+   *
+   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   */
+
+  public java.lang.String getExpressionsOrDefault(java.lang.String key, java.lang.String defaultValue) {
+    if (key == null) {
+      throw new java.lang.NullPointerException();
+    }
+    java.util.Map<java.lang.String, java.lang.String> map = internalGetExpressions().getMap();
+    return map.containsKey(key) ? map.get(key) : defaultValue;
+  }
+  /**
+   * <pre>
+   * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+   * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+   * task execution.
+   * </pre>
+   *
+   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   */
+
+  public java.lang.String getExpressionsOrThrow(java.lang.String key) {
+    if (key == null) {
+      throw new java.lang.NullPointerException();
+    }
+    java.util.Map<java.lang.String, java.lang.String> map = internalGetExpressions().getMap();
+    if (!map.containsKey(key)) {
+      throw new java.lang.IllegalArgumentException();
+    }
+    return map.get(key);
+  }
+
+  public static final int EXPRESSION_FUNCTOR_TOKEN_FIELD_NUMBER = 5;
   private long expressionFunctorToken_;
   /**
-   * <code>int64 expression_functor_token = 4;</code>
+   * <pre>
+   * The delegate system offers JIT secret decryption. This token allows for making sure that the expressions for
+   * obtaining secrets are system generated, and not a hack from customers input.
+   * </pre>
+   *
+   * <code>int64 expression_functor_token = 5;</code>
    */
   public long getExpressionFunctorToken() {
     return expressionFunctorToken_;
@@ -185,14 +378,16 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
     if (!getTypeBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 1, type_);
     }
-    if (!kryoParameters_.isEmpty()) {
-      output.writeBytes(2, kryoParameters_);
+    if (parametersCase_ == 2) {
+      output.writeBytes(2, (com.google.protobuf.ByteString) parameters_);
     }
     if (executionTimeout_ != null) {
       output.writeMessage(3, getExecutionTimeout());
     }
+    com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
+        output, internalGetExpressions(), ExpressionsDefaultEntryHolder.defaultEntry, 4);
     if (expressionFunctorToken_ != 0L) {
-      output.writeInt64(4, expressionFunctorToken_);
+      output.writeInt64(5, expressionFunctorToken_);
     }
     unknownFields.writeTo(output);
   }
@@ -207,14 +402,22 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
     if (!getTypeBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, type_);
     }
-    if (!kryoParameters_.isEmpty()) {
-      size += com.google.protobuf.CodedOutputStream.computeBytesSize(2, kryoParameters_);
+    if (parametersCase_ == 2) {
+      size += com.google.protobuf.CodedOutputStream.computeBytesSize(2, (com.google.protobuf.ByteString) parameters_);
     }
     if (executionTimeout_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, getExecutionTimeout());
     }
+    for (java.util.Map.Entry<java.lang.String, java.lang.String> entry : internalGetExpressions().getMap().entrySet()) {
+      com.google.protobuf.MapEntry<java.lang.String, java.lang.String> expressions__ =
+          ExpressionsDefaultEntryHolder.defaultEntry.newBuilderForType()
+              .setKey(entry.getKey())
+              .setValue(entry.getValue())
+              .build();
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(4, expressions__);
+    }
     if (expressionFunctorToken_ != 0L) {
-      size += com.google.protobuf.CodedOutputStream.computeInt64Size(4, expressionFunctorToken_);
+      size += com.google.protobuf.CodedOutputStream.computeInt64Size(5, expressionFunctorToken_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -233,16 +436,26 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
 
     if (!getType().equals(other.getType()))
       return false;
-    if (!getKryoParameters().equals(other.getKryoParameters()))
-      return false;
     if (hasExecutionTimeout() != other.hasExecutionTimeout())
       return false;
     if (hasExecutionTimeout()) {
       if (!getExecutionTimeout().equals(other.getExecutionTimeout()))
         return false;
     }
+    if (!internalGetExpressions().equals(other.internalGetExpressions()))
+      return false;
     if (getExpressionFunctorToken() != other.getExpressionFunctorToken())
       return false;
+    if (!getParametersCase().equals(other.getParametersCase()))
+      return false;
+    switch (parametersCase_) {
+      case 2:
+        if (!getKryoParameters().equals(other.getKryoParameters()))
+          return false;
+        break;
+      case 0:
+      default:
+    }
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -257,14 +470,24 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
     hash = (19 * hash) + getDescriptor().hashCode();
     hash = (37 * hash) + TYPE_FIELD_NUMBER;
     hash = (53 * hash) + getType().hashCode();
-    hash = (37 * hash) + KRYOPARAMETERS_FIELD_NUMBER;
-    hash = (53 * hash) + getKryoParameters().hashCode();
     if (hasExecutionTimeout()) {
       hash = (37 * hash) + EXECUTION_TIMEOUT_FIELD_NUMBER;
       hash = (53 * hash) + getExecutionTimeout().hashCode();
     }
+    if (!internalGetExpressions().getMap().isEmpty()) {
+      hash = (37 * hash) + EXPRESSIONS_FIELD_NUMBER;
+      hash = (53 * hash) + internalGetExpressions().hashCode();
+    }
     hash = (37 * hash) + EXPRESSION_FUNCTOR_TOKEN_FIELD_NUMBER;
     hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getExpressionFunctorToken());
+    switch (parametersCase_) {
+      case 2:
+        hash = (37 * hash) + KRYOPARAMETERS_FIELD_NUMBER;
+        hash = (53 * hash) + getKryoParameters().hashCode();
+        break;
+      case 0:
+      default:
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -342,6 +565,11 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
     return builder;
   }
   /**
+   * <pre>
+   * Task details represent the object that will be propagated over the wire to the task executor Task executor needs to
+   * be able to make sense of this data and accomplish the needed work from the task.
+   * </pre>
+   *
    * Protobuf type {@code io.harness.delegate.task.Details}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
@@ -351,6 +579,24 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       return io.harness.delegate.task.Task.internal_static_io_harness_delegate_task_Details_descriptor;
     }
 
+    @SuppressWarnings({"rawtypes"})
+    protected com.google.protobuf.MapField internalGetMapField(int number) {
+      switch (number) {
+        case 4:
+          return internalGetExpressions();
+        default:
+          throw new RuntimeException("Invalid map field number: " + number);
+      }
+    }
+    @SuppressWarnings({"rawtypes"})
+    protected com.google.protobuf.MapField internalGetMutableMapField(int number) {
+      switch (number) {
+        case 4:
+          return internalGetMutableExpressions();
+        default:
+          throw new RuntimeException("Invalid map field number: " + number);
+      }
+    }
     @java.
     lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
@@ -377,16 +623,17 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       super.clear();
       type_ = "";
 
-      kryoParameters_ = com.google.protobuf.ByteString.EMPTY;
-
       if (executionTimeoutBuilder_ == null) {
         executionTimeout_ = null;
       } else {
         executionTimeout_ = null;
         executionTimeoutBuilder_ = null;
       }
+      internalGetMutableExpressions().clear();
       expressionFunctorToken_ = 0L;
 
+      parametersCase_ = 0;
+      parameters_ = null;
       return this;
     }
 
@@ -416,14 +663,22 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
     lang.Override
     public io.harness.delegate.task.Details buildPartial() {
       io.harness.delegate.task.Details result = new io.harness.delegate.task.Details(this);
+      int from_bitField0_ = bitField0_;
+      int to_bitField0_ = 0;
       result.type_ = type_;
-      result.kryoParameters_ = kryoParameters_;
+      if (parametersCase_ == 2) {
+        result.parameters_ = parameters_;
+      }
       if (executionTimeoutBuilder_ == null) {
         result.executionTimeout_ = executionTimeout_;
       } else {
         result.executionTimeout_ = executionTimeoutBuilder_.build();
       }
+      result.expressions_ = internalGetExpressions();
+      result.expressions_.makeImmutable();
       result.expressionFunctorToken_ = expressionFunctorToken_;
+      result.bitField0_ = to_bitField0_;
+      result.parametersCase_ = parametersCase_;
       onBuilt();
       return result;
     }
@@ -470,14 +725,21 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
         type_ = other.type_;
         onChanged();
       }
-      if (other.getKryoParameters() != com.google.protobuf.ByteString.EMPTY) {
-        setKryoParameters(other.getKryoParameters());
-      }
       if (other.hasExecutionTimeout()) {
         mergeExecutionTimeout(other.getExecutionTimeout());
       }
+      internalGetMutableExpressions().mergeFrom(other.internalGetExpressions());
       if (other.getExpressionFunctorToken() != 0L) {
         setExpressionFunctorToken(other.getExpressionFunctorToken());
+      }
+      switch (other.getParametersCase()) {
+        case KRYOPARAMETERS: {
+          setKryoParameters(other.getKryoParameters());
+          break;
+        }
+        case PARAMETERS_NOT_SET: {
+          break;
+        }
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -505,9 +767,28 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       }
       return this;
     }
+    private int parametersCase_ = 0;
+    private java.lang.Object parameters_;
+    public ParametersCase getParametersCase() {
+      return ParametersCase.forNumber(parametersCase_);
+    }
+
+    public Builder clearParameters() {
+      parametersCase_ = 0;
+      parameters_ = null;
+      onChanged();
+      return this;
+    }
+
+    private int bitField0_;
 
     private java.lang.Object type_ = "";
     /**
+     * <pre>
+     * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+     * actual task executor. TODO: more details
+     * </pre>
+     *
      * <code>string type = 1;</code>
      */
     public java.lang.String getType() {
@@ -522,6 +803,11 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
+     * <pre>
+     * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+     * actual task executor. TODO: more details
+     * </pre>
+     *
      * <code>string type = 1;</code>
      */
     public com.google.protobuf.ByteString getTypeBytes() {
@@ -535,6 +821,11 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
+     * <pre>
+     * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+     * actual task executor. TODO: more details
+     * </pre>
+     *
      * <code>string type = 1;</code>
      */
     public Builder setType(java.lang.String value) {
@@ -547,6 +838,11 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
+     * <pre>
+     * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+     * actual task executor. TODO: more details
+     * </pre>
+     *
      * <code>string type = 1;</code>
      */
     public Builder clearType() {
@@ -555,6 +851,11 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
+     * <pre>
+     * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+     * actual task executor. TODO: more details
+     * </pre>
+     *
      * <code>string type = 1;</code>
      */
     public Builder setTypeBytes(com.google.protobuf.ByteString value) {
@@ -568,31 +869,51 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
 
-    private com.google.protobuf.ByteString kryoParameters_ = com.google.protobuf.ByteString.EMPTY;
     /**
+     * <pre>
+     * Using kryo java serialization, useful for java based task where java annotation play important role of
+     * determining encrypted fields and expressions.
+     * </pre>
+     *
      * <code>bytes kryoParameters = 2;</code>
      */
     public com.google.protobuf.ByteString getKryoParameters() {
-      return kryoParameters_;
+      if (parametersCase_ == 2) {
+        return (com.google.protobuf.ByteString) parameters_;
+      }
+      return com.google.protobuf.ByteString.EMPTY;
     }
     /**
+     * <pre>
+     * Using kryo java serialization, useful for java based task where java annotation play important role of
+     * determining encrypted fields and expressions.
+     * </pre>
+     *
      * <code>bytes kryoParameters = 2;</code>
      */
     public Builder setKryoParameters(com.google.protobuf.ByteString value) {
       if (value == null) {
         throw new NullPointerException();
       }
-
-      kryoParameters_ = value;
+      parametersCase_ = 2;
+      parameters_ = value;
       onChanged();
       return this;
     }
     /**
+     * <pre>
+     * Using kryo java serialization, useful for java based task where java annotation play important role of
+     * determining encrypted fields and expressions.
+     * </pre>
+     *
      * <code>bytes kryoParameters = 2;</code>
      */
     public Builder clearKryoParameters() {
-      kryoParameters_ = getDefaultInstance().getKryoParameters();
-      onChanged();
+      if (parametersCase_ == 2) {
+        parametersCase_ = 0;
+        parameters_ = null;
+        onChanged();
+      }
       return this;
     }
 
@@ -600,12 +921,22 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Duration, com.google.protobuf.Duration.Builder,
         com.google.protobuf.DurationOrBuilder> executionTimeoutBuilder_;
     /**
+     * <pre>
+     * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+     * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+     * </pre>
+     *
      * <code>.google.protobuf.Duration execution_timeout = 3;</code>
      */
     public boolean hasExecutionTimeout() {
       return executionTimeoutBuilder_ != null || executionTimeout_ != null;
     }
     /**
+     * <pre>
+     * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+     * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+     * </pre>
+     *
      * <code>.google.protobuf.Duration execution_timeout = 3;</code>
      */
     public com.google.protobuf.Duration getExecutionTimeout() {
@@ -616,6 +947,11 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
+     * <pre>
+     * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+     * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+     * </pre>
+     *
      * <code>.google.protobuf.Duration execution_timeout = 3;</code>
      */
     public Builder setExecutionTimeout(com.google.protobuf.Duration value) {
@@ -632,6 +968,11 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
+     * <pre>
+     * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+     * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+     * </pre>
+     *
      * <code>.google.protobuf.Duration execution_timeout = 3;</code>
      */
     public Builder setExecutionTimeout(com.google.protobuf.Duration.Builder builderForValue) {
@@ -645,6 +986,11 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
+     * <pre>
+     * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+     * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+     * </pre>
+     *
      * <code>.google.protobuf.Duration execution_timeout = 3;</code>
      */
     public Builder mergeExecutionTimeout(com.google.protobuf.Duration value) {
@@ -663,6 +1009,11 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
+     * <pre>
+     * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+     * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+     * </pre>
+     *
      * <code>.google.protobuf.Duration execution_timeout = 3;</code>
      */
     public Builder clearExecutionTimeout() {
@@ -677,6 +1028,11 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
+     * <pre>
+     * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+     * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+     * </pre>
+     *
      * <code>.google.protobuf.Duration execution_timeout = 3;</code>
      */
     public com.google.protobuf.Duration.Builder getExecutionTimeoutBuilder() {
@@ -684,6 +1040,11 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       return getExecutionTimeoutFieldBuilder().getBuilder();
     }
     /**
+     * <pre>
+     * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+     * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+     * </pre>
+     *
      * <code>.google.protobuf.Duration execution_timeout = 3;</code>
      */
     public com.google.protobuf.DurationOrBuilder getExecutionTimeoutOrBuilder() {
@@ -694,6 +1055,11 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
+     * <pre>
+     * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+     * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+     * </pre>
+     *
      * <code>.google.protobuf.Duration execution_timeout = 3;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Duration, com.google.protobuf.Duration.Builder,
@@ -708,15 +1074,185 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       return executionTimeoutBuilder_;
     }
 
+    private com.google.protobuf.MapField<java.lang.String, java.lang.String> expressions_;
+    private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetExpressions() {
+      if (expressions_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(ExpressionsDefaultEntryHolder.defaultEntry);
+      }
+      return expressions_;
+    }
+    private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetMutableExpressions() {
+      onChanged();
+      ;
+      if (expressions_ == null) {
+        expressions_ = com.google.protobuf.MapField.newMapField(ExpressionsDefaultEntryHolder.defaultEntry);
+      }
+      if (!expressions_.isMutable()) {
+        expressions_ = expressions_.copy();
+      }
+      return expressions_;
+    }
+
+    public int getExpressionsCount() {
+      return internalGetExpressions().getMap().size();
+    }
+    /**
+     * <pre>
+     * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+     * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+     * task execution.
+     * </pre>
+     *
+     * <code>map&lt;string, string&gt; expressions = 4;</code>
+     */
+
+    public boolean containsExpressions(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      return internalGetExpressions().getMap().containsKey(key);
+    }
+    /**
+     * Use {@link #getExpressionsMap()} instead.
+     */
+    @java.
+    lang.Deprecated
+    public java.util.Map<java.lang.String, java.lang.String> getExpressions() {
+      return getExpressionsMap();
+    }
+    /**
+     * <pre>
+     * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+     * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+     * task execution.
+     * </pre>
+     *
+     * <code>map&lt;string, string&gt; expressions = 4;</code>
+     */
+
+    public java.util.Map<java.lang.String, java.lang.String> getExpressionsMap() {
+      return internalGetExpressions().getMap();
+    }
+    /**
+     * <pre>
+     * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+     * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+     * task execution.
+     * </pre>
+     *
+     * <code>map&lt;string, string&gt; expressions = 4;</code>
+     */
+
+    public java.lang.String getExpressionsOrDefault(java.lang.String key, java.lang.String defaultValue) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      java.util.Map<java.lang.String, java.lang.String> map = internalGetExpressions().getMap();
+      return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+    /**
+     * <pre>
+     * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+     * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+     * task execution.
+     * </pre>
+     *
+     * <code>map&lt;string, string&gt; expressions = 4;</code>
+     */
+
+    public java.lang.String getExpressionsOrThrow(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      java.util.Map<java.lang.String, java.lang.String> map = internalGetExpressions().getMap();
+      if (!map.containsKey(key)) {
+        throw new java.lang.IllegalArgumentException();
+      }
+      return map.get(key);
+    }
+
+    public Builder clearExpressions() {
+      internalGetMutableExpressions().getMutableMap().clear();
+      return this;
+    }
+    /**
+     * <pre>
+     * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+     * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+     * task execution.
+     * </pre>
+     *
+     * <code>map&lt;string, string&gt; expressions = 4;</code>
+     */
+
+    public Builder removeExpressions(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      internalGetMutableExpressions().getMutableMap().remove(key);
+      return this;
+    }
+    /**
+     * Use alternate mutation accessors instead.
+     */
+    @java.
+    lang.Deprecated
+    public java.util.Map<java.lang.String, java.lang.String> getMutableExpressions() {
+      return internalGetMutableExpressions().getMutableMap();
+    }
+    /**
+     * <pre>
+     * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+     * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+     * task execution.
+     * </pre>
+     *
+     * <code>map&lt;string, string&gt; expressions = 4;</code>
+     */
+    public Builder putExpressions(java.lang.String key, java.lang.String value) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      if (value == null) {
+        throw new java.lang.NullPointerException();
+      }
+      internalGetMutableExpressions().getMutableMap().put(key, value);
+      return this;
+    }
+    /**
+     * <pre>
+     * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+     * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+     * task execution.
+     * </pre>
+     *
+     * <code>map&lt;string, string&gt; expressions = 4;</code>
+     */
+
+    public Builder putAllExpressions(java.util.Map<java.lang.String, java.lang.String> values) {
+      internalGetMutableExpressions().getMutableMap().putAll(values);
+      return this;
+    }
+
     private long expressionFunctorToken_;
     /**
-     * <code>int64 expression_functor_token = 4;</code>
+     * <pre>
+     * The delegate system offers JIT secret decryption. This token allows for making sure that the expressions for
+     * obtaining secrets are system generated, and not a hack from customers input.
+     * </pre>
+     *
+     * <code>int64 expression_functor_token = 5;</code>
      */
     public long getExpressionFunctorToken() {
       return expressionFunctorToken_;
     }
     /**
-     * <code>int64 expression_functor_token = 4;</code>
+     * <pre>
+     * The delegate system offers JIT secret decryption. This token allows for making sure that the expressions for
+     * obtaining secrets are system generated, and not a hack from customers input.
+     * </pre>
+     *
+     * <code>int64 expression_functor_token = 5;</code>
      */
     public Builder setExpressionFunctorToken(long value) {
       expressionFunctorToken_ = value;
@@ -724,7 +1260,12 @@ public final class Details extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>int64 expression_functor_token = 4;</code>
+     * <pre>
+     * The delegate system offers JIT secret decryption. This token allows for making sure that the expressions for
+     * obtaining secrets are system generated, and not a hack from customers input.
+     * </pre>
+     *
+     * <code>int64 expression_functor_token = 5;</code>
      */
     public Builder clearExpressionFunctorToken() {
       expressionFunctorToken_ = 0L;

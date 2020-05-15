@@ -8,34 +8,128 @@ public interface DetailsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.task.Details)
     com.google.protobuf.MessageOrBuilder {
   /**
+   * <pre>
+   * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+   * actual task executor. TODO: more details
+   * </pre>
+   *
    * <code>string type = 1;</code>
    */
   java.lang.String getType();
   /**
+   * <pre>
+   * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+   * actual task executor. TODO: more details
+   * </pre>
+   *
    * <code>string type = 1;</code>
    */
   com.google.protobuf.ByteString getTypeBytes();
 
   /**
+   * <pre>
+   * Using kryo java serialization, useful for java based task where java annotation play important role of
+   * determining encrypted fields and expressions.
+   * </pre>
+   *
    * <code>bytes kryoParameters = 2;</code>
    */
   com.google.protobuf.ByteString getKryoParameters();
 
   /**
+   * <pre>
+   * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+   * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+   * </pre>
+   *
    * <code>.google.protobuf.Duration execution_timeout = 3;</code>
    */
   boolean hasExecutionTimeout();
   /**
+   * <pre>
+   * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+   * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+   * </pre>
+   *
    * <code>.google.protobuf.Duration execution_timeout = 3;</code>
    */
   com.google.protobuf.Duration getExecutionTimeout();
   /**
+   * <pre>
+   * Execution time out determines for how long the task should be kept waited on to accomplish its work.
+   * NOTE: this time does not include the time the task was in the queue. This is determined independently.
+   * </pre>
+   *
    * <code>.google.protobuf.Duration execution_timeout = 3;</code>
    */
   com.google.protobuf.DurationOrBuilder getExecutionTimeoutOrBuilder();
 
   /**
-   * <code>int64 expression_functor_token = 4;</code>
+   * <pre>
+   * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+   * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+   * task execution.
+   * </pre>
+   *
+   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   */
+  int getExpressionsCount();
+  /**
+   * <pre>
+   * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+   * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+   * task execution.
+   * </pre>
+   *
+   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   */
+  boolean containsExpressions(java.lang.String key);
+  /**
+   * Use {@link #getExpressionsMap()} instead.
+   */
+  @java.lang.Deprecated java.util.Map<java.lang.String, java.lang.String> getExpressions();
+  /**
+   * <pre>
+   * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+   * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+   * task execution.
+   * </pre>
+   *
+   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   */
+  java.util.Map<java.lang.String, java.lang.String> getExpressionsMap();
+  /**
+   * <pre>
+   * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+   * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+   * task execution.
+   * </pre>
+   *
+   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   */
+
+  java.lang.String getExpressionsOrDefault(java.lang.String key, java.lang.String defaultValue);
+  /**
+   * <pre>
+   * Expressions a map between arbitrary keys and expression. Expression can contain secrets that the delegate system
+   * will resolve. The consumer is responsible to apply the finalized expression values to their internal model before
+   * task execution.
+   * </pre>
+   *
+   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   */
+
+  java.lang.String getExpressionsOrThrow(java.lang.String key);
+
+  /**
+   * <pre>
+   * The delegate system offers JIT secret decryption. This token allows for making sure that the expressions for
+   * obtaining secrets are system generated, and not a hack from customers input.
+   * </pre>
+   *
+   * <code>int64 expression_functor_token = 5;</code>
    */
   long getExpressionFunctorToken();
+
+  public io.harness.delegate.task.Details.ParametersCase getParametersCase();
 }

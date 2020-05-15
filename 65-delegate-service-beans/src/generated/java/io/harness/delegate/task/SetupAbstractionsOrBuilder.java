@@ -8,29 +8,29 @@ public interface SetupAbstractionsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.task.SetupAbstractions)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>map&lt;string, string&gt; map = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1;</code>
    */
-  int getMapCount();
+  int getValuesCount();
   /**
-   * <code>map&lt;string, string&gt; map = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1;</code>
    */
-  boolean containsMap(java.lang.String key);
+  boolean containsValues(java.lang.String key);
   /**
-   * Use {@link #getMapMap()} instead.
+   * Use {@link #getValuesMap()} instead.
    */
-  @java.lang.Deprecated java.util.Map<java.lang.String, java.lang.String> getMap();
+  @java.lang.Deprecated java.util.Map<java.lang.String, java.lang.String> getValues();
   /**
-   * <code>map&lt;string, string&gt; map = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1;</code>
    */
-  java.util.Map<java.lang.String, java.lang.String> getMapMap();
+  java.util.Map<java.lang.String, java.lang.String> getValuesMap();
   /**
-   * <code>map&lt;string, string&gt; map = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1;</code>
    */
 
-  java.lang.String getMapOrDefault(java.lang.String key, java.lang.String defaultValue);
+  java.lang.String getValuesOrDefault(java.lang.String key, java.lang.String defaultValue);
   /**
-   * <code>map&lt;string, string&gt; map = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1;</code>
    */
 
-  java.lang.String getMapOrThrow(java.lang.String key);
+  java.lang.String getValuesOrThrow(java.lang.String key);
 }

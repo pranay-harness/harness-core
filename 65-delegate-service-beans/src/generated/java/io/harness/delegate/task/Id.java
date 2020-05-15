@@ -4,6 +4,10 @@
 package io.harness.delegate.task;
 
 /**
+ * <pre>
+ * Task global unique identifier
+ * </pre>
+ *
  * Protobuf type {@code io.harness.delegate.task.Id}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:Id.java.pb.meta")
@@ -242,6 +246,10 @@ public final class Id extends com.google.protobuf.GeneratedMessageV3 implements
     return builder;
   }
   /**
+   * <pre>
+   * Task global unique identifier
+   * </pre>
+   *
    * Protobuf type {@code io.harness.delegate.task.Id}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
