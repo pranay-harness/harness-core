@@ -16,6 +16,7 @@ import io.harness.persistence.UuidAware;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,8 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PostLoad;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.Map;
 
 @StoreIn(EVENTS_DB)
@@ -43,9 +46,12 @@ import java.util.Map;
 @Slf4j
 public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidAware, AccountAccess {
   @Id private String uuid;
+  private long createdAt;
 
-  // Delete after 14 days
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 14 * 24 * 60 * 60)) private long createdAt;
+  @EqualsAndHashCode.Exclude
+  @Builder.Default
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private final Date validUntil = Date.from(OffsetDateTime.now().plusDays(14).toInstant());
 
   private final long occurredAt;
   private final String accountId;
