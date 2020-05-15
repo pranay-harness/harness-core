@@ -1,6 +1,5 @@
 package io.harness.managerclient;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
@@ -121,7 +120,7 @@ public interface ManagerClient {
 
   @KryoResponse
   @GET("agent/delegates/{delegateId}/tasks/{taskId}/fail")
-  Call<DelegateTask> failIfAllDelegatesFailed(
+  Call<RestResponse> failIfAllDelegatesFailed(
       @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
 
   @GET("agent/delegates/{delegateId}/task-events")
