@@ -1,6 +1,8 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.deployment.InstanceDetails.InstanceType.AWS;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -11,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
@@ -85,5 +88,30 @@ public class AwsStateHelper {
       throw new InvalidRequestException(format("Current Capacity of Asg: [%s] not found", asgName));
     }
     return capacity;
+  }
+
+  public List<InstanceDetails> generateAmInstanceDetails(List<InstanceElement> allInstanceElements) {
+    if (isEmpty(allInstanceElements)) {
+      return emptyList();
+    }
+
+    return allInstanceElements.stream()
+        .filter(instanceElement -> instanceElement != null)
+        .map(instanceElement
+            -> InstanceDetails.builder()
+                   .instanceType(AWS)
+                   .newInstance(instanceElement.isNewInstance())
+                   .hostName(instanceElement.getHostName())
+                   .aws(InstanceDetails.AWS.builder()
+                            .ec2Instance(
+                                instanceElement.getHost() != null ? instanceElement.getHost().getEc2Instance() : null)
+                            .publicDns(
+                                instanceElement.getHost() != null ? instanceElement.getHost().getPublicDns() : null)
+                            .instanceId(
+                                instanceElement.getHost() != null ? instanceElement.getHost().getInstanceId() : null)
+                            .ip(instanceElement.getHost() != null ? instanceElement.getHost().getIp() : null)
+                            .build())
+                   .build())
+        .collect(toList());
   }
 }
