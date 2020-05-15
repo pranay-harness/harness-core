@@ -3,6 +3,7 @@ package io.harness.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.time.Duration.ofDays;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -32,6 +33,7 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @FieldNameConstants(innerTypeName = "PlanExecutionKeys")
 @Entity(value = "planExecutions")
+@JsonIgnoreProperties(ignoreUnknown = true, value = {"plan"})
 public final class PlanExecution implements PersistentRegularIterable, CreatedAtAware, CreatedAtAccess, CreatedByAware,
                                             CreatedByAccess, UpdatedAtAware, UuidAccess {
   public static final Duration TTL = ofDays(21);
