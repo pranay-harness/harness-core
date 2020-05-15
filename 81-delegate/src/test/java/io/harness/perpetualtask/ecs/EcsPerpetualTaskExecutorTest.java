@@ -71,7 +71,7 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
   @Parameterized.Parameter public Clock clock;
   @Parameterized.Parameters(name = "{index}: with clock: {0}")
   public static Clock[] clocks() {
-    return new Clock[] {Clock.systemUTC(), // current  time
+    return new Clock[] {new FakeClock(), // current time
         new FakeClock().instant(Instant.parse("2020-03-03T10:00:00.00Z")), // exact hour
         new FakeClock().instant(Instant.parse("2020-03-03T10:00:01.00Z")), // second after
         new FakeClock().instant(Instant.parse("2020-03-03T10:59:59.00Z"))}; // second before

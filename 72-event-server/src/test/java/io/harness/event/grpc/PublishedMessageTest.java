@@ -15,6 +15,9 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
+
 public class PublishedMessageTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
@@ -35,5 +38,14 @@ public class PublishedMessageTest extends CategoryTest {
                                             .type(ecsTaskLifecycle.getClass().getName())
                                             .build();
     assertThat(publishedMessage.getMessage()).isEqualTo(ecsTaskLifecycle);
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldSetValidUntil() throws Exception {
+    Date expected = Date.from(OffsetDateTime.now().plusDays(14).toInstant());
+    PublishedMessage message = PublishedMessage.builder().build();
+    assertThat(message.getValidUntil()).isNotNull().isAfter(expected);
   }
 }

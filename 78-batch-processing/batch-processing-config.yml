@@ -10,7 +10,7 @@ events-mongo:
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
-
+  indexManagerMode: AUTO
 
 timescaledb:
   timescaledbUrl: "jdbc:postgresql://localhost:5432/harness"

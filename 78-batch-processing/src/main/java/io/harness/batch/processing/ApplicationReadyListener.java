@@ -2,7 +2,6 @@ package io.harness.batch.processing;
 
 import static com.google.common.base.Verify.verify;
 import static io.harness.event.app.EventServiceApplication.EVENTS_STORE;
-import static io.harness.mongo.IndexManager.Mode.MANUAL;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
@@ -12,6 +11,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import io.harness.annotation.StoreIn;
+import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.IndexManager;
 import io.harness.persistence.HPersistence;
@@ -49,7 +49,7 @@ public class ApplicationReadyListener {
   }
 
   @EventListener(ApplicationReadyEvent.class)
-  void ensureIndexForEventsStore() {
+  void ensureIndexForEventsStore(ApplicationReadyEvent applicationReadyEvent) {
     Reflections reflections = new Reflections("software.wings", "io.harness");
     Set<Class> classes = reflections.getSubTypesOf(PersistentEntity.class)
                              .stream()
@@ -64,8 +64,11 @@ public class ApplicationReadyListener {
     AdvancedDatastore datastore = hPersistence.getDatastore(EVENTS_STORE);
     locMorphia.map(classes);
 
-    // TODO: get the mode from config file
-    IndexManager.ensureIndexes(MANUAL, datastore, locMorphia);
+    IndexManager.Mode indexManagerMode = applicationReadyEvent.getApplicationContext()
+                                             .getBean(BatchMainConfig.class)
+                                             .getHarnessMongo()
+                                             .getIndexManagerMode();
+    IndexManager.ensureIndexes(indexManagerMode, datastore, locMorphia);
   }
 
   @EventListener(ApplicationReadyEvent.class)
