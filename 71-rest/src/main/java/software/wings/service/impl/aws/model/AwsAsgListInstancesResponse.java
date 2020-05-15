@@ -14,5 +14,6 @@ public class AwsAsgListInstancesResponse implements AwsResponse {
   private DelegateMetaInfo delegateMetaInfo;
   private ExecutionStatus executionStatus;
   private String errorMessage;
+  private String asgName;
   private List<Instance> instances;
 }

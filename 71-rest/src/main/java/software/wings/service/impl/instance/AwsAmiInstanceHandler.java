@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
@@ -8,9 +9,11 @@ import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_F
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +36,9 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
+import software.wings.service.AwsAmiInstanceSyncPerpetualTaskCreator;
+import software.wings.service.InstanceSyncPerpetualTaskCreator;
+import software.wings.service.impl.aws.model.AwsAsgListInstancesResponse;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
 
@@ -48,16 +54,19 @@ import java.util.Optional;
  */
 @Singleton
 @Slf4j
-public class AwsAmiInstanceHandler extends AwsInstanceHandler {
+public class AwsAmiInstanceHandler extends AwsInstanceHandler implements InstanceSyncByPerpetualTaskHandler {
+  @Inject private AwsAmiInstanceSyncPerpetualTaskCreator perpetualTaskCreator;
+
   @Override
   public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
     // Key - Auto scaling group with revision, Value - Instance
     Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
-    syncInstancesInternal(appId, infraMappingId, asgInstanceMap, null, false);
+    syncInstancesInternal(appId, infraMappingId, asgInstanceMap, null, false, null, instanceSyncFlow);
   }
 
   private void syncInstancesInternal(String appId, String infraMappingId, Multimap<String, Instance> asgInstanceMap,
-      List<DeploymentSummary> newDeploymentSummaries, boolean rollbak) {
+      List<DeploymentSummary> newDeploymentSummaries, boolean rollback,
+      AwsAsgListInstancesResponse asgListInstancesResponse, InstanceSyncFlow instanceSyncFlow) {
     Map<String, DeploymentSummary> asgNamesDeploymentSummaryMap = getDeploymentSummaryMap(newDeploymentSummaries);
 
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
@@ -82,14 +91,30 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
     AwsAmiInfrastructureMapping amiInfraMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
     String region = amiInfraMapping.getRegion();
 
-    handleEc2InstanceSync(ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region, Optional.empty(), true);
+    boolean canUpdateDb = canUpdateInstancesInDb(instanceSyncFlow, infrastructureMapping.getAccountId());
 
-    handleAsgInstanceSync(region, asgInstanceMap, awsConfig, encryptedDataDetails, infrastructureMapping,
-        asgNamesDeploymentSummaryMap, true, rollbak, Optional.empty());
+    if (instanceSyncFlow != InstanceSyncFlow.PERPETUAL_TASK) {
+      handleEc2InstanceSync(
+          ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region, Optional.empty(), canUpdateDb);
+      handleAsgInstanceSync(region, asgInstanceMap, awsConfig, encryptedDataDetails, infrastructureMapping,
+          asgNamesDeploymentSummaryMap, true, rollback, Optional.empty(), canUpdateDb);
+    } else {
+      handleAsgInstanceSyncForPerpetualTask(asgInstanceMap, infrastructureMapping, asgNamesDeploymentSummaryMap, true,
+          rollback, asgListInstancesResponse);
+    }
+  }
+
+  private void handleAsgInstanceSyncForPerpetualTask(Multimap<String, Instance> asgInstanceMap,
+      InfrastructureMapping infrastructureMapping, Map<String, DeploymentSummary> asgNamesDeploymentSummaryMap,
+      boolean isAmi, boolean rollback, AwsAsgListInstancesResponse response) {
+    if (asgInstanceMap.size() > 0) {
+      handleAutoScalingGroup(asgInstanceMap, infrastructureMapping, asgNamesDeploymentSummaryMap, isAmi, rollback,
+          response.getAsgName(), response.getInstances());
+    }
   }
 
   private Map<String, DeploymentSummary> getDeploymentSummaryMap(List<DeploymentSummary> newDeploymentSummaries) {
-    if (EmptyPredicate.isEmpty(newDeploymentSummaries)) {
+    if (isEmpty(newDeploymentSummaries)) {
       return Collections.emptyMap();
     }
 
@@ -117,7 +142,8 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
             null));
 
     syncInstancesInternal(deploymentSummaries.iterator().next().getAppId(),
-        deploymentSummaries.iterator().next().getInfraMappingId(), asgInstanceMap, deploymentSummaries, rollback);
+        deploymentSummaries.iterator().next().getInfraMappingId(), asgInstanceMap, deploymentSummaries, rollback, null,
+        InstanceSyncFlow.NEW_DEPLOYMENT);
   }
 
   @Override
@@ -213,5 +239,33 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
           .message("Invalid deploymentKey passed for AwsAmiDeploymentKey" + deploymentKey)
           .build();
     }
+  }
+
+  @Override
+  public FeatureName getFeatureFlagToEnablePerpetualTaskForInstanceSync() {
+    return FeatureName.MOVE_AWS_AMI_INSTANCE_SYNC_TO_PERPETUAL_TASK;
+  }
+
+  @Override
+  public InstanceSyncPerpetualTaskCreator getInstanceSyncPerpetualTaskCreator() {
+    return perpetualTaskCreator;
+  }
+
+  @Override
+  public void processInstanceSyncResponseFromPerpetualTask(
+      InfrastructureMapping infrastructureMapping, ResponseData response) {
+    Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
+    syncInstancesInternal(infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), asgInstanceMap, null,
+        false, (AwsAsgListInstancesResponse) response, InstanceSyncFlow.PERPETUAL_TASK);
+  }
+
+  @Override
+  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+    AwsAsgListInstancesResponse asgListInstancesResponse = (AwsAsgListInstancesResponse) response;
+    boolean success = asgListInstancesResponse.getExecutionStatus() == ExecutionStatus.SUCCESS;
+    boolean deleteTask = success && isEmpty(asgListInstancesResponse.getInstances());
+    String errorMessage = success ? null : asgListInstancesResponse.getErrorMessage();
+
+    return Status.builder().retryable(!deleteTask).errorMessage(errorMessage).success(success).build();
   }
 }

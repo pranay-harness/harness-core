@@ -186,8 +186,8 @@ public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncB
 
     // For AWS SSH, this method call is a NOOP. So we are not invoking this in the new perpetual task flow
     if (instanceSyncFlow != InstanceSyncFlow.PERPETUAL_TASK) {
-      handleAsgInstanceSync(
-          region, asgInstanceMap, awsConfig, encryptedDataDetails, infrastructureMapping, null, true, false, instances);
+      handleAsgInstanceSync(region, asgInstanceMap, awsConfig, encryptedDataDetails, infrastructureMapping, null, true,
+          false, instances, true);
     }
   }
 
@@ -213,94 +213,98 @@ public class AwsInstanceHandler extends InstanceHandler implements InstanceSyncB
   protected void handleAsgInstanceSync(String region, Multimap<String, Instance> asgInstanceMap, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, InfrastructureMapping infrastructureMapping,
       Map<String, DeploymentSummary> asgNameDeploymentSummaryMap, boolean isAmi, boolean rollback,
-      Optional<List<com.amazonaws.services.ec2.model.Instance>> instances) {
+      Optional<List<com.amazonaws.services.ec2.model.Instance>> instances, boolean canUpdateDb) {
     // This is to handle the case of the instances stored in the new schema.
     if (asgInstanceMap.size() > 0) {
       asgInstanceMap.keySet().forEach(autoScalingGroupName -> {
         List<com.amazonaws.services.ec2.model.Instance> latestEc2Instances = getEc2InstancesFromAutoScalingGroup(
             region, autoScalingGroupName, awsConfig, encryptedDataDetails, infrastructureMapping.getAppId());
-
-        Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap =
-            latestEc2Instances.stream().collect(
-                Collectors.toMap(com.amazonaws.services.ec2.model.Instance::getInstanceId, identity()));
-
-        Collection<Instance> instancesInDB = asgInstanceMap.get(autoScalingGroupName);
-        Map<String, Instance> instancesInDBMap = new HashMap<>();
-
-        // If there are prior instances in db already
-        if (isNotEmpty(instancesInDB)) {
-          instancesInDB.forEach(instance -> {
-            if (instance != null) {
-              instancesInDBMap.put(getEc2InstanceId(instance), instance);
-            }
-          });
-        }
-
-        SetView<String> instancesToBeUpdated =
-            Sets.intersection(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
-
-        // Find the instances that were yet to be added to db
-        SetView<String> instancesToBeAdded = Sets.difference(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
-
-        if (asgNameDeploymentSummaryMap != null && !isAmi) {
-          instancesToBeUpdated.forEach(ec2InstanceId -> {
-            Instance oldInstance = instancesInDBMap.get(ec2InstanceId);
-            com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
-            Instance instance = buildInstanceUsingEc2InstanceAndASG(null, ec2Instance, infrastructureMapping,
-                autoScalingGroupName, asgNameDeploymentSummaryMap.get(autoScalingGroupName));
-            if (oldInstance != null) {
-              instanceService.update(instance, oldInstance.getUuid());
-            } else {
-              logger.error("Instance doesn't exist for given ec2 instance id {}", ec2InstanceId);
-            }
-          });
-
-          logger.info("Instances to be updated {}", instancesToBeUpdated.size());
-        }
-
-        handleEc2InstanceDelete(instancesInDBMap, latestEc2InstanceMap);
-
-        DeploymentSummary deploymentSummary;
-        if (isNotEmpty(instancesToBeAdded)) {
-          if (isAmi) {
-            // newDeploymentInfo would be null in case of sync job.
-            if ((asgNameDeploymentSummaryMap == null || !asgNameDeploymentSummaryMap.containsKey(autoScalingGroupName))
-                && isNotEmpty(instancesInDB)) {
-              Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
-              if (!instanceWithExecutionInfoOptional.isPresent()) {
-                logger.warn("Couldn't find an instance from a previous deployment for inframapping {}",
-                    infrastructureMapping.getUuid());
-                return;
-              }
-
-              DeploymentSummary deploymentSummaryFromPrevious =
-                  DeploymentSummary.builder()
-                      .deploymentInfo(AwsAutoScalingGroupDeploymentInfo.builder().build())
-                      .build();
-              generateDeploymentSummaryFromInstance(
-                  instanceWithExecutionInfoOptional.get(), deploymentSummaryFromPrevious);
-              deploymentSummary = deploymentSummaryFromPrevious;
-            } else {
-              deploymentSummary = getDeploymentSummaryForInstanceCreation(
-                  asgNameDeploymentSummaryMap.get(autoScalingGroupName), rollback);
-            }
-
-            instancesToBeAdded.forEach(ec2InstanceId -> {
-              com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
-              // change to asg based instance builder
-              Instance instance = buildInstanceUsingEc2InstanceAndASG(
-                  null, ec2Instance, infrastructureMapping, autoScalingGroupName, deploymentSummary);
-              instanceService.save(instance);
-            });
-          } else {
-            // If a trigger is configured on a new instance creation, it will go ahead and spin up a workflow
-            triggerService.triggerExecutionByServiceInfra(
-                infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
-          }
-
-          logger.info("Instances to be added {}", instancesToBeAdded.size());
+        if (canUpdateDb) {
+          handleAutoScalingGroup(asgInstanceMap, infrastructureMapping, asgNameDeploymentSummaryMap, isAmi, rollback,
+              autoScalingGroupName, latestEc2Instances);
         }
       });
+    }
+  }
+
+  protected void handleAutoScalingGroup(Multimap<String, Instance> asgInstanceMap,
+      InfrastructureMapping infrastructureMapping, Map<String, DeploymentSummary> asgNameDeploymentSummaryMap,
+      boolean isAmi, boolean rollback, String autoScalingGroupName,
+      List<com.amazonaws.services.ec2.model.Instance> latestEc2Instances) {
+    Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap = latestEc2Instances.stream().collect(
+        Collectors.toMap(com.amazonaws.services.ec2.model.Instance::getInstanceId, identity()));
+
+    Collection<Instance> instancesInDB = asgInstanceMap.get(autoScalingGroupName);
+    Map<String, Instance> instancesInDBMap = new HashMap<>();
+
+    // If there are prior instances in db already
+    if (isNotEmpty(instancesInDB)) {
+      instancesInDB.forEach(instance -> {
+        if (instance != null) {
+          instancesInDBMap.put(getEc2InstanceId(instance), instance);
+        }
+      });
+    }
+
+    SetView<String> instancesToBeUpdated = Sets.intersection(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
+
+    // Find the instances that were yet to be added to db
+    SetView<String> instancesToBeAdded = Sets.difference(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
+
+    if (asgNameDeploymentSummaryMap != null && !isAmi) {
+      instancesToBeUpdated.forEach(ec2InstanceId -> {
+        Instance oldInstance = instancesInDBMap.get(ec2InstanceId);
+        com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
+        Instance instance = buildInstanceUsingEc2InstanceAndASG(null, ec2Instance, infrastructureMapping,
+            autoScalingGroupName, asgNameDeploymentSummaryMap.get(autoScalingGroupName));
+        if (oldInstance != null) {
+          instanceService.update(instance, oldInstance.getUuid());
+        } else {
+          logger.error("Instance doesn't exist for given ec2 instance id {}", ec2InstanceId);
+        }
+      });
+
+      logger.info("Instances to be updated {}", instancesToBeUpdated.size());
+    }
+
+    handleEc2InstanceDelete(instancesInDBMap, latestEc2InstanceMap);
+
+    DeploymentSummary deploymentSummary;
+    if (isNotEmpty(instancesToBeAdded)) {
+      if (isAmi) {
+        // newDeploymentInfo would be null in case of sync job.
+        if ((asgNameDeploymentSummaryMap == null || !asgNameDeploymentSummaryMap.containsKey(autoScalingGroupName))
+            && isNotEmpty(instancesInDB)) {
+          Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
+          if (!instanceWithExecutionInfoOptional.isPresent()) {
+            logger.warn("Couldn't find an instance from a previous deployment for inframapping {}",
+                infrastructureMapping.getUuid());
+            return;
+          }
+
+          DeploymentSummary deploymentSummaryFromPrevious =
+              DeploymentSummary.builder().deploymentInfo(AwsAutoScalingGroupDeploymentInfo.builder().build()).build();
+          generateDeploymentSummaryFromInstance(instanceWithExecutionInfoOptional.get(), deploymentSummaryFromPrevious);
+          deploymentSummary = deploymentSummaryFromPrevious;
+        } else {
+          deploymentSummary =
+              getDeploymentSummaryForInstanceCreation(asgNameDeploymentSummaryMap.get(autoScalingGroupName), rollback);
+        }
+
+        instancesToBeAdded.forEach(ec2InstanceId -> {
+          com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
+          // change to asg based instance builder
+          Instance instance = buildInstanceUsingEc2InstanceAndASG(
+              null, ec2Instance, infrastructureMapping, autoScalingGroupName, deploymentSummary);
+          instanceService.save(instance);
+        });
+      } else {
+        // If a trigger is configured on a new instance creation, it will go ahead and spin up a workflow
+        triggerService.triggerExecutionByServiceInfra(
+            infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
+      }
+
+      logger.info("Instances to be added {}", instancesToBeAdded.size());
     }
   }
 

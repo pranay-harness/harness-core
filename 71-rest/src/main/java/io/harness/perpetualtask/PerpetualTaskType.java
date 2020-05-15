@@ -13,7 +13,8 @@ public enum PerpetualTaskType {
   SAMPLE(SamplePerpetualTaskServiceClient.class),
   ARTIFACT_COLLECTION(ArtifactCollectionPTaskServiceClient.class),
   PCF_INSTANCE_SYNC(PcfInstanceSyncPerpetualTaskClient.class),
-  AWS_SSH_INSTANCE_SYNC(AwsSshPerpetualTaskServiceClient.class);
+  AWS_SSH_INSTANCE_SYNC(AwsSshPerpetualTaskServiceClient.class),
+  AWS_AMI_INSTANCE_SYNC(AwsAmiInstanceSyncPerpetualTaskClient.class);
 
   private final Class<? extends PerpetualTaskServiceClient> perpetualTaskServiceClientClass;
 
