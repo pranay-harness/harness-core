@@ -745,12 +745,18 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     if (!delegateConfiguration.isPollForTasks()) {
       socket.close();
     }
+    if (perpetualTaskWorker != null) {
+      perpetualTaskWorker.stop();
+    }
   }
 
   private void resume() {
     try {
       if (!delegateConfiguration.isPollForTasks()) {
         FibonacciBackOff.executeForEver(() -> socket.open(requestBuilder.build()));
+      }
+      if (perpetualTaskWorker != null) {
+        perpetualTaskWorker.start();
       }
       upgradePending.set(false);
       upgradeNeeded.set(false);
@@ -1057,7 +1063,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         new Schedulable("Failed to schedule a task", () -> taskPollExecutor.submit(this ::pollForTask)), 0,
         POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
     if (perpetualTaskWorker != null) {
-      perpetualTaskWorker.startAsync();
+      perpetualTaskWorker.start();
     }
   }
 
