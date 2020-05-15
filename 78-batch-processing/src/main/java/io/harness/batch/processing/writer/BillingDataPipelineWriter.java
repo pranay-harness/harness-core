@@ -17,8 +17,9 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ce.CEAwsConfig;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -46,7 +47,7 @@ public class BillingDataPipelineWriter extends EventWriter implements ItemWriter
     String accountType = getAccountType(accountInfo);
 
     List<SettingAttribute> ceConnectorsList = cloudToHarnessMappingService.getSettingAttributes(accountId,
-        SettingAttribute.SettingCategory.CE_CONNECTOR.toString(), SettingValue.SettingVariableTypes.CE_AWS.toString(),
+        SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS,
         CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE).toEpochMilli(),
         CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE).toEpochMilli());
 

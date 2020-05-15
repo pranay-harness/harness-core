@@ -79,9 +79,8 @@ public class BillingDataPipelineWriterTest extends CategoryTest {
 
     when(cloudToHarnessMappingService.getAccountInfoFromId(accountId))
         .thenReturn(Account.Builder.anAccount().withAccountName(accountName).build());
-    when(cloudToHarnessMappingService.getSettingAttributes(accountId,
-             SettingAttribute.SettingCategory.CE_CONNECTOR.toString(),
-             SettingValue.SettingVariableTypes.CE_AWS.toString(), startTime, endTime))
+    when(cloudToHarnessMappingService.getSettingAttributes(accountId, SettingAttribute.SettingCategory.CE_CONNECTOR,
+             SettingValue.SettingVariableTypes.CE_AWS, startTime, endTime))
         .thenReturn(Collections.singletonList(settingAttribute));
     when(billingDataPipelineService.createDataSet(accountId, accountName, masterAccountId, accountType))
         .thenReturn(dataSetId);

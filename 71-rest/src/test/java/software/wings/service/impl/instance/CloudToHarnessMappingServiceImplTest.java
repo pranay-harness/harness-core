@@ -61,8 +61,8 @@ public class CloudToHarnessMappingServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetSettingAttributes() {
     List<SettingAttribute> settingAttributes = cloudToHarnessMappingService.getSettingAttributes(ACCOUNT_ID,
-        SettingAttribute.SettingCategory.CE_CONNECTOR.toString(), SettingValue.SettingVariableTypes.CE_AWS.toString(),
-        instant.toEpochMilli(), instant.plus(1, ChronoUnit.DAYS).toEpochMilli());
+        SettingAttribute.SettingCategory.CE_CONNECTOR, SettingValue.SettingVariableTypes.CE_AWS, instant.toEpochMilli(),
+        instant.plus(1, ChronoUnit.DAYS).toEpochMilli());
     assertThat(settingAttributes.size()).isEqualTo(0);
   }
 

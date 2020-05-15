@@ -839,9 +839,9 @@ public class SettingsServiceImpl implements SettingsService {
     if (isOpenSSHKeyUsed(settingAttribute)) {
       restrictOpenSSHKey(settingAttribute);
     }
-
     SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
     SettingAttribute prevSettingAttribute = existingSetting;
+    validateAndUpdateCEDetails(settingAttribute);
 
     notNullCheck("Setting Attribute was deleted", existingSetting, USER);
     notNullCheck("SettingValue not associated", settingAttribute.getValue(), USER);
