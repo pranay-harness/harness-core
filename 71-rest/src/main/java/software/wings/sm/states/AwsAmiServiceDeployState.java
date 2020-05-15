@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.deployment.InstanceDetails.InstanceType.AWS;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
@@ -32,7 +31,6 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -525,40 +523,16 @@ public class AwsAmiServiceDeployState extends State {
     }
 
     // This sweeping element will be used by verification or other consumers.
-    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-                                   .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
-                                   .value(InstanceInfoVariables.builder()
-                                              .instanceElements(allInstanceElements)
-                                              .instanceDetails(generateAmInstanceDetails(allInstanceElements))
-                                              .build())
-                                   .build());
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+            .value(InstanceInfoVariables.builder()
+                       .instanceElements(allInstanceElements)
+                       .instanceDetails(awsStateHelper.generateAmInstanceDetails(allInstanceElements))
+                       .build())
+            .build());
 
     return instanceElements;
-  }
-
-  private List<InstanceDetails> generateAmInstanceDetails(List<InstanceElement> allInstanceElements) {
-    if (isEmpty(allInstanceElements)) {
-      return emptyList();
-    }
-
-    return allInstanceElements.stream()
-        .filter(instanceElement -> instanceElement != null)
-        .map(instanceElement
-            -> InstanceDetails.builder()
-                   .instanceType(AWS)
-                   .newInstance(instanceElement.isNewInstance())
-                   .hostName(instanceElement.getHostName())
-                   .aws(InstanceDetails.AWS.builder()
-                            .ec2Instance(
-                                instanceElement.getHost() != null ? instanceElement.getHost().getEc2Instance() : null)
-                            .publicDns(
-                                instanceElement.getHost() != null ? instanceElement.getHost().getPublicDns() : null)
-                            .instanceId(
-                                instanceElement.getHost() != null ? instanceElement.getHost().getInstanceId() : null)
-                            .ip(instanceElement.getHost() != null ? instanceElement.getHost().getIp() : null)
-                            .build())
-                   .build())
-        .collect(toList());
   }
 
   private List<InstanceElement> generateInstanceElements(List<Instance> instances, ExecutionContext context,

@@ -9,6 +9,8 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.AmiDeploymentType.SPOTINST;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -28,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
@@ -40,10 +43,13 @@ import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElementListParam;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -55,12 +61,14 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.AwsStateHelper;
+import software.wings.utils.WingsTestConstants;
 
 import java.util.List;
 import java.util.Map;
@@ -72,7 +80,8 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
   @Mock private SettingsService mockSettingsService;
   @Mock private ActivityService mockActivityService;
   @Mock private SpotInstStateHelper mockSpotinstStateHelper;
-  @Mock private AwsStateHelper mockAwsStateHelper;
+  @Spy private AwsStateHelper mockAwsStateHelper;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   @InjectMocks SpotInstDeployState state = new SpotInstDeployState("stateName");
 
@@ -172,6 +181,10 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
         .doReturn(singletonList(anInstanceElement().uuid(oldId).build()))
         .when(mockAwsStateHelper)
         .generateInstanceElements(anyList(), any(), any());
+    doReturn(SweepingOutputInstance.builder())
+        .when(mockContext)
+        .prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW);
+    doReturn(WingsTestConstants.STATE_EXECUTION_ID).when(mockContext).appendStateExecutionId(anyString());
     ExecutionResponse response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
@@ -185,6 +198,12 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
     assertThat(param.getInstanceElements().get(0).isNewInstance()).isTrue();
     assertThat(param.getInstanceElements().get(1).getUuid()).isEqualTo(oldId);
     assertThat(param.getInstanceElements().get(1).isNewInstance()).isFalse();
+
+    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(1)).save(captor.capture());
+    InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) captor.getValue().getValue();
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(2);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(2);
   }
 
   @Test

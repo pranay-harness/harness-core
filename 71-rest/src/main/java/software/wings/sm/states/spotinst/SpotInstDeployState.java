@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -37,6 +38,7 @@ import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -54,6 +56,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
@@ -75,6 +78,7 @@ public class SpotInstDeployState extends State {
   @Inject private transient ActivityService activityService;
   @Inject private transient SpotInstStateHelper spotInstStateHelper;
   @Inject private transient AwsStateHelper awsStateHelper;
+  @Inject private transient SweepingOutputService sweepingOutputService;
 
   @Getter @Setter private Integer instanceCount;
   @Getter @Setter private InstanceUnitType instanceUnitType = InstanceUnitType.PERCENTAGE;
@@ -257,6 +261,18 @@ public class SpotInstDeployState extends State {
         existingInstanceElements.forEach(instanceElement -> instanceElement.setNewInstance(false));
         instanceElements.addAll(existingInstanceElements);
       }
+    }
+
+    if (isNotEmpty(instanceElements)) {
+      // This sweeping element will be used by verification or other consumers.
+      sweepingOutputService.save(
+          context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+              .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+              .value(InstanceInfoVariables.builder()
+                         .instanceElements(instanceElements)
+                         .instanceDetails(awsStateHelper.generateAmInstanceDetails(instanceElements))
+                         .build())
+              .build());
     }
     InstanceElementListParam instanceElementListParam =
         InstanceElementListParam.builder().instanceElements(instanceElements).build();
