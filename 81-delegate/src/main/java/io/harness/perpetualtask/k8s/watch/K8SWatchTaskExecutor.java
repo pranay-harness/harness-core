@@ -89,7 +89,6 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
               })
           .collectAndPublishMetrics(now);
 
-      // to be removed after batch processing changes
     } catch (K8sClusterException ke) {
       try {
         eventPublisher.publishMessage(CeExceptionMessage.newBuilder()

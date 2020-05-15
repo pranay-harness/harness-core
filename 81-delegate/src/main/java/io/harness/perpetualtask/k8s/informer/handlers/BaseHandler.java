@@ -86,7 +86,7 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
 
   @Override
   public void onAdd(ApiType resource) {
-    handleDifferentApiVersion(resource);
+    handleMissingKindAndApiVersion(resource);
     logger.debug("Added resource: {}", ResourceDetails.ofResource(resource));
     V1OwnerReference controller = getController(resource);
     if (controller != null) {
@@ -108,7 +108,7 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
     }
   }
 
-  private void handleDifferentApiVersion(ApiType resource) {
+  private void handleMissingKindAndApiVersion(ApiType resource) {
     if (Reflect.on(resource).get("kind") == null) {
       Reflect.on(resource).set("kind", getKind());
     }
@@ -119,6 +119,8 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
 
   @Override
   public void onUpdate(ApiType oldResource, ApiType newResource) {
+    handleMissingKindAndApiVersion(oldResource);
+    handleMissingKindAndApiVersion(newResource);
     ResourceDetails oldResourceDetails = ResourceDetails.ofResource(oldResource);
     ResourceDetails newResourceDetails = ResourceDetails.ofResource(newResource);
     logger.debug("Resource: {} updated from {} to {}", oldResourceDetails, oldResourceDetails.getResourceVersion(),
@@ -178,6 +180,7 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
 
   @Override
   public void onDelete(ApiType resource, boolean finalStateUnknown) {
+    handleMissingKindAndApiVersion(resource);
     logger.debug("Delete resource: {}, finalStateUnknown: {}", ResourceDetails.ofResource(resource), finalStateUnknown);
     V1OwnerReference controller = getController(resource);
     if (controller != null) {
