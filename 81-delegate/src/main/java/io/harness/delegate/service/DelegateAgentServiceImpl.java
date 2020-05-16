@@ -149,6 +149,7 @@ import org.atmosphere.wasync.Request.TRANSPORT;
 import org.atmosphere.wasync.RequestBuilder;
 import org.atmosphere.wasync.Socket;
 import org.atmosphere.wasync.Socket.STATUS;
+import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -278,6 +279,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
 
+  private final Set<String> currentlyAcquiringTasks = new ConcurrentHashSet<>();
   private final Map<String, DelegateTaskPackage> currentlyValidatingTasks = new ConcurrentHashMap<>();
   private final Map<String, DelegateTaskPackage> currentlyExecutingTasks = new ConcurrentHashMap<>();
   private final Map<String, Future<?>> currentlyValidatingFutures = new ConcurrentHashMap<>();
@@ -1502,6 +1504,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
 
     String delegateTaskId = delegateTaskEvent.getDelegateTaskId();
+    if (delegateTaskId == null) {
+      logger.warn("Delegate task id cannot be null");
+      return;
+    }
+
     if (!acquireTasks.get()) {
       logger.info("[Old] Upgraded process is running. Won't acquire task while completing other tasks");
       return;
@@ -1512,19 +1519,30 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       return;
     }
 
-    if (delegateTaskId != null) {
-      if (currentlyValidatingTasks.containsKey(delegateTaskId)) {
-        logger.info("Task [DelegateTaskEvent: {}] already validating. Don't validate again", delegateTaskEvent);
-        return;
+    if (currentlyAcquiringTasks.contains(delegateTaskId)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Task [DelegateTaskEvent: {}] currently acquiring. Don't acquire again", delegateTaskEvent);
       }
+      return;
+    }
 
-      if (currentlyExecutingTasks.containsKey(delegateTaskId)) {
-        logger.info("Task [DelegateTaskEvent: {}] already acquired. Don't acquire again", delegateTaskEvent);
-        return;
+    if (currentlyValidatingTasks.containsKey(delegateTaskId)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Task [DelegateTaskEvent: {}] already validating. Don't validate again", delegateTaskEvent);
       }
+      return;
+    }
+
+    if (currentlyExecutingTasks.containsKey(delegateTaskId)) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Task [DelegateTaskEvent: {}] already acquired. Don't acquire again", delegateTaskEvent);
+      }
+      return;
     }
 
     try {
+      currentlyAcquiringTasks.add(delegateTaskId);
+
       // Delay response if already working on many tasks
       sleep(ofMillis(100 * Math.min(currentlyExecutingTasks.size() + currentlyValidatingTasks.size(), 10)));
 
@@ -1593,6 +1611,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
     } catch (IOException e) {
       logger.error("Unable to get task for validation", e);
+    } finally {
+      currentlyAcquiringTasks.remove(delegateTaskId);
     }
   }
 
