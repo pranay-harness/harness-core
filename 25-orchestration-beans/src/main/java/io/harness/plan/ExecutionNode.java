@@ -3,7 +3,6 @@ package io.harness.plan;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.adviser.AdviserObtainment;
-import io.harness.ambiance.LevelType;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -26,6 +25,7 @@ public class ExecutionNode {
   @NotNull String uuid;
   @NotNull String name;
   @NotNull StateType stateType;
+  @NotNull String identifier;
 
   // Input/Outputs
   StateParameters stateParameters;
@@ -34,6 +34,4 @@ public class ExecutionNode {
   // Hooks
   @Singular List<AdviserObtainment> adviserObtainments;
   @Singular List<FacilitatorObtainment> facilitatorObtainments;
-
-  @NotNull LevelType levelType;
 }

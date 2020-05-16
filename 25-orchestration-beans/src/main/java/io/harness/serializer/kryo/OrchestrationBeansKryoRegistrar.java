@@ -8,7 +8,6 @@ import io.harness.adviser.AdviserType;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.LevelExecution;
 import io.harness.ambiance.LevelType;
-import io.harness.ambiance.dev.DefaultLevel;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
@@ -36,7 +35,6 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(LevelExecution.class, 2504);
     kryo.register(LevelType.class, 2505);
     kryo.register(NodeExecution.class, 2506);
-    kryo.register(DefaultLevel.class, 2507);
     kryo.register(ExecutionNode.class, 2508);
     kryo.register(StateType.class, 2509);
     kryo.register(ExecutionMode.class, 2510);

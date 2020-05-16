@@ -3,7 +3,6 @@ package io.harness.serializer.morphia;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.adviser.AdviserParameters;
-import io.harness.ambiance.dev.DefaultLevel;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.data.OutcomeInstance;
@@ -45,7 +44,6 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
       map.put(PKG_HARNESS + name, clazz);
     };
     h.put("facilitator.DefaultFacilitatorParams", DefaultFacilitatorParams.class);
-    h.put("ambiance.dev.DefaultLevel", DefaultLevel.class);
     h.put("references.OutcomeRefObject", OutcomeRefObject.class);
   }
 }

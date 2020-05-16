@@ -10,8 +10,6 @@ import com.google.inject.Singleton;
 
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
-import io.harness.ambiance.Level;
-import io.harness.ambiance.LevelType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorType;
@@ -19,11 +17,9 @@ import io.harness.govern.DependencyModule;
 import io.harness.references.RefType;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
-import io.harness.registries.level.LevelRegistry;
 import io.harness.registries.registrar.AdviserRegistrar;
 import io.harness.registries.registrar.EngineRegistrar;
 import io.harness.registries.registrar.FacilitatorRegistrar;
-import io.harness.registries.registrar.LevelRegistrar;
 import io.harness.registries.registrar.ResolverRegistrar;
 import io.harness.registries.registrar.StateRegistrar;
 import io.harness.registries.resolver.ResolverRegistry;
@@ -58,14 +54,12 @@ public class RegistryModule extends DependencyModule {
           .put(RegistryType.ADVISER, AdviserRegistrar.class)
           .put(RegistryType.FACILITATOR, FacilitatorRegistrar.class)
           .put(RegistryType.RESOLVER, ResolverRegistrar.class)
-          .put(RegistryType.LEVEL, LevelRegistrar.class)
           .build();
 
   private static final Set stateClasses = collectClasses(RegistryType.STATE);
   private static final Set adviserClasses = collectClasses(RegistryType.ADVISER);
   private static final Set facilitatorClasses = collectClasses(RegistryType.FACILITATOR);
   private static final Set resolverClasses = collectClasses(RegistryType.RESOLVER);
-  private static final Set levelClasses = collectClasses(RegistryType.LEVEL);
 
   private static synchronized Set collectClasses(RegistryType registryType) {
     Set classes = new ConcurrentHashSet<>();
@@ -130,18 +124,6 @@ public class RegistryModule extends DependencyModule {
     });
     injector.injectMembers(facilitatorRegistry);
     return facilitatorRegistry;
-  }
-
-  @Provides
-  @Singleton
-  LevelRegistry providesLevelRegistry(Injector injector) {
-    LevelRegistry levelRegistry = new LevelRegistry();
-    levelClasses.forEach(pair -> {
-      Pair<LevelType, Class<? extends Level>> statePair = (Pair<LevelType, Class<? extends Level>>) pair;
-      levelRegistry.register(statePair.getLeft(), statePair.getRight());
-    });
-    injector.injectMembers(levelRegistry);
-    return levelRegistry;
   }
 
   @Override
