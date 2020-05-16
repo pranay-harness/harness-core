@@ -65,7 +65,7 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
       String uuid = generateUuid();
       callbackIds.add(uuid);
       ExecutionNode node = plan.fetchNode(child.getChildNodeId());
-      Ambiance clonedAmbiance = ambiance.deepCopy();
+      Ambiance clonedAmbiance = ambiance.cloneForChild();
       clonedAmbiance.addLevelExecution(
           LevelExecution.builder().setupId(node.getUuid()).runtimeId(uuid).identifier(node.getIdentifier()).build());
       NodeExecution childNodeExecution = NodeExecution.builder()

@@ -56,8 +56,8 @@ public class Plan implements PersistentEntity {
   }
 
   public ExecutionNode fetchNode(String nodeId) {
-    int nodeIndex = Collections.binarySearch(
-        nodes, ExecutionNode.builder().uuid(nodeId).build(), Comparator.comparing(ExecutionNode::getUuid));
+    int nodeIndex =
+        Collections.binarySearch(nodes, new ExecutionNode(nodeId), Comparator.comparing(ExecutionNode::getUuid));
     if (nodeIndex < 0) {
       throw new InvalidRequestException("No node found with Id :" + nodeId);
     }

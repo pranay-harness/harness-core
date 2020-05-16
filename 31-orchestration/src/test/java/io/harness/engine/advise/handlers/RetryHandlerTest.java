@@ -52,6 +52,7 @@ public class RetryHandlerTest extends OrchestrationTest {
                                       .node(ExecutionNode.builder()
                                                 .uuid(NODE_SETUP_ID)
                                                 .name("DUMMY")
+                                                .identifier("dummy")
                                                 .stateType(StateType.builder().type("DUMMY").build())
                                                 .build())
                                       .startTs(System.currentTimeMillis())
