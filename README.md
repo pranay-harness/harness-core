@@ -477,6 +477,37 @@ The above comand creates or updates `BUILD.bazel`
 
 We need to update the dependencies in `portal/WORKSPACE`. Run the following for your new/updated `go.mod`
 ```lang=bash
-bazel run //:gazelle -- update-repos -from_file=commons/go/lib/go.mod # an example
+update_bazel_repo.sh commons/go/lib/go.mod # an example
 ```
 This updates the `portal/WORKSPACE` file with new dependencies. Check-in `portal/WORKSPACE` file and any updated `go.mod` and `go.sum` files.
+
+
+# How to use local module in an application outside the module
+* We are using bazel for building and testing go source code. bazel needs BUILD.bazel files and doesn't need go.mod or go.sum files
+go.mod and go.sum files  are needed for native go tools
+* bazel uses $PROJECT_ROOT/WORKSPACE to store go repositories which has information found in both go.mod and go.sum bazel uses $PROJECT_ROOT/WORKSPACE for dependency management and BUILD.bazel for actual execution of targets
+
+* To use local modules in an application
+* for eg., to use module `lib` in an application `ci-addon`, we need to perform these actions:
+```lang=bash 
+cd ci/addon #cd to the application folder where main.go is located
+```  
+```lang=bash 
+go mod init <module-name>   # this generates go.mod and go.sum
+```
+
+* update go.mod by adding the following line to point to local repository (replace module and relative path to match yours):
+```lang=bash 
+replace github.com/wings-software/portal/commons/go/lib => ../../../commons/go/lib
+```
+* (the above replace is needed only if you are outside the module you want to import)
+```lang=bash 
+go get  # this updates go.mod
+```
+```lang=bash 
+gazelle  # generates, updates BUILD.bazel
+```
+* To update go_repository() at portal/WORKSPACE, run this script as:
+```lang=bash 
+portal/tools/go/update_bazel_repo.sh go.mod
+```
