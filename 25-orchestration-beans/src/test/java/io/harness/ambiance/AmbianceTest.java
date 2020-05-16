@@ -34,10 +34,9 @@ public class AmbianceTest extends OrchestrationBeansTest {
     assertThat(copy).isNotNull();
     assertThat(System.identityHashCode(copy.getSetupAbstractions()))
         .isNotEqualTo(System.identityHashCode(ambiance.getSetupAbstractions()));
-    assertThat(System.identityHashCode(copy.getLevelExecutions()))
-        .isNotEqualTo(System.identityHashCode(ambiance.getLevelExecutions()));
+    assertThat(System.identityHashCode(copy.getLevels())).isNotEqualTo(System.identityHashCode(ambiance.getLevels()));
     assertThat(copy.getSetupAbstractions()).isEqualTo(ambiance.getSetupAbstractions());
-    assertThat(copy.getLevelExecutions()).isEqualTo(ambiance.getLevelExecutions());
+    assertThat(copy.getLevels()).isEqualTo(ambiance.getLevels());
   }
 
   @Test
@@ -46,11 +45,11 @@ public class AmbianceTest extends OrchestrationBeansTest {
   public void shouldTestAddLevelExecution() {
     String setupId = generateUuid();
     String runtimeId = generateUuid();
-    LevelExecution stepLevelExecution = LevelExecution.builder().runtimeId(runtimeId).setupId(setupId).build();
+    Level stepLevel = Level.builder().runtimeId(runtimeId).setupId(setupId).build();
     Ambiance ambiance = buildAmbiance();
-    assertThat(ambiance.getLevelExecutions()).hasSize(2);
-    ambiance.addLevelExecution(stepLevelExecution);
-    assertThat(ambiance.getLevelExecutions()).hasSize(3);
+    assertThat(ambiance.getLevels()).hasSize(2);
+    ambiance.addLevel(stepLevel);
+    assertThat(ambiance.getLevels()).hasSize(3);
   }
 
   @Test
@@ -58,11 +57,11 @@ public class AmbianceTest extends OrchestrationBeansTest {
   @Category(UnitTests.class)
   public void shouldTestCloneForNext() {
     Ambiance ambiance = buildAmbiance();
-    assertThat(ambiance.getLevelExecutions()).hasSize(2);
+    assertThat(ambiance.getLevels()).hasSize(2);
 
     Ambiance clonedAmbiance = ambiance.cloneForFinish();
     assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevelExecutions()).hasSize(1);
+    assertThat(clonedAmbiance.getLevels()).hasSize(1);
     assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
   }
 
@@ -71,11 +70,11 @@ public class AmbianceTest extends OrchestrationBeansTest {
   @Category(UnitTests.class)
   public void shouldTestCloneForChild() {
     Ambiance ambiance = buildAmbiance();
-    assertThat(ambiance.getLevelExecutions()).hasSize(2);
+    assertThat(ambiance.getLevels()).hasSize(2);
 
     Ambiance clonedAmbiance = ambiance.cloneForChild();
     assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevelExecutions()).hasSize(2);
+    assertThat(clonedAmbiance.getLevels()).hasSize(2);
     assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
   }
 
@@ -88,18 +87,16 @@ public class AmbianceTest extends OrchestrationBeansTest {
   }
 
   private Ambiance buildAmbiance() {
-    LevelExecution phaseLevelExecution =
-        LevelExecution.builder().runtimeId(PHASE_RUNTIME_ID).setupId(PHASE_SETUP_ID).build();
-    LevelExecution sectionLevelExecution =
-        LevelExecution.builder().runtimeId(SECTION_RUNTIME_ID).setupId(SECTION_SETUP_ID).build();
-    List<LevelExecution> levelExecutions = new ArrayList<>();
-    levelExecutions.add(phaseLevelExecution);
-    levelExecutions.add(sectionLevelExecution);
+    Level phaseLevel = Level.builder().runtimeId(PHASE_RUNTIME_ID).setupId(PHASE_SETUP_ID).build();
+    Level sectionLevel = Level.builder().runtimeId(SECTION_RUNTIME_ID).setupId(SECTION_SETUP_ID).build();
+    List<Level> levels = new ArrayList<>();
+    levels.add(phaseLevel);
+    levels.add(sectionLevel);
     return Ambiance.builder()
         .planExecutionId(EXECUTION_INSTANCE_ID)
         .setupAbstractions(
             ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
-        .levelExecutions(levelExecutions)
+        .levels(levels)
         .build();
   }
 }

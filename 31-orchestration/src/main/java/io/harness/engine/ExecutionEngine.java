@@ -16,7 +16,7 @@ import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.LevelExecution;
+import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
@@ -143,8 +143,7 @@ public class ExecutionEngine implements Engine {
   private Ambiance reBuildAmbiance(Ambiance ambiance, ExecutionNode node, String uuid) {
     Ambiance cloned = ambiance.obtainCurrentRuntimeId() == null ? ambiance : ambiance.cloneForFinish();
 
-    cloned.addLevelExecution(
-        LevelExecution.builder().setupId(node.getUuid()).runtimeId(uuid).identifier(node.getIdentifier()).build());
+    cloned.addLevel(Level.builder().setupId(node.getUuid()).runtimeId(uuid).identifier(node.getIdentifier()).build());
     return cloned;
   }
 

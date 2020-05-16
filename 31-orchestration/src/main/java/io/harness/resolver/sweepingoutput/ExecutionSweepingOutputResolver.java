@@ -73,16 +73,16 @@ public class ExecutionSweepingOutputResolver implements Resolver<SweepingOutput>
   }
 
   private List<String> prepareLevelRuntimeIdIndices(@NotNull Ambiance ambiance) {
-    if (EmptyPredicate.isEmpty(ambiance.getLevelExecutions())) {
+    if (EmptyPredicate.isEmpty(ambiance.getLevels())) {
       // If the ambiance has no level executions, the instance also shouldn't have any level executions.
       return Collections.singletonList("");
     }
 
     List<String> levelRuntimeIdIndices = new ArrayList<>();
     levelRuntimeIdIndices.add("");
-    for (int i = 1; i <= ambiance.getLevelExecutions().size(); i++) {
+    for (int i = 1; i <= ambiance.getLevels().size(); i++) {
       levelRuntimeIdIndices.add(
-          ExecutionSweepingOutputInstance.prepareLevelRuntimeIdIdx(ambiance.getLevelExecutions().subList(0, i)));
+          ExecutionSweepingOutputInstance.prepareLevelRuntimeIdIdx(ambiance.getLevels().subList(0, i)));
     }
     return levelRuntimeIdIndices;
   }

@@ -33,14 +33,14 @@ public class Ambiance {
   @Singular Map<String, String> setupAbstractions;
 
   // These is a combination of setup/execution Id for a particular level
-  @Builder.Default @NonFinal List<LevelExecution> levelExecutions = new ArrayList<>();
+  @Builder.Default @NonFinal List<Level> levels = new ArrayList<>();
 
   @NotNull String planExecutionId;
 
   public AutoLogContext autoLogContext() {
     Map<String, String> logContext = new HashMap<>(setupAbstractions);
     logContext.put(AmbianceKeys.planExecutionId, planExecutionId);
-    levelExecutions.forEach(level -> {
+    levels.forEach(level -> {
       logContext.put("identifier", level.getIdentifier());
       logContext.put("runtimeId", level.getRuntimeId());
       logContext.put("setupId", level.getSetupId());
@@ -48,13 +48,13 @@ public class Ambiance {
     return new AutoLogContext(logContext, OVERRIDE_ERROR);
   }
 
-  public void addLevelExecution(@Valid @NotNull LevelExecution levelExecution) {
-    levelExecutions.add(levelExecution);
+  public void addLevel(@Valid @NotNull Level level) {
+    levels.add(level);
   }
 
   public Ambiance cloneForFinish() {
     Ambiance cloned = deepCopy();
-    cloned.levelExecutions.remove(levelExecutions.size() - 1);
+    cloned.levels.remove(levels.size() - 1);
     return cloned;
   }
 
@@ -63,15 +63,15 @@ public class Ambiance {
   }
 
   public String obtainCurrentRuntimeId() {
-    LevelExecution levelExecution = obtainCurrentLevelExecution();
-    return levelExecution == null ? null : levelExecution.getRuntimeId();
+    Level level = obtainCurrentLevel();
+    return level == null ? null : level.getRuntimeId();
   }
 
-  public LevelExecution obtainCurrentLevelExecution() {
-    if (isEmpty(levelExecutions)) {
+  public Level obtainCurrentLevel() {
+    if (isEmpty(levels)) {
       return null;
     }
-    return levelExecutions.get(levelExecutions.size() - 1);
+    return levels.get(levels.size() - 1);
   }
 
   @VisibleForTesting

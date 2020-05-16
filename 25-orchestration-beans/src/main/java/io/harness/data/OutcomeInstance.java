@@ -2,7 +2,7 @@ package io.harness.data;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.ambiance.LevelExecution;
+import io.harness.ambiance.Level;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
@@ -34,11 +34,11 @@ import java.util.stream.Collectors;
 @Indexes({
   @Index(options = @IndexOptions(name = "levelSetupIdx"),
       fields = { @Field("planExecutionId")
-                 , @Field("levelExecutions.setupId"), @Field("name") })
+                 , @Field("levels.setupId"), @Field("name") })
   ,
       @Index(options = @IndexOptions(name = "levelRuntimeIdx"),
           fields = { @Field("planExecutionId")
-                     , @Field("levelExecutions.runtimeId"), @Field("name") }),
+                     , @Field("levels.runtimeId"), @Field("name") }),
       @Index(options = @IndexOptions(name = "planExecutionIdx"), fields = { @Field("ambiance.planExecutionId") }),
       @Index(
           options = @IndexOptions(name = "levelRuntimeUniqueIdx", unique = true), fields = { @Field("levelIndexKey") })
@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 public class OutcomeInstance implements PersistentEntity, UuidAccess, CreatedAtAccess {
   @Id String uuid;
   @NonNull String planExecutionId;
-  @Singular List<LevelExecution> levelExecutions;
+  @Singular List<Level> levels;
   @NonNull String name;
   Outcome outcome;
   long createdAt;
@@ -55,13 +55,12 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess, CreatedAtA
 
   @UtilityClass
   public static final class OutcomeInstanceKeys {
-    public static final String levelExecutionSetupId = "levelExecutions.setupId";
-    public static final String levelExecutionRuntimeId = "levelExecutions.runtimeId";
+    public static final String levelSetupId = "levels.setupId";
+    public static final String levelRuntimeId = "levels.runtimeId";
   }
 
   @PrePersist
   void populateLevelIndexKey() {
-    levelIndexKey =
-        levelExecutions.stream().map(LevelExecution::getRuntimeId).collect(Collectors.joining("|")).concat("|" + name);
+    levelIndexKey = levels.stream().map(Level::getRuntimeId).collect(Collectors.joining("|")).concat("|" + name);
   }
 }

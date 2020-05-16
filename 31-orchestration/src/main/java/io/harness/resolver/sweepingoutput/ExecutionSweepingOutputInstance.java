@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Ambiance.AmbianceKeys;
-import io.harness.ambiance.LevelExecution;
+import io.harness.ambiance.Level;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
@@ -68,12 +68,11 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
 
   @PrePersist
   void populateLevelRuntimeIdIdx() {
-    levelRuntimeIdIdx = prepareLevelRuntimeIdIdx(ambiance.getLevelExecutions());
+    levelRuntimeIdIdx = prepareLevelRuntimeIdIdx(ambiance.getLevels());
   }
 
-  public static String prepareLevelRuntimeIdIdx(List<LevelExecution> levelExecutions) {
-    return EmptyPredicate.isEmpty(levelExecutions)
-        ? ""
-        : levelExecutions.stream().map(LevelExecution::getRuntimeId).collect(Collectors.joining("|"));
+  public static String prepareLevelRuntimeIdIdx(List<Level> levels) {
+    return EmptyPredicate.isEmpty(levels) ? ""
+                                          : levels.stream().map(Level::getRuntimeId).collect(Collectors.joining("|"));
   }
 }
