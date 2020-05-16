@@ -211,7 +211,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
        */
       for (AppdynamicsMetricData metricData : metricsData) {
         String[] appdynamicsPathPieces = metricData.getMetricPath().split(Pattern.quote("|"));
-        String tierName = parseAppdynamicsInternalName(appdynamicsPathPieces, 2);
+        String tierName = appdynamicsPathPieces[2];
         String nodeName = dataCollectionInfo.getTimeSeriesMlAnalysisType() == TimeSeriesMlAnalysisType.PREDICTIVE
             ? tierName
             : appdynamicsPathPieces[5];
