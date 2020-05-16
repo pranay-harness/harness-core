@@ -10,28 +10,45 @@ import io.harness.references.RefObject;
 import io.harness.state.StateType;
 import io.harness.state.io.StateParameters;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
 import lombok.Singular;
-import lombok.Value;
 
 import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
-@Value
-@Builder
 @Redesign
 public class ExecutionNode {
   // Identifiers
-  @NotNull String uuid;
-  @NotNull String name;
-  @NotNull StateType stateType;
-  @NotNull String identifier;
+  @NonNull @Getter String uuid;
+  @NonNull @Getter String name;
+  @NonNull @Getter StateType stateType;
+  @NonNull @Getter String identifier;
 
   // Input/Outputs
-  StateParameters stateParameters;
-  @Singular List<RefObject> refObjects;
+  @Getter StateParameters stateParameters;
+  @Singular @Getter List<RefObject> refObjects;
 
   // Hooks
-  @Singular List<AdviserObtainment> adviserObtainments;
-  @Singular List<FacilitatorObtainment> facilitatorObtainments;
+  @Singular @Getter List<AdviserObtainment> adviserObtainments;
+  @Singular @Getter List<FacilitatorObtainment> facilitatorObtainments;
+
+  @Builder
+  public ExecutionNode(@NonNull String uuid, @NonNull String name, @NonNull StateType stateType,
+      @NonNull String identifier, StateParameters stateParameters, @Singular List<RefObject> refObjects,
+      @Singular List<AdviserObtainment> adviserObtainments,
+      @Singular List<FacilitatorObtainment> facilitatorObtainments) {
+    this.uuid = uuid;
+    this.name = name;
+    this.stateType = stateType;
+    this.identifier = identifier;
+    this.stateParameters = stateParameters;
+    this.refObjects = refObjects;
+    this.adviserObtainments = adviserObtainments;
+    this.facilitatorObtainments = facilitatorObtainments;
+  }
+
+  ExecutionNode(String uuid) {
+    this.uuid = uuid;
+  }
 }
