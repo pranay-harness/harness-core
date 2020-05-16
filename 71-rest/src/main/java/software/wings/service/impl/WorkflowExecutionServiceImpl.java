@@ -816,6 +816,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (executionArgs.getArtifactIdNames() != null) {
         String accountId = appService.getAccountIdByAppId(appId);
         executionArgs.setArtifacts(artifactService.listByIds(accountId, executionArgs.getArtifactIdNames().keySet()));
+      } else {
+        executionArgs.setArtifacts(Collections.emptyList());
       }
     }
     return workflowExecution;
