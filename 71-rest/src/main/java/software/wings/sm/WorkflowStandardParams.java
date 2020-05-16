@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 
@@ -147,10 +148,16 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     } else {
       envUrlId = BUILD == context.getOrchestrationWorkflowType() ? "build" : "noEnv";
     }
-    map.put(DEPLOYMENT_URL,
-        buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(), app.getUuid(),
-                             envUrlId, context.getWorkflowExecutionId()),
-            context.getAccountId()));
+
+    String url;
+    if (workflowElement != null && isNotBlank(workflowElement.getPipelineDeploymentUuid())) {
+      url = format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/%s/details", app.getAccountId(),
+          app.getUuid(), workflowElement.getPipelineDeploymentUuid(), context.getWorkflowExecutionId());
+    } else {
+      url = format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(), app.getUuid(), envUrlId,
+          context.getWorkflowExecutionId());
+    }
+    map.put(DEPLOYMENT_URL, buildAbsoluteUrl(url, context.getAccountId()));
 
     if (currentUser != null) {
       map.put(DEPLOYMENT_TRIGGERED_BY, currentUser.getName());
