@@ -5,7 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.LevelExecution;
+import io.harness.ambiance.Level;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,18 +20,16 @@ public class AmbianceTestUtils {
   public static final String SECTION_SETUP_ID = generateUuid();
 
   public static Ambiance buildAmbiance() {
-    LevelExecution phaseLevelExecution =
-        LevelExecution.builder().runtimeId(PHASE_RUNTIME_ID).setupId(PHASE_SETUP_ID).build();
-    LevelExecution sectionLevelExecution =
-        LevelExecution.builder().runtimeId(SECTION_RUNTIME_ID).setupId(SECTION_SETUP_ID).build();
-    List<LevelExecution> levelExecutions = new ArrayList<>();
-    levelExecutions.add(phaseLevelExecution);
-    levelExecutions.add(sectionLevelExecution);
+    Level phaseLevel = Level.builder().runtimeId(PHASE_RUNTIME_ID).setupId(PHASE_SETUP_ID).build();
+    Level sectionLevel = Level.builder().runtimeId(SECTION_RUNTIME_ID).setupId(SECTION_SETUP_ID).build();
+    List<Level> levels = new ArrayList<>();
+    levels.add(phaseLevel);
+    levels.add(sectionLevel);
     return Ambiance.builder()
         .planExecutionId(EXECUTION_INSTANCE_ID)
         .setupAbstractions(
             ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
-        .levelExecutions(levelExecutions)
+        .levels(levels)
         .build();
   }
 }

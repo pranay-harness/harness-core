@@ -27,7 +27,7 @@ public class OutcomeServiceImpl implements OutcomeService {
   public Outcome resolve(Ambiance ambiance, RefObject refObject) {
     OutcomeInstance outcomeInstance = hPersistence.createQuery(OutcomeInstance.class)
                                           .filter(OutcomeInstanceKeys.planExecutionId, ambiance.getPlanExecutionId())
-                                          .filter(OutcomeInstanceKeys.levelExecutionSetupId, refObject.getProducerId())
+                                          .filter(OutcomeInstanceKeys.levelSetupId, refObject.getProducerId())
                                           .filter(OutcomeInstanceKeys.name, refObject.getName())
                                           .get();
     if (outcomeInstance == null) {
@@ -53,7 +53,7 @@ public class OutcomeServiceImpl implements OutcomeService {
     OutcomeInstance instance = OutcomeInstance.builder()
                                    .uuid(generateUuid())
                                    .planExecutionId(ambiance.getPlanExecutionId())
-                                   .levelExecutions(ambiance.getLevelExecutions())
+                                   .levels(ambiance.getLevels())
                                    .outcome(outcome)
                                    .createdAt(System.currentTimeMillis())
                                    .name(name)

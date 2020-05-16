@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.LevelExecution;
+import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.AmbianceHelper;
@@ -59,11 +59,8 @@ public class ChildExecutableInvoker implements ExecutableInvoker {
     Plan plan = planExecution.getPlan();
     ExecutionNode node = plan.fetchNode(response.getChildNodeId());
     Ambiance clonedAmbiance = ambiance.cloneForChild();
-    clonedAmbiance.addLevelExecution(LevelExecution.builder()
-                                         .setupId(node.getUuid())
-                                         .runtimeId(childInstanceId)
-                                         .identifier(node.getIdentifier())
-                                         .build());
+    clonedAmbiance.addLevel(
+        Level.builder().setupId(node.getUuid()).runtimeId(childInstanceId).identifier(node.getIdentifier()).build());
     NodeExecution childNodeExecution = NodeExecution.builder()
                                            .uuid(childInstanceId)
                                            .node(node)

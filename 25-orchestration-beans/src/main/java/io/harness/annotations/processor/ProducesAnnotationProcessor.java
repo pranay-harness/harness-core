@@ -3,7 +3,6 @@ package io.harness.annotations.processor;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.adviser.Adviser;
-import io.harness.ambiance.Level;
 import io.harness.annotations.Produces;
 import io.harness.facilitator.Facilitator;
 import io.harness.resolvers.Resolver;
@@ -29,7 +28,6 @@ public class ProducesAnnotationProcessor extends AbstractProcessor {
           .put(Facilitator.class.getCanonicalName(), Facilitator.class.getCanonicalName())
           .put(Resolver.class.getCanonicalName(), Resolver.class.getCanonicalName())
           .put(State.class.getCanonicalName(), State.class.getCanonicalName())
-          .put(Level.class.getCanonicalName(), Level.class.getCanonicalName())
           .build();
 
   @Override

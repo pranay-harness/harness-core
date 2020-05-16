@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.LevelExecution;
+import io.harness.ambiance.Level;
 import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -35,7 +35,7 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
     Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
     Ambiance ambiancePhase = ambianceSection.cloneForFinish();
     Ambiance ambianceStep = ambianceSection.cloneForChild();
-    ambianceStep.addLevelExecution(LevelExecution.builder().runtimeId(STEP_RUNTIME_ID).setupId(STEP_SETUP_ID).build());
+    ambianceStep.addLevel(Level.builder().runtimeId(STEP_RUNTIME_ID).setupId(STEP_SETUP_ID).build());
 
     String outputName = "outputName";
     String testValueSection = "testSection";
