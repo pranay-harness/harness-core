@@ -28,7 +28,6 @@ import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
-import io.harness.registries.level.LevelRegistry;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -38,7 +37,6 @@ import java.util.concurrent.ExecutorService;
 @Redesign
 public class ChildExecutableInvoker implements ExecutableInvoker {
   @Inject private AmbianceHelper ambianceHelper;
-  @Inject private LevelRegistry levelRegistry;
   @Inject private HPersistence hPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private EngineStatusHelper engineStatusHelper;
@@ -60,11 +58,11 @@ public class ChildExecutableInvoker implements ExecutableInvoker {
     NodeExecution nodeExecution = ambianceHelper.obtainNodeExecution(ambiance);
     Plan plan = planExecution.getPlan();
     ExecutionNode node = plan.fetchNode(response.getChildNodeId());
-    Ambiance clonedAmbiance = ambiance.cloneForChild(levelRegistry.obtain(node.getLevelType()));
+    Ambiance clonedAmbiance = ambiance.deepCopy();
     clonedAmbiance.addLevelExecution(LevelExecution.builder()
                                          .setupId(node.getUuid())
                                          .runtimeId(childInstanceId)
-                                         .level(levelRegistry.obtain(node.getLevelType()))
+                                         .identifier(node.getIdentifier())
                                          .build());
     NodeExecution childNodeExecution = NodeExecution.builder()
                                            .uuid(childInstanceId)

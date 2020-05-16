@@ -11,7 +11,6 @@ import io.harness.beans.steps.StepMetadata;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.ExecutionNode;
-import io.harness.redesign.levels.StepLevel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +27,7 @@ public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeCon
         .name(step.getStepInfo().getStepIdentifier())
         .uuid(step.getStepMetadata().getUuid())
         .stateType(step.getStepInfo().getStateType())
-        .levelType(StepLevel.LEVEL_TYPE)
+        .identifier(step.getStepInfo().getStepIdentifier())
         .stateParameters(step.getStepInfo())
         .facilitatorObtainment(getFacilitatorsFromMetaData(step.getStepMetadata()))
         .adviserObtainments(getAdviserObtainmentFromMetaData(step.getStepMetadata(), nextStepUuid))

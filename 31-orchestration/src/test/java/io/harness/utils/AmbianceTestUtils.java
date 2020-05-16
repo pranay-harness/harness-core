@@ -20,16 +20,10 @@ public class AmbianceTestUtils {
   public static final String SECTION_SETUP_ID = generateUuid();
 
   public static Ambiance buildAmbiance() {
-    LevelExecution phaseLevelExecution = LevelExecution.builder()
-                                             .level(PhaseTestLevel.builder().build())
-                                             .runtimeId(PHASE_RUNTIME_ID)
-                                             .setupId(PHASE_SETUP_ID)
-                                             .build();
-    LevelExecution sectionLevelExecution = LevelExecution.builder()
-                                               .level(SectionTestLevel.builder().build())
-                                               .runtimeId(SECTION_RUNTIME_ID)
-                                               .setupId(SECTION_SETUP_ID)
-                                               .build();
+    LevelExecution phaseLevelExecution =
+        LevelExecution.builder().runtimeId(PHASE_RUNTIME_ID).setupId(PHASE_SETUP_ID).build();
+    LevelExecution sectionLevelExecution =
+        LevelExecution.builder().runtimeId(SECTION_RUNTIME_ID).setupId(SECTION_SETUP_ID).build();
     List<LevelExecution> levelExecutions = new ArrayList<>();
     levelExecutions.add(phaseLevelExecution);
     levelExecutions.add(sectionLevelExecution);

@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
-import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 
@@ -23,13 +22,5 @@ import lombok.experimental.FieldNameConstants;
 public class LevelExecution {
   String setupId;
   String runtimeId;
-  @NonNull Level level;
-
-  public LevelType getLevelName() {
-    return level.getType();
-  }
-
-  public int getLevelPriority() {
-    return level.getOrder();
-  }
+  String identifier;
 }

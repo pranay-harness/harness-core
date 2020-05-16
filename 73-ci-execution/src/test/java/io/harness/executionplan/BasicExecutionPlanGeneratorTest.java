@@ -1,5 +1,6 @@
 package io.harness.executionplan;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.HARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -13,7 +14,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.node.BasicStepToExecutionNodeConverter;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
-import io.harness.redesign.levels.StepLevel;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +40,7 @@ public class BasicExecutionPlanGeneratorTest extends CIExecutionTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldGenerateExecutionPlan() throws IOException {
-    ExecutionNode executionNode = ExecutionNode.builder().uuid(UUID).name(NAME).levelType(StepLevel.LEVEL_TYPE).build();
+    ExecutionNode executionNode = ExecutionNode.builder().uuid(UUID).name(NAME).identifier(generateUuid()).build();
 
     when(basicStepToExecutionNodeConverter.convertStep(any(), any())).thenReturn(executionNode);
     StepGraph ciStepsGraph = ciExecutionPlanTestHelper.getStepsGraph();

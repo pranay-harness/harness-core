@@ -3,17 +3,12 @@ package io.harness.ambiance;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.OrchestrationBeansTest;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import io.harness.utils.levels.PhaseTestLevel;
-import io.harness.utils.levels.SectionTestLevel;
-import io.harness.utils.levels.StepTestLevel;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -51,50 +46,21 @@ public class AmbianceTest extends OrchestrationBeansTest {
   public void shouldTestAddLevelExecution() {
     String setupId = generateUuid();
     String runtimeId = generateUuid();
-    LevelExecution phaseLevelExecution =
-        LevelExecution.builder().level(PhaseTestLevel.builder().build()).runtimeId(runtimeId).setupId(setupId).build();
+    LevelExecution stepLevelExecution = LevelExecution.builder().runtimeId(runtimeId).setupId(setupId).build();
     Ambiance ambiance = buildAmbiance();
     assertThat(ambiance.getLevelExecutions()).hasSize(2);
-    ambiance.addLevelExecution(phaseLevelExecution);
-    assertThat(ambiance.getLevelExecutions()).hasSize(1);
-    assertThat(ambiance.getLevelExecutions().get(0)).isEqualTo(phaseLevelExecution);
+    ambiance.addLevelExecution(stepLevelExecution);
+    assertThat(ambiance.getLevelExecutions()).hasSize(3);
   }
 
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestCloneForNext() {
-    LevelExecution phaseLevelExecution = LevelExecution.builder()
-                                             .level(PhaseTestLevel.builder().build())
-                                             .runtimeId(generateUuid())
-                                             .setupId(generateUuid())
-                                             .build();
-
-    LevelExecution sectionLevelExecution = LevelExecution.builder()
-                                               .level(SectionTestLevel.builder().build())
-                                               .runtimeId(generateUuid())
-                                               .setupId(generateUuid())
-                                               .build();
-
-    LevelExecution stepLevelExecution = LevelExecution.builder()
-                                            .level(StepTestLevel.builder().build())
-                                            .runtimeId(generateUuid())
-                                            .setupId(generateUuid())
-                                            .build();
     Ambiance ambiance = buildAmbiance();
     assertThat(ambiance.getLevelExecutions()).hasSize(2);
 
-    Ambiance clonedAmbiance = ambiance.cloneForFinish(phaseLevelExecution.getLevel());
-    assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevelExecutions()).hasSize(0);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
-
-    clonedAmbiance = ambiance.cloneForFinish(sectionLevelExecution.getLevel());
-    assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevelExecutions()).hasSize(1);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
-
-    clonedAmbiance = ambiance.cloneForFinish(stepLevelExecution.getLevel());
+    Ambiance clonedAmbiance = ambiance.cloneForFinish();
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevelExecutions()).hasSize(1);
     assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
@@ -107,13 +73,10 @@ public class AmbianceTest extends OrchestrationBeansTest {
     Ambiance ambiance = buildAmbiance();
     assertThat(ambiance.getLevelExecutions()).hasSize(2);
 
-    Ambiance clonedAmbiance = ambiance.cloneForChild(StepTestLevel.builder().build());
+    Ambiance clonedAmbiance = ambiance.cloneForChild();
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevelExecutions()).hasSize(2);
     assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
-
-    assertThatThrownBy(() -> ambiance.cloneForChild(PhaseTestLevel.builder().build()))
-        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
@@ -125,16 +88,10 @@ public class AmbianceTest extends OrchestrationBeansTest {
   }
 
   private Ambiance buildAmbiance() {
-    LevelExecution phaseLevelExecution = LevelExecution.builder()
-                                             .level(PhaseTestLevel.builder().build())
-                                             .runtimeId(PHASE_RUNTIME_ID)
-                                             .setupId(PHASE_SETUP_ID)
-                                             .build();
-    LevelExecution sectionLevelExecution = LevelExecution.builder()
-                                               .level(SectionTestLevel.builder().build())
-                                               .runtimeId(SECTION_RUNTIME_ID)
-                                               .setupId(SECTION_SETUP_ID)
-                                               .build();
+    LevelExecution phaseLevelExecution =
+        LevelExecution.builder().runtimeId(PHASE_RUNTIME_ID).setupId(PHASE_SETUP_ID).build();
+    LevelExecution sectionLevelExecution =
+        LevelExecution.builder().runtimeId(SECTION_RUNTIME_ID).setupId(SECTION_SETUP_ID).build();
     List<LevelExecution> levelExecutions = new ArrayList<>();
     levelExecutions.add(phaseLevelExecution);
     levelExecutions.add(sectionLevelExecution);

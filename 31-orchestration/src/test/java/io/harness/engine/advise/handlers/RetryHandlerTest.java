@@ -11,7 +11,6 @@ import io.harness.OrchestrationTest;
 import io.harness.adviser.impl.retry.RetryAdvise;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.LevelExecution;
-import io.harness.ambiance.dev.DefaultLevel;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -43,11 +42,8 @@ public class RetryHandlerTest extends OrchestrationTest {
   public void setup() {
     ambiance = Ambiance.builder()
                    .planExecutionId(PLAN_EXECUTION_ID)
-                   .levelExecutions(Collections.singletonList(LevelExecution.builder()
-                                                                  .level(new DefaultLevel())
-                                                                  .runtimeId(NODE_EXECUTION_ID)
-                                                                  .setupId(NODE_SETUP_ID)
-                                                                  .build()))
+                   .levelExecutions(Collections.singletonList(
+                       LevelExecution.builder().runtimeId(NODE_EXECUTION_ID).setupId(NODE_SETUP_ID).build()))
                    .build();
 
     NodeExecution nodeExecution = NodeExecution.builder()

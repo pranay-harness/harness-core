@@ -44,7 +44,6 @@ import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
-import io.harness.registries.level.LevelRegistry;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StateRegistry;
 import io.harness.resolvers.Resolver;
@@ -74,7 +73,6 @@ public class ExecutionEngine implements Engine {
   @Inject private Injector injector;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject private StateRegistry stateRegistry;
-  @Inject private LevelRegistry levelRegistry;
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private ResolverRegistry resolverRegistry;
@@ -118,20 +116,14 @@ public class ExecutionEngine implements Engine {
   }
 
   public void triggerExecution(Ambiance ambiance, ExecutionNode node) {
-    Ambiance cloned = ambiance.obtainCurrentRuntimeId() == null
-        ? ambiance
-        : ambiance.cloneForFinish(levelRegistry.obtain(node.getLevelType()));
     String uuid = generateUuid();
     NodeExecution previousNodeExecution = null;
     if (ambiance.obtainCurrentRuntimeId() != null) {
       previousNodeExecution = engineStatusHelper.updateNodeInstance(
           ambiance.obtainCurrentRuntimeId(), ops -> ops.set(NodeExecutionKeys.nextId, uuid));
     }
-    cloned.addLevelExecution(LevelExecution.builder()
-                                 .setupId(node.getUuid())
-                                 .runtimeId(uuid)
-                                 .level(levelRegistry.obtain(node.getLevelType()))
-                                 .build());
+
+    Ambiance cloned = reBuildAmbiance(ambiance, node, uuid);
 
     NodeExecution nodeExecution =
         NodeExecution.builder()
@@ -146,6 +138,14 @@ public class ExecutionEngine implements Engine {
             .build();
     hPersistence.save(nodeExecution);
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).executionEngine(this).build());
+  }
+
+  private Ambiance reBuildAmbiance(Ambiance ambiance, ExecutionNode node, String uuid) {
+    Ambiance cloned = ambiance.obtainCurrentRuntimeId() == null ? ambiance : ambiance.cloneForFinish();
+
+    cloned.addLevelExecution(
+        LevelExecution.builder().setupId(node.getUuid()).runtimeId(uuid).identifier(node.getIdentifier()).build());
+    return cloned;
   }
 
   private void facilitateExecution(Ambiance ambiance, ExecutionNode node, List<StateTransput> inputs) {

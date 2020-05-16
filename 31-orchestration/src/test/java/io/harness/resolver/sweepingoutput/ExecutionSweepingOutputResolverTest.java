@@ -18,8 +18,6 @@ import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.DummySweepingOutput;
-import io.harness.utils.SectionTestLevel;
-import io.harness.utils.StepTestLevel;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -35,13 +33,9 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void testSaveAndFind() {
     Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
-    Ambiance ambiancePhase = ambianceSection.cloneForFinish(SectionTestLevel.builder().build());
-    Ambiance ambianceStep = ambianceSection.cloneForChild(StepTestLevel.builder().build());
-    ambianceStep.addLevelExecution(LevelExecution.builder()
-                                       .level(StepTestLevel.builder().build())
-                                       .runtimeId(STEP_RUNTIME_ID)
-                                       .setupId(STEP_SETUP_ID)
-                                       .build());
+    Ambiance ambiancePhase = ambianceSection.cloneForFinish();
+    Ambiance ambianceStep = ambianceSection.cloneForChild();
+    ambianceStep.addLevelExecution(LevelExecution.builder().runtimeId(STEP_RUNTIME_ID).setupId(STEP_SETUP_ID).build());
 
     String outputName = "outputName";
     String testValueSection = "testSection";

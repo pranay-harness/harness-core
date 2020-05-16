@@ -30,7 +30,6 @@ import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
-import io.harness.registries.level.LevelRegistry;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -46,7 +45,6 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
   @Inject private ExecutionEngine engine;
   @Inject private EngineStatusHelper engineStatusHelper;
   @Inject private AmbianceHelper ambianceHelper;
-  @Inject private LevelRegistry levelRegistry;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
   @Override
@@ -67,12 +65,9 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
       String uuid = generateUuid();
       callbackIds.add(uuid);
       ExecutionNode node = plan.fetchNode(child.getChildNodeId());
-      Ambiance clonedAmbiance = ambiance.cloneForChild(levelRegistry.obtain(node.getLevelType()));
-      clonedAmbiance.addLevelExecution(LevelExecution.builder()
-                                           .setupId(node.getUuid())
-                                           .runtimeId(uuid)
-                                           .level(levelRegistry.obtain(node.getLevelType()))
-                                           .build());
+      Ambiance clonedAmbiance = ambiance.deepCopy();
+      clonedAmbiance.addLevelExecution(
+          LevelExecution.builder().setupId(node.getUuid()).runtimeId(uuid).identifier(node.getIdentifier()).build());
       NodeExecution childNodeExecution = NodeExecution.builder()
                                              .uuid(uuid)
                                              .node(node)
