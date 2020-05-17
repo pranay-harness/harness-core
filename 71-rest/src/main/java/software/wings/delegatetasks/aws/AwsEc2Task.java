@@ -5,12 +5,12 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsEc2ListInstancesRequest;
 import software.wings.service.impl.aws.model.AwsEc2ListInstancesResponse;
@@ -40,9 +40,9 @@ import java.util.function.Supplier;
 public class AwsEc2Task extends AbstractDelegateRunnableTask {
   @Inject private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
 
-  public AwsEc2Task(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
-      Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public AwsEc2Task(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

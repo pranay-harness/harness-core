@@ -26,6 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
@@ -60,7 +61,8 @@ public class ArtifactoryCollectionTaskTest extends CategoryTest {
   @InjectMocks
   private ArtifactoryCollectionTask artifactoryCollectionTask =
       (ArtifactoryCollectionTask) TaskType.ARTIFACTORY_COLLECTION.getDelegateRunnableTask(
-          "delid1", collectionTask, notifyResponseData -> {}, () -> true);
+          DelegateTaskPackage.builder().delegateId("delid1").delegateTask(collectionTask).build(),
+          notifyResponseData -> {}, () -> true);
 
   @Test
   @Owner(developers = SRINIVAS)

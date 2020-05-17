@@ -8,7 +8,6 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
@@ -16,6 +15,7 @@ import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
@@ -55,9 +55,9 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
   private volatile Future taskFuture;
   private volatile boolean pendingTask;
 
-  public AbstractDelegateDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public AbstractDelegateDataCollectionTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   public static OkHttpClient getUnsafeHttpClient(String baseUrl) {

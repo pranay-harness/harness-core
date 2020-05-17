@@ -26,6 +26,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.NameValuePair;
@@ -61,9 +62,11 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   @InjectMocks
   TerraformInputVariablesObtainTask delegateRunnableTask =
       (TerraformInputVariablesObtainTask) TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.getDelegateRunnableTask(
-          WingsTestConstants.DELEGATE_ID,
-          DelegateTask.builder()
-              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+          DelegateTaskPackage.builder()
+              .delegateId(WingsTestConstants.DELEGATE_ID)
+              .delegateTask(DelegateTask.builder()
+                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                .build())
               .build(),
           notifyResponseData -> {}, () -> true);
 

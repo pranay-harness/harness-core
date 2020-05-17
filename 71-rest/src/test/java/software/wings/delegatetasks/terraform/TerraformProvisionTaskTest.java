@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.delegatetasks.TerraformProvisionTask;
 import software.wings.service.intfc.security.EncryptionService;
@@ -33,8 +34,13 @@ import java.util.List;
 public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
 
-  TerraformProvisionTask terraformProvisionTask = new TerraformProvisionTask(WingsTestConstants.DELEGATE_ID,
-      DelegateTask.builder().data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
+  TerraformProvisionTask terraformProvisionTask = new TerraformProvisionTask(
+      DelegateTaskPackage.builder()
+          .delegateId(WingsTestConstants.DELEGATE_ID)
+          .delegateTask(DelegateTask.builder()
+                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                            .build())
+          .build(),
       delegateTaskResponse -> {}, () -> true);
 
   @Before

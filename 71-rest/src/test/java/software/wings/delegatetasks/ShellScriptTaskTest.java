@@ -40,6 +40,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.TaskType;
@@ -91,8 +92,13 @@ public class ShellScriptTaskTest extends WingsBaseTest {
                                                  .build();
 
   @InjectMocks
-  private ShellScriptTask shellScriptTask = (ShellScriptTask) TaskType.SCRIPT.getDelegateRunnableTask("delid1",
-      DelegateTask.builder().data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
+  private ShellScriptTask shellScriptTask = (ShellScriptTask) TaskType.SCRIPT.getDelegateRunnableTask(
+      DelegateTaskPackage.builder()
+          .delegateId("delid1")
+          .delegateTask(DelegateTask.builder()
+                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                            .build())
+          .build(),
       notifyResponseData -> {}, () -> true);
 
   @Before

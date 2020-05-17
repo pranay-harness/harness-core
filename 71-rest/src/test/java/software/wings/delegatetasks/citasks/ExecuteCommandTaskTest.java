@@ -18,6 +18,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.beans.ci.ExecuteCommandTaskParams;
 import software.wings.delegatetasks.citasks.cik8handler.K8ExecuteCommandTaskHandler;
@@ -30,8 +31,12 @@ public class ExecuteCommandTaskTest extends WingsBaseTest {
   @Mock private K8ExecuteCommandTaskHandler k8ExecuteCommandTaskHandler;
 
   @InjectMocks
-  private ExecuteCommandTask task = (ExecuteCommandTask) TaskType.EXECUTE_COMMAND.getDelegateRunnableTask("delegateid",
-      DelegateTask.builder().data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
+  private ExecuteCommandTask task = (ExecuteCommandTask) TaskType.EXECUTE_COMMAND.getDelegateRunnableTask(
+      DelegateTaskPackage.builder()
+          .delegateId("delegateid")
+          .delegateTask(
+              DelegateTask.builder().data(TaskData.builder().timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build())
+          .build(),
       notifyResponseData -> {}, () -> true);
 
   @Before

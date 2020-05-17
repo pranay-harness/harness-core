@@ -13,6 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.TerraformFetchTargetsTask;
 import software.wings.utils.WingsTestConstants;
 
@@ -21,8 +22,14 @@ import java.util.List;
 import java.util.Map;
 
 public class TerraformFetchTargetsTaskTest extends WingsBaseTest {
-  TerraformFetchTargetsTask terraformFetchTargetsTask = new TerraformFetchTargetsTask(WingsTestConstants.DELEGATE_ID,
-      DelegateTask.builder().data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
+  TerraformFetchTargetsTask terraformFetchTargetsTask = new TerraformFetchTargetsTask(
+      DelegateTaskPackage.builder()
+          .delegateId(WingsTestConstants.DELEGATE_ID)
+          .delegateTask(DelegateTask.builder()
+                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                            .build())
+          .build(),
+
       delegateTaskResponse -> {}, () -> true);
   Map<String, Object> parsedContentWithModulesAndResources, getParsedContentWithoutModulesAndResources;
 

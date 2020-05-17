@@ -419,9 +419,9 @@ public enum TaskType {
     return taskGroup;
   }
 
-  public DelegateRunnableTask getDelegateRunnableTask(String delegateId, DelegateTask delegateTask,
+  public DelegateRunnableTask getDelegateRunnableTask(DelegateTaskPackage delegateTaskPackage,
       Consumer<DelegateTaskResponse> postExecute, Supplier<Boolean> preExecute) {
-    return on(delegateRunnableTaskClass).create(delegateId, delegateTask, postExecute, preExecute).get();
+    return on(delegateRunnableTaskClass).create(delegateTaskPackage, postExecute, preExecute).get();
   }
 
   public DelegateValidateTask getDelegateValidateTask(

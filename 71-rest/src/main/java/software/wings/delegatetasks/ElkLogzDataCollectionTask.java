@@ -6,7 +6,6 @@ import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
@@ -19,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -54,9 +54,9 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
   private LogDataCollectionInfo dataCollectionInfo;
 
-  public ElkLogzDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public ElkLogzDataCollectionTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

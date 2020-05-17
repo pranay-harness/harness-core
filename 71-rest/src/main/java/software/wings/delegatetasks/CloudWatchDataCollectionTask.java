@@ -11,13 +11,13 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -53,9 +53,9 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
   @Inject private CloudWatchDelegateServiceImpl cloudWatchDelegateService;
   @Inject private AwsLambdaHelperServiceDelegateImpl awsLambdaHelperServiceDelegate;
 
-  public CloudWatchDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public CloudWatchDataCollectionTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

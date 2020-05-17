@@ -21,6 +21,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GitConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.yaml.GitFetchFilesResult;
@@ -43,8 +44,13 @@ public class TriggerTaskTest extends WingsBaseTest {
   @Mock private GitService gitService;
 
   @InjectMocks
-  private TriggerTask triggerTask = (TriggerTask) TaskType.TRIGGER_TASK.getDelegateRunnableTask("delegateId",
-      DelegateTask.builder().data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
+  private TriggerTask triggerTask = (TriggerTask) TaskType.TRIGGER_TASK.getDelegateRunnableTask(
+      DelegateTaskPackage.builder()
+          .delegateId("delegateId")
+          .delegateTask(DelegateTask.builder()
+                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                            .build())
+          .build(),
       notifyResponseData -> {}, () -> true);
 
   @Before

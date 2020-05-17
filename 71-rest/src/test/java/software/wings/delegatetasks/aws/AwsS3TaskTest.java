@@ -19,6 +19,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsS3ListBucketNamesRequest;
 import software.wings.service.impl.aws.model.AwsS3Request;
@@ -28,8 +29,13 @@ public class AwsS3TaskTest extends WingsBaseTest {
   @Mock private AwsS3HelperServiceDelegate mockS3HelperServiceDelegate;
 
   @InjectMocks
-  private AwsS3Task task = (AwsS3Task) TaskType.AWS_S3_TASK.getDelegateRunnableTask("delegateid",
-      DelegateTask.builder().data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
+  private AwsS3Task task = (AwsS3Task) TaskType.AWS_S3_TASK.getDelegateRunnableTask(
+      DelegateTaskPackage.builder()
+          .delegateId("delegateid")
+          .delegateTask(DelegateTask.builder()
+                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                            .build())
+          .build(),
       notifyResponseData -> {}, () -> true);
 
   @Before

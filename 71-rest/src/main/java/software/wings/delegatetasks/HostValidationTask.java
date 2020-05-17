@@ -4,12 +4,12 @@ import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostValidationTaskParameters;
 import software.wings.beans.SettingAttribute;
@@ -23,9 +23,9 @@ import java.util.function.Supplier;
 public class HostValidationTask extends AbstractDelegateRunnableTask {
   @Inject private HostValidationService hostValidationService;
 
-  public HostValidationTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
-      Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public HostValidationTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

@@ -25,6 +25,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.HostValidationTaskParameters;
 import software.wings.settings.validation.SshConnectionConnectivityValidationAttributes;
 import software.wings.utils.HostValidationService;
@@ -38,7 +39,8 @@ public class HostValidationTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private HostValidationTask hostValidationTask = (HostValidationTask) HOST_VALIDATION.getDelegateRunnableTask(
-      DELEGATE_ID, delegateTask, notifyResponseData -> {}, () -> true);
+      DelegateTaskPackage.builder().delegateId(DELEGATE_ID).delegateTask(delegateTask).build(),
+      notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {

@@ -6,7 +6,6 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DelegateTask;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
@@ -15,6 +14,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
@@ -30,9 +30,9 @@ import java.util.function.Supplier;
 public class AzureArtifactsCollectionTask extends AbstractDelegateRunnableTask {
   @Inject private AzureArtifactsService azureArtifactsService;
 
-  public AzureArtifactsCollectionTask(String delegateId, DelegateTask delegateTask,
+  public AzureArtifactsCollectionTask(DelegateTaskPackage delegateTaskPackage,
       Consumer<DelegateTaskResponse> postExecute, Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, postExecute, preExecute);
+    super(delegateTaskPackage, postExecute, preExecute);
   }
 
   @Override

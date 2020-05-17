@@ -6,7 +6,6 @@ import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
@@ -16,6 +15,7 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.core.local.executors.ShellExecutorFactory;
 import software.wings.core.ssh.executors.ScriptExecutor;
@@ -44,9 +44,9 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
 
-  public ShellScriptTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
+  public ShellScriptTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, postExecute, preExecute);
+    super(delegateTaskPackage, postExecute, preExecute);
   }
 
   @Override

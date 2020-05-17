@@ -32,6 +32,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.GcpHelperService;
@@ -111,7 +112,8 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
                             .infrastructureMappingId(infrastructureMappingId)
                             .build();
     task.setUuid(delegateId);
-    dataCollectionTask = new StackDriverDataCollectionTask(delegateId, task, null, null);
+    dataCollectionTask = new StackDriverDataCollectionTask(
+        DelegateTaskPackage.builder().delegateId(delegateId).delegateTask(task).build(), null, null);
     when(encryptionService.decrypt(any(), any())).thenReturn(null);
     setupFields();
   }
@@ -237,7 +239,9 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
                             .build();
     task.setUuid(delegateId);
 
-    dataCollectionTask = new StackDriverDataCollectionTask(delegateId, task, null, null);
+    dataCollectionTask = new StackDriverDataCollectionTask(
+        DelegateTaskPackage.builder().delegateTaskId(task.getUuid()).delegateId(delegateId).delegateTask(task).build(),
+        null, null);
 
     // setup the executor service to run the mock calls.
     DataCollectionExecutorService executorService = new DataCollectionExecutorService();

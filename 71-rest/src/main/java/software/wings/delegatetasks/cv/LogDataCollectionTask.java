@@ -5,8 +5,8 @@ import static software.wings.common.VerificationConstants.TOTAL_HITS_PER_MIN_THR
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.service.impl.analysis.LogDataCollectionInfoV2;
@@ -30,9 +30,9 @@ public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends Ab
   private LogDataCollectionInfoV2 dataCollectionInfo;
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
 
-  public LogDataCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
-      Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public LogDataCollectionTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

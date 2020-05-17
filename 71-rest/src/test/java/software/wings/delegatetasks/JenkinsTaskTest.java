@@ -45,6 +45,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.Log;
@@ -89,8 +90,13 @@ public class JenkinsTaskTest extends WingsBaseTest {
   private Map<String, String> assertions = new HashMap<>();
 
   @InjectMocks
-  private JenkinsTask jenkinsTask = (JenkinsTask) TaskType.JENKINS.getDelegateRunnableTask("delid1",
-      DelegateTask.builder().data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
+  private JenkinsTask jenkinsTask = (JenkinsTask) TaskType.JENKINS.getDelegateRunnableTask(
+      DelegateTaskPackage.builder()
+          .delegateId("delid1")
+          .delegateTask(DelegateTask.builder()
+                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                            .build())
+          .build(),
       notifyResponseData -> {}, () -> true);
 
   @Before

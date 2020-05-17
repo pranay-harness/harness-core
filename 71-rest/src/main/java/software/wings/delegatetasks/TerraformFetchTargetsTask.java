@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
@@ -14,6 +13,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.TerraformExecutionData;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitOperationContext;
@@ -39,9 +39,9 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
   @Inject private GitUtilsDelegate gitUtilsDelegate;
   @Inject private TerraformConfigInspectService terraformConfigInspectService;
 
-  public TerraformFetchTargetsTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public TerraformFetchTargetsTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

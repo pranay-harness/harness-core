@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -16,6 +15,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
@@ -42,9 +42,9 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
   @Inject private ServiceClassLocator serviceLocator;
   @Inject private Injector injector;
 
-  public BuildSourceTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
-      Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public BuildSourceTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

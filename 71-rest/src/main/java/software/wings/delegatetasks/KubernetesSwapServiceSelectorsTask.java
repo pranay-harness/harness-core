@@ -7,7 +7,6 @@ import static software.wings.sm.states.KubernetesSwapServiceSelectors.KUBERNETES
 import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.Service;
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -16,6 +15,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -35,9 +35,9 @@ public class KubernetesSwapServiceSelectorsTask extends AbstractDelegateRunnable
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private KubernetesContainerService kubernetesContainerService;
 
-  public KubernetesSwapServiceSelectorsTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public KubernetesSwapServiceSelectorsTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

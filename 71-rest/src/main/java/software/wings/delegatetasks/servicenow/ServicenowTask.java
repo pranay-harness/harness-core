@@ -14,7 +14,6 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -33,6 +32,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.api.ServiceNowImportSetResponse;
 import software.wings.api.ServiceNowImportSetResult;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.servicenow.ServiceNowFields;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
@@ -53,9 +53,9 @@ import java.util.function.Supplier;
 public class ServicenowTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
 
-  public ServicenowTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
-      Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public ServicenowTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

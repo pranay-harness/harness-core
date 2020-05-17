@@ -26,6 +26,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.helpers.ext.mail.Mailer;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -41,9 +42,12 @@ public class ConnectivityValidationTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private ConnectivityValidationTask task =
-      (ConnectivityValidationTask) CONNECTIVITY_VALIDATION.getDelegateRunnableTask("delegateid",
-          DelegateTask.builder()
-              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+      (ConnectivityValidationTask) CONNECTIVITY_VALIDATION.getDelegateRunnableTask(
+          DelegateTaskPackage.builder()
+              .delegateId("delegateid")
+              .delegateTask(DelegateTask.builder()
+                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                .build())
               .build(),
           notifyResponseData -> {}, () -> true);
 

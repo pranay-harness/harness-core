@@ -6,7 +6,6 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
 import com.google.common.base.Splitter;
 
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
@@ -38,6 +37,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.ProxyAuthenticationStrategy;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
 import java.io.IOException;
@@ -54,9 +54,9 @@ public class HttpTask extends AbstractDelegateRunnableTask {
 
   private static final Splitter HEADER_SPLITTER = Splitter.on(":").trimResults();
 
-  public HttpTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
+  public HttpTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, postExecute, preExecute);
+    super(delegateTaskPackage, postExecute, preExecute);
   }
 
   @Override

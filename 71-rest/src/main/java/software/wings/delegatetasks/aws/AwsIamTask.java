@@ -5,7 +5,6 @@ import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
@@ -13,6 +12,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsIamListInstanceRolesResponse;
 import software.wings.service.impl.aws.model.AwsIamListRolesResponse;
@@ -30,9 +30,9 @@ import java.util.function.Supplier;
 public class AwsIamTask extends AbstractDelegateRunnableTask {
   @Inject private AwsIamHelperServiceDelegate iAmServiceDelegate;
 
-  public AwsIamTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
-      Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public AwsIamTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

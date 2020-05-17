@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -11,6 +10,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
 import software.wings.helpers.ext.external.comm.handlers.EmailHandler;
@@ -21,9 +21,9 @@ import java.util.function.Supplier;
 public class CollaborationProviderTask extends AbstractDelegateRunnableTask {
   @Inject EmailHandler emailHandler;
 
-  public CollaborationProviderTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public CollaborationProviderTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

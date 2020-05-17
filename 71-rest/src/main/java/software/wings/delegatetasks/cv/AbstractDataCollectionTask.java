@@ -7,7 +7,6 @@ import static software.wings.delegatetasks.cv.CVConstants.RETRY_SLEEP_DURATION;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.TaskParameters;
@@ -15,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import retrofit2.Call;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.delegatetasks.DelegateCVActivityLogService.Logger;
@@ -48,9 +48,9 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
   private DataCollectionExecutionContext dataCollectionExecutionContext;
   private Logger activityLogger;
 
-  public AbstractDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public AbstractDataCollectionTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

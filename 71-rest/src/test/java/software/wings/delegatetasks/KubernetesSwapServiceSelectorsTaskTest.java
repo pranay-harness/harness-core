@@ -25,6 +25,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.beans.container.KubernetesSwapServiceSelectorsParams;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
@@ -43,9 +44,11 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
   @InjectMocks
   private KubernetesSwapServiceSelectorsTask kubernetesSwapServiceSelectorsTask =
       (KubernetesSwapServiceSelectorsTask) TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK.getDelegateRunnableTask(
-          "delid1",
-          DelegateTask.builder()
-              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+          DelegateTaskPackage.builder()
+              .delegateId("delid1")
+              .delegateTask(DelegateTask.builder()
+                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                .build())
               .build(),
           notifyResponseData -> {}, () -> true);
 

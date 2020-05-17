@@ -5,7 +5,6 @@ import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
@@ -17,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import software.wings.api.TerraformExecutionData;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitOperationContext;
@@ -45,9 +45,9 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
   @Inject private GitUtilsDelegate gitUtilsDelegate;
   @Inject private TerraformConfigInspectService terraformConfigInspectService;
 
-  public TerraformInputVariablesObtainTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public TerraformInputVariablesObtainTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override
