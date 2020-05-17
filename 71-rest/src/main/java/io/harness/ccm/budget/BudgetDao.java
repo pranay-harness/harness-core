@@ -1,7 +1,5 @@
 package io.harness.ccm.budget;
 
-import static io.harness.ccm.budget.entities.BudgetType.SPECIFIED_AMOUNT;
-
 import com.google.inject.Inject;
 
 import io.harness.ccm.budget.entities.Budget;
@@ -35,11 +33,9 @@ public class BudgetDao {
     UpdateOperations<Budget> updateOperations = persistence.createUpdateOperations(Budget.class)
                                                     .set(BudgetKeys.name, budget.getName())
                                                     .set(BudgetKeys.scope, budget.getScope())
-                                                    .set(BudgetKeys.type, budget.getType());
+                                                    .set(BudgetKeys.type, budget.getType())
+                                                    .set(BudgetKeys.budgetAmount, budget.getBudgetAmount());
 
-    if (SPECIFIED_AMOUNT == budget.getType()) {
-      updateOperations = updateOperations.set(BudgetKeys.budgetAmount, budget.getBudgetAmount());
-    }
     if (null != budget.getAlertThresholds()) {
       updateOperations.set(BudgetKeys.alertThresholds, budget.getAlertThresholds());
     }

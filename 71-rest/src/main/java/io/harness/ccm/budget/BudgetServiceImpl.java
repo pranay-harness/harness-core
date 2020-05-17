@@ -62,7 +62,7 @@ public class BudgetServiceImpl implements BudgetService {
   @Inject QLBillingStatsHelper statsHelper;
   @Inject EnvironmentServiceImpl environmentService;
   private String NOTIFICATION_TEMPLATE = "%s | %s exceed %s ($%s)";
-  private String DATE_TEMPLATE = "MM-dd-yyyy hh:mm a";
+  private String DATE_TEMPLATE = "MM-dd-yyyy";
   private double BUDGET_AMOUNT_UPPER_LIMIT = 100000000;
   private String NO_BUDGET_AMOUNT_EXCEPTION = "Error in creating budget. No budget amount specified.";
   private String BUDGET_AMOUNT_NOT_WITHIN_BOUNDS_EXCEPTION =
