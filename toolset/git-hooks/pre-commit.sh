@@ -26,6 +26,16 @@ else
     . $BASEDIR/toolset/git-hooks/checkstyle.sh
 fi
 
+CHECKPROTO_PROPERTY=hook.pre-commit.protocheck
+if [ "`git config $CHECKPROTO_PROPERTY`" == "false" ]
+then
+    echo '\033[0;31m' checking proto is disabled - to enable: '\033[0;37m'git config --unset $CHECKPROTO_PROPERTY '\033[0m'
+else
+    echo '\033[0;34m' checking proto  ... to disable: '\033[0;37m'git config --add $CHECKPROTO_PROPERTY false '\033[0m'
+
+    . $BASEDIR/toolset/git-hooks/checkproto.sh
+fi
+
 FORMAT_PROPERTY=hook.pre-commit.format
 if [ "`git config $FORMAT_PROPERTY`" == "false" ]
 then

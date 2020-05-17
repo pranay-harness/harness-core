@@ -32,7 +32,7 @@ public interface TaskDetailsOrBuilder extends
    * determining encrypted fields and expressions.
    * </pre>
    *
-   * <code>bytes kryoParameters = 2;</code>
+   * <code>bytes kryo_parameters = 2;</code>
    */
   com.google.protobuf.ByteString getKryoParameters();
 

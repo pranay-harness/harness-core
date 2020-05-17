@@ -78,10 +78,10 @@ public final class Capability extends com.google.protobuf.GeneratedMessageV3 imp
             io.harness.delegate.Capability.class, io.harness.delegate.Capability.Builder.class);
   }
 
-  public static final int KRYOCAPABILITY_FIELD_NUMBER = 1;
+  public static final int KRYO_CAPABILITY_FIELD_NUMBER = 1;
   private com.google.protobuf.ByteString kryoCapability_;
   /**
-   * <code>bytes kryoCapability = 1;</code>
+   * <code>bytes kryo_capability = 1;</code>
    */
   public com.google.protobuf.ByteString getKryoCapability() {
     return kryoCapability_;
@@ -147,7 +147,7 @@ public final class Capability extends com.google.protobuf.GeneratedMessageV3 imp
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + KRYOCAPABILITY_FIELD_NUMBER;
+    hash = (37 * hash) + KRYO_CAPABILITY_FIELD_NUMBER;
     hash = (53 * hash) + getKryoCapability().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -369,13 +369,13 @@ public final class Capability extends com.google.protobuf.GeneratedMessageV3 imp
 
     private com.google.protobuf.ByteString kryoCapability_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes kryoCapability = 1;</code>
+     * <code>bytes kryo_capability = 1;</code>
      */
     public com.google.protobuf.ByteString getKryoCapability() {
       return kryoCapability_;
     }
     /**
-     * <code>bytes kryoCapability = 1;</code>
+     * <code>bytes kryo_capability = 1;</code>
      */
     public Builder setKryoCapability(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -387,7 +387,7 @@ public final class Capability extends com.google.protobuf.GeneratedMessageV3 imp
       return this;
     }
     /**
-     * <code>bytes kryoCapability = 1;</code>
+     * <code>bytes kryo_capability = 1;</code>
      */
     public Builder clearKryoCapability() {
       kryoCapability_ = getDefaultInstance().getKryoCapability();

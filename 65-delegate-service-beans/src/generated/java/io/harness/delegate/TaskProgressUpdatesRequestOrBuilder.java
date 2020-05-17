@@ -3,9 +3,9 @@
 
 package io.harness.delegate;
 
-@javax.annotation.Generated(value = "protoc", comments = "annotations:CancelTaskRequestOrBuilder.java.pb.meta")
-public interface CancelTaskRequestOrBuilder extends
-    // @@protoc_insertion_point(interface_extends:io.harness.delegate.CancelTaskRequest)
+@javax.annotation.Generated(value = "protoc", comments = "annotations:TaskProgressUpdatesRequestOrBuilder.java.pb.meta")
+public interface TaskProgressUpdatesRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:io.harness.delegate.TaskProgressUpdatesRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
    * <code>.io.harness.delegate.TaskId task_id = 1;</code>

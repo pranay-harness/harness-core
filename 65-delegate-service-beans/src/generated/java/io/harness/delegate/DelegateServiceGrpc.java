@@ -127,33 +127,34 @@ public final class DelegateServiceGrpc {
     return getTaskProgressMethod;
   }
 
-  private static volatile io.grpc.MethodDescriptor<io.harness.delegate.TaskProgressRequest,
-      io.harness.delegate.TaskProgressResponse> getTaskProgressUpdatesMethod;
+  private static volatile io.grpc.MethodDescriptor<io.harness.delegate.TaskProgressUpdatesRequest,
+      io.harness.delegate.TaskProgressUpdatesResponse> getTaskProgressUpdatesMethod;
 
   @io.grpc.stub.annotations
       .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "TaskProgressUpdates",
-          requestType = io.harness.delegate.TaskProgressRequest.class,
-          responseType = io.harness.delegate.TaskProgressResponse.class,
+          requestType = io.harness.delegate.TaskProgressUpdatesRequest.class,
+          responseType = io.harness.delegate.TaskProgressUpdatesResponse.class,
           methodType = io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING)
       public static io.grpc
-      .MethodDescriptor<io.harness.delegate.TaskProgressRequest, io.harness.delegate.TaskProgressResponse>
+      .MethodDescriptor<io.harness.delegate.TaskProgressUpdatesRequest, io.harness.delegate.TaskProgressUpdatesResponse>
       getTaskProgressUpdatesMethod() {
-    io.grpc.MethodDescriptor<io.harness.delegate.TaskProgressRequest, io.harness.delegate.TaskProgressResponse>
-        getTaskProgressUpdatesMethod;
+    io.grpc.MethodDescriptor<io.harness.delegate.TaskProgressUpdatesRequest,
+        io.harness.delegate.TaskProgressUpdatesResponse> getTaskProgressUpdatesMethod;
     if ((getTaskProgressUpdatesMethod = DelegateServiceGrpc.getTaskProgressUpdatesMethod) == null) {
       synchronized (DelegateServiceGrpc.class) {
         if ((getTaskProgressUpdatesMethod = DelegateServiceGrpc.getTaskProgressUpdatesMethod) == null) {
           DelegateServiceGrpc.getTaskProgressUpdatesMethod = getTaskProgressUpdatesMethod =
               io.grpc.MethodDescriptor
-                  .<io.harness.delegate.TaskProgressRequest, io.harness.delegate.TaskProgressResponse>newBuilder()
+                  .<io.harness.delegate.TaskProgressUpdatesRequest,
+                      io.harness.delegate.TaskProgressUpdatesResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING)
                   .setFullMethodName(
                       generateFullMethodName("io.harness.delegate.DelegateService", "TaskProgressUpdates"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                      io.harness.delegate.TaskProgressRequest.getDefaultInstance()))
+                      io.harness.delegate.TaskProgressUpdatesRequest.getDefaultInstance()))
                   .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                      io.harness.delegate.TaskProgressResponse.getDefaultInstance()))
+                      io.harness.delegate.TaskProgressUpdatesResponse.getDefaultInstance()))
                   .setSchemaDescriptor(new DelegateServiceMethodDescriptorSupplier("TaskProgressUpdates"))
                   .build();
         }
@@ -209,8 +210,8 @@ public final class DelegateServiceGrpc {
 
     /**
      */
-    public void taskProgressUpdates(io.harness.delegate.TaskProgressRequest request,
-        io.grpc.stub.StreamObserver<io.harness.delegate.TaskProgressResponse> responseObserver) {
+    public void taskProgressUpdates(io.harness.delegate.TaskProgressUpdatesRequest request,
+        io.grpc.stub.StreamObserver<io.harness.delegate.TaskProgressUpdatesResponse> responseObserver) {
       asyncUnimplementedUnaryCall(getTaskProgressUpdatesMethod(), responseObserver);
     }
 
@@ -231,9 +232,8 @@ public final class DelegateServiceGrpc {
                   new MethodHandlers<io.harness.delegate.TaskProgressRequest, io.harness.delegate.TaskProgressResponse>(
                       this, METHODID_TASK_PROGRESS)))
           .addMethod(getTaskProgressUpdatesMethod(),
-              asyncServerStreamingCall(
-                  new MethodHandlers<io.harness.delegate.TaskProgressRequest, io.harness.delegate.TaskProgressResponse>(
-                      this, METHODID_TASK_PROGRESS_UPDATES)))
+              asyncServerStreamingCall(new MethodHandlers<io.harness.delegate.TaskProgressUpdatesRequest,
+                  io.harness.delegate.TaskProgressUpdatesResponse>(this, METHODID_TASK_PROGRESS_UPDATES)))
           .build();
     }
   }
@@ -277,8 +277,8 @@ public final class DelegateServiceGrpc {
 
     /**
      */
-    public void taskProgressUpdates(io.harness.delegate.TaskProgressRequest request,
-        io.grpc.stub.StreamObserver<io.harness.delegate.TaskProgressResponse> responseObserver) {
+    public void taskProgressUpdates(io.harness.delegate.TaskProgressUpdatesRequest request,
+        io.grpc.stub.StreamObserver<io.harness.delegate.TaskProgressUpdatesResponse> responseObserver) {
       asyncServerStreamingCall(
           getChannel().newCall(getTaskProgressUpdatesMethod(), getCallOptions()), request, responseObserver);
     }
@@ -320,8 +320,8 @@ public final class DelegateServiceGrpc {
 
     /**
      */
-    public java.util.Iterator<io.harness.delegate.TaskProgressResponse> taskProgressUpdates(
-        io.harness.delegate.TaskProgressRequest request) {
+    public java.util.Iterator<io.harness.delegate.TaskProgressUpdatesResponse> taskProgressUpdates(
+        io.harness.delegate.TaskProgressUpdatesRequest request) {
       return blockingServerStreamingCall(getChannel(), getTaskProgressUpdatesMethod(), getCallOptions(), request);
     }
   }
@@ -400,8 +400,8 @@ public final class DelegateServiceGrpc {
               (io.grpc.stub.StreamObserver<io.harness.delegate.TaskProgressResponse>) responseObserver);
           break;
         case METHODID_TASK_PROGRESS_UPDATES:
-          serviceImpl.taskProgressUpdates((io.harness.delegate.TaskProgressRequest) request,
-              (io.grpc.stub.StreamObserver<io.harness.delegate.TaskProgressResponse>) responseObserver);
+          serviceImpl.taskProgressUpdates((io.harness.delegate.TaskProgressUpdatesRequest) request,
+              (io.grpc.stub.StreamObserver<io.harness.delegate.TaskProgressUpdatesResponse>) responseObserver);
           break;
         default:
           throw new AssertionError();

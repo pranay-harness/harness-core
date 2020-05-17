@@ -22,8 +22,8 @@ public final class CapabilityOuterClass {
   static {
     java.lang.String[] descriptorData = {"\n$io/harness/delegate/capability.proto\022\023"
         + "io.harness.delegate\032\036google/protobuf/dur"
-        + "ation.proto\"$\n\nCapability\022\026\n\016kryoCapabil"
-        + "ity\030\001 \001(\014B\002P\001b\006proto3"};
+        + "ation.proto\"%\n\nCapability\022\027\n\017kryo_capabi"
+        + "lity\030\001 \001(\014B\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(

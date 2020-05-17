@@ -11,7 +11,7 @@ service DelegateService {
   rpc SubmitTask(SubmitTaskRequest) returns (SubmitTaskResponse);
   rpc CancelTask(CancelTaskRequest) returns (CancelTaskResponse);
   rpc TaskProgress(TaskProgressRequest) returns (TaskProgressResponse);
-  rpc TaskProgressUpdates(TaskProgressRequest) returns (stream TaskProgressResponse);
+  rpc TaskProgressUpdates(TaskProgressUpdatesRequest) returns (stream TaskProgressUpdatesResponse);
 }
 
 message SubmitTaskRequest {
@@ -21,11 +21,11 @@ message SubmitTaskRequest {
 }
 
 message SubmitTaskResponse {
-  TaskId taskId = 1;
+  TaskId task_id = 1;
 }
 
 message CancelTaskRequest {
-  TaskId taskId = 1;
+  TaskId task_id = 1;
 }
 
 message CancelTaskResponse {
@@ -33,9 +33,17 @@ message CancelTaskResponse {
 }
 
 message TaskProgressRequest {
-  TaskId taskId = 1;
+  TaskId task_id = 1;
 }
 
 message TaskProgressResponse {
+  TaskExecutionStage currently_at_stage = 1;
+}
+
+message TaskProgressUpdatesRequest {
+  TaskId task_id = 1;
+}
+
+message TaskProgressUpdatesResponse {
   TaskExecutionStage currently_at_stage = 1;
 }

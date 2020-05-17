@@ -18,9 +18,10 @@ public final class Progress {
   private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
   static {
     java.lang.String[] descriptorData = {"\n\"io/harness/delegate/progress.proto\022\023io"
-        + ".harness.delegate*O\n\022TaskExecutionStage\022"
-        + "\014\n\010QUEUEING\020\000\022\016\n\nVALIDATING\020\001\022\r\n\tEXECUTI"
-        + "NG\020\002\022\014\n\010FINISHED\020\003B\002P\001b\006proto3"};
+        + ".harness.delegate*e\n\022TaskExecutionStage\022"
+        + "\024\n\020TYPE_UNSPECIFIED\020\000\022\014\n\010QUEUEING\020\001\022\016\n\nV"
+        + "ALIDATING\020\002\022\r\n\tEXECUTING\020\003\022\014\n\010FINISHED\020\004"
+        + "B\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(

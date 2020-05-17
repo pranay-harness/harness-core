@@ -18,5 +18,13 @@ RUN echo "deb http://ftp.de.debian.org/debian sid main" >> /etc/apt/sources.list
     wget https://github.com/protocolbuffers/protobuf/releases/download/v3.7.1/protoc-3.7.1-linux-x86_64.zip && \
     unzip protoc-3.7.1-linux-x86_64.zip -d /opt/protobuf
 
+RUN BIN="/usr/local/bin" && \
+    VERSION="0.12.1" && \
+    BINARY_NAME="buf" && \
+      curl -sSL \
+        "https://github.com/bufbuild/buf/releases/download/v${VERSION}/${BINARY_NAME}-$(uname -s)-$(uname -m)" \
+        -o "${BIN}/${BINARY_NAME}" && \
+      chmod +x "${BIN}/${BINARY_NAME}"
+
 ENV PATH ${PATH}:/opt/protobuf/bin
 

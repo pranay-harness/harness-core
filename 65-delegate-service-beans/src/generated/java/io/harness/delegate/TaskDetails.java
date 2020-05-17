@@ -129,7 +129,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
   private java.lang.Object parameters_;
   public enum ParametersCase implements com
   .google.protobuf.Internal.EnumLite {
-    KRYOPARAMETERS(2), PARAMETERS_NOT_SET(0);
+    KRYO_PARAMETERS(2), PARAMETERS_NOT_SET(0);
     private final int value;
     private ParametersCase(int value) {
       this.value = value;
@@ -145,7 +145,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     public static ParametersCase forNumber(int value) {
       switch (value) {
         case 2:
-          return KRYOPARAMETERS;
+          return KRYO_PARAMETERS;
         case 0:
           return PARAMETERS_NOT_SET;
         default:
@@ -201,14 +201,14 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     }
   }
 
-  public static final int KRYOPARAMETERS_FIELD_NUMBER = 2;
+  public static final int KRYO_PARAMETERS_FIELD_NUMBER = 2;
   /**
    * <pre>
    * Using kryo java serialization, useful for java based task where java annotation play important role of
    * determining encrypted fields and expressions.
    * </pre>
    *
-   * <code>bytes kryoParameters = 2;</code>
+   * <code>bytes kryo_parameters = 2;</code>
    */
   public com.google.protobuf.ByteString getKryoParameters() {
     if (parametersCase_ == 2) {
@@ -482,7 +482,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getExpressionFunctorToken());
     switch (parametersCase_) {
       case 2:
-        hash = (37 * hash) + KRYOPARAMETERS_FIELD_NUMBER;
+        hash = (37 * hash) + KRYO_PARAMETERS_FIELD_NUMBER;
         hash = (53 * hash) + getKryoParameters().hashCode();
         break;
       case 0:
@@ -733,7 +733,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
         setExpressionFunctorToken(other.getExpressionFunctorToken());
       }
       switch (other.getParametersCase()) {
-        case KRYOPARAMETERS: {
+        case KRYO_PARAMETERS: {
           setKryoParameters(other.getKryoParameters());
           break;
         }
@@ -875,7 +875,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * determining encrypted fields and expressions.
      * </pre>
      *
-     * <code>bytes kryoParameters = 2;</code>
+     * <code>bytes kryo_parameters = 2;</code>
      */
     public com.google.protobuf.ByteString getKryoParameters() {
       if (parametersCase_ == 2) {
@@ -889,7 +889,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * determining encrypted fields and expressions.
      * </pre>
      *
-     * <code>bytes kryoParameters = 2;</code>
+     * <code>bytes kryo_parameters = 2;</code>
      */
     public Builder setKryoParameters(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -906,7 +906,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * determining encrypted fields and expressions.
      * </pre>
      *
-     * <code>bytes kryoParameters = 2;</code>
+     * <code>bytes kryo_parameters = 2;</code>
      */
     public Builder clearKryoParameters() {
       if (parametersCase_ == 2) {

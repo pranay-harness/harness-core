@@ -10,39 +10,47 @@ package io.harness.delegate;
 public enum TaskExecutionStage implements com
 .google.protobuf.ProtocolMessageEnum {
   /**
-   * <code>QUEUEING = 0;</code>
+   * <code>TYPE_UNSPECIFIED = 0;</code>
    */
-  QUEUEING(0),
+  TYPE_UNSPECIFIED(0),
       /**
-       * <code>VALIDATING = 1;</code>
+       * <code>QUEUEING = 1;</code>
        */
-      VALIDATING(1),
+      QUEUEING(1),
       /**
-       * <code>EXECUTING = 2;</code>
+       * <code>VALIDATING = 2;</code>
        */
-      EXECUTING(2),
+      VALIDATING(2),
       /**
-       * <code>FINISHED = 3;</code>
+       * <code>EXECUTING = 3;</code>
        */
-      FINISHED(3), UNRECOGNIZED(-1),
+      EXECUTING(3),
+      /**
+       * <code>FINISHED = 4;</code>
+       */
+      FINISHED(4), UNRECOGNIZED(-1),
       ;
 
   /**
-   * <code>QUEUEING = 0;</code>
+   * <code>TYPE_UNSPECIFIED = 0;</code>
    */
-  public static final int QUEUEING_VALUE = 0;
+  public static final int TYPE_UNSPECIFIED_VALUE = 0;
   /**
-   * <code>VALIDATING = 1;</code>
+   * <code>QUEUEING = 1;</code>
    */
-  public static final int VALIDATING_VALUE = 1;
+  public static final int QUEUEING_VALUE = 1;
   /**
-   * <code>EXECUTING = 2;</code>
+   * <code>VALIDATING = 2;</code>
    */
-  public static final int EXECUTING_VALUE = 2;
+  public static final int VALIDATING_VALUE = 2;
   /**
-   * <code>FINISHED = 3;</code>
+   * <code>EXECUTING = 3;</code>
    */
-  public static final int FINISHED_VALUE = 3;
+  public static final int EXECUTING_VALUE = 3;
+  /**
+   * <code>FINISHED = 4;</code>
+   */
+  public static final int FINISHED_VALUE = 4;
 
   public final int getNumber() {
     if (this == UNRECOGNIZED) {
@@ -62,12 +70,14 @@ public enum TaskExecutionStage implements com
   public static TaskExecutionStage forNumber(int value) {
     switch (value) {
       case 0:
-        return QUEUEING;
+        return TYPE_UNSPECIFIED;
       case 1:
-        return VALIDATING;
+        return QUEUEING;
       case 2:
-        return EXECUTING;
+        return VALIDATING;
       case 3:
+        return EXECUTING;
+      case 4:
         return FINISHED;
       default:
         return null;

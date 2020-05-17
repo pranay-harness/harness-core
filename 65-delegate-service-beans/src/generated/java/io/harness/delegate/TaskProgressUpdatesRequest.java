@@ -4,25 +4,25 @@
 package io.harness.delegate;
 
 /**
- * Protobuf type {@code io.harness.delegate.TaskProgressRequest}
+ * Protobuf type {@code io.harness.delegate.TaskProgressUpdatesRequest}
  */
-@javax.annotation.Generated(value = "protoc", comments = "annotations:TaskProgressRequest.java.pb.meta")
-public final class TaskProgressRequest extends com.google.protobuf.GeneratedMessageV3 implements
-    // @@protoc_insertion_point(message_implements:io.harness.delegate.TaskProgressRequest)
-    TaskProgressRequestOrBuilder {
+@javax.annotation.Generated(value = "protoc", comments = "annotations:TaskProgressUpdatesRequest.java.pb.meta")
+public final class TaskProgressUpdatesRequest extends com.google.protobuf.GeneratedMessageV3 implements
+    // @@protoc_insertion_point(message_implements:io.harness.delegate.TaskProgressUpdatesRequest)
+    TaskProgressUpdatesRequestOrBuilder {
   private static final long serialVersionUID = 0L;
-  // Use TaskProgressRequest.newBuilder() to construct.
-  private TaskProgressRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+  // Use TaskProgressUpdatesRequest.newBuilder() to construct.
+  private TaskProgressUpdatesRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private TaskProgressRequest() {}
+  private TaskProgressUpdatesRequest() {}
 
   @java.
   lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
-  private TaskProgressRequest(
+  private TaskProgressUpdatesRequest(
       com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     this();
@@ -71,15 +71,16 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
   }
   public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
     return io.harness.delegate.DelegateServiceOuterClass
-        .internal_static_io_harness_delegate_TaskProgressRequest_descriptor;
+        .internal_static_io_harness_delegate_TaskProgressUpdatesRequest_descriptor;
   }
 
   @java.
   lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
     return io.harness.delegate.DelegateServiceOuterClass
-        .internal_static_io_harness_delegate_TaskProgressRequest_fieldAccessorTable.ensureFieldAccessorsInitialized(
-            io.harness.delegate.TaskProgressRequest.class, io.harness.delegate.TaskProgressRequest.Builder.class);
+        .internal_static_io_harness_delegate_TaskProgressUpdatesRequest_fieldAccessorTable
+        .ensureFieldAccessorsInitialized(io.harness.delegate.TaskProgressUpdatesRequest.class,
+            io.harness.delegate.TaskProgressUpdatesRequest.Builder.class);
   }
 
   public static final int TASK_ID_FIELD_NUMBER = 1;
@@ -144,10 +145,10 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
     if (obj == this) {
       return true;
     }
-    if (!(obj instanceof io.harness.delegate.TaskProgressRequest)) {
+    if (!(obj instanceof io.harness.delegate.TaskProgressUpdatesRequest)) {
       return super.equals(obj);
     }
-    io.harness.delegate.TaskProgressRequest other = (io.harness.delegate.TaskProgressRequest) obj;
+    io.harness.delegate.TaskProgressUpdatesRequest other = (io.harness.delegate.TaskProgressUpdatesRequest) obj;
 
     if (hasTaskId() != other.hasTaskId())
       return false;
@@ -176,54 +177,54 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
     return hash;
   }
 
-  public static io.harness.delegate.TaskProgressRequest parseFrom(java.nio.ByteBuffer data)
+  public static io.harness.delegate.TaskProgressUpdatesRequest parseFrom(java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static io.harness.delegate.TaskProgressRequest parseFrom(
+  public static io.harness.delegate.TaskProgressUpdatesRequest parseFrom(
       java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static io.harness.delegate.TaskProgressRequest parseFrom(com.google.protobuf.ByteString data)
+  public static io.harness.delegate.TaskProgressUpdatesRequest parseFrom(com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static io.harness.delegate.TaskProgressRequest parseFrom(
+  public static io.harness.delegate.TaskProgressUpdatesRequest parseFrom(
       com.google.protobuf.ByteString data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static io.harness.delegate.TaskProgressRequest parseFrom(byte[] data)
+  public static io.harness.delegate.TaskProgressUpdatesRequest parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static io.harness.delegate.TaskProgressRequest parseFrom(
+  public static io.harness.delegate.TaskProgressUpdatesRequest parseFrom(
       byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static io.harness.delegate.TaskProgressRequest parseFrom(java.io.InputStream input)
+  public static io.harness.delegate.TaskProgressUpdatesRequest parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
   }
-  public static io.harness.delegate.TaskProgressRequest parseFrom(java.io.InputStream input,
+  public static io.harness.delegate.TaskProgressUpdatesRequest parseFrom(java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
   }
-  public static io.harness.delegate.TaskProgressRequest parseDelimitedFrom(java.io.InputStream input)
+  public static io.harness.delegate.TaskProgressUpdatesRequest parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
   }
-  public static io.harness.delegate.TaskProgressRequest parseDelimitedFrom(java.io.InputStream input,
+  public static io.harness.delegate.TaskProgressUpdatesRequest parseDelimitedFrom(java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static io.harness.delegate.TaskProgressRequest parseFrom(com.google.protobuf.CodedInputStream input)
+  public static io.harness.delegate.TaskProgressUpdatesRequest parseFrom(com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
   }
-  public static io.harness.delegate.TaskProgressRequest parseFrom(com.google.protobuf.CodedInputStream input,
+  public static io.harness.delegate.TaskProgressUpdatesRequest parseFrom(com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
   }
@@ -235,7 +236,7 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(io.harness.delegate.TaskProgressRequest prototype) {
+  public static Builder newBuilder(io.harness.delegate.TaskProgressUpdatesRequest prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   @java.lang.Override
@@ -249,25 +250,26 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
     return builder;
   }
   /**
-   * Protobuf type {@code io.harness.delegate.TaskProgressRequest}
+   * Protobuf type {@code io.harness.delegate.TaskProgressUpdatesRequest}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:io.harness.delegate.TaskProgressRequest)
-      io.harness.delegate.TaskProgressRequestOrBuilder {
+      // @@protoc_insertion_point(builder_implements:io.harness.delegate.TaskProgressUpdatesRequest)
+      io.harness.delegate.TaskProgressUpdatesRequestOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
       return io.harness.delegate.DelegateServiceOuterClass
-          .internal_static_io_harness_delegate_TaskProgressRequest_descriptor;
+          .internal_static_io_harness_delegate_TaskProgressUpdatesRequest_descriptor;
     }
 
     @java.
     lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
       return io.harness.delegate.DelegateServiceOuterClass
-          .internal_static_io_harness_delegate_TaskProgressRequest_fieldAccessorTable.ensureFieldAccessorsInitialized(
-              io.harness.delegate.TaskProgressRequest.class, io.harness.delegate.TaskProgressRequest.Builder.class);
+          .internal_static_io_harness_delegate_TaskProgressUpdatesRequest_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(io.harness.delegate.TaskProgressUpdatesRequest.class,
+              io.harness.delegate.TaskProgressUpdatesRequest.Builder.class);
     }
 
-    // Construct using io.harness.delegate.TaskProgressRequest.newBuilder()
+    // Construct using io.harness.delegate.TaskProgressUpdatesRequest.newBuilder()
     private Builder() {
       maybeForceBuilderInitialization();
     }
@@ -296,19 +298,19 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
     lang.Override
     public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
       return io.harness.delegate.DelegateServiceOuterClass
-          .internal_static_io_harness_delegate_TaskProgressRequest_descriptor;
+          .internal_static_io_harness_delegate_TaskProgressUpdatesRequest_descriptor;
     }
 
     @java.
     lang.Override
-    public io.harness.delegate.TaskProgressRequest getDefaultInstanceForType() {
-      return io.harness.delegate.TaskProgressRequest.getDefaultInstance();
+    public io.harness.delegate.TaskProgressUpdatesRequest getDefaultInstanceForType() {
+      return io.harness.delegate.TaskProgressUpdatesRequest.getDefaultInstance();
     }
 
     @java.
     lang.Override
-    public io.harness.delegate.TaskProgressRequest build() {
-      io.harness.delegate.TaskProgressRequest result = buildPartial();
+    public io.harness.delegate.TaskProgressUpdatesRequest build() {
+      io.harness.delegate.TaskProgressUpdatesRequest result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
@@ -317,8 +319,8 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
 
     @java.
     lang.Override
-    public io.harness.delegate.TaskProgressRequest buildPartial() {
-      io.harness.delegate.TaskProgressRequest result = new io.harness.delegate.TaskProgressRequest(this);
+    public io.harness.delegate.TaskProgressUpdatesRequest buildPartial() {
+      io.harness.delegate.TaskProgressUpdatesRequest result = new io.harness.delegate.TaskProgressUpdatesRequest(this);
       if (taskIdBuilder_ == null) {
         result.taskId_ = taskId_;
       } else {
@@ -355,16 +357,16 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
     }
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof io.harness.delegate.TaskProgressRequest) {
-        return mergeFrom((io.harness.delegate.TaskProgressRequest) other);
+      if (other instanceof io.harness.delegate.TaskProgressUpdatesRequest) {
+        return mergeFrom((io.harness.delegate.TaskProgressUpdatesRequest) other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(io.harness.delegate.TaskProgressRequest other) {
-      if (other == io.harness.delegate.TaskProgressRequest.getDefaultInstance())
+    public Builder mergeFrom(io.harness.delegate.TaskProgressUpdatesRequest other) {
+      if (other == io.harness.delegate.TaskProgressUpdatesRequest.getDefaultInstance())
         return this;
       if (other.hasTaskId()) {
         mergeTaskId(other.getTaskId());
@@ -382,11 +384,11 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
-      io.harness.delegate.TaskProgressRequest parsedMessage = null;
+      io.harness.delegate.TaskProgressUpdatesRequest parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (io.harness.delegate.TaskProgressRequest) e.getUnfinishedMessage();
+        parsedMessage = (io.harness.delegate.TaskProgressUpdatesRequest) e.getUnfinishedMessage();
         throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
@@ -516,42 +518,42 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
       return super.mergeUnknownFields(unknownFields);
     }
 
-    // @@protoc_insertion_point(builder_scope:io.harness.delegate.TaskProgressRequest)
+    // @@protoc_insertion_point(builder_scope:io.harness.delegate.TaskProgressUpdatesRequest)
   }
 
-  // @@protoc_insertion_point(class_scope:io.harness.delegate.TaskProgressRequest)
-  private static final io.harness.delegate.TaskProgressRequest DEFAULT_INSTANCE;
+  // @@protoc_insertion_point(class_scope:io.harness.delegate.TaskProgressUpdatesRequest)
+  private static final io.harness.delegate.TaskProgressUpdatesRequest DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new io.harness.delegate.TaskProgressRequest();
+    DEFAULT_INSTANCE = new io.harness.delegate.TaskProgressUpdatesRequest();
   }
 
-  public static io.harness.delegate.TaskProgressRequest getDefaultInstance() {
+  public static io.harness.delegate.TaskProgressUpdatesRequest getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<TaskProgressRequest> PARSER =
-      new com.google.protobuf.AbstractParser<TaskProgressRequest>() {
+  private static final com.google.protobuf.Parser<TaskProgressUpdatesRequest> PARSER =
+      new com.google.protobuf.AbstractParser<TaskProgressUpdatesRequest>() {
         @java.lang.Override
-        public TaskProgressRequest parsePartialFrom(
+        public TaskProgressUpdatesRequest parsePartialFrom(
             com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws com.google.protobuf.InvalidProtocolBufferException {
-          return new TaskProgressRequest(input, extensionRegistry);
+          return new TaskProgressUpdatesRequest(input, extensionRegistry);
         }
       };
 
-  public static com.google.protobuf.Parser<TaskProgressRequest> parser() {
+  public static com.google.protobuf.Parser<TaskProgressUpdatesRequest> parser() {
     return PARSER;
   }
 
   @java.
   lang.Override
-  public com.google.protobuf.Parser<TaskProgressRequest> getParserForType() {
+  public com.google.protobuf.Parser<TaskProgressUpdatesRequest> getParserForType() {
     return PARSER;
   }
 
   @java.
   lang.Override
-  public io.harness.delegate.TaskProgressRequest getDefaultInstanceForType() {
+  public io.harness.delegate.TaskProgressUpdatesRequest getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 }

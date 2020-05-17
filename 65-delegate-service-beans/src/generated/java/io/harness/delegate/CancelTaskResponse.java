@@ -109,7 +109,7 @@ public final class CancelTaskResponse extends com.google.protobuf.GeneratedMessa
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (canceledAtStage_ != io.harness.delegate.TaskExecutionStage.QUEUEING.getNumber()) {
+    if (canceledAtStage_ != io.harness.delegate.TaskExecutionStage.TYPE_UNSPECIFIED.getNumber()) {
       output.writeEnum(1, canceledAtStage_);
     }
     unknownFields.writeTo(output);
@@ -122,7 +122,7 @@ public final class CancelTaskResponse extends com.google.protobuf.GeneratedMessa
       return size;
 
     size = 0;
-    if (canceledAtStage_ != io.harness.delegate.TaskExecutionStage.QUEUEING.getNumber()) {
+    if (canceledAtStage_ != io.harness.delegate.TaskExecutionStage.TYPE_UNSPECIFIED.getNumber()) {
       size += com.google.protobuf.CodedOutputStream.computeEnumSize(1, canceledAtStage_);
     }
     size += unknownFields.getSerializedSize();

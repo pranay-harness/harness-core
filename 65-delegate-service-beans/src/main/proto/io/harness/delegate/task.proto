@@ -26,10 +26,10 @@ message TaskDetails {
   string type = 1;
 
   // Delegate system allows several way to pass the task parameters
-  oneof Parameters {
+  oneof parameters {
     // Using kryo java serialization, useful for java based task where java annotation play important role of
     // determining encrypted fields and expressions.
-    bytes kryoParameters = 2;
+    bytes kryo_parameters = 2;
   }
 
   // Execution time out determines for how long the task should be kept waited on to accomplish its work.
@@ -49,5 +49,5 @@ message TaskDetails {
 
 // List of all capabilities needed for the task
 message TaskCapabilities {
-  repeated io.harness.delegate.Capability list = 1;
+  repeated Capability list = 1;
 }
