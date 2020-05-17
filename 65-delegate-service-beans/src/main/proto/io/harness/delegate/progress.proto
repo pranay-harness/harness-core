@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package io.harness.delegate;
+
+option java_multiple_files = true;
+
+enum TaskExecutionStage {
+  QUEUEING = 0;
+  VALIDATING = 1;
+  EXECUTING = 2;
+  FINISHED = 3;
+}
