@@ -6,13 +6,13 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsEcrGetAuthTokenRequest;
 import software.wings.service.impl.aws.model.AwsEcrGetAuthTokenResponse;
@@ -31,9 +31,9 @@ import java.util.function.Supplier;
 public class AwsEcrTask extends AbstractDelegateRunnableTask {
   @Inject private AwsEcrHelperServiceDelegate ecrServiceDelegate;
 
-  public AwsEcrTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
-      Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public AwsEcrTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

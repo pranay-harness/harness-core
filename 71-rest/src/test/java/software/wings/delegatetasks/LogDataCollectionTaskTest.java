@@ -27,6 +27,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -82,7 +83,8 @@ public class LogDataCollectionTaskTest extends CategoryTest {
                             .envId(envId)
                             .infrastructureMappingId(infrastructureMappingId)
                             .build();
-    dataCollectionTask = new LogDataCollectionTask(delegateId, task, null, null);
+    dataCollectionTask = new LogDataCollectionTask(
+        DelegateTaskPackage.builder().delegateId(delegateId).delegateTask(task).build(), null, null);
 
     MockitoAnnotations.initMocks(this);
 

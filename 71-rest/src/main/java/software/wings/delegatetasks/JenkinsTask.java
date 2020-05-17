@@ -18,7 +18,6 @@ import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -33,6 +32,7 @@ import io.harness.logging.ExceptionLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.client.HttpResponseException;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.Log;
@@ -59,9 +59,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService logService;
   @Inject private JenkinsUtils jenkinsUtil;
 
-  public JenkinsTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
+  public JenkinsTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, postExecute, preExecute);
+    super(delegateTaskPackage, postExecute, preExecute);
   }
 
   @Override

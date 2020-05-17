@@ -5,9 +5,9 @@ import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HA
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.MetricDataStoreService;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.MetricElement;
@@ -31,9 +31,9 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
   private MetricsDataCollector<T> metricsDataCollector;
   @Inject private MetricDataStoreService metricStoreService;
 
-  public MetricsDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public MetricsDataCollectionTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

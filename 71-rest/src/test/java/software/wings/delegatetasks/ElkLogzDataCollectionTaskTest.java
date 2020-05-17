@@ -22,6 +22,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -82,7 +83,8 @@ public class ElkLogzDataCollectionTaskTest extends WingsBaseTest {
                             .infrastructureMappingId(infrastructureMappingId)
                             .build();
     task.setUuid(delegateId);
-    dataCollectionTask = new ElkLogzDataCollectionTask(delegateId, task, null, null);
+    dataCollectionTask = new ElkLogzDataCollectionTask(
+        DelegateTaskPackage.builder().delegateId(delegateId).delegateTask(task).build(), null, null);
     when(encryptionService.decrypt(any(), any())).thenReturn(null);
     setupFields();
   }

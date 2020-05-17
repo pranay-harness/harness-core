@@ -18,6 +18,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsRoute53ListHostedZonesRequest;
 import software.wings.service.impl.aws.model.AwsRoute53Request;
@@ -27,8 +28,13 @@ public class AwsRoute53TaskTest extends WingsBaseTest {
   @Mock private AwsRoute53HelperServiceDelegate mockAwsRoute53HelperServiceDelegate;
 
   @InjectMocks
-  private AwsRoute53Task task = (AwsRoute53Task) TaskType.AWS_ROUTE53_TASK.getDelegateRunnableTask("delegateid",
-      DelegateTask.builder().data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
+  private AwsRoute53Task task = (AwsRoute53Task) TaskType.AWS_ROUTE53_TASK.getDelegateRunnableTask(
+      DelegateTaskPackage.builder()
+          .delegateId("delegateid")
+          .delegateTask(DelegateTask.builder()
+                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                            .build())
+          .build(),
       notifyResponseData -> {}, () -> true);
 
   @Before

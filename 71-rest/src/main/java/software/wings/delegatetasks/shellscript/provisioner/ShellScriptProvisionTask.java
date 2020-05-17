@@ -8,7 +8,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -23,6 +22,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
@@ -48,9 +48,9 @@ public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
   @Inject private ShellExecutorFactory shellExecutorFactory;
   @Inject private EncryptionService encryptionService;
 
-  public ShellScriptProvisionTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
-      Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public ShellScriptProvisionTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

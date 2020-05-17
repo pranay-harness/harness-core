@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
@@ -13,6 +12,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
@@ -30,9 +30,9 @@ import java.util.function.Supplier;
 public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask {
   @Inject private ArtifactoryService artifactoryService;
 
-  public ArtifactoryCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DelegateTaskResponse> postExecute, Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, postExecute, preExecute);
+  public ArtifactoryCollectionTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
+      Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, postExecute, preExecute);
   }
 
   @Override

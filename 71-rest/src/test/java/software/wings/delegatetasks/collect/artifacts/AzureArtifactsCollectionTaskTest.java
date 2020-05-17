@@ -24,6 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
@@ -49,12 +50,14 @@ public class AzureArtifactsCollectionTaskTest extends CategoryTest {
   @InjectMocks
   private AzureArtifactsCollectionTask mavenCollectionTask =
       (AzureArtifactsCollectionTask) TaskType.AZURE_ARTIFACTS_COLLECTION.getDelegateRunnableTask(
-          DELEGATE_ID1, mavenDelegateTask, notifyResponseData -> {}, () -> true);
+          DelegateTaskPackage.builder().delegateId(DELEGATE_ID1).delegateTask(mavenDelegateTask).build(),
+          notifyResponseData -> {}, () -> true);
 
   @InjectMocks
   private AzureArtifactsCollectionTask nugetCollectionTask =
       (AzureArtifactsCollectionTask) TaskType.AZURE_ARTIFACTS_COLLECTION.getDelegateRunnableTask(
-          DELEGATE_ID2, nugetDelegateTask, notifyResponseData -> {}, () -> true);
+          DelegateTaskPackage.builder().delegateId(DELEGATE_ID2).delegateTask(nugetDelegateTask).build(),
+          notifyResponseData -> {}, () -> true);
 
   @Test
   @Owner(developers = GARVIT)

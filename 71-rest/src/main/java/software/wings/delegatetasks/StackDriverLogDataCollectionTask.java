@@ -11,13 +11,13 @@ import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.inject.Inject;
 
 import com.jayway.jsonpath.JsonPath;
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.GcpHelperService;
@@ -44,9 +44,9 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
   @Inject private GcpHelperService gcpHelperService;
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
 
-  public StackDriverLogDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public StackDriverLogDataCollectionTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

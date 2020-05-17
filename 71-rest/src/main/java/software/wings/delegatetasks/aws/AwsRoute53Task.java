@@ -5,13 +5,13 @@ import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
@@ -28,9 +28,9 @@ import java.util.function.Supplier;
 public class AwsRoute53Task extends AbstractDelegateRunnableTask {
   @Inject private AwsRoute53HelperServiceDelegate awsRoute53HelperServiceDelegate;
 
-  public AwsRoute53Task(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
-      Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public AwsRoute53Task(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

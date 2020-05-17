@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -10,6 +9,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.service.intfc.ServiceCommandExecutorService;
@@ -21,9 +21,9 @@ import java.util.function.Supplier;
 public class CommandTask extends AbstractDelegateRunnableTask {
   @Inject private ServiceCommandExecutorService serviceCommandExecutorService;
 
-  public CommandTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
+  public CommandTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, postExecute, preExecute);
+    super(delegateTaskPackage, postExecute, preExecute);
   }
 
   @Override

@@ -2,7 +2,6 @@ package software.wings.delegatetasks.aws.ecs;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
@@ -10,6 +9,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHandler;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
@@ -23,9 +23,9 @@ import java.util.function.Supplier;
 public class EcsCommandTask extends AbstractDelegateRunnableTask {
   @Inject private Map<String, EcsCommandTaskHandler> commandTaskTypeToTaskHandlerMap;
 
-  public EcsCommandTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
-      Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public EcsCommandTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

@@ -5,13 +5,13 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsCodeDeployListAppResponse;
 import software.wings.service.impl.aws.model.AwsCodeDeployListAppRevisionRequest;
@@ -35,9 +35,9 @@ import java.util.function.Supplier;
 public class AwsCodeDeployTask extends AbstractDelegateRunnableTask {
   @Inject private AwsCodeDeployHelperServiceDelegate awsCodeDeployHelperServiceDelegate;
 
-  public AwsCodeDeployTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
-      Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public AwsCodeDeployTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

@@ -6,7 +6,6 @@ import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -26,6 +25,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.AccountLogContext;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 
 import java.util.EnumSet;
@@ -50,17 +50,17 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
 
   @Inject private DataCollectionExecutorService dataCollectionService;
 
-  public AbstractDelegateRunnableTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
-    this.delegateId = delegateId;
-    this.taskId = delegateTask.getUuid();
-    this.parameters = delegateTask.getData().getParameters();
-    this.accountId = delegateTask.getAccountId();
-    this.appId = delegateTask.getAppId();
+  public AbstractDelegateRunnableTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    this.delegateId = delegateTaskPackage.getDelegateId();
+    this.taskId = delegateTaskPackage.getDelegateTaskId();
+    this.parameters = delegateTaskPackage.getDelegateTask().getData().getParameters();
+    this.accountId = delegateTaskPackage.getDelegateTask().getAccountId();
+    this.appId = delegateTaskPackage.getDelegateTask().getAppId();
     this.consumer = consumer;
     this.preExecute = preExecute;
-    this.taskType = delegateTask.getData().getTaskType();
-    this.isAsync = delegateTask.getData().isAsync();
+    this.taskType = delegateTaskPackage.getDelegateTask().getData().getTaskType();
+    this.isAsync = delegateTaskPackage.getDelegateTask().getData().isAsync();
   }
 
   @Override

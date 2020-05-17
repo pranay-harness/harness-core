@@ -7,7 +7,6 @@ import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -20,6 +19,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.beans.ApprovalDetails.Action;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
@@ -43,9 +43,9 @@ public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
   @Inject private ShellExecutorFactory shellExecutorFactory;
   @Inject private DelegateLogService logService;
 
-  public ShellScriptApprovalTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
-      Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public ShellScriptApprovalTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

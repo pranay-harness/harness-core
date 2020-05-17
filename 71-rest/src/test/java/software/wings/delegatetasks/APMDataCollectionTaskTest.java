@@ -31,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -95,7 +96,8 @@ public class APMDataCollectionTaskTest extends WingsBaseTest {
                             .envId(envId)
                             .infrastructureMappingId(infrastructureMappingId)
                             .build();
-    dataCollectionTask = new APMDataCollectionTask(delegateId, task, null, null);
+    dataCollectionTask = new APMDataCollectionTask(
+        DelegateTaskPackage.builder().delegateId(delegateId).delegateTask(task).build(), null, null);
     FieldUtils.writeField(dataCollectionTask, "delegateLogService", delegateLogService, true);
     FieldUtils.writeField(dataCollectionTask, "metricStoreService", metricStoreService, true);
     FieldUtils.writeField(dataCollectionTask, "encryptionService", encryptionService, true);

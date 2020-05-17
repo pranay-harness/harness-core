@@ -18,6 +18,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsEcrGetAuthTokenRequest;
 import software.wings.service.impl.aws.model.AwsEcrGetImageUrlRequest;
@@ -28,8 +29,13 @@ public class AwsEcrTaskTest extends WingsBaseTest {
   @Mock private AwsEcrHelperServiceDelegate mockEcrServiceDelegate;
 
   @InjectMocks
-  private AwsEcrTask task = (AwsEcrTask) TaskType.AWS_ECR_TASK.getDelegateRunnableTask("delegateid",
-      DelegateTask.builder().data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build()).build(),
+  private AwsEcrTask task = (AwsEcrTask) TaskType.AWS_ECR_TASK.getDelegateRunnableTask(
+      DelegateTaskPackage.builder()
+          .delegateId("delegateid")
+          .delegateTask(DelegateTask.builder()
+                            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                            .build())
+          .build(),
       notifyResponseData -> {}, () -> true);
 
   @Before

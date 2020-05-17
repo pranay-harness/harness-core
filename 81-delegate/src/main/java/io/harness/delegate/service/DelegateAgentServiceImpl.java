@@ -1563,20 +1563,20 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         // applyDelegateSecretFunctor(delegatePackage);
         DelegateValidateTask delegateValidateTask = getDelegateValidateTask(delegateTaskEvent, delegateTask);
         injector.injectMembers(delegateValidateTask);
-        currentlyValidatingTasks.put(delegateTask.getUuid(), delegateTaskPackage);
+        currentlyValidatingTasks.put(delegateTaskPackage.getDelegateTaskId(), delegateTaskPackage);
         updateCounterIfLessThanCurrent(maxValidatingTasksCount, currentlyValidatingTasks.size());
         ExecutorService executorService = selectExecutorService(delegateTask.getData());
 
         Future<List<DelegateConnectionResult>> future =
             executorService.submit(() -> delegateValidateTask.validationResults());
-        currentlyValidatingFutures.put(delegateTask.getUuid(), future);
+        currentlyValidatingFutures.put(delegateTaskPackage.getDelegateTaskId(), future);
 
         DelegateValidateTask delegateAlternativeValidateTask = getAlternativeDelegateValidateTask(delegateTask);
         if (delegateAlternativeValidateTask != null) {
           injector.injectMembers(delegateAlternativeValidateTask);
 
           alternativeExecutor.submit(() -> {
-            try (TaskLogContext ignore = new TaskLogContext(delegateTask.getUuid(),
+            try (TaskLogContext ignore = new TaskLogContext(delegateTaskPackage.getDelegateTaskId(),
                      delegateTask.getData().getTaskType(), getCapabilityDetails(delegateTask), OVERRIDE_ERROR)) {
               logger.info("Executing comparison for task type {}", delegateTask.getData().getTaskType());
               try {
@@ -1718,7 +1718,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private void executeTask(@NotNull DelegateTaskPackage delegateTaskPackage) {
     DelegateTask delegateTask = delegateTaskPackage.getDelegateTask();
 
-    if (currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
+    if (currentlyExecutingTasks.containsKey(delegateTaskPackage.getDelegateTaskId())) {
       logger.info("Already executing task");
       return;
     }
@@ -1726,8 +1726,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     Optional<LogSanitizer> sanitizer = getLogSanitizer(delegateTaskPackage);
     DelegateRunnableTask delegateRunnableTask =
         TaskType.valueOf(delegateTask.getData().getTaskType())
-            .getDelegateRunnableTask(delegateId, delegateTask,
-                getPostExecutionFunction(delegateTask.getUuid(), sanitizer.orElse(null)),
+            .getDelegateRunnableTask(delegateTaskPackage,
+                getPostExecutionFunction(delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null)),
                 getPreExecutionFunction(delegateTaskPackage, sanitizer.orElse(null)));
     if (delegateRunnableTask instanceof AbstractDelegateRunnableTask) {
       ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(HOST_NAME);
@@ -1736,10 +1736,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     ExecutorService executorService = selectExecutorService(delegateTask.getData());
     Future taskFuture = executorService.submit(delegateRunnableTask);
     logger.info("Task future in executeTask: done:{}, cancelled:{}", taskFuture.isDone(), taskFuture.isCancelled());
-    currentlyExecutingFutures.put(delegateTask.getUuid(), taskFuture);
+    currentlyExecutingFutures.put(delegateTaskPackage.getDelegateTaskId(), taskFuture);
     updateCounterIfLessThanCurrent(maxExecutingFuturesCount, currentlyExecutingFutures.size());
 
-    timeoutEnforcement.submit(() -> enforceDelegateTaskTimeout(delegateTask.getUuid(), delegateTask.getData()));
+    timeoutEnforcement.submit(
+        () -> enforceDelegateTaskTimeout(delegateTaskPackage.getDelegateTaskId(), delegateTask.getData()));
     logger.info("Task submitted for execution");
   }
 

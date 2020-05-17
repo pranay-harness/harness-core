@@ -5,12 +5,12 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import com.google.inject.Inject;
 
 import groovy.util.logging.Slf4j;
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.NotImplementedException;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsCFGetTemplateParamsRequest;
 import software.wings.service.impl.aws.model.AwsCFGetTemplateParamsResponse;
@@ -28,9 +28,9 @@ import java.util.function.Supplier;
 public class AwsCFTask extends AbstractDelegateRunnableTask {
   @Inject private AwsCFHelperServiceDelegate awsCFHelperServiceDelegate;
 
-  public AwsCFTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
-      Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, consumer, preExecute);
+  public AwsCFTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, consumer, preExecute);
   }
 
   @Override

@@ -19,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.core.local.executors.ShellExecutorConfig;
@@ -38,8 +39,12 @@ public class ShellScriptProvisionTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private ShellScriptProvisionTask shellScriptProvisionTask =
-      (ShellScriptProvisionTask) TaskType.SHELL_SCRIPT_PROVISION_TASK.getDelegateRunnableTask("delegateid",
-          DelegateTask.builder().data(TaskData.builder().build()).build(), notifyResponseData -> {}, () -> true);
+      (ShellScriptProvisionTask) TaskType.SHELL_SCRIPT_PROVISION_TASK.getDelegateRunnableTask(
+          DelegateTaskPackage.builder()
+              .delegateId("delegateid")
+              .delegateTask(DelegateTask.builder().data(TaskData.builder().build()).build())
+              .build(),
+          notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {}

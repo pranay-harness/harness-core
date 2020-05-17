@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
@@ -14,6 +13,7 @@ import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 
@@ -29,9 +29,9 @@ import java.util.function.Supplier;
 public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask {
   @Inject private AmazonS3Service amazonS3Service;
 
-  public AmazonS3CollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<DelegateTaskResponse> postExecute, Supplier<Boolean> preExecute) {
-    super(delegateId, delegateTask, postExecute, preExecute);
+  public AmazonS3CollectionTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
+      Supplier<Boolean> preExecute) {
+    super(delegateTaskPackage, postExecute, preExecute);
   }
 
   @Override

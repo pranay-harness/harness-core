@@ -24,6 +24,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest;
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest.CommunicationType;
@@ -45,9 +46,12 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
 
   @InjectMocks
   private CollaborationProviderTask collaborationProviderTask =
-      (CollaborationProviderTask) TaskType.COLLABORATION_PROVIDER_TASK.getDelegateRunnableTask("delid1",
-          DelegateTask.builder()
-              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+      (CollaborationProviderTask) TaskType.COLLABORATION_PROVIDER_TASK.getDelegateRunnableTask(
+          DelegateTaskPackage.builder()
+              .delegateId("delid1")
+              .delegateTask(DelegateTask.builder()
+                                .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                .build())
               .build(),
           notifyResponseData -> {}, () -> true);
 
