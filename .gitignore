@@ -60,3 +60,4 @@ profile
 profile.result
 
 bazel-*
+**/vendor

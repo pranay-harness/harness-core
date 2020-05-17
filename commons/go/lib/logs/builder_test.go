@@ -1,16 +1,24 @@
 package logs
 
 import (
+	"go.uber.org/zap"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_Default_NewDevelopmentBuilder(t *testing.T) {
+	b := NewDevelopmentBuilder()
+
+	assert.Equal(t, map[string]interface{}{}, b.Config.InitialFields)
+	assert.Equal(t, "ts", b.Config.EncoderConfig.TimeKey)
+}
+
 func Test_Default_NewBuilder(t *testing.T) {
 	b := NewBuilder()
 
-	assert.Equal(t, b.Config.InitialFields, map[string]interface{}{})
-	assert.Equal(t, b.Config.EncoderConfig.TimeKey, "ts")
+	assert.Equal(t, map[string]interface{}{}, b.Config.InitialFields)
+	assert.Equal(t, "ts", b.Config.EncoderConfig.TimeKey)
 }
 
 func Test_NewBuilder_WithFields(t *testing.T) {
@@ -20,6 +28,16 @@ func Test_NewBuilder_WithFields(t *testing.T) {
 		"k2": "v2",
 		"k3": "v3",
 	}, b.Config.InitialFields)
+}
+
+func Test_NewBuilder_Verbose(t *testing.T) {
+	b := NewBuilder().Verbose(true)
+	assert.Equal(t, zap.DebugLevel, b.Config.Level.Level())
+}
+
+func Test_NewBuilder_MustBuild(t *testing.T) {
+	b := NewBuilder().Verbose(true)
+	_ = b.MustBuild()
 }
 
 func Test_NewBuilder_WithFields_OddArgsPanics(t *testing.T) {

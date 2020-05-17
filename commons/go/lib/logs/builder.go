@@ -53,6 +53,15 @@ func (b *Builder) Build() (*zap.Logger, error) {
 	return log, nil
 }
 
+// MustBuild builds the logger out of the underlying config, panics if it fails
+func (b *Builder) MustBuild() *zap.Logger {
+	log, err := b.Build()
+	if err != nil {
+		panic(err)
+	}
+	return log
+}
+
 // Verbose sets the log level to zap.DebugLevel if verbose == true, or performs a noop if verbose == false.
 func (b *Builder) Verbose(verbose bool) *Builder {
 	if verbose {

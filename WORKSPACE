@@ -231,8 +231,8 @@ go_repository(
 go_repository(
     name = "org_golang_x_sync",
     importpath = "golang.org/x/sync",
-    sum = "h1:vcxGaoTs7kV8m5Np9uUNQin4BrLOthgV7252N8V+FwY=",
-    version = "v0.0.0-20190911185100-cd5d95a43a6e",
+    sum = "h1:8gQV6CLnAEikrhgkHFbMAEhagSSnXWGV915qUMm9mrU=",
+    version = "v0.0.0-20190423024810-112230192c58",
 )
 
 go_repository(
@@ -317,4 +317,18 @@ go_repository(
     importpath = "gopkg.in/DATA-DOG/go-sqlmock.v1",
     sum = "h1:FVCohIoYO7IJoDDVpV2pdq7SgrMH6wHnuTyrdrxJNoY=",
     version = "v1.3.0",
+)
+
+go_repository(
+    name = "com_github_alexflint_go_arg",
+    importpath = "github.com/alexflint/go-arg",
+    sum = "h1:UfldqSdFWeLtoOuVRosqofU4nmhI1pYEbT4ZFS34Bdo=",
+    version = "v1.3.0",
+)
+
+go_repository(
+    name = "com_github_alexflint_go_scalar",
+    importpath = "github.com/alexflint/go-scalar",
+    sum = "h1:NGupf1XV/Xb04wXskDFzS0KWOLH632W/EO4fAFi+A70=",
+    version = "v1.0.0",
 )
