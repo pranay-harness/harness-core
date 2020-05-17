@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package io.harness.delegate;
+
+option java_multiple_files = true;
+
+import "io/harness/delegate/task.proto";
+import "io/harness/delegate/progress.proto";
+
+service DelegateService {
+  rpc SubmitTask(SubmitTaskRequest) returns (SubmitTaskResponse);
+  rpc CancelTask(CancelTaskRequest) returns (CancelTaskResponse);
+  rpc TaskProgress(TaskProgressRequest) returns (TaskProgressResponse);
+  rpc TaskProgressUpdates(TaskProgressRequest) returns (stream TaskProgressResponse);
+}
+
+message SubmitTaskRequest {
+  TaskSetupAbstractions setup_abstractions = 1;
+  TaskDetails details = 2;
+  TaskCapabilities capabilities = 3;
+}
+
+message SubmitTaskResponse {
+  TaskId taskId = 1;
+}
+
+message CancelTaskRequest {
+  TaskId taskId = 1;
+}
+
+message CancelTaskResponse {
+  TaskExecutionStage canceled_at_stage = 1;
+}
+
+message TaskProgressRequest {
+  TaskId taskId = 1;
+}
+
+message TaskProgressResponse {
+  TaskExecutionStage currently_at_stage = 1;
+}

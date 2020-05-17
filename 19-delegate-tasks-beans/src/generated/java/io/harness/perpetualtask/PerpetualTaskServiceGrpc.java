@@ -17,8 +17,8 @@ import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
 
 /**
  */
-@javax.annotation.Generated(
-    value = "by gRPC proto compiler (version 1.21.0)", comments = "Source: perpetualtask/perpetual_task_service.proto")
+@javax.annotation.Generated(value = "by gRPC proto compiler (version 1.21.0)",
+    comments = "Source: io/harness/perpetualtask/perpetual_task_service.proto")
 public final class PerpetualTaskServiceGrpc {
   private PerpetualTaskServiceGrpc() {}
 
