@@ -8,15 +8,15 @@ public interface SubmitTaskResponseOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.SubmitTaskResponse)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.delegate.TaskId taskId = 1;</code>
+   * <code>.io.harness.delegate.TaskId task_id = 1;</code>
    */
   boolean hasTaskId();
   /**
-   * <code>.io.harness.delegate.TaskId taskId = 1;</code>
+   * <code>.io.harness.delegate.TaskId task_id = 1;</code>
    */
   io.harness.delegate.TaskId getTaskId();
   /**
-   * <code>.io.harness.delegate.TaskId taskId = 1;</code>
+   * <code>.io.harness.delegate.TaskId task_id = 1;</code>
    */
   io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder();
 }

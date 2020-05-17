@@ -35,6 +35,14 @@ public final class DelegateServiceOuterClass {
       .Descriptor internal_static_io_harness_delegate_TaskProgressResponse_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_delegate_TaskProgressResponse_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_delegate_TaskProgressUpdatesRequest_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_delegate_TaskProgressUpdatesRequest_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_delegate_TaskProgressUpdatesResponse_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_delegate_TaskProgressUpdatesResponse_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -49,27 +57,32 @@ public final class DelegateServiceOuterClass {
         + "egate.TaskSetupAbstractions\0221\n\007details\030\002"
         + " \001(\0132 .io.harness.delegate.TaskDetails\022;"
         + "\n\014capabilities\030\003 \001(\0132%.io.harness.delega"
-        + "te.TaskCapabilities\"A\n\022SubmitTaskRespons"
-        + "e\022+\n\006taskId\030\001 \001(\0132\033.io.harness.delegate."
-        + "TaskId\"@\n\021CancelTaskRequest\022+\n\006taskId\030\001 "
-        + "\001(\0132\033.io.harness.delegate.TaskId\"X\n\022Canc"
-        + "elTaskResponse\022B\n\021canceled_at_stage\030\001 \001("
-        + "\0162\'.io.harness.delegate.TaskExecutionSta"
-        + "ge\"B\n\023TaskProgressRequest\022+\n\006taskId\030\001 \001("
-        + "\0132\033.io.harness.delegate.TaskId\"[\n\024TaskPr"
-        + "ogressResponse\022C\n\022currently_at_stage\030\001 \001"
-        + "(\0162\'.io.harness.delegate.TaskExecutionSt"
-        + "age2\242\003\n\017DelegateService\022]\n\nSubmitTask\022&."
-        + "io.harness.delegate.SubmitTaskRequest\032\'."
-        + "io.harness.delegate.SubmitTaskResponse\022]"
-        + "\n\nCancelTask\022&.io.harness.delegate.Cance"
-        + "lTaskRequest\032\'.io.harness.delegate.Cance"
-        + "lTaskResponse\022c\n\014TaskProgress\022(.io.harne"
-        + "ss.delegate.TaskProgressRequest\032).io.har"
-        + "ness.delegate.TaskProgressResponse\022l\n\023Ta"
-        + "skProgressUpdates\022(.io.harness.delegate."
-        + "TaskProgressRequest\032).io.harness.delegat"
-        + "e.TaskProgressResponse0\001B\002P\001b\006proto3"};
+        + "te.TaskCapabilities\"B\n\022SubmitTaskRespons"
+        + "e\022,\n\007task_id\030\001 \001(\0132\033.io.harness.delegate"
+        + ".TaskId\"A\n\021CancelTaskRequest\022,\n\007task_id\030"
+        + "\001 \001(\0132\033.io.harness.delegate.TaskId\"X\n\022Ca"
+        + "ncelTaskResponse\022B\n\021canceled_at_stage\030\001 "
+        + "\001(\0162\'.io.harness.delegate.TaskExecutionS"
+        + "tage\"C\n\023TaskProgressRequest\022,\n\007task_id\030\001"
+        + " \001(\0132\033.io.harness.delegate.TaskId\"[\n\024Tas"
+        + "kProgressResponse\022C\n\022currently_at_stage\030"
+        + "\001 \001(\0162\'.io.harness.delegate.TaskExecutio"
+        + "nStage\"J\n\032TaskProgressUpdatesRequest\022,\n\007"
+        + "task_id\030\001 \001(\0132\033.io.harness.delegate.Task"
+        + "Id\"b\n\033TaskProgressUpdatesResponse\022C\n\022cur"
+        + "rently_at_stage\030\001 \001(\0162\'.io.harness.deleg"
+        + "ate.TaskExecutionStage2\260\003\n\017DelegateServi"
+        + "ce\022]\n\nSubmitTask\022&.io.harness.delegate.S"
+        + "ubmitTaskRequest\032\'.io.harness.delegate.S"
+        + "ubmitTaskResponse\022]\n\nCancelTask\022&.io.har"
+        + "ness.delegate.CancelTaskRequest\032\'.io.har"
+        + "ness.delegate.CancelTaskResponse\022c\n\014Task"
+        + "Progress\022(.io.harness.delegate.TaskProgr"
+        + "essRequest\032).io.harness.delegate.TaskPro"
+        + "gressResponse\022z\n\023TaskProgressUpdates\022/.i"
+        + "o.harness.delegate.TaskProgressUpdatesRe"
+        + "quest\0320.io.harness.delegate.TaskProgress"
+        + "UpdatesResponse0\001B\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -125,6 +138,22 @@ public final class DelegateServiceOuterClass {
     internal_static_io_harness_delegate_TaskProgressResponse_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_delegate_TaskProgressResponse_descriptor,
+            new java.lang.String[] {
+                "CurrentlyAtStage",
+            });
+    internal_static_io_harness_delegate_TaskProgressUpdatesRequest_descriptor =
+        getDescriptor().getMessageTypes().get(6);
+    internal_static_io_harness_delegate_TaskProgressUpdatesRequest_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_delegate_TaskProgressUpdatesRequest_descriptor,
+            new java.lang.String[] {
+                "TaskId",
+            });
+    internal_static_io_harness_delegate_TaskProgressUpdatesResponse_descriptor =
+        getDescriptor().getMessageTypes().get(7);
+    internal_static_io_harness_delegate_TaskProgressUpdatesResponse_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_delegate_TaskProgressUpdatesResponse_descriptor,
             new java.lang.String[] {
                 "CurrentlyAtStage",
             });

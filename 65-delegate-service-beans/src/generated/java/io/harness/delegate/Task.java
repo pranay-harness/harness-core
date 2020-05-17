@@ -46,16 +46,16 @@ public final class Task {
         + "bstractions\022F\n\006values\030\001 \003(\01326.io.harness"
         + ".delegate.TaskSetupAbstractions.ValuesEn"
         + "try\032-\n\013ValuesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value"
-        + "\030\002 \001(\t:\0028\001\"\227\002\n\013TaskDetails\022\014\n\004type\030\001 \001(\t"
-        + "\022\030\n\016kryoParameters\030\002 \001(\014H\000\0224\n\021execution_"
-        + "timeout\030\003 \001(\0132\031.google.protobuf.Duration"
-        + "\022F\n\013expressions\030\004 \003(\01321.io.harness.deleg"
-        + "ate.TaskDetails.ExpressionsEntry\022 \n\030expr"
-        + "ession_functor_token\030\005 \001(\003\0322\n\020Expression"
-        + "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001B\014"
-        + "\n\nParameters\"A\n\020TaskCapabilities\022-\n\004list"
-        + "\030\001 \003(\0132\037.io.harness.delegate.CapabilityB"
-        + "\002P\001b\006proto3"};
+        + "\030\002 \001(\t:\0028\001\"\230\002\n\013TaskDetails\022\014\n\004type\030\001 \001(\t"
+        + "\022\031\n\017kryo_parameters\030\002 \001(\014H\000\0224\n\021execution"
+        + "_timeout\030\003 \001(\0132\031.google.protobuf.Duratio"
+        + "n\022F\n\013expressions\030\004 \003(\01321.io.harness.dele"
+        + "gate.TaskDetails.ExpressionsEntry\022 \n\030exp"
+        + "ression_functor_token\030\005 \001(\003\0322\n\020Expressio"
+        + "nsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001B"
+        + "\014\n\nparameters\"A\n\020TaskCapabilities\022-\n\004lis"
+        + "t\030\001 \003(\0132\037.io.harness.delegate.Capability"
+        + "B\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(

@@ -109,7 +109,7 @@ public final class TaskProgressResponse extends com.google.protobuf.GeneratedMes
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (currentlyAtStage_ != io.harness.delegate.TaskExecutionStage.QUEUEING.getNumber()) {
+    if (currentlyAtStage_ != io.harness.delegate.TaskExecutionStage.TYPE_UNSPECIFIED.getNumber()) {
       output.writeEnum(1, currentlyAtStage_);
     }
     unknownFields.writeTo(output);
@@ -122,7 +122,7 @@ public final class TaskProgressResponse extends com.google.protobuf.GeneratedMes
       return size;
 
     size = 0;
-    if (currentlyAtStage_ != io.harness.delegate.TaskExecutionStage.QUEUEING.getNumber()) {
+    if (currentlyAtStage_ != io.harness.delegate.TaskExecutionStage.TYPE_UNSPECIFIED.getNumber()) {
       size += com.google.protobuf.CodedOutputStream.computeEnumSize(1, currentlyAtStage_);
     }
     size += unknownFields.getSerializedSize();

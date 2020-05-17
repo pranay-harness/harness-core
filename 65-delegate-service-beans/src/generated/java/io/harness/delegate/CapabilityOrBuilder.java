@@ -8,7 +8,7 @@ public interface CapabilityOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.Capability)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>bytes kryoCapability = 1;</code>
+   * <code>bytes kryo_capability = 1;</code>
    */
   com.google.protobuf.ByteString getKryoCapability();
 }

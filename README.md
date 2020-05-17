@@ -62,6 +62,19 @@ Unzip the protoc file and add the bin directory to your path. Below is an exampl
 
 ```
 
+8. Download and install buf
+Complete this step only if you actively working with the protocol buffer files.
+
+```
+    brew tap bufbuild/buf
+    brew install buf
+```
+
+To check if your protobuf files are according to the coding standards execute in the root of the repo
+
+```
+    buf check lint
+```
 
 ### Github setup
 

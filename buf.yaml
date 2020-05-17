@@ -1,0 +1,12 @@
+build:
+  roots:
+    - 65-delegate-service-beans/src/main/proto
+lint:
+  use:
+    - DEFAULT
+  except:
+    - ENUM_VALUE_PREFIX
+    - PACKAGE_VERSION_SUFFIX
+breaking:
+  use:
+    - WIRE_JSON
