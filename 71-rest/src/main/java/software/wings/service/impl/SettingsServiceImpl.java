@@ -846,15 +846,11 @@ public class SettingsServiceImpl implements SettingsService {
     notNullCheck("Setting Attribute was deleted", existingSetting, USER);
     notNullCheck("SettingValue not associated", settingAttribute.getValue(), USER);
     equalCheck(existingSetting.getValue().getType(), settingAttribute.getValue().getType());
-    validateSettingAttribute(settingAttribute, existingSetting);
-    settingServiceHelper.validateUsageRestrictionsOnEntityUpdate(settingAttribute, settingAttribute.getAccountId(),
-        existingSetting.getUsageRestrictions(), getUsageRestrictions(settingAttribute));
 
     settingAttribute.setAccountId(existingSetting.getAccountId());
     settingAttribute.setAppId(existingSetting.getAppId());
     // e.g. User is saving GitConnector and setWebhookToken is needed.
     // This fields is populated by us and not by user
-    autoGenerateFieldsIfRequired(settingAttribute);
 
     boolean referencesSecrets = settingServiceHelper.hasReferencedSecrets(settingAttribute);
     if (referencesSecrets) {
@@ -862,6 +858,10 @@ public class SettingsServiceImpl implements SettingsService {
     } else {
       resetUnchangedEncryptedFields(existingSetting, settingAttribute);
     }
+    settingServiceHelper.validateUsageRestrictionsOnEntityUpdate(settingAttribute, settingAttribute.getAccountId(),
+        existingSetting.getUsageRestrictions(), getUsageRestrictions(settingAttribute));
+    validateSettingAttribute(settingAttribute, existingSetting);
+    autoGenerateFieldsIfRequired(settingAttribute);
 
     if (updateConnectivity || isBlank(settingAttribute.getConnectivityError())) {
       settingValidationService.validate(settingAttribute);
