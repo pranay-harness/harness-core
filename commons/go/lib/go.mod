@@ -1,4 +1,4 @@
-module github.com/wings-software/portal/common/go/lib
+module github.com/wings-software/portal/commons/go/lib
 
 go 1.14
 
