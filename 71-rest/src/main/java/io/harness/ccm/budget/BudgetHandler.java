@@ -1,5 +1,6 @@
 package io.harness.ccm.budget;
 
+import static io.harness.ccm.budget.entities.AlertThresholdBase.ACTUAL_COST;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
@@ -50,6 +51,8 @@ public class BudgetHandler implements Handler<Budget> {
 
   private static final String BUDGET_MAIL_ERROR = "Budget alert email couldn't be sent";
   private static final String BUDGET_DETAILS_URL_FORMAT = "/account/%s/continuous-efficiency/budget/%s";
+  private static final String ACTUAL_COST_BUDGET = "cost";
+  private static final String FORECASTED_COST_BUDGET = "forecasted cost";
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
@@ -86,10 +89,15 @@ public class BudgetHandler implements Handler<Budget> {
       if (alertThresholds[i].getAlertsSent() > 0) {
         continue;
       }
-
+      String costType = ACTUAL_COST_BUDGET;
       double currentCost;
       try {
-        currentCost = budgetService.getActualCost(budget);
+        if (alertThresholds[i].getBasedOn() == ACTUAL_COST) {
+          currentCost = budgetService.getActualCost(budget);
+        } else {
+          currentCost = budgetService.getForecastCost(budget);
+          costType = FORECASTED_COST_BUDGET;
+        }
         logger.info("{} has been spent under the budget with id={} ", currentCost, budget.getUuid());
       } catch (Exception e) {
         logger.error(e.getMessage());
@@ -99,7 +107,7 @@ public class BudgetHandler implements Handler<Budget> {
       if (exceedsThreshold(currentCost, getThresholdAmount(budget, alertThresholds[i]))) {
         for (String userGroupId : userGroupIds) {
           UserGroup userGroup = userGroupService.get(budget.getAccountId(), userGroupId, true);
-          sendBudgetAlertMail(userGroup, budget.getUuid(), budget.getName(), alertThresholds[i], currentCost);
+          sendBudgetAlertMail(userGroup, budget.getUuid(), budget.getName(), alertThresholds[i], currentCost, costType);
           budgetService.incAlertCount(budget, i);
           budgetService.setThresholdCrossedTimestamp(budget, i, Instant.now().toEpochMilli());
         }
@@ -107,8 +115,8 @@ public class BudgetHandler implements Handler<Budget> {
     }
   }
 
-  private void sendBudgetAlertMail(
-      UserGroup userGroup, String budgetId, String budgetName, AlertThreshold alertThreshold, double currentCost) {
+  private void sendBudgetAlertMail(UserGroup userGroup, String budgetId, String budgetName,
+      AlertThreshold alertThreshold, double currentCost, String costType) {
     try {
       String accountId = userGroup.getAccountId();
       String budgetUrl = buildAbsoluteUrl(format(BUDGET_DETAILS_URL_FORMAT, accountId, budgetId), accountId);
@@ -118,6 +126,7 @@ public class BudgetHandler implements Handler<Budget> {
       templateModel.put("BUDGET_NAME", budgetName);
       templateModel.put("THRESHOLD_PERCENTAGE", String.format("%.1f", alertThreshold.getPercentage()));
       templateModel.put("CURRENT_COST", String.format("%.2f", currentCost));
+      templateModel.put("COST_TYPE", costType);
 
       userGroup.getMemberIds().forEach(memberId -> {
         User user = userService.get(memberId);

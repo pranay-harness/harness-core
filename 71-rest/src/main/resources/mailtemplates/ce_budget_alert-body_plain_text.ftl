@@ -1,7 +1,7 @@
 Hi harness user,
 
-You requested that we alert you when the cost associated with your \"${BUDGET_NAME}\" budget exceeds ${THRESHOLD_PERCENTAGE}% for the current month.
-As of now, the cost associated with this budget is ${CURRENT_COST}.
+You requested that we alert you when the ${COST_TYPE} associated with your \"${BUDGET_NAME}\" budget exceeds ${THRESHOLD_PERCENTAGE}% for the current month.
+As of now, the ${COST_TYPE} associated with this budget is ${CURRENT_COST}.
 
 ${url!}
 
