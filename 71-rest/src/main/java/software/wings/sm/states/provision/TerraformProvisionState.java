@@ -49,6 +49,7 @@ import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -136,6 +137,8 @@ public abstract class TerraformProvisionState extends State {
   @Inject private transient LogService logService;
   @Inject protected FeatureFlagService featureFlagService;
   @Inject protected SweepingOutputService sweepingOutputService;
+
+  @Inject protected transient MainConfiguration configuration;
 
   @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 

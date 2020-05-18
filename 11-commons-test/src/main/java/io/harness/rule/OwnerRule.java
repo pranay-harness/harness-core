@@ -128,6 +128,7 @@ public class OwnerRule implements TestRule {
   public static final String ACASIAN = "alexandru.casian";
   public static final String ANIL = "anil.chowdhury";
   public static final String VGLIJIN = "vasile.glijin";
+  public static final String ARCHIT = "archit.singla";
   @Deprecated public static final String UNKNOWN = "unknown";
 
   private static DevInfoBuilder defaultDevInfo(String user) {
@@ -210,6 +211,7 @@ public class OwnerRule implements TestRule {
           .put(ABOSII, defaultDevInfo(ABOSII).slack("U01321VFH1A").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(ACASIAN, defaultDevInfo(ACASIAN).slack("U012UEVAPAR").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(VGLIJIN, defaultDevInfo(VGLIJIN).slack("U012W2S777V").team(CONTINUOUS_DEPLOYMENT_CORE).build())
+          .put(ARCHIT, defaultDevInfo(ARCHIT).slack("U012QGPR9N0").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(UNKNOWN, DevInfo.builder().email("n/a").slack("channel").build())
           .build();
 

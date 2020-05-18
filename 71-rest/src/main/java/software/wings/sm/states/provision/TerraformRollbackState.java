@@ -38,12 +38,14 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
+import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.GitUtilsManager;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+import javax.validation.constraints.NotNull;
 
 @Getter
 @Setter
@@ -122,9 +124,14 @@ public class TerraformRollbackState extends TerraformProvisionState {
           break;
         }
       }
-
+      ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
+      StringBuilder rollbackMessage = new StringBuilder();
       if (configParameter == currentConfig) {
+        rollbackMessage.append("No previous successful terraform execution, hence destroying.");
         rollbackCommand = TerraformCommand.DESTROY;
+      } else {
+        rollbackMessage.append("Inheriting terraform execution from last successful terraform execution : ");
+        rollbackMessage.append(getLastSuccessfulWorkflowExecutionUrl(configParameter, executionContext));
       }
 
       final String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
@@ -159,7 +166,10 @@ public class TerraformRollbackState extends TerraformProvisionState {
       List<String> targets = configParameter.getTargets();
       targets = resolveTargets(targets, context);
 
-      ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
+      ManagerExecutionLogCallback executionLogCallback = infrastructureProvisionerService.getManagerExecutionCallback(
+          terraformProvisioner.getAppId(), activityId, commandUnit().name());
+      executionLogCallback.saveExecutionLog(rollbackMessage.toString());
+
       TerraformProvisionParameters parameters =
           TerraformProvisionParameters.builder()
               .timeoutInMillis(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES)))
@@ -188,6 +198,27 @@ public class TerraformRollbackState extends TerraformProvisionState {
 
       return createAndRunTask(activityId, executionContext, parameters, configParameter.getDelegateTag());
     }
+  }
+
+  /**
+   * @param configParameter of the last successful workflow execution.
+   * @param executionContext context.
+   * @return last successful workflow execution url.
+   */
+  @NotNull
+  protected StringBuilder getLastSuccessfulWorkflowExecutionUrl(
+      TerraformConfig configParameter, ExecutionContextImpl executionContext) {
+    return new StringBuilder()
+        .append(configuration.getPortal().getUrl())
+        .append("/#/account/")
+        .append(configParameter.getAccountId())
+        .append("/app/")
+        .append(configParameter.getAppId())
+        .append("/env/")
+        .append(executionContext.getEnv() != null ? executionContext.getEnv().getUuid() : "null")
+        .append("/executions/")
+        .append(configParameter.getWorkflowExecutionId())
+        .append("/details");
   }
 
   @Override
