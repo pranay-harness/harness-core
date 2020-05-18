@@ -50,6 +50,7 @@ pwnedPasswordsAllowed: true
 executionLogStorageMode: MONGO
 fileStorageMode: MONGO
 clusterName: ""
+bugsnagApiKey: ""
 
 ceSetUpConfig:
   awsAccountId: 108817434118

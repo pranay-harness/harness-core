@@ -142,6 +142,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("jreConfigs") private Map<String, JreConfig> jreConfigs;
   @JsonProperty("cdnConfig") private CdnConfig cdnConfig;
   @JsonProperty("commandLibraryServiceConfig") private CommandLibraryServiceConfig commandLibraryServiceConfig;
+  @JsonProperty(value = "bugsnagApiKey") private String bugsnagApiKey;
 
   private int applicationPort;
   private boolean sslEnabled;

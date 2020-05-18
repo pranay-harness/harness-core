@@ -11,6 +11,7 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.ErrorData;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.exception.WeakPasswordException;
@@ -22,6 +23,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.signup.AzureMarketplaceIntegrationService;
 import software.wings.service.intfc.signup.SignupException;
 import software.wings.service.intfc.signup.SignupService;
+import software.wings.signup.BugsnagErrorReporter;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -44,6 +46,10 @@ import javax.ws.rs.core.Response;
 public class SignupResource {
   @Inject SignupService signupService;
   @Inject AzureMarketplaceIntegrationService azureMarketplaceIntegrationService;
+  @Inject BugsnagErrorReporter bugsnagErrorReporter;
+
+  private static final String FAILURE_MESSAGE = "Failed to complete signup";
+  private static final String FAILURE_MESSAGE_CONTACT_SUPPORT = "Failed to signup. Please contact harness support";
 
   /**
    *  Start the trial registration with email and user info. (Doesn't contains password)
@@ -59,13 +65,16 @@ public class SignupResource {
     try {
       return new RestResponse<>(signupService.signup(userInvite, source));
     } catch (SignupException ex) {
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).email(userInvite.getEmail()).build());
       throw ex;
     } catch (WeakPasswordException ex) {
       logger.error("Password validation failed");
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).email(userInvite.getEmail()).build());
       throw new SignupException(ex.getMessage(), ex, INVALID_REQUEST, Level.ERROR, WingsException.USER, null);
     } catch (Exception ex) {
-      logger.error("Failed to complete signup", ex);
-      throw new SignupException("Failed to signup. Please contact harness support");
+      logger.error(FAILURE_MESSAGE, ex);
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).email(userInvite.getEmail()).build());
+      throw new SignupException(FAILURE_MESSAGE_CONTACT_SUPPORT);
     }
   }
 
@@ -76,7 +85,8 @@ public class SignupResource {
     try {
       return signupService.checkValidity(azureMarketplaceToken);
     } catch (Exception ex) {
-      throw new SignupException("Failed to signup. Please contact harness support");
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).build());
+      throw new SignupException(FAILURE_MESSAGE_CONTACT_SUPPORT);
     }
   }
 
@@ -88,13 +98,16 @@ public class SignupResource {
     try {
       return new RestResponse<>(signupService.completeSignup(passwordRequest, secretToken));
     } catch (SignupException ex) {
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).build());
       throw ex;
     } catch (WeakPasswordException ex) {
       logger.error("Password validation failed");
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).build());
       throw new SignupException(ex.getMessage(), ex, INVALID_REQUEST, Level.ERROR, WingsException.USER, null);
     } catch (Exception ex) {
-      logger.error("Failed to complete signup", ex);
-      throw new SignupException("Failed to signup. Please contact harness support");
+      logger.error(FAILURE_MESSAGE, ex);
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).build());
+      throw new SignupException(FAILURE_MESSAGE_CONTACT_SUPPORT);
     }
   }
 
@@ -105,10 +118,12 @@ public class SignupResource {
     try {
       return new RestResponse<>(signupService.completeAzureMarketplaceSignup(token));
     } catch (SignupException ex) {
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).build());
       throw ex;
     } catch (Exception ex) {
-      logger.error("Failed to complete signup", ex);
-      throw new SignupException("Failed to signup. Please contact harness support");
+      logger.error(FAILURE_MESSAGE, ex);
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).build());
+      throw new SignupException(FAILURE_MESSAGE_CONTACT_SUPPORT);
     }
   }
 }

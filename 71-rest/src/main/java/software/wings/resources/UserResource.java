@@ -42,6 +42,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
+import software.wings.beans.ErrorData;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.LoginRequest;
 import software.wings.beans.LoginTypeRequest;
@@ -75,6 +76,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.signup.BugsnagErrorReporter;
 import software.wings.utils.AccountPermissionUtils;
 import software.wings.utils.CacheManager;
 
@@ -138,6 +140,7 @@ public class UserResource {
   private ReCaptchaVerifier reCaptchaVerifier;
   private static final String BASIC = "Basic";
 
+  @Inject private BugsnagErrorReporter bugsnagErrorReporter;
   @Inject
   public UserResource(UserService userService, AuthService authService, AccountService accountService,
       AccountPermissionUtils accountPermissionUtils, AuthenticationManager authenticationManager,
@@ -216,7 +219,12 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> trialSignup(UserInvite userInvite) {
-    return new RestResponse<>(userService.trialSignup(userInvite));
+    try {
+      return new RestResponse<>(userService.trialSignup(userInvite));
+    } catch (Exception exception) {
+      bugsnagErrorReporter.report(ErrorData.builder().exception(exception).email(userInvite.getEmail()).build());
+      throw exception;
+    }
   }
 
   /**
@@ -232,7 +240,13 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> accountJoinRequest(AccountJoinRequest accountJoinRequest) {
-    return new RestResponse<>(userService.accountJoinRequest(accountJoinRequest));
+    try {
+      return new RestResponse<>(userService.accountJoinRequest(accountJoinRequest));
+    } catch (Exception exception) {
+      bugsnagErrorReporter.report(
+          ErrorData.builder().exception(exception).email(accountJoinRequest.getEmail()).build());
+      throw exception;
+    }
   }
 
   @POST
@@ -370,7 +384,12 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse resetPassword(@NotNull ResetPasswordRequest passwordRequest) {
-    return new RestResponse<>(userService.resetPassword(passwordRequest.getEmail()));
+    try {
+      return new RestResponse<>(userService.resetPassword(passwordRequest.getEmail()));
+    } catch (Exception exception) {
+      bugsnagErrorReporter.report(ErrorData.builder().exception(exception).email(passwordRequest.getEmail()).build());
+      throw exception;
+    }
   }
 
   /**
@@ -403,8 +422,13 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse updatePassword(
       @NotEmpty @PathParam("token") String resetPasswordToken, UpdatePasswordRequest updatePasswordRequest) {
-    return new RestResponse(
-        userService.updatePassword(resetPasswordToken, updatePasswordRequest.getPassword().toCharArray()));
+    try {
+      return new RestResponse(
+          userService.updatePassword(resetPasswordToken, updatePasswordRequest.getPassword().toCharArray()));
+    } catch (Exception exception) {
+      bugsnagErrorReporter.report(ErrorData.builder().exception(exception).build());
+      throw exception;
+    }
   }
 
   @PublicApi
@@ -857,7 +881,12 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> resendVerificationEmail(@PathParam("email") String email) throws URISyntaxException {
-    return new RestResponse<>(userService.resendVerificationEmail(email));
+    try {
+      return new RestResponse<>(userService.resendVerificationEmail(email));
+    } catch (Exception exception) {
+      bugsnagErrorReporter.report(ErrorData.builder().exception(exception).email(email).build());
+      throw exception;
+    }
   }
 
   /**
