@@ -109,7 +109,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   }
 
   @Override
-  public PerpetualTaskContext getTaskContext(String taskId) {
+  public PerpetualTaskContext perpetualTaskContext(String taskId) {
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecordDao.getTask(taskId);
 
     PerpetualTaskParams params = getTaskParams(perpetualTaskRecord);

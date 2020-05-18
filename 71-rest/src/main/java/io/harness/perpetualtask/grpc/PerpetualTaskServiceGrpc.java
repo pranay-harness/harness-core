@@ -5,12 +5,13 @@ import com.google.inject.Singleton;
 
 import io.grpc.stub.StreamObserver;
 import io.harness.grpc.utils.HTimestamps;
-import io.harness.perpetualtask.DelegateId;
 import io.harness.perpetualtask.HeartbeatRequest;
 import io.harness.perpetualtask.HeartbeatResponse;
-import io.harness.perpetualtask.PerpetualTaskContext;
+import io.harness.perpetualtask.PerpetualTaskContextRequest;
+import io.harness.perpetualtask.PerpetualTaskContextResponse;
 import io.harness.perpetualtask.PerpetualTaskId;
-import io.harness.perpetualtask.PerpetualTaskIdList;
+import io.harness.perpetualtask.PerpetualTaskListRequest;
+import io.harness.perpetualtask.PerpetualTaskListResponse;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskState;
@@ -24,23 +25,28 @@ public class PerpetualTaskServiceGrpc
   @Inject private PerpetualTaskService perpetualTaskService;
 
   @Override
-  public void listTaskIds(DelegateId request, StreamObserver<PerpetualTaskIdList> responseObserver) {
-    List<String> taskIds = perpetualTaskService.listAssignedTaskIds(request.getId());
+  public void perpetualTaskList(
+      PerpetualTaskListRequest request, StreamObserver<PerpetualTaskListResponse> responseObserver) {
+    List<String> taskIds = perpetualTaskService.listAssignedTaskIds(request.getDelegateId().getId());
     List<PerpetualTaskId> perpetualTaskIds =
         taskIds.stream().map(taskId -> PerpetualTaskId.newBuilder().setId(taskId).build()).collect(Collectors.toList());
-    PerpetualTaskIdList taskIdList = PerpetualTaskIdList.newBuilder().addAllTaskIds(perpetualTaskIds).build();
-    responseObserver.onNext(taskIdList);
+    PerpetualTaskListResponse response = PerpetualTaskListResponse.newBuilder().addAllTaskIds(perpetualTaskIds).build();
+    responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
 
   @Override
-  public void getTaskContext(PerpetualTaskId request, StreamObserver<PerpetualTaskContext> responseObserver) {
-    responseObserver.onNext(perpetualTaskService.getTaskContext(request.getId()));
+  public void perpetualTaskContext(
+      PerpetualTaskContextRequest request, StreamObserver<PerpetualTaskContextResponse> responseObserver) {
+    responseObserver.onNext(
+        PerpetualTaskContextResponse.newBuilder()
+            .setPerpetualTaskContext(perpetualTaskService.perpetualTaskContext(request.getPerpetualTaskId().getId()))
+            .build());
     responseObserver.onCompleted();
   }
 
   @Override
-  public void publishHeartbeat(HeartbeatRequest request, StreamObserver<HeartbeatResponse> responseObserver) {
+  public void heartbeat(HeartbeatRequest request, StreamObserver<HeartbeatResponse> responseObserver) {
     String taskId = request.getId();
 
     PerpetualTaskResponse perpetualTaskResponse =
