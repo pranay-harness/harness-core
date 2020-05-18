@@ -148,7 +148,7 @@ public class GitChangeSetProcesser {
     addProcessingCommitDetailsToChangeList(processingCommitId, processingCommitTimeMs, commitMessage, gitFileChanges);
     // All initial activities will be created with status QUEUED
     gitSyncService.logActivityForGitOperation(
-        getFileChangesOfCommit(gitFileChanges), GitFileActivity.Status.QUEUED, true, false, "", "");
+        getFileChangesOfCommit(gitFileChanges), GitFileActivity.Status.QUEUED, true, false, "", "", "");
   }
 
   private List<GitFileChange> getFileChangesOfCommit(List<GitFileChange> gitFileChanges) {
@@ -167,13 +167,14 @@ public class GitChangeSetProcesser {
   }
 
   private void addProcessingCommitDetailsToChangeList(String processingCommitId, Long processingCommitTimeMs,
-      String commitMessage, List<GitFileChange> gitFileChanges) {
+      String processingCommitMessage, List<GitFileChange> gitFileChanges) {
     if (isEmpty(gitFileChanges)) {
       return;
     }
     gitFileChanges.forEach(gitFileChange -> {
       gitFileChange.setProcessingCommitId(processingCommitId);
       gitFileChange.setProcessingCommitTimeMs(processingCommitTimeMs);
+      gitFileChange.setProcessingCommitMessage(processingCommitMessage);
       gitFileChange.setChangeFromAnotherCommit(!gitFileChange.getCommitId().equalsIgnoreCase(processingCommitId));
     });
   }
