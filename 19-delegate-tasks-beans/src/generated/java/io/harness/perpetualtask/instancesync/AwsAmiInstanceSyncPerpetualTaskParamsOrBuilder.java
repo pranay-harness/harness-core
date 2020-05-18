@@ -18,21 +18,21 @@ public interface AwsAmiInstanceSyncPerpetualTaskParamsOrBuilder extends
   com.google.protobuf.ByteString getRegionBytes();
 
   /**
-   * <code>bytes awsConfig = 2;</code>
+   * <code>bytes aws_config = 2;</code>
    */
   com.google.protobuf.ByteString getAwsConfig();
 
   /**
-   * <code>string asgName = 3;</code>
+   * <code>string asg_name = 3;</code>
    */
   java.lang.String getAsgName();
   /**
-   * <code>string asgName = 3;</code>
+   * <code>string asg_name = 3;</code>
    */
   com.google.protobuf.ByteString getAsgNameBytes();
 
   /**
-   * <code>bytes encryptedData = 4;</code>
+   * <code>bytes encrypted_data = 4;</code>
    */
   com.google.protobuf.ByteString getEncryptedData();
 }

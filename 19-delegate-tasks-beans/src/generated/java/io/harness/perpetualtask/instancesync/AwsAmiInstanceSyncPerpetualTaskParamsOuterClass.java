@@ -25,10 +25,10 @@ public final class AwsAmiInstanceSyncPerpetualTaskParamsOuterClass {
     java.lang.String[] descriptorData = {"\nWio/harness/perpetualtask/instancesync/"
         + "aws_ami_instance_sync_perpetual_task_par"
         + "ams.proto\022%io.harness.perpetualtask.inst"
-        + "ancesync\"r\n%AwsAmiInstanceSyncPerpetualT"
-        + "askParams\022\016\n\006region\030\001 \001(\t\022\021\n\tawsConfig\030\002"
-        + " \001(\014\022\017\n\007asgName\030\003 \001(\t\022\025\n\rencryptedData\030\004"
-        + " \001(\014B\002P\001b\006proto3"};
+        + "ancesync\"u\n%AwsAmiInstanceSyncPerpetualT"
+        + "askParams\022\016\n\006region\030\001 \001(\t\022\022\n\naws_config\030"
+        + "\002 \001(\014\022\020\n\010asg_name\030\003 \001(\t\022\026\n\016encrypted_dat"
+        + "a\030\004 \001(\014B\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(

@@ -25,11 +25,11 @@ public final class PcfInstanceSyncPerpetualTaskParamsOuterClass {
     java.lang.String[] descriptorData = {"\nSio/harness/perpetualtask/instancesync/"
         + "pcf_instance_sync_perpetual_task_params."
         + "proto\022%io.harness.perpetualtask.instance"
-        + "sync\"\237\001\n\"PcfInstanceSyncPerpetualTaskPar"
-        + "ams\022\026\n\016infraMappingId\030\001 \001(\t\022\027\n\017applicati"
-        + "onName\030\002 \001(\t\022\017\n\007orgName\030\003 \001(\t\022\r\n\005space\030\004"
-        + " \001(\t\022\021\n\tpcfConfig\030\005 \001(\014\022\025\n\rencryptedData"
-        + "\030\006 \001(\014B\002P\001b\006proto3"};
+        + "sync\"\245\001\n\"PcfInstanceSyncPerpetualTaskPar"
+        + "ams\022\030\n\020infra_mapping_id\030\001 \001(\t\022\030\n\020applica"
+        + "tion_name\030\002 \001(\t\022\020\n\010org_name\030\003 \001(\t\022\r\n\005spa"
+        + "ce\030\004 \001(\t\022\022\n\npcf_config\030\005 \001(\014\022\026\n\016encrypte"
+        + "d_data\030\006 \001(\014B\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(

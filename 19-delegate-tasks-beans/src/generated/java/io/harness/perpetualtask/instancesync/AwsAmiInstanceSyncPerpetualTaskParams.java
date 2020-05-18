@@ -127,19 +127,19 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
     }
   }
 
-  public static final int AWSCONFIG_FIELD_NUMBER = 2;
+  public static final int AWS_CONFIG_FIELD_NUMBER = 2;
   private com.google.protobuf.ByteString awsConfig_;
   /**
-   * <code>bytes awsConfig = 2;</code>
+   * <code>bytes aws_config = 2;</code>
    */
   public com.google.protobuf.ByteString getAwsConfig() {
     return awsConfig_;
   }
 
-  public static final int ASGNAME_FIELD_NUMBER = 3;
+  public static final int ASG_NAME_FIELD_NUMBER = 3;
   private volatile java.lang.Object asgName_;
   /**
-   * <code>string asgName = 3;</code>
+   * <code>string asg_name = 3;</code>
    */
   public java.lang.String getAsgName() {
     java.lang.Object ref = asgName_;
@@ -153,7 +153,7 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
     }
   }
   /**
-   * <code>string asgName = 3;</code>
+   * <code>string asg_name = 3;</code>
    */
   public com.google.protobuf.ByteString getAsgNameBytes() {
     java.lang.Object ref = asgName_;
@@ -166,10 +166,10 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
     }
   }
 
-  public static final int ENCRYPTEDDATA_FIELD_NUMBER = 4;
+  public static final int ENCRYPTED_DATA_FIELD_NUMBER = 4;
   private com.google.protobuf.ByteString encryptedData_;
   /**
-   * <code>bytes encryptedData = 4;</code>
+   * <code>bytes encrypted_data = 4;</code>
    */
   public com.google.protobuf.ByteString getEncryptedData() {
     return encryptedData_;
@@ -262,11 +262,11 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
     hash = (19 * hash) + getDescriptor().hashCode();
     hash = (37 * hash) + REGION_FIELD_NUMBER;
     hash = (53 * hash) + getRegion().hashCode();
-    hash = (37 * hash) + AWSCONFIG_FIELD_NUMBER;
+    hash = (37 * hash) + AWS_CONFIG_FIELD_NUMBER;
     hash = (53 * hash) + getAwsConfig().hashCode();
-    hash = (37 * hash) + ASGNAME_FIELD_NUMBER;
+    hash = (37 * hash) + ASG_NAME_FIELD_NUMBER;
     hash = (53 * hash) + getAsgName().hashCode();
-    hash = (37 * hash) + ENCRYPTEDDATA_FIELD_NUMBER;
+    hash = (37 * hash) + ENCRYPTED_DATA_FIELD_NUMBER;
     hash = (53 * hash) + getEncryptedData().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -577,13 +577,13 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
 
     private com.google.protobuf.ByteString awsConfig_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes awsConfig = 2;</code>
+     * <code>bytes aws_config = 2;</code>
      */
     public com.google.protobuf.ByteString getAwsConfig() {
       return awsConfig_;
     }
     /**
-     * <code>bytes awsConfig = 2;</code>
+     * <code>bytes aws_config = 2;</code>
      */
     public Builder setAwsConfig(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -595,7 +595,7 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       return this;
     }
     /**
-     * <code>bytes awsConfig = 2;</code>
+     * <code>bytes aws_config = 2;</code>
      */
     public Builder clearAwsConfig() {
       awsConfig_ = getDefaultInstance().getAwsConfig();
@@ -605,7 +605,7 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
 
     private java.lang.Object asgName_ = "";
     /**
-     * <code>string asgName = 3;</code>
+     * <code>string asg_name = 3;</code>
      */
     public java.lang.String getAsgName() {
       java.lang.Object ref = asgName_;
@@ -619,7 +619,7 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       }
     }
     /**
-     * <code>string asgName = 3;</code>
+     * <code>string asg_name = 3;</code>
      */
     public com.google.protobuf.ByteString getAsgNameBytes() {
       java.lang.Object ref = asgName_;
@@ -632,7 +632,7 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       }
     }
     /**
-     * <code>string asgName = 3;</code>
+     * <code>string asg_name = 3;</code>
      */
     public Builder setAsgName(java.lang.String value) {
       if (value == null) {
@@ -644,7 +644,7 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       return this;
     }
     /**
-     * <code>string asgName = 3;</code>
+     * <code>string asg_name = 3;</code>
      */
     public Builder clearAsgName() {
       asgName_ = getDefaultInstance().getAsgName();
@@ -652,7 +652,7 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       return this;
     }
     /**
-     * <code>string asgName = 3;</code>
+     * <code>string asg_name = 3;</code>
      */
     public Builder setAsgNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -667,13 +667,13 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
 
     private com.google.protobuf.ByteString encryptedData_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes encryptedData = 4;</code>
+     * <code>bytes encrypted_data = 4;</code>
      */
     public com.google.protobuf.ByteString getEncryptedData() {
       return encryptedData_;
     }
     /**
-     * <code>bytes encryptedData = 4;</code>
+     * <code>bytes encrypted_data = 4;</code>
      */
     public Builder setEncryptedData(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -685,7 +685,7 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       return this;
     }
     /**
-     * <code>bytes encryptedData = 4;</code>
+     * <code>bytes encrypted_data = 4;</code>
      */
     public Builder clearEncryptedData() {
       encryptedData_ = getDefaultInstance().getEncryptedData();

@@ -6,7 +6,7 @@ option java_multiple_files = true;
 
 message AwsAmiInstanceSyncPerpetualTaskParams {
   string region = 1;
-  bytes awsConfig = 2;
-  string asgName = 3;
-  bytes encryptedData = 4;
+  bytes aws_config = 2;
+  string asg_name = 3;
+  bytes encrypted_data = 4;
 }

@@ -7,6 +7,6 @@ option java_multiple_files = true;
 message AwsSshInstanceSyncPerpetualTaskParams {
   string region = 1;
   bytes filter = 2;
-  bytes awsConfig = 3;
-  bytes encryptedData = 4;
+  bytes aws_config = 3;
+  bytes encrypted_data = 4;
 }
