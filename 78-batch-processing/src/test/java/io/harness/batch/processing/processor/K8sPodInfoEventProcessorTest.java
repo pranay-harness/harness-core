@@ -87,7 +87,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldCreateInvalidInstancePodEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage = getK8sPodEventMessage(
-        POD_UID, CLOUD_PROVIDER_ID, CLUSTER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_INVALID, START_TIMESTAMP);
+        POD_UID, CLOUD_PROVIDER_ID, CLUSTER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_UNSPECIFIED, START_TIMESTAMP);
     InstanceEvent instanceEvent = k8sPodEventProcessor.process(k8sNodeEventMessage);
     assertThat(instanceEvent).isNotNull();
     assertThat(instanceEvent.getType()).isNull();

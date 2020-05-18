@@ -134,19 +134,19 @@ public final class AwsSshInstanceSyncPerpetualTaskParams extends com.google.prot
     return filter_;
   }
 
-  public static final int AWSCONFIG_FIELD_NUMBER = 3;
+  public static final int AWS_CONFIG_FIELD_NUMBER = 3;
   private com.google.protobuf.ByteString awsConfig_;
   /**
-   * <code>bytes awsConfig = 3;</code>
+   * <code>bytes aws_config = 3;</code>
    */
   public com.google.protobuf.ByteString getAwsConfig() {
     return awsConfig_;
   }
 
-  public static final int ENCRYPTEDDATA_FIELD_NUMBER = 4;
+  public static final int ENCRYPTED_DATA_FIELD_NUMBER = 4;
   private com.google.protobuf.ByteString encryptedData_;
   /**
-   * <code>bytes encryptedData = 4;</code>
+   * <code>bytes encrypted_data = 4;</code>
    */
   public com.google.protobuf.ByteString getEncryptedData() {
     return encryptedData_;
@@ -241,9 +241,9 @@ public final class AwsSshInstanceSyncPerpetualTaskParams extends com.google.prot
     hash = (53 * hash) + getRegion().hashCode();
     hash = (37 * hash) + FILTER_FIELD_NUMBER;
     hash = (53 * hash) + getFilter().hashCode();
-    hash = (37 * hash) + AWSCONFIG_FIELD_NUMBER;
+    hash = (37 * hash) + AWS_CONFIG_FIELD_NUMBER;
     hash = (53 * hash) + getAwsConfig().hashCode();
-    hash = (37 * hash) + ENCRYPTEDDATA_FIELD_NUMBER;
+    hash = (37 * hash) + ENCRYPTED_DATA_FIELD_NUMBER;
     hash = (53 * hash) + getEncryptedData().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -581,13 +581,13 @@ public final class AwsSshInstanceSyncPerpetualTaskParams extends com.google.prot
 
     private com.google.protobuf.ByteString awsConfig_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes awsConfig = 3;</code>
+     * <code>bytes aws_config = 3;</code>
      */
     public com.google.protobuf.ByteString getAwsConfig() {
       return awsConfig_;
     }
     /**
-     * <code>bytes awsConfig = 3;</code>
+     * <code>bytes aws_config = 3;</code>
      */
     public Builder setAwsConfig(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -599,7 +599,7 @@ public final class AwsSshInstanceSyncPerpetualTaskParams extends com.google.prot
       return this;
     }
     /**
-     * <code>bytes awsConfig = 3;</code>
+     * <code>bytes aws_config = 3;</code>
      */
     public Builder clearAwsConfig() {
       awsConfig_ = getDefaultInstance().getAwsConfig();
@@ -609,13 +609,13 @@ public final class AwsSshInstanceSyncPerpetualTaskParams extends com.google.prot
 
     private com.google.protobuf.ByteString encryptedData_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes encryptedData = 4;</code>
+     * <code>bytes encrypted_data = 4;</code>
      */
     public com.google.protobuf.ByteString getEncryptedData() {
       return encryptedData_;
     }
     /**
-     * <code>bytes encryptedData = 4;</code>
+     * <code>bytes encrypted_data = 4;</code>
      */
     public Builder setEncryptedData(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -627,7 +627,7 @@ public final class AwsSshInstanceSyncPerpetualTaskParams extends com.google.prot
       return this;
     }
     /**
-     * <code>bytes encryptedData = 4;</code>
+     * <code>bytes encrypted_data = 4;</code>
      */
     public Builder clearEncryptedData() {
       encryptedData_ = getDefaultInstance().getEncryptedData();

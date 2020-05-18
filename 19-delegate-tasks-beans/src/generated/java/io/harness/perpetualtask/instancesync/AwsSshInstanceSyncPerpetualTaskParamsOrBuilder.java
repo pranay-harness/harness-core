@@ -23,12 +23,12 @@ public interface AwsSshInstanceSyncPerpetualTaskParamsOrBuilder extends
   com.google.protobuf.ByteString getFilter();
 
   /**
-   * <code>bytes awsConfig = 3;</code>
+   * <code>bytes aws_config = 3;</code>
    */
   com.google.protobuf.ByteString getAwsConfig();
 
   /**
-   * <code>bytes encryptedData = 4;</code>
+   * <code>bytes encrypted_data = 4;</code>
    */
   com.google.protobuf.ByteString getEncryptedData();
 }

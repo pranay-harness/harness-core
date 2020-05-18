@@ -9,29 +9,29 @@ public interface PcfInstanceSyncPerpetualTaskParamsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskParams)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string infraMappingId = 1;</code>
+   * <code>string infra_mapping_id = 1;</code>
    */
   java.lang.String getInfraMappingId();
   /**
-   * <code>string infraMappingId = 1;</code>
+   * <code>string infra_mapping_id = 1;</code>
    */
   com.google.protobuf.ByteString getInfraMappingIdBytes();
 
   /**
-   * <code>string applicationName = 2;</code>
+   * <code>string application_name = 2;</code>
    */
   java.lang.String getApplicationName();
   /**
-   * <code>string applicationName = 2;</code>
+   * <code>string application_name = 2;</code>
    */
   com.google.protobuf.ByteString getApplicationNameBytes();
 
   /**
-   * <code>string orgName = 3;</code>
+   * <code>string org_name = 3;</code>
    */
   java.lang.String getOrgName();
   /**
-   * <code>string orgName = 3;</code>
+   * <code>string org_name = 3;</code>
    */
   com.google.protobuf.ByteString getOrgNameBytes();
 
@@ -45,12 +45,12 @@ public interface PcfInstanceSyncPerpetualTaskParamsOrBuilder extends
   com.google.protobuf.ByteString getSpaceBytes();
 
   /**
-   * <code>bytes pcfConfig = 5;</code>
+   * <code>bytes pcf_config = 5;</code>
    */
   com.google.protobuf.ByteString getPcfConfig();
 
   /**
-   * <code>bytes encryptedData = 6;</code>
+   * <code>bytes encrypted_data = 6;</code>
    */
   com.google.protobuf.ByteString getEncryptedData();
 }

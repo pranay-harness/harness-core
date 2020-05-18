@@ -165,9 +165,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
   public enum Type implements com
   .google.protobuf.ProtocolMessageEnum {
     /**
-     * <code>TYPE_INVALID = 0;</code>
+     * <code>TYPE_UNSPECIFIED = 0;</code>
      */
-    TYPE_INVALID(0),
+    TYPE_UNSPECIFIED(0),
         /**
          * <code>TYPE_ADDED = 1;</code>
          */
@@ -183,9 +183,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
         ;
 
     /**
-     * <code>TYPE_INVALID = 0;</code>
+     * <code>TYPE_UNSPECIFIED = 0;</code>
      */
-    public static final int TYPE_INVALID_VALUE = 0;
+    public static final int TYPE_UNSPECIFIED_VALUE = 0;
     /**
      * <code>TYPE_ADDED = 1;</code>
      */
@@ -217,7 +217,7 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     public static Type forNumber(int value) {
       switch (value) {
         case 0:
-          return TYPE_INVALID;
+          return TYPE_UNSPECIFIED;
         case 1:
           return TYPE_ADDED;
         case 2:
@@ -652,7 +652,7 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     if (!getCloudProviderIdBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, cloudProviderId_);
     }
-    if (type_ != io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type.TYPE_INVALID.getNumber()) {
+    if (type_ != io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type.TYPE_UNSPECIFIED.getNumber()) {
       output.writeEnum(4, type_);
     }
     if (resourceRef_ != null) {
@@ -695,7 +695,7 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     if (!getCloudProviderIdBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, cloudProviderId_);
     }
-    if (type_ != io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type.TYPE_INVALID.getNumber()) {
+    if (type_ != io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type.TYPE_UNSPECIFIED.getNumber()) {
       size += com.google.protobuf.CodedOutputStream.computeEnumSize(4, type_);
     }
     if (resourceRef_ != null) {

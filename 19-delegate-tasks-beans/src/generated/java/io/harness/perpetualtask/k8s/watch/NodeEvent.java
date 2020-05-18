@@ -132,9 +132,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
   public enum EventType implements com
   .google.protobuf.ProtocolMessageEnum {
     /**
-     * <code>EVENT_TYPE_INVALID = 0;</code>
+     * <code>EVENT_TYPE_UNSPECIFIED = 0;</code>
      */
-    EVENT_TYPE_INVALID(0),
+    EVENT_TYPE_UNSPECIFIED(0),
         /**
          * <code>EVENT_TYPE_START = 1;</code>
          */
@@ -146,9 +146,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
         ;
 
     /**
-     * <code>EVENT_TYPE_INVALID = 0;</code>
+     * <code>EVENT_TYPE_UNSPECIFIED = 0;</code>
      */
-    public static final int EVENT_TYPE_INVALID_VALUE = 0;
+    public static final int EVENT_TYPE_UNSPECIFIED_VALUE = 0;
     /**
      * <code>EVENT_TYPE_START = 1;</code>
      */
@@ -176,7 +176,7 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     public static EventType forNumber(int value) {
       switch (value) {
         case 0:
-          return EVENT_TYPE_INVALID;
+          return EVENT_TYPE_UNSPECIFIED;
         case 1:
           return EVENT_TYPE_START;
         case 2:
@@ -437,7 +437,7 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     if (!getNodeUidBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, nodeUid_);
     }
-    if (type_ != io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_INVALID.getNumber()) {
+    if (type_ != io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_UNSPECIFIED.getNumber()) {
       output.writeEnum(4, type_);
     }
     if (timestamp_ != null) {
@@ -468,7 +468,7 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     if (!getNodeUidBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, nodeUid_);
     }
-    if (type_ != io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_INVALID.getNumber()) {
+    if (type_ != io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_UNSPECIFIED.getNumber()) {
       size += com.google.protobuf.CodedOutputStream.computeEnumSize(4, type_);
     }
     if (timestamp_ != null) {
