@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package io.harness.perpetualtask.instancesync;
 
+option java_multiple_files = true;
+
 message AwsAmiInstanceSyncPerpetualTaskParams {
   string region = 1;
   bytes awsConfig = 2;

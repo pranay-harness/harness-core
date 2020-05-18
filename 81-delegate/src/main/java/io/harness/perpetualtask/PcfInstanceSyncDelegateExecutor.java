@@ -9,7 +9,7 @@ import com.google.protobuf.ByteString;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.managerclient.ManagerClient;
-import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskParamsOuterClass.PcfInstanceSyncPerpetualTaskParams;
+import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import io.jsonwebtoken.lang.Collections;

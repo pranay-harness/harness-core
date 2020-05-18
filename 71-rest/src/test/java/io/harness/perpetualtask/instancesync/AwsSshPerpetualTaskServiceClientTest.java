@@ -20,7 +20,6 @@ import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
-import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPTParamsOuterClass.AwsSshInstanceSyncPTParams;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.assertj.core.api.Assertions;
@@ -100,9 +99,10 @@ public class AwsSshPerpetualTaskServiceClientTest extends WingsBaseTest {
     AwsConfig awsConfig = AwsConfig.builder().tag("abc").build();
     prepareTaskData(awsConfig);
 
-    final AwsSshInstanceSyncPTParams taskParams = (AwsSshInstanceSyncPTParams) client.getTaskParams(
-        new PerpetualTaskClientContext(ImmutableMap.of(InstanceSyncConstants.HARNESS_APPLICATION_ID, APP_ID,
-            InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID)));
+    final AwsSshInstanceSyncPerpetualTaskParams taskParams =
+        (AwsSshInstanceSyncPerpetualTaskParams) client.getTaskParams(
+            new PerpetualTaskClientContext(ImmutableMap.of(InstanceSyncConstants.HARNESS_APPLICATION_ID, APP_ID,
+                InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID)));
 
     Assertions.assertThat(taskParams.getRegion()).isEqualTo("us-east-1");
     Assertions.assertThat(taskParams.getAwsConfig()).isNotNull();

@@ -21,7 +21,6 @@ import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskType;
-import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPTParamsOuterClass.AwsSshInstanceSyncPTParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import lombok.Builder;
@@ -86,7 +85,7 @@ public class AwsSshPerpetualTaskServiceClient implements PerpetualTaskServiceCli
     ByteString filterBytes = ByteString.copyFrom(KryoUtils.asBytes(taskData.getFilters()));
     ByteString encryptionDetailsBytes = ByteString.copyFrom(KryoUtils.asBytes(taskData.getEncryptionDetails()));
 
-    return AwsSshInstanceSyncPTParams.newBuilder()
+    return AwsSshInstanceSyncPerpetualTaskParams.newBuilder()
         .setRegion(taskData.getRegion())
         .setAwsConfig(configBytes)
         .setFilter(filterBytes)

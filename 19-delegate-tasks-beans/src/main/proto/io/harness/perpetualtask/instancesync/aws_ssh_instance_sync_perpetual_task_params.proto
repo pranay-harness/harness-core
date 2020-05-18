@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package io.harness.perpetualtask.instancesync;
 
-message AwsSshInstanceSyncPTParams {
+option java_multiple_files = true;
+
+message AwsSshInstanceSyncPerpetualTaskParams {
   string region = 1;
   bytes filter = 2;
   bytes awsConfig = 3;

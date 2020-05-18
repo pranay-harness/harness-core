@@ -38,7 +38,7 @@ executeWithRetry() {
 
 validate_proto() {
   file=$1
-  docker run bufbuild/buf check $file
+
   if ! grep 'syntax = "proto3";' ${file} > /dev/null
   then
     echo ${file} needs to use: syntax = \"proto3\";
@@ -69,9 +69,6 @@ git diff --exit-code
  find . \( -iname "*.proto" -a -not -regex ".*/target/.*" \) |\
     grep -v src/main/proto/log_analysis_record.proto |\
     grep -v src/main/proto/time_series_record.proto |\
-    grep -v src/main/proto/perpetualtask/instancesync/AwsAmiInstanceSyncPerpetualTaskParams.proto |\
-    grep -v src/main/proto/perpetualtask/instancesync/PcfInstanceSyncPerpetualTaskParams.proto |\
-    grep -v src/main/proto/io/harness/perpetualtask/instancesync/AwsSshInstanceSyncPTParams.proto
     while read file; do validate_proto "$file"; done
 
 ISSUES=`buf check lint`

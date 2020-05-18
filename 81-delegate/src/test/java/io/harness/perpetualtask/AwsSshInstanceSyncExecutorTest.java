@@ -20,7 +20,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.managerclient.ManagerClient;
-import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPTParamsOuterClass.AwsSshInstanceSyncPTParams;
+import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPerpetualTaskParams;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -149,12 +149,12 @@ public class AwsSshInstanceSyncExecutorTest extends CategoryTest {
     ByteString filterBytes = ByteString.copyFrom(KryoUtils.asBytes(Arrays.asList(new Filter())));
     ByteString encryptionDetailsBytes = ByteString.copyFrom(KryoUtils.asBytes(new ArrayList<>()));
 
-    AwsSshInstanceSyncPTParams params = AwsSshInstanceSyncPTParams.newBuilder()
-                                            .setAwsConfig(configBytes)
-                                            .setFilter(filterBytes)
-                                            .setEncryptedData(encryptionDetailsBytes)
-                                            .setRegion("us-east-1")
-                                            .build();
+    AwsSshInstanceSyncPerpetualTaskParams params = AwsSshInstanceSyncPerpetualTaskParams.newBuilder()
+                                                       .setAwsConfig(configBytes)
+                                                       .setFilter(filterBytes)
+                                                       .setEncryptedData(encryptionDetailsBytes)
+                                                       .setRegion("us-east-1")
+                                                       .build();
     return PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(params)).build();
   }
 

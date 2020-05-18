@@ -9,7 +9,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.ExecutionStatus;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.managerclient.ManagerClient;
-import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPTParamsOuterClass.AwsSshInstanceSyncPTParams;
+import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -28,8 +28,8 @@ public class AwsSshInstanceSyncExecutor implements PerpetualTaskExecutor {
 
   @Override
   public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
-    final AwsSshInstanceSyncPTParams instanceSyncParams =
-        AnyUtils.unpack(params.getCustomizedParams(), AwsSshInstanceSyncPTParams.class);
+    final AwsSshInstanceSyncPerpetualTaskParams instanceSyncParams =
+        AnyUtils.unpack(params.getCustomizedParams(), AwsSshInstanceSyncPerpetualTaskParams.class);
 
     final String region = instanceSyncParams.getRegion();
 
