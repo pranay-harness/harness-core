@@ -1,5 +1,6 @@
 package software.wings.service.impl.slack;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.security.SecretManager.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
 import static software.wings.sm.states.ApprovalState.JSON;
 
@@ -13,6 +14,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -35,6 +37,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.core.MultivaluedMap;
 
+@OwnedBy(CDC)
 @Slf4j
 @Singleton
 public class SlackApprovalUtils {

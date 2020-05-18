@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.ABORTING;
 import static io.harness.beans.ExecutionStatus.ERROR;
@@ -31,6 +32,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusCategory;
 import io.harness.exception.InvalidRequestException;
@@ -65,6 +67,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class GraphRenderer {

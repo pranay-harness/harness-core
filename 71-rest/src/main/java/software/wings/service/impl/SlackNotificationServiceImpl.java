@@ -1,11 +1,13 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.annotations.dev.OwnedBy;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -30,6 +32,7 @@ import java.util.Objects;
  * Created by anubhaw on 12/14/16.
  */
 
+@OwnedBy(CDC)
 @Slf4j
 @Singleton
 public class SlackNotificationServiceImpl implements SlackNotificationService {

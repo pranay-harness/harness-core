@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static software.wings.common.NotificationConstants.WHITE_COLOR;
@@ -11,6 +12,7 @@ import allbegray.slack.SlackClientFactory;
 import allbegray.slack.type.Attachment;
 import allbegray.slack.type.Payload;
 import allbegray.slack.webhook.SlackWebhookClient;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ import software.wings.service.intfc.SlackMessageSender;
 
 import java.io.IOException;
 
+@OwnedBy(CDC)
 @Slf4j
 public class SlackMessageSenderImpl implements SlackMessageSender {
   @Override

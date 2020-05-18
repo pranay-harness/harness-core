@@ -1,10 +1,12 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
@@ -26,6 +28,7 @@ import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
