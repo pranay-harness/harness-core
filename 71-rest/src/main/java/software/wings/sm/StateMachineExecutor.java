@@ -978,8 +978,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
 
     List<ExecutionStatus> executionStatuses = asList(NEW, QUEUED, STARTING, RUNNING, PAUSED, WAITING);
-
-    boolean updated = updateStatus(stateExecutionInstance, DISCONTINUING, executionStatuses, null);
+    boolean updated = updateStatus(stateExecutionInstance, DISCONTINUING, executionStatuses, null,
+        ops -> ops.set("expiryTs", System.currentTimeMillis() + DEFAULT_STATE_TIMEOUT_MILLIS));
     if (!updated) {
       throw new WingsException(STATE_NOT_FOR_TYPE)
           .addParam("displayName", stateExecutionInstance.getDisplayName())
@@ -1025,10 +1025,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
       }
       currentState.handleAbortEvent(context);
-      if (stateExecutionInstance.getStateTimeout() != null && stateExecutionInstance.getStateTimeout() > 0) {
-        stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + stateExecutionInstance.getStateTimeout());
-      }
-
+      stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + DEFAULT_STATE_TIMEOUT_MILLIS);
       updated = updateStateExecutionData(
           stateExecutionInstance, null, finalStatus, null, singletonList(DISCONTINUING), null, null, null);
 
@@ -1599,7 +1596,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
 
     ops.set(StateExecutionInstanceKeys.status, DISCONTINUING);
-
+    ops.set(StateExecutionInstanceKeys.expiryTs, System.currentTimeMillis() + DEFAULT_STATE_TIMEOUT_MILLIS);
     ops.addToSet(StateExecutionInstanceKeys.interruptHistory,
         ExecutionInterruptEffect.builder()
             .interruptId(workflowExecutionInterrupt.getUuid())
