@@ -18,6 +18,7 @@ import migrations.timescaledb.AddingToCVDeploymentMetrics;
 import migrations.timescaledb.AlterCEUtilizationDataTables;
 import migrations.timescaledb.ChangeToTimeStampTZ;
 import migrations.timescaledb.CreateBillingData;
+import migrations.timescaledb.CreateBillingDataHourly;
 import migrations.timescaledb.CreateKubernetesUtilizationData;
 import migrations.timescaledb.CreateNewInstanceV2Migration;
 import migrations.timescaledb.CreateUtilizationData;
@@ -59,6 +60,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(22, AddDeploymentTagsToDeployment.class))
         .add(Pair.of(23, AddIdleUnallocatedColumns.class))
         .add(Pair.of(24, AddMaxUtilColumns.class))
+        .add(Pair.of(25, CreateBillingDataHourly.class))
         .build();
   }
 }

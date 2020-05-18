@@ -3,7 +3,9 @@ package io.harness.batch.processing.billing.timeseries.service.impl;
 import com.google.inject.Singleton;
 
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
+import io.harness.batch.processing.billing.timeseries.service.support.BillingDataTableNameProvider;
 import io.harness.batch.processing.ccm.ActualIdleCostWriterData;
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import software.wings.graphql.datafetcher.DataFetcherUtils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 
 @Service
@@ -24,18 +27,21 @@ public class BillingDataServiceImpl {
 
   private static final int MAX_RETRY_COUNT = 2;
   static final String INSERT_STATEMENT =
-      "INSERT INTO BILLING_DATA (STARTTIME, ENDTIME, ACCOUNTID, INSTANCETYPE, BILLINGACCOUNTID, BILLINGAMOUNT, CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, USAGEDURATIONSECONDS, INSTANCEID, CLUSTERNAME, CLUSTERID, SETTINGID,  SERVICEID, APPID, CLOUDPROVIDERID, ENVID, CPUUNITSECONDS, MEMORYMBSECONDS, PARENTINSTANCEID, REGION, LAUNCHTYPE, CLUSTERTYPE, CLOUDPROVIDER, WORKLOADNAME, WORKLOADTYPE, NAMESPACE, CLOUDSERVICENAME, TASKID, IDLECOST, CPUIDLECOST, MEMORYIDLECOST, MAXCPUUTILIZATION, MAXMEMORYUTILIZATION, AVGCPUUTILIZATION, AVGMEMORYUTILIZATION, SYSTEMCOST, CPUSYSTEMCOST, MEMORYSYSTEMCOST, ACTUALIDLECOST, CPUACTUALIDLECOST, MEMORYACTUALIDLECOST, UNALLOCATEDCOST, CPUUNALLOCATEDCOST, MEMORYUNALLOCATEDCOST, INSTANCENAME ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO %s (STARTTIME, ENDTIME, ACCOUNTID, INSTANCETYPE, BILLINGACCOUNTID, BILLINGAMOUNT, CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, USAGEDURATIONSECONDS, INSTANCEID, CLUSTERNAME, CLUSTERID, SETTINGID,  SERVICEID, APPID, CLOUDPROVIDERID, ENVID, CPUUNITSECONDS, MEMORYMBSECONDS, PARENTINSTANCEID, REGION, LAUNCHTYPE, CLUSTERTYPE, CLOUDPROVIDER, WORKLOADNAME, WORKLOADTYPE, NAMESPACE, CLOUDSERVICENAME, TASKID, IDLECOST, CPUIDLECOST, MEMORYIDLECOST, MAXCPUUTILIZATION, MAXMEMORYUTILIZATION, AVGCPUUTILIZATION, AVGMEMORYUTILIZATION, SYSTEMCOST, CPUSYSTEMCOST, MEMORYSYSTEMCOST, ACTUALIDLECOST, CPUACTUALIDLECOST, MEMORYACTUALIDLECOST, UNALLOCATEDCOST, CPUUNALLOCATEDCOST, MEMORYUNALLOCATEDCOST, INSTANCENAME ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
   static final String UPDATE_STATEMENT =
-      "UPDATE BILLING_DATA SET ACTUALIDLECOST = ?, CPUACTUALIDLECOST = ?, MEMORYACTUALIDLECOST = ?, UNALLOCATEDCOST = ?, CPUUNALLOCATEDCOST = ?, MEMORYUNALLOCATEDCOST = ? WHERE ACCOUNTID = ? AND CLUSTERID = ? AND INSTANCEID = ? AND STARTTIME = ?";
+      "UPDATE %s SET ACTUALIDLECOST = ?, CPUACTUALIDLECOST = ?, MEMORYACTUALIDLECOST = ?, UNALLOCATEDCOST = ?, CPUUNALLOCATEDCOST = ?, MEMORYUNALLOCATEDCOST = ? WHERE ACCOUNTID = ? AND CLUSTERID = ? AND INSTANCEID = ? AND STARTTIME = ?";
 
-  public boolean create(InstanceBillingData instanceBillingData) {
+  static final String PURGE_DATA_QUERY = "SELECT drop_chunks(interval '16 days', 'billing_data_hourly')";
+
+  public boolean create(InstanceBillingData instanceBillingData, BatchJobType batchJobType) {
     boolean successfulInsert = false;
     if (timeScaleDBService.isValid()) {
+      String insertStatement = BillingDataTableNameProvider.replaceTableName(INSERT_STATEMENT, batchJobType);
       int retryCount = 0;
       while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
-             PreparedStatement statement = dbConnection.prepareStatement(INSERT_STATEMENT)) {
+             PreparedStatement statement = dbConnection.prepareStatement(insertStatement)) {
           updateInsertStatement(statement, instanceBillingData);
           statement.execute();
           logger.debug("Prepared Statement in BillingDataServiceImpl: {} ", statement);
@@ -52,14 +58,33 @@ public class BillingDataServiceImpl {
     return successfulInsert;
   }
 
-  public boolean update(ActualIdleCostWriterData actualIdleCostWriterData) {
+  public boolean purgeOldHourlyBillingData() {
+    boolean purgedHourlyBillingData = false;
+    logger.info("Purging old hourly billing data !!");
+    if (timeScaleDBService.isValid()) {
+      int retryCount = 0;
+      while (retryCount < MAX_RETRY_COUNT && !purgedHourlyBillingData) {
+        try (Connection connection = timeScaleDBService.getDBConnection();
+             Statement statement = connection.createStatement()) {
+          statement.execute(PURGE_DATA_QUERY);
+          purgedHourlyBillingData = true;
+        } catch (SQLException e) {
+          logger.error("Failed to execute query=[{}]", PURGE_DATA_QUERY, e);
+          retryCount++;
+        }
+      }
+    }
+    return purgedHourlyBillingData;
+  }
+
+  public boolean update(ActualIdleCostWriterData actualIdleCostWriterData, BatchJobType batchJobType) {
     boolean successfulUpdate = false;
     if (timeScaleDBService.isValid()) {
       int retryCount = 0;
-
+      String updateStatement = BillingDataTableNameProvider.replaceTableName(UPDATE_STATEMENT, batchJobType);
       while (!successfulUpdate && retryCount < MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
-             PreparedStatement statement = dbConnection.prepareStatement(UPDATE_STATEMENT)) {
+             PreparedStatement statement = dbConnection.prepareStatement(updateStatement)) {
           updateBillingDataUpdateStatement(statement, actualIdleCostWriterData);
           logger.debug("Prepared Statement in BillingDataServiceImpl for actual idle cost: {} ", statement);
           statement.execute();

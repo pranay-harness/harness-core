@@ -1,6 +1,7 @@
 package io.harness.batch.processing.reader;
 
 import io.harness.batch.processing.billing.timeseries.service.impl.UnallocatedBillingDataServiceImpl;
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.UnallocatedCostData;
 import lombok.extern.slf4j.Slf4j;
@@ -33,9 +34,12 @@ public class UnallocatedBillingDataReader implements ItemReader<List<Unallocated
     List<UnallocatedCostData> unallocatedCostDataList = null;
     if (!runOnlyOnce.getAndSet(true)) {
       String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
+      BatchJobType batchJobType =
+          CCMJobConstants.getBatchJobTypeFromJobParams(parameters, CCMJobConstants.BATCH_JOB_TYPE);
       long startDate = Long.parseLong(parameters.getString(CCMJobConstants.JOB_START_DATE));
       long endDate = Long.parseLong(parameters.getString(CCMJobConstants.JOB_END_DATE));
-      unallocatedCostDataList = unallocatedBillingDataService.getUnallocatedCostData(accountId, startDate, endDate);
+      unallocatedCostDataList =
+          unallocatedBillingDataService.getUnallocatedCostData(accountId, startDate, endDate, batchJobType);
     }
     return unallocatedCostDataList;
   }

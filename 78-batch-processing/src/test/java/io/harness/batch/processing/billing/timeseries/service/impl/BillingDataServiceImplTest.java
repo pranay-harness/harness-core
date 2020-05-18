@@ -8,7 +8,9 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
+import io.harness.batch.processing.billing.timeseries.service.support.BillingDataTableNameProvider;
 import io.harness.batch.processing.ccm.ActualIdleCostWriterData;
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -52,7 +54,14 @@ public class BillingDataServiceImplTest extends CategoryTest {
     Connection mockConnection = mock(Connection.class);
     when(timeScaleDBService.getDBConnection()).thenReturn(mockConnection);
     when(timeScaleDBService.isValid()).thenReturn(true);
-    when(mockConnection.prepareStatement(billingDataService.INSERT_STATEMENT)).thenReturn(statement);
+    when(mockConnection.prepareStatement(BillingDataTableNameProvider.replaceTableName(
+             billingDataService.INSERT_STATEMENT, BatchJobType.INSTANCE_BILLING)))
+        .thenReturn(statement);
+    when(mockConnection.prepareStatement(BillingDataTableNameProvider.replaceTableName(
+             billingDataService.INSERT_STATEMENT, BatchJobType.INSTANCE_BILLING_HOURLY)))
+        .thenReturn(statement);
+    when(mockConnection.prepareStatement(billingDataService.PURGE_DATA_QUERY)).thenReturn(statement);
+    when(mockConnection.createStatement()).thenReturn(statement);
     when(utils.getDefaultCalendar()).thenReturn(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
   }
 
@@ -62,7 +71,7 @@ public class BillingDataServiceImplTest extends CategoryTest {
   public void testCreateBillingData() throws SQLException {
     when(statement.execute()).thenReturn(true);
     InstanceBillingData instanceBillingData = instanceBillingData();
-    boolean insert = billingDataService.create(instanceBillingData);
+    boolean insert = billingDataService.create(instanceBillingData, BatchJobType.INSTANCE_BILLING);
     assertThat(insert).isTrue();
   }
 
@@ -73,10 +82,12 @@ public class BillingDataServiceImplTest extends CategoryTest {
     Connection mockConnection = mock(Connection.class);
     when(timeScaleDBService.getDBConnection()).thenReturn(mockConnection);
     when(timeScaleDBService.isValid()).thenReturn(true);
-    when(mockConnection.prepareStatement(billingDataService.UPDATE_STATEMENT)).thenReturn(statement);
+    when(mockConnection.prepareStatement(BillingDataTableNameProvider.replaceTableName(
+             billingDataService.UPDATE_STATEMENT, BatchJobType.ACTUAL_IDLE_COST_BILLING)))
+        .thenReturn(statement);
     when(statement.execute()).thenReturn(true);
     ActualIdleCostWriterData actualIdleCostWriterData = mockActualIdleCostWriterData();
-    boolean update = billingDataService.update(actualIdleCostWriterData);
+    boolean update = billingDataService.update(actualIdleCostWriterData, BatchJobType.ACTUAL_IDLE_COST_BILLING);
     assertThat(update).isTrue();
   }
 
@@ -86,7 +97,8 @@ public class BillingDataServiceImplTest extends CategoryTest {
   public void testSqlExceptionUpdateBillingData() throws SQLException {
     when(timeScaleDBService.getDBConnection()).thenThrow(SQLException.class);
     ActualIdleCostWriterData actualIdleCostWriterData = mockActualIdleCostWriterData();
-    assertThat(billingDataService.update(actualIdleCostWriterData)).isEqualTo(false);
+    assertThat(billingDataService.update(actualIdleCostWriterData, BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY))
+        .isEqualTo(false);
   }
 
   @Test
@@ -95,7 +107,8 @@ public class BillingDataServiceImplTest extends CategoryTest {
   public void testTimescaleDbInvalidUpdateBillingData() {
     when(timeScaleDBService.isValid()).thenReturn(false);
     ActualIdleCostWriterData actualIdleCostWriterData = mockActualIdleCostWriterData();
-    assertThat(billingDataService.update(actualIdleCostWriterData)).isEqualTo(false);
+    assertThat(billingDataService.update(actualIdleCostWriterData, BatchJobType.ACTUAL_IDLE_COST_BILLING))
+        .isEqualTo(false);
   }
 
   @Test
@@ -104,8 +117,17 @@ public class BillingDataServiceImplTest extends CategoryTest {
   public void testNullCreateBillingData() throws SQLException {
     when(statement.execute()).thenThrow(new SQLException());
     InstanceBillingData instanceBillingData = instanceBillingData();
-    boolean insert = billingDataService.create(instanceBillingData);
+    boolean insert = billingDataService.create(instanceBillingData, BatchJobType.INSTANCE_BILLING_HOURLY);
     assertThat(insert).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testPurgeOldHourlyBillingData() throws SQLException {
+    when(timeScaleDBService.isValid()).thenReturn(true);
+    boolean insert = billingDataService.purgeOldHourlyBillingData();
+    assertThat(insert).isTrue();
   }
 
   private InstanceBillingData instanceBillingData() {

@@ -8,11 +8,15 @@ import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.inject.Inject;
+
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.ccm.ActualIdleCostBatchJobData;
 import io.harness.batch.processing.ccm.ActualIdleCostData;
 import io.harness.batch.processing.ccm.ActualIdleCostWriterData;
+import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -23,6 +27,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.batch.core.JobParameters;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -30,8 +35,9 @@ import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ActualIdleBillingDataWriterTest extends CategoryTest {
-  @InjectMocks private ActualIdleBillingDataWriter actualIdleBillingDataWriter;
+  @Inject @InjectMocks private ActualIdleBillingDataWriter actualIdleBillingDataWriter;
   @Mock private BillingDataServiceImpl billingDataService;
+  @Mock private JobParameters parameters;
 
   private static final String ACCOUNT_ID = "accountId";
   private static final String CLUSTER_ID = "clusterId";
@@ -50,7 +56,8 @@ public class ActualIdleBillingDataWriterTest extends CategoryTest {
 
   @Before
   public void setup() {
-    when(billingDataService.create(any())).thenReturn(true);
+    when(parameters.getString(CCMJobConstants.BATCH_JOB_TYPE)).thenReturn(BatchJobType.ACTUAL_IDLE_COST_BILLING.name());
+    when(billingDataService.create(any(), any())).thenReturn(true);
   }
 
   @Test
@@ -62,7 +69,9 @@ public class ActualIdleBillingDataWriterTest extends CategoryTest {
     actualIdleBillingDataWriter.write(Collections.singletonList(actualIdleCostBatchJobData));
     ArgumentCaptor<ActualIdleCostWriterData> actualIdleCostWriterDataArgumentCaptor =
         ArgumentCaptor.forClass(ActualIdleCostWriterData.class);
-    verify(billingDataService, atMost(1)).update(actualIdleCostWriterDataArgumentCaptor.capture());
+    ArgumentCaptor<BatchJobType> batchJobTypeArgumentCaptor = ArgumentCaptor.forClass(BatchJobType.class);
+    verify(billingDataService, atMost(1))
+        .update(actualIdleCostWriterDataArgumentCaptor.capture(), batchJobTypeArgumentCaptor.capture());
     List<ActualIdleCostWriterData> actualIdleCostWriterData = actualIdleCostWriterDataArgumentCaptor.getAllValues();
     assertThat(actualIdleCostWriterData.get(0).getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(actualIdleCostWriterData.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -85,7 +94,9 @@ public class ActualIdleBillingDataWriterTest extends CategoryTest {
     actualIdleBillingDataWriter.write(Collections.singletonList(actualIdleCostBatchJobData));
     ArgumentCaptor<ActualIdleCostWriterData> actualIdleCostWriterDataArgumentCaptor =
         ArgumentCaptor.forClass(ActualIdleCostWriterData.class);
-    verify(billingDataService, atMost(1)).update(actualIdleCostWriterDataArgumentCaptor.capture());
+    ArgumentCaptor<BatchJobType> batchJobTypeArgumentCaptor = ArgumentCaptor.forClass(BatchJobType.class);
+    verify(billingDataService, atMost(1))
+        .update(actualIdleCostWriterDataArgumentCaptor.capture(), batchJobTypeArgumentCaptor.capture());
     List<ActualIdleCostWriterData> actualIdleCostWriterData = actualIdleCostWriterDataArgumentCaptor.getAllValues();
     assertThat(actualIdleCostWriterData.get(0).getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(actualIdleCostWriterData.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -108,7 +119,9 @@ public class ActualIdleBillingDataWriterTest extends CategoryTest {
     actualIdleBillingDataWriter.write(Collections.singletonList(actualIdleCostBatchJobData));
     ArgumentCaptor<ActualIdleCostWriterData> actualIdleCostWriterDataArgumentCaptor =
         ArgumentCaptor.forClass(ActualIdleCostWriterData.class);
-    verify(billingDataService, atMost(1)).update(actualIdleCostWriterDataArgumentCaptor.capture());
+    ArgumentCaptor<BatchJobType> batchJobTypeArgumentCaptor = ArgumentCaptor.forClass(BatchJobType.class);
+    verify(billingDataService, atMost(1))
+        .update(actualIdleCostWriterDataArgumentCaptor.capture(), batchJobTypeArgumentCaptor.capture());
     List<ActualIdleCostWriterData> actualIdleCostWriterData = actualIdleCostWriterDataArgumentCaptor.getAllValues();
     assertThat(actualIdleCostWriterData.get(0).getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(actualIdleCostWriterData.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);

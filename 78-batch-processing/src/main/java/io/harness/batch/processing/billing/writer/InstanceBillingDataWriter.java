@@ -10,6 +10,7 @@ import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
 import io.harness.batch.processing.billing.writer.support.BillingDataGenerationValidator;
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
@@ -49,6 +50,8 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
   public void write(List<? extends InstanceData> instanceDataLists) throws Exception {
     Instant startTime = getFieldValueFromJobParams(CCMJobConstants.JOB_START_DATE);
     Instant endTime = getFieldValueFromJobParams(CCMJobConstants.JOB_END_DATE);
+    BatchJobType batchJobType =
+        CCMJobConstants.getBatchJobTypeFromJobParams(parameters, CCMJobConstants.BATCH_JOB_TYPE);
     logger.info("Instance data list {} {} {} {}", instanceDataLists.size(), startTime, endTime, parameters.toString());
 
     Map<String, ? extends List<? extends InstanceData>> instanceDataGroupedCluster =
@@ -132,7 +135,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
                     .cpuUnallocatedCost(BigDecimal.ZERO)
                     .memoryUnallocatedCost(BigDecimal.ZERO)
                     .build();
-            billingDataService.create(instanceBillingData);
+            billingDataService.create(instanceBillingData, batchJobType);
           });
     });
   }

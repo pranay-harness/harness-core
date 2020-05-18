@@ -56,6 +56,15 @@ public class BillingBatchConfiguration {
   }
 
   @Bean
+  @Qualifier(value = "instanceBillingHourlyJob")
+  public Job instanceBillingHourlyJob(JobBuilderFactory jobBuilderFactory, Step instanceBillingStep) {
+    return jobBuilderFactory.get(BatchJobType.INSTANCE_BILLING_HOURLY.name())
+        .incrementer(new RunIdIncrementer())
+        .start(instanceBillingStep)
+        .build();
+  }
+
+  @Bean
   public Step instanceBillingStep(StepBuilderFactory stepBuilderFactory,
       ItemReader<InstanceData> instanceInfoMessageReader, ItemWriter<InstanceData> instanceBillingDataWriter) {
     return stepBuilderFactory.get("instanceBillingStep")

@@ -41,6 +41,15 @@ public class ActualIdleCostBatchConfig {
   }
 
   @Bean
+  @Qualifier(value = "actualIdleCostHourlyJob")
+  public Job actualIdleCostHourlyJob(JobBuilderFactory jobBuilderFactory, Step actualIdleCostCalculationStep) {
+    return jobBuilderFactory.get(BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY.name())
+        .incrementer(new RunIdIncrementer())
+        .start(actualIdleCostCalculationStep)
+        .build();
+  }
+
+  @Bean
   public Step actualIdleCostCalculationStep(StepBuilderFactory stepBuilderFactory) {
     return stepBuilderFactory.get("actualIdleCostCalculationStep")
         .<ActualIdleCostBatchJobData, ActualIdleCostBatchJobData>chunk(BATCH_SIZE)

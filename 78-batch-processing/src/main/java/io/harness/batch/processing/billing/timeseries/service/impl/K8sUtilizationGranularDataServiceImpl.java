@@ -40,7 +40,7 @@ public class K8sUtilizationGranularDataServiceImpl {
       "SELECT MAX(MAXCPU) as CPUUTILIZATIONMAX, MAX(MAXMEMORY) as MEMORYUTILIZATIONMAX, AVG(CPU) as CPUUTILIZATIONAVG, AVG(MEMORY) as MEMORYUTILIZATIONAVG,"
       + " SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' "
       + " GROUP BY SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE ";
-  static final String PURGE_DATA_QUERY = "SELECT drop_chunks(interval '14 days', 'kubernetes_utilization_data')";
+  static final String PURGE_DATA_QUERY = "SELECT drop_chunks(interval '16 days', 'kubernetes_utilization_data')";
 
   public boolean create(List<K8sGranularUtilizationData> k8sGranularUtilizationDataList) {
     boolean successfulInsert = false;

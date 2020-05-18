@@ -6,6 +6,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.ClusterCostData;
 import io.harness.batch.processing.ccm.UnallocatedCostData;
 import io.harness.category.element.UnitTests;
@@ -97,8 +98,8 @@ public class UnallocatedBillingDataServiceImplTest {
   public void testUnallocatedCostDataService() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
     when(statement.execute()).thenReturn(true);
-    List<UnallocatedCostData> unallocatedCostDataList =
-        unallocatedBillingDataService.getUnallocatedCostData(ACCOUNT_ID, START_TIME, END_TIME);
+    List<UnallocatedCostData> unallocatedCostDataList = unallocatedBillingDataService.getUnallocatedCostData(
+        ACCOUNT_ID, START_TIME, END_TIME, BatchJobType.UNALLOCATED_BILLING_HOURLY);
     assertThat(unallocatedCostDataList.get(0).getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(unallocatedCostDataList.get(0).getInstanceType()).isEqualTo(INSTANCE_TYPE);
     assertThat(unallocatedCostDataList.get(0).getCost()).isEqualTo(COST);
@@ -114,7 +115,8 @@ public class UnallocatedBillingDataServiceImplTest {
   @Category(UnitTests.class)
   public void testNullUnallocatedCostData() throws SQLException {
     when(timeScaleDBService.getDBConnection()).thenThrow(SQLException.class);
-    assertThat(unallocatedBillingDataService.getUnallocatedCostData(ACCOUNT_ID, START_TIME, END_TIME))
+    assertThat(unallocatedBillingDataService.getUnallocatedCostData(
+                   ACCOUNT_ID, START_TIME, END_TIME, BatchJobType.UNALLOCATED_BILLING_HOURLY))
         .isEqualTo(Collections.emptyList());
   }
 
@@ -124,8 +126,8 @@ public class UnallocatedBillingDataServiceImplTest {
   public void testGetCommonDataService() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
     when(statement.execute()).thenReturn(true);
-    ClusterCostData clusterCostData =
-        unallocatedBillingDataService.getCommonFields(ACCOUNT_ID, CLUSTER_ID, START_TIME, END_TIME);
+    ClusterCostData clusterCostData = unallocatedBillingDataService.getCommonFields(
+        ACCOUNT_ID, CLUSTER_ID, START_TIME, END_TIME, BatchJobType.UNALLOCATED_BILLING_HOURLY);
     assertThat(clusterCostData.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(clusterCostData.getBillingAccountId()).isEqualTo(BILLING_ACCOUNT_ID);
     assertThat(clusterCostData.getClusterName()).isEqualTo(CLUSTER_NAME);
@@ -141,7 +143,8 @@ public class UnallocatedBillingDataServiceImplTest {
   @Category(UnitTests.class)
   public void testNullCommonData() throws SQLException {
     when(timeScaleDBService.getDBConnection()).thenThrow(SQLException.class);
-    assertThat(unallocatedBillingDataService.getCommonFields(ACCOUNT_ID, CLUSTER_ID, START_TIME, END_TIME))
+    assertThat(unallocatedBillingDataService.getCommonFields(
+                   ACCOUNT_ID, CLUSTER_ID, START_TIME, END_TIME, BatchJobType.UNALLOCATED_BILLING_HOURLY))
         .isEqualTo(ClusterCostData.builder().build());
   }
 

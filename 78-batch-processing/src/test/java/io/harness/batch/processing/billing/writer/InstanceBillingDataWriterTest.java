@@ -18,6 +18,7 @@ import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
 import io.harness.batch.processing.billing.writer.support.BillingDataGenerationValidator;
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
@@ -233,6 +234,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
                                     .build();
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
+    when(parameters.getString(CCMJobConstants.BATCH_JOB_TYPE)).thenReturn(BatchJobType.INSTANCE_BILLING.name());
     when(utilizationDataService.getUtilizationDataForInstances(any(), any(), any(), any(), any(), any()))
         .thenReturn(utilizationDataForInstances);
     when(billingCalculationService.getInstanceBillingAmount(any(), any(), any(), any()))
@@ -246,7 +248,9 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     instanceBillingDataWriter.write(Arrays.asList(instanceData));
     ArgumentCaptor<InstanceBillingData> instanceBillingDataArgumentCaptor =
         ArgumentCaptor.forClass(InstanceBillingData.class);
-    verify(billingDataService).create(instanceBillingDataArgumentCaptor.capture());
+    ArgumentCaptor<BatchJobType> batchJobTypeArgumentCaptor = ArgumentCaptor.forClass(BatchJobType.class);
+    verify(billingDataService)
+        .create(instanceBillingDataArgumentCaptor.capture(), batchJobTypeArgumentCaptor.capture());
     InstanceBillingData instanceBillingData = instanceBillingDataArgumentCaptor.getValue();
     assertThat(instanceBillingData.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(instanceBillingData.getClusterId()).isEqualTo(null);

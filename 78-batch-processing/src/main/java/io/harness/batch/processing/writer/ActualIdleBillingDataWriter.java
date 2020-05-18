@@ -6,8 +6,13 @@ import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataSe
 import io.harness.batch.processing.ccm.ActualIdleCostBatchJobData;
 import io.harness.batch.processing.ccm.ActualIdleCostData;
 import io.harness.batch.processing.ccm.ActualIdleCostWriterData;
+import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.entities.InstanceData;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -21,8 +26,17 @@ import java.util.Map;
 public class ActualIdleBillingDataWriter extends EventWriter implements ItemWriter<ActualIdleCostBatchJobData> {
   @Autowired private BillingDataServiceImpl billingDataService;
 
+  private JobParameters parameters;
+
+  @BeforeStep
+  public void beforeStep(final StepExecution stepExecution) {
+    parameters = stepExecution.getJobExecution().getJobParameters();
+  }
+
   @Override
   public void write(List<? extends ActualIdleCostBatchJobData> list) throws Exception {
+    BatchJobType batchJobType =
+        CCMJobConstants.getBatchJobTypeFromJobParams(parameters, CCMJobConstants.BATCH_JOB_TYPE);
     list.forEach(entry -> {
       List<ActualIdleCostData> podsData = entry.getPodData();
       List<ActualIdleCostData> nodesData = entry.getNodeData();
@@ -89,7 +103,8 @@ public class ActualIdleBillingDataWriter extends EventWriter implements ItemWrit
                                       .memoryActualIdleCost(memoryActualIdleCost)
                                       .startTime(nodeData.getStartTime())
                                       .clusterId(nodeData.getClusterId())
-                                      .build());
+                                      .build(),
+            batchJobType);
       });
     });
   }
