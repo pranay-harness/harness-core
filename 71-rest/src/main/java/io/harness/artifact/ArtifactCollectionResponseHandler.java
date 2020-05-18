@@ -57,6 +57,9 @@ public class ArtifactCollectionResponseHandler {
     if (artifactStream == null) {
       return; // Possibly clean up the perpetual task.
     }
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, artifactStream.getAccountId())) {
+      return;
+    }
 
     try (AutoLogContext ignore1 = new AccountLogContext(artifactStream.getAccountId(), OVERRIDE_ERROR);
          AutoLogContext ignore2 = new ArtifactStreamLogContext(

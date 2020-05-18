@@ -133,6 +133,7 @@ public class ArtifactCollectionUtils {
   @Inject private ArtifactService artifactService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AwsCommandHelper awsCommandHelper;
+  @Inject private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
 
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
@@ -876,6 +877,16 @@ public class ArtifactCollectionUtils {
           artifactStream.getUuid(), action);
       return true;
     }
+
+    if (isNotEmpty(artifactStream.getPerpetualTaskId())) {
+      if (!artifactStreamPTaskHelper.delete(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId())) {
+        logger.error(
+            format("Unable to delete artifact collection perpetual task: %s", artifactStream.getPerpetualTaskId()));
+      }
+      artifactStream.setPerpetualTaskId(null);
+      artifactStreamService.update(artifactStream);
+    }
+
     if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, artifactStream.getAccountId())
         && artifactStream.isArtifactStreamParameterized()) {
       logger.info(
