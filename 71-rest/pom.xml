@@ -101,6 +101,11 @@
             <artifactId>hcl4j</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.bugsnag</groupId>
+            <artifactId>bugsnag</artifactId>
+            <version>[3.0,4.0)</version>
+        </dependency>
+        <dependency>
             <groupId>com.coveo</groupId>
             <artifactId>saml-client</artifactId>
         </dependency>

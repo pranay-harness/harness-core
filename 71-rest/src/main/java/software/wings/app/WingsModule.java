@@ -470,6 +470,7 @@ import software.wings.service.intfc.EcrClassicBuildService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ErrorReporter;
 import software.wings.service.intfc.ExternalApiRateLimitingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
@@ -615,6 +616,7 @@ import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlGitConfigService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.signup.BugsnagErrorReporter;
 import software.wings.signup.SignupServiceImpl;
 import software.wings.sm.ExpressionProcessorFactory;
 import software.wings.utils.CacheManager.CacheManagerConfig;
@@ -681,6 +683,12 @@ public class WingsModule extends DependencyModule implements ServersModule {
   public UrlConfiguration urlConfiguration() {
     return new UrlConfiguration(configuration.getPortal().getUrl(), configuration.getApiUrl(),
         configuration.getDelegateMetadataUrl(), configuration.getWatcherMetadataUrl());
+  }
+
+  @Provides
+  public BugsnagErrorReporterConfiguration bugsnagErrorReporterConfiguration() {
+    return new BugsnagErrorReporterConfiguration(
+        configuration.isTrialRegistrationAllowed(), configuration.getBugsnagApiKey());
   }
 
   @Provides
@@ -867,6 +875,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(GitSyncErrorService.class).to(GitSyncErrorServiceImpl.class);
     bind(YamlGitConfigService.class).to(YamlGitConfigServiceImpl.class);
     bind(CommandLibraryService.class).to(CommandLibraryServiceImpl.class);
+    bind(ErrorReporter.class).to(BugsnagErrorReporter.class);
 
     requestStaticInjection(EncryptedData.class);
 

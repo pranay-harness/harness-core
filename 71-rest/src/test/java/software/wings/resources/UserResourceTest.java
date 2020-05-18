@@ -2,10 +2,12 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
@@ -32,8 +34,10 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.ErrorData;
 import software.wings.beans.LoginRequest;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -47,6 +51,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.signup.BugsnagErrorReporter;
 import software.wings.utils.AccountPermissionUtils;
 import software.wings.utils.CacheManager;
 import software.wings.utils.ResourceTestRule;
@@ -75,6 +80,7 @@ public class UserResourceTest extends WingsBaseTest {
       mock(TwoFactorAuthenticationManager.class);
   static final AccountPermissionUtils ACCOUNT_PERMISSION_UTILS = mock(AccountPermissionUtils.class);
   @Inject @InjectMocks private UserResource userResource;
+  @Mock private BugsnagErrorReporter bugsnagErrorReporter;
 
   /**
    * The constant RESOURCES.
@@ -164,5 +170,30 @@ public class UserResourceTest extends WingsBaseTest {
     UserInvite userInvite = anUserInvite().build();
     userResource.inviteUsers(accountId, userInvite);
     verify(USER_SERVICE, times(1)).inviteUsers(any());
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void testBugsnagErrorReportingForTrialSignup() {
+    UserInvite userInvite = anUserInvite().withEmail("invalid").build();
+    try {
+      userResource.trialSignup(userInvite);
+    } catch (Exception e) {
+      verify(bugsnagErrorReporter, times(1)).report(ErrorData.builder().exception(e).email("invalid").build());
+      assertThat(e).isNotNull();
+    }
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void testBugsnagErrorReportingForResendVerificationEmail() {
+    try {
+      userResource.resendVerificationEmail("");
+    } catch (Exception e) {
+      verify(bugsnagErrorReporter, times(1)).report(ErrorData.builder().exception(e).email("").build());
+      assertThat(e).isNotNull();
+    }
   }
 }

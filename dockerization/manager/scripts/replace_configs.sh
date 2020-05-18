@@ -582,3 +582,7 @@ fi
 if [[ "" != "$COMMAND_LIBRARY_SERVICE_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE commandLibraryServiceConfig.baseUrl "$COMMAND_LIBRARY_SERVICE_BASE_URL"
 fi
+
+if [[ "" != "$BUGSNAG_API_KEY" ]]; then
+  yq write -i $CONFIG_FILE bugsnagApiKey "$BUGSNAG_API_KEY"
+fi
