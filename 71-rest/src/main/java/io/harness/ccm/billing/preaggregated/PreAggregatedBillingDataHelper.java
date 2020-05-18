@@ -136,6 +136,14 @@ public class PreAggregatedBillingDataHelper {
     return 0;
   }
 
+  private long getTimeStampValue(FieldValueList row, Field field) {
+    FieldValue value = row.get(field.getName());
+    if (!value.isNull()) {
+      return value.getTimestampValue();
+    }
+    return 0;
+  }
+
   private List<TimeSeriesDataPoints> convertTimeSeriesPointsMapToList(
       Map<Timestamp, List<QLBillingDataPoint>> timeSeriesDataPointsMap) {
     return timeSeriesDataPointsMap.entrySet()
@@ -368,14 +376,16 @@ public class PreAggregatedBillingDataHelper {
           costDataBuilder.cost(getNumericValue(row, field));
           break;
         case minPreAggStartTimeConstant:
-          costDataBuilder.minStartTime(row.get(field.getName()).getTimestampValue());
-          blendedCostData.minStartTime(row.get(field.getName()).getTimestampValue());
-          unBlendedCostData.minStartTime(row.get(field.getName()).getTimestampValue());
+          long minStartTime = getTimeStampValue(row, field);
+          costDataBuilder.minStartTime(minStartTime);
+          blendedCostData.minStartTime(minStartTime);
+          unBlendedCostData.minStartTime(minStartTime);
           break;
         case maxPreAggStartTimeConstant:
-          costDataBuilder.maxStartTime(row.get(field.getName()).getTimestampValue());
-          blendedCostData.maxStartTime(row.get(field.getName()).getTimestampValue());
-          unBlendedCostData.maxStartTime(row.get(field.getName()).getTimestampValue());
+          long maxStartTime = getTimeStampValue(row, field);
+          costDataBuilder.maxStartTime(maxStartTime);
+          blendedCostData.maxStartTime(maxStartTime);
+          unBlendedCostData.maxStartTime(maxStartTime);
           break;
         default:
           break;
@@ -387,6 +397,9 @@ public class PreAggregatedBillingDataHelper {
       List<CloudBillingFilter> filters, String label, Instant trendFilterStartTime) {
     Instant startInstant = Instant.ofEpochMilli(getStartTimeFilter(filters).getValue().longValue());
     Instant endInstant = Instant.ofEpochMilli(costData.getMaxStartTime() / 1000);
+    if (costData.getMaxStartTime() == 0) {
+      endInstant = Instant.ofEpochMilli(getEndTimeFilter(filters).getValue().longValue());
+    }
     boolean isYearRequired = billingDataHelper.isYearRequired(startInstant, endInstant);
     String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant, isYearRequired);
     String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant, isYearRequired);
