@@ -1,11 +1,7 @@
 package software.wings.delegatetasks.citasks.cik8handler;
 
-/**
- * Helper class to create spec for image registry and GIT secrets. Generated spec can be used for creation of secrets on
- * a K8 cluster.
- */
-
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.KubernetesConvention.getKubernetesGitSecretName;
@@ -18,19 +14,27 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.container.ImageDetails;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.settings.SettingValue;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+/**
+ * Helper class to create spec for image registry and GIT secrets. Generated spec can be used for creation of secrets on
+ * a K8 cluster.
+ */
 
 @Slf4j
 @Singleton
@@ -75,11 +79,27 @@ public class SecretSpecBuilder {
 
     encryptionService.decrypt(gitConfig, gitEncryptedDataDetails);
     Map<String, String> data = new HashMap<>();
-    if (gitConfig.getAuthenticationScheme() == HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD) {
+    if (isNotEmpty(gitConfig.getUsername()) && isNotEmpty(gitConfig.getPassword())) {
       String urlEncodedPwd = URLEncoder.encode(new String(gitConfig.getPassword()), "UTF-8");
       data.put(GIT_SECRET_USERNAME_KEY, encodeBase64(gitConfig.getUsername()));
       data.put(GIT_SECRET_PWD_KEY, encodeBase64(urlEncodedPwd));
-    } else {
+    } else if (isNotEmpty(gitConfig.getSshSettingId()) && gitConfig.getSshSettingAttribute() != null) {
+      SettingAttribute sshSettingAttribute = gitConfig.getSshSettingAttribute();
+      SettingValue settingValue = sshSettingAttribute.getValue();
+      if (!(settingValue instanceof HostConnectionAttributes)) {
+        String errMsg = "Type mismatch: Git config SSH setting value not a type of HostConnectionAttributes";
+        logger.error(errMsg);
+        throw new InvalidRequestException(errMsg);
+      }
+
+      HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingValue;
+      if (isNotEmpty(hostConnectionAttributes.getKey())) {
+        String sshKey = new String(hostConnectionAttributes.getKey());
+        data.put(GIT_SECRET_SSH_KEY, encodeBase64(sshKey));
+      }
+    }
+
+    if (data.isEmpty()) {
       String errMsg = format("Invalid GIT Authentication scheme %s for repository %s",
           gitConfig.getAuthenticationScheme().toString(), gitConfig.getRepoUrl());
       logger.error(errMsg);

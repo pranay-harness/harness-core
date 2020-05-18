@@ -40,6 +40,7 @@ public class GitCloneContainerSpecBuilderTestHelper {
   private static final String volumeMountPath = "/harness-" + stepExecVolumeName;
 
   private static final String gitPwdRepoUrl = "https://github.com/wings-software/portal.git";
+  private static final String gitInvalidRepoUrl = "xhttps://github.com/wings-software/portal.git";
   private static final String gitRepoInCmd = "github.com/wings-software/portal.git";
   private static final String gitSshRepoUrl = "git@github.com:wings-software/portal.git";
 
@@ -98,10 +99,7 @@ public class GitCloneContainerSpecBuilderTestHelper {
   }
 
   public static GitCloneContainerParams gitCloneParamsWithInvalidAuth() {
-    GitConfig gitConfig = GitConfig.builder()
-                              .repoUrl(gitPwdRepoUrl)
-                              .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.KERBEROS)
-                              .build();
+    GitConfig gitConfig = GitConfig.builder().repoUrl(gitInvalidRepoUrl).build();
     GitFileConfig gitFileConfig = GitFileConfig.builder().branch(gitBranch).build();
     return GitCloneContainerParams.builder()
         .gitFetchFilesConfig(GitFetchFilesConfig.builder().gitConfig(gitConfig).gitFileConfig(gitFileConfig).build())
@@ -174,8 +172,7 @@ public class GitCloneContainerSpecBuilderTestHelper {
         .withArgs(gitCtrArgs)
         .withImage(GIT_CLONE_IMAGE_NAME + ":" + GIT_CLONE_IMAGE_TAG)
         .withName(GIT_CLONE_CONTAINER_NAME)
-        .withSecurityContext(
-            new SecurityContextBuilder().withReadOnlyRootFilesystem(true).withPrivileged(false).build())
+        .withSecurityContext(new SecurityContextBuilder().withPrivileged(false).build())
         .withEnv(envVars)
         .withVolumeMounts(new VolumeMountBuilder().withName(stepExecVolumeName).withMountPath(volumeMountPath).build())
         .build();
@@ -194,8 +191,7 @@ public class GitCloneContainerSpecBuilderTestHelper {
         .withArgs(gitCtrArgs)
         .withImage(GIT_CLONE_IMAGE_NAME + ":" + GIT_CLONE_IMAGE_TAG)
         .withName(GIT_CLONE_CONTAINER_NAME)
-        .withSecurityContext(
-            new SecurityContextBuilder().withReadOnlyRootFilesystem(true).withPrivileged(false).build())
+        .withSecurityContext(new SecurityContextBuilder().withPrivileged(false).build())
         .withVolumeMounts(volumeMounts)
         .build();
   }
@@ -214,8 +210,7 @@ public class GitCloneContainerSpecBuilderTestHelper {
         .withArgs(gitCtrArgs)
         .withImage(GIT_CLONE_IMAGE_NAME + ":" + GIT_CLONE_IMAGE_TAG)
         .withName(GIT_CLONE_CONTAINER_NAME)
-        .withSecurityContext(
-            new SecurityContextBuilder().withReadOnlyRootFilesystem(true).withPrivileged(false).build())
+        .withSecurityContext(new SecurityContextBuilder().withPrivileged(false).build())
         .withVolumeMounts(volumeMounts)
         .build();
   }
