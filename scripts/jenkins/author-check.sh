@@ -89,6 +89,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Alexandru Casian <alexandru.casian@harness.io>$" |\
     grep -iv "^acasian-harness <alexandru.casian@harness.io>$" |\
     grep -iv "^Anil Chowdhury <anil.chowdhury@harness.io>$" |\
+    grep -iv "^Archit Singla <archit.singla@harness.io>$" |\
     grep -iv "^Yogesh Chauhan <yogesh.chauhan@harness.io>$" |\
     grep -iv "^Vasile Glijin <vasile.glijin@harness.io>$" ` || :
 
