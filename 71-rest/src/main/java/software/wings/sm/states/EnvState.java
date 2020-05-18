@@ -410,9 +410,12 @@ public class EnvState extends State {
 
     List<ServiceArtifactVariableElement> artifactVariableElements = new ArrayList<>();
     allStateExecutionInstances.forEach(stateExecutionInstance -> {
+      if (!(stateExecutionInstance.fetchStateExecutionData() instanceof ArtifactCollectionExecutionData)) {
+        return;
+      }
+
       ArtifactCollectionExecutionData artifactCollectionExecutionData =
           (ArtifactCollectionExecutionData) stateExecutionInstance.fetchStateExecutionData();
-
       Artifact artifact = artifactService.get(artifactCollectionExecutionData.getArtifactId());
       artifactVariableElements.add(ServiceArtifactVariableElement.builder()
                                        .uuid(artifact.getUuid())
