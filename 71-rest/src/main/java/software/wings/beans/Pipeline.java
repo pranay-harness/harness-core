@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -61,7 +62,7 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAwar
 
   @NotNull @EntityName private String name;
   private String description;
-  private List<PipelineStage> pipelineStages = new ArrayList<>();
+  @Valid private List<PipelineStage> pipelineStages = new ArrayList<>();
   private Map<String, Long> stateEtaMap = new HashMap<>();
   @Transient private List<Service> services = new ArrayList<>();
   @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();

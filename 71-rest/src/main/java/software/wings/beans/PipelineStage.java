@@ -5,18 +5,21 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.google.common.collect.Lists;
 
 import io.harness.annotations.dev.OwnedBy;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.NotSaved;
+import software.wings.resources.ValidSkipAssert;
 import software.wings.yaml.BaseYamlWithType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.validation.Valid;
 
 /**
  * Created by anubhaw on 11/17/16.
@@ -29,7 +32,7 @@ import java.util.Map;
 public class PipelineStage {
   private String name;
   private boolean parallel;
-  private List<PipelineStageElement> pipelineStageElements = new ArrayList<>();
+  @Valid private List<PipelineStageElement> pipelineStageElements = new ArrayList<>();
   private transient boolean valid = true;
   private transient String validationMessage;
 
@@ -46,7 +49,7 @@ public class PipelineStage {
     private Map<String, String> workflowVariables = new HashMap<>();
     // Remove this once UI moves away from it
     @NotSaved private boolean disable;
-    private String disableAssertion;
+    @ValidSkipAssert private String disableAssertion;
 
     private transient boolean valid = true;
     private transient String validationMessage;
