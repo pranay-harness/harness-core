@@ -85,5 +85,8 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   @UtilityClass
   public static final class NodeExecutionKeys {
     public static final String planExecutionId = NodeExecutionKeys.ambiance + "." + AmbianceKeys.planExecutionId;
+    public static final String levelRuntimeId = NodeExecutionKeys.ambiance + "." + AmbianceKeys.levelRuntimeId;
+    public static final String levelSetupId = NodeExecutionKeys.ambiance + "." + AmbianceKeys.levelSetupId;
+    public static final String levelIdentifier = NodeExecutionKeys.ambiance + "." + AmbianceKeys.levelIdentifier;
   }
 }

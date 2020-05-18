@@ -18,7 +18,7 @@ import lombok.experimental.FieldNameConstants;
 @Redesign
 @Value
 @Builder
-@FieldNameConstants(innerTypeName = "LevelExecutionKeys")
+@FieldNameConstants(innerTypeName = "LevelKeys")
 public class Level {
   String setupId;
   String runtimeId;
