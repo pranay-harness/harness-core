@@ -6,6 +6,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import io.harness.ambiance.Level.LevelKeys;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
@@ -15,6 +16,7 @@ import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
+import lombok.experimental.UtilityClass;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,5 +79,12 @@ public class Ambiance {
   @VisibleForTesting
   Ambiance deepCopy() {
     return KryoUtils.clone(this);
+  }
+
+  @UtilityClass
+  public static final class AmbianceKeys {
+    public static final String levelRuntimeId = AmbianceKeys.levels + "." + LevelKeys.runtimeId;
+    public static final String levelSetupId = AmbianceKeys.levels + "." + LevelKeys.setupId;
+    public static final String levelIdentifier = AmbianceKeys.levels + "." + LevelKeys.identifier;
   }
 }
