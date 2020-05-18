@@ -37,7 +37,7 @@ public class CloudBillingHelper {
     CESetUpConfig ceSetUpConfig = mainConfiguration.getCeSetUpConfig();
     String projectId = ceSetUpConfig.getGcpProjectId();
     String dataSetId = geDataPipelineMetadata(accountId);
-    String tableName = "preAggregation";
+    String tableName = "preAggregated";
     return format("%s.%s.%s", projectId, dataSetId, tableName);
   }
 
