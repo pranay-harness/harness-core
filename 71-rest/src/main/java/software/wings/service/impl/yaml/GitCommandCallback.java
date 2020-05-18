@@ -145,10 +145,11 @@ public class GitCommandCallback implements NotifyCallback {
 
               saveCommitFromHarness(gitCommitAndPushResult, yamlChangeSet, yamlGitConfigIds, yamlSetIdsProcessed);
               final String processingCommitId = gitCommitAndPushResult.getGitCommitResult().getCommitId();
+              final String processingCommitMessage = gitCommitAndPushResult.getGitCommitResult().getCommitMessage();
               final List<GitFileChange> filesCommited = emptyIfNull(gitCommitAndPushResult.getFilesCommitedToGit());
               addYamlChangeSetToFilesCommited(filesCommited, gitCommitAndPushResult.getYamlGitConfig());
               gitSyncService.logActivityForGitOperation(filesCommited, GitFileActivity.Status.SUCCESS, false,
-                  yamlChangeSet.isFullSync(), "", processingCommitId);
+                  yamlChangeSet.isFullSync(), "", processingCommitId, processingCommitMessage);
               gitSyncService.createGitFileActivitySummaryForCommit(
                   processingCommitId, accountId, false, GitCommit.Status.COMPLETED);
             }

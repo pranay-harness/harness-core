@@ -210,7 +210,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   private GitFileActivity createGitFileActivityForFailedExtraFile(
       GitFileChange change, String errorMessage, boolean isFullSync) {
-    return buildBaseGitFileActivity(change, "")
+    return buildBaseGitFileActivity(change, "", "")
         .status(Status.FAILED)
         .errorMessage(errorMessage)
         .triggeredBy(getTriggeredBy(change.isSyncFromGit(), isFullSync))
@@ -268,7 +268,7 @@ public class GitSyncServiceImpl implements GitSyncService {
       GitFileChange gitFileChange = (GitFileChange) change;
       if (gitFileChange.isChangeFromAnotherCommit()) {
         logActivityForGitOperation(
-            Collections.singletonList((GitFileChange) change), GitFileActivity.Status.SUCCESS, true, false, "", "");
+            Collections.singletonList((GitFileChange) change), GitFileActivity.Status.SUCCESS, true, false, "", "", "");
       } else {
         updateStatusOfGitFileActivity(((GitFileChange) change).getProcessingCommitId(),
             Arrays.asList(change.getFilePath()), GitFileActivity.Status.SUCCESS, "", accountId);
@@ -394,7 +394,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   @Override
   public void logActivityForGitOperation(List<GitFileChange> changeList, Status status, boolean isGitToHarness,
-      boolean isFullSync, String message, String commitId) {
+      boolean isFullSync, String message, String commitId, String commitMessage) {
     try {
       if (isEmpty(changeList)) {
         return;
@@ -403,11 +403,10 @@ public class GitSyncServiceImpl implements GitSyncService {
       Map<String, String> fileNameAppIdMap = getAppIdsForTheGitFileChanges(changeList, accountId);
       final List<GitFileActivity> activities = changeList.stream()
                                                    .map(change
-                                                       -> buildBaseGitFileActivity(change, commitId)
+                                                       -> buildBaseGitFileActivity(change, commitId, commitMessage)
                                                               .status(status)
                                                               .errorMessage(message)
                                                               .triggeredBy(getTriggeredBy(isGitToHarness, isFullSync))
-                                                              .commitMessage(change.getCommitMessage())
                                                               .appId(fileNameAppIdMap.get(change.getFilePath()))
                                                               .build())
                                                    .collect(toList());
@@ -471,10 +470,13 @@ public class GitSyncServiceImpl implements GitSyncService {
     }
   }
 
-  private GitFileActivityBuilder buildBaseGitFileActivity(GitFileChange change, String commitId) {
+  private GitFileActivityBuilder buildBaseGitFileActivity(GitFileChange change, String commitId, String commitMessage) {
     YamlGitConfig gitConfig = change.getYamlGitConfig();
     String commitIdToPersist = StringUtils.isEmpty(commitId) ? change.getCommitId() : commitId;
     String processingCommitIdToPersist = StringUtils.isEmpty(commitId) ? change.getProcessingCommitId() : commitId;
+    String commitMessageToPersist = StringUtils.isEmpty(commitMessage) ? change.getCommitMessage() : commitMessage;
+    String processingCommitMessage =
+        StringUtils.isEmpty(commitMessage) ? change.getProcessingCommitMessage() : commitMessage;
     final Boolean changeFromAnotherCommit = change.isChangeFromAnotherCommit();
     return GitFileActivity.builder()
         .accountId(change.getAccountId())
@@ -482,7 +484,8 @@ public class GitSyncServiceImpl implements GitSyncService {
         .processingCommitId(processingCommitIdToPersist)
         .filePath(change.getFilePath())
         .fileContent(change.getFileContent())
-        .commitMessage(change.getCommitMessage())
+        .commitMessage(commitMessageToPersist)
+        .processingCommitMessage(processingCommitMessage)
         .changeType(change.getChangeType())
         .gitConnectorId(gitConfig.getGitConnectorId())
         .branchName(gitConfig.getBranchName())

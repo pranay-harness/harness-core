@@ -49,6 +49,7 @@ public class GitFileActivity implements PersistentEntity, UuidAware, CreatedAtAw
   private TriggeredBy triggeredBy;
   private boolean changeFromAnotherCommit;
   private String commitMessage;
+  private String processingCommitMessage;
   private String appId;
   private long createdAt;
   private long lastUpdatedAt;

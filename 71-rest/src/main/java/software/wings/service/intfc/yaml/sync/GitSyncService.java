@@ -49,7 +49,7 @@ public interface GitSyncService {
    * @param message
    */
   void logActivityForGitOperation(List<GitFileChange> changeList, Status status, boolean isGitToHarness,
-      boolean isFullSync, String message, String commitId);
+      boolean isFullSync, String message, String commitId, String commitMessage);
 
   /**
    *
