@@ -89,7 +89,7 @@ public class PerpetualTaskWorker {
 
   void updateAssignedTaskIds() {
     String delegateId = getDelegateId().orElse("UNREGISTERED");
-    assignedTasks = new HashSet<>(perpetualTaskServiceGrpcClient.listTaskIds(delegateId));
+    assignedTasks = new HashSet<>(perpetualTaskServiceGrpcClient.perpetualTaskList(delegateId));
     logger.debug("Refreshed list of assigned perpetual tasks {}", assignedTasks);
   }
 
@@ -98,7 +98,7 @@ public class PerpetualTaskWorker {
     try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
       try {
         logger.info("Starting perpetual task with id: {}.", taskId.getId());
-        PerpetualTaskContext context = perpetualTaskServiceGrpcClient.getTaskContext(taskId);
+        PerpetualTaskContext context = perpetualTaskServiceGrpcClient.perpetualTaskContext(taskId);
         PerpetualTaskSchedule schedule = context.getTaskSchedule();
         long intervalSeconds = Durations.toSeconds(schedule.getInterval());
 

@@ -25,109 +25,111 @@ public final class PerpetualTaskServiceGrpc {
   public static final String SERVICE_NAME = "io.harness.perpetualtask.PerpetualTaskService";
 
   // Static method descriptors that strictly reflect the proto.
-  private static volatile io.grpc.MethodDescriptor<io.harness.perpetualtask.DelegateId,
-      io.harness.perpetualtask.PerpetualTaskIdList> getListTaskIdsMethod;
+  private static volatile io.grpc.MethodDescriptor<io.harness.perpetualtask.PerpetualTaskListRequest,
+      io.harness.perpetualtask.PerpetualTaskListResponse> getPerpetualTaskListMethod;
 
   @io.grpc.stub.annotations
-      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "ListTaskIds",
-          requestType = io.harness.perpetualtask.DelegateId.class,
-          responseType = io.harness.perpetualtask.PerpetualTaskIdList.class,
+      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "PerpetualTaskList",
+          requestType = io.harness.perpetualtask.PerpetualTaskListRequest.class,
+          responseType = io.harness.perpetualtask.PerpetualTaskListResponse.class,
           methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-      public static io.grpc
-      .MethodDescriptor<io.harness.perpetualtask.DelegateId, io.harness.perpetualtask.PerpetualTaskIdList>
-      getListTaskIdsMethod() {
-    io.grpc.MethodDescriptor<io.harness.perpetualtask.DelegateId, io.harness.perpetualtask.PerpetualTaskIdList>
-        getListTaskIdsMethod;
-    if ((getListTaskIdsMethod = PerpetualTaskServiceGrpc.getListTaskIdsMethod) == null) {
+      public static io.grpc.MethodDescriptor<io.harness.perpetualtask.PerpetualTaskListRequest,
+          io.harness.perpetualtask.PerpetualTaskListResponse>
+      getPerpetualTaskListMethod() {
+    io.grpc.MethodDescriptor<io.harness.perpetualtask.PerpetualTaskListRequest,
+        io.harness.perpetualtask.PerpetualTaskListResponse> getPerpetualTaskListMethod;
+    if ((getPerpetualTaskListMethod = PerpetualTaskServiceGrpc.getPerpetualTaskListMethod) == null) {
       synchronized (PerpetualTaskServiceGrpc.class) {
-        if ((getListTaskIdsMethod = PerpetualTaskServiceGrpc.getListTaskIdsMethod) == null) {
-          PerpetualTaskServiceGrpc.getListTaskIdsMethod = getListTaskIdsMethod =
+        if ((getPerpetualTaskListMethod = PerpetualTaskServiceGrpc.getPerpetualTaskListMethod) == null) {
+          PerpetualTaskServiceGrpc.getPerpetualTaskListMethod = getPerpetualTaskListMethod =
               io.grpc.MethodDescriptor
-                  .<io.harness.perpetualtask.DelegateId, io.harness.perpetualtask.PerpetualTaskIdList>newBuilder()
+                  .<io.harness.perpetualtask.PerpetualTaskListRequest,
+                      io.harness.perpetualtask.PerpetualTaskListResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
                   .setFullMethodName(
-                      generateFullMethodName("io.harness.perpetualtask.PerpetualTaskService", "ListTaskIds"))
-                  .setSampledToLocalTracing(true)
-                  .setRequestMarshaller(
-                      io.grpc.protobuf.ProtoUtils.marshaller(io.harness.perpetualtask.DelegateId.getDefaultInstance()))
-                  .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                      io.harness.perpetualtask.PerpetualTaskIdList.getDefaultInstance()))
-                  .setSchemaDescriptor(new PerpetualTaskServiceMethodDescriptorSupplier("ListTaskIds"))
-                  .build();
-        }
-      }
-    }
-    return getListTaskIdsMethod;
-  }
-
-  private static volatile io.grpc.MethodDescriptor<io.harness.perpetualtask.PerpetualTaskId,
-      io.harness.perpetualtask.PerpetualTaskContext> getGetTaskContextMethod;
-
-  @io.grpc.stub.annotations
-      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "GetTaskContext",
-          requestType = io.harness.perpetualtask.PerpetualTaskId.class,
-          responseType = io.harness.perpetualtask.PerpetualTaskContext.class,
-          methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-      public static io.grpc
-      .MethodDescriptor<io.harness.perpetualtask.PerpetualTaskId, io.harness.perpetualtask.PerpetualTaskContext>
-      getGetTaskContextMethod() {
-    io.grpc.MethodDescriptor<io.harness.perpetualtask.PerpetualTaskId, io.harness.perpetualtask.PerpetualTaskContext>
-        getGetTaskContextMethod;
-    if ((getGetTaskContextMethod = PerpetualTaskServiceGrpc.getGetTaskContextMethod) == null) {
-      synchronized (PerpetualTaskServiceGrpc.class) {
-        if ((getGetTaskContextMethod = PerpetualTaskServiceGrpc.getGetTaskContextMethod) == null) {
-          PerpetualTaskServiceGrpc.getGetTaskContextMethod = getGetTaskContextMethod =
-              io.grpc.MethodDescriptor
-                  .<io.harness.perpetualtask.PerpetualTaskId, io.harness.perpetualtask.PerpetualTaskContext>newBuilder()
-                  .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                  .setFullMethodName(
-                      generateFullMethodName("io.harness.perpetualtask.PerpetualTaskService", "GetTaskContext"))
+                      generateFullMethodName("io.harness.perpetualtask.PerpetualTaskService", "PerpetualTaskList"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                      io.harness.perpetualtask.PerpetualTaskId.getDefaultInstance()))
+                      io.harness.perpetualtask.PerpetualTaskListRequest.getDefaultInstance()))
                   .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                      io.harness.perpetualtask.PerpetualTaskContext.getDefaultInstance()))
-                  .setSchemaDescriptor(new PerpetualTaskServiceMethodDescriptorSupplier("GetTaskContext"))
+                      io.harness.perpetualtask.PerpetualTaskListResponse.getDefaultInstance()))
+                  .setSchemaDescriptor(new PerpetualTaskServiceMethodDescriptorSupplier("PerpetualTaskList"))
                   .build();
         }
       }
     }
-    return getGetTaskContextMethod;
+    return getPerpetualTaskListMethod;
+  }
+
+  private static volatile io.grpc.MethodDescriptor<io.harness.perpetualtask.PerpetualTaskContextRequest,
+      io.harness.perpetualtask.PerpetualTaskContextResponse> getPerpetualTaskContextMethod;
+
+  @io.grpc.stub.annotations
+      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "PerpetualTaskContext",
+          requestType = io.harness.perpetualtask.PerpetualTaskContextRequest.class,
+          responseType = io.harness.perpetualtask.PerpetualTaskContextResponse.class,
+          methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+      public static io.grpc.MethodDescriptor<io.harness.perpetualtask.PerpetualTaskContextRequest,
+          io.harness.perpetualtask.PerpetualTaskContextResponse>
+      getPerpetualTaskContextMethod() {
+    io.grpc.MethodDescriptor<io.harness.perpetualtask.PerpetualTaskContextRequest,
+        io.harness.perpetualtask.PerpetualTaskContextResponse> getPerpetualTaskContextMethod;
+    if ((getPerpetualTaskContextMethod = PerpetualTaskServiceGrpc.getPerpetualTaskContextMethod) == null) {
+      synchronized (PerpetualTaskServiceGrpc.class) {
+        if ((getPerpetualTaskContextMethod = PerpetualTaskServiceGrpc.getPerpetualTaskContextMethod) == null) {
+          PerpetualTaskServiceGrpc.getPerpetualTaskContextMethod = getPerpetualTaskContextMethod =
+              io.grpc.MethodDescriptor
+                  .<io.harness.perpetualtask.PerpetualTaskContextRequest,
+                      io.harness.perpetualtask.PerpetualTaskContextResponse>newBuilder()
+                  .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+                  .setFullMethodName(
+                      generateFullMethodName("io.harness.perpetualtask.PerpetualTaskService", "PerpetualTaskContext"))
+                  .setSampledToLocalTracing(true)
+                  .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.perpetualtask.PerpetualTaskContextRequest.getDefaultInstance()))
+                  .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.perpetualtask.PerpetualTaskContextResponse.getDefaultInstance()))
+                  .setSchemaDescriptor(new PerpetualTaskServiceMethodDescriptorSupplier("PerpetualTaskContext"))
+                  .build();
+        }
+      }
+    }
+    return getPerpetualTaskContextMethod;
   }
 
   private static volatile io.grpc.MethodDescriptor<io.harness.perpetualtask.HeartbeatRequest,
-      io.harness.perpetualtask.HeartbeatResponse> getPublishHeartbeatMethod;
+      io.harness.perpetualtask.HeartbeatResponse> getHeartbeatMethod;
 
   @io.grpc.stub.annotations
-      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "PublishHeartbeat",
+      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "Heartbeat",
           requestType = io.harness.perpetualtask.HeartbeatRequest.class,
           responseType = io.harness.perpetualtask.HeartbeatResponse.class,
           methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
       public static io.grpc
       .MethodDescriptor<io.harness.perpetualtask.HeartbeatRequest, io.harness.perpetualtask.HeartbeatResponse>
-      getPublishHeartbeatMethod() {
+      getHeartbeatMethod() {
     io.grpc.MethodDescriptor<io.harness.perpetualtask.HeartbeatRequest, io.harness.perpetualtask.HeartbeatResponse>
-        getPublishHeartbeatMethod;
-    if ((getPublishHeartbeatMethod = PerpetualTaskServiceGrpc.getPublishHeartbeatMethod) == null) {
+        getHeartbeatMethod;
+    if ((getHeartbeatMethod = PerpetualTaskServiceGrpc.getHeartbeatMethod) == null) {
       synchronized (PerpetualTaskServiceGrpc.class) {
-        if ((getPublishHeartbeatMethod = PerpetualTaskServiceGrpc.getPublishHeartbeatMethod) == null) {
-          PerpetualTaskServiceGrpc.getPublishHeartbeatMethod = getPublishHeartbeatMethod =
+        if ((getHeartbeatMethod = PerpetualTaskServiceGrpc.getHeartbeatMethod) == null) {
+          PerpetualTaskServiceGrpc.getHeartbeatMethod = getHeartbeatMethod =
               io.grpc.MethodDescriptor
                   .<io.harness.perpetualtask.HeartbeatRequest, io.harness.perpetualtask.HeartbeatResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
                   .setFullMethodName(
-                      generateFullMethodName("io.harness.perpetualtask.PerpetualTaskService", "PublishHeartbeat"))
+                      generateFullMethodName("io.harness.perpetualtask.PerpetualTaskService", "Heartbeat"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                       io.harness.perpetualtask.HeartbeatRequest.getDefaultInstance()))
                   .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                       io.harness.perpetualtask.HeartbeatResponse.getDefaultInstance()))
-                  .setSchemaDescriptor(new PerpetualTaskServiceMethodDescriptorSupplier("PublishHeartbeat"))
+                  .setSchemaDescriptor(new PerpetualTaskServiceMethodDescriptorSupplier("Heartbeat"))
                   .build();
         }
       }
     }
-    return getPublishHeartbeatMethod;
+    return getHeartbeatMethod;
   }
 
   /**
@@ -156,39 +158,38 @@ public final class PerpetualTaskServiceGrpc {
   public static abstract class PerpetualTaskServiceImplBase implements io.grpc.BindableService {
     /**
      */
-    public void listTaskIds(io.harness.perpetualtask.DelegateId request,
-        io.grpc.stub.StreamObserver<io.harness.perpetualtask.PerpetualTaskIdList> responseObserver) {
-      asyncUnimplementedUnaryCall(getListTaskIdsMethod(), responseObserver);
+    public void perpetualTaskList(io.harness.perpetualtask.PerpetualTaskListRequest request,
+        io.grpc.stub.StreamObserver<io.harness.perpetualtask.PerpetualTaskListResponse> responseObserver) {
+      asyncUnimplementedUnaryCall(getPerpetualTaskListMethod(), responseObserver);
     }
 
     /**
      */
-    public void getTaskContext(io.harness.perpetualtask.PerpetualTaskId request,
-        io.grpc.stub.StreamObserver<io.harness.perpetualtask.PerpetualTaskContext> responseObserver) {
-      asyncUnimplementedUnaryCall(getGetTaskContextMethod(), responseObserver);
+    public void perpetualTaskContext(io.harness.perpetualtask.PerpetualTaskContextRequest request,
+        io.grpc.stub.StreamObserver<io.harness.perpetualtask.PerpetualTaskContextResponse> responseObserver) {
+      asyncUnimplementedUnaryCall(getPerpetualTaskContextMethod(), responseObserver);
     }
 
     /**
      */
-    public void publishHeartbeat(io.harness.perpetualtask.HeartbeatRequest request,
+    public void heartbeat(io.harness.perpetualtask.HeartbeatRequest request,
         io.grpc.stub.StreamObserver<io.harness.perpetualtask.HeartbeatResponse> responseObserver) {
-      asyncUnimplementedUnaryCall(getPublishHeartbeatMethod(), responseObserver);
+      asyncUnimplementedUnaryCall(getHeartbeatMethod(), responseObserver);
     }
 
     @java.
     lang.Override
     public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
-          .addMethod(getListTaskIdsMethod(),
-              asyncUnaryCall(
-                  new MethodHandlers<io.harness.perpetualtask.DelegateId, io.harness.perpetualtask.PerpetualTaskIdList>(
-                      this, METHODID_LIST_TASK_IDS)))
-          .addMethod(getGetTaskContextMethod(),
-              asyncUnaryCall(new MethodHandlers<io.harness.perpetualtask.PerpetualTaskId,
-                  io.harness.perpetualtask.PerpetualTaskContext>(this, METHODID_GET_TASK_CONTEXT)))
-          .addMethod(getPublishHeartbeatMethod(),
+          .addMethod(getPerpetualTaskListMethod(),
+              asyncUnaryCall(new MethodHandlers<io.harness.perpetualtask.PerpetualTaskListRequest,
+                  io.harness.perpetualtask.PerpetualTaskListResponse>(this, METHODID_PERPETUAL_TASK_LIST)))
+          .addMethod(getPerpetualTaskContextMethod(),
+              asyncUnaryCall(new MethodHandlers<io.harness.perpetualtask.PerpetualTaskContextRequest,
+                  io.harness.perpetualtask.PerpetualTaskContextResponse>(this, METHODID_PERPETUAL_TASK_CONTEXT)))
+          .addMethod(getHeartbeatMethod(),
               asyncUnaryCall(new MethodHandlers<io.harness.perpetualtask.HeartbeatRequest,
-                  io.harness.perpetualtask.HeartbeatResponse>(this, METHODID_PUBLISH_HEARTBEAT)))
+                  io.harness.perpetualtask.HeartbeatResponse>(this, METHODID_HEARTBEAT)))
           .build();
     }
   }
@@ -211,23 +212,24 @@ public final class PerpetualTaskServiceGrpc {
 
     /**
      */
-    public void listTaskIds(io.harness.perpetualtask.DelegateId request,
-        io.grpc.stub.StreamObserver<io.harness.perpetualtask.PerpetualTaskIdList> responseObserver) {
-      asyncUnaryCall(getChannel().newCall(getListTaskIdsMethod(), getCallOptions()), request, responseObserver);
+    public void perpetualTaskList(io.harness.perpetualtask.PerpetualTaskListRequest request,
+        io.grpc.stub.StreamObserver<io.harness.perpetualtask.PerpetualTaskListResponse> responseObserver) {
+      asyncUnaryCall(getChannel().newCall(getPerpetualTaskListMethod(), getCallOptions()), request, responseObserver);
     }
 
     /**
      */
-    public void getTaskContext(io.harness.perpetualtask.PerpetualTaskId request,
-        io.grpc.stub.StreamObserver<io.harness.perpetualtask.PerpetualTaskContext> responseObserver) {
-      asyncUnaryCall(getChannel().newCall(getGetTaskContextMethod(), getCallOptions()), request, responseObserver);
+    public void perpetualTaskContext(io.harness.perpetualtask.PerpetualTaskContextRequest request,
+        io.grpc.stub.StreamObserver<io.harness.perpetualtask.PerpetualTaskContextResponse> responseObserver) {
+      asyncUnaryCall(
+          getChannel().newCall(getPerpetualTaskContextMethod(), getCallOptions()), request, responseObserver);
     }
 
     /**
      */
-    public void publishHeartbeat(io.harness.perpetualtask.HeartbeatRequest request,
+    public void heartbeat(io.harness.perpetualtask.HeartbeatRequest request,
         io.grpc.stub.StreamObserver<io.harness.perpetualtask.HeartbeatResponse> responseObserver) {
-      asyncUnaryCall(getChannel().newCall(getPublishHeartbeatMethod(), getCallOptions()), request, responseObserver);
+      asyncUnaryCall(getChannel().newCall(getHeartbeatMethod(), getCallOptions()), request, responseObserver);
     }
   }
 
@@ -250,22 +252,22 @@ public final class PerpetualTaskServiceGrpc {
 
     /**
      */
-    public io.harness.perpetualtask.PerpetualTaskIdList listTaskIds(io.harness.perpetualtask.DelegateId request) {
-      return blockingUnaryCall(getChannel(), getListTaskIdsMethod(), getCallOptions(), request);
+    public io.harness.perpetualtask.PerpetualTaskListResponse perpetualTaskList(
+        io.harness.perpetualtask.PerpetualTaskListRequest request) {
+      return blockingUnaryCall(getChannel(), getPerpetualTaskListMethod(), getCallOptions(), request);
     }
 
     /**
      */
-    public io.harness.perpetualtask.PerpetualTaskContext getTaskContext(
-        io.harness.perpetualtask.PerpetualTaskId request) {
-      return blockingUnaryCall(getChannel(), getGetTaskContextMethod(), getCallOptions(), request);
+    public io.harness.perpetualtask.PerpetualTaskContextResponse perpetualTaskContext(
+        io.harness.perpetualtask.PerpetualTaskContextRequest request) {
+      return blockingUnaryCall(getChannel(), getPerpetualTaskContextMethod(), getCallOptions(), request);
     }
 
     /**
      */
-    public io.harness.perpetualtask.HeartbeatResponse publishHeartbeat(
-        io.harness.perpetualtask.HeartbeatRequest request) {
-      return blockingUnaryCall(getChannel(), getPublishHeartbeatMethod(), getCallOptions(), request);
+    public io.harness.perpetualtask.HeartbeatResponse heartbeat(io.harness.perpetualtask.HeartbeatRequest request) {
+      return blockingUnaryCall(getChannel(), getHeartbeatMethod(), getCallOptions(), request);
     }
   }
 
@@ -288,29 +290,29 @@ public final class PerpetualTaskServiceGrpc {
 
     /**
      */
-    public com.google.common.util.concurrent.ListenableFuture<io.harness.perpetualtask.PerpetualTaskIdList> listTaskIds(
-        io.harness.perpetualtask.DelegateId request) {
-      return futureUnaryCall(getChannel().newCall(getListTaskIdsMethod(), getCallOptions()), request);
+    public com.google.common.util.concurrent.ListenableFuture<io.harness.perpetualtask.PerpetualTaskListResponse>
+    perpetualTaskList(io.harness.perpetualtask.PerpetualTaskListRequest request) {
+      return futureUnaryCall(getChannel().newCall(getPerpetualTaskListMethod(), getCallOptions()), request);
     }
 
     /**
      */
-    public com.google.common.util.concurrent.ListenableFuture<io.harness.perpetualtask.PerpetualTaskContext>
-    getTaskContext(io.harness.perpetualtask.PerpetualTaskId request) {
-      return futureUnaryCall(getChannel().newCall(getGetTaskContextMethod(), getCallOptions()), request);
+    public com.google.common.util.concurrent.ListenableFuture<io.harness.perpetualtask.PerpetualTaskContextResponse>
+    perpetualTaskContext(io.harness.perpetualtask.PerpetualTaskContextRequest request) {
+      return futureUnaryCall(getChannel().newCall(getPerpetualTaskContextMethod(), getCallOptions()), request);
     }
 
     /**
      */
-    public com.google.common.util.concurrent.ListenableFuture<io.harness.perpetualtask.HeartbeatResponse>
-    publishHeartbeat(io.harness.perpetualtask.HeartbeatRequest request) {
-      return futureUnaryCall(getChannel().newCall(getPublishHeartbeatMethod(), getCallOptions()), request);
+    public com.google.common.util.concurrent.ListenableFuture<io.harness.perpetualtask.HeartbeatResponse> heartbeat(
+        io.harness.perpetualtask.HeartbeatRequest request) {
+      return futureUnaryCall(getChannel().newCall(getHeartbeatMethod(), getCallOptions()), request);
     }
   }
 
-  private static final int METHODID_LIST_TASK_IDS = 0;
-  private static final int METHODID_GET_TASK_CONTEXT = 1;
-  private static final int METHODID_PUBLISH_HEARTBEAT = 2;
+  private static final int METHODID_PERPETUAL_TASK_LIST = 0;
+  private static final int METHODID_PERPETUAL_TASK_CONTEXT = 1;
+  private static final int METHODID_HEARTBEAT = 2;
 
   private static final class MethodHandlers<Req, Resp>
       implements io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -330,16 +332,16 @@ public final class PerpetualTaskServiceGrpc {
     @java.lang.SuppressWarnings("unchecked")
     public void invoke(Req request, io.grpc.stub.StreamObserver<Resp> responseObserver) {
       switch (methodId) {
-        case METHODID_LIST_TASK_IDS:
-          serviceImpl.listTaskIds((io.harness.perpetualtask.DelegateId) request,
-              (io.grpc.stub.StreamObserver<io.harness.perpetualtask.PerpetualTaskIdList>) responseObserver);
+        case METHODID_PERPETUAL_TASK_LIST:
+          serviceImpl.perpetualTaskList((io.harness.perpetualtask.PerpetualTaskListRequest) request,
+              (io.grpc.stub.StreamObserver<io.harness.perpetualtask.PerpetualTaskListResponse>) responseObserver);
           break;
-        case METHODID_GET_TASK_CONTEXT:
-          serviceImpl.getTaskContext((io.harness.perpetualtask.PerpetualTaskId) request,
-              (io.grpc.stub.StreamObserver<io.harness.perpetualtask.PerpetualTaskContext>) responseObserver);
+        case METHODID_PERPETUAL_TASK_CONTEXT:
+          serviceImpl.perpetualTaskContext((io.harness.perpetualtask.PerpetualTaskContextRequest) request,
+              (io.grpc.stub.StreamObserver<io.harness.perpetualtask.PerpetualTaskContextResponse>) responseObserver);
           break;
-        case METHODID_PUBLISH_HEARTBEAT:
-          serviceImpl.publishHeartbeat((io.harness.perpetualtask.HeartbeatRequest) request,
+        case METHODID_HEARTBEAT:
+          serviceImpl.heartbeat((io.harness.perpetualtask.HeartbeatRequest) request,
               (io.grpc.stub.StreamObserver<io.harness.perpetualtask.HeartbeatResponse>) responseObserver);
           break;
         default:
@@ -406,9 +408,9 @@ public final class PerpetualTaskServiceGrpc {
         if (result == null) {
           serviceDescriptor = result = io.grpc.ServiceDescriptor.newBuilder(SERVICE_NAME)
                                            .setSchemaDescriptor(new PerpetualTaskServiceFileDescriptorSupplier())
-                                           .addMethod(getListTaskIdsMethod())
-                                           .addMethod(getGetTaskContextMethod())
-                                           .addMethod(getPublishHeartbeatMethod())
+                                           .addMethod(getPerpetualTaskListMethod())
+                                           .addMethod(getPerpetualTaskContextMethod())
+                                           .addMethod(getHeartbeatMethod())
                                            .build();
         }
       }

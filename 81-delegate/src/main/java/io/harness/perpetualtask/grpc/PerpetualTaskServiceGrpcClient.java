@@ -3,12 +3,14 @@ package io.harness.perpetualtask.grpc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.DelegateId;
 import io.harness.grpc.utils.HTimestamps;
-import io.harness.perpetualtask.DelegateId;
 import io.harness.perpetualtask.HeartbeatRequest;
 import io.harness.perpetualtask.PerpetualTaskContext;
+import io.harness.perpetualtask.PerpetualTaskContextRequest;
 import io.harness.perpetualtask.PerpetualTaskId;
-import io.harness.perpetualtask.PerpetualTaskIdList;
+import io.harness.perpetualtask.PerpetualTaskListRequest;
+import io.harness.perpetualtask.PerpetualTaskListResponse;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskServiceGrpc.PerpetualTaskServiceBlockingStub;
 import lombok.extern.slf4j.Slf4j;
@@ -27,25 +29,29 @@ public class PerpetualTaskServiceGrpcClient {
     serviceBlockingStub = perpetualTaskServiceBlockingStub;
   }
 
-  public List<PerpetualTaskId> listTaskIds(String delegateId) {
-    PerpetualTaskIdList perpetualTaskIdList = serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
-                                                  .listTaskIds(DelegateId.newBuilder().setId(delegateId).build());
-    return perpetualTaskIdList.getTaskIdsList();
+  public List<PerpetualTaskId> perpetualTaskList(String delegateId) {
+    PerpetualTaskListResponse response =
+        serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+            .perpetualTaskList(PerpetualTaskListRequest.newBuilder()
+                                   .setDelegateId(DelegateId.newBuilder().setId(delegateId).build())
+                                   .build());
+    return response.getTaskIdsList();
   }
 
-  public PerpetualTaskContext getTaskContext(PerpetualTaskId taskId) {
-    return serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).getTaskContext(taskId);
+  public PerpetualTaskContext perpetualTaskContext(PerpetualTaskId taskId) {
+    return serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+        .perpetualTaskContext(PerpetualTaskContextRequest.newBuilder().setPerpetualTaskId(taskId).build())
+        .getPerpetualTaskContext();
   }
 
-  public void publishHeartbeat(
-      PerpetualTaskId taskId, Instant taskStartTime, PerpetualTaskResponse perpetualTaskResponse) {
+  public void heartbeat(PerpetualTaskId taskId, Instant taskStartTime, PerpetualTaskResponse perpetualTaskResponse) {
     serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
-        .publishHeartbeat(HeartbeatRequest.newBuilder()
-                              .setId(taskId.getId())
-                              .setHeartbeatTimestamp(HTimestamps.fromInstant(taskStartTime))
-                              .setResponseCode(perpetualTaskResponse.getResponseCode())
-                              .setTaskState(perpetualTaskResponse.getPerpetualTaskState().name())
-                              .setResponseMessage(perpetualTaskResponse.getResponseMessage())
-                              .build());
+        .heartbeat(HeartbeatRequest.newBuilder()
+                       .setId(taskId.getId())
+                       .setHeartbeatTimestamp(HTimestamps.fromInstant(taskStartTime))
+                       .setResponseCode(perpetualTaskResponse.getResponseCode())
+                       .setTaskState(perpetualTaskResponse.getPerpetualTaskState().name())
+                       .setResponseMessage(perpetualTaskResponse.getResponseMessage())
+                       .build());
   }
 }

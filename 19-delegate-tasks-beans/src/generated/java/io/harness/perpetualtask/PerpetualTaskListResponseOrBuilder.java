@@ -3,9 +3,9 @@
 
 package io.harness.perpetualtask;
 
-@javax.annotation.Generated(value = "protoc", comments = "annotations:PerpetualTaskIdListOrBuilder.java.pb.meta")
-public interface PerpetualTaskIdListOrBuilder extends
-    // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.PerpetualTaskIdList)
+@javax.annotation.Generated(value = "protoc", comments = "annotations:PerpetualTaskListResponseOrBuilder.java.pb.meta")
+public interface PerpetualTaskListResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.PerpetualTaskListResponse)
     com.google.protobuf.MessageOrBuilder {
   /**
    * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>

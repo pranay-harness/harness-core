@@ -4,45 +4,31 @@ package io.harness.perpetualtask;
 
 option java_multiple_files = true;
 
-import "google/protobuf/any.proto";
-import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
+import "io/harness/delegate/delegate.proto";
+import "io/harness/perpetualtask/perpetual_task.proto";
+
 service PerpetualTaskService {
-  rpc ListTaskIds(DelegateId) returns (PerpetualTaskIdList);
-  rpc GetTaskContext(PerpetualTaskId) returns (PerpetualTaskContext);
-  rpc PublishHeartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+  rpc PerpetualTaskList(PerpetualTaskListRequest) returns (PerpetualTaskListResponse);
+  rpc PerpetualTaskContext(PerpetualTaskContextRequest) returns (PerpetualTaskContextResponse);
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
 }
 
-// params are tracked by clients
-message PerpetualTaskParams {
-  google.protobuf.Any customized_params = 1;
+message PerpetualTaskListRequest {
+  delegate.DelegateId delegate_id = 1;
 }
 
-// schedule persists in mongodb
-message PerpetualTaskSchedule {
-  // Interval between successive iterations
-  google.protobuf.Duration interval = 1;
-  // Timeout for one iteration of the task
-  google.protobuf.Duration timeout = 2;
-}
-
-message PerpetualTaskId {
-  string id = 1;
-}
-
-message PerpetualTaskContext {
-  PerpetualTaskParams task_params = 1;
-  PerpetualTaskSchedule task_schedule = 2;
-  google.protobuf.Timestamp heartbeat_timestamp = 3;
-}
-
-message DelegateId {
-  string id = 1;
-}
-
-message PerpetualTaskIdList {
+message PerpetualTaskListResponse {
   repeated PerpetualTaskId task_ids = 1;
+}
+
+message PerpetualTaskContextRequest {
+  PerpetualTaskId perpetual_task_id = 1;
+}
+
+message PerpetualTaskContextResponse {
+  PerpetualTaskContext perpetual_task_context = 1;
 }
 
 message HeartbeatRequest {

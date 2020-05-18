@@ -64,7 +64,7 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder().setInterval(Durations.fromSeconds(1)).build();
     context = PerpetualTaskContext.newBuilder().setTaskParams(params).setTaskSchedule(schedule).build();
 
-    when(perpetualTaskServiceGrpcClient.getTaskContext(isA(PerpetualTaskId.class))).thenReturn(context);
+    when(perpetualTaskServiceGrpcClient.perpetualTaskContext(isA(PerpetualTaskId.class))).thenReturn(context);
   }
 
   @Test
@@ -72,7 +72,7 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdateAssignedTaskIds() {
     worker.updateAssignedTaskIds();
-    verify(perpetualTaskServiceGrpcClient).listTaskIds(anyString());
+    verify(perpetualTaskServiceGrpcClient).perpetualTaskList(anyString());
   }
 
   @Test
@@ -91,7 +91,7 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
     worker.startTask(taskId1);
     worker.startTask(taskId2);
     worker.startAssignedTasks();
-    verify(perpetualTaskServiceGrpcClient, times(2)).getTaskContext(isA(PerpetualTaskId.class));
+    verify(perpetualTaskServiceGrpcClient, times(2)).perpetualTaskContext(isA(PerpetualTaskId.class));
   }
 
   @Test

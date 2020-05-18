@@ -83,7 +83,7 @@ public class PerpetualTaskLifecycleManager {
     String perpetualTaskId = taskId.getId();
     PerpetualTaskResponse cachedPerpetualTaskResponse = perpetualTaskResponseCache.getIfPresent(perpetualTaskId);
     if (null == cachedPerpetualTaskResponse || !cachedPerpetualTaskResponse.equals(perpetualTaskResponse)) {
-      perpetualTaskServiceGrpcClient.publishHeartbeat(taskId, taskStartTime, perpetualTaskResponse);
+      perpetualTaskServiceGrpcClient.heartbeat(taskId, taskStartTime, perpetualTaskResponse);
       perpetualTaskResponseCache.put(perpetualTaskId, perpetualTaskResponse);
     }
     return null;

@@ -4,18 +4,18 @@
 package io.harness.perpetualtask;
 
 /**
- * Protobuf type {@code io.harness.perpetualtask.PerpetualTaskIdList}
+ * Protobuf type {@code io.harness.perpetualtask.PerpetualTaskListResponse}
  */
-@javax.annotation.Generated(value = "protoc", comments = "annotations:PerpetualTaskIdList.java.pb.meta")
-public final class PerpetualTaskIdList extends com.google.protobuf.GeneratedMessageV3 implements
-    // @@protoc_insertion_point(message_implements:io.harness.perpetualtask.PerpetualTaskIdList)
-    PerpetualTaskIdListOrBuilder {
+@javax.annotation.Generated(value = "protoc", comments = "annotations:PerpetualTaskListResponse.java.pb.meta")
+public final class PerpetualTaskListResponse extends com.google.protobuf.GeneratedMessageV3 implements
+    // @@protoc_insertion_point(message_implements:io.harness.perpetualtask.PerpetualTaskListResponse)
+    PerpetualTaskListResponseOrBuilder {
   private static final long serialVersionUID = 0L;
-  // Use PerpetualTaskIdList.newBuilder() to construct.
-  private PerpetualTaskIdList(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+  // Use PerpetualTaskListResponse.newBuilder() to construct.
+  private PerpetualTaskListResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private PerpetualTaskIdList() {
+  private PerpetualTaskListResponse() {
     taskIds_ = java.util.Collections.emptyList();
   }
 
@@ -24,7 +24,7 @@ public final class PerpetualTaskIdList extends com.google.protobuf.GeneratedMess
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
-  private PerpetualTaskIdList(
+  private PerpetualTaskListResponse(
       com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     this();
@@ -71,16 +71,16 @@ public final class PerpetualTaskIdList extends com.google.protobuf.GeneratedMess
   }
   public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
     return io.harness.perpetualtask.PerpetualTaskServiceOuterClass
-        .internal_static_io_harness_perpetualtask_PerpetualTaskIdList_descriptor;
+        .internal_static_io_harness_perpetualtask_PerpetualTaskListResponse_descriptor;
   }
 
   @java.
   lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
     return io.harness.perpetualtask.PerpetualTaskServiceOuterClass
-        .internal_static_io_harness_perpetualtask_PerpetualTaskIdList_fieldAccessorTable
-        .ensureFieldAccessorsInitialized(io.harness.perpetualtask.PerpetualTaskIdList.class,
-            io.harness.perpetualtask.PerpetualTaskIdList.Builder.class);
+        .internal_static_io_harness_perpetualtask_PerpetualTaskListResponse_fieldAccessorTable
+        .ensureFieldAccessorsInitialized(io.harness.perpetualtask.PerpetualTaskListResponse.class,
+            io.harness.perpetualtask.PerpetualTaskListResponse.Builder.class);
   }
 
   public static final int TASK_IDS_FIELD_NUMBER = 1;
@@ -157,10 +157,10 @@ public final class PerpetualTaskIdList extends com.google.protobuf.GeneratedMess
     if (obj == this) {
       return true;
     }
-    if (!(obj instanceof io.harness.perpetualtask.PerpetualTaskIdList)) {
+    if (!(obj instanceof io.harness.perpetualtask.PerpetualTaskListResponse)) {
       return super.equals(obj);
     }
-    io.harness.perpetualtask.PerpetualTaskIdList other = (io.harness.perpetualtask.PerpetualTaskIdList) obj;
+    io.harness.perpetualtask.PerpetualTaskListResponse other = (io.harness.perpetualtask.PerpetualTaskListResponse) obj;
 
     if (!getTaskIdsList().equals(other.getTaskIdsList()))
       return false;
@@ -185,54 +185,54 @@ public final class PerpetualTaskIdList extends com.google.protobuf.GeneratedMess
     return hash;
   }
 
-  public static io.harness.perpetualtask.PerpetualTaskIdList parseFrom(java.nio.ByteBuffer data)
+  public static io.harness.perpetualtask.PerpetualTaskListResponse parseFrom(java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static io.harness.perpetualtask.PerpetualTaskIdList parseFrom(
+  public static io.harness.perpetualtask.PerpetualTaskListResponse parseFrom(
       java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static io.harness.perpetualtask.PerpetualTaskIdList parseFrom(com.google.protobuf.ByteString data)
+  public static io.harness.perpetualtask.PerpetualTaskListResponse parseFrom(com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static io.harness.perpetualtask.PerpetualTaskIdList parseFrom(
+  public static io.harness.perpetualtask.PerpetualTaskListResponse parseFrom(
       com.google.protobuf.ByteString data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static io.harness.perpetualtask.PerpetualTaskIdList parseFrom(byte[] data)
+  public static io.harness.perpetualtask.PerpetualTaskListResponse parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static io.harness.perpetualtask.PerpetualTaskIdList parseFrom(
+  public static io.harness.perpetualtask.PerpetualTaskListResponse parseFrom(
       byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static io.harness.perpetualtask.PerpetualTaskIdList parseFrom(java.io.InputStream input)
+  public static io.harness.perpetualtask.PerpetualTaskListResponse parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
   }
-  public static io.harness.perpetualtask.PerpetualTaskIdList parseFrom(java.io.InputStream input,
+  public static io.harness.perpetualtask.PerpetualTaskListResponse parseFrom(java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
   }
-  public static io.harness.perpetualtask.PerpetualTaskIdList parseDelimitedFrom(java.io.InputStream input)
+  public static io.harness.perpetualtask.PerpetualTaskListResponse parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
   }
-  public static io.harness.perpetualtask.PerpetualTaskIdList parseDelimitedFrom(java.io.InputStream input,
+  public static io.harness.perpetualtask.PerpetualTaskListResponse parseDelimitedFrom(java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static io.harness.perpetualtask.PerpetualTaskIdList parseFrom(com.google.protobuf.CodedInputStream input)
+  public static io.harness.perpetualtask.PerpetualTaskListResponse parseFrom(com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
   }
-  public static io.harness.perpetualtask.PerpetualTaskIdList parseFrom(com.google.protobuf.CodedInputStream input,
+  public static io.harness.perpetualtask.PerpetualTaskListResponse parseFrom(com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
   }
@@ -244,7 +244,7 @@ public final class PerpetualTaskIdList extends com.google.protobuf.GeneratedMess
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(io.harness.perpetualtask.PerpetualTaskIdList prototype) {
+  public static Builder newBuilder(io.harness.perpetualtask.PerpetualTaskListResponse prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   @java.lang.Override
@@ -258,26 +258,26 @@ public final class PerpetualTaskIdList extends com.google.protobuf.GeneratedMess
     return builder;
   }
   /**
-   * Protobuf type {@code io.harness.perpetualtask.PerpetualTaskIdList}
+   * Protobuf type {@code io.harness.perpetualtask.PerpetualTaskListResponse}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:io.harness.perpetualtask.PerpetualTaskIdList)
-      io.harness.perpetualtask.PerpetualTaskIdListOrBuilder {
+      // @@protoc_insertion_point(builder_implements:io.harness.perpetualtask.PerpetualTaskListResponse)
+      io.harness.perpetualtask.PerpetualTaskListResponseOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
       return io.harness.perpetualtask.PerpetualTaskServiceOuterClass
-          .internal_static_io_harness_perpetualtask_PerpetualTaskIdList_descriptor;
+          .internal_static_io_harness_perpetualtask_PerpetualTaskListResponse_descriptor;
     }
 
     @java.
     lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
       return io.harness.perpetualtask.PerpetualTaskServiceOuterClass
-          .internal_static_io_harness_perpetualtask_PerpetualTaskIdList_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(io.harness.perpetualtask.PerpetualTaskIdList.class,
-              io.harness.perpetualtask.PerpetualTaskIdList.Builder.class);
+          .internal_static_io_harness_perpetualtask_PerpetualTaskListResponse_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(io.harness.perpetualtask.PerpetualTaskListResponse.class,
+              io.harness.perpetualtask.PerpetualTaskListResponse.Builder.class);
     }
 
-    // Construct using io.harness.perpetualtask.PerpetualTaskIdList.newBuilder()
+    // Construct using io.harness.perpetualtask.PerpetualTaskListResponse.newBuilder()
     private Builder() {
       maybeForceBuilderInitialization();
     }
@@ -307,19 +307,19 @@ public final class PerpetualTaskIdList extends com.google.protobuf.GeneratedMess
     lang.Override
     public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
       return io.harness.perpetualtask.PerpetualTaskServiceOuterClass
-          .internal_static_io_harness_perpetualtask_PerpetualTaskIdList_descriptor;
+          .internal_static_io_harness_perpetualtask_PerpetualTaskListResponse_descriptor;
     }
 
     @java.
     lang.Override
-    public io.harness.perpetualtask.PerpetualTaskIdList getDefaultInstanceForType() {
-      return io.harness.perpetualtask.PerpetualTaskIdList.getDefaultInstance();
+    public io.harness.perpetualtask.PerpetualTaskListResponse getDefaultInstanceForType() {
+      return io.harness.perpetualtask.PerpetualTaskListResponse.getDefaultInstance();
     }
 
     @java.
     lang.Override
-    public io.harness.perpetualtask.PerpetualTaskIdList build() {
-      io.harness.perpetualtask.PerpetualTaskIdList result = buildPartial();
+    public io.harness.perpetualtask.PerpetualTaskListResponse build() {
+      io.harness.perpetualtask.PerpetualTaskListResponse result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
@@ -328,8 +328,9 @@ public final class PerpetualTaskIdList extends com.google.protobuf.GeneratedMess
 
     @java.
     lang.Override
-    public io.harness.perpetualtask.PerpetualTaskIdList buildPartial() {
-      io.harness.perpetualtask.PerpetualTaskIdList result = new io.harness.perpetualtask.PerpetualTaskIdList(this);
+    public io.harness.perpetualtask.PerpetualTaskListResponse buildPartial() {
+      io.harness.perpetualtask.PerpetualTaskListResponse result =
+          new io.harness.perpetualtask.PerpetualTaskListResponse(this);
       int from_bitField0_ = bitField0_;
       if (taskIdsBuilder_ == null) {
         if (((bitField0_ & 0x00000001) != 0)) {
@@ -371,16 +372,16 @@ public final class PerpetualTaskIdList extends com.google.protobuf.GeneratedMess
     }
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof io.harness.perpetualtask.PerpetualTaskIdList) {
-        return mergeFrom((io.harness.perpetualtask.PerpetualTaskIdList) other);
+      if (other instanceof io.harness.perpetualtask.PerpetualTaskListResponse) {
+        return mergeFrom((io.harness.perpetualtask.PerpetualTaskListResponse) other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(io.harness.perpetualtask.PerpetualTaskIdList other) {
-      if (other == io.harness.perpetualtask.PerpetualTaskIdList.getDefaultInstance())
+    public Builder mergeFrom(io.harness.perpetualtask.PerpetualTaskListResponse other) {
+      if (other == io.harness.perpetualtask.PerpetualTaskListResponse.getDefaultInstance())
         return this;
       if (taskIdsBuilder_ == null) {
         if (!other.taskIds_.isEmpty()) {
@@ -420,11 +421,11 @@ public final class PerpetualTaskIdList extends com.google.protobuf.GeneratedMess
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
-      io.harness.perpetualtask.PerpetualTaskIdList parsedMessage = null;
+      io.harness.perpetualtask.PerpetualTaskListResponse parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (io.harness.perpetualtask.PerpetualTaskIdList) e.getUnfinishedMessage();
+        parsedMessage = (io.harness.perpetualtask.PerpetualTaskListResponse) e.getUnfinishedMessage();
         throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
@@ -668,42 +669,42 @@ public final class PerpetualTaskIdList extends com.google.protobuf.GeneratedMess
       return super.mergeUnknownFields(unknownFields);
     }
 
-    // @@protoc_insertion_point(builder_scope:io.harness.perpetualtask.PerpetualTaskIdList)
+    // @@protoc_insertion_point(builder_scope:io.harness.perpetualtask.PerpetualTaskListResponse)
   }
 
-  // @@protoc_insertion_point(class_scope:io.harness.perpetualtask.PerpetualTaskIdList)
-  private static final io.harness.perpetualtask.PerpetualTaskIdList DEFAULT_INSTANCE;
+  // @@protoc_insertion_point(class_scope:io.harness.perpetualtask.PerpetualTaskListResponse)
+  private static final io.harness.perpetualtask.PerpetualTaskListResponse DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new io.harness.perpetualtask.PerpetualTaskIdList();
+    DEFAULT_INSTANCE = new io.harness.perpetualtask.PerpetualTaskListResponse();
   }
 
-  public static io.harness.perpetualtask.PerpetualTaskIdList getDefaultInstance() {
+  public static io.harness.perpetualtask.PerpetualTaskListResponse getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<PerpetualTaskIdList> PARSER =
-      new com.google.protobuf.AbstractParser<PerpetualTaskIdList>() {
+  private static final com.google.protobuf.Parser<PerpetualTaskListResponse> PARSER =
+      new com.google.protobuf.AbstractParser<PerpetualTaskListResponse>() {
         @java.lang.Override
-        public PerpetualTaskIdList parsePartialFrom(
+        public PerpetualTaskListResponse parsePartialFrom(
             com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws com.google.protobuf.InvalidProtocolBufferException {
-          return new PerpetualTaskIdList(input, extensionRegistry);
+          return new PerpetualTaskListResponse(input, extensionRegistry);
         }
       };
 
-  public static com.google.protobuf.Parser<PerpetualTaskIdList> parser() {
+  public static com.google.protobuf.Parser<PerpetualTaskListResponse> parser() {
     return PARSER;
   }
 
   @java.
   lang.Override
-  public com.google.protobuf.Parser<PerpetualTaskIdList> getParserForType() {
+  public com.google.protobuf.Parser<PerpetualTaskListResponse> getParserForType() {
     return PARSER;
   }
 
   @java.
   lang.Override
-  public io.harness.perpetualtask.PerpetualTaskIdList getDefaultInstanceForType() {
+  public io.harness.perpetualtask.PerpetualTaskListResponse getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 }
