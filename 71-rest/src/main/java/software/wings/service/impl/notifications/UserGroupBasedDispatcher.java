@@ -1,5 +1,6 @@
 package software.wings.service.impl.notifications;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -7,6 +8,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import org.apache.commons.collections4.CollectionUtils;
 import org.mongodb.morphia.query.Criteria;
@@ -32,6 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDC)
 public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGroup> {
   private static final Logger log = LoggerFactory.getLogger(UserGroupBasedDispatcher.class);
 

@@ -1,5 +1,6 @@
 package software.wings.service.impl.slack;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.service.impl.slack.SlackApprovalUtils.approve;
 import static software.wings.service.impl.slack.SlackApprovalUtils.createBody;
 import static software.wings.service.impl.slack.SlackApprovalUtils.createMessageFromTemplate;
@@ -7,6 +8,7 @@ import static software.wings.service.impl.slack.SlackApprovalUtils.slackPostRequ
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.rest.RestResponse;
@@ -23,6 +25,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(CDC)
 public class ProceedResponseHandler implements SlackActionHandler {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private SlackApprovalUtils slackApprovalUtils;

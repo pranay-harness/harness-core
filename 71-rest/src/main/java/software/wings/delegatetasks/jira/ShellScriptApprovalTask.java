@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.jira;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.Log.Builder.aLog;
@@ -7,6 +8,7 @@ import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -35,6 +37,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@OwnedBy(CDC)
 public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
   private static final String SCRIPT_APPROVAL_ENV_VARIABLE = "HARNESS_APPROVAL_STATUS";
   private static final String APPROVE_STATUS = "Approved";
