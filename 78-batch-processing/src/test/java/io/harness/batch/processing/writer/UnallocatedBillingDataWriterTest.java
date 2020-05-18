@@ -11,10 +11,14 @@ import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.inject.Inject;
+
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.UnallocatedBillingDataServiceImpl;
+import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.UnallocatedCostData;
@@ -28,6 +32,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.batch.core.JobParameters;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -38,9 +43,10 @@ import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UnallocatedBillingDataWriterTest extends CategoryTest {
-  @InjectMocks private UnallocatedBillingDataWriter unallocatedBillingDataWriter;
+  @Inject @InjectMocks private UnallocatedBillingDataWriter unallocatedBillingDataWriter;
   @Mock private BillingDataServiceImpl billingDataService;
   @Mock private UnallocatedBillingDataServiceImpl unallocatedBillingDataService;
+  @Mock private JobParameters parameters;
 
   private final Instant NOW = Instant.now();
   private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
@@ -74,7 +80,10 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
 
   @Before
   public void setup() {
-    when(billingDataService.create(any())).thenReturn(true);
+    when(parameters.getString(CCMJobConstants.BATCH_JOB_TYPE))
+        .thenReturn(BatchJobType.UNALLOCATED_BILLING_HOURLY.name());
+
+    when(billingDataService.create(any(), any())).thenReturn(true);
     // K8s Mock Data
     UnallocatedCostData unallocatedCostDataPodCluster1 =
         getMockUnallocatedCostData(CLUSTER_ID_1, InstanceType.K8S_POD.name(), COST_POD, SYSTEM_COST_POD, COST_POD * .5,
@@ -116,13 +125,13 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
                                                         .cloudProvider(CLOUD_PROVIDER)
                                                         .workloadType(WORKLOAD_TYPE);
 
-    when(unallocatedBillingDataService.getCommonFields(eq(ACCOUNT_ID), eq(CLUSTER_ID_1), anyLong(), anyLong()))
+    when(unallocatedBillingDataService.getCommonFields(eq(ACCOUNT_ID), eq(CLUSTER_ID_1), anyLong(), anyLong(), any()))
         .thenReturn(clusterCostDataBuilder.accountId(ACCOUNT_ID).clusterType(K8S_CLUSTER_TYPE).build());
-    when(unallocatedBillingDataService.getCommonFields(eq(ACCOUNT_ID), eq(CLUSTER_ID_2), anyLong(), anyLong()))
+    when(unallocatedBillingDataService.getCommonFields(eq(ACCOUNT_ID), eq(CLUSTER_ID_2), anyLong(), anyLong(), any()))
         .thenReturn(clusterCostDataBuilder.accountId(ACCOUNT_ID).clusterType(K8S_CLUSTER_TYPE).build());
-    when(unallocatedBillingDataService.getCommonFields(eq(ACCOUNT_ID), eq(CLUSTER_ID_3), anyLong(), anyLong()))
+    when(unallocatedBillingDataService.getCommonFields(eq(ACCOUNT_ID), eq(CLUSTER_ID_3), anyLong(), anyLong(), any()))
         .thenReturn(clusterCostDataBuilder.accountId(ACCOUNT_ID).clusterType(ECS_CLUSTER_TYPE).build());
-    when(unallocatedBillingDataService.getCommonFields(eq(ACCOUNT_ID), eq(CLUSTER_ID_4), anyLong(), anyLong()))
+    when(unallocatedBillingDataService.getCommonFields(eq(ACCOUNT_ID), eq(CLUSTER_ID_4), anyLong(), anyLong(), any()))
         .thenReturn(clusterCostDataBuilder.accountId(ACCOUNT_ID).clusterType(ECS_CLUSTER_TYPE).build());
   }
 
@@ -134,7 +143,7 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
     unallocatedBillingDataWriter.write(Collections.singletonList(unallocatedCostDataList));
     ArgumentCaptor<InstanceBillingData> instanceBillingDataArgumentCaptor =
         ArgumentCaptor.forClass(InstanceBillingData.class);
-    verify(billingDataService, atMost(4)).create(instanceBillingDataArgumentCaptor.capture());
+    verify(billingDataService, atMost(4)).create(instanceBillingDataArgumentCaptor.capture(), any());
     List<InstanceBillingData> instanceUtilizationData = instanceBillingDataArgumentCaptor.getAllValues();
     assertThat(instanceUtilizationData.get(0).getClusterId()).isEqualTo(CLUSTER_ID_1);
     assertThat(instanceUtilizationData.get(0).getClusterType()).isEqualTo(K8S_CLUSTER_TYPE);

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.batch.processing.ccm.ActualIdleCostData;
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -71,8 +72,8 @@ public class ActualIdleBillingDataServiceImplTest {
   public void testActualIdleCostDataServiceForNodes() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
     when(statement.execute()).thenReturn(true);
-    List<ActualIdleCostData> actualIdleCostDataList =
-        actualIdleBillingDataService.getActualIdleCostDataForNodes(ACCOUNT_ID, START_TIME, END_TIME);
+    List<ActualIdleCostData> actualIdleCostDataList = actualIdleBillingDataService.getActualIdleCostDataForNodes(
+        ACCOUNT_ID, START_TIME, END_TIME, BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY);
     assertThat(actualIdleCostDataList.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(actualIdleCostDataList.get(0).getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(actualIdleCostDataList.get(0).getInstanceId()).isEqualTo(INSTANCE_ID);
@@ -93,7 +94,8 @@ public class ActualIdleBillingDataServiceImplTest {
   @Category(UnitTests.class)
   public void testNullActualIdleCostDataServiceForNodes() throws SQLException {
     when(timeScaleDBService.getDBConnection()).thenThrow(SQLException.class);
-    assertThat(actualIdleBillingDataService.getActualIdleCostDataForNodes(ACCOUNT_ID, START_TIME, END_TIME))
+    assertThat(actualIdleBillingDataService.getActualIdleCostDataForNodes(
+                   ACCOUNT_ID, START_TIME, END_TIME, BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY))
         .isEqualTo(Collections.emptyList());
   }
 
@@ -103,8 +105,8 @@ public class ActualIdleBillingDataServiceImplTest {
   public void testActualIdleCostDataServiceForPods() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
     when(statement.execute()).thenReturn(true);
-    List<ActualIdleCostData> actualIdleCostDataList =
-        actualIdleBillingDataService.getActualIdleCostDataForPods(ACCOUNT_ID, START_TIME, END_TIME);
+    List<ActualIdleCostData> actualIdleCostDataList = actualIdleBillingDataService.getActualIdleCostDataForPods(
+        ACCOUNT_ID, START_TIME, END_TIME, BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY);
     assertThat(actualIdleCostDataList.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(actualIdleCostDataList.get(0).getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(actualIdleCostDataList.get(0).getInstanceId()).isEqualTo(null);
@@ -125,7 +127,8 @@ public class ActualIdleBillingDataServiceImplTest {
   @Category(UnitTests.class)
   public void testNullActualIdleCostDataServiceForPods() throws SQLException {
     when(timeScaleDBService.getDBConnection()).thenThrow(SQLException.class);
-    assertThat(actualIdleBillingDataService.getActualIdleCostDataForPods(ACCOUNT_ID, START_TIME, END_TIME))
+    assertThat(actualIdleBillingDataService.getActualIdleCostDataForPods(
+                   ACCOUNT_ID, START_TIME, END_TIME, BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY))
         .isEqualTo(Collections.emptyList());
   }
 

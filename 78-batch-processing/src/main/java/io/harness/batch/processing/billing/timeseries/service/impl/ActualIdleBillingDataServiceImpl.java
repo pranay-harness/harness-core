@@ -1,6 +1,8 @@
 package io.harness.batch.processing.billing.timeseries.service.impl;
 
+import io.harness.batch.processing.billing.timeseries.service.support.BillingDataTableNameProvider;
 import io.harness.batch.processing.ccm.ActualIdleCostData;
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
@@ -22,20 +24,22 @@ public class ActualIdleBillingDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
 
   static final String GET_UNALLOCATED_AND_IDLE_COST_DATA_FOR_NODES =
-      "SELECT SUM(BILLINGAMOUNT) AS COST, SUM(CPUBILLINGAMOUNT) AS CPUCOST, SUM(MEMORYBILLINGAMOUNT) AS MEMORYCOST, SUM(SYSTEMCOST) AS SYSTEMCOST, SUM(CPUSYSTEMCOST) AS CPUSYSTEMCOST, SUM(MEMORYSYSTEMCOST) AS MEMORYSYSTEMCOST, SUM(IDLECOST) AS IDLECOST, SUM(CPUIDLECOST) AS CPUIDLECOST, SUM(MEMORYIDLECOST) AS MEMORYIDLECOST, ACCOUNTID, CLUSTERID, INSTANCEID FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND CLUSTERID IS NOT NULL AND INSTANCETYPE IN ('K8S_NODE', 'ECS_CONTAINER_INSTANCE') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY ACCOUNTID, CLUSTERID, INSTANCEID;";
+      "SELECT SUM(BILLINGAMOUNT) AS COST, SUM(CPUBILLINGAMOUNT) AS CPUCOST, SUM(MEMORYBILLINGAMOUNT) AS MEMORYCOST, SUM(SYSTEMCOST) AS SYSTEMCOST, SUM(CPUSYSTEMCOST) AS CPUSYSTEMCOST, SUM(MEMORYSYSTEMCOST) AS MEMORYSYSTEMCOST, SUM(IDLECOST) AS IDLECOST, SUM(CPUIDLECOST) AS CPUIDLECOST, SUM(MEMORYIDLECOST) AS MEMORYIDLECOST, ACCOUNTID, CLUSTERID, INSTANCEID FROM %s WHERE ACCOUNTID = '%s' AND CLUSTERID IS NOT NULL AND INSTANCETYPE IN ('K8S_NODE', 'ECS_CONTAINER_INSTANCE') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY ACCOUNTID, CLUSTERID, INSTANCEID;";
 
   static final String GET_UNALLOCATED_AND_IDLE_COST_DATA_FOR_PODS =
-      "SELECT SUM(BILLINGAMOUNT) AS COST, SUM(CPUBILLINGAMOUNT) AS CPUCOST, SUM(MEMORYBILLINGAMOUNT) AS MEMORYCOST, SUM(SYSTEMCOST) AS SYSTEMCOST, SUM(CPUSYSTEMCOST) AS CPUSYSTEMCOST, SUM(MEMORYSYSTEMCOST) AS MEMORYSYSTEMCOST, SUM(IDLECOST) AS IDLECOST, SUM(CPUIDLECOST) AS CPUIDLECOST, SUM(MEMORYIDLECOST) AS MEMORYIDLECOST, ACCOUNTID, CLUSTERID, PARENTINSTANCEID FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND CLUSTERID IS NOT NULL AND INSTANCETYPE IN ('K8S_POD', 'ECS_TASK_EC2') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY ACCOUNTID, CLUSTERID, PARENTINSTANCEID;";
+      "SELECT SUM(BILLINGAMOUNT) AS COST, SUM(CPUBILLINGAMOUNT) AS CPUCOST, SUM(MEMORYBILLINGAMOUNT) AS MEMORYCOST, SUM(SYSTEMCOST) AS SYSTEMCOST, SUM(CPUSYSTEMCOST) AS CPUSYSTEMCOST, SUM(MEMORYSYSTEMCOST) AS MEMORYSYSTEMCOST, SUM(IDLECOST) AS IDLECOST, SUM(CPUIDLECOST) AS CPUIDLECOST, SUM(MEMORYIDLECOST) AS MEMORYIDLECOST, ACCOUNTID, CLUSTERID, PARENTINSTANCEID FROM %s WHERE ACCOUNTID = '%s' AND CLUSTERID IS NOT NULL AND INSTANCETYPE IN ('K8S_POD', 'ECS_TASK_EC2') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY ACCOUNTID, CLUSTERID, PARENTINSTANCEID;";
 
   private static final String PARENT_INSTANCE_ID = "PARENT_INSTANCE_ID";
 
   // For nodes / container instance
-  public List<ActualIdleCostData> getActualIdleCostDataForNodes(String accountId, long startDate, long endDate) {
+  public List<ActualIdleCostData> getActualIdleCostDataForNodes(
+      String accountId, long startDate, long endDate, BatchJobType batchJobType) {
     ResultSet resultSet = null;
     List<ActualIdleCostData> actualIdleCostDataList = new ArrayList<>();
 
-    String query = String.format(GET_UNALLOCATED_AND_IDLE_COST_DATA_FOR_NODES, accountId,
-        Instant.ofEpochMilli(startDate), Instant.ofEpochMilli(endDate));
+    String query = String.format(GET_UNALLOCATED_AND_IDLE_COST_DATA_FOR_NODES,
+        BillingDataTableNameProvider.getTableName(batchJobType), accountId, Instant.ofEpochMilli(startDate),
+        Instant.ofEpochMilli(endDate));
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(query);
@@ -68,12 +72,14 @@ public class ActualIdleBillingDataServiceImpl {
   }
 
   // For pods/tasks
-  public List<ActualIdleCostData> getActualIdleCostDataForPods(String accountId, long startDate, long endDate) {
+  public List<ActualIdleCostData> getActualIdleCostDataForPods(
+      String accountId, long startDate, long endDate, BatchJobType batchJobType) {
     ResultSet resultSet = null;
     List<ActualIdleCostData> actualIdleCostDataList = new ArrayList<>();
 
-    String query = String.format(GET_UNALLOCATED_AND_IDLE_COST_DATA_FOR_PODS, accountId,
-        Instant.ofEpochMilli(startDate), Instant.ofEpochMilli(endDate));
+    String query = String.format(GET_UNALLOCATED_AND_IDLE_COST_DATA_FOR_PODS,
+        BillingDataTableNameProvider.getTableName(batchJobType), accountId, Instant.ofEpochMilli(startDate),
+        Instant.ofEpochMilli(endDate));
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {
       resultSet = statement.executeQuery(query);

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.batch.processing.billing.timeseries.service.impl.UnallocatedBillingDataServiceImpl;
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.UnallocatedCostData;
 import io.harness.category.element.UnitTests;
@@ -46,7 +47,8 @@ public class UnallocatedBillingDataReaderTest extends WingsBaseTest {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    when(unallocatedBillingDataService.getUnallocatedCostData(ACCOUNT_ID, START_TIME_MILLIS, END_TIME_MILLIS))
+    when(unallocatedBillingDataService.getUnallocatedCostData(
+             ACCOUNT_ID, START_TIME_MILLIS, END_TIME_MILLIS, BatchJobType.UNALLOCATED_BILLING_HOURLY))
         .thenReturn(Collections.singletonList(UnallocatedCostData.builder()
                                                   .clusterId(CLUSTER_ID)
                                                   .instanceType(INSTANCE_TYPE)
@@ -57,6 +59,8 @@ public class UnallocatedBillingDataReaderTest extends WingsBaseTest {
                                                   .endTime(END_TIME_MILLIS)
                                                   .build()));
     when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
+    when(parameters.getString(CCMJobConstants.BATCH_JOB_TYPE))
+        .thenReturn(BatchJobType.UNALLOCATED_BILLING_HOURLY.name());
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
     runOnlyOnce = new AtomicBoolean(false);

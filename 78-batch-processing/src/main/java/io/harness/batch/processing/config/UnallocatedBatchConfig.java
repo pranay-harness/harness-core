@@ -43,6 +43,15 @@ public class UnallocatedBatchConfig {
   }
 
   @Bean
+  @Qualifier(value = "unallocatedHourlyCostJob")
+  public Job unallocatedHourlyCostJob(JobBuilderFactory jobBuilderFactory, Step unallocatedCostCalculationStep) {
+    return jobBuilderFactory.get(BatchJobType.UNALLOCATED_BILLING_HOURLY.name())
+        .incrementer(new RunIdIncrementer())
+        .start(unallocatedCostCalculationStep)
+        .build();
+  }
+
+  @Bean
   public Step unallocatedCostCalculationStep(StepBuilderFactory stepBuilderFactory) {
     return stepBuilderFactory.get("unallocatedCostCalculationStep")
         .<List<UnallocatedCostData>, List<UnallocatedCostData>>chunk(BATCH_SIZE)

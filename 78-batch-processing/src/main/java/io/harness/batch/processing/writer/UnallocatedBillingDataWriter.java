@@ -12,11 +12,16 @@ import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData.InstanceBillingDataBuilder;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.UnallocatedBillingDataServiceImpl;
+import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterCostData;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.UnallocatedCostData;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -32,8 +37,17 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
   @Autowired private UnallocatedBillingDataServiceImpl unallocatedBillingDataService;
   private static final String UNALLOCATED_INSTANCE_ID = "unallocated_instance_id_";
 
+  private JobParameters parameters;
+
+  @BeforeStep
+  public void beforeStep(final StepExecution stepExecution) {
+    parameters = stepExecution.getJobExecution().getJobParameters();
+  }
+
   @Override
   public void write(List<? extends List<UnallocatedCostData>> lists) {
+    BatchJobType batchJobType =
+        CCMJobConstants.getBatchJobTypeFromJobParams(parameters, CCMJobConstants.BATCH_JOB_TYPE);
     Map<String, ClusterCostData> unallocatedCostMap = new HashMap<>();
     lists.forEach(list -> {
       list.forEach(dataPoint -> {
@@ -85,8 +99,8 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
         }
       });
       unallocatedCostMap.forEach((clusterId, clusterCostData) -> {
-        ClusterCostData commonFields = unallocatedBillingDataService.getCommonFields(
-            clusterCostData.getAccountId(), clusterId, clusterCostData.getStartTime(), clusterCostData.getEndTime());
+        ClusterCostData commonFields = unallocatedBillingDataService.getCommonFields(clusterCostData.getAccountId(),
+            clusterId, clusterCostData.getStartTime(), clusterCostData.getEndTime(), batchJobType);
         BigDecimal billingAmount = BigDecimal.valueOf(
             clusterCostData.getTotalCost() - clusterCostData.getUtilizedCost() - clusterCostData.getTotalSystemCost());
         BigDecimal cpuBillingAmount = BigDecimal.valueOf(clusterCostData.getCpuTotalCost()
@@ -153,7 +167,7 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
             throw new IllegalStateException("Unexpected value: " + commonFields.getCloudProvider());
         }
 
-        billingDataService.create(instanceBillingDataBuilder.build());
+        billingDataService.create(instanceBillingDataBuilder.build(), batchJobType);
       });
     });
   }

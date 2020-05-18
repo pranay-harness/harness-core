@@ -6,6 +6,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.common.collect.ImmutableSet;
 
+import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.logging.AutoLogContext;
@@ -31,6 +32,7 @@ public class EventJobScheduler {
   @Autowired private BatchJobRunner batchJobRunner;
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
+  @Autowired private BillingDataServiceImpl billingDataService;
 
   @PostConstruct
   public void orderJobs() {
@@ -49,6 +51,12 @@ public class EventJobScheduler {
       k8sUtilizationGranularDataService.purgeOldKubernetesUtilData();
     } catch (Exception ex) {
       logger.error("Exception while running runTimescalePurgeJob {}", ex);
+    }
+
+    try {
+      billingDataService.purgeOldHourlyBillingData();
+    } catch (Exception ex) {
+      logger.error("Exception while running purgeOldHourlyBillingData Job {}", ex);
     }
   }
 

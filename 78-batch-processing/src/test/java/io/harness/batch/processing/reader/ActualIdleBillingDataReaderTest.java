@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import io.harness.batch.processing.billing.timeseries.service.impl.ActualIdleBillingDataServiceImpl;
 import io.harness.batch.processing.ccm.ActualIdleCostBatchJobData;
 import io.harness.batch.processing.ccm.ActualIdleCostData;
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -55,11 +56,15 @@ public class ActualIdleBillingDataReaderTest extends WingsBaseTest {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    when(actualIdleBillingDataService.getActualIdleCostDataForNodes(ACCOUNT_ID, START_TIME_MILLIS, END_TIME_MILLIS))
+    when(actualIdleBillingDataService.getActualIdleCostDataForNodes(
+             ACCOUNT_ID, START_TIME_MILLIS, END_TIME_MILLIS, BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY))
         .thenReturn(Collections.singletonList(mockActualIdleCostData(INSTANCE_ID, "PARENT_INSTANCE_ID")));
-    when(actualIdleBillingDataService.getActualIdleCostDataForPods(ACCOUNT_ID, START_TIME_MILLIS, END_TIME_MILLIS))
+    when(actualIdleBillingDataService.getActualIdleCostDataForPods(
+             ACCOUNT_ID, START_TIME_MILLIS, END_TIME_MILLIS, BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY))
         .thenReturn(Collections.singletonList(mockActualIdleCostData(null, INSTANCE_ID)));
     when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
+    when(parameters.getString(CCMJobConstants.BATCH_JOB_TYPE))
+        .thenReturn(BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY.name());
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
     runOnlyOnce = new AtomicBoolean(false);

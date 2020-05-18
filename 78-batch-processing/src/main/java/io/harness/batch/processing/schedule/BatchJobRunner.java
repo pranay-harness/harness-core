@@ -66,6 +66,7 @@ public class BatchJobRunner {
                 .addString(CCMJobConstants.ACCOUNT_ID, accountId)
                 .addString(CCMJobConstants.JOB_START_DATE, String.valueOf(startInstant.toEpochMilli()))
                 .addString(CCMJobConstants.JOB_END_DATE, String.valueOf(endInstant.toEpochMilli()))
+                .addString(CCMJobConstants.BATCH_JOB_TYPE, batchJobType.name())
                 .toJobParameters();
         Instant jobStartTime = Instant.now();
         BatchStatus status = jobLauncher.run(job, params).getStatus();
