@@ -38,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFileConfig;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.ci.pod.ContainerParams;
 import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.cik8handler.SecretSpecBuilder;
@@ -56,8 +55,9 @@ import java.util.Map;
 @Slf4j
 public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
   private static final List<String> CONTAINER_BASH_EXEC_CMD = Arrays.asList("/bin/sh", "-c", "--");
-  private static final Boolean GIT_CLONE_CONTAINER_READ_ONLY_ROOT_FS = Boolean.TRUE;
   private static final Boolean GIT_CLONE_CONTAINER_PRIVILEGE = Boolean.FALSE;
+  private static final String GIT_REPO_HTTP_PREFIX = "http";
+  private static final String GIT_REPO_SSH_PREFIX = "git";
 
   private static final String BASIC_AUTH_CONTAINER_ARG_FORMAT =
       "git clone -b %s --single-branch -- https://$(%s):$(%s)@%s %s/%s";
@@ -145,10 +145,8 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
       volumes.add(ciVolumeResponse.getVolume());
     }
 
-    SecurityContext securityContext = new SecurityContextBuilder()
-                                          .withReadOnlyRootFilesystem(GIT_CLONE_CONTAINER_READ_ONLY_ROOT_FS)
-                                          .withPrivileged(GIT_CLONE_CONTAINER_PRIVILEGE)
-                                          .build();
+    SecurityContext securityContext =
+        new SecurityContextBuilder().withPrivileged(GIT_CLONE_CONTAINER_PRIVILEGE).build();
     containerBuilder.withSecurityContext(securityContext);
 
     containerSpecBuilderResponse.setContainerBuilder(containerBuilder);
@@ -161,7 +159,7 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
   private ArrayList<EnvVar> getEnvVars(GitConfig gitConfig, String gitSecret) {
     ArrayList<EnvVar> envVars = new ArrayList<>();
 
-    if (gitConfig.getAuthenticationScheme() == HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD) {
+    if (gitConfig.getRepoUrl().toLowerCase().startsWith(GIT_REPO_HTTP_PREFIX)) {
       EnvVarSource userNameSource = new EnvVarSourceBuilder()
                                         .withSecretKeyRef(new SecretKeySelectorBuilder()
                                                               .withName(gitSecret)
@@ -190,17 +188,17 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
     String volMountPath = CIGitConstants.STEP_EXEC_VOLUME_MOUNT_PATH;
     List<String> containerArgs = new ArrayList<>();
     String containerArg;
-    if (gitConfig.getAuthenticationScheme() == HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD) {
+    if (gitConfig.getRepoUrl().toLowerCase().startsWith(GIT_REPO_HTTP_PREFIX)) {
       String gitUrl = gitConfig.getRepoUrl().substring(gitConfig.getRepoUrl().indexOf("://") + 3);
       containerArg = String.format(BASIC_AUTH_CONTAINER_ARG_FORMAT, branchName, GIT_USERNAME_ENV_VAR, GIT_PASS_ENV_VAR,
           gitUrl, volMountPath, workingDir);
-    } else if (gitConfig.getAuthenticationScheme() == HostConnectionAttributes.AuthenticationScheme.SSH_KEY) {
+    } else if (gitConfig.getRepoUrl().toLowerCase().startsWith(GIT_REPO_SSH_PREFIX)) {
       String sshKeyPath = String.format("%s/%s", GIT_SSH_VOL_MOUNT_PATH, SecretSpecBuilder.GIT_SECRET_SSH_KEY);
       containerArg = String.format(
           SSH_CONTAINER_ARG_FORMAT, sshKeyPath, branchName, gitConfig.getRepoUrl(), volMountPath, workingDir);
     } else {
-      String errMsg =
-          String.format("Invalid GIT authentication scheme %s", gitConfig.getAuthenticationScheme().toString());
+      String errMsg = String.format("Invalid GIT authentication scheme %s for repo %s",
+          gitConfig.getAuthenticationScheme(), gitConfig.getRepoUrl());
       logger.error(errMsg);
       throw new InvalidArgumentsException(errMsg, WingsException.USER);
     }
@@ -217,7 +215,7 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
    * SSH key required to clone a git repository.
    */
   private CIVolumeResponse getGitSecretVolume(GitConfig gitConfig, String gitSecret) {
-    if (gitConfig.getAuthenticationScheme() == HostConnectionAttributes.AuthenticationScheme.SSH_KEY) {
+    if (gitConfig.getRepoUrl().toLowerCase().startsWith(GIT_REPO_SSH_PREFIX)) {
       VolumeMount volumeMount =
           new VolumeMountBuilder().withName(GIT_SSH_VOL_NAME).withMountPath(GIT_SSH_VOL_MOUNT_PATH).build();
       Volume volume = new VolumeBuilder()

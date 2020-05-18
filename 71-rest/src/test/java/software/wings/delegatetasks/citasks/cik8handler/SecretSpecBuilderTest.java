@@ -5,10 +5,14 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
+import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 
 import io.fabric8.kubernetes.api.model.Secret;
 import io.harness.category.element.UnitTests;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Test;
@@ -16,10 +20,13 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.container.ImageDetails;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.settings.SettingValue;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -39,6 +46,41 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
   private static final String password = "pwd";
   private static final String gitRepoUrl = "https://github.com/wings-software/portal.git";
   private static final String gitSecretName = "hs-wings-software-portal-hs";
+  private static final String sshSettingId = "setting-id";
+
+  private GitConfig getGitConfigWithSshKeys() {
+    HostConnectionAttributes hostConnectionAttributes =
+        aHostConnectionAttributes()
+            .withAccessType(KEY)
+            .withAccountId(UUIDGenerator.generateUuid())
+            .withConnectionType(HostConnectionAttributes.ConnectionType.SSH)
+            .withKey("Test Private Key".toCharArray())
+            .build();
+    SettingAttribute attr = SettingAttribute.Builder.aSettingAttribute().withValue(hostConnectionAttributes).build();
+    return GitConfig.builder()
+        .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
+        .sshSettingId(sshSettingId)
+        .sshSettingAttribute(attr)
+        .repoUrl(gitRepoUrl)
+        .build();
+  }
+  private GitConfig getGitConfigWithSshKeysInvalidArg() {
+    HostConnectionAttributes hostConnectionAttributes =
+        aHostConnectionAttributes()
+            .withAccessType(KEY)
+            .withAccountId(UUIDGenerator.generateUuid())
+            .withConnectionType(HostConnectionAttributes.ConnectionType.SSH)
+            .withKey("Test Private Key".toCharArray())
+            .build();
+    SettingValue value = AwsConfig.builder().build();
+    SettingAttribute attr = SettingAttribute.Builder.aSettingAttribute().withValue(value).build();
+    return GitConfig.builder()
+        .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
+        .sshSettingId(sshSettingId)
+        .sshSettingAttribute(attr)
+        .repoUrl(gitRepoUrl)
+        .build();
+  }
 
   @Test
   @Owner(developers = SHUBHAM)
@@ -90,7 +132,7 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void getGitSecretSpecWithInvalidAuthSchme() throws UnsupportedEncodingException {
     GitConfig gitConfig =
-        GitConfig.builder().authenticationScheme(HostConnectionAttributes.AuthenticationScheme.SSH_KEY).build();
+        GitConfig.builder().authenticationScheme(HostConnectionAttributes.AuthenticationScheme.KERBEROS).build();
     List<EncryptedDataDetail> gitEncryptedDataDetails = new ArrayList<>();
 
     secretSpecBuilder.getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace);
@@ -113,5 +155,33 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
     Secret secret = secretSpecBuilder.getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace);
     assertEquals(gitSecretName, secret.getMetadata().getName());
     assertEquals(namespace, secret.getMetadata().getNamespace());
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void getGitSecretSpecWithSshKeys() throws UnsupportedEncodingException {
+    GitConfig gitConfig = getGitConfigWithSshKeys();
+    List<EncryptedDataDetail> gitEncryptedDataDetails = mock(List.class);
+
+    when(encryptionService.decrypt(gitConfig, gitEncryptedDataDetails)).thenReturn(null);
+    gitConfig.setPassword(password.toCharArray());
+
+    Secret secret = secretSpecBuilder.getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace);
+    assertEquals(gitSecretName, secret.getMetadata().getName());
+    assertEquals(namespace, secret.getMetadata().getNamespace());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void getGitSecretSpecWithInvalidArgument() throws UnsupportedEncodingException {
+    GitConfig gitConfig = getGitConfigWithSshKeysInvalidArg();
+    List<EncryptedDataDetail> gitEncryptedDataDetails = mock(List.class);
+
+    when(encryptionService.decrypt(gitConfig, gitEncryptedDataDetails)).thenReturn(null);
+    gitConfig.setPassword(password.toCharArray());
+
+    secretSpecBuilder.getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace);
   }
 }
