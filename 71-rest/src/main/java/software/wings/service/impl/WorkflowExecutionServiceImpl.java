@@ -3173,6 +3173,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     List<Artifact> artifacts = new ArrayList<>();
     allStateExecutionInstances.forEach(stateExecutionInstance -> {
+      if (!(stateExecutionInstance.fetchStateExecutionData() instanceof ArtifactCollectionExecutionData)) {
+        return;
+      }
+
       ArtifactCollectionExecutionData artifactCollectionExecutionData =
           (ArtifactCollectionExecutionData) stateExecutionInstance.fetchStateExecutionData();
       artifacts.add(artifactService.get(artifactCollectionExecutionData.getArtifactId()));
