@@ -1,5 +1,7 @@
 syntax = "proto3";
+
 package io.harness.perpetualtask.artifact;
+
 option java_multiple_files = true;
 
 message ArtifactCollectionTaskParams {

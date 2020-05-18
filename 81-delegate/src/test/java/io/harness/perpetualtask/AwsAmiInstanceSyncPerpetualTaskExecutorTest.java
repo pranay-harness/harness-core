@@ -19,7 +19,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.managerclient.ManagerClient;
-import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskParamsOuterClass.AwsAmiInstanceSyncPerpetualTaskParams;
+import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskParams;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;

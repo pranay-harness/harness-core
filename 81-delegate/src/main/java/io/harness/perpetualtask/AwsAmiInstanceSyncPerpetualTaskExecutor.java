@@ -8,7 +8,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.ExecutionStatus;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.managerclient.ManagerClient;
-import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskParamsOuterClass.AwsAmiInstanceSyncPerpetualTaskParams;
+import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;

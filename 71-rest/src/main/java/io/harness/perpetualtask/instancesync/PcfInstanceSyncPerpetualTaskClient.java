@@ -21,7 +21,6 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
-import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskParamsOuterClass.PcfInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import lombok.AccessLevel;
