@@ -16,12 +16,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.jira.JiraTask;
 
 public class JiraTaskTest extends WingsBaseTest {
-  @InjectMocks private JiraTask jiraTask = new JiraTask(DELEGATE_ID, delegateTask, null, null);
+  @InjectMocks
+  private JiraTask jiraTask = new JiraTask(
+      DelegateTaskPackage.builder().delegateId(DELEGATE_ID).delegateTask(delegateTask).build(), null, null);
   static DelegateTask delegateTask = DelegateTask.builder()
                                          .uuid("id")
                                          .accountId(ACCOUNT_ID)
