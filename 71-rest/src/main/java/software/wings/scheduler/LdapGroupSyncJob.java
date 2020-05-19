@@ -149,7 +149,7 @@ public class LdapGroupSyncJob implements Job {
       // do nothing. Only one manager should acquire the lock.
     } catch (Exception e) {
       // Catching all exceptions to prevent immediate job retry.
-      logger.warn("Error while trying to sync user group for ldap sso provider", e);
+      logger.error("Error while trying to sync user group for ldap sso provider", e);
     }
   }
 
@@ -240,7 +240,11 @@ public class LdapGroupSyncJob implements Job {
       }
     });
     userService.loadUserGroupsForUsers(new ArrayList<>(usersSet), accountId);
-    usersSet.forEach(user -> emailToUserGroups.get(user.getEmail()).addAll(user.getUserGroups()));
+    usersSet.forEach(user -> {
+      if (emailToUserGroups.containsKey(user.getEmail())) {
+        emailToUserGroups.get(user.getEmail()).addAll(user.getUserGroups());
+      }
+    });
     removedGroups.forEach((userGroup, users) -> users.forEach(user -> {
       emailToUserGroups.computeIfAbsent(user.getEmail(), k -> new HashSet<>(user.getUserGroups()));
       emailToUserGroups.get(user.getEmail()).remove(userGroup);
@@ -369,7 +373,7 @@ public class LdapGroupSyncJob implements Job {
     } catch (Exception ex) {
       ssoSettingService.raiseSyncFailureAlert(accountId, ssoId,
           String.format(LdapConstants.USER_GROUP_SYNC_FAILED, ldapSettings.getDisplayName()) + ex.getMessage());
-      logger.warn("Error while syncing ssoId {} in accountId {}", ssoId, accountId, ex);
+      logger.error("Error while syncing ssoId {} in accountId {}", ssoId, accountId, ex);
     }
   }
 }
