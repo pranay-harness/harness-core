@@ -5,6 +5,7 @@ import static io.harness.eraro.ErrorCode.AWS_ACCESS_DENIED;
 import static io.harness.eraro.ErrorCode.AWS_CLUSTER_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.AWS_SERVICE_NOT_FOUND;
 import static io.harness.exception.WingsException.USER;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -50,8 +51,9 @@ class AwsHelperServiceDelegateBase {
       logger.info("Instantiating EC2ContainerCredentialsProviderWrapper");
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
     } else {
-      credentialsProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(
-          awsConfig.getAccessKey(), awsConfig.getSecretKey() != null ? new String(awsConfig.getSecretKey()) : null));
+      credentialsProvider =
+          new AWSStaticCredentialsProvider(new BasicAWSCredentials(defaultString(awsConfig.getAccessKey(), ""),
+              awsConfig.getSecretKey() != null ? new String(awsConfig.getSecretKey()) : ""));
     }
     if (awsConfig.isAssumeCrossAccountRole() && awsConfig.getCrossAccountAttributes() != null) {
       // For the security token service we default to us-east-1.
