@@ -3,9 +3,10 @@
 CONFIG_FILE=/opt/harness/config.yml
 NEWRELIC_FILE=/opt/harness/newrelic.yml
 
-yq delete -i $CONFIG_FILE server.adminConnectors
 yq delete -i $CONFIG_FILE server.applicationConnectors[0]
 yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
+
+yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
