@@ -75,8 +75,8 @@ public class GcpOrganizationDaoTest extends WingsBaseTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldDelete() {
-    String organizationUuid = gcpOrganizationDao.save(gcpOrganization1);
-    gcpOrganizationDao.delete(organizationUuid);
+    GcpOrganization organization = gcpOrganizationDao.upsert(gcpOrganization1);
+    gcpOrganizationDao.delete(organization.getUuid());
     List<GcpOrganization> gcpOrganizations = gcpOrganizationDao.list(accountId);
     assertThat(gcpOrganizations).hasSize(0);
   }
