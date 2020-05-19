@@ -42,6 +42,7 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
   @Mock private GcpOrganizationDao gcpOrganizationDao;
   @Mock private GcpServiceAccountService gcpServiceAccountService;
   @Mock private SettingsService settingsService;
+  @Mock private CeConnectorDao ceConnectorDao;
   @Mock private CEGcpServiceAccountService ceGcpServiceAccountService;
   @InjectMocks private GcpOrganizationServiceImpl gcpOrganizationService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -75,7 +76,7 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void testGet() {
+  public void shouldGet() {
     gcpOrganizationService.get(gcpOrganizationId1);
     verify(gcpOrganizationDao).get(eq(gcpOrganizationId1));
   }
@@ -86,5 +87,14 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
   public void shouldList() {
     gcpOrganizationService.list(accountId);
     verify(gcpOrganizationDao).list(accountId);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldDelete() {
+    String organizationUuid = "UUID";
+    gcpOrganizationService.delete(accountId, organizationUuid);
+    verify(gcpOrganizationDao).delete(organizationUuid);
   }
 }

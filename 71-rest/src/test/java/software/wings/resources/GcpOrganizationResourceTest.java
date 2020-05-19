@@ -3,6 +3,7 @@ package software.wings.resources;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -23,6 +24,7 @@ import javax.ws.rs.core.MediaType;
 
 public class GcpOrganizationResourceTest {
   private String accountId = "ACCOUNT_ID";
+  private String gcpOrganizationUuid = "GCP_ORGANIZATION_UUID";
   private GcpOrganization gcpOrganization;
 
   private static GcpOrganizationService gcpOrganizationService = mock(GcpOrganizationService.class);
@@ -56,5 +58,16 @@ public class GcpOrganizationResourceTest {
         .request()
         .post(entity(gcpOrganization, MediaType.APPLICATION_JSON), new GenericType<RestResponse<GcpOrganization>>() {});
     verify(gcpOrganizationService).upsert(gcpOrganization);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldDelete() {
+    RESOURCES.client()
+        .target(format("/gcp-organizations/%s/?accountId=%s", gcpOrganizationUuid, accountId))
+        .request()
+        .delete();
+    verify(gcpOrganizationService).delete(eq(accountId), eq(gcpOrganizationUuid));
   }
 }

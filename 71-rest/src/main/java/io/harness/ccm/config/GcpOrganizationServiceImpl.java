@@ -21,12 +21,14 @@ import java.util.List;
 public class GcpOrganizationServiceImpl implements GcpOrganizationService {
   private GcpOrganizationDao gcpOrganizationDao;
   private SettingsService settingsService;
+  private CeConnectorDao ceConnectorDao;
   private CEGcpServiceAccountService ceGcpServiceAccountService;
 
   @Inject
-  public GcpOrganizationServiceImpl(GcpOrganizationDao gcpOrganizationDao, SettingsService settingsService,
-      CEGcpServiceAccountService ceGcpServiceAccountService) {
+  public GcpOrganizationServiceImpl(GcpOrganizationDao gcpOrganizationDao, CeConnectorDao ceConnectorDao,
+      SettingsService settingsService, CEGcpServiceAccountService ceGcpServiceAccountService) {
     this.gcpOrganizationDao = gcpOrganizationDao;
+    this.ceConnectorDao = ceConnectorDao;
     this.settingsService = settingsService;
     this.ceGcpServiceAccountService = ceGcpServiceAccountService;
   }
@@ -43,11 +45,17 @@ public class GcpOrganizationServiceImpl implements GcpOrganizationService {
     checkArgument(
         null != gcpServiceAccount && organization.getServiceAccountEmail().equals(gcpServiceAccount.getEmail()),
         format("The organization %s is missing a valid service account.", organization.getOrganizationName()));
-    if (null
-        == settingsService.getByName(organization.getAccountId(), GLOBAL_APP_ID, organization.getOrganizationName())) {
-      settingsService.save(toSettingAttribute(organization));
+    GcpOrganization upsertedOrganization = gcpOrganizationDao.upsert(organization);
+    SettingAttribute prevCeConnector =
+        ceConnectorDao.getCEGcpConfig(upsertedOrganization.getAccountId(), upsertedOrganization.getUuid());
+    SettingAttribute currCeConnector = toSettingAttribute(upsertedOrganization);
+    if (null == prevCeConnector) {
+      settingsService.save(currCeConnector);
+    } else {
+      currCeConnector.setUuid(prevCeConnector.getUuid());
+      settingsService.update(currCeConnector);
     }
-    return gcpOrganizationDao.upsert(organization);
+    return upsertedOrganization;
   }
 
   private SettingAttribute toSettingAttribute(GcpOrganization organization) {
@@ -72,5 +80,11 @@ public class GcpOrganizationServiceImpl implements GcpOrganizationService {
   @Override
   public List<GcpOrganization> list(String accountId) {
     return gcpOrganizationDao.list(accountId);
+  }
+
+  public boolean delete(String accountId, String uuid) {
+    ceConnectorDao.getCEGcpConfig(accountId, uuid);
+    settingsService.delete(GLOBAL_APP_ID, uuid);
+    return gcpOrganizationDao.delete(uuid);
   }
 }

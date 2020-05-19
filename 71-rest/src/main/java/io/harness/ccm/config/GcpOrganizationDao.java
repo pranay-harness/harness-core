@@ -47,4 +47,8 @@ public class GcpOrganizationDao {
         persistence.createQuery(GcpOrganization.class).field(GcpOrganizationKeys.accountId).equal(accountId);
     return query.asList();
   }
+
+  public boolean delete(String uuid) {
+    return persistence.delete(GcpOrganization.class, uuid);
+  }
 }
