@@ -89,6 +89,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
+import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -781,12 +782,14 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testGetInstanceDetails() {
-    assertThat(k8sStateHelper.getInstanceDetails(null)).isEmpty();
-    assertThat(k8sStateHelper.getInstanceDetails(emptyList())).isEmpty();
+    assertThat(k8sStateHelper.getInstanceDetails(null, false)).isEmpty();
+    assertThat(k8sStateHelper.getInstanceDetails(emptyList(), false)).isEmpty();
 
-    final List<InstanceDetails> instanceDetails =
+    List<InstanceDetails> instanceDetails;
+    instanceDetails =
         k8sStateHelper.getInstanceDetails(asList(K8sPod.builder().name("pod-1").podIP("ip-1").build(),
-            K8sPod.builder().name("pod-2").podIP("ip-2").newPod(true).build()));
+                                              K8sPod.builder().name("pod-2").podIP("ip-2").newPod(true).build()),
+            false);
 
     assertThat(instanceDetails).hasSize(2);
     assertThat(instanceDetails.stream().map(InstanceDetails::getInstanceType).collect(toSet()))
@@ -797,8 +800,49 @@ public class K8sStateHelperTest extends WingsBaseTest {
     assertThat(instanceDetails.stream().map(pod -> pod.getK8s().getIp()).collect(toList()))
         .containsExactlyInAnyOrder("ip-1", "ip-2");
     assertThat(instanceDetails.stream().filter(InstanceDetails::isNewInstance).count()).isEqualTo(1);
+
+    instanceDetails =
+        k8sStateHelper.getInstanceDetails(asList(K8sPod.builder().name("pod-1").podIP("ip-1").build(),
+                                              K8sPod.builder().name("pod-2").podIP("ip-2").newPod(true).build()),
+            true);
+    assertThat(instanceDetails).hasSize(2);
+    assertThat(instanceDetails.stream().map(InstanceDetails::getInstanceType).collect(toSet()))
+        .hasSize(1)
+        .contains(InstanceDetails.InstanceType.K8s);
+    assertThat(instanceDetails.stream().map(pod -> pod.getK8s().getPodName()).collect(toList()))
+        .containsExactlyInAnyOrder("pod-1", "pod-2");
+    assertThat(instanceDetails.stream().map(pod -> pod.getK8s().getIp()).collect(toList()))
+        .containsExactlyInAnyOrder("ip-1", "ip-2");
+    assertThat(instanceDetails.stream().filter(InstanceDetails::isNewInstance).count()).isEqualTo(2);
   }
 
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetInstanceElements() {
+    assertThat(k8sStateHelper.getInstanceElementList(null, false)).isEmpty();
+    assertThat(k8sStateHelper.getInstanceElementList(emptyList(), false)).isEmpty();
+
+    List<InstanceElement> instanceElements;
+    instanceElements =
+        k8sStateHelper.getInstanceElementList(asList(K8sPod.builder().name("pod-1").podIP("ip-1").build(),
+                                                  K8sPod.builder().name("pod-2").podIP("ip-2").newPod(true).build()),
+            false);
+
+    assertThat(instanceElements).hasSize(2);
+    assertThat(instanceElements.stream().map(InstanceElement::getPodName).collect(toList()))
+        .containsExactlyInAnyOrder("pod-1", "pod-2");
+    assertThat(instanceElements.stream().filter(InstanceElement::isNewInstance).count()).isEqualTo(1);
+
+    instanceElements =
+        k8sStateHelper.getInstanceElementList(asList(K8sPod.builder().name("pod-1").podIP("ip-1").build(),
+                                                  K8sPod.builder().name("pod-2").podIP("ip-2").newPod(true).build()),
+            true);
+    assertThat(instanceElements).hasSize(2);
+    assertThat(instanceElements.stream().map(InstanceElement::getPodName).collect(toList()))
+        .containsExactlyInAnyOrder("pod-1", "pod-2");
+    assertThat(instanceElements.stream().filter(InstanceElement::isNewInstance).count()).isEqualTo(2);
+  }
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)

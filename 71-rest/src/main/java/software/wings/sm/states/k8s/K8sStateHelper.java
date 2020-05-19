@@ -684,7 +684,7 @@ public class K8sStateHelper {
   }
 
   public InstanceElementListParam getInstanceElementListParam(List<K8sPod> podDetailsList) {
-    return InstanceElementListParam.builder().instanceElements(getInstanceElementList(podDetailsList)).build();
+    return InstanceElementListParam.builder().instanceElements(getInstanceElementList(podDetailsList, false)).build();
   }
 
   public List<InstanceStatusSummary> getInstanceStatusSummaries(
@@ -760,7 +760,7 @@ public class K8sStateHelper {
         k8sTaskExecutionResponse.getErrorMessage(), k8sTaskExecutionResponse.getCommandExecutionStatus()));
   }
 
-  List<InstanceElement> getInstanceElementList(List<K8sPod> podList) {
+  List<InstanceElement> getInstanceElementList(List<K8sPod> podList, boolean treatAllPodsAsNew) {
     if (isEmpty(podList)) {
       return Collections.emptyList();
     }
@@ -773,7 +773,7 @@ public class K8sStateHelper {
               .hostName(podDetails.getName())
               .displayName(podDetails.getName())
               .podName(podDetails.getName())
-              .newInstance(podDetails.isNewPod())
+              .newInstance(treatAllPodsAsNew || podDetails.isNewPod())
               .build();
         })
         .collect(Collectors.toList());
@@ -1007,14 +1007,14 @@ public class K8sStateHelper {
   }
 
   @Nonnull
-  List<InstanceDetails> getInstanceDetails(@Nullable List<K8sPod> pods) {
+  List<InstanceDetails> getInstanceDetails(@Nullable List<K8sPod> pods, boolean treatAllPodsAsNew) {
     return emptyIfNull(pods)
         .stream()
         .map(pod
             -> InstanceDetails.builder()
                    .instanceType(InstanceType.K8s)
                    .hostName(pod.getName())
-                   .newInstance(pod.isNewPod())
+                   .newInstance(treatAllPodsAsNew || pod.isNewPod())
                    .k8s(K8s.builder().podName(pod.getName()).ip(pod.getPodIP()).build())
                    .build())
         .collect(Collectors.toList());
