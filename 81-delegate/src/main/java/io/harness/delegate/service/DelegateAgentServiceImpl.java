@@ -406,6 +406,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .delegateProfileId(delegateProfile)
                                           .description(description)
                                           .version(getVersion())
+                                          .status(Status.ENABLED.name())
                                           .delegateType(DELEGATE_TYPE)
                                           .sampleDelegate(isSample);
 
