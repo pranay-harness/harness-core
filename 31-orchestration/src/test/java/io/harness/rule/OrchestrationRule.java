@@ -1,5 +1,6 @@
 package io.harness.rule;
 
+import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static io.harness.waiter.TestNotifyEventListener.TEST_PUBLISHER;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -14,6 +15,7 @@ import com.google.inject.TypeLiteral;
 
 import io.harness.OrchestrationModule;
 import io.harness.config.PublisherConfiguration;
+import io.harness.delay.DelayEventListener;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -32,8 +34,11 @@ import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionInfoManager;
 import io.harness.version.VersionModule;
+import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
+import io.harness.waiter.NotifyResponseCleaner;
+import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.TestNotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
@@ -43,7 +48,9 @@ import org.junit.runners.model.Statement;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
@@ -114,12 +121,20 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
 
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(TestNotifyEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
 
     final QueuePublisher<NotifyEvent> publisher =
         injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
-    notifyQueuePublisherRegister.register(TEST_PUBLISHER, payload -> publisher.send(asList(TEST_PUBLISHER), payload));
+    notifyQueuePublisherRegister.register(
+        TEST_PUBLISHER, payload -> publisher.send(Collections.singletonList(TEST_PUBLISHER), payload));
+    notifyQueuePublisherRegister.register(
+        ORCHESTRATION, payload -> publisher.send(Collections.singletonList(ORCHESTRATION), payload));
+
+    injector.getInstance(NotifierScheduledExecutorService.class)
+        .scheduleWithFixedDelay(injector.getInstance(NotifyResponseCleaner.class), 0L, 1000L, TimeUnit.MILLISECONDS);
   }
 
   @Override
