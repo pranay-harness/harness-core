@@ -50,13 +50,21 @@ public class AzureArtifactsCollectionTaskTest extends CategoryTest {
   @InjectMocks
   private AzureArtifactsCollectionTask mavenCollectionTask =
       (AzureArtifactsCollectionTask) TaskType.AZURE_ARTIFACTS_COLLECTION.getDelegateRunnableTask(
-          DelegateTaskPackage.builder().delegateId(DELEGATE_ID1).delegateTask(mavenDelegateTask).build(),
+          DelegateTaskPackage.builder()
+              .accountId(ACCOUNT_ID)
+              .delegateId(DELEGATE_ID1)
+              .delegateTask(mavenDelegateTask)
+              .build(),
           notifyResponseData -> {}, () -> true);
 
   @InjectMocks
   private AzureArtifactsCollectionTask nugetCollectionTask =
       (AzureArtifactsCollectionTask) TaskType.AZURE_ARTIFACTS_COLLECTION.getDelegateRunnableTask(
-          DelegateTaskPackage.builder().delegateId(DELEGATE_ID2).delegateTask(nugetDelegateTask).build(),
+          DelegateTaskPackage.builder()
+              .accountId(ACCOUNT_ID)
+              .delegateId(DELEGATE_ID2)
+              .delegateTask(nugetDelegateTask)
+              .build(),
           notifyResponseData -> {}, () -> true);
 
   @Test

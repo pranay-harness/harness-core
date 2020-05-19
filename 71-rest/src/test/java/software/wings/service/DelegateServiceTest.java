@@ -1082,7 +1082,12 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
-    assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isNotNull();
+    DelegateTaskPackage delegateTaskPackage =
+        delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid());
+    assertThat(delegateTaskPackage).isNotNull();
+    assertThat(delegateTaskPackage.getDelegateTaskId()).isEqualTo(delegateTask.getUuid());
+    assertThat(delegateTaskPackage.getDelegateId()).isEqualTo(DELEGATE_ID);
+    assertThat(delegateTaskPackage.getAccountId()).isEqualTo(ACCOUNT_ID);
   }
 
   @Cache

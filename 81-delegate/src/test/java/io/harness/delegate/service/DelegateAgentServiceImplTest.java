@@ -57,9 +57,11 @@ public class DelegateAgentServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldNotApplyFunctorIfNoSecrets() {
     String delegateTaskId = UUIDGenerator.generateUuid();
+    String accountId = UUIDGenerator.generateUuid();
 
     DelegateTaskPackage delegateTaskPackage =
         DelegateTaskPackage.builder()
+            .accountId(accountId)
             .delegateTaskId(delegateTaskId)
             .delegateTask(DelegateTask.builder()
                               .uuid(delegateTaskId)
@@ -76,6 +78,7 @@ public class DelegateAgentServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldApplyFunctorForSecrets() {
     String delegateTaskId = UUIDGenerator.generateUuid();
+    String accountId = UUIDGenerator.generateUuid();
 
     Map<String, EncryptionConfig> encryptionConfigMap = new HashMap<>();
     KmsConfig kmsConfig = KmsConfig.builder().build();
@@ -92,6 +95,7 @@ public class DelegateAgentServiceImplTest extends CategoryTest {
 
     DelegateTaskPackage delegateTaskPackage =
         DelegateTaskPackage.builder()
+            .accountId(accountId)
             .delegateTaskId(delegateTaskId)
             .delegateTask(DelegateTask.builder()
                               .uuid(delegateTaskId)

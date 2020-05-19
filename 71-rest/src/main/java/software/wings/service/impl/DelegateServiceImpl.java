@@ -2229,6 +2229,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               delegateTask.getData().getExpressionFunctorToken());
 
       DelegateTaskPackageBuilder delegateTaskPackageBuilder = DelegateTaskPackage.builder()
+                                                                  .accountId(delegateTask.getAccountId())
                                                                   .delegateId(delegateTask.getDelegateId())
                                                                   .delegateTaskId(delegateTask.getUuid())
                                                                   .delegateTask(delegateTask);
@@ -2284,6 +2285,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
             CapabilityHelper.fetchEncryptionDetailsListFromParameters(delegateTask.getData());
 
         return DelegateTaskPackage.builder()
+            .accountId(delegateTask.getAccountId())
             .delegateId(delegateTask.getDelegateId())
             .delegateTaskId(delegateTask.getUuid())
             .delegateTask(delegateTask)
