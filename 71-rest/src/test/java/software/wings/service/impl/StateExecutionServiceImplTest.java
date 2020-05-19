@@ -1,43 +1,57 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
+import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
+import com.google.inject.Inject;
+
+import io.harness.beans.ExecutionStatus;
+import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder;
 import software.wings.api.SelectNodeStepExecutionSummary;
 import software.wings.beans.ServiceInstance;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.sm.ExecutionInterruptEffect;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.Builder;
 import software.wings.sm.StateType;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class StateExecutionServiceImplTest extends WingsBaseTest {
   private static final String RANDOM = "RANDOM";
@@ -45,14 +59,16 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AppService appService;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Inject private WingsPersistence wingsPersistence;
 
-  private StateExecutionServiceImpl stateExecutionService = spy(new StateExecutionServiceImpl());
+  @InjectMocks private StateExecutionServiceImpl stateExecutionService = spy(new StateExecutionServiceImpl());
 
   @Before
   public void setUp() throws Exception {
     Reflect.on(stateExecutionService).set("featureFlagService", featureFlagService);
     Reflect.on(stateExecutionService).set("appService", appService);
     Reflect.on(stateExecutionService).set("sweepingOutputService", sweepingOutputService);
+    Reflect.on(stateExecutionService).set("wingsPersistence", wingsPersistence);
   }
 
   @Test
@@ -253,5 +269,83 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     PhaseExecutionSummary savedPhaseExecutionSummary =
         stateExecutionService.fetchPhaseExecutionSummarySweepingOutput(stateExecutionInstance);
     assertThat(savedPhaseExecutionSummary).isEqualTo(phaseExecutionSummary);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldNotFetchExecutionStatesMap() {
+    Map<String, StateExecutionInstance> executionStateMap =
+        stateExecutionService.executionStatesMap(generateUuid(), generateUuid());
+    assertThat(executionStateMap).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldFetchExecutionStatesMap() {
+    StateExecutionInstance stateExecutionInstance = createStateExecutionInstance();
+    wingsPersistence.save(stateExecutionInstance);
+    Map<String, StateExecutionInstance> executionStateMap = stateExecutionService.executionStatesMap(
+        stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid());
+    assertThat(executionStateMap).isNotEmpty();
+
+    StateExecutionInstance dbStateExecutionInstance = executionStateMap.get(stateExecutionInstance.getUuid());
+    assertThat(dbStateExecutionInstance).isNotNull();
+    assertThat(dbStateExecutionInstance.getContextElement()).isEqualTo(stateExecutionInstance.getContextElement());
+    assertThat(dbStateExecutionInstance.isContextTransition()).isEqualTo(stateExecutionInstance.isContextTransition());
+    assertThat(dbStateExecutionInstance.getDedicatedInterruptCount())
+        .isEqualTo(stateExecutionInstance.getDedicatedInterruptCount());
+    assertThat(dbStateExecutionInstance.getDisplayName()).isEqualTo(stateExecutionInstance.getDisplayName());
+    assertThat(dbStateExecutionInstance.getExecutionType()).isEqualTo(stateExecutionInstance.getExecutionType());
+    assertThat(dbStateExecutionInstance.getExecutionType()).isEqualTo(stateExecutionInstance.getExecutionType());
+    assertThat(dbStateExecutionInstance.getUuid()).isEqualTo(stateExecutionInstance.getUuid());
+    assertThat(dbStateExecutionInstance.getInterruptHistory()).isEqualTo(stateExecutionInstance.getInterruptHistory());
+    assertThat(dbStateExecutionInstance.getLastUpdatedAt()).isEqualTo(stateExecutionInstance.getLastUpdatedAt());
+    assertThat(dbStateExecutionInstance.getParentInstanceId()).isEqualTo(stateExecutionInstance.getParentInstanceId());
+    assertThat(dbStateExecutionInstance.getPrevInstanceId()).isEqualTo(stateExecutionInstance.getPrevInstanceId());
+    assertThat(dbStateExecutionInstance.getStateExecutionDataHistory().get(0).getStateName())
+        .isEqualTo(stateExecutionInstance.getStateExecutionDataHistory().get(0).getStateName());
+    assertThat(dbStateExecutionInstance.getStateExecutionMap().size()).isEqualTo(0);
+    assertThat(dbStateExecutionInstance.getStateName()).isEqualTo(stateExecutionInstance.getStateName());
+    assertThat(dbStateExecutionInstance.getStateType()).isEqualTo(stateExecutionInstance.getStateType());
+    assertThat(dbStateExecutionInstance.getStatus()).isEqualTo(stateExecutionInstance.getStatus());
+    assertThat(dbStateExecutionInstance.getStatus()).isEqualTo(stateExecutionInstance.getStatus());
+    assertThat(dbStateExecutionInstance.isHasInspection()).isEqualTo(stateExecutionInstance.isHasInspection());
+    assertThat(dbStateExecutionInstance.getAppId()).isEqualTo(stateExecutionInstance.getAppId());
+    assertThat(dbStateExecutionInstance.getDelegateTaskId()).isEqualTo(stateExecutionInstance.getDelegateTaskId());
+  }
+
+  private StateExecutionInstance createStateExecutionInstance() {
+    StateExecutionData stateExecutionData =
+        StateExecutionDataBuilder.aStateExecutionData().withStateName("stateName").build();
+    Map<String, StateExecutionData> stateExecutionDataMap = new HashMap<>();
+    stateExecutionDataMap.put(stateExecutionData.getStateName(), stateExecutionData);
+
+    StateExecutionInstance stateExecutionInstance =
+        StateExecutionInstance.Builder.aStateExecutionInstance()
+            .executionUuid(generateUuid())
+            .contextElement(InstanceElement.Builder.anInstanceElement().build())
+            .contextTransition(false)
+            .displayName("displayName")
+            .executionType(WorkflowType.ORCHESTRATION)
+            .uuid(generateUuid())
+            .lastUpdatedAt(System.currentTimeMillis())
+            .parentInstanceId(generateUuid())
+            .prevInstanceId(generateUuid())
+            .stateExecutionDataHistory(Arrays.asList(stateExecutionData))
+            .stateExecutionMap(stateExecutionDataMap)
+            .stateName("stateName")
+            .stateType("stateType")
+            .status(ExecutionStatus.SUCCESS)
+            .appId("appId")
+            .build();
+
+    stateExecutionInstance.setDedicatedInterruptCount(1);
+    stateExecutionInstance.setInterruptHistory(Arrays.asList(ExecutionInterruptEffect.builder().build()));
+    stateExecutionInstance.setHasInspection(false);
+    stateExecutionInstance.setDelegateTaskId(generateUuid());
+
+    return stateExecutionInstance;
   }
 }

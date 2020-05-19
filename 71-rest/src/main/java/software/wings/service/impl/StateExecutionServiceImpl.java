@@ -78,6 +78,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
                                  .project(StateExecutionInstanceKeys.status, true)
                                  .project(StateExecutionInstanceKeys.hasInspection, true)
                                  .project(StateExecutionInstanceKeys.appId, true)
+                                 .project(StateExecutionInstanceKeys.delegateTaskId, true)
                                  .fetch())) {
       for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
         stateExecutionInstance.getStateExecutionMap().entrySet().removeIf(
