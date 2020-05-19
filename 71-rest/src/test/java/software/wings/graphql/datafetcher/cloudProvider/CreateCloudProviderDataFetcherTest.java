@@ -27,7 +27,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLCreateCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLCreateCloudProviderPayload;
 import software.wings.graphql.schema.mutation.cloudProvider.QLGcpCloudProviderInput;
@@ -57,8 +56,11 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
   private static final String ACCOUNT_ID = "ACCOUNT-ID";
 
   @Mock private SettingsService settingsService;
-  @Mock private UsageScopeController usageScopeController;
   @Mock private SettingServiceHelper settingServiceHelper;
+  @Mock private PcfDataFetcherHelper pcfDataFetcherHelper;
+  @Mock private SpotInstDataFetcherHelper spotInstDataFetcherHelper;
+  @Mock private GcpDataFetcherHelper gcpDataFetcherHelper;
+  @Mock private K8sDataFetcherHelper k8sDataFetcherHelper;
 
   @InjectMocks private CreateCloudProviderDataFetcher dataFetcher = new CreateCloudProviderDataFetcher();
 
@@ -75,6 +77,10 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                    .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
                                    .withValue(PcfConfig.builder().accountId(ACCOUNT_ID).build())
                                    .build();
+
+    doReturn(setting)
+        .when(pcfDataFetcherHelper)
+        .toSettingAttribute(isA(QLPcfCloudProviderInput.class), isA(String.class));
 
     doReturn(setting)
         .when(settingsService)
@@ -117,6 +123,10 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                    .build();
 
     doReturn(setting)
+        .when(spotInstDataFetcherHelper)
+        .toSettingAttribute(isA(QLSpotInstCloudProviderInput.class), isA(String.class));
+
+    doReturn(setting)
         .when(settingsService)
         .saveWithPruning(isA(SettingAttribute.class), isA(String.class), isA(String.class));
 
@@ -155,6 +165,10 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                    .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
                                    .withValue(GcpConfig.builder().accountId(ACCOUNT_ID).build())
                                    .build();
+
+    doReturn(setting)
+        .when(gcpDataFetcherHelper)
+        .toSettingAttribute(isA(QLGcpCloudProviderInput.class), isA(String.class));
 
     doReturn(setting)
         .when(settingsService)
@@ -196,6 +210,10 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                    .build();
 
     doReturn(setting)
+        .when(k8sDataFetcherHelper)
+        .toSettingAttribute(isA(QLK8sCloudProviderInput.class), isA(String.class));
+
+    doReturn(setting)
         .when(settingsService)
         .saveWithPruning(isA(SettingAttribute.class), isA(String.class), isA(String.class));
 
@@ -228,7 +246,7 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
     assertThat(payload.getCloudProvider().getId()).isEqualTo(CLOUD_PROVIDER_ID);
   }
 
-  private QLUsageScope usageScope() {
+  public static QLUsageScope usageScope() {
     return QLUsageScope.builder()
         .appEnvScopes(Sets.newHashSet(
             QLAppEnvScope.builder()

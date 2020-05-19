@@ -8,8 +8,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-
-import com.google.common.collect.Sets;
+import static software.wings.graphql.datafetcher.cloudProvider.CreateCloudProviderDataFetcherTest.usageScope;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -28,7 +27,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLGcpCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLPcfCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLSpotInstCloudProviderInput;
@@ -37,17 +35,11 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProvide
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLInheritClusterDetails;
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLK8sCloudProviderInput;
 import software.wings.graphql.schema.type.QLCloudProviderType;
-import software.wings.graphql.schema.type.QLEnvFilterType;
-import software.wings.graphql.schema.type.QLGenericFilterType;
 import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLSpotInstCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.k8s.QLClusterDetailsType;
-import software.wings.graphql.schema.type.secrets.QLAppEnvScope;
-import software.wings.graphql.schema.type.secrets.QLAppScopeFilter;
-import software.wings.graphql.schema.type.secrets.QLEnvScopeFilter;
-import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
 
@@ -58,8 +50,11 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
   private static final String ACCOUNT_ID = "ACCOUNT-ID";
 
   @Mock private SettingsService settingsService;
-  @Mock private UsageScopeController usageScopeController;
   @Mock private SettingServiceHelper settingServiceHelper;
+  @Mock private PcfDataFetcherHelper pcfDataFetcherHelper;
+  @Mock private SpotInstDataFetcherHelper spotInstDataFetcherHelper;
+  @Mock private GcpDataFetcherHelper gcpDataFetcherHelper;
+  @Mock private K8sDataFetcherHelper k8sDataFetcherHelper;
 
   @InjectMocks private UpdateCloudProviderDataFetcher dataFetcher = new UpdateCloudProviderDataFetcher();
 
@@ -78,6 +73,10 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                    .build();
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CLOUD_PROVIDER_ID);
+
+    doNothing()
+        .when(pcfDataFetcherHelper)
+        .updateSettingAttribute(isA(SettingAttribute.class), isA(QLPcfCloudProviderInput.class), isA(String.class));
 
     doReturn(SettingAttribute.Builder.aSettingAttribute()
                  .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
@@ -251,16 +250,6 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
     assertThat(payload.getCloudProvider()).isNotNull();
     assertThat(payload.getCloudProvider()).isInstanceOf(QLKubernetesClusterCloudProvider.class);
     assertThat(payload.getCloudProvider().getId()).isEqualTo(CLOUD_PROVIDER_ID);
-  }
-
-  private QLUsageScope usageScope() {
-    return QLUsageScope.builder()
-        .appEnvScopes(Sets.newHashSet(
-            QLAppEnvScope.builder()
-                .application(QLAppScopeFilter.builder().filterType(QLGenericFilterType.ALL).build())
-                .environment(QLEnvScopeFilter.builder().filterType(QLEnvFilterType.PRODUCTION_ENVIRONMENTS).build())
-                .build()))
-        .build();
   }
 
   @Test(expected = InvalidRequestException.class)
