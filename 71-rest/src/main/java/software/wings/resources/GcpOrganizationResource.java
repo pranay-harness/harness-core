@@ -8,9 +8,12 @@ import io.harness.ccm.config.GcpOrganization;
 import io.harness.ccm.config.GcpOrganizationService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import org.hibernate.validator.constraints.NotEmpty;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
@@ -39,5 +42,14 @@ public class GcpOrganizationResource {
       @QueryParam("accountId") String accountId, GcpOrganization gcpOrganization) {
     gcpOrganization.setAccountId(accountId);
     return new RestResponse<>(gcpOrganizationService.upsert(gcpOrganization));
+  }
+
+  @DELETE
+  @Path("{uuid}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse delete(@NotEmpty @QueryParam("accountId") String accountId, @PathParam("uuid") String uuid) {
+    gcpOrganizationService.delete(accountId, uuid);
+    return new RestResponse();
   }
 }

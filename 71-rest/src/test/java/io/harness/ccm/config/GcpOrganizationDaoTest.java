@@ -64,10 +64,20 @@ public class GcpOrganizationDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void testList() {
+  public void shouldList() {
     gcpOrganizationDao.save(gcpOrganization1);
     gcpOrganizationDao.save(gcpOrganization2);
     List<GcpOrganization> gcpOrganizations = gcpOrganizationDao.list(accountId);
     assertThat(gcpOrganizations).hasSize(2);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldDelete() {
+    String organizationUuid = gcpOrganizationDao.save(gcpOrganization1);
+    gcpOrganizationDao.delete(organizationUuid);
+    List<GcpOrganization> gcpOrganizations = gcpOrganizationDao.list(accountId);
+    assertThat(gcpOrganizations).hasSize(0);
   }
 }

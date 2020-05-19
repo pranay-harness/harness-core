@@ -9,4 +9,5 @@ public interface GcpOrganizationService {
   GcpOrganization upsert(GcpOrganization organization);
   GcpOrganization get(String uuid);
   List<GcpOrganization> list(String accountId);
+  boolean delete(String accountId, String uuid);
 }
