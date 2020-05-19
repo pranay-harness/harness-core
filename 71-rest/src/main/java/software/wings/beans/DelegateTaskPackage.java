@@ -17,6 +17,7 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 public class DelegateTaskPackage {
+  private String accountId;
   private String delegateTaskId;
   private String delegateId;
   private DelegateTask delegateTask;
