@@ -21,6 +21,7 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.MEHUL;
+import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -1683,6 +1684,34 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateTask delegateTask = saveDelegateTask(true, ImmutableSet.of(DELEGATE_ID), QUEUED);
     delegateService.abortTask(ACCOUNT_ID, delegateTask.getUuid());
     assertThat(wingsPersistence.createQuery(DelegateTask.class).get().getStatus()).isEqualTo(ABORTED);
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldGetCountOfDelegatesForAccounts() {
+    String accountId1 = generateUuid();
+    String accountId2 = generateUuid();
+    Delegate delegate = BUILDER.build();
+    delegate.setAccountId(accountId1);
+    delegate.setUuid(generateUuid());
+
+    DelegateProfile delegateProfile =
+        createDelegateProfileBuilder().accountId(delegate.getAccountId()).uuid(generateUuid()).build();
+    delegate.setDelegateProfileId(delegateProfile.getUuid());
+
+    when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId1)).thenReturn(Integer.MAX_VALUE);
+
+    delegate = delegateService.add(delegate);
+    assertThat(wingsPersistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
+
+    List<String> accountIds = Arrays.asList(accountId1, accountId2);
+    List<Integer> countOfDelegatesForAccounts = delegateService.getCountOfDelegatesForAccounts(accountIds);
+    assertThat(countOfDelegatesForAccounts).hasSize(2);
+
+    assertThat(countOfDelegatesForAccounts.get(0)).isEqualTo(1);
+    assertThat(countOfDelegatesForAccounts.get(1)).isEqualTo(0);
   }
 
   private DelegateTask saveDelegateTask(boolean async, Set<String> validatingTaskIds, DelegateTask.Status status) {
