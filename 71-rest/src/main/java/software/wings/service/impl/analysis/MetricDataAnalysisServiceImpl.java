@@ -19,7 +19,6 @@ import static software.wings.utils.Misc.replaceDotWithUnicode;
 import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.AtomicDouble;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -348,16 +347,18 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
           .getCustomThresholds()
           .addAll(threshold.getThresholds().getCustomThresholds());
     });
+    txnMetricThresholdMap.forEach(
+        (key, value) -> { validateThresholdsForSameCriteria(value.getThresholds().getCustomThresholds()); });
 
     txnMetricThresholdMap.forEach((uniqueKey, threshold) -> {
       List<Threshold> customThresholds = threshold.getThresholds().getCustomThresholds();
-      AtomicDouble acceptableAbsoluteLowerValue = new AtomicDouble(-1),
-                   acceptableAbsoluteHigherValue = new AtomicDouble(-1);
+      Optional<Double> acceptableAbsoluteLowerValue = Optional.empty(),
+                       acceptableAbsoluteHigherValue = Optional.empty();
       AtomicInteger numAcceptableRatio = new AtomicInteger(0), numAcceptableDeviation = new AtomicInteger(0),
                     numAcceptableAbsolute = new AtomicInteger(0), numAnomalousRation = new AtomicInteger(0),
                     numAnomalousDeviation = new AtomicInteger(0), numAnomalousAbsolute = new AtomicInteger(0);
 
-      customThresholds.forEach(customThreshold -> {
+      for (Threshold customThreshold : customThresholds) {
         if (ThresholdComparisonType.RATIO.equals(customThreshold.getComparisonType())) {
           if (TimeSeriesCustomThresholdType.ACCEPTABLE.equals(customThreshold.getCustomThresholdType())) {
             numAcceptableRatio.incrementAndGet();
@@ -375,9 +376,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
             && customThreshold.getCustomThresholdType().equals(TimeSeriesCustomThresholdType.ACCEPTABLE)) {
           numAcceptableAbsolute.incrementAndGet();
           if (ALERT_WHEN_LOWER.equals(customThreshold.getThresholdType())) {
-            acceptableAbsoluteLowerValue.set(customThreshold.getMl());
+            acceptableAbsoluteLowerValue = Optional.of(customThreshold.getMl());
           } else if (ALERT_WHEN_HIGHER.equals(customThreshold.getThresholdType())) {
-            acceptableAbsoluteHigherValue.set(customThreshold.getMl());
+            acceptableAbsoluteHigherValue = Optional.of(customThreshold.getMl());
           }
         } else if (ThresholdComparisonType.ABSOLUTE.equals(customThreshold.getComparisonType())
             && customThreshold.getCustomThresholdType().equals(TimeSeriesCustomThresholdType.ANOMALOUS)) {
@@ -389,7 +390,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
             && customThreshold.getCustomThresholdType().equals(TimeSeriesCustomThresholdType.ANOMALOUS)) {
           numAnomalousDeviation.incrementAndGet();
         }
-      });
+      }
       if (numAcceptableAbsolute.get() > 2 || numAnomalousAbsolute.get() > 2) {
         throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
             "Please add only one absolute threshold per transaction metric combination");
@@ -402,8 +403,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
             "Please add only one Percentage Deviation threshold per transaction metric combination");
       }
-      if (acceptableAbsoluteHigherValue.doubleValue() < acceptableAbsoluteLowerValue.doubleValue()) {
-        // TODO: Come up with better error msg.
+      if (acceptableAbsoluteHigherValue.isPresent() && acceptableAbsoluteLowerValue.isPresent()
+          && (acceptableAbsoluteHigherValue.get() < acceptableAbsoluteLowerValue.get())) {
         throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
             "Absolute value thresholds with a criteria of 'Greater than' should be lesser in value "
                 + "than absolute value thresholds with a criteria of 'Lesser than'");
@@ -411,6 +412,22 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     });
     return txnMetricThresholdMap.values();
   }
+
+  private void validateThresholdsForSameCriteria(List<Threshold> customThresholds) {
+    if (isEmpty(customThresholds)) {
+      return;
+    }
+
+    for (int i = 0; i < customThresholds.size(); i++) {
+      for (int j = i + 1; j < customThresholds.size(); j++) {
+        if (customThresholds.get(i).isSimilarTo(customThresholds.get(j))) {
+          throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
+              "Please add only one threshold per transaction metric and criteria combination");
+        }
+      }
+    }
+  }
+
   @Override
   public boolean saveCustomThreshold(String accountId, String appId, StateType stateType, String serviceId,
       String cvConfigId, String transactionName, String groupName, TimeSeriesMetricDefinition metricDefinition,

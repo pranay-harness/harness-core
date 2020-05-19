@@ -19,4 +19,13 @@ public class Threshold {
   private TimeSeriesCustomThresholdType customThresholdType = TimeSeriesCustomThresholdType.ACCEPTABLE;
   // the thresholdCriteria will be present for Anomalous thresholds.
   private TimeSeriesCustomThresholdCriteria thresholdCriteria;
+
+  public boolean isSimilarTo(Threshold other) {
+    if (this.thresholdType == other.getThresholdType() && this.comparisonType == other.getComparisonType()
+        && this.customThresholdType == other.getCustomThresholdType()
+        && this.thresholdCriteria == other.getThresholdCriteria()) {
+      return true;
+    }
+    return false;
+  }
 }
