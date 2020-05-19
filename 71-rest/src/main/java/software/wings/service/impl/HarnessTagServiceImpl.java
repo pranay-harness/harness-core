@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
@@ -16,7 +17,6 @@ import static software.wings.beans.EntityType.PROVISIONER;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.TRIGGER;
 import static software.wings.beans.EntityType.WORKFLOW;
-import static software.wings.beans.HarnessTagType.HARNESS;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -32,7 +32,6 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TriggerException;
-import io.harness.exception.WingsException;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.validation.Update;
@@ -48,7 +47,6 @@ import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTag.HarnessTagKeys;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
-import software.wings.beans.HarnessTagType;
 import software.wings.beans.User;
 import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
@@ -151,29 +149,19 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
     checkIfTagCanBeCreated(tag);
 
-    if (featureFlagService.isEnabled(FeatureName.HARNESS_TAGS, tag.getAccountId()) && tag.getTagType() == null) {
-      tag.setTagType(HarnessTagType.USER);
-    }
-
     wingsPersistence.save(tag);
-    HarnessTag savedTag = get(tag.getAccountId(), tag.getKey(), tag.getTagType());
+    HarnessTag savedTag = get(tag.getAccountId(), tag.getKey());
 
-    if (HARNESS != tag.getTagType()) {
-      yamlPushService.pushYamlChangeSet(savedTag.getAccountId(), savedTag, savedTag, Type.UPDATE, syncFromGit, false);
-    }
+    yamlPushService.pushYamlChangeSet(savedTag.getAccountId(), savedTag, savedTag, Type.UPDATE, syncFromGit, false);
 
     return savedTag;
   }
 
   private void checkIfTagCanBeCreated(HarnessTag tag) {
-    HarnessTag existingTag = get(tag.getAccountId(), tag.getKey(), tag.getTagType());
+    HarnessTag existingTag = get(tag.getAccountId(), tag.getKey());
 
     if (existingTag != null) {
       throw new InvalidRequestException("Tag with given Tag Name already exists");
-    }
-
-    if (HARNESS == tag.getTagType()) {
-      return;
     }
 
     if (getTagCount(tag.getAccountId()) >= MAX_TAGS_PER_ACCOUNT) {
@@ -183,8 +171,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     String accountId = tag.getAccountId();
     boolean isRestrictedTag = isNotEmpty(tag.getAllowedValues());
     if (!tagsFeature.isAvailableForAccount(accountId) && isRestrictedTag) {
-      throw new InvalidRequestException(
-          String.format("Operation not permitted for account [%s].", accountId), WingsException.USER);
+      throw new InvalidRequestException(String.format("Operation not permitted for account [%s].", accountId), USER);
     }
   }
 
@@ -205,7 +192,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       @GetAccountId(HarnessTagAccountIdExtractor.class) HarnessTag tag, boolean syncFromGit, boolean allowExpressions) {
     sanitizeAndValidateHarnessTag(tag, allowExpressions);
 
-    HarnessTag existingTag = get(tag.getAccountId(), tag.getKey(), tag.getTagType());
+    HarnessTag existingTag = get(tag.getAccountId(), tag.getKey());
     if (existingTag == null) {
       throw new InvalidRequestException("Tag with given Tag Name does not exist");
     }
@@ -221,12 +208,10 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     }
 
     wingsPersistence.updateFields(HarnessTag.class, existingTag.getUuid(), keyValuePairsToAdd, fieldsToRemove);
-    HarnessTag updatedTag = get(tag.getAccountId(), tag.getKey(), tag.getTagType());
+    HarnessTag updatedTag = get(tag.getAccountId(), tag.getKey());
 
-    if (HARNESS != updatedTag.getTagType()) {
-      yamlPushService.pushYamlChangeSet(
-          updatedTag.getAccountId(), updatedTag, updatedTag, Type.UPDATE, syncFromGit, false);
-    }
+    yamlPushService.pushYamlChangeSet(
+        updatedTag.getAccountId(), updatedTag, updatedTag, Type.UPDATE, syncFromGit, false);
 
     return updatedTag;
   }
@@ -253,25 +238,15 @@ public class HarnessTagServiceImpl implements HarnessTagService {
           "Allowed values must contain all in used values. %s [%s] %s missing in current allowed values list",
           plural("Value", inUseValues.size()), String.join(",", inUseValues), inUseValues.size() > 1 ? "are" : "is");
 
-      throw new InvalidRequestException(msg, WingsException.USER);
+      throw new InvalidRequestException(msg, USER);
     }
   }
 
   @Override
-  // TODO This method should be removed once HARNESS_TAGS is enabled
   public HarnessTag get(@NotBlank String accountId, @NotBlank String key) {
     return wingsPersistence.createQuery(HarnessTag.class)
         .filter(HarnessTagKeys.accountId, accountId)
         .filter(HarnessTagKeys.key, key.trim())
-        .get();
-  }
-
-  @Override
-  public HarnessTag get(@NotBlank String accountId, @NotBlank String key, HarnessTagType tagType) {
-    return wingsPersistence.createQuery(HarnessTag.class)
-        .filter(HarnessTagKeys.accountId, accountId)
-        .filter(HarnessTagKeys.key, key.trim())
-        .filter(HarnessTagKeys.tagType, tagType)
         .get();
   }
 
@@ -361,14 +336,12 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       allowExpressions = true;
     }
 
-    validateAndCreateTagIfNeeded(
-        tagLink.getAccountId(), tagLink.getKey(), tagLink.getValue(), allowExpressions, tagLink.getTagType());
+    validateAndCreateTagIfNeeded(tagLink.getAccountId(), tagLink.getKey(), tagLink.getValue(), allowExpressions);
 
     HarnessTagLink existingTagLink = wingsPersistence.createQuery(HarnessTagLink.class)
                                          .filter(HarnessTagLinkKeys.accountId, tagLink.getAccountId())
                                          .filter(HarnessTagLinkKeys.entityId, tagLink.getEntityId())
                                          .filter(HarnessTagLinkKeys.key, tagLink.getKey())
-                                         .filter(HarnessTagLinkKeys.tagType, tagLink.getTagType())
                                          .get();
 
     if (existingTagLink != null) {
@@ -434,7 +407,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
           harnessTagLink.setEntityName(entityName);
           harnessTagLink.setAppName(appName);
         } catch (ExecutionException ex) {
-          throw new InvalidRequestException("Failed to find entity name", ex, WingsException.USER);
+          throw new InvalidRequestException("Failed to find entity name", ex, USER);
         }
       }
     }
@@ -581,12 +554,10 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     }
   }
 
-  private void validateAndCreateTagIfNeeded(
-      String accountId, String key, String value, boolean allowExpressions, HarnessTagType tagType) {
-    HarnessTag existingTag = get(accountId, key, tagType);
+  private void validateAndCreateTagIfNeeded(String accountId, String key, String value, boolean allowExpressions) {
+    HarnessTag existingTag = get(accountId, key);
     if (existingTag == null) {
-      createTag(
-          HarnessTag.builder().accountId(accountId).key(key).tagType(tagType).build(), false, false, allowExpressions);
+      createTag(HarnessTag.builder().accountId(accountId).key(key).build(), false, false, allowExpressions);
       return;
     }
 
@@ -690,13 +661,13 @@ public class HarnessTagServiceImpl implements HarnessTagService {
     if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
       DeploymentTrigger existingDTrigger = deploymentTriggerService.get(appId, entityId, false);
       if (existingDTrigger == null) {
-        throw new TriggerException("Trigger does not exist", WingsException.USER);
+        throw new TriggerException("Trigger does not exist", USER);
       }
       triggerAuthHandler.authorize(existingDTrigger, true);
     } else {
       Trigger existingTrigger = triggerService.get(appId, entityId);
       if (existingTrigger == null) {
-        throw new TriggerException("Trigger does not exist", WingsException.USER);
+        throw new TriggerException("Trigger does not exist", USER);
       }
       triggerService.authorize(existingTrigger, true);
     }
@@ -734,8 +705,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
 
       default:
         unhandled(entityType);
-        throw new InvalidRequestException(
-            format("Unsupported entity type %s for tags", entityType), WingsException.USER);
+        throw new InvalidRequestException(format("Unsupported entity type %s for tags", entityType), USER);
     }
 
     return permissionType;
