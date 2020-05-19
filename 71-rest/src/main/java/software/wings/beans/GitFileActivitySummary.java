@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
 
 import javax.validation.constraints.NotNull;
@@ -38,4 +39,5 @@ public class GitFileActivitySummary implements PersistentEntity, UuidAware, Crea
   private Boolean gitToHarness;
   private GitCommit.Status status;
   private GitFileProcessingSummary fileProcessingSummary;
+  @Transient private String connectorName;
 }

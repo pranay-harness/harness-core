@@ -15,8 +15,8 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.GitCommit;
 import software.wings.beans.GitDetail;
+import software.wings.beans.GitFileActivitySummary;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.yaml.GitToHarnessErrorCommitStats;
@@ -197,9 +197,12 @@ public class GitSyncResource {
   @GET
   @Path("activities")
   public RestResponse<PageResponse<GitFileActivity>> listGitFileActivity(
-      @BeanParam PageRequest<GitFileActivity> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
+      @BeanParam PageRequest<GitFileActivity> pageRequest, @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("appId") String appId,
+      @QueryParam("activityForFileHistory") @DefaultValue("false") boolean activityForFileHistory) {
     pageRequest.addFilter(GitFileActivityKeys.accountId, EQ, accountId);
-    PageResponse<GitFileActivity> pageResponse = gitSyncService.fetchGitSyncActivity(pageRequest, accountId);
+    PageResponse<GitFileActivity> pageResponse =
+        gitSyncService.fetchGitSyncActivity(pageRequest, accountId, appId, activityForFileHistory);
     return new RestResponse<>(pageResponse);
   }
 
@@ -238,9 +241,12 @@ public class GitSyncResource {
    */
   @GET
   @Path("commits")
-  public RestResponse<PageResponse<GitCommit>> listCommits(@BeanParam PageRequest<GitCommit> pageRequest,
-      @QueryParam("gitToHarness") @Nullable Boolean gitToHarness, @QueryParam("accountId") @NotEmpty String accountId) {
-    PageResponse<GitCommit> pageResponse = gitSyncService.fetchGitCommits(pageRequest, gitToHarness, accountId);
+  public RestResponse<PageResponse<GitFileActivitySummary>> listCommits(
+      @BeanParam PageRequest<GitFileActivitySummary> pageRequest,
+      @QueryParam("gitToHarness") @Nullable Boolean gitToHarness, @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("appId") @NotEmpty String appId) {
+    PageResponse<GitFileActivitySummary> pageResponse =
+        gitSyncService.fetchGitCommits(pageRequest, gitToHarness, accountId, appId);
     return new RestResponse<>(pageResponse);
   }
 

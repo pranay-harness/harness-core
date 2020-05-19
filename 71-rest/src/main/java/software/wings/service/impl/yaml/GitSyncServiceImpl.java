@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.CreatedAtAware.CREATED_AT_KEY;
@@ -24,6 +25,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.beans.SortOrder;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,9 +38,9 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.GitCommit;
-import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.beans.GitDetail;
 import software.wings.beans.GitFileActivitySummary;
+import software.wings.beans.GitFileActivitySummary.GitFileActivitySummaryKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.yaml.Change;
@@ -65,7 +67,6 @@ import software.wings.yaml.gitSync.GitFileActivity.Status;
 import software.wings.yaml.gitSync.GitFileActivity.TriggeredBy;
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
 import software.wings.yaml.gitSync.YamlChangeSet;
-import software.wings.yaml.gitSync.YamlChangeSet.YamlChangeSetKeys;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
@@ -99,7 +100,14 @@ public class GitSyncServiceImpl implements GitSyncService {
   private static final String UNKNOWN_GIT_CONNECTOR = "Unknown Git Connector";
 
   @Override
-  public PageResponse<GitFileActivity> fetchGitSyncActivity(PageRequest<GitFileActivity> req, String accountId) {
+  public PageResponse<GitFileActivity> fetchGitSyncActivity(
+      PageRequest<GitFileActivity> req, String accountId, String appId, boolean activityForFileHistory) {
+    if (isNotEmpty(appId)) {
+      req.addFilter(GitFileActivityKeys.appId, EQ, appId);
+    }
+    if (activityForFileHistory) {
+      req.addOrder(GitFileActivityKeys.createdAt, SortOrder.OrderType.DESC);
+    }
     PageResponse<GitFileActivity> response = wingsPersistence.query(GitFileActivity.class, req);
     List<GitFileActivity> gitFileActivities = response.getResponse();
     List<GitFileActivity> fileHistoryWithValidConnectorName =
@@ -340,38 +348,31 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   @Override
-  public PageResponse<GitCommit> fetchGitCommits(
-      PageRequest<GitCommit> pageRequest, Boolean gitToHarness, String accountId) {
-    pageRequest.addFilter(GitCommitKeys.accountId, SearchFilter.Operator.HAS, accountId);
+  public PageResponse<GitFileActivitySummary> fetchGitCommits(
+      PageRequest<GitFileActivitySummary> pageRequest, Boolean gitToHarness, String accountId, String appId) {
+    pageRequest.addFilter(GitFileActivitySummaryKeys.accountId, SearchFilter.Operator.HAS, accountId);
     if (gitToHarness != null) {
-      pageRequest.addFilter("yamlChangeSet.gitToHarness", SearchFilter.Operator.HAS, gitToHarness);
+      pageRequest.addFilter(GitFileActivitySummaryKeys.gitToHarness, SearchFilter.Operator.HAS, gitToHarness);
     }
-    /* Only these attributes are sufficient for UI consumption, removing other attributes from api response since it was
-     * bloating the api response*/
-    pageRequest.addFieldsIncluded(GitCommitKeys.accountId);
-    pageRequest.addFieldsIncluded(GitCommitKeys.commitId);
-    pageRequest.addFieldsIncluded(GitCommitKeys.commitMessage);
-    pageRequest.addFieldsIncluded(GitCommitKeys.createdAt);
-    pageRequest.addFieldsIncluded(GitCommitKeys.fileProcessingSummary);
-    pageRequest.addFieldsIncluded(GitCommitKeys.yamlGitConfigIds);
-    pageRequest.addFieldsIncluded(GitCommitKeys.gitConnectorId);
-    pageRequest.addFieldsIncluded(GitCommitKeys.branchName);
-    pageRequest.addFieldsIncluded(GitCommitKeys.status);
-    pageRequest.addFieldsIncluded(GitCommitKeys.yamlChangeSet.concat(".").concat(YamlChangeSetKeys.gitToHarness));
-    PageResponse<GitCommit> pageResponse = wingsPersistence.query(GitCommit.class, pageRequest);
-    List<GitCommit> gitCommits = pageResponse.getResponse();
-    List<GitCommit> gitCommitsWithValidConnectorName = populateConnectorNameInGitCommits(gitCommits, accountId);
+    pageRequest.addFilter(GitFileActivitySummaryKeys.appId, EQ, appId);
+    PageResponse<GitFileActivitySummary> pageResponse =
+        wingsPersistence.query(GitFileActivitySummary.class, pageRequest);
+    List<GitFileActivitySummary> gitFileActivitySummaries = pageResponse.getResponse();
+    List<GitFileActivitySummary> gitCommitsWithValidConnectorName =
+        populateConnectorNameInGitFileActivitySummaries(gitFileActivitySummaries, accountId);
     pageResponse.setResponse(gitCommitsWithValidConnectorName);
     return pageResponse;
   }
 
-  private List<GitCommit> populateConnectorNameInGitCommits(List<GitCommit> gitCommits, String accountId) {
-    if (isEmpty(gitCommits)) {
-      return gitCommits;
+  private List<GitFileActivitySummary> populateConnectorNameInGitFileActivitySummaries(
+      List<GitFileActivitySummary> gitFileActivitySummaries, String accountId) {
+    if (isEmpty(gitFileActivitySummaries)) {
+      return gitFileActivitySummaries;
     }
-    List<String> connectorIdList = gitCommits.stream().map(commit -> commit.getGitConnectorId()).collect(toList());
+    List<String> connectorIdList =
+        gitFileActivitySummaries.stream().map(commit -> commit.getGitConnectorId()).collect(toList());
     Map<String, String> connetorIdNameMap = gitConfigHelperService.getConnectorIdNameMap(connectorIdList, accountId);
-    return gitCommits.stream()
+    return gitFileActivitySummaries.stream()
         .map(gitCommit -> {
           String connectorName = connetorIdNameMap.getOrDefault(gitCommit.getGitConnectorId(), UNKNOWN_GIT_CONNECTOR);
           gitCommit.setConnectorName(connectorName);
