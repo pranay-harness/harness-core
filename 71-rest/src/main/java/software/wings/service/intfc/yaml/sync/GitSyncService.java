@@ -4,6 +4,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitDetail;
+import software.wings.beans.GitFileActivitySummary;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
@@ -31,14 +32,16 @@ public interface GitSyncService {
    * @param accountId
    * @return
    */
-  PageResponse<GitCommit> fetchGitCommits(PageRequest<GitCommit> req, Boolean gitToHarness, String accountId);
+  PageResponse<GitFileActivitySummary> fetchGitCommits(
+      PageRequest<GitFileActivitySummary> req, Boolean gitToHarness, String accountId, String appId);
 
   /**
    *
    * @param req
    * @return
    */
-  PageResponse<GitFileActivity> fetchGitSyncActivity(PageRequest<GitFileActivity> req, String accountId);
+  PageResponse<GitFileActivity> fetchGitSyncActivity(
+      PageRequest<GitFileActivity> req, String accountId, String appId, boolean activityForFileHistory);
 
   /**
    *

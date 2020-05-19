@@ -230,8 +230,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
             projection(GitSyncErrorKeys.branchName), projection(GitToHarnessErrorCommitStatsKeys.commitMessage),
             projection(GitToHarnessErrorCommitStatsKeys.errorsForSummaryView))
         .sort(Sort.descending(GitToHarnessErrorCommitStatsKeys.commitTime))
-        .limit(limit)
         .skip(offset)
+        .limit(limit)
         .aggregate(GitToHarnessErrorCommitStats.class)
         .forEachRemaining(commitWiseErrorDetails::add);
 

@@ -14,7 +14,6 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.beans.yaml.GitCommandResult;
@@ -60,7 +59,6 @@ public class GitCommit extends Base {
   private String commitMessage;
   private String gitConnectorId;
   private String branchName;
-  @Transient private String connectorName;
 
   public enum Status { QUEUED, RUNNING, COMPLETED, FAILED, COMPLETED_WITH_ERRORS, SKIPPED }
 
