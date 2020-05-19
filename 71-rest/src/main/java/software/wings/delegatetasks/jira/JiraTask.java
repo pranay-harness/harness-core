@@ -316,7 +316,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
         logger.info("Successfully updated ticket : " + issueId);
         issueKeys.add(issue.getKey());
-        issueUrls.add(getIssueUrl(parameters.getJiraConfig(), issue));
+        issueUrls.add(getIssueUrl(parameters.getJiraConfig(), issue.getKey()));
 
         if (firstIssueInListData == null) {
           firstIssueInListData = JiraIssueData.builder().description(parameters.getDescription()).build();
@@ -440,7 +440,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .errorMessage("Created Jira ticket " + issue.getKey())
           .issueId(issue.getId())
           .issueKey(issue.getKey())
-          .issueUrl(getIssueUrl(parameters.getJiraConfig(), issue))
+          .issueUrl(getIssueUrl(parameters.getJiraConfig(), issue.getKey()))
           .jiraIssueData(JiraIssueData.builder().description(issue.getDescription()).build())
           .build();
     } catch (JiraException e) {
@@ -544,14 +544,14 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         .build();
   }
 
-  private String getIssueUrl(JiraConfig jiraConfig, Issue issue) {
+  public String getIssueUrl(JiraConfig jiraConfig, String issueKey) {
     try {
-      URL jiraUrl = new URL(jiraConfig.getBaseUrl());
-      URL issueUrl = new URL(jiraUrl, "/browse/" + issue.getKey());
+      URL issueUrl =
+          new URL(jiraConfig.getBaseUrl() + (jiraConfig.getBaseUrl().endsWith("/") ? "" : "/") + "browse/" + issueKey);
 
       return issueUrl.toString();
     } catch (MalformedURLException e) {
-      logger.info("Incorrect url");
+      logger.info("Incorrect url: " + e.getMessage());
     }
 
     return null;
@@ -582,7 +582,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
       return JiraExecutionData.builder()
           .executionStatus(ExecutionStatus.PAUSED)
-          .issueUrl(getIssueUrl(jiraConfig, issue))
+          .issueUrl(getIssueUrl(jiraConfig, issue.getKey()))
           .issueKey(issue.getKey())
           .currentStatus(approvalFieldValue)
           .errorMessage(message)
