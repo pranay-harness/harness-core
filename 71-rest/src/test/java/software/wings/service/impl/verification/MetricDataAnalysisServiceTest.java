@@ -356,6 +356,65 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     metricDataAnalysisService.saveCustomThreshold(null, cvConfigId, timeSeriesMLTransactionThresholds);
   }
 
+  @Test(expected = VerificationOperationException.class)
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testSaveInvalidThreshold_sameCriteriaDiffValues() {
+    List<TimeSeriesMLTransactionThresholds> timeSeriesMLTransactionThresholds = createThresholds();
+
+    timeSeriesMLTransactionThresholds.get(0).getThresholds().getCustomThresholds().get(0).setComparisonType(
+        ThresholdComparisonType.ABSOLUTE);
+    timeSeriesMLTransactionThresholds.get(1).getThresholds().getCustomThresholds().get(0).setComparisonType(
+        ThresholdComparisonType.ABSOLUTE);
+
+    Threshold upper = Threshold.builder()
+                          .customThresholdType(TimeSeriesCustomThresholdType.ACCEPTABLE)
+                          .comparisonType(ThresholdComparisonType.ABSOLUTE)
+                          .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                          .ml(10)
+                          .build();
+
+    Threshold lower = Threshold.builder()
+                          .customThresholdType(TimeSeriesCustomThresholdType.ACCEPTABLE)
+                          .comparisonType(ThresholdComparisonType.ABSOLUTE)
+                          .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                          .ml(5)
+                          .build();
+
+    timeSeriesMLTransactionThresholds.get(0).getThresholds().setCustomThresholds(Arrays.asList(upper));
+    timeSeriesMLTransactionThresholds.get(1).getThresholds().setCustomThresholds(Arrays.asList(lower));
+    metricDataAnalysisService.saveCustomThreshold(null, cvConfigId, timeSeriesMLTransactionThresholds);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testSaveInvalidThreshold_onlyHigherAbsoluteValue() {
+    List<TimeSeriesMLTransactionThresholds> timeSeriesMLTransactionThresholds = createThresholds();
+
+    timeSeriesMLTransactionThresholds.get(0).getThresholds().getCustomThresholds().get(0).setComparisonType(
+        ThresholdComparisonType.ABSOLUTE);
+    timeSeriesMLTransactionThresholds.remove(1);
+
+    Threshold upper = Threshold.builder()
+                          .customThresholdType(TimeSeriesCustomThresholdType.ACCEPTABLE)
+                          .comparisonType(ThresholdComparisonType.ABSOLUTE)
+                          .thresholdType(ThresholdType.ALERT_WHEN_LOWER)
+                          .ml(10)
+                          .build();
+
+    timeSeriesMLTransactionThresholds.get(0).getThresholds().setCustomThresholds(Arrays.asList(upper));
+
+    metricDataAnalysisService.saveCustomThreshold(null, cvConfigId, timeSeriesMLTransactionThresholds);
+
+    List<TimeSeriesMLTransactionThresholds> thresholdsInDB =
+        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+            .filter(TimeSeriesMLTransactionThresholdKeys.customThresholdRefId,
+                timeSeriesMLTransactionThresholds.get(0).getCustomThresholdRefId())
+            .asList();
+    assertThat(thresholdsInDB.size()).isEqualTo(1);
+  }
+
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
