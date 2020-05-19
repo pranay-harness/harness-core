@@ -20,9 +20,13 @@ public class HelmCommandCapabilityCheck implements CapabilityCheck {
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     HelmCommandCapability capability = (HelmCommandCapability) delegateCapability;
     HelmCommandRequest commandRequest = capability.getCommandRequest();
-    String configLocation =
-        containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(commandRequest.getContainerServiceParams());
-    commandRequest.setKubeConfigLocation(configLocation);
+
+    if (commandRequest.getContainerServiceParams() != null) {
+      String configLocation =
+          containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(commandRequest.getContainerServiceParams());
+      commandRequest.setKubeConfigLocation(configLocation);
+    }
+
     HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmInstalled(commandRequest);
     if (helmCommandResponse.getCommandExecutionStatus() == CommandExecutionResult.CommandExecutionStatus.SUCCESS) {
       return CapabilityResponse.builder().validated(true).delegateCapability(capability).build();
