@@ -83,8 +83,8 @@ public class GcpOrganizationServiceImpl implements GcpOrganizationService {
   }
 
   public boolean delete(String accountId, String uuid) {
-    ceConnectorDao.getCEGcpConfig(accountId, uuid);
-    settingsService.delete(GLOBAL_APP_ID, uuid);
+    SettingAttribute settingAttribute = ceConnectorDao.getCEGcpConfig(accountId, uuid);
+    settingsService.delete(GLOBAL_APP_ID, settingAttribute.getUuid());
     return gcpOrganizationDao.delete(uuid);
   }
 }

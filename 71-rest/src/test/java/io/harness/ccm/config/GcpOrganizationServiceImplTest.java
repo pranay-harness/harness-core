@@ -7,6 +7,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.api.services.iam.v1.model.ServiceAccount;
 
@@ -24,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
 
 public class GcpOrganizationServiceImplTest extends CategoryTest {
@@ -94,7 +96,12 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldDelete() {
     String organizationUuid = "UUID";
+    String settingAttributeUuid = "SETTING_ATTRIBUTE_UUID";
+    SettingAttribute settingAttribute =
+        SettingAttribute.Builder.aSettingAttribute().withUuid(settingAttributeUuid).build();
+    when(ceConnectorDao.getCEGcpConfig(eq(accountId), eq(organizationUuid))).thenReturn(settingAttribute);
     gcpOrganizationService.delete(accountId, organizationUuid);
+    verify(settingsService).delete(eq(GLOBAL_APP_ID), eq(settingAttributeUuid));
     verify(gcpOrganizationDao).delete(organizationUuid);
   }
 }

@@ -49,6 +49,7 @@ public class GcpOrganizationDao {
   }
 
   public boolean delete(String uuid) {
-    return persistence.delete(GcpOrganization.class, uuid);
+    return persistence.delete(
+        persistence.createQuery(GcpOrganization.class).filter(GcpOrganizationKeys.uuid, new ObjectId(uuid)));
   }
 }
