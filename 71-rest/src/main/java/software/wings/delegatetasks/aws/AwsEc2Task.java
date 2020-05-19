@@ -25,7 +25,6 @@ import software.wings.service.impl.aws.model.AwsEc2ListVpcsRequest;
 import software.wings.service.impl.aws.model.AwsEc2ListVpcsResponse;
 import software.wings.service.impl.aws.model.AwsEc2Request;
 import software.wings.service.impl.aws.model.AwsEc2Request.AwsEc2RequestType;
-import software.wings.service.impl.aws.model.AwsEc2ValidateCredentialsResponse;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
 import software.wings.service.impl.aws.model.AwsSubnet;
@@ -57,9 +56,8 @@ public class AwsEc2Task extends AbstractDelegateRunnableTask {
       AwsEc2RequestType requestType = request.getRequestType();
       switch (requestType) {
         case VALIDATE_CREDENTIALS: {
-          boolean validCredentials =
-              ec2ServiceDelegate.validateAwsAccountCredential(request.getAwsConfig(), request.getEncryptionDetails());
-          return AwsEc2ValidateCredentialsResponse.builder().valid(validCredentials).executionStatus(SUCCESS).build();
+          return ec2ServiceDelegate.validateAwsAccountCredential(
+              request.getAwsConfig(), request.getEncryptionDetails());
         }
         case LIST_REGIONS: {
           List<String> regions = ec2ServiceDelegate.listRegions(request.getAwsConfig(), request.getEncryptionDetails());

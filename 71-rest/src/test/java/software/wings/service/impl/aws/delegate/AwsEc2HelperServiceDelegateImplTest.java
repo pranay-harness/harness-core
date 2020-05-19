@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
@@ -16,10 +17,12 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ec2.model.BlockDeviceMapping;
 import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionRequest;
 import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionResult;
@@ -55,6 +58,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
+import software.wings.service.impl.aws.model.AwsEc2ValidateCredentialsResponse;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
 import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
@@ -78,17 +82,75 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
     doNothing().when(mockTracker).trackEC2Call(anyString());
   }
+
   @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
-  public void testValidateAwsAccountCredential() {
+  public void testValidateAwsAccountCredentialTrue() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new DescribeRegionsResult()).when(mockClient).describeRegions();
     doNothing().when(mockTracker).trackEC2Call(anyString());
-    boolean valid = awsEc2HelperServiceDelegate.validateAwsAccountCredential(AwsConfig.builder().build(), emptyList());
-    assertThat(valid).isTrue();
+    AwsEc2ValidateCredentialsResponse validateCredentialsResponse =
+        awsEc2HelperServiceDelegate.validateAwsAccountCredential(AwsConfig.builder().build(), emptyList());
+    assertThat(validateCredentialsResponse.isValid()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testValidateAwsAccountCredentialFalseIncorrectCredentials() {
+    AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
+    AwsConfig awsConfig =
+        new AwsConfig("ACCESS_KEY", new char[] {'s', 'e', 'c', 'r', 'e', 't'}, "", "", false, "", null, false, null);
+    AmazonEC2Exception exception = new AmazonEC2Exception("Invalid Aws Credentials");
+    exception.setStatusCode(401);
+    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    when(mockClient.describeRegions()).thenThrow(exception);
+    doNothing().when(mockTracker).trackEC2Call(anyString());
+    AwsEc2ValidateCredentialsResponse validateCredentialsResponse =
+        awsEc2HelperServiceDelegate.validateAwsAccountCredential(awsConfig, emptyList());
+    assertThat(validateCredentialsResponse.isValid()).isFalse();
+    assertThat(validateCredentialsResponse.getErrorMessage()).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testValidateAwsAccountCredentialFalseAccessKeyEmpty() {
+    AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
+    AwsConfig awsConfig =
+        new AwsConfig("", new char[] {'s', 'e', 'c', 'r', 'e', 't'}, "", "", false, "", null, false, null);
+    AmazonEC2Exception exception = new AmazonEC2Exception("Invalid Aws Credentials");
+    exception.setStatusCode(401);
+    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    when(mockClient.describeRegions()).thenThrow(exception);
+    doNothing().when(mockTracker).trackEC2Call(anyString());
+    AwsEc2ValidateCredentialsResponse validateCredentialsResponse =
+        awsEc2HelperServiceDelegate.validateAwsAccountCredential(awsConfig, emptyList());
+    assertThat(validateCredentialsResponse.isValid()).isFalse();
+    assertThat(validateCredentialsResponse.getErrorMessage()).isEqualTo("Access Key should not be empty");
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testValidateAwsAccountCredentialFalseSecretKeyEmpty() {
+    AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
+    AwsConfig awsConfig = new AwsConfig("ACCESS_KEY", null, "", "", false, "", null, false, null);
+    AmazonEC2Exception exception = new AmazonEC2Exception("Invalid Aws Credentials");
+    exception.setStatusCode(401);
+    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    when(mockClient.describeRegions()).thenThrow(exception);
+    doNothing().when(mockTracker).trackEC2Call(anyString());
+    AwsEc2ValidateCredentialsResponse validateCredentialsResponse =
+        awsEc2HelperServiceDelegate.validateAwsAccountCredential(awsConfig, emptyList());
+    assertThat(validateCredentialsResponse.isValid()).isFalse();
+    assertThat(validateCredentialsResponse.getErrorMessage()).isEqualTo("Secret Key should not be empty");
   }
 
   @Test

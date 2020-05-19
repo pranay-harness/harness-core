@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
@@ -43,6 +44,8 @@ import com.amazonaws.services.ec2.model.TagDescription;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
+import software.wings.service.impl.aws.model.AwsEc2ValidateCredentialsResponse;
+import software.wings.service.impl.aws.model.AwsEc2ValidateCredentialsResponse.AwsEc2ValidateCredentialsResponseBuilder;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
 import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
@@ -67,20 +70,31 @@ public class AwsEc2HelperServiceDelegateImpl
   }
 
   @Override
-  public boolean validateAwsAccountCredential(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
+  public AwsEc2ValidateCredentialsResponse validateAwsAccountCredential(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       tracker.trackEC2Call("Get Ec2 client");
       getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig).describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
-        return false;
+        AwsEc2ValidateCredentialsResponseBuilder responseBuilder =
+            AwsEc2ValidateCredentialsResponse.builder().valid(false).executionStatus(SUCCESS);
+        if (!awsConfig.isUseEc2IamCredentials()) {
+          if (isEmpty(awsConfig.getAccessKey())) {
+            responseBuilder.errorMessage("Access Key should not be empty");
+          } else if (isEmpty(awsConfig.getSecretKey())) {
+            responseBuilder.errorMessage("Secret Key should not be empty");
+          }
+        }
+        return responseBuilder.build();
       }
       handleAmazonServiceException(amazonEC2Exception);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
     }
-    return true;
+
+    return AwsEc2ValidateCredentialsResponse.builder().valid(true).executionStatus(SUCCESS).build();
   }
 
   @Override

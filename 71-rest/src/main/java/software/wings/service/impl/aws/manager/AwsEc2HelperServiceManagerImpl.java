@@ -2,6 +2,7 @@ package software.wings.service.impl.aws.manager;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -59,7 +60,8 @@ public class AwsEc2HelperServiceManagerImpl implements AwsEc2HelperServiceManage
         AwsEc2ValidateCredentialsRequest.builder().awsConfig(awsConfig).encryptionDetails(encryptionDetails).build(),
         "");
     if (!((AwsEc2ValidateCredentialsResponse) response).isValid()) {
-      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER).addParam("message", "Invalid AWS credentials.");
+      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER)
+          .addParam("message", defaultString(response.getErrorMessage(), "Invalid AWS credentials."));
     }
   }
 
