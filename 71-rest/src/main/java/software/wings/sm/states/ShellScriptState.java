@@ -427,6 +427,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
                                     .envId(envId)
                                     .infrastructureMappingId(infrastructureMappingId)
                                     .serviceTemplateId(serviceTemplateId)
+                                    .selectionLogsTrackingEnabled(true)
                                     .build();
 
     String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask,

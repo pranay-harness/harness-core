@@ -2029,7 +2029,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-        if (!assignDelegateService.canAssign(null, delegateId, delegateTask)) {
+        BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(delegateTask);
+        boolean canAssign = assignDelegateService.canAssign(batch, delegateId, delegateTask);
+        delegateSelectionLogsService.save(batch);
+
+        if (!canAssign) {
           logger.info("Delegate is not scoped for task");
           ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
           return null;

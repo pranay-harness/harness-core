@@ -573,7 +573,8 @@ public class GraphRenderer {
                                    .type(instance.getStateType())
                                    .rollback(instance.isRollback())
                                    .status(String.valueOf(instance.getStatus()).toUpperCase())
-                                   .hasInspection(instance.isHasInspection());
+                                   .hasInspection(instance.isHasInspection())
+                                   .delegateTaskId(instance.getDelegateTaskId());
 
     if (instance.getStateExecutionDataHistory() != null) {
       builder.executionHistoryCount(instance.getStateExecutionDataHistory().size());

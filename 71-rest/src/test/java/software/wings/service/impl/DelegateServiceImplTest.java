@@ -50,6 +50,7 @@ import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 import software.wings.service.intfc.AssignDelegateService;
+import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
@@ -64,6 +65,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private DelegateServiceImpl delegateService;
   @Mock private AssignDelegateService assignDelegateService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
   @InjectMocks @Spy private DelegateServiceImpl spydelegateService;
 
   @Before
@@ -165,9 +167,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     doReturn(delegate).when(spydelegateService).get(ACCOUNT_ID, delegate.getUuid(), false);
     doReturn(false).when(featureFlagService).isEnabled(eq(REVALIDATE_WHITELISTED_DELEGATE), anyString());
 
-    doReturn(getDelegateTask())
-        .when(spydelegateService)
-        .getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", delegate.getUuid());
+    DelegateTask delegateTask = getDelegateTask();
+    doReturn(delegateTask).when(spydelegateService).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", delegate.getUuid());
 
     doReturn(getDelegateTaskPackage())
         .when(spydelegateService)
@@ -176,10 +177,13 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(assignDelegateService.canAssign(any(), anyString(), any())).thenReturn(true);
     when(assignDelegateService.isWhitelisted(any(), anyString())).thenReturn(true);
     when(assignDelegateService.shouldValidate(any(), anyString())).thenReturn(false);
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().build();
+    when(delegateSelectionLogsService.createBatch(delegateTask)).thenReturn(batch);
 
     spydelegateService.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ");
 
     verify(spydelegateService, times(1)).assignTask(anyString(), anyString(), any(DelegateTask.class));
+    verify(delegateSelectionLogsService).save(batch);
   }
 
   @Test

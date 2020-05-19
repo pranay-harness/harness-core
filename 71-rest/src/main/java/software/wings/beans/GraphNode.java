@@ -63,6 +63,8 @@ public class GraphNode {
   private GraphNode next;
   private GraphGroup group;
 
+  private String delegateTaskId;
+
   public GraphNode cloneInternal() {
     GraphNode clonedNode = GraphNode.builder()
                                .id("node_" + generateUuid())

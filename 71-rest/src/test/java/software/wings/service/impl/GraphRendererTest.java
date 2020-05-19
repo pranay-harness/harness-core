@@ -212,6 +212,7 @@ public class GraphRendererTest extends WingsBaseTest {
                                                 .build();
 
     instance.setStateParams(ImmutableMap.of("key", "value"));
+    instance.setDelegateTaskId(generateUuid());
 
     GraphNode node = graphRenderer.convertToNode(instance);
 
@@ -221,6 +222,7 @@ public class GraphRendererTest extends WingsBaseTest {
     assertThat(node.isRollback()).isEqualTo(instance.isRollback());
     assertThat(node.getStatus()).isEqualTo(instance.getStatus().name());
     assertThat(node.getProperties()).isEqualTo(instance.getStateParams());
+    assertThat(node.getDelegateTaskId()).isEqualTo(instance.getDelegateTaskId());
   }
 
   @Test
