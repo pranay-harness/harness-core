@@ -16,6 +16,7 @@ import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.mongo.MongoConfig;
 import lombok.Data;
+import software.wings.DataStorageMode;
 
 import java.util.Optional;
 
@@ -24,6 +25,7 @@ public class VerificationConfiguration extends Configuration {
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
   private String managerUrl;
+  private DataStorageMode dataStorageMode;
 
   /**
    * Instantiates a new Main configuration.
