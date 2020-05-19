@@ -522,6 +522,7 @@ public class MessageServiceImpl implements MessageService {
             data = JsonUtils.asObject(fileContent, HashMap.class);
           } catch (Exception e) {
             logger.error("Couldn't read map from {}. File content: \n{}", file.getName(), fileContent, e);
+            FileUtils.deleteQuietly(file);
           }
         } else {
           data = new HashMap<>();
