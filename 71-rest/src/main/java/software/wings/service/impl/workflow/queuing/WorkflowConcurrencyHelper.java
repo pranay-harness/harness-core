@@ -3,6 +3,7 @@ package software.wings.service.impl.workflow.queuing;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.CollectionUtils.fetchIndex;
 import static io.harness.data.structure.CollectionUtils.isPresent;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.common.InfrastructureConstants.QUEUING_RC_NAME;
 import static software.wings.common.InfrastructureConstants.RC_INFRA_STEP_NAME;
@@ -13,11 +14,11 @@ import static software.wings.sm.StateType.RESOURCE_CONSTRAINT;
 import static software.wings.sm.StateType.SHELL_SCRIPT_PROVISION;
 import static software.wings.sm.StateType.TERRAFORM_PROVISION;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -26,6 +27,8 @@ import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.ResourceConstraint;
+import software.wings.beans.TemplateExpression;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.service.intfc.AppService;
@@ -34,8 +37,10 @@ import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.sm.states.ResourceConstraintState.AcquireMode;
 import software.wings.sm.states.ResourceConstraintState.ResourceConstraintStateKeys;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 @OwnedBy(CDC)
@@ -48,20 +53,28 @@ public class WorkflowConcurrencyHelper {
   private static final List<String> PROVISIONER_STEP_TYPES =
       Arrays.asList(CLOUD_FORMATION_CREATE_STACK.name(), TERRAFORM_PROVISION.name(), SHELL_SCRIPT_PROVISION.name());
 
-  public OrchestrationWorkflow enhanceWithConcurrencySteps(String appId, OrchestrationWorkflow orchestrationWorkflow) {
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-    if (!concurrencyEnabled(canaryOrchestrationWorkflow)) {
-      return canaryOrchestrationWorkflow;
-    }
+  public OrchestrationWorkflow enhanceWithConcurrencySteps(Workflow workflow, Map<String, String> workflowVariables) {
+    try {
+      String appId = workflow.getAppId();
+      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+          (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+      if (!concurrencyEnabled(canaryOrchestrationWorkflow)) {
+        return canaryOrchestrationWorkflow;
+      }
 
-    boolean resourceConstraintAdded = false;
-    if (EmptyPredicate.isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
-      resourceConstraintAdded = addResourceConstraintForConcurrency(appId, canaryOrchestrationWorkflow);
+      boolean resourceConstraintAdded = false;
+      if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
+        resourceConstraintAdded =
+            addResourceConstraintForConcurrency(appId, canaryOrchestrationWorkflow, workflowVariables);
+      }
+      if (resourceConstraintAdded) {
+        canaryOrchestrationWorkflow.setGraph(canaryOrchestrationWorkflow.generateGraph());
+      }
+      return canaryOrchestrationWorkflow;
+    } catch (Exception e) {
+      logger.error("Failed to enhance workflow with concurrency steps: {}", e.getMessage());
+      return workflow.getOrchestrationWorkflow();
     }
-    if (resourceConstraintAdded) {
-      canaryOrchestrationWorkflow.setGraph(canaryOrchestrationWorkflow.generateGraph());
-    }
-    return canaryOrchestrationWorkflow;
   }
 
   /**
@@ -73,43 +86,73 @@ public class WorkflowConcurrencyHelper {
    * @return WorkflowPhase After adding the Resource Constraint Step If required
    */
   private boolean addResourceConstraintForConcurrency(
-      String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
+      String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow, Map<String, String> workflowVariables) {
     boolean resourceConstraintAdded = false;
-    WorkflowPhase workflowPhase = canaryOrchestrationWorkflow.getWorkflowPhases().get(0);
-    if (workflowPhase.getInfraDefinitionId() != null) {
-      boolean isDynamicInfra =
-          infrastructureDefinitionService.isDynamicInfrastructure(appId, workflowPhase.getInfraDefinitionId());
-      List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
-
-      if (addAsFirstStepInPhaseStep(canaryOrchestrationWorkflow, isDynamicInfra, phaseSteps)) {
-        PhaseStep firstStep = phaseSteps.get(0);
-        firstStep.getSteps().add(
-            0, getResourceConstraintStep(appId, canaryOrchestrationWorkflow.getConcurrencyStrategy()));
-        resourceConstraintAdded = true;
-      } else if (isDynamicInfra && isPresent(phaseSteps, getProvisionInfrastructurePhaseStepPredicate())) {
-        PhaseStep provisionerPhaseStep =
-            phaseSteps.get(fetchIndex(phaseSteps, getProvisionInfrastructurePhaseStepPredicate()));
-        int provisionerStepIndex =
-            fetchIndex(provisionerPhaseStep.getSteps(), step -> PROVISIONER_STEP_TYPES.contains(step.getType()));
-        if (provisionerStepIndex > -1) {
-          provisionerPhaseStep.getSteps().add(provisionerStepIndex + 1,
-              getResourceConstraintStep(appId, canaryOrchestrationWorkflow.getConcurrencyStrategy()));
+    List<String> expressionsHandled = new ArrayList<>();
+    TemplateExpression expression;
+    for (WorkflowPhase phase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
+      String infraId = phase.getInfraDefinitionId();
+      if (phase.checkInfraDefinitionTemplatized()) {
+        expression = Preconditions.checkNotNull(phase.fetchInfraDefinitonTemplateExpression());
+        if (expressionsHandled.contains(expression.getExpression())) {
+          continue;
+        }
+        for (Map.Entry<String, String> entry : workflowVariables.entrySet()) {
+          String varName = expression.getExpression().replace("${", "").replace("}", "");
+          if (varName.equals(entry.getKey())) {
+            infraId = entry.getValue();
+            break;
+          }
+        }
+        boolean isAdded = addResourceConstraint(appId, canaryOrchestrationWorkflow, phase, infraId);
+        if (isAdded) {
+          expressionsHandled.add(expression.getExpression());
           resourceConstraintAdded = true;
         }
       } else {
-        logger.info("No Provisioner Step for Dynamic Infra. Skipping Adding Steps for Concurrency");
+        boolean isAdded = addResourceConstraint(appId, canaryOrchestrationWorkflow, phase, infraId);
+        if (isAdded) {
+          resourceConstraintAdded = true;
+        }
       }
+    }
+    return resourceConstraintAdded;
+  }
+
+  private boolean addResourceConstraint(String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow,
+      WorkflowPhase workflowPhase, String infraId) {
+    boolean resourceConstraintAdded = false;
+    boolean isDynamicInfra = infrastructureDefinitionService.isDynamicInfrastructure(appId, infraId);
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
+    if (addAsFirstStepInPhaseStep(canaryOrchestrationWorkflow, isDynamicInfra, phaseSteps)) {
+      PhaseStep firstStep = phaseSteps.get(0);
+      firstStep.getSteps().add(
+          0, getResourceConstraintStep(appId, canaryOrchestrationWorkflow.getConcurrencyStrategy()));
+      resourceConstraintAdded = true;
+    } else if (isDynamicInfra && isPresent(phaseSteps, getProvisionInfrastructurePhaseStepPredicate())) {
+      PhaseStep provisionerPhaseStep =
+          phaseSteps.get(fetchIndex(phaseSteps, getProvisionInfrastructurePhaseStepPredicate()));
+      int provisionerStepIndex =
+          fetchIndex(provisionerPhaseStep.getSteps(), step -> PROVISIONER_STEP_TYPES.contains(step.getType()));
+      if (provisionerStepIndex > -1) {
+        provisionerPhaseStep.getSteps().add(provisionerStepIndex + 1,
+            getResourceConstraintStep(appId, canaryOrchestrationWorkflow.getConcurrencyStrategy()));
+        resourceConstraintAdded = true;
+      }
+    } else {
+      logger.info("No Provisioner Step for Dynamic Infra. Skipping Adding Steps for Concurrency");
     }
     return resourceConstraintAdded;
   }
 
   private boolean addAsFirstStepInPhaseStep(
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow, boolean isDynamicInfra, List<PhaseStep> phaseSteps) {
-    return (!isDynamicInfra && EmptyPredicate.isNotEmpty(phaseSteps))
+    return (!isDynamicInfra && isNotEmpty(phaseSteps))
         || (canaryOrchestrationWorkflow.getPreDeploymentSteps() != null
                && isPresent(canaryOrchestrationWorkflow.getPreDeploymentSteps().getSteps(),
                       step -> PROVISIONER_STEP_TYPES.contains(step.getType()))
-               && EmptyPredicate.isNotEmpty(phaseSteps));
+               && isNotEmpty(phaseSteps));
   }
 
   @NotNull
@@ -140,7 +183,7 @@ public class WorkflowConcurrencyHelper {
             .put(ResourceConstraintStateKeys.acquireMode, AcquireMode.ENSURE)
             .put(ResourceConstraintStateKeys.harnessOwned, resourceConstraint.isHarnessOwned())
             .put(STATE_TIMEOUT_KEY_NAME, WEEK_TIMEOUT);
-    if (EmptyPredicate.isNotEmpty(concurrencyStrategy.getNotificationGroups())) {
+    if (isNotEmpty(concurrencyStrategy.getNotificationGroups())) {
       mapBuilder.put(ResourceConstraintStateKeys.notificationGroups, concurrencyStrategy.getNotificationGroups());
     }
     return mapBuilder.build();

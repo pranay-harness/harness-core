@@ -396,7 +396,7 @@ public class WorkflowPhase implements UuidAccess {
         .orElse(null);
   }
 
-  private TemplateExpression fetchInfraDefinitonTemplateExpression() {
+  public TemplateExpression fetchInfraDefinitonTemplateExpression() {
     if (isEmpty(templateExpressions)) {
       return null;
     }
