@@ -16,6 +16,9 @@
         <module>21-persistence</module>
         <module>25-orchestration-beans</module>
         <module>31-orchestration</module>
+        <module>41-cv-nextgen-beans</module>
+        <module>42-cv-nextgen-commons</module>
+        <module>45-cv-nextgen</module>
         <module>57-command-library-common</module>
         <module>64-events-framework</module>
         <module>64-delegate-beans</module>
