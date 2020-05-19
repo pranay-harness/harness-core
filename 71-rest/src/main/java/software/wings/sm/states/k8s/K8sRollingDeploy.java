@@ -175,8 +175,8 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
     }
 
     k8sStateHelper.saveInstanceInfoToSweepingOutput(context,
-        k8sStateHelper.getInstanceElementList(k8sRollingDeployResponse.getK8sPodList()),
-        k8sStateHelper.getInstanceDetails(k8sRollingDeployResponse.getK8sPodList()));
+        k8sStateHelper.getInstanceElementList(k8sRollingDeployResponse.getK8sPodList(), true),
+        k8sStateHelper.getInstanceDetails(k8sRollingDeployResponse.getK8sPodList(), true));
 
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)

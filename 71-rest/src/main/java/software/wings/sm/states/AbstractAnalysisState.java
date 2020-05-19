@@ -6,6 +6,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.govern.Switch.noop;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.AccountType.COMMUNITY;
@@ -1245,16 +1246,22 @@ public abstract class AbstractAnalysisState extends State {
           "[NewInstanceAPI] Time taken to get control and test nodes: {} ms", System.currentTimeMillis() - startTime);
       Set<String> newControlNodes = nodePair.getControlNodes(), newTestNodes = nodePair.getTestNodes();
       DeploymentType deploymentType = getDeploymentType(context);
+      String message = EMPTY;
+      if (isEmpty(newTestNodes)) {
+        message = "[EmptyTestNodeError] Empty New Test Nodes";
+      } else if (isEmpty(testNodes)) {
+        message = "[EmptyTestNodeError] Empty Old Test Nodes";
+      }
       if (testNodes.equals(newTestNodes) && controlNodes.equals(newControlNodes)) {
         getLogger().info(
-            "[NewInstanceAPI] New nodes and old nodes are equal. deploymentType: {} ComparisionStrategy: {} testNodes: {}, controlNodes {}",
-            deploymentType, getComparisonStrategy(), testNodes, controlNodes);
+            "[NewInstanceAPI] New nodes and old nodes are equal {}. deploymentType: {} ComparisionStrategy: {} testNodes: {}, controlNodes {}",
+            message, deploymentType, getComparisonStrategy(), testNodes, controlNodes);
       } else {
         getLogger().info(
-            "[NewInstanceAPI][Error] New nodes and old nodes are not equal. deploymentType: {} ComparisionStrategy: {}, "
+            "[NewInstanceAPI][Error] New nodes and old nodes are not equal {}. deploymentType: {} ComparisionStrategy: {}, "
                 + "includePreviousPhaseNodes: {} testNodes: {}, controlNodes {}, newTestNodes {}, newControlNodes {}",
-            deploymentType, getComparisonStrategy(), includePreviousPhaseNodes, testNodes, controlNodes, newTestNodes,
-            newControlNodes);
+            message, deploymentType, getComparisonStrategy(), includePreviousPhaseNodes, testNodes, controlNodes,
+            newTestNodes, newControlNodes);
       }
     } catch (Exception e) {
       // this is the new api supposed to replace the old code. Ignoring any exception so that the existing code is not

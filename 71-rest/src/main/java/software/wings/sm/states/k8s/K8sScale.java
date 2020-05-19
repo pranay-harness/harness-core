@@ -143,8 +143,8 @@ public class K8sScale extends State {
           k8sStateHelper.getInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
 
       k8sStateHelper.saveInstanceInfoToSweepingOutput(context,
-          k8sStateHelper.getInstanceElementList(k8sScaleResponse.getK8sPodList()),
-          k8sStateHelper.getInstanceDetails(k8sScaleResponse.getK8sPodList()));
+          k8sStateHelper.getInstanceElementList(k8sScaleResponse.getK8sPodList(), false),
+          k8sStateHelper.getInstanceDetails(k8sScaleResponse.getK8sPodList(), false));
 
       return ExecutionResponse.builder()
           .executionStatus(executionStatus)
