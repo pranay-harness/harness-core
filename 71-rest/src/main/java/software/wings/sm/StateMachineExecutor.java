@@ -142,6 +142,7 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 public class StateMachineExecutor implements StateInspectionListener {
   private static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
+  private static final int ABORT_EXPIRY_BUFFER_MILLIS = 1 * 60 * 60 * 1000; // 1 hours
 
   @Getter private Subject<StateStatusUpdate> statusUpdateSubject = new Subject<>();
 
@@ -979,7 +980,7 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     List<ExecutionStatus> executionStatuses = asList(NEW, QUEUED, STARTING, RUNNING, PAUSED, WAITING);
     boolean updated = updateStatus(stateExecutionInstance, DISCONTINUING, executionStatuses, null,
-        ops -> ops.set("expiryTs", System.currentTimeMillis() + DEFAULT_STATE_TIMEOUT_MILLIS));
+        ops -> ops.set("expiryTs", System.currentTimeMillis() + ABORT_EXPIRY_BUFFER_MILLIS));
     if (!updated) {
       throw new WingsException(STATE_NOT_FOR_TYPE)
           .addParam("displayName", stateExecutionInstance.getDisplayName())
@@ -1025,7 +1026,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
       }
       currentState.handleAbortEvent(context);
-      stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + DEFAULT_STATE_TIMEOUT_MILLIS);
+      stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + ABORT_EXPIRY_BUFFER_MILLIS);
       updated = updateStateExecutionData(
           stateExecutionInstance, null, finalStatus, null, singletonList(DISCONTINUING), null, null, null);
 
@@ -1596,7 +1597,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
 
     ops.set(StateExecutionInstanceKeys.status, DISCONTINUING);
-    ops.set(StateExecutionInstanceKeys.expiryTs, System.currentTimeMillis() + DEFAULT_STATE_TIMEOUT_MILLIS);
+    ops.set(StateExecutionInstanceKeys.expiryTs, System.currentTimeMillis() + ABORT_EXPIRY_BUFFER_MILLIS);
     ops.addToSet(StateExecutionInstanceKeys.interruptHistory,
         ExecutionInterruptEffect.builder()
             .interruptId(workflowExecutionInterrupt.getUuid())
