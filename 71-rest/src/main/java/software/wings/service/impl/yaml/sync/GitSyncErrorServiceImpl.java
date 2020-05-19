@@ -670,7 +670,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     List<GitSyncError> filteredErrors =
         filterErrorsWithValidConnectorAndPopulateConnectorName(allGitSyncErrors, accountId);
     return aPageResponse()
-        .withTotal(filteredErrors.size())
+        .withTotal(query.count())
         .withResponse(filteredErrors)
         .withLimit(String.valueOf(limit))
         .withOffset(String.valueOf(offset))
