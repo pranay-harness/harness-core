@@ -18,6 +18,7 @@
         <module>31-orchestration</module>
         <module>57-command-library-common</module>
         <module>64-events-framework</module>
+        <module>64-delegate-beans</module>
         <module>65-delegate-agent-beans</module>
         <module>65-delegate-service-beans</module>
         <module>70-delegate-agent</module>

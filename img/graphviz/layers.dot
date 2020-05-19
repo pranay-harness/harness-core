@@ -18,6 +18,11 @@ digraph G {
     delegate_tasks [label="delegate tasks" color=white];
   }
 
+  subgraph cluster_delegate_beans {
+    color=green
+    delegate_beans [label="delegate beans" color=white];
+  }
+
   subgraph cluster_delegate_agent_beans {
     color=green
     delegate_agent_beans [label="delegate agent beans" color=white];
@@ -50,7 +55,11 @@ digraph G {
 
   delegate_tasks -> service_api [ltail=cluster_delegate_tasks,lhead=cluster_service_api];
 
-  delegate_agent_beans -> delegate_tasks [style=invis];
+  delegate_agent_beans-> delegate_beans [ltail=cluster_delegate_agent_beans,lhead=cluster_delegate_beans];
+
+  delegate_service_beans-> delegate_beans [ltail=cluster_delegate_service_beans,lhead=cluster_delegate_beans];
+
+  delegate_beans -> delegate_tasks [style=invis];
 
   delegate_agent-> delegate_agent_beans [ltail=cluster_delegate_agent,lhead=cluster_delegate_agent_beans];
   delegate_agent-> delegate_tasks [ltail=cluster_delegate_agent,lhead=cluster_delegate_tasks];

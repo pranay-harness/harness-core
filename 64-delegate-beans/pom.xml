@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>65-delegate-service-beans</artifactId>
+    <artifactId>64-delegate-beans</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -19,14 +19,16 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>64-delegate-beans</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>11-commons-test</artifactId>
             <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/proto</directory>
+            </resource>
+        </resources>
+    </build>
 </project>
