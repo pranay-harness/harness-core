@@ -7,6 +7,7 @@ import static io.harness.delegate.message.MessageServiceImpl.SECONDARY_DELIMITER
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.NIKOLA;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -262,5 +263,59 @@ public class MessageServiceTest extends CategoryTest {
 
     assertThat(dataFile1.exists()).isFalse();
     assertThat(dataFile2.exists()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldDeleteDamagedFile() throws IOException {
+    Map<String, Object> map1 = new HashMap<>();
+    map1.put("foo", "bar");
+    map1.put("baz", "qux");
+    FileUtils.write(dataFile1, JsonUtils.asPrettyJson(map1), UTF_8);
+
+    Map<String, Object> map2 = new HashMap<>();
+    map2.put("abc", "123");
+    map2.put("xyz", asList("423", "567"));
+    FileUtils.write(dataFile2, JsonUtils.asPrettyJson(map2), UTF_8);
+
+    assertThat(dataFile1.exists()).isTrue();
+    assertThat(dataFile2.exists()).isTrue();
+
+    FileUtils.write(dataFile1, "non-readable text");
+    map1 = messageService.getAllData(dataFile1.getName());
+
+    assertThat(dataFile1.exists()).isFalse();
+    assertThat(dataFile2.exists()).isTrue();
+
+    FileUtils.write(dataFile2, "non-readable text");
+    map2 = messageService.getAllData(dataFile2.getName());
+
+    assertThat(dataFile1.exists()).isFalse();
+    assertThat(dataFile2.exists()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldRecoverDamagedFile() throws IOException {
+    Map<String, Object> map1 = new HashMap<>();
+    map1.put("abc", "bar");
+    map1.put("baz", "qux");
+    FileUtils.write(dataFile1, JsonUtils.asPrettyJson(map1), UTF_8);
+
+    assertThat(dataFile1.exists()).isTrue();
+
+    FileUtils.write(dataFile1, "non-readable text");
+    map1 = messageService.getAllData(dataFile1.getName());
+
+    assertThat(dataFile1.exists()).isFalse();
+
+    Map<String, Object> map2 = new HashMap<>();
+    map1.put("foo", "123");
+    map1.put("xyz", asList("423", "567"));
+    FileUtils.write(dataFile1, JsonUtils.asPrettyJson(map2), UTF_8);
+
+    assertThat(dataFile1.exists()).isTrue();
   }
 }
