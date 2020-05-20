@@ -11,7 +11,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
 
@@ -24,8 +28,13 @@ import javax.validation.constraints.NotNull;
 @Builder
 @AllArgsConstructor
 @Entity(value = "gitFileActivitySummary", noClassnameStored = true)
-@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GitFileActivitySummaryKeys")
+@Indexes({
+  @Index(fields = {
+    @Field("accountId"), @Field("appId"), @Field("gitToHarness")
+  }, options = @IndexOptions(name = "gitCommits_for_appId_indx"))
+})
+@HarnessEntity(exportable = true)
 public class GitFileActivitySummary implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id @NotNull(groups = {Update.class}) String uuid;
   private String accountId;

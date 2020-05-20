@@ -44,6 +44,7 @@ import software.wings.beans.GitFileActivitySummary.GitFileActivitySummaryKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
@@ -72,6 +73,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,8 +114,25 @@ public class GitSyncServiceImpl implements GitSyncService {
     List<GitFileActivity> gitFileActivities = response.getResponse();
     List<GitFileActivity> fileHistoryWithValidConnectorName =
         populateConnectorNameInFileHistory(gitFileActivities, accountId);
+    if (!activityForFileHistory) {
+      sortGitFileActivityInProcessingOrder(fileHistoryWithValidConnectorName);
+    }
     response.setResponse(fileHistoryWithValidConnectorName);
     return response;
+  }
+
+  private void sortGitFileActivityInProcessingOrder(List<GitFileActivity> gitFileActivities) {
+    gitFileActivities.sort(new GitFileActivityComparator());
+  }
+
+  private final class GitFileActivityComparator implements Comparator<GitFileActivity> {
+    @Override
+    public int compare(GitFileActivity lhs, GitFileActivity rhs) {
+      int lCoefficient = lhs.getChangeType() == ChangeType.DELETE ? -1 : 1;
+      int rlCoefficient = rhs.getChangeType() == ChangeType.DELETE ? -1 : 1;
+      return (lCoefficient * yamlService.findOrdinal(lhs.getFilePath(), lhs.getAccountId()))
+          - (rlCoefficient * yamlService.findOrdinal(rhs.getFilePath(), rhs.getAccountId()));
+    }
   }
 
   private List<GitFileActivity> populateConnectorNameInFileHistory(
@@ -351,10 +370,10 @@ public class GitSyncServiceImpl implements GitSyncService {
   public PageResponse<GitFileActivitySummary> fetchGitCommits(
       PageRequest<GitFileActivitySummary> pageRequest, Boolean gitToHarness, String accountId, String appId) {
     pageRequest.addFilter(GitFileActivitySummaryKeys.accountId, SearchFilter.Operator.HAS, accountId);
+    pageRequest.addFilter(GitFileActivitySummaryKeys.appId, EQ, appId);
     if (gitToHarness != null) {
       pageRequest.addFilter(GitFileActivitySummaryKeys.gitToHarness, SearchFilter.Operator.HAS, gitToHarness);
     }
-    pageRequest.addFilter(GitFileActivitySummaryKeys.appId, EQ, appId);
     PageResponse<GitFileActivitySummary> pageResponse =
         wingsPersistence.query(GitFileActivitySummary.class, pageRequest);
     List<GitFileActivitySummary> gitFileActivitySummaries = pageResponse.getResponse();
