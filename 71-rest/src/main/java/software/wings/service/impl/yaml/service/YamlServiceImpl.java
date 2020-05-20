@@ -843,7 +843,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     }
   }
 
-  private int findOrdinal(String yamlFilePath, String accountId) {
+  public int findOrdinal(String yamlFilePath, String accountId) {
     AtomicInteger count = new AtomicInteger();
     Optional<YamlType> first = getYamlProcessingOrder(accountId)
                                    .stream()
