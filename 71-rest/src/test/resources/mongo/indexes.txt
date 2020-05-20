@@ -643,12 +643,14 @@ userGroups {"name": "accountIdAndImportedByScim", "background": true} {"accountI
 userGroups {"name": "accountId_1", "background": true} {"accountId": 1}
 userGroups {"name": "appId_1", "background": true} {"appId": 1}
 userGroups {"name": "createdAt_1", "background": true} {"createdAt": 1}
+userGroups {"name": "name_1", "background": true} {"name": 1}
 userInvites {"name": "accountId_email_1", "background": true} {"accountId": 1, "email": 1}
 userInvites {"name": "appId_1", "background": true} {"appId": 1}
 userInvites {"name": "createdAt_1", "background": true} {"createdAt": 1}
 users {"name": "appId_1", "background": true} {"appId": 1}
 users {"name": "createdAt_1", "background": true} {"createdAt": 1}
 users {"name": "email_1", "unique": true} {"email": 1}
+users {"name": "name_1", "background": true} {"name": 1}
 vaultConfig {"name": "appId_1", "background": true} {"appId": 1}
 vaultConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
 vaultConfig {"name": "uniqueIdx", "unique": true} {"name": 1, "accountId": 1}
