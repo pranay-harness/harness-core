@@ -61,11 +61,15 @@ public class VMPricingServiceImpl implements VMPricingService {
       Call<PricingResponse> pricingInfoCall =
           banzaiPricingClient.getPricingInfo(cloudProvider.getCloudProviderName(), serviceName, region);
       Response<PricingResponse> pricingInfo = pricingInfoCall.execute();
-      List<VMComputePricingInfo> products = pricingInfo.body().getProducts();
-      products.forEach(
-          product -> vmPricingInfoCache.put(getVMCacheKey(product.getType(), region, cloudProvider), product));
-      logger.info("Cache size {}", vmPricingInfoCache.asMap().size());
-      logger.info("Pricing response {} {}", pricingInfo.toString(), pricingInfo.body().getProducts());
+      if (null != pricingInfo.body() && null != pricingInfo.body().getProducts()) {
+        List<VMComputePricingInfo> products = pricingInfo.body().getProducts();
+        products.forEach(
+            product -> vmPricingInfoCache.put(getVMCacheKey(product.getType(), region, cloudProvider), product));
+        logger.info("Cache size {}", vmPricingInfoCache.asMap().size());
+        logger.info("Pricing response {} {}", pricingInfo.toString(), pricingInfo.body().getProducts());
+      } else {
+        logger.info("Null response for params {} {} {}", region, serviceName, cloudProvider);
+      }
     } catch (IOException e) {
       logger.error("Exception in pricing service ", e);
     }
