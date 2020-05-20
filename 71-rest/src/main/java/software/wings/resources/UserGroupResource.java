@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -9,16 +10,19 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.beans.sso.LdapLinkGroupRequest;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlLinkGroupRequest;
@@ -84,8 +88,16 @@ public class UserGroupResource {
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.USER_PERMISSION_READ)
   public RestResponse<PageResponse<UserGroup>> list(@BeanParam PageRequest<UserGroup> pageRequest,
-      @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm,
       @QueryParam("details") @DefaultValue("true") boolean loadUsers) {
+    if (!StringUtils.isEmpty(searchTerm)) {
+      SearchFilter searchFilter = SearchFilter.builder()
+                                      .fieldName(UserGroupKeys.name)
+                                      .op(Operator.STARTS_WITH)
+                                      .fieldValues(new String[] {searchTerm})
+                                      .build();
+      pageRequest.setFilters(Lists.newArrayList(searchFilter));
+    }
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, loadUsers);
     return getPublicUserGroups(pageResponse);
   }

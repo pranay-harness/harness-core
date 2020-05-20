@@ -2944,6 +2944,18 @@ public class UserServiceImpl implements UserService {
     return userList;
   }
 
+  @Override
+  public List<User> searchUsers(
+      String accountId, boolean loadUserGroups, Integer pageSize, Integer offset, String searchTerm) {
+    Query<User> query = getSearchUserQuery(accountId, searchTerm);
+    FindOptions findOptions = new FindOptions().skip(offset).limit(pageSize);
+    List<User> userList = query.asList(findOptions);
+    if (loadUserGroups) {
+      loadUserGroupsForUsers(userList, accountId);
+    }
+    return userList;
+  }
+
   public long getTotalUserCount(String accountId, boolean listPendingUsers) {
     Query<User> query = getListUserQuery(accountId, listPendingUsers);
     return query.count();
@@ -2960,6 +2972,14 @@ public class UserServiceImpl implements UserService {
     }
     query.order(Sort.descending("lastUpdatedAt"));
     return query;
+  }
+
+  private Query<User> getSearchUserQuery(String accountId, String searchTerm) {
+    Query<User> searchUsersQuery = wingsPersistence.createQuery(User.class, HQuery.excludeAuthority);
+    searchUsersQuery.criteria(UserKeys.accounts).hasThisOne(accountId);
+    searchUsersQuery.or(searchUsersQuery.criteria(UserKeys.name).startsWithIgnoreCase(searchTerm),
+        searchUsersQuery.criteria(UserKeys.email).startsWithIgnoreCase(searchTerm));
+    return searchUsersQuery;
   }
 
   @Override

@@ -526,6 +526,8 @@ public interface UserService extends OwnedByAccount {
   List<User> listUsers(
       String accountId, boolean loadUserGroups, Integer pageSize, Integer offset, boolean listPendingUsers);
 
+  List<User> searchUsers(String accountId, boolean loadUserGroups, Integer pageSize, Integer offset, String searchTerm);
+
   long getTotalUserCount(String accountId, boolean listPendingUsers);
 
   InviteOperationResponse checkInviteStatus(UserInvite userInvite);

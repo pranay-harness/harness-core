@@ -175,11 +175,16 @@ public class UserResource {
   @ExceptionMetered
   @AuthRule(permissionType = USER_PERMISSION_READ)
   public RestResponse<PageResponse<PublicUser>> list(@BeanParam PageRequest<User> pageRequest,
-      @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm,
       @QueryParam("details") @DefaultValue("true") boolean loadUserGroups) {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
-    List<User> userList = userService.listUsers(accountId, loadUserGroups, pageSize, offset, true);
+    List<User> userList;
+    if (!StringUtils.isEmpty(searchTerm)) {
+      userList = userService.searchUsers(accountId, loadUserGroups, pageSize, offset, searchTerm);
+    } else {
+      userList = userService.listUsers(accountId, loadUserGroups, pageSize, offset, true);
+    }
 
     PageResponse<PublicUser> pageResponse = aPageResponse()
                                                 .withOffset(offset.toString())

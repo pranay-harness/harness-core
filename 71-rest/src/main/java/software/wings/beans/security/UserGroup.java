@@ -89,7 +89,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo, Account
       ImmutableSet.of(DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME, DEFAULT_PROD_SUPPORT_USER_GROUP_NAME,
           DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME, DEFAULT_READ_ONLY_USER_GROUP_NAME);
 
-  @NotEmpty private String name;
+  @NotEmpty @Indexed private String name;
   private String description;
 
   // TODO: User composition with SSOInfo class to store this info
