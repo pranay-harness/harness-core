@@ -20,6 +20,7 @@ import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -99,7 +100,7 @@ public class NodeWatcher implements Watcher<Node> {
               .setNodeUid(node.getMetadata().getUid())
               .setNodeName(node.getMetadata().getName())
               .setCreationTime(timestamp)
-              .setProviderId(node.getSpec().getProviderID())
+              .setProviderId(Optional.ofNullable(node.getSpec().getProviderID()).orElse(""))
               .putAllLabels(node.getMetadata().getLabels())
               .putAllAllocatableResource(K8sResourceUtils.getResourceMap(node.getStatus().getAllocatable()))
               .build();

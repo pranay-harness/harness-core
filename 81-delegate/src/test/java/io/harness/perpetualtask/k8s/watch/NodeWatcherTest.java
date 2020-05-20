@@ -148,6 +148,27 @@ public class NodeWatcherTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
+  public void shouldPublishNodeInfoWhenNoProviderId() throws Exception {
+    Instant creationTime = now().minus(5, ChronoUnit.MINUTES);
+    Map<String, String> labels = ImmutableMap.of("k1", "v1", "k2", "v2");
+    Node node = node(UID, NAME, creationTime.toString(), labels, nodeStatus(), null);
+    nodeWatcher.eventReceived(Action.ADDED, node);
+    ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
+    verify(eventPublisher, times(2))
+        .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
+    assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(NodeInfo.class, nodeInfo -> {
+      assertThat(nodeInfo.getNodeUid()).isEqualTo(UID);
+      assertThat(nodeInfo.getNodeName()).isEqualTo(NAME);
+      assertThat(toInstant(nodeInfo.getCreationTime())).isEqualTo(creationTime);
+      assertThat(nodeInfo.getLabelsMap()).isEqualTo(labels);
+      assertThat(mapArgumentCaptor.getValue().keySet().contains(CLUSTER_ID_IDENTIFIER));
+      assertThat(nodeInfo.getProviderId()).isEqualTo("");
+    });
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
   public void shouldCloseUnderlyingWatchOnClosingWatcher() throws Exception {
     nodeWatcher.onClose(null);
     verify(watch).close();
