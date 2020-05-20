@@ -7,17 +7,17 @@ if [ $(git rev-list --count $ghprbActualCommit ^origin/master)  -eq 1 ]; then
     ghprbPullTitle=$(git log -1 --format="%s" $ghprbActualCommit)
 fi
 
-PR_MESSAGE=`echo "${ghprbPullTitle}" | grep -iE '\[(CCM|CCE|CD|CDP|CDC|CE|CI|CV|CVNG|DOC|ER|HAR|LE|PL|SEC|SWAT|DX)-[0-9]+]:'`
+PR_MESSAGE=`echo "${ghprbPullTitle}" | grep -iE '\[(CCM|CCE|CD|CDP|CDC|CE|CI|CV|CVNG|CDNG|DOC|ER|HAR|LE|PL|SEC|SWAT|DX)-[0-9]+]:'`
 
 if [ -z "$PR_MESSAGE" ]
 then
     echo The PR title \"${ghprbPullTitle}\"
     echo "does not match the expectations"
-    echo 'Make sure that your message starts with [CCM|CCE|CD|CDP|CDC|CE|CI|CV|CVNG|DOC|ER|HAR|LE|PL|SEC|SWAT|DX-<number>]: <description>'
+    echo 'Make sure that your message starts with [CCM|CCE|CD|CDP|CDC|CE|CI|CV|CVNG|CDNG|DOC|ER|HAR|LE|PL|SEC|SWAT|DX-<number>]: <description>'
     exit 1
 fi
 
-KEY=`echo "${ghprbPullTitle}" | grep -o -iqE '(CCM|CCE|CD|CDP|CDC|CE|CI|CV|CVNG|DOC|ER|HAR|LE|PL|SEC|SWAT|DX)-[0-9]+'`
+KEY=`echo "${ghprbPullTitle}" | grep -o -iqE '(CCM|CCE|CD|CDP|CDC|CE|CI|CV|CVNG|CDNG|DOC|ER|HAR|LE|PL|SEC|SWAT|DX)-[0-9]+'`
 
 
 #TODO: enable priorities check
