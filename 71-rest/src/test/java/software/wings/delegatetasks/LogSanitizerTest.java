@@ -25,7 +25,7 @@ public class LogSanitizerTest {
     HashMap<String, String> secrets = new HashMap<String, String>() {
       { put(TEST_KEY, TEST_VALUE); }
     };
-    LogSanitizer logSanitizer = new LogSanitizer(LogSanitizer.GENERIC_ACTIVITY_ID, Sets.newHashSet(secrets.values()));
+    LogSanitizer logSanitizer = new GenericLogSanitizer(Sets.newHashSet(secrets.values()));
 
     String random = logSanitizer.sanitizeLog("random", "remove -> testValue <- ");
     assertThat(random.contains(TEST_VALUE)).isFalse();
@@ -38,7 +38,7 @@ public class LogSanitizerTest {
     HashMap<String, String> secrets = new HashMap<String, String>() {
       { put(TEST_KEY, TEST_VALUE); }
     };
-    LogSanitizer logSanitizer = new LogSanitizer(ACTIVITY_ID, Sets.newHashSet(secrets.values()));
+    LogSanitizer logSanitizer = new ActivityBasedLogSanitizer(ACTIVITY_ID, Sets.newHashSet(secrets.values()));
 
     String random = logSanitizer.sanitizeLog(ACTIVITY_ID, "remove -> testValue <- ");
     assertThat(random.contains(TEST_VALUE)).isFalse();
@@ -51,7 +51,7 @@ public class LogSanitizerTest {
     HashMap<String, String> secrets = new HashMap<String, String>() {
       { put(TEST_KEY, TEST_VALUE); }
     };
-    LogSanitizer logSanitizer = new LogSanitizer(ACTIVITY_ID, Sets.newHashSet(secrets.values()));
+    LogSanitizer logSanitizer = new ActivityBasedLogSanitizer(ACTIVITY_ID, Sets.newHashSet(secrets.values()));
 
     String random = logSanitizer.sanitizeLog(DIFFERENT_ACTIVITY_ID, "remove -> testValue <- ");
     assertThat(random.contains(TEST_VALUE)).isTrue();

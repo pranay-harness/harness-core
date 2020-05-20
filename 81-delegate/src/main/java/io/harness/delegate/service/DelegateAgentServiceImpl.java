@@ -68,7 +68,6 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
-import static software.wings.delegatetasks.LogSanitizer.GENERIC_ACTIVITY_ID;
 import static software.wings.utils.Misc.getDurationString;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -166,7 +165,9 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
+import software.wings.delegatetasks.ActivityBasedLogSanitizer;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.GenericLogSanitizer;
 import software.wings.delegatetasks.LogSanitizer;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
@@ -1791,9 +1792,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
     if (delegateLocalConfigService.isLocalConfigPresent()) {
       appendSecretsToSanitizeFromDelegateConfig(secrets);
-      return Optional.of(new LogSanitizer(GENERIC_ACTIVITY_ID, secrets));
+      return Optional.of(new GenericLogSanitizer(secrets));
     } else if (isNotBlank(activityId) && isNotEmpty(secrets)) {
-      return Optional.of(new LogSanitizer(activityId, secrets));
+      return Optional.of(new ActivityBasedLogSanitizer(activityId, secrets));
     } else {
       return Optional.empty();
     }
