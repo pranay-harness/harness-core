@@ -35,6 +35,7 @@ import software.wings.utils.RepositoryType;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -174,7 +175,13 @@ public class NexusServiceImpl implements NexusService {
           "Failed to fetch images/groups from Nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId, e);
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
-      } else if (e.getCause() != null && e.getCause() instanceof TimeoutException) {
+      } else if ((e.getCause() != null && e.getCause() instanceof SocketTimeoutException)
+          || (e instanceof SocketTimeoutException)) {
+        throw new ArtifactServerException(
+            "Timed out while connecting to the nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId,
+            e.getCause(), USER);
+      } else if ((e.getCause() != null && e.getCause() instanceof TimeoutException)
+          || (e instanceof TimeoutException)) {
         throw new ArtifactServerException("Timed out while fetching images/groups from Nexus server "
                 + nexusConfig.getNexusUrl() + " under repo " + repoId,
             e.getCause(), USER);
