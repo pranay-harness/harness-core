@@ -70,3 +70,15 @@ fi
 if [[ "" != "$DATA_PIPELINE_CONFIG_GCS_BASE_PATH" ]]; then
   yq write -i $CONFIG_FILE awsDataPipelineConfig.gcsBasePath "$DATA_PIPELINE_CONFIG_GCS_BASE_PATH"
 fi
+
+if [[ "" != "$SMTP_HOST" ]]; then
+  yq write -i $CONFIG_FILE smtp.host "$SMTP_HOST"
+fi
+
+if [[ "" != "$SMTP_USERNAME" ]]; then
+  yq write -i $CONFIG_FILE smtp.username "$SMTP_USERNAME"
+fi
+
+if [[ "" != "$SMTP_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE smtp.password "$SMTP_PASSWORD"
+fi

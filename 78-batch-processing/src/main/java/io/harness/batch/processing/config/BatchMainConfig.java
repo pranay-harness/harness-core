@@ -5,6 +5,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import lombok.Builder;
 import lombok.Data;
+import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.security.authentication.AwsS3SyncConfig;
 
 @Data
@@ -15,4 +16,5 @@ public class BatchMainConfig {
   @JsonProperty("events-mongo") private MongoConfig eventsMongo;
   @JsonProperty("awsS3SyncConfig") private AwsS3SyncConfig awsS3SyncConfig;
   @JsonProperty("awsDataPipelineConfig") private AwsDataPipelineConfig awsDataPipelineConfig;
+  @JsonProperty("smtp") private SmtpConfig smtpConfig;
 }

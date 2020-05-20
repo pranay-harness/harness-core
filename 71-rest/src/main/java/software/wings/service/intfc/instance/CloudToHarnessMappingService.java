@@ -6,6 +6,7 @@ import software.wings.beans.ResourceLookup;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.instance.HarnessServiceInfo;
+import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.time.Instant;
@@ -35,4 +36,6 @@ public interface CloudToHarnessMappingService {
 
   List<SettingAttribute> getSettingAttributes(
       String accountId, SettingCategory category, SettingVariableTypes valueType, long startTime, long endTime);
+
+  String getEntityName(BillingDataQueryMetadata.BillingDataMetaDataFields field, String entityId);
 }
