@@ -1331,7 +1331,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     userService.resendInvitationEmail(ACCOUNT_ID, USER_EMAIL);
 
-    verify(accountService, times(2)).get(ACCOUNT_ID);
+    verify(accountService, times(1)).get(ACCOUNT_ID);
     verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
     assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo(INVITE_EMAIL_TEMPLATE_NAME);
   }

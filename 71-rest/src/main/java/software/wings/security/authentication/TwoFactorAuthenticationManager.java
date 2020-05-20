@@ -67,7 +67,8 @@ public class TwoFactorAuthenticationManager {
 
   public TwoFactorAuthenticationSettings createTwoFactorAuthenticationSettings(
       User user, TwoFactorAuthenticationMechanism mechanism) {
-    return getTwoFactorAuthHandler(mechanism).createTwoFactorAuthenticationSettings(user);
+    Account account = accountService.get(user.getDefaultAccountId());
+    return getTwoFactorAuthHandler(mechanism).createTwoFactorAuthenticationSettings(user, account);
   }
 
   public User enableTwoFactorAuthenticationSettings(User user, TwoFactorAuthenticationSettings settings) {
