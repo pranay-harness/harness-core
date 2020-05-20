@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import com.mongodb.ReadPreference;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -39,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -568,7 +570,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public List<UserGroup> fetchUserGroupNamesFromIds(List<String> userGroupIds) {
+  public List<UserGroup> fetchUserGroupNamesFromIds(Collection<String> userGroupIds) {
     if (isEmpty(userGroupIds)) {
       return asList();
     }
@@ -579,6 +581,23 @@ public class UserGroupServiceImpl implements UserGroupService {
         .project(UserGroup.NAME_KEY, true)
         .project(UserGroup.ID_KEY, true)
         .asList()
+        .stream()
+        .filter(userGroup -> !isEmpty(userGroup.getName()))
+        .collect(toList());
+  }
+
+  @Override
+  public List<UserGroup> fetchUserGroupNamesFromIdsUsingSecondary(Collection<String> userGroupIds) {
+    if (isEmpty(userGroupIds)) {
+      return Collections.emptyList();
+    }
+
+    return wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+        .field(UserGroup.ID_KEY)
+        .in(userGroupIds)
+        .project(UserGroup.NAME_KEY, true)
+        .project(UserGroup.ID_KEY, true)
+        .asList(new FindOptions().readPreference(ReadPreference.secondaryPreferred()))
         .stream()
         .filter(userGroup -> !isEmpty(userGroup.getName()))
         .collect(toList());

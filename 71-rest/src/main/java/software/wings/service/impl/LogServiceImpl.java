@@ -47,9 +47,11 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class LogServiceImpl implements LogService {
   public static final int MAX_LOG_ROWS_PER_ACTIVITY = 1000;
-
-  private final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
   public static final int NUM_OF_LOGS_TO_KEEP = 200;
+
+  public static final String DATE_FORMATTER_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+  private final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FORMATTER_PATTERN);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ActivityService activityService;
   @Inject private DataStoreService dataStoreService;

@@ -11,6 +11,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.command.CommandUnitDetails;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
@@ -61,6 +62,8 @@ public interface ActivityService {
    * @return the command units
    */
   List<CommandUnitDetails> getCommandUnits(String appId, String activityId);
+
+  Map<String, List<CommandUnitDetails>> getCommandUnitsMapUsingSecondary(Collection<String> activityIds);
 
   /**
    * Gets last activity for service.

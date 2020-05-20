@@ -15,7 +15,7 @@ import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import java.util.Collections;
 import java.util.List;
 
-public class ApprovalCommandUnitMetadataTest extends CategoryTest {
+public class ActivityCommandUnitMetadataTest extends CategoryTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)

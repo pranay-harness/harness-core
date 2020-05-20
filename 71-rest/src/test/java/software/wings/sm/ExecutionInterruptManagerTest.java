@@ -2,7 +2,9 @@ package software.wings.sm;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
@@ -27,6 +29,9 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * The type State machine execution event manager test.
@@ -442,5 +447,42 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.RESUME_ALL_ALREADY.name());
     }
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testListByIdsUsingSecondary() {
+    List<ExecutionInterrupt> executionInterrupts =
+        executionInterruptManager.listByIdsUsingSecondary(Collections.emptyList());
+    assertThat(executionInterrupts).isNotNull();
+    assertThat(executionInterrupts).isEmpty();
+
+    ExecutionInterrupt executionInterrupt = anExecutionInterrupt().executionUuid("id").build();
+    String id = wingsPersistence.save(executionInterrupt);
+
+    executionInterrupts = executionInterruptManager.listByIdsUsingSecondary(asList(id, "random"));
+    assertThat(executionInterrupts).isNotNull();
+    assertThat(executionInterrupts.size()).isEqualTo(1);
+    assertThat(executionInterrupts.get(0).getUuid()).isEqualTo(id);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testListByStateExecutionIdsUsingSecondary() {
+    List<ExecutionInterrupt> executionInterrupts =
+        executionInterruptManager.listByStateExecutionIdsUsingSecondary(Collections.emptyList());
+    assertThat(executionInterrupts).isNotNull();
+    assertThat(executionInterrupts).isEmpty();
+
+    ExecutionInterrupt executionInterrupt =
+        anExecutionInterrupt().stateExecutionInstanceId("seid").executionUuid("id").build();
+    String id = wingsPersistence.save(executionInterrupt);
+
+    executionInterrupts = executionInterruptManager.listByStateExecutionIdsUsingSecondary(asList("seid", "random"));
+    assertThat(executionInterrupts).isNotNull();
+    assertThat(executionInterrupts.size()).isEqualTo(1);
+    assertThat(executionInterrupts.get(0).getUuid()).isEqualTo(id);
   }
 }

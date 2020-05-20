@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -682,6 +683,29 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     assertThat(getIds(userGroupService.getUserGroupsByAccountId(ACCOUNT_ID, user)))
         .isEqualTo(Arrays.asList(defaultUserGroup.getUuid(), nonDefaultUserGroup.getUuid()));
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testFetchUserGroupNamesFromIdsUsingSecondary() {
+    List<UserGroup> userGroups = userGroupService.fetchUserGroupNamesFromIdsUsingSecondary(null);
+    assertThat(userGroups).isNotNull();
+    assertThat(userGroups).isEmpty();
+
+    UserGroup userGroup1 = UserGroup.builder().accountId(ACCOUNT_ID).name("USER_GROUP1").build();
+    UserGroup userGroup2 = UserGroup.builder().accountId(ACCOUNT_ID).name("USER_GROUP2").build();
+    UserGroup userGroup3 = UserGroup.builder().accountId(ACCOUNT_ID).name("USER_GROUP3").build();
+
+    userGroup1 = userGroupService.save(userGroup1);
+    userGroup2 = userGroupService.save(userGroup2);
+    userGroup3 = userGroupService.save(userGroup3);
+
+    userGroups = userGroupService.fetchUserGroupNamesFromIdsUsingSecondary(
+        asList(userGroup1.getUuid(), userGroup2.getUuid(), userGroup3.getUuid()));
+    assertThat(userGroups).isNotNull();
+    assertThat(userGroups.stream().map(UserGroup::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("USER_GROUP1", "USER_GROUP2", "USER_GROUP3");
   }
 
   private List<String> getIds(List<UserGroup> userGroups) {

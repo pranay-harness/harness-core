@@ -10,6 +10,7 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -31,6 +32,8 @@ public interface StateExecutionService {
   StateExecutionInstance getStateExecutionData(String appId, String stateExecutionId);
 
   PageResponse<StateExecutionInstance> list(PageRequest<StateExecutionInstance> pageRequest);
+
+  List<StateExecutionInstance> listByIdsUsingSecondary(Collection<String> stateExecutionInstanceIds);
 
   List<ServiceInstance> getHostExclusionList(
       StateExecutionInstance stateExecutionInstance, PhaseElement phaseElement, String infraMappingId);

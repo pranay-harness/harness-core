@@ -1,7 +1,9 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ADMIN;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Event.Builder.anEvent;
@@ -9,6 +11,7 @@ import static software.wings.beans.Event.Builder.anEvent;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.ReadPreference;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -19,6 +22,7 @@ import io.harness.queue.QueuePublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.mapping.Mapper;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Activity;
@@ -43,8 +47,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -111,8 +118,32 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
+  public Map<String, List<CommandUnitDetails>> getCommandUnitsMapUsingSecondary(Collection<String> activityIds) {
+    if (isEmpty(activityIds)) {
+      return new HashMap<>();
+    }
+
+    // Activity doesn't have accountId in it's collection. So excluding authority for now. Use case is to get command
+    // units for all activities for a set of executions in an account (may not be the same app). The account check is
+    // done on workflow executions.
+    List<Activity> activities = wingsPersistence.createQuery(Activity.class, excludeAuthority)
+                                    .field(ActivityKeys.uuid)
+                                    .in(activityIds)
+                                    .asList(new FindOptions().readPreference(ReadPreference.secondaryPreferred()));
+    if (activities == null) {
+      return new HashMap<>();
+    }
+
+    return activities.stream().collect(Collectors.toMap(Activity::getUuid, this ::getCommandUnits));
+  }
+
+  @Override
   public List<CommandUnitDetails> getCommandUnits(String appId, String activityId) {
     Activity activity = get(activityId, appId);
+    return getCommandUnits(activity);
+  }
+
+  private List<CommandUnitDetails> getCommandUnits(Activity activity) {
     List<CommandUnitDetails> rv = new ArrayList<>();
     if (activity.getCommandUnitType() != null) {
       switch (activity.getCommandUnitType()) {
