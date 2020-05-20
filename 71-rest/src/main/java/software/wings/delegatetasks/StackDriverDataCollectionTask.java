@@ -140,7 +140,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
               NewRelicMetricDataRecord.builder()
                   .stateType(getStateType())
                   .name(HARNESS_HEARTBEAT_METRIC_NAME)
-                  .appId(getAppId())
+                  .appId(dataCollectionInfo.getApplicationId())
                   .workflowId(dataCollectionInfo.getWorkflowId())
                   .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                   .serviceId(dataCollectionInfo.getServiceId())
@@ -221,7 +221,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
 
       switch (dataCollectionInfo.getTimeSeriesMlAnalysisType()) {
         case COMPARATIVE:
-          fetchMetrics(dataFetchParameters, getAppId(), dataCollectionInfo, rv,
+          fetchMetrics(dataFetchParameters, dataCollectionInfo.getApplicationId(), dataCollectionInfo, rv,
               dataCollectionInfo.getTimeSeriesMlAnalysisType());
           break;
         case PREDICTIVE:
@@ -237,12 +237,12 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
             dataFetchParameters.setEndTime(
                 dataFetchParameters.getStartTime() + TimeUnit.MINUTES.toMillis(periodToCollect));
             dataFetchParameters.setDimensionValue("dummyHost");
-            fetchMetrics(dataFetchParameters, getAppId(), dataCollectionInfo, rv,
+            fetchMetrics(dataFetchParameters, dataCollectionInfo.getApplicationId(), dataCollectionInfo, rv,
                 dataCollectionInfo.getTimeSeriesMlAnalysisType());
           } else {
             dataFetchParameters.setStartTime(
                 dataFetchParameters.getEndTime() - TimeUnit.MINUTES.toMillis(periodToCollect));
-            fetchMetrics(dataFetchParameters, getAppId(), dataCollectionInfo, rv,
+            fetchMetrics(dataFetchParameters, dataCollectionInfo.getApplicationId(), dataCollectionInfo, rv,
                 dataCollectionInfo.getTimeSeriesMlAnalysisType());
           }
           break;
