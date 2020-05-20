@@ -123,7 +123,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
               NewRelicMetricDataRecord.builder()
                   .stateType(getStateType())
                   .name(HARNESS_HEARTBEAT_METRIC_NAME)
-                  .appId(getAppId())
+                  .appId(dataCollectionInfo.getApplicationId())
                   .workflowId(dataCollectionInfo.getWorkflowId())
                   .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                   .serviceId(dataCollectionInfo.getServiceId())
@@ -234,7 +234,8 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                     -> callables.add(
                         ()
                             -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.EC2, cloudWatchClient,
-                                cloudWatchMetric, host, groupName, dataCollectionInfo, getAppId(),
+                                cloudWatchMetric, host, groupName, dataCollectionInfo,
+                                dataCollectionInfo.getApplicationId(),
                                 collectionStartTime - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
                                 collectionStartTime, createApiCallLog(dataCollectionInfo.getStateExecutionId()),
                                 is247Task, hostStartTimeMap))));
@@ -265,12 +266,13 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
         List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables, AwsNameSpace nameSpace,
         Map<String, List<CloudWatchMetric>> cloudWatchMetricsByType) {
       cloudWatchMetricsByType.forEach((entityType, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
-        callables.add(()
-                          -> cloudWatchDelegateService.getMetricDataRecords(nameSpace, cloudWatchClient,
-                              cloudWatchMetric, entityType, DEFAULT_GROUP_NAME, dataCollectionInfo, getAppId(),
-                              System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
-                              System.currentTimeMillis(), createApiCallLog(dataCollectionInfo.getStateExecutionId()),
-                              is247Task, hostStartTimeMap));
+        callables.add(
+            ()
+                -> cloudWatchDelegateService.getMetricDataRecords(nameSpace, cloudWatchClient, cloudWatchMetric,
+                    entityType, DEFAULT_GROUP_NAME, dataCollectionInfo, dataCollectionInfo.getApplicationId(),
+                    System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
+                    System.currentTimeMillis(), createApiCallLog(dataCollectionInfo.getStateExecutionId()), is247Task,
+                    hostStartTimeMap));
       }));
     }
   }
