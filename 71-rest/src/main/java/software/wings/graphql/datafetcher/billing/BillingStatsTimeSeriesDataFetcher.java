@@ -36,7 +36,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -405,7 +404,7 @@ public class BillingStatsTimeSeriesDataFetcher
         }
       }
     });
-    List<String> selectedIdsAfterLimit = getElementIdsAfterLimit(aggregatedData, limit);
+    List<String> selectedIdsAfterLimit = billingDataHelper.getElementIdsAfterLimit(aggregatedData, limit);
 
     return QLBillingStackedTimeSeriesData.builder()
         .data(getDataAfterLimit(data, selectedIdsAfterLimit, includeOthers))
@@ -445,15 +444,6 @@ public class BillingStatsTimeSeriesDataFetcher
           QLBillingStackedTimeSeriesDataPoint.builder().time(dataPoint.getTime()).values(limitProcessedValues).build());
     });
     return limitProcessedData;
-  }
-
-  private List<String> getElementIdsAfterLimit(Map<String, Double> aggregatedData, int limit) {
-    List<Map.Entry<String, Double>> list = new ArrayList<>(aggregatedData.entrySet());
-    list.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
-    list = list.stream().limit(limit).collect(Collectors.toList());
-    List<String> topNElementIds = new ArrayList<>();
-    list.forEach(entry -> topNElementIds.add(entry.getKey()));
-    return topNElementIds;
   }
 
   private boolean isEntityGroupByPresent(List<QLCCMGroupBy> groupByList) {

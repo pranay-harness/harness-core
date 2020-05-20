@@ -53,12 +53,12 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
       if (timeScaleDBService.isValid()) {
         return getData(accountId, aggregateFunction, filters, groupBy, sort);
       } else {
-        throw new InvalidRequestException("Cannot process request");
+        throw new InvalidRequestException("Error while connecting to the TimeScale DB in EfficiencyStats Data Fetcher");
       }
     } catch (Exception e) {
-      throw new InvalidRequestException(
-          "Error while connecting to the TimeScale DB in EfficiencyStats Data Fetcher", e);
+      logger.error("Cannot Process Request in EfficiencyStats Data Fetcher", e);
     }
+    return null;
   }
 
   protected QLEfficiencyStatsData getData(@NotNull String accountId, List<QLCCMAggregationFunction> aggregateFunction,
@@ -70,12 +70,12 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupBy);
 
     queryData = billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction,
-        groupByEntityList.isEmpty() ? Collections.emptyList() : groupByEntityList, groupByTime, sort, true, true);
+        groupByEntityList.isEmpty() ? Collections.emptyList() : groupByEntityList, groupByTime, sort, true, true, true);
     logger.info("getSunburstGridData query: {}", queryData.getQuery());
 
     Map<String, QLBillingAmountData> entityIdToPrevBillingAmountData =
         billingDataHelper.getBillingAmountDataForEntityCostTrend(
-            accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sort);
+            accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sort, true);
 
     StringJoiner entityIdAppender = new StringJoiner(":");
     QLBillingAmountData prevBillingAmountData = entityIdToPrevBillingAmountData.get(entityIdAppender.toString());

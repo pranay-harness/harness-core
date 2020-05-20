@@ -33,6 +33,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -234,11 +235,19 @@ public class BillingDataHelper {
       List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters,
       List<QLCCMEntityGroupBy> groupByEntityList, QLCCMTimeSeriesAggregation groupByTime,
       List<QLBillingSortCriteria> sortCriteria) {
+    return getBillingAmountDataForEntityCostTrend(
+        accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sortCriteria, false);
+  }
+
+  protected Map<String, QLBillingAmountData> getBillingAmountDataForEntityCostTrend(String accountId,
+      List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters,
+      List<QLCCMEntityGroupBy> groupByEntityList, QLCCMTimeSeriesAggregation groupByTime,
+      List<QLBillingSortCriteria> sortCriteria, boolean isEfficiencyStats) {
     List<BillingDataMetaDataFields> entity = getEntityForCostTrendMapping(groupByEntityList);
     List<QLBillingDataFilter> trendFilters = getTrendFilter(filters, getStartInstant(filters), getEndInstant(filters));
     boolean addInstanceTypeFilter = setInstanceTypeBoolean(groupByEntityList);
     BillingDataQueryMetadata queryData = billingDataQueryBuilder.formQuery(accountId, trendFilters, aggregateFunction,
-        groupByEntityList, groupByTime, sortCriteria, addInstanceTypeFilter, true);
+        groupByEntityList, groupByTime, sortCriteria, addInstanceTypeFilter, true, isEfficiencyStats);
     String query = queryData.getQuery();
     logger.info("Billing data query for cost trend {}", query);
     ResultSet resultSet = null;
@@ -317,7 +326,7 @@ public class BillingDataHelper {
   }
 
   // To insert commas in given number
-  protected String formatNumber(Double number) {
+  public String formatNumber(Double number) {
     NumberFormat formatter = NumberFormat.getInstance(Locale.US);
     return formatter.format(number);
   }
@@ -332,5 +341,14 @@ public class BillingDataHelper {
       isFieldPresent.put("ACTUALIDLECOST", Boolean.TRUE);
     }
     return isFieldPresent;
+  }
+
+  public List<String> getElementIdsAfterLimit(Map<String, Double> aggregatedData, Integer limit) {
+    List<Map.Entry<String, Double>> list = new ArrayList<>(aggregatedData.entrySet());
+    list.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
+    list = list.stream().limit(limit).collect(Collectors.toList());
+    List<String> topNElementIds = new ArrayList<>();
+    list.forEach(entry -> topNElementIds.add(entry.getKey()));
+    return topNElementIds;
   }
 }

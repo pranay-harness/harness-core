@@ -404,7 +404,8 @@ public class PreAggregatedBillingDataHelper {
     String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant, isYearRequired);
     String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant, isYearRequired);
     String totalCostDescription = String.format(COST_DESCRIPTION, startInstantFormat, endInstantFormat);
-    String totalCostValue = String.format(COST_VALUE, billingDataHelper.getRoundedDoubleValue(costData.getCost()));
+    String totalCostValue = String.format(
+        COST_VALUE, billingDataHelper.formatNumber(billingDataHelper.getRoundedDoubleValue(costData.getCost())));
 
     BigDecimal forecastCost = billingDataHelper.getForecastCost(
         QLBillingAmountData.builder().cost(BigDecimal.valueOf(costData.getCost())).build(),

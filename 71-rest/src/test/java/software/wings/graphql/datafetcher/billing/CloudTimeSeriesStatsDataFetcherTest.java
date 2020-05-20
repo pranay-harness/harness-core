@@ -3,11 +3,15 @@ package software.wings.graphql.datafetcher.billing;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyDouble;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.billing.TimeSeriesDataPoints;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
@@ -23,8 +27,10 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
+import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
+import software.wings.graphql.schema.type.aggregation.QLReference;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 
 import java.util.ArrayList;
@@ -34,6 +40,7 @@ import java.util.List;
 public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Mock CloudBillingHelper cloudBillingHelper;
   @Mock PreAggregateBillingServiceImpl preAggregateBillingService;
+  @Mock BillingDataHelper billingDataHelper;
   @InjectMocks CloudTimeSeriesStatsDataFetcher cloudTimeSeriesStatsDataFetcher;
 
   private static final String COST = "unblendedCost";
@@ -43,10 +50,17 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
   private static final String USAGE_TYPE = "usageType";
   private static final String INSTANCE_TYPE = "instanceType";
   private static final String CLOUD_PROVIDER = "AWS";
+  private static final String ID1 = "id1";
+  private static final String ID2 = "id2";
+  private static final String ID3 = "id3";
+  private static final String ID4 = "id4";
+  private static final String TYPE = "awsUsagetype";
+  private static final Integer LIMIT = 2;
 
   private List<CloudBillingAggregate> cloudBillingAggregates = new ArrayList<>();
   private List<CloudBillingFilter> filters = new ArrayList<>();
   private List<CloudBillingGroupBy> groupBy = new ArrayList<>();
+  private PreAggregateBillingTimeSeriesStatsDTO qlData;
 
   @Before
   public void setup() {
@@ -64,6 +78,47 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
              anyList(), anyList(), anyList(), anyList(), any()))
         .thenReturn(PreAggregateBillingTimeSeriesStatsDTO.builder().build());
     when(cloudBillingHelper.getCloudProviderTableName(anyString())).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
+
+    List<TimeSeriesDataPoints> dataPoints = new ArrayList<>();
+    dataPoints.add(TimeSeriesDataPoints.builder()
+                       .time(1589328000000L)
+                       .values(Arrays.asList(QLBillingDataPoint.builder()
+                                                 .key(QLReference.builder().id(ID1).name(ID1).type(TYPE).build())
+                                                 .value(30)
+                                                 .build(),
+                           QLBillingDataPoint.builder()
+                               .key(QLReference.builder().id(ID2).name(ID2).type(TYPE).build())
+                               .value(40)
+                               .build(),
+                           QLBillingDataPoint.builder()
+                               .key(QLReference.builder().id(ID3).name(ID3).type(TYPE).build())
+                               .value(50)
+                               .build(),
+                           QLBillingDataPoint.builder()
+                               .key(QLReference.builder().id(ID4).name(ID4).type(TYPE).build())
+                               .value(10)
+                               .build()))
+                       .build());
+
+    dataPoints.add(TimeSeriesDataPoints.builder()
+                       .time(1589414400000L)
+                       .values(Arrays.asList(QLBillingDataPoint.builder()
+                                                 .key(QLReference.builder().id(ID1).name(ID1).type(TYPE).build())
+                                                 .value(10)
+                                                 .build(),
+                           QLBillingDataPoint.builder()
+                               .key(QLReference.builder().id(ID2).name(ID2).type(TYPE).build())
+                               .value(60)
+                               .build(),
+                           QLBillingDataPoint.builder()
+                               .key(QLReference.builder().id(ID3).name(ID3).type(TYPE).build())
+                               .value(30)
+                               .build()))
+                       .build());
+
+    qlData = PreAggregateBillingTimeSeriesStatsDTO.builder().stats(dataPoints).build();
+    doCallRealMethod().when(billingDataHelper).getRoundedDoubleValue(anyDouble());
+    doCallRealMethod().when(billingDataHelper).getElementIdsAfterLimit(any(), anyInt());
   }
 
   @Test
@@ -73,6 +128,34 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
     QLData data =
         cloudTimeSeriesStatsDataFetcher.fetch(ACCOUNT1_ID, cloudBillingAggregates, filters, groupBy, null, 5, 0);
     assertThat(data).isEqualTo(PreAggregateBillingTimeSeriesStatsDTO.builder().build());
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testPostFetchTimeSeriesDataFetcherIncludeOthers() {
+    PreAggregateBillingTimeSeriesStatsDTO postFetchData =
+        (PreAggregateBillingTimeSeriesStatsDTO) cloudTimeSeriesStatsDataFetcher.postFetch(
+            ACCOUNT1_ID, null, null, null, this.qlData, LIMIT, true);
+    assertThat(postFetchData.getStats().get(0).getValues().size()).isEqualTo(LIMIT + 1);
+    assertThat(postFetchData.getStats().get(0).getValues().get(0).getValue()).isEqualTo(40);
+    assertThat(postFetchData.getStats().get(0).getValues().get(1).getValue()).isEqualTo(50);
+    assertThat(postFetchData.getStats().get(0).getValues().get(2).getValue()).isEqualTo(40.0);
+    assertThat(postFetchData.getStats().get(1).getValues().get(2).getValue()).isEqualTo(10.0);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testPostFetchTimeSeriesDataFetcherExcludeOthers() {
+    PreAggregateBillingTimeSeriesStatsDTO postFetchData =
+        (PreAggregateBillingTimeSeriesStatsDTO) cloudTimeSeriesStatsDataFetcher.postFetch(
+            ACCOUNT1_ID, null, null, null, this.qlData, LIMIT, false);
+    assertThat(postFetchData.getStats().get(0).getValues().size()).isEqualTo(LIMIT);
+    assertThat(postFetchData.getStats().get(0).getValues().get(0).getValue()).isEqualTo(40);
+    assertThat(postFetchData.getStats().get(0).getValues().get(1).getValue()).isEqualTo(50);
+    assertThat(postFetchData.getStats().get(1).getValues().get(0).getValue()).isEqualTo(60);
+    assertThat(postFetchData.getStats().get(1).getValues().get(1).getValue()).isEqualTo(30);
   }
 
   private CloudBillingAggregate getBillingAggregate(String columnName) {
