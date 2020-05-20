@@ -15,6 +15,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.manage.GlobalContextManager;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.ResponseType;
@@ -65,7 +66,7 @@ public class YamlAuditRecordGenerationUtils {
   }
 
   public void finalizeAuditRecord(
-      String accountId, GitDiffResult gitDiffResult, Map<String, ChangeWithErrorMsg> changeWithErrorMsgs) {
+      String accountId, List<GitFileChange> gitFileChanges, Map<String, ChangeWithErrorMsg> changeWithErrorMsgs) {
     AuditGlobalContextData auditGlobalContextData =
         (AuditGlobalContextData) GlobalContextManager.get(AuditGlobalContextData.AUDIT_ID);
     AuditHeader auditHeader = wingsPersistence.get(AuditHeader.class, auditGlobalContextData.getAuditId());
@@ -75,12 +76,12 @@ public class YamlAuditRecordGenerationUtils {
     }
 
     auditHeader.setResponseTime(System.currentTimeMillis());
-    if (isEmpty(changeWithErrorMsgs)) {
+    if (!whetherAllChangesFailedInCommit(gitFileChanges, changeWithErrorMsgs)) {
       // All changes were successfully ingested.
       updateAuditHeaderAsSuccess(accountId, auditHeader);
     } else {
       // There were some failures for yaml changes
-      updateAuditHeaderCompletedWithErrors(accountId, auditHeader, gitDiffResult, changeWithErrorMsgs);
+      updateAuditHeaderCompletedWithErrors(accountId, auditHeader, gitFileChanges, changeWithErrorMsgs);
     }
   }
 
@@ -105,10 +106,9 @@ public class YamlAuditRecordGenerationUtils {
    * Generate EntityAuditRecords for yamlPaths failed, and update those in AuditHeader
    */
   private void updateAuditHeaderCompletedWithErrors(String accountId, AuditHeader auditHeader,
-      GitDiffResult gitDiffResult, Map<String, ChangeWithErrorMsg> changeWithErrorMsgs) {
+      List<GitFileChange> gitFileChanges, Map<String, ChangeWithErrorMsg> changeWithErrorMsgs) {
     List<GitFileChange> changeListWithFailedChanges =
-        gitDiffResult.getGitFileChanges()
-            .stream()
+        gitFileChanges.stream()
             .filter(gitFileChange -> changeWithErrorMsgs.containsKey(gitFileChange.getFilePath()))
             .collect(toList());
 
@@ -147,20 +147,39 @@ public class YamlAuditRecordGenerationUtils {
       }
     });
 
-    String failureStatusMsg = generateFailureStatusMessage(changeWithErrorMsgs);
-    boolean ifAllChangesFailed = gitDiffResult.getGitFileChanges().size() == changeWithErrorMsgs.size();
+    String failureStatusMsg = generateFailureStatusMessage(gitFileChanges, changeWithErrorMsgs);
+    boolean ifAllChangesFailed = whetherAllChangesFailedInCommit(gitFileChanges, changeWithErrorMsgs);
     auditHeader.setResponseType(ifAllChangesFailed ? ResponseType.FAILED : ResponseType.COMPLETED_WITH_ERRORS);
     auditHeader.setResponseStatusCode(ifAllChangesFailed ? 400 : 207);
     String msg = generateResponseMessage(
-        accountId, auditHeader, changeListWithFailedChanges, gitDiffResult, changeWithErrorMsgs);
+        accountId, auditHeader, changeListWithFailedChanges, gitFileChanges, changeWithErrorMsgs);
     updateAuditHeader(accountId, auditHeader, msg, failureStatusMsg);
   }
 
-  private String generateFailureStatusMessage(Map<String, ChangeWithErrorMsg> changeWithErrorMsgs) {
+  private boolean whetherAllChangesFailedInCommit(
+      List<GitFileChange> gitFileChanges, Map<String, ChangeWithErrorMsg> changeWithErrorMsgs) {
+    if (isEmpty(gitFileChanges)) {
+      return false;
+    }
+    for (GitFileChange gitFileChange : gitFileChanges) {
+      if (!changeWithErrorMsgs.containsKey(gitFileChange.getFilePath())) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private String generateFailureStatusMessage(
+      List<GitFileChange> gitFileChanges, Map<String, ChangeWithErrorMsg> changeWithErrorMsgs) {
+    if (isEmpty(gitFileChanges)) {
+      return StringUtils.EMPTY;
+    }
     try {
       StringBuilder msg = new StringBuilder(128);
       msg.append("Failed paths are:  \n");
-      changeWithErrorMsgs.keySet().forEach(path -> msg.append(path).append("  \n"));
+      gitFileChanges.stream()
+          .filter(change -> changeWithErrorMsgs.containsKey(change.getFilePath()))
+          .forEach(change -> msg.append(change.getFilePath()).append("  \n"));
       return msg.toString();
     } catch (Exception e) {
       logger.warn("Exception in handling audit for GitChanges: " + e);
@@ -197,12 +216,11 @@ public class YamlAuditRecordGenerationUtils {
    * with details of failed and successful changes
    */
   private String generateResponseMessage(String accountId, AuditHeader auditHeader,
-      List<GitFileChange> changeListWithFailedChanges, GitDiffResult gitDiffResult,
+      List<GitFileChange> changeListWithFailedChanges, List<GitFileChange> gitFileChanges,
       Map<String, ChangeWithErrorMsg> changeWithErrorMsgs) {
     try {
       List<GitFileChange> changeListWithSuccessfulChanges =
-          gitDiffResult.getGitFileChanges()
-              .stream()
+          gitFileChanges.stream()
               .filter(gitFileChange -> !changeWithErrorMsgs.containsKey(gitFileChange.getFilePath()))
               .collect(toList());
 
