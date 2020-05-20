@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyDouble;
@@ -16,7 +15,6 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Before;
@@ -92,7 +90,7 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTest {
 
     doReturn(entityIdToPrevBillingAmountData)
         .when(billingDataHelper)
-        .getBillingAmountDataForEntityCostTrend(anyString(), any(), any(), any(), any(), any());
+        .getBillingAmountDataForEntityCostTrend(anyString(), any(), any(), any(), any(), any(), anyBoolean());
     doReturn(Double.valueOf(4.55))
         .when(billingDataHelper)
         .getCostTrendForEntity(resultSet, entityIdToPrevBillingAmountData.get(entityIdAppender.toString()), filters);
@@ -131,10 +129,9 @@ public class EfficiencyStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Category(UnitTests.class)
   public void testEfficiencyStatsDataForDBInvalid() {
     when(timeScaleDBService.isValid()).thenReturn(false);
-    assertThatThrownBy(()
-                           -> efficiencyStatsDataFetcher.fetch(ACCOUNT1_ID, Collections.EMPTY_LIST,
-                               Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST))
-        .isInstanceOf(InvalidRequestException.class);
+    QLData data = efficiencyStatsDataFetcher.fetch(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+    assertThat(data).isNull();
   }
 
   @Test

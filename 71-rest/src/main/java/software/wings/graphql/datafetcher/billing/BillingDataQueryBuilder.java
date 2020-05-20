@@ -79,6 +79,14 @@ public class BillingDataQueryBuilder {
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
       QLCCMTimeSeriesAggregation groupByTime, List<QLBillingSortCriteria> sortCriteria, boolean addInstanceTypeFilter,
       boolean isCostTrendQuery) {
+    return formQuery(accountId, filters, aggregateFunction, groupBy, groupByTime, sortCriteria, addInstanceTypeFilter,
+        isCostTrendQuery, false);
+  }
+
+  protected BillingDataQueryMetadata formQuery(String accountId, List<QLBillingDataFilter> filters,
+      List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
+      QLCCMTimeSeriesAggregation groupByTime, List<QLBillingSortCriteria> sortCriteria, boolean addInstanceTypeFilter,
+      boolean isCostTrendQuery, boolean isEfficiencyStatsQuery) {
     BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
     SelectQuery selectQuery = new SelectQuery();
 
@@ -90,7 +98,8 @@ public class BillingDataQueryBuilder {
     List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
 
     if (addInstanceTypeFilter
-        && (isGroupByClusterPresent(groupBy) || isNoneGroupBySelectedWithoutFilterInClusterView(groupBy, filters))) {
+        && (isGroupByClusterPresent(groupBy) || isNoneGroupBySelectedWithoutFilterInClusterView(groupBy, filters)
+               || isEfficiencyStatsQuery)) {
       addInstanceTypeFilter(filters);
     }
 

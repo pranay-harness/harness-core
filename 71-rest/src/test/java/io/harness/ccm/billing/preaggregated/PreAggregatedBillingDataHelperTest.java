@@ -16,6 +16,8 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.nullStr
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyDouble;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.Timestamp;
@@ -205,6 +207,7 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
 
     when(billingDataHelper.getRoundedDoubleValue(COST)).thenReturn(1.44);
     when(billingDataHelper.isYearRequired(any(), any())).thenReturn(true);
+    doCallRealMethod().when(billingDataHelper).formatNumber(anyDouble());
     when(billingDataHelper.getTotalCostFormattedDate(Instant.ofEpochMilli(0L), true)).thenReturn("01 January, 1970");
     when(billingDataHelper.getTotalCostFormattedDate(Instant.ofEpochMilli(MAX_START_TIME / 1000), true))
         .thenReturn("01 January, 2020");
