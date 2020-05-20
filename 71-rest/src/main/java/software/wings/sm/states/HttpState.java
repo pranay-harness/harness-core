@@ -106,7 +106,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   @Getter @Setter private String sweepingOutputName;
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
 
-  @SchemaIgnore private int socketTimeoutMillis = 10000;
+  @SchemaIgnore private int socketTimeoutMillis = 30000;
 
   @Inject private transient ActivityHelperService activityHelperService;
   @Inject private transient SweepingOutputService sweepingOutputService;
@@ -340,8 +340,12 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
     Integer stateTimeout = getTimeoutMillis();
     int taskSocketTimeout = socketTimeoutMillis;
-    if (stateTimeout != null && taskSocketTimeout > stateTimeout) {
+    String warningMessage = null;
+    if (stateTimeout != null && taskSocketTimeout >= stateTimeout) {
       taskSocketTimeout = stateTimeout - 1000;
+    } else {
+      warningMessage = "State timeout is greater than " + socketTimeoutMillis / 1000
+          + " sec. Defaulting  socket timeout to " + socketTimeoutMillis / 1000 + " sec.";
     }
 
     List<String> renderedTags = newArrayList();
@@ -372,7 +376,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
     executionDataBuilder.httpUrl(expressionEvaluator.substitute(httpTaskParameters.getUrl(), Collections.emptyMap()))
         .httpMethod(expressionEvaluator.substitute(httpTaskParameters.getMethod(), Collections.emptyMap()))
-        .header(expressionEvaluator.substitute(httpTaskParameters.getHeader(), Collections.emptyMap()));
+        .header(expressionEvaluator.substitute(httpTaskParameters.getHeader(), Collections.emptyMap()))
+        .warningMessage(warningMessage);
 
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(((ExecutionContextImpl) context).fetchRequiredApp().getAccountId())
