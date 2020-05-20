@@ -42,6 +42,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
   private String assertionStatus;
   private String header;
   private boolean useProxy;
+  private String warningMessage;
 
   @Transient private transient Document document;
 
@@ -50,7 +51,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
       String errorMsg, Integer waitInterval, ContextElement element, Map<String, Object> stateParams,
       Map<String, Object> templateVariables, String httpUrl, String httpMethod, int httpResponseCode,
       String httpResponseBody, String assertionStatement, String assertionStatus, Document document, String header,
-      boolean useProxy) {
+      boolean useProxy, String warningMessage) {
     super(
         stateName, stateType, startTs, endTs, status, errorMsg, waitInterval, element, stateParams, templateVariables);
     this.httpUrl = httpUrl;
@@ -62,6 +63,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
     this.document = document;
     this.header = header;
     this.useProxy = useProxy;
+    this.warningMessage = warningMessage;
   }
 
   /**
@@ -140,6 +142,8 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
         ExecutionDataValue.builder().displayName("Assertion").value(assertionStatement).build());
     putNotNull(executionDetails, "assertionStatus",
         ExecutionDataValue.builder().displayName("Assertion Result").value(assertionStatus).build());
+    putNotNull(executionDetails, "warningMessage",
+        ExecutionDataValue.builder().displayName("Warning").value(warningMessage).build());
     return executionDetails;
   }
 }
