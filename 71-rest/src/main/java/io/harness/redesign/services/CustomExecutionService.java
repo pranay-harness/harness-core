@@ -16,4 +16,6 @@ public interface CustomExecutionService {
   PlanExecution executeSectionPlan();
 
   PlanExecution executeRetryPlan();
+
+  PlanExecution executeSimpleShellScriptPlan();
 }

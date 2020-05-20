@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.redesign.states.http.BasicHttpState;
+import io.harness.redesign.states.shell.ShellScriptState;
 import io.harness.redesign.states.wait.WaitState;
 import io.harness.registries.registrar.StateRegistrar;
 import io.harness.state.State;
@@ -18,5 +19,6 @@ public class WingsStateRegistrar implements StateRegistrar {
   public void register(Set<Pair<StateType, Class<? extends State>>> stateClasses) {
     stateClasses.add(Pair.of(BasicHttpState.STATE_TYPE, BasicHttpState.class));
     stateClasses.add(Pair.of(WaitState.STATE_TYPE, WaitState.class));
+    stateClasses.add(Pair.of(ShellScriptState.STATE_TYPE, ShellScriptState.class));
   }
 }

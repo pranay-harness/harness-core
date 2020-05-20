@@ -12,18 +12,21 @@ import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.task.shell.ScriptType;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
 import io.harness.redesign.states.http.BasicHttpStateParameters;
+import io.harness.redesign.states.shell.ShellScriptStateParameters;
 import io.harness.redesign.states.wait.WaitStateParameters;
 import io.harness.references.OutcomeRefObject;
 import io.harness.state.StateType;
 import io.harness.state.core.fork.ForkStateParameters;
 import io.harness.state.core.section.SectionStateParameters;
 import lombok.experimental.UtilityClass;
+import software.wings.sm.states.ShellScriptState;
 
 import java.util.Collections;
 
@@ -293,6 +296,37 @@ public class CustomExecutionUtils {
         .setupAbstractions(ImmutableMap.<String, String>builder()
                                .put("accountId", "kmpySmUISimoRrJL6NL73w")
                                .put("appId", "XEsfW6D_RJm1IaGpDidD3g")
+                               .build())
+        .build();
+  }
+
+  public static Plan provideSimpleShellScriptPlan() {
+    String shellScriptNodeId = generateUuid();
+    ShellScriptStateParameters shellScriptStateParameters =
+        ShellScriptStateParameters.builder()
+            .executeOnDelegate(true)
+            .connectionType(ShellScriptState.ConnectionType.SSH)
+            .scriptType(ScriptType.BASH)
+            .scriptString("echo 'Hello, world, from the new engine!'\nexport HELLO='hello!'\nexport HI='hi!'")
+            .outputVars("HELLO,HI")
+            .sweepingOutputName("shellscript")
+            .build();
+
+    return Plan.builder()
+        .uuid(generateUuid())
+        .startingNodeId(shellScriptNodeId)
+        .node(ExecutionNode.builder()
+                  .uuid(shellScriptNodeId)
+                  .name("Basic Http 1")
+                  .stateType(StateType.builder().type(software.wings.sm.StateType.SHELL_SCRIPT.name()).build())
+                  .stateParameters(shellScriptStateParameters)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                             .build())
+                  .build())
+        .setupAbstractions(ImmutableMap.<String, String>builder()
+                               .put("accountId", "kmpySmUISimoRrJL6NL73w")
+                               .put("appId", "d9cTupsyQjWqbhUmZ8XPdQ")
                                .build())
         .build();
   }

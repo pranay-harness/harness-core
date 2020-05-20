@@ -40,7 +40,6 @@ import java.util.Map;
 @Produces(State.class)
 public class BasicHttpState implements State, AsyncExecutable {
   public static final StateType STATE_TYPE = StateType.builder().type("BASIC_HTTP").build();
-  ;
 
   @Inject private DelegateService delegateService;
 

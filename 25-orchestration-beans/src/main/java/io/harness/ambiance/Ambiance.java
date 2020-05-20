@@ -60,6 +60,14 @@ public class Ambiance {
     return cloned;
   }
 
+  public Ambiance cloneForFinish(int levelsToKeep) {
+    Ambiance cloned = deepCopy();
+    if (levelsToKeep >= 0 && levelsToKeep < levels.size()) {
+      cloned.levels.subList(levelsToKeep, cloned.levels.size()).clear();
+    }
+    return cloned;
+  }
+
   public Ambiance cloneForChild() {
     return deepCopy();
   }

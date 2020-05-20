@@ -1,6 +1,7 @@
 package io.harness.resolver.sweepingoutput;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 
@@ -38,8 +39,22 @@ public class ExecutionSweepingOutputResolver implements Resolver<SweepingOutput>
 
   @Override
   public SweepingOutput consume(@NotNull Ambiance ambiance, @NotNull String name, @NotNull SweepingOutput value) {
+    return save(ambiance, name, value, -1);
+  }
+
+  public SweepingOutput save(
+      @NotNull Ambiance ambiance, @NotNull String name, @NotNull SweepingOutput value, int levelsToKeep) {
+    if (levelsToKeep >= 0) {
+      ambiance = ambiance.cloneForFinish(levelsToKeep);
+    }
+
     try {
-      hPersistence.save(ExecutionSweepingOutputInstance.builder().ambiance(ambiance).name(name).value(value).build());
+      hPersistence.save(ExecutionSweepingOutputInstance.builder()
+                            .uuid(generateUuid())
+                            .ambiance(ambiance)
+                            .name(name)
+                            .value(value)
+                            .build());
     } catch (DuplicateKeyException ex) {
       throw new InvalidRequestException(format("Sweeping output with name %s is already saved", name), ex);
     }

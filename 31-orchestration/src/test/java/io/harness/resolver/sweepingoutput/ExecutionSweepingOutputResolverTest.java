@@ -25,13 +25,25 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
   private static final String STEP_RUNTIME_ID = generateUuid();
   private static final String STEP_SETUP_ID = generateUuid();
 
+  private static final String outputName = "outputName";
+  private static final String testValueSection = "testSection";
+  private static final String testValueStep = "testStep";
+
+  private static final Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
+  private static final Ambiance ambiancePhase = AmbianceTestUtils.buildAmbiance();
+  private static final Ambiance ambianceStep = AmbianceTestUtils.buildAmbiance();
+
+  static {
+    ambianceStep.addLevel(Level.builder().runtimeId(STEP_RUNTIME_ID).setupId(STEP_SETUP_ID).build());
+  }
+
   @Inject private ExecutionSweepingOutputResolver executionSweepingOutputResolver;
 
   @Test
   @RealMongo
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testSaveAndFind() {
+  public void testConsumeAndFind() {
     Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
     Ambiance ambiancePhase = ambianceSection.cloneForFinish();
     Ambiance ambianceStep = ambianceSection.cloneForChild();
@@ -52,6 +64,33 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueStep);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testSaveAndFind() {
+    Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
+    Ambiance ambiancePhase = ambianceSection.cloneForFinish();
+    Ambiance ambianceStep = ambianceSection.cloneForChild();
+    ambianceStep.addLevel(Level.builder().runtimeId(STEP_RUNTIME_ID).setupId(STEP_SETUP_ID).build());
+
+    String outputName = "outputName";
+    String testValueSection = "testSection";
+    String testValueStep = "testStep";
+
+    executionSweepingOutputResolver.save(
+        ambianceSection, outputName, DummySweepingOutput.builder().test(testValueSection).build(), 2);
+    validateResult(resolve(ambianceSection, outputName), testValueSection);
+    validateResult(resolve(ambianceStep, outputName), testValueSection);
+    assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(InvalidRequestException.class);
+
+    executionSweepingOutputResolver.save(
+        ambianceStep, outputName, DummySweepingOutput.builder().test(testValueStep).build(), 0);
+    validateResult(resolve(ambiancePhase, outputName), testValueStep);
+    validateResult(resolve(ambianceSection, outputName), testValueSection);
+    validateResult(resolve(ambianceStep, outputName), testValueSection);
   }
 
   private void validateResult(SweepingOutput foundOutput, String testValue) {
