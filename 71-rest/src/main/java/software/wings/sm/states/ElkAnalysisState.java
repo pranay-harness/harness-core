@@ -1,8 +1,10 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.TemplateExpressionProcessor.checkFieldTemplatized;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -181,7 +183,10 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   public void setAnalysisServerConfigId(String analysisServerConfigId) {
     this.analysisServerConfigId = analysisServerConfigId;
   }
-
+  // don't remove this. It's used by yaml update.
+  public void setInitialAnalysisDelay(String initialAnalysisDelay) {
+    this.initialAnalysisDelay = initialAnalysisDelay;
+  }
   /**
    * Validates Query on Manager side. No ELK call is made here.
    *
@@ -248,6 +253,28 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
         .build();
   }
 
+  @Override
+  protected int getDelaySeconds(String initialDelay) {
+    if (isEmpty(initialDelay)) {
+      initialDelay = "2m";
+    }
+    char lastChar = initialDelay.charAt(initialDelay.length() - 1);
+    int initialDelayInSec;
+    switch (lastChar) {
+      case 's':
+        initialDelayInSec = Integer.parseInt(initialDelay.substring(0, initialDelay.length() - 1));
+        break;
+      case 'm':
+        initialDelayInSec = (int) TimeUnit.MINUTES.toSeconds(1)
+            * Integer.parseInt(initialDelay.substring(0, initialDelay.length() - 1));
+        break;
+      default:
+        throw new IllegalArgumentException("Specify delay(initialAnalysisDelay) in seconds (1s) or minutes (1m)");
+    }
+    Preconditions.checkState(initialDelayInSec >= 60 && initialDelayInSec <= 10 * 60,
+        "initialAnalysisDelay can only be between 1 to 10 minutes.");
+    return initialDelayInSec;
+  }
   @Override
   protected boolean isCVTaskEnqueuingEnabled(String accountId) {
     return true;
