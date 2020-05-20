@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
@@ -28,6 +29,9 @@ import software.wings.security.annotations.AuthRule;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class WorkflowDataFetcher extends AbstractObjectDataFetcher<QLWorkflow, QLWorkflowQueryParameters> {
   public static final String WORKFLOW_DOES_NOT_EXIST_MSG = "Workflow does not exist";
+  public static final String EMPTY_WORKFLOW_NAME = "Empty Workflow name";
+  public static final String EMPTY_APPLICATION_ID = "Empty Application Id";
+
   @Inject HPersistence persistence;
 
   @Override
@@ -38,6 +42,13 @@ public class WorkflowDataFetcher extends AbstractObjectDataFetcher<QLWorkflow, Q
     if (qlQuery.getWorkflowId() != null) {
       workflow = persistence.get(Workflow.class, qlQuery.getWorkflowId());
     } else if (qlQuery.getWorkflowName() != null) {
+      if (EmptyPredicate.isEmpty(qlQuery.getApplicationId())) {
+        throw new InvalidRequestException(EMPTY_APPLICATION_ID, WingsException.USER);
+      }
+
+      if (EmptyPredicate.isEmpty(qlQuery.getWorkflowName())) {
+        throw new InvalidRequestException(EMPTY_WORKFLOW_NAME, WingsException.USER);
+      }
       workflow = persistence.createQuery(Workflow.class)
                      .filter(WorkflowKeys.name, qlQuery.getWorkflowName())
                      .filter(WorkflowKeys.appId, qlQuery.getApplicationId())
