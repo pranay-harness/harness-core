@@ -312,4 +312,18 @@ public class ElkAnalysisStateTest extends APMStateVerificationTestBase {
         .isInstanceOf(DataCollectionException.class)
         .hasMessage("Expression " + elkAnalysisState.getIndices() + " could not be resolved");
   }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetDelaySeconds_withNonDefaultValue() {
+    elkAnalysisState.setInitialAnalysisDelay("5m");
+    assertThat(elkAnalysisState.initialAnalysisDelay).isEqualTo("5m");
+    assertThat(elkAnalysisState.getDelaySeconds("3m")).isEqualTo(180);
+    assertThat(elkAnalysisState.getDelaySeconds("600s")).isEqualTo(600);
+    assertThatThrownBy(() -> elkAnalysisState.getDelaySeconds("601s"))
+        .hasMessage("initialAnalysisDelay can only be between 1 to 10 minutes.");
+    assertThatThrownBy(() -> elkAnalysisState.getDelaySeconds("600"))
+        .hasMessage("Specify delay(initialAnalysisDelay) in seconds (1s) or minutes (1m)");
+  }
 }
