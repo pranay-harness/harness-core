@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableSet;
 
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
+import io.harness.batch.processing.billing.timeseries.service.impl.WeeklyReportServiceImpl;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
@@ -32,6 +33,7 @@ public class EventJobScheduler {
   @Autowired private BatchJobRunner batchJobRunner;
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
+  @Autowired private WeeklyReportServiceImpl weeklyReportService;
   @Autowired private BillingDataServiceImpl billingDataService;
 
   @PostConstruct
@@ -57,6 +59,16 @@ public class EventJobScheduler {
       billingDataService.purgeOldHourlyBillingData();
     } catch (Exception ex) {
       logger.error("Exception while running purgeOldHourlyBillingData Job {}", ex);
+    }
+  }
+
+  @Scheduled(cron = "0 0 1 * * ?")
+  public void runWeeklyReportJob() {
+    try {
+      weeklyReportService.generateAndSendWeeklyReport();
+      logger.info("Weekly billing report generated and send");
+    } catch (Exception ex) {
+      logger.error("Exception while running weeklyReportJob {}", ex);
     }
   }
 

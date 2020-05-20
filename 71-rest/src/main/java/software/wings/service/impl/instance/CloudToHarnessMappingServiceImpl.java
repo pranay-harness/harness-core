@@ -1,29 +1,42 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
+import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeValidate;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.ccm.cluster.entities.Cluster;
+import io.harness.ccm.cluster.entities.ClusterRecord;
+import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
+import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
+import io.harness.ccm.cluster.entities.EcsCluster;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.ResourceLookup;
 import software.wings.beans.ResourceLookup.ResourceLookupKeys;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.instance.HarnessServiceInfo;
+import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -191,5 +204,122 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
       }
     }
     return settingAttributes;
+  }
+
+  @Override
+  public String getEntityName(BillingDataQueryMetadata.BillingDataMetaDataFields field, String entityId) {
+    switch (field) {
+      case APPID:
+      case ENVID:
+      case SERVICEID:
+      case CLUSTERID:
+        return fetchEntityName(field, entityId);
+      case CLOUDSERVICENAME:
+      case TASKID:
+      case WORKLOADNAME:
+      case NAMESPACE:
+      case CLUSTERNAME:
+        return entityId;
+      default:
+        throw new InvalidRequestException("Invalid EntityType " + field);
+    }
+  }
+
+  private String fetchEntityName(BillingDataQueryMetadata.BillingDataMetaDataFields field, String entityId) {
+    switch (field) {
+      case APPID:
+        return getApplicationName(entityId);
+      case ENVID:
+        return getEnvironmentName(entityId);
+      case SERVICEID:
+        return getServiceName(entityId);
+      case CLUSTERID:
+        return getClusterName(entityId);
+      default:
+        throw new InvalidRequestException("Invalid EntityType " + field);
+    }
+  }
+
+  private String getApplicationName(String entityId) {
+    try {
+      Application app = persistence.get(Application.class, entityId);
+      if (app != null) {
+        return app.getName();
+      } else {
+        return entityId;
+      }
+    } catch (Exception e) {
+      logger.info("Entity Id could not be converted : ", e);
+      return entityId;
+    }
+  }
+
+  private String getServiceName(String entityId) {
+    try {
+      Service service = persistence.get(Service.class, entityId);
+      if (service != null) {
+        return service.getName();
+      } else {
+        return entityId;
+      }
+    } catch (Exception e) {
+      logger.info("Entity Id could not be converted : ", e);
+      return entityId;
+    }
+  }
+
+  private String getEnvironmentName(String entityId) {
+    try {
+      Environment env = persistence.get(Environment.class, entityId);
+      if (env != null) {
+        return env.getName();
+      } else {
+        return entityId;
+      }
+    } catch (Exception e) {
+      logger.info("Entity Id could not be converted : ", e);
+      return entityId;
+    }
+  }
+
+  private String getClusterName(String entityId) {
+    try {
+      Cluster cluster = getCluster(entityId).getCluster();
+      if (cluster != null) {
+        if (cluster.getClusterType().equals(AWS_ECS)) {
+          EcsCluster ecsCluster = (EcsCluster) cluster;
+          if (null != ecsCluster.getClusterName()) {
+            return ecsCluster.getClusterName();
+          } else {
+            return entityId;
+          }
+        } else if (cluster.getClusterType().equals(DIRECT_KUBERNETES)) {
+          DirectKubernetesCluster kubernetesCluster = (DirectKubernetesCluster) cluster;
+          String clusterName = kubernetesCluster.getClusterName();
+          if (null == clusterName || clusterName.equals("")) {
+            SettingAttribute settingAttribute = getSettingAttributeForCluster(kubernetesCluster.getCloudProviderId());
+            clusterName = settingAttribute.getName();
+          }
+          return clusterName;
+        } else {
+          return entityId;
+        }
+      } else {
+        return entityId;
+      }
+    } catch (Exception e) {
+      logger.info("Entity Id could not be converted : ", e);
+      return entityId;
+    }
+  }
+
+  private ClusterRecord getCluster(String clusterId) {
+    Query<ClusterRecord> query =
+        persistence.createQuery(ClusterRecord.class).filter(ClusterRecordKeys.uuid, new ObjectId(clusterId));
+    return query.get();
+  }
+
+  private SettingAttribute getSettingAttributeForCluster(String varId) {
+    return persistence.get(SettingAttribute.class, varId);
   }
 }
