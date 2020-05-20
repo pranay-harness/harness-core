@@ -48,4 +48,11 @@ public class CustomExecutionResource {
   public RestResponse<PlanExecution> executeRetryPlan() {
     return new RestResponse<>(customExecutionService.executeRetryPlan());
   }
+
+  @GET
+  @Path("/simple-shell-script")
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<PlanExecution> executeSimpleShellScriptPlan() {
+    return new RestResponse<>(customExecutionService.executeSimpleShellScriptPlan());
+  }
 }
