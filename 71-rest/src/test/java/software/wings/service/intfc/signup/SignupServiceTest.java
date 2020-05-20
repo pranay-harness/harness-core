@@ -100,6 +100,9 @@ public class SignupServiceTest extends WingsBaseTest {
     final String weakPassword = "abc";
     assertThatThrownBy(() -> signupService.validatePassword(weakPassword.toCharArray()))
         .isInstanceOf(WeakPasswordException.class);
+    final String blankPassword = "    ";
+    assertThatThrownBy(() -> signupService.validatePassword(blankPassword.toCharArray()))
+        .isInstanceOf(WeakPasswordException.class);
   }
 
   private void fail() {

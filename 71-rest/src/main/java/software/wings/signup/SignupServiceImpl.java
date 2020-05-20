@@ -1,6 +1,5 @@
 package software.wings.signup;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_EMAIL;
@@ -240,7 +239,7 @@ public class SignupServiceImpl implements SignupService {
 
   @Override
   public void validatePassword(char[] password) {
-    if (isEmpty(password)) {
+    if (password == null || isBlank(String.valueOf(password))) {
       throw new WeakPasswordException(
           "Password cannot be empty.", null, PASSWORD_STRENGTH_CHECK_FAILED, Level.ERROR, USER, null);
     }
