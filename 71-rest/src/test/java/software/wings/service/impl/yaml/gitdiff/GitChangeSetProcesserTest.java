@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.gitdiff;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -47,7 +48,7 @@ public class GitChangeSetProcesserTest extends CategoryTest {
     verify(yamlGitService, Mockito.times(1)).isCommitAlreadyProcessed(eq(ACCOUNTID), anyString());
     verify(gitChangeAuditRecordHandler, times(1)).processGitChangesForAudit(ACCOUNTID, gitDiffResult);
     verify(gitChangesToEntityConverter, times(1)).ingestGitYamlChangs(ACCOUNTID, gitDiffResult);
-    verify(gitChangeAuditRecordHandler, times(1)).finalizeAuditRecord(eq(ACCOUNTID), eq(gitDiffResult), anyMap());
+    verify(gitChangeAuditRecordHandler, times(1)).finalizeAuditRecord(eq(ACCOUNTID), any(), anyMap());
   }
 
   @Test
@@ -60,6 +61,6 @@ public class GitChangeSetProcesserTest extends CategoryTest {
     verify(yamlGitService, Mockito.times(1)).isCommitAlreadyProcessed(eq(ACCOUNTID), anyString());
     verify(gitChangeAuditRecordHandler, times(0)).processGitChangesForAudit(ACCOUNTID, gitDiffResult);
     verify(gitChangesToEntityConverter, times(0)).ingestGitYamlChangs(ACCOUNTID, gitDiffResult);
-    verify(gitChangeAuditRecordHandler, times(0)).finalizeAuditRecord(eq(ACCOUNTID), eq(gitDiffResult), anyMap());
+    verify(gitChangeAuditRecordHandler, times(0)).finalizeAuditRecord(eq(ACCOUNTID), any(), anyMap());
   }
 }

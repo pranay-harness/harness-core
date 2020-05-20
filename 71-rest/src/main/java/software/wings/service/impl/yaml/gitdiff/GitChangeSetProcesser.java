@@ -104,7 +104,8 @@ public class GitChangeSetProcesser {
       // 1. Mark exit point.
       // 2. Set status code 200 / 207 (multi-status code (indicating success and failure for some paths)
       // 3. Set detailed message
-      gitChangeAuditRecordHandler.finalizeAuditRecord(accountId, gitDiffResult, changeWithErrorMsgs);
+      gitChangeAuditRecordHandler.finalizeAuditRecord(
+          accountId, getFileChangesOfCommit(gitFileChanges), changeWithErrorMsgs);
     }
   }
 
