@@ -2,6 +2,7 @@ package io.harness.batch.processing.billing.service.impl;
 
 import io.harness.batch.processing.billing.service.PricingData;
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
+import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
 import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
@@ -29,13 +30,18 @@ public class EcsFargateInstancePricingStrategy implements InstancePricingStrateg
     String region = instanceMetaData.get(InstanceMetaDataConstants.REGION);
     EcsFargatePricingInfo fargatePricingInfo = vmPricingService.getFargatePricingInfo(region);
 
-    double cpuPricePerHour = (instanceData.getTotalResource().getCpuUnits() / 1024) * fargatePricingInfo.getCpuPrice();
-    double memoryPricePerHour =
-        (instanceData.getTotalResource().getMemoryMb() / 1024) * fargatePricingInfo.getMemoryPrice();
+    Double cpuUnits = instanceData.getTotalResource().getCpuUnits();
+    Double memoryMb = instanceData.getTotalResource().getMemoryMb();
+    if (InstanceType.K8S_POD == instanceData.getInstanceType()) {
+      cpuUnits = Double.valueOf(instanceMetaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_CPU));
+      memoryMb = Double.valueOf(instanceMetaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY));
+    }
+    double cpuPricePerHour = (cpuUnits / 1024) * fargatePricingInfo.getCpuPrice();
+    double memoryPricePerHour = (memoryMb / 1024) * fargatePricingInfo.getMemoryPrice();
     return PricingData.builder()
         .pricePerHour(cpuPricePerHour + memoryPricePerHour)
-        .cpuUnit(instanceData.getTotalResource().getCpuUnits())
-        .memoryMb(instanceData.getTotalResource().getMemoryMb())
+        .cpuUnit(cpuUnits)
+        .memoryMb(memoryMb)
         .build();
   }
 }

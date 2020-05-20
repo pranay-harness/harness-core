@@ -54,11 +54,16 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
     metaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM, labelsMap.get(K8sCCMConstants.OPERATING_SYSTEM));
     metaData.put(InstanceMetaDataConstants.NODE_UID, nodeInfo.getNodeUid());
     metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, getInstanceCategory(k8SCloudProvider, labelsMap).name());
+    if (null != labelsMap.get(K8sCCMConstants.COMPUTE_TYPE)) {
+      metaData.put(InstanceMetaDataConstants.COMPUTE_TYPE, labelsMap.get(K8sCCMConstants.COMPUTE_TYPE));
+    }
 
     Resource allocatableResource = K8sResourceUtils.getResource(nodeInfo.getAllocatableResourceMap());
     Resource totalResource = allocatableResource;
     List<CloudProvider> cloudProviders = cloudProviderService.getFirstClassSupportedCloudProviders();
-    if (cloudProviders.contains(k8SCloudProvider)) {
+    String computeType =
+        InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.COMPUTE_TYPE, metaData);
+    if (cloudProviders.contains(k8SCloudProvider) && !K8sCCMConstants.AWS_FARGATE_COMPUTE_TYPE.equals(computeType)) {
       totalResource = instanceResourceService.getComputeVMResource(
           InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.INSTANCE_FAMILY, metaData),
           InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, metaData),

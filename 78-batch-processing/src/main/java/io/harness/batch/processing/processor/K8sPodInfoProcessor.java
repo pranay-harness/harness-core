@@ -73,6 +73,9 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
           InstanceMetaDataConstants.PARENT_RESOURCE_CPU, String.valueOf(instanceData.getTotalResource().getCpuUnits()));
       metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY,
           String.valueOf(instanceData.getTotalResource().getMemoryMb()));
+      if (null != nodeMetaData.get(InstanceMetaDataConstants.COMPUTE_TYPE)) {
+        metaData.put(InstanceMetaDataConstants.COMPUTE_TYPE, nodeMetaData.get(InstanceMetaDataConstants.COMPUTE_TYPE));
+      }
     } else {
       logger.error(
           "Node detail not found settingId {} node name {}", podInfo.getCloudProviderId(), podInfo.getNodeName());
