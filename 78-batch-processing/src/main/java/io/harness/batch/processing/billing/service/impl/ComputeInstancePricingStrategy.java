@@ -10,6 +10,7 @@ import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.data.ZonePrice;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomPricingService;
 import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
+import io.harness.batch.processing.pricing.service.support.GCPCustomInstanceDetailProvider;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,6 @@ import java.util.Map;
 public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
   private final VMPricingService vmPricingService;
   private final AwsCustomPricingService awsCustomPricingService;
-  private static final String GCP_CUSTOM_INSTANCE_PREFIX = "custom-";
 
   @Autowired
   public ComputeInstancePricingStrategy(
@@ -41,8 +41,8 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
         InstanceCategory.valueOf(instanceMetaData.get(InstanceMetaDataConstants.INSTANCE_CATEGORY));
     String instanceFamily = instanceMetaData.get(InstanceMetaDataConstants.INSTANCE_FAMILY);
 
-    if (instanceFamily.startsWith(GCP_CUSTOM_INSTANCE_PREFIX) && cloudProvider == CloudProvider.GCP) {
-      return getGCPCustomInstancePricingData(instanceFamily, instanceCategory);
+    if (GCPCustomInstanceDetailProvider.isCustomGCPInstance(instanceFamily, cloudProvider)) {
+      return GCPCustomInstanceDetailProvider.getGCPCustomInstancePricingData(instanceFamily, instanceCategory);
     } else if (cloudProvider == CloudProvider.IBM) {
       return getIBMInstancePricingData(instanceData);
     }
@@ -71,20 +71,6 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
     }
     double pricePerHr = ((cpuPricePerHr * cpuUnits) / 1024) + ((memoryPricePerHr * memoryMb) / 1024);
     return PricingData.builder().pricePerHour(pricePerHr).cpuUnit(cpuUnits).memoryMb(memoryMb).build();
-  }
-
-  private PricingData getGCPCustomInstancePricingData(String instanceFamily, InstanceCategory instanceCategory) {
-    double cpuPricePerHr = 0.033174;
-    double memoryPricePerHr = 0.004446;
-    if (instanceCategory == InstanceCategory.SPOT) {
-      cpuPricePerHr = 0.00698;
-      memoryPricePerHr = 0.00094;
-    }
-    String[] split = instanceFamily.split("-");
-    double cpu = Double.parseDouble(split[1]);
-    double memory = Double.parseDouble(split[2]);
-    double pricePerHr = (cpuPricePerHr * cpu) + ((memoryPricePerHr / 1024) * memory);
-    return PricingData.builder().pricePerHour(pricePerHr).cpuUnit(cpu * 1024).memoryMb(memory).build();
   }
 
   private double getPricePerHour(

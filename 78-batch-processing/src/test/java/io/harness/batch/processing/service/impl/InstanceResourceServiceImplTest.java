@@ -24,7 +24,7 @@ public class InstanceResourceServiceImplTest {
 
   private static final String REGION = "asia-east2";
   private final String GCP_INSTANCE_FAMILY = "n1-standard-4";
-  private final String GCP_CUSTOM_INSTANCE_FAMILY = "custom-2-5120";
+  private final String GCP_CUSTOM_INSTANCE_FAMILY = "n2-custom-2-5120";
 
   @Test
   @Owner(developers = HITESH)
