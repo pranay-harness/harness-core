@@ -40,6 +40,7 @@
         <module>84-command-library-server</module>
         <module>85-functional-test</module>
         <module>91-model-gen-tool</module>
+        <module>120-cd-nextgen</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>
