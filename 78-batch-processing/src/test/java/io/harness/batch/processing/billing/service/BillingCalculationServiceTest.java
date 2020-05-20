@@ -45,6 +45,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Mock private InstancePricingStrategyContext instancePricingStrategyRegistry;
   @Mock private VMPricingServiceImpl vmPricingService;
   @Mock private AwsCustomPricingService awsCustomPricingService;
+  @Mock private EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy;
 
   private final Instant NOW = Instant.now().truncatedTo(ChronoUnit.DAYS);
   private final Instant INSTANCE_STOP_TIMESTAMP = NOW;
@@ -336,7 +337,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
     when(vmPricingService.getComputeVMPricingInfo(DEFAULT_INSTANCE_FAMILY, REGION, CloudProvider.AWS))
         .thenReturn(createVMComputePricingInfo());
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.ECS_TASK_EC2))
-        .thenReturn(new ComputeInstancePricingStrategy(vmPricingService, awsCustomPricingService));
+        .thenReturn(new ComputeInstancePricingStrategy(
+            vmPricingService, awsCustomPricingService, ecsFargateInstancePricingStrategy));
     Resource instanceResource = getInstanceResource(18432, 30720);
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
@@ -366,7 +368,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
     when(vmPricingService.getComputeVMPricingInfo(GCP_INSTANCE_FAMILY, GCP_REGION, CloudProvider.GCP))
         .thenReturn(createVMComputePricingInfo());
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_NODE))
-        .thenReturn(new ComputeInstancePricingStrategy(vmPricingService, awsCustomPricingService));
+        .thenReturn(new ComputeInstancePricingStrategy(
+            vmPricingService, awsCustomPricingService, ecsFargateInstancePricingStrategy));
     Resource totalResource = getInstanceResource(4096, 15360);
     Resource instanceResource = getInstanceResource(3988, 14360);
     Map<String, String> metaData = new HashMap<>();
@@ -424,7 +427,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountGCPCustomInstance() throws IOException {
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_POD))
-        .thenReturn(new ComputeInstancePricingStrategy(vmPricingService, awsCustomPricingService));
+        .thenReturn(new ComputeInstancePricingStrategy(
+            vmPricingService, awsCustomPricingService, ecsFargateInstancePricingStrategy));
     Resource instanceResource = getInstanceResource(4 * 1024, 5 * 1024);
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.GCP.name());
@@ -447,7 +451,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountIBMInstance() throws IOException {
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_POD))
-        .thenReturn(new ComputeInstancePricingStrategy(vmPricingService, awsCustomPricingService));
+        .thenReturn(new ComputeInstancePricingStrategy(
+            vmPricingService, awsCustomPricingService, ecsFargateInstancePricingStrategy));
     Resource instanceResource = getInstanceResource(4 * 1024, 5 * 1024);
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.IBM.name());

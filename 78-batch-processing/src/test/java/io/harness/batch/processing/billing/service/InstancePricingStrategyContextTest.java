@@ -22,14 +22,16 @@ import org.mockito.runners.MockitoJUnitRunner;
 public class InstancePricingStrategyContextTest extends CategoryTest {
   @Mock private VMPricingServiceImpl vmPricingService;
   @Mock private AwsCustomPricingService awsCustomPricingService;
+  @Mock private EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy;
 
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstancePricingStrategy() {
-    InstancePricingStrategyContext instancePricingStrategyContext = new InstancePricingStrategyContext(
-        new ComputeInstancePricingStrategy(vmPricingService, awsCustomPricingService),
-        new EcsFargateInstancePricingStrategy(vmPricingService));
+    InstancePricingStrategyContext instancePricingStrategyContext =
+        new InstancePricingStrategyContext(new ComputeInstancePricingStrategy(vmPricingService, awsCustomPricingService,
+                                               ecsFargateInstancePricingStrategy),
+            new EcsFargateInstancePricingStrategy(vmPricingService));
     InstancePricingStrategy computeInstancePricingStrategy =
         instancePricingStrategyContext.getInstancePricingStrategy(InstanceType.EC2_INSTANCE);
     assertThat(computeInstancePricingStrategy.getClass()).isEqualTo(ComputeInstancePricingStrategy.class);

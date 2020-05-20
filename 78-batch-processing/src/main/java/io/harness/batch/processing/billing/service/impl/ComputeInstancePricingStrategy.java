@@ -11,7 +11,9 @@ import io.harness.batch.processing.pricing.data.ZonePrice;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomPricingService;
 import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
 import io.harness.batch.processing.pricing.service.support.GCPCustomInstanceDetailProvider;
+import io.harness.batch.processing.processor.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,12 +26,15 @@ import java.util.Map;
 public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
   private final VMPricingService vmPricingService;
   private final AwsCustomPricingService awsCustomPricingService;
+  private final EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy;
 
   @Autowired
-  public ComputeInstancePricingStrategy(
-      VMPricingService vmPricingService, AwsCustomPricingService awsCustomPricingService) {
+  public ComputeInstancePricingStrategy(VMPricingService vmPricingService,
+      AwsCustomPricingService awsCustomPricingService,
+      EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy) {
     this.vmPricingService = vmPricingService;
     this.awsCustomPricingService = awsCustomPricingService;
+    this.ecsFargateInstancePricingStrategy = ecsFargateInstancePricingStrategy;
   }
 
   @Override
@@ -40,11 +45,15 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
     InstanceCategory instanceCategory =
         InstanceCategory.valueOf(instanceMetaData.get(InstanceMetaDataConstants.INSTANCE_CATEGORY));
     String instanceFamily = instanceMetaData.get(InstanceMetaDataConstants.INSTANCE_FAMILY);
+    String computeType = InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
+        InstanceMetaDataConstants.COMPUTE_TYPE, instanceMetaData);
 
     if (GCPCustomInstanceDetailProvider.isCustomGCPInstance(instanceFamily, cloudProvider)) {
       return GCPCustomInstanceDetailProvider.getGCPCustomInstancePricingData(instanceFamily, instanceCategory);
     } else if (cloudProvider == CloudProvider.IBM) {
       return getIBMInstancePricingData(instanceData);
+    } else if (cloudProvider == CloudProvider.AWS && K8sCCMConstants.AWS_FARGATE_COMPUTE_TYPE.equals(computeType)) {
+      return ecsFargateInstancePricingStrategy.getPricePerHour(instanceData, startTime);
     }
 
     VMComputePricingInfo vmComputePricingInfo = getCustomVMPricing(instanceData, startTime, cloudProvider);

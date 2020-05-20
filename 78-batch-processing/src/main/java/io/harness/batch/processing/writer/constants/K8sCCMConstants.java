@@ -11,8 +11,10 @@ public class K8sCCMConstants {
   public static final String REGION = "failure-domain.beta.kubernetes.io/region";
   public static final String ZONE = "failure-domain.beta.kubernetes.io/zone";
   public static final String INSTANCE_FAMILY = "beta.kubernetes.io/instance-type";
+  public static final String COMPUTE_TYPE = "eks.amazonaws.com/compute-type";
   public static final String UNALLOCATED = "Unallocated";
   public static final String DEFAULT_DEPLOYMENT_TYPE = "Pod";
+  public static final String AWS_FARGATE_COMPUTE_TYPE = "fargate";
 
   private K8sCCMConstants() {}
 }

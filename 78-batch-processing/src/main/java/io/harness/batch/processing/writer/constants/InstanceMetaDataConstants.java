@@ -9,6 +9,7 @@ public class InstanceMetaDataConstants {
   public static final String TASK_ID = "task_id";
   public static final String LAUNCH_TYPE = "launch_type";
   public static final String NAMESPACE = "namespace";
+  public static final String COMPUTE_TYPE = "compute_type";
   public static final String CLUSTER_TYPE = "cluster_type";
   public static final String CLOUD_PROVIDER = "cloud_provider";
   public static final String WORKLOAD_NAME = "workload_name";

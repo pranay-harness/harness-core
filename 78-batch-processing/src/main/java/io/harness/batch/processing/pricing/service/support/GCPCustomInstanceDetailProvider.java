@@ -14,7 +14,7 @@ public class GCPCustomInstanceDetailProvider {
 
   public static boolean isCustomGCPInstance(String instanceType, CloudProvider cloudProvider) {
     boolean gcpCustomInstance = false;
-    if (instanceType.contains(GCP_CUSTOM_INSTANCE_PREFIX) && cloudProvider == CloudProvider.GCP) {
+    if (cloudProvider == CloudProvider.GCP && instanceType.contains(GCP_CUSTOM_INSTANCE_PREFIX)) {
       gcpCustomInstance = true;
     }
     return gcpCustomInstance;
