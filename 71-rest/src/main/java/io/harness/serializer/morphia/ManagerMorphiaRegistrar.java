@@ -15,6 +15,7 @@ import io.harness.ccm.cluster.entities.InstanceData;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.ccm.cluster.entities.K8sYaml;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
+import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpOrganization;
 import io.harness.ccm.config.GcpServiceAccount;
@@ -808,6 +809,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(BaseFile.class);
     set.add(BugsnagCVConfiguration.class);
     set.add(CacheEntity.class);
+    set.add(CECommunications.class);
     set.add(CloudFormationInfrastructureProvisioner.class);
     set.add(CloudFormationRollbackConfig.class);
     set.add(CloudWatchCVServiceConfiguration.class);

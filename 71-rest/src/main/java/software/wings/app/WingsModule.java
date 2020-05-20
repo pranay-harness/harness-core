@@ -25,6 +25,8 @@ import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.BudgetServiceImpl;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
+import io.harness.ccm.communication.CECommunicationsService;
+import io.harness.ccm.communication.CECommunicationsServiceImpl;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.config.CCMSettingServiceImpl;
 import io.harness.ccm.health.HealthStatusService;
@@ -899,6 +901,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(CCMSettingService.class).to(CCMSettingServiceImpl.class);
     bind(ClusterRecordService.class).to(ClusterRecordServiceImpl.class);
     bind(BudgetService.class).to(BudgetServiceImpl.class);
+    bind(CECommunicationsService.class).to(CECommunicationsServiceImpl.class);
     bind(HealthStatusService.class).to(HealthStatusServiceImpl.class);
     bind(GcpBillingService.class).to(GcpBillingServiceImpl.class);
     bind(PreAggregateBillingService.class).to(PreAggregateBillingServiceImpl.class);
