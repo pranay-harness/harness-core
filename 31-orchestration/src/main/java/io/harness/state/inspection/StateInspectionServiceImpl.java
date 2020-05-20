@@ -1,19 +1,25 @@
 package io.harness.state.inspection;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.ReadPreference;
 import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
 import io.harness.state.inspection.StateInspection.StateInspectionKeys;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Singleton
@@ -28,6 +34,18 @@ public class StateInspectionServiceImpl implements StateInspectionService {
     return persistence.createQuery(StateInspection.class)
         .filter(StateInspectionKeys.stateExecutionInstanceId, stateExecutionInstanceId)
         .get();
+  }
+
+  @Override
+  public List<StateInspection> listUsingSecondary(Collection<String> stateExecutionInstanceIds) {
+    if (isEmpty(stateExecutionInstanceIds)) {
+      return new ArrayList<>();
+    }
+
+    return persistence.createQuery(StateInspection.class, excludeAuthority)
+        .field(StateInspectionKeys.stateExecutionInstanceId)
+        .in(stateExecutionInstanceIds)
+        .asList(new FindOptions().readPreference(ReadPreference.secondaryPreferred()));
   }
 
   @Override

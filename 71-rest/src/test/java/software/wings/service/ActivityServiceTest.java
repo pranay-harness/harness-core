@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static java.util.Arrays.asList;
@@ -66,6 +67,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by peeyushaggarwal on 5/27/16.
@@ -253,6 +255,43 @@ public class ActivityServiceTest extends WingsBaseTest {
         .hasSize(3)
         .extracting(CommandUnitDetails::getCommandUnitType, CommandUnitDetails::getName)
         .contains(tuple(COMMAND, INITIALIZE_UNIT), tuple(COMMAND, COMMAND_UNIT_NAME), tuple(COMMAND, CLEANUP_UNIT));
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetActivityCommandUnits() {
+    Map<String, List<CommandUnitDetails>> commandUnitsMap =
+        activityService.getCommandUnitsMapUsingSecondary(Collections.emptyList());
+    assertThat(commandUnitsMap).isNotNull();
+    assertThat(commandUnitsMap).isEmpty();
+
+    commandUnitsMap = activityService.getCommandUnitsMapUsingSecondary(Collections.singletonList("random-0919"));
+    assertThat(commandUnitsMap).isNotNull();
+    assertThat(commandUnitsMap).isEmpty();
+
+    List<CommandUnit> commandUnitList1 = asList(new InitSshCommandUnit(),
+        anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("./bin/start.sh").build());
+    List<CommandUnit> commandUnitList2 = Collections.singletonList(new CleanupSshCommandUnit());
+    Activity activity1 = Activity.builder().commandUnits(commandUnitList1).build();
+    activity1.setAppId(APP_ID);
+    Activity activity2 = Activity.builder().commandUnits(commandUnitList2).build();
+    activity2.setAppId(APP_ID);
+
+    String activityId1 = wingsPersistence.save(activity1);
+    String activityId2 = wingsPersistence.save(activity2);
+
+    commandUnitsMap = activityService.getCommandUnitsMapUsingSecondary(asList(activityId1, activityId2, "random-0919"));
+    assertThat(commandUnitsMap).isNotEmpty();
+    assertThat(commandUnitsMap.keySet()).containsExactlyInAnyOrder(activityId1, activityId2);
+    assertThat(commandUnitsMap.get(activityId1))
+        .hasSize(2)
+        .extracting(CommandUnitDetails::getCommandUnitType, CommandUnitDetails::getName)
+        .containsExactly(tuple(COMMAND, INITIALIZE_UNIT), tuple(COMMAND, COMMAND_UNIT_NAME));
+    assertThat(commandUnitsMap.get(activityId2))
+        .hasSize(1)
+        .extracting(CommandUnitDetails::getCommandUnitType, CommandUnitDetails::getName)
+        .containsExactly(tuple(COMMAND, CLEANUP_UNIT));
   }
 
   /**

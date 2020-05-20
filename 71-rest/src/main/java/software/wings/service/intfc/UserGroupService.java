@@ -156,7 +156,9 @@ public interface UserGroupService extends OwnedByAccount {
 
   List<String> fetchUserGroupsMemberIds(String accountId, List<String> userGroupIds);
 
-  List<UserGroup> fetchUserGroupNamesFromIds(List<String> userGroupIds);
+  List<UserGroup> fetchUserGroupNamesFromIds(Collection<String> userGroupIds);
+
+  List<UserGroup> fetchUserGroupNamesFromIdsUsingSecondary(Collection<String> userGroupIds);
 
   boolean verifyUserAuthorizedToAcceptOrRejectApproval(String accountId, List<String> userGroupIds);
 

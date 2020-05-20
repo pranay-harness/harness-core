@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -9,6 +10,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder;
+import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
@@ -91,8 +93,8 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
         PhaseExecutionDataBuilder.aPhaseExecutionData().withInfraDefinitionId(INFRA_DEFINITION_ID).build();
     doReturn(phaseExecutionData).when(stateExecutionService).getPhaseExecutionDataSweepingOutput(any());
     StateExecutionInstance stateExecutionInstance =
-        Builder.aStateExecutionInstance().displayName("Phase 2").appId(APP_ID).build();
-    StateExecutionInstance previousStateExecutionInstance = Builder.aStateExecutionInstance()
+        aStateExecutionInstance().displayName("Phase 2").appId(APP_ID).build();
+    StateExecutionInstance previousStateExecutionInstance = aStateExecutionInstance()
                                                                 .appId(APP_ID)
                                                                 .displayName("Phase 1")
                                                                 .addStateExecutionData("Phase 1", phaseExecutionData)
@@ -114,7 +116,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReturnEmptyWhenNoPreviousPhases() {
     PhaseElement phaseElement = PhaseElement.builder().infraDefinitionId(INFRA_DEFINITION_ID).build();
-    StateExecutionInstance stateExecutionInstance = Builder.aStateExecutionInstance().appId(APP_ID).build();
+    StateExecutionInstance stateExecutionInstance = aStateExecutionInstance().appId(APP_ID).build();
     doReturn(Collections.emptyList())
         .when(stateExecutionService)
         .fetchPreviousPhasesStateExecutionInstances(any(), any(), any(), any());
@@ -145,8 +147,8 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     PhaseExecutionData phaseExecutionData =
         PhaseExecutionDataBuilder.aPhaseExecutionData().withInfraMappingId(INFRA_MAPPING_ID).build();
     StateExecutionInstance stateExecutionInstance =
-        Builder.aStateExecutionInstance().displayName("Phase 2").appId(APP_ID).build();
-    StateExecutionInstance previousStateExecutionInstance = Builder.aStateExecutionInstance()
+        aStateExecutionInstance().displayName("Phase 2").appId(APP_ID).build();
+    StateExecutionInstance previousStateExecutionInstance = aStateExecutionInstance()
                                                                 .appId(APP_ID)
                                                                 .displayName("Phase 1")
                                                                 .addStateExecutionData("Phase 1", phaseExecutionData)
@@ -196,7 +198,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
   }
 
   private void setupStateExecutionInstanceData(String uuid1, String uuid2, String uuid3, String uuid4) {
-    Builder instance = Builder.aStateExecutionInstance().appId(APP_ID).executionUuid(WORKFLOW_EXECUTION_ID);
+    Builder instance = aStateExecutionInstance().appId(APP_ID).executionUuid(WORKFLOW_EXECUTION_ID);
 
     StateExecutionInstance executionInstance1 = instance.uuid(uuid1)
                                                     .displayName("App Resize")
@@ -246,7 +248,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     PhaseExecutionSummary phaseExecutionSummary = new PhaseExecutionSummary();
     PhaseElement phaseElement =
         PhaseElement.builder().uuid(phaseExecutionId).phaseName(phaseName).infraMappingId(INFRA_MAPPING_ID).build();
-    StateExecutionInstance stateExecutionInstance = Builder.aStateExecutionInstance()
+    StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .uuid(stateExecutionId)
                                                         .displayName(phaseName)
                                                         .appId(APP_ID)
@@ -347,5 +349,22 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     stateExecutionInstance.setDelegateTaskId(generateUuid());
 
     return stateExecutionInstance;
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testListByIdsUsingSecondary() {
+    String id = wingsPersistence.save(createStateExecutionInstance());
+
+    List<StateExecutionInstance> stateExecutionInstances =
+        stateExecutionService.listByIdsUsingSecondary(Collections.emptyList());
+    assertThat(stateExecutionInstances).isNotNull();
+    assertThat(stateExecutionInstances).isEmpty();
+
+    stateExecutionInstances = stateExecutionService.listByIdsUsingSecondary(Collections.singletonList(id));
+    assertThat(stateExecutionInstances).isNotNull();
+    assertThat(stateExecutionInstances.size()).isEqualTo(1);
+    assertThat(stateExecutionInstances.get(0).getUuid()).isEqualTo(id);
   }
 }

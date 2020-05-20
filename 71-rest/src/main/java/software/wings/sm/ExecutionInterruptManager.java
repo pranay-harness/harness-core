@@ -39,6 +39,7 @@ import static io.harness.interrupts.ExecutionInterruptType.RESUME;
 import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.interrupts.ExecutionInterruptType.RETRY;
 import static io.harness.interrupts.ExecutionInterruptType.ROLLBACK;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 
@@ -46,6 +47,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import com.mongodb.ReadPreference;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -57,6 +59,7 @@ import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.logging.ExceptionLogger;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
@@ -64,8 +67,11 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.sm.ExecutionInterrupt.ExecutionInterruptKeys;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -307,6 +313,28 @@ public class ExecutionInterruptManager {
                                               .addOrder(ExecutionInterrupt.CREATED_AT_KEY, OrderType.DESC)
                                               .build();
     return wingsPersistence.query(ExecutionInterrupt.class, req);
+  }
+
+  public List<ExecutionInterrupt> listByIdsUsingSecondary(Collection<String> ids) {
+    if (isEmpty(ids)) {
+      return Collections.emptyList();
+    }
+
+    return wingsPersistence.createQuery(ExecutionInterrupt.class, excludeAuthority)
+        .field(ExecutionInterruptKeys.uuid)
+        .in(ids)
+        .asList(new FindOptions().readPreference(ReadPreference.secondaryPreferred()));
+  }
+
+  public List<ExecutionInterrupt> listByStateExecutionIdsUsingSecondary(Collection<String> stateExecutionIds) {
+    if (isEmpty(stateExecutionIds)) {
+      return Collections.emptyList();
+    }
+
+    return wingsPersistence.createQuery(ExecutionInterrupt.class, excludeAuthority)
+        .field(ExecutionInterruptKeys.stateExecutionInstanceId)
+        .in(stateExecutionIds)
+        .asList(new FindOptions().readPreference(ReadPreference.secondaryPreferred()));
   }
 
   /**
