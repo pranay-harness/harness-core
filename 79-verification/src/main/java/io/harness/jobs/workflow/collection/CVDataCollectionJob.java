@@ -14,7 +14,7 @@ public class CVDataCollectionJob implements Handler<Account> {
   @Override
   public void handle(Account account) {
     final String accountId = account.getUuid();
-    logger.info("starting processing cv task for account id {}", accountId);
+    logger.debug("starting processing cv task for account id {}", accountId);
     continuousVerificationService.processNextCVTasks(accountId);
     continuousVerificationService.expireLongRunningCVTasks(accountId);
     continuousVerificationService.retryCVTasks(accountId);

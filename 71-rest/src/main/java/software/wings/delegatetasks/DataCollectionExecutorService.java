@@ -29,7 +29,7 @@ public class DataCollectionExecutorService {
 
   public <T> List<Optional<T>> executeParrallel(List<Callable<T>> callables) {
     CompletionService<T> completionService = new ExecutorCompletionService<>(dataCollectionService);
-    logger.info("Parallelizing callables {} ", callables.size());
+    logger.debug("Parallelizing callables {} ", callables.size());
     for (Callable<T> callable : callables) {
       completionService.submit(callable::call);
     }
@@ -51,7 +51,7 @@ public class DataCollectionExecutorService {
         throw new WingsException("Error executing task " + e.getMessage(), e);
       }
     }
-    logger.info("Done parallelizing callables {} ", callables.size());
+    logger.debug("Done parallelizing callables {} ", callables.size());
     return rv;
   }
 }

@@ -545,14 +545,14 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
                 dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
           } else {
-            logger.info(dataCollectionInfo.getStateType() + ": Sent {} metric records to the server for minute {}",
+            logger.debug(dataCollectionInfo.getStateType() + ": Sent {} metric records to the server for minute {}",
                 allMetricRecords.size(), dataCollectionMinute);
           }
           lastEndTime = currentEndTime;
           collectionStartTime += TimeUnit.MINUTES.toMillis(collectionWindow);
           if (dataCollectionMinute >= dataCollectionInfo.getDataCollectionTotalTime() || is24x7Task) {
             // We are done with all data collection, so setting task status to success and quitting.
-            logger.info(
+            logger.debug(
                 "Completed APM collection task. So setting task status to success and quitting. StateExecutionId {}",
                 dataCollectionInfo.getStateExecutionId());
             completed.set(true);
@@ -580,7 +580,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       }
 
       if (completed.get()) {
-        logger.info(dataCollectionInfo.getStateType() + ": Shutting down apm data collection");
+        logger.debug(dataCollectionInfo.getStateType() + ": Shutting down apm data collection");
         shutDownCollection();
         return;
       }

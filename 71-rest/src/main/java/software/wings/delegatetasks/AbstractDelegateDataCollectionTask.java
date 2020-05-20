@@ -106,7 +106,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
       final Runnable runnable = getDataCollector(taskResult);
       future = verificationExecutor.scheduleAtFixedRate(() -> {
         if (taskFuture == null || taskFuture.isCancelled() || taskFuture.isDone()) {
-          getLogger().info("submitting data collection to executor service");
+          getLogger().debug("submitting data collection to executor service");
           taskFuture = executorService.submit(runnable);
         } else {
           if (!pendingTask) {
@@ -129,7 +129,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
       }, getInitialDelaySeconds(), getPeriodSeconds(), TimeUnit.SECONDS);
       getLogger().info("going to collect data for " + parameters);
       waitForCompletion();
-      getLogger().info(" finish data collection for " + parameters + ". result is " + taskResult);
+      getLogger().debug(" finish data collection for " + parameters + ". result is " + taskResult);
       return taskResult;
     } catch (Exception e) {
       getLogger().error("Data collection task   failed : ", e);

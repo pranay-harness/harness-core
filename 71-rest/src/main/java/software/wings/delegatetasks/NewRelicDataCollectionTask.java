@@ -149,12 +149,12 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         NewRelicApplicationInstance node, Set<String> metricNames, long endTime, boolean failOnException) {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
-      logger.info("Fetching for host {} for stateExecutionId {} for metrics {}", node,
+      logger.debug("Fetching for host {} for stateExecutionId {} for metrics {}", node,
           dataCollectionInfo.getStateExecutionId(), metricNames);
       getWebTransactionMetrics(node, metricNames, endTime, records, failOnException);
       getErrorMetrics(node, metricNames, endTime, records, failOnException);
       getApdexMetrics(node, metricNames, endTime, records, failOnException);
-      logger.info("Fetching done for host {} for stateExecutionId {} for metrics {}", node,
+      logger.debug("Fetching done for host {} for stateExecutionId {} for metrics {}", node,
           dataCollectionInfo.getStateExecutionId(), metricNames);
 
       logger.debug(records.toString());
@@ -199,7 +199,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       int retry = 0;
       while (retry < RETRIES) {
         try {
-          logger.info("For datacollectionMinute {}, start and end times are {} and {}", dataCollectionMinute,
+          logger.debug("For datacollectionMinute {}, start and end times are {} and {}", dataCollectionMinute,
               windowStartTimeManager, endTime);
           NewRelicMetricData metricData = getPredictiveOrComparativeMetricData(metricNames, endTime, node);
 
@@ -391,15 +391,15 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       while (!completed.get() && retry < RETRIES) {
         try {
           Set<NewRelicMetric> txnsToCollect = getTxnsToCollect(dataCollectionInfo.isCheckNotAllowedStrings());
-          logger.info("Found total new relic metrics " + txnsToCollect.size());
+          logger.debug("Found total new relic metrics " + txnsToCollect.size());
           List<NewRelicApplicationInstance> instances = newRelicDelegateService.getApplicationInstances(
               dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
               dataCollectionInfo.getNewRelicAppId(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));
-          logger.info("Got {} new relic nodes.", instances.size());
+          logger.debug("Got {} new relic nodes.", instances.size());
 
           Map<String, List<Set<String>>> metricBatches =
               batchMetricsToCollect(txnsToCollect, dataCollectionInfo.isCheckNotAllowedStrings());
-          logger.info("Found total new relic metric batches " + metricBatches.size());
+          logger.debug("Found total new relic metric batches " + metricBatches.size());
 
           List<Callable<Boolean>> callables = new ArrayList<>();
           if (isPredictiveAnalysis()) {
@@ -409,7 +409,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
             Preconditions.checkState(
                 isNotEmpty(instances), "No instances found for application %s" + dataCollectionInfo.getNewRelicAppId());
-            logger.info("AnalysisType is Predictive. So we're collecting metrics by application instead of host/node");
+            logger.debug("AnalysisType is Predictive. So we're collecting metrics by application instead of host/node");
             callables.add(() -> fetchAndSaveMetricsForNode(instances.get(0), metricBatches, endTimeForCollection));
           } else {
             for (NewRelicApplicationInstance node : instances) {
@@ -419,12 +419,12 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 continue;
               }
 
-              logger.info("Going to collect for host {} for stateExecutionId {}, for metrics {}", node.getHost(),
+              logger.debug("Going to collect for host {} for stateExecutionId {}, for metrics {}", node.getHost(),
                   dataCollectionInfo.getStateExecutionId(), metricBatches);
               callables.add(() -> fetchAndSaveMetricsForNode(node, metricBatches, windowEndTimeManager));
             }
           }
-          logger.info("submitting parallel tasks {}", callables.size());
+          logger.debug("submitting parallel tasks {}", callables.size());
           List<Optional<Boolean>> results = executeParallel(callables);
           for (Optional<Boolean> result : results) {
             if (!result.isPresent() || !result.get()) {
@@ -508,13 +508,13 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   .cvConfigId(dataCollectionInfo.getCvConfigId())
                   .groupName(entry.getValue())
                   .build());
-          logger.info("adding heartbeat new relic metric record for group {} for minute {}", entry.getValue(),
+          logger.debug("adding heartbeat new relic metric record for group {} for minute {}", entry.getValue(),
               dataCollectionMinuteEnd);
           groups.add(entry.getValue());
         }
       }
       List<NewRelicMetricDataRecord> metricRecords = getAllMetricRecords(records);
-      logger.info(
+      logger.debug(
           "Sending {} new relic heart  beat records for minute {}", records.cellSet().size(), dataCollectionMinuteEnd);
       return saveMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(), dataCollectionInfo.getApplicationId(),
           dataCollectionInfo.getStateExecutionId(), metricRecords);
@@ -539,8 +539,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       });
 
       List<NewRelicMetricDataRecord> metricRecords = getAllMetricRecords(records);
-      logger.info("Sending {} new relic metric records for node {} for minute {}. Time taken: {}",
-          records.cellSet().size(), node, dataCollectionMinute, System.currentTimeMillis() - startTime);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Sending {} new relic metric records for node {} for minute {}. Time taken: {}",
+            records.cellSet().size(), node, dataCollectionMinute, System.currentTimeMillis() - startTime);
+      }
       return saveMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(), dataCollectionInfo.getApplicationId(),
           dataCollectionInfo.getStateExecutionId(), metricRecords);
     }

@@ -199,7 +199,7 @@ public class CVTaskServiceImpl implements CVTaskService {
 
   @Override
   public void updateTaskStatus(String cvTaskId, DataCollectionTaskResult result) {
-    logger.info("Updating CVTask status for id: {} and DataCollectionTaskResult: {}", cvTaskId, result);
+    logger.debug("Updating CVTask status for id: {} and DataCollectionTaskResult: {}", cvTaskId, result);
     CVTask cvTask = getCVTask(cvTaskId);
     if (result.getStatus() == DataCollectionTaskStatus.FAILURE) {
       Map<String, Object> updateMap =
@@ -241,7 +241,7 @@ public class CVTaskServiceImpl implements CVTaskService {
 
   @Override
   public void expireLongRunningTasks(String accountId) {
-    logger.info("Running expire long running tasks for accountId {}", accountId);
+    logger.debug("Running expire long running tasks for accountId {}", accountId);
     UpdateOperations<CVTask> updateOperations = wingsPersistence.createUpdateOperations(CVTask.class)
                                                     .set(CVTaskKeys.status, ExecutionStatus.EXPIRED)
                                                     .set(CVTaskKeys.exception, "Task timed out");
