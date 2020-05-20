@@ -16,7 +16,7 @@ public class ServiceGuardLogAnalysisJob implements Handler<Account> {
   @Override
   public void handle(Account account) {
     final String accountId = account.getUuid();
-    logger.info("triggering all analysis for account {}", accountId);
+    logger.debug("triggering all analysis for account {}", accountId);
     continuousVerificationService.triggerServiceGuardTimeSeriesAnalysis(accountId);
     continuousVerificationService.triggerLogsL1Clustering(accountId);
     continuousVerificationService.triggerLogsL2Clustering(accountId);

@@ -319,7 +319,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
           Preconditions.checkNotNull(dataCollectionInfo, "No trier found for dataCollectionInfo");
           setHostIdsIfNecessary();
           List<AppdynamicsMetricData> metricsData = getMetricsData();
-          logger.info(
+          logger.debug(
               "Got {} metrics from appdynamics for {}", metricsData.size(), dataCollectionInfo.getStateExecutionId());
           TreeBasedTable<String, Long, Map<String, NewRelicMetricDataRecord>> records = TreeBasedTable.create();
           records.putAll(processMetricData(metricsData));
@@ -386,7 +386,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       }
 
       if (completed.get()) {
-        logger.info("Shutting down appdynamics data collection");
+        logger.debug("Shutting down appdynamics data collection");
         shutDownCollection();
         return;
       }
