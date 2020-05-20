@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import software.wings.beans.Account;
 import software.wings.beans.User;
 
 public interface TwoFactorAuthHandler {
@@ -13,7 +14,7 @@ public interface TwoFactorAuthHandler {
 
   TwoFactorAuthenticationMechanism getAuthenticationMechanism();
 
-  TwoFactorAuthenticationSettings createTwoFactorAuthenticationSettings(User user);
+  TwoFactorAuthenticationSettings createTwoFactorAuthenticationSettings(User user, Account accouunt);
 
   User applyTwoFactorAuthenticationSettings(User user, TwoFactorAuthenticationSettings settings);
 

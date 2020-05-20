@@ -70,10 +70,9 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
   }
 
   @Override
-  public TwoFactorAuthenticationSettings createTwoFactorAuthenticationSettings(User user) {
+  public TwoFactorAuthenticationSettings createTwoFactorAuthenticationSettings(User user, Account account) {
     String secretKey = generateTotpSecret();
-    String otpUrl =
-        generateOtpUrl(authenticationUtils.getDefaultAccount(user).getCompanyName(), user.getEmail(), secretKey);
+    String otpUrl = generateOtpUrl(account.getCompanyName(), user.getEmail(), secretKey);
     return TwoFactorAuthenticationSettings.builder()
         .mechanism(getAuthenticationMechanism())
         .totpqrurl(otpUrl)
@@ -108,7 +107,8 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
 
   @Override
   public boolean resetAndSendEmail(User user) {
-    TwoFactorAuthenticationSettings settings = createTwoFactorAuthenticationSettings(user);
+    TwoFactorAuthenticationSettings settings =
+        createTwoFactorAuthenticationSettings(user, authenticationUtils.getDefaultAccount(user));
     user = applyTwoFactorAuthenticationSettings(user, settings);
     return sendTwoFactorAuthenticationResetEmail(user);
   }

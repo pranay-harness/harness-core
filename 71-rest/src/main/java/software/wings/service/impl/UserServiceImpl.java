@@ -744,8 +744,9 @@ public class UserServiceImpl implements UserService {
     if (user == null) {
       throw new InvalidRequestException("user does not exist");
     }
-    user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, accountService.get(accountId));
-    sendNewInvitationMail(savedUserInvite, accountService.get(accountId), user);
+    Account account = accountService.get(accountId);
+    user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
+    sendNewInvitationMail(savedUserInvite, account, user);
     logger.info("Resent invitation email for user: {}", email);
     return true;
   }
@@ -1798,10 +1799,10 @@ public class UserServiceImpl implements UserService {
       updateQuery.filter(UserKeys.accounts, accountId);
       if (updateQuery.count() > 0) {
         for (User user : updateQuery) {
-          String defaultAccountId = authenticationUtils.getDefaultAccount(user).getUuid();
-          logger.info("User {} default account Id is {}", user.getEmail(), defaultAccountId);
-          if (defaultAccountId.equals(accountId) && !user.isTwoFactorAuthenticationEnabled()) {
-            user = enableTwoFactorAuthenticationForUser(user);
+          Account defaultAccount = authenticationUtils.getDefaultAccount(user);
+          logger.info("User {} default account Id is {}", user.getEmail(), defaultAccount.getUuid());
+          if (defaultAccount.getUuid().equals(accountId) && !user.isTwoFactorAuthenticationEnabled()) {
+            user = enableTwoFactorAuthenticationForUser(user, defaultAccount);
             logger.info("Sending 2FA reset email to user {}", user.getEmail());
             totpAuthHandler.sendTwoFactorAuthenticationResetEmail(user);
           }
@@ -1814,10 +1815,10 @@ public class UserServiceImpl implements UserService {
     return true;
   }
 
-  private User enableTwoFactorAuthenticationForUser(User user) {
+  private User enableTwoFactorAuthenticationForUser(User user, Account account) {
     logger.info("Enabling 2FA for user {}", user.getEmail());
     TwoFactorAuthenticationSettings twoFactorAuthenticationSettings =
-        totpAuthHandler.createTwoFactorAuthenticationSettings(user);
+        totpAuthHandler.createTwoFactorAuthenticationSettings(user, account);
     twoFactorAuthenticationSettings.setTwoFactorAuthenticationEnabled(true);
     return updateTwoFactorAuthenticationSettings(user, twoFactorAuthenticationSettings);
   }
@@ -1840,7 +1841,7 @@ public class UserServiceImpl implements UserService {
     logger.info("2FA enabled is {} account wide for account {}", account.isTwoFactorAdminEnforced(), account.getUuid());
     if (defaultAccountId.equals(account.getUuid()) && account.isTwoFactorAdminEnforced()
         && !user.isTwoFactorAuthenticationEnabled()) {
-      user = enableTwoFactorAuthenticationForUser(user);
+      user = enableTwoFactorAuthenticationForUser(user, account);
     }
     return user;
   }
