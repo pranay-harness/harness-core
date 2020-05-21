@@ -17,7 +17,7 @@ import javax.validation.ReportAsSingleViolation;
 @Retention(RUNTIME)
 @ReportAsSingleViolation
 public @interface ValidSkipAssert {
-  String message() default "Expression Invalid";
+  String message() default "${validatedValue} Expression Invalid";
   Class<?>[] groups() default {};
   Class<? extends Payload>[] payload() default {};
 }

@@ -158,8 +158,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 
 /**
  * @author rktummala on 10/16/17
@@ -302,7 +305,15 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       if (isNotEmpty(failedYamlFileChangeMap)) {
         ChangeWithErrorMsg changeWithErrorMsg = failedYamlFileChangeMap.get(change.getFilePath());
         if (changeWithErrorMsg != null) {
-          errorMsg = changeWithErrorMsg.getErrorMsg();
+          if (changeWithErrorMsg.getCause() instanceof ConstraintViolationException) {
+            errorMsg = ((ConstraintViolationException) changeWithErrorMsg.getCause())
+                           .getConstraintViolations()
+                           .stream()
+                           .map(ConstraintViolation::getMessage)
+                           .collect(Collectors.joining(", "));
+          } else {
+            errorMsg = changeWithErrorMsg.getErrorMsg();
+          }
         } else {
           errorMsg = "Internal error";
         }
@@ -435,7 +446,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   /**
-   *
    * @param changeList
    */
   @Override
@@ -677,6 +687,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           logger.warn("Exception while processing yaml file {}", yamlFilePath, ex);
           ChangeWithErrorMsg changeWithErrorMsg = ChangeWithErrorMsg.builder()
                                                       .change(changeContext.getChange())
+                                                      .cause(ex)
                                                       .errorMsg(ExceptionUtils.getMessage(ex))
                                                       .build();
           // We continue processing the yaml files we understand, the failures are reported at the end
@@ -879,6 +890,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
   /**
    * Check if the yaml is valid
+   *
    * @param yamlString
    * @return
    */
@@ -891,6 +903,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
   /**
    * Get yaml representation for a given file path
+   *
    * @param yamlFilePath
    * @param accountId
    * @param yamlSubType
