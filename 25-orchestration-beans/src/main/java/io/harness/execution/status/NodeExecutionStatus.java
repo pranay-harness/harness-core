@@ -11,6 +11,7 @@ public enum NodeExecutionStatus {
 
   // In Progress statuses : All the in progress statuses named with ing in the end
   RUNNING,
+  ASYNC_WAITING,
   TASK_WAITING,
   CHILD_WAITING,
   CHILDREN_WAITING,

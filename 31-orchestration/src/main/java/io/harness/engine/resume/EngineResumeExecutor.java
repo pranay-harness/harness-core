@@ -61,8 +61,8 @@ public class EngineResumeExecutor implements Runnable {
       switch (nodeExecution.getMode()) {
         case CHILDREN:
           ChildrenExecutable childrenExecutable = (ChildrenExecutable) stateRegistry.obtain(node.getStateType());
-          stateResponse =
-              childrenExecutable.handleAsyncResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
+          stateResponse = childrenExecutable.handleChildrenResponse(
+              nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;
         case ASYNC:
           AsyncExecutable asyncExecutable = (AsyncExecutable) stateRegistry.obtain(node.getStateType());
@@ -72,7 +72,7 @@ public class EngineResumeExecutor implements Runnable {
         case CHILD:
           ChildExecutable childExecutable = (ChildExecutable) stateRegistry.obtain(node.getStateType());
           stateResponse =
-              childExecutable.handleAsyncResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
+              childExecutable.handleChildResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;
         default:
           throw new InvalidRequestException("Resume not handled for execution Mode : " + nodeExecution.getMode());

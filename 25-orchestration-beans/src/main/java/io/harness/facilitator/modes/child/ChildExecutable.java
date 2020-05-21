@@ -18,6 +18,6 @@ import java.util.Map;
 public interface ChildExecutable {
   ChildExecutableResponse obtainChild(Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs);
 
-  StateResponse handleAsyncResponse(
+  StateResponse handleChildResponse(
       Ambiance ambiance, StateParameters stateParameters, Map<String, ResponseData> responseDataMap);
 }
