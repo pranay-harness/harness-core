@@ -16,6 +16,7 @@
         <module>21-persistence</module>
         <module>25-orchestration-beans</module>
         <module>31-orchestration</module>
+        <module>38-execution-plan</module>
         <module>41-cv-nextgen-beans</module>
         <module>42-cv-nextgen-commons</module>
         <module>45-cv-nextgen</module>
