@@ -26,6 +26,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
@@ -39,8 +40,10 @@ import io.harness.spotinst.model.ElastiGroupCapacity;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -66,9 +69,11 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.AwsStateHelper;
 import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 
@@ -88,6 +93,8 @@ public class SpotInstStateHelper {
   @Inject private ActivityService activityService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private AwsCommandHelper commandHelper;
+  @Inject private SweepingOutputService sweepingOutputService;
+  @Inject private AwsStateHelper awsStateHelper;
 
   public SpotInstSetupStateExecutionData prepareStateExecutionData(
       ExecutionContext context, SpotInstServiceSetup serviceSetup) {
@@ -434,5 +441,27 @@ public class SpotInstStateHelper {
         .spotinstConfig(spotinstConfig)
         .spotinstEncryptedDataDetails(spotinstEncryptedDataDetails)
         .build();
+  }
+
+  void saveInstanceInfoToSweepingOutput(ExecutionContext context, List<InstanceElement> instanceElements) {
+    if (isNotEmpty(instanceElements)) {
+      // This sweeping element will be used by verification or other consumers.
+      sweepingOutputService.save(
+          context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+              .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+              .value(InstanceInfoVariables.builder()
+                         .instanceElements(instanceElements)
+                         .instanceDetails(awsStateHelper.generateAmInstanceDetails(instanceElements))
+                         .build())
+              .build());
+    }
+  }
+
+  void saveInstanceInfoToSweepingOutput(ExecutionContext context, int trafficShift) {
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+            .value(InstanceInfoVariables.builder().newInstanceTrafficPercent(trafficShift).build())
+            .build());
   }
 }

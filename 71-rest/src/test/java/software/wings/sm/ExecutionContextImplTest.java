@@ -77,6 +77,7 @@ import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactElements;
 import software.wings.api.artifact.ServiceArtifactVariableElement;
 import software.wings.api.artifact.ServiceArtifactVariableElements;
+import software.wings.api.instancedetails.InstanceApiResponse;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -751,6 +752,36 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     testInstanceScalingDown(context);
     testInstanceScalingUpDown(context);
     testInstanceRolling(context);
+    testTrafficShift(context);
+  }
+
+  private void testTrafficShift(ExecutionContextImpl context) {
+    InstanceInfoVariables instanceInfoVariables;
+    List<SweepingOutput> sweepingOutputs;
+
+    sweepingOutputs = new ArrayList<>(asList(instanceInfoVariablesWithNewTag(asList("1", "2", "3"), asList("4", "5"))));
+
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(5);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(5);
+    assertThat(newHostsFromDetails(instanceInfoVariables.getInstanceDetails()))
+        .containsExactlyInAnyOrder("host-4", "host-5");
+    assertThat(newHostsFromElement(instanceInfoVariables.getInstanceElements()))
+        .containsExactlyInAnyOrder("host-4", "host-5");
+    assertThat(instanceInfoVariables.getNewInstanceTrafficPercent()).isEqualTo(null);
+
+    sweepingOutputs.add(instanceInfoVariablesWithNewTag(asList("1", "2", "3", "4", "5"), asList("6", "7")));
+    sweepingOutputs.add(instanceInfoVariablesWithTrafficShift(10));
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(7);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(7);
+    assertThat(instanceInfoVariables.getNewInstanceTrafficPercent()).isEqualTo(10);
+
+    sweepingOutputs.add(instanceInfoVariablesWithTrafficShift(50));
+    instanceInfoVariables = context.getAccumulatedInstanceInfoVariables(sweepingOutputs);
+    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(7);
+    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(7);
+    assertThat(instanceInfoVariables.getNewInstanceTrafficPercent()).isEqualTo(50);
   }
 
   private void testInstanceRolling(ExecutionContextImpl context) {
@@ -892,6 +923,10 @@ public class ExecutionContextImplTest extends WingsBaseTest {
         .build();
   }
 
+  private InstanceInfoVariables instanceInfoVariablesWithTrafficShift(int val) {
+    return InstanceInfoVariables.builder().newInstanceTrafficPercent(val).build();
+  }
+
   private List<String> newHostsFromDetails(List<InstanceDetails> instanceDetails) {
     return instanceDetails.stream()
         .filter(InstanceDetails::isNewInstance)
@@ -926,14 +961,16 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     List<String> expected = asList("host-1", "host-2");
     List<SweepingOutput> sweepingOutputs = asList(InstanceInfoVariables.builder().build());
 
-    doReturn(expected).when(context).renderExpressionFromInstanceInfoVariables(
-        anyString(), eq(true), any(InstanceInfoVariables.class));
+    doReturn(InstanceApiResponse.builder().instances(expected).build())
+        .when(context)
+        .renderExpressionFromInstanceInfoVariables(anyString(), eq(true), any(InstanceInfoVariables.class));
     doReturn(sweepingOutputs)
         .when(sweepingOutputService)
         .findManyWithNamePrefix(any(SweepingOutputInquiry.class), eq(Scope.PHASE));
     doReturn(sweepingOutputs.get(0)).when(context).getAccumulatedInstanceInfoVariables(anyList());
 
-    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.k8s.ip}", true)).isEqualTo(expected);
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.k8s.ip}", true).getInstances())
+        .isEqualTo(expected);
 
     verify(sweepingOutputService, times(1))
         .findSweepingOutputsWithNamePrefix(any(SweepingOutputInquiry.class), eq(Scope.PHASE));
@@ -948,14 +985,15 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     List<String> expected = asList("host-1", "host-2");
     List<SweepingOutput> sweepingOutputs = asList(InstanceInfoVariables.builder().build());
 
-    doReturn(expected).when(context).renderExpressionFromInstanceInfoVariables(
-        anyString(), eq(true), any(InstanceInfoVariables.class));
+    doReturn(InstanceApiResponse.builder().instances(expected).build())
+        .when(context)
+        .renderExpressionFromInstanceInfoVariables(anyString(), eq(true), any(InstanceInfoVariables.class));
     doReturn(sweepingOutputs)
         .when(sweepingOutputService)
         .findManyWithNamePrefix(any(SweepingOutputInquiry.class), eq(Scope.WORKFLOW));
     doReturn(sweepingOutputs.get(0)).when(context).getAccumulatedInstanceInfoVariables(anyList());
 
-    assertThat(context.renderExpressionsForInstanceDetailsForWorkflow("${instanceDetails.k8s.ip}", true))
+    assertThat(context.renderExpressionsForInstanceDetailsForWorkflow("${instanceDetails.k8s.ip}", true).getInstances())
         .isEqualTo(expected);
 
     verify(sweepingOutputService, times(1))

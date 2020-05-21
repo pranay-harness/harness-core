@@ -57,6 +57,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 public class SweepingOutputServiceImplTest extends WingsBaseTest {
   private static final String SWEEPING_OUTPUT_NAME = "SWEEPING_OUTPUT_NAME";
@@ -263,18 +264,11 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
     on(context).set("evaluator", new ManagerExpressionEvaluator());
     on(context).set("sweepingOutputService", sweepingOutputService);
 
-    SweepingOutputInstance saved = sweepingOutputService.save(
-        SweepingOutputInstance.builder()
-            .phaseExecutionId(workflowExecutionUuid + phaseElementId + phaseName)
-            .stateExecutionId(stateExecutionInstanceId)
-            .workflowExecutionId(workflowExecutionUuid)
-            .name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME)
-            .appId(appId)
-            .value(InstanceInfoVariables.builder()
-                       .instanceElements(pcfStateHelper.generateInstanceElement(pcfInstanceElements))
-                       .instanceDetails(pcfStateHelper.generateInstanceDetails(pcfInstanceElements))
-                       .build())
-            .build());
+    saveSweepingOutput(InstanceInfoVariables.builder()
+                           .instanceElements(pcfStateHelper.generateInstanceElement(pcfInstanceElements))
+                           .instanceDetails(pcfStateHelper.generateInstanceDetails(pcfInstanceElements))
+                           .build());
+    saveSweepingOutput(InstanceInfoVariables.builder().newInstanceTrafficPercent(10).build());
 
     SweepingOutputInquiry sweepingOutputInquiry = SweepingOutputInquiry.builder()
                                                       .name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME)
@@ -295,26 +289,35 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
         sweepingOutputService.fetchInstanceElementsFromSweepingOutput(sweepingOutputInquiry, false);
     assertThat(instanceElements.size()).isEqualTo(3);
 
-    assertThat(context.renderExpressionsForInstanceDetails("${instance.hostName}", false))
+    assertThat(context.renderExpressionsForInstanceDetails("${instance.hostName}", true).getNewInstanceTrafficPercent())
+        .isEqualTo(Optional.of(10));
+    assertThat(
+        context.renderExpressionsForInstanceDetails("${instance.hostName}", false).getNewInstanceTrafficPercent())
+        .isEqualTo(Optional.of(10));
+    assertThat(context.renderExpressionsForInstanceDetails("${instance.hostName}", false).getInstances())
         .containsExactly("pcf_0:0", "pcf_1:1", "pcf_1:2");
-    assertThat(context.renderExpressionsForInstanceDetails("${instance.hostName}"
-                       + "-"
-                       + "${instanceDetails.pcf.instanceIndex}",
-                   false))
+    assertThat(context
+                   .renderExpressionsForInstanceDetails("${instance.hostName}"
+                           + "-"
+                           + "${instanceDetails.pcf.instanceIndex}",
+                       false)
+                   .getInstances())
         .containsExactly("pcf_0:0-0", "pcf_1:1-1", "pcf_1:2-2");
-    assertThat(context.renderExpressionsForInstanceDetails("${instance.newInstance}", false))
+    assertThat(context.renderExpressionsForInstanceDetails("${instance.newInstance}", false).getInstances())
         .containsExactly("false", "true", "true");
-    assertThat(context.renderExpressionsForInstanceDetails("${host.hostName}", false))
+    assertThat(context.renderExpressionsForInstanceDetails("${host.hostName}", false).getInstances())
         .containsExactly("pcf_0:0", "pcf_1:1", "pcf_1:2");
-    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.hostName}", false))
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.hostName}", false).getInstances())
         .containsExactly("pcf_0:0", "pcf_1:1", "pcf_1:2");
-    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.newInstance}", false))
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.newInstance}", false).getInstances())
         .containsExactly("false", "true", "true");
-    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.pcf.applicationName}", false))
+    assertThat(
+        context.renderExpressionsForInstanceDetails("${instanceDetails.pcf.applicationName}", false).getInstances())
         .containsExactly("pcf_0", "pcf_1", "pcf_1");
-    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.pcf.applicationId}", false))
+    assertThat(
+        context.renderExpressionsForInstanceDetails("${instanceDetails.pcf.applicationId}", false).getInstances())
         .containsExactly("id0", "id1", "id1");
-    assertThat(context.renderExpressionsForInstanceDetails("${pcfinstance.applicationId}", false))
+    assertThat(context.renderExpressionsForInstanceDetails("${pcfinstance.applicationId}", false).getInstances())
         .containsExactly("id0", "id1", "id1");
 
     // Only New Instances
@@ -323,23 +326,35 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
     instanceElements = sweepingOutputService.fetchInstanceElementsFromSweepingOutput(sweepingOutputInquiry, true);
     assertThat(instanceElements.size()).isEqualTo(2);
 
-    assertThat(context.renderExpressionsForInstanceDetails("${instance.hostName}", true))
+    assertThat(context.renderExpressionsForInstanceDetails("${instance.hostName}", true).getInstances())
         .containsExactly("pcf_1:1", "pcf_1:2");
-    assertThat(context.renderExpressionsForInstanceDetails("${instance.newInstance}", true))
+    assertThat(context.renderExpressionsForInstanceDetails("${instance.newInstance}", true).getInstances())
         .containsExactly("true", "true");
-    assertThat(context.renderExpressionsForInstanceDetails("${host.hostName}", true))
+    assertThat(context.renderExpressionsForInstanceDetails("${host.hostName}", true).getInstances())
         .containsExactly("pcf_1:1", "pcf_1:2");
-    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.hostName}", true))
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.hostName}", true).getInstances())
         .containsExactly("pcf_1:1", "pcf_1:2");
-    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.newInstance}", true))
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.newInstance}", true).getInstances())
         .containsExactly("true", "true");
-    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.pcf.applicationName}", true))
+    assertThat(
+        context.renderExpressionsForInstanceDetails("${instanceDetails.pcf.applicationName}", true).getInstances())
         .containsExactly("pcf_1", "pcf_1");
-    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.pcf.applicationId}", true))
+    assertThat(context.renderExpressionsForInstanceDetails("${instanceDetails.pcf.applicationId}", true).getInstances())
         .containsExactly("id1", "id1");
 
-    assertThat(context.renderExpressionsForInstanceDetails("${pcfinstance.applicationId}", true))
+    assertThat(context.renderExpressionsForInstanceDetails("${pcfinstance.applicationId}", true).getInstances())
         .containsExactly("id1", "id1");
+  }
+
+  private void saveSweepingOutput(InstanceInfoVariables instanceInfoVariables) {
+    sweepingOutputService.save(SweepingOutputInstance.builder()
+                                   .phaseExecutionId(workflowExecutionUuid + phaseElementId + phaseName)
+                                   .stateExecutionId(stateExecutionInstanceId)
+                                   .workflowExecutionId(workflowExecutionUuid)
+                                   .name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME)
+                                   .appId(appId)
+                                   .value(instanceInfoVariables)
+                                   .build());
   }
 
   private ExecutionContext generateExecutionContext() {

@@ -116,6 +116,9 @@ public class SpotinstTrafficShiftAlbDeployState extends State {
     }
     InstanceElementListParam instanceElementListParam =
         InstanceElementListParam.builder().instanceElements(instanceElements).build();
+
+    spotinstStateHelper.saveInstanceInfoToSweepingOutput(context, instanceElements);
+
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .errorMessage(executionResponse.getErrorMessage())
