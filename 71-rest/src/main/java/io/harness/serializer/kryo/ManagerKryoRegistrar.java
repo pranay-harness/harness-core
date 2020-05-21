@@ -1609,5 +1609,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ShellScriptVariablesSweepingOutput.class, 7377);
     kryo.register(CustomSecretsManagerConfig.class, 7378);
     kryo.register(CustomSecretsManagerShellScript.class, 7379);
+    kryo.register(StackDriverMetricDefinition.Aggregation.class, 7380);
   }
 }

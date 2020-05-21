@@ -3,6 +3,7 @@ package software.wings.service.intfc.stackdriver;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.stackdriver.StackDriverMetric;
 import software.wings.service.impl.stackdriver.StackDriverSetupTestNodeData;
+import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 
 import java.io.IOException;
 import java.util.List;
@@ -12,6 +13,8 @@ import java.util.Map;
  * Created by Pranjal on 11/27/2018
  */
 public interface StackDriverService {
+  void validateMetricDefinitions(List<StackDriverMetricDefinition> metricDefinitions);
+
   /**
    * Api to fetch metric data for given node.
    * @param setupTestNodeData

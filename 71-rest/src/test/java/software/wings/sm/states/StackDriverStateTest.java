@@ -10,6 +10,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
+
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -27,6 +30,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
+import software.wings.service.impl.verification.CVConfigurationServiceImplTest;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -34,7 +38,10 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.stackdriver.StackDriverService;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
+import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 
+import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,9 +63,10 @@ public class StackDriverStateTest extends APMStateVerificationTestBase {
   private GcpConfig gcpConfig;
 
   @Before
-  public void setUp() throws IllegalAccessException {
+  public void setUp() throws IllegalAccessException, IOException {
     setupCommon();
-
+    String paramsForStackDriver = Resources.toString(
+        CVConfigurationServiceImplTest.class.getResource("/apm/stackdriverpayload.json"), Charsets.UTF_8);
     MockitoAnnotations.initMocks(this);
 
     analysisContext = AnalysisContext.builder().build();
@@ -68,6 +76,12 @@ public class StackDriverStateTest extends APMStateVerificationTestBase {
 
     stackDriverState = Mockito.spy(new StackDriverState("stackDriverState"));
     stackDriverState.setTimeDuration("10");
+    stackDriverState.setMetricDefinitions(Collections.singletonList(StackDriverMetricDefinition.builder()
+                                                                        .metricName("CPU")
+                                                                        .metricType("INFRA")
+                                                                        .txnName("txn")
+                                                                        .filterJson(paramsForStackDriver)
+                                                                        .build()));
     gcpConfig = GcpConfig.builder().accountId(accountId).build();
     settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                            .withAccountId(accountId)
@@ -107,6 +121,17 @@ public class StackDriverStateTest extends APMStateVerificationTestBase {
         (StackDriverDataCollectionInfo) task.getData().getParameters()[0];
 
     assertThat(dataCollectionInfo.getGcpConfig()).isEqualTo(gcpConfig);
+    assertThat(dataCollectionInfo.getTimeSeriesToCollect().size()).isEqualTo(1);
+    assertThat(dataCollectionInfo.getTimeSeriesToCollect().get(0).getMetricType()).isEqualTo("INFRA");
+    assertThat(dataCollectionInfo.getTimeSeriesToCollect().get(0).getMetricName()).isEqualTo("CPU");
+    assertThat(dataCollectionInfo.getTimeSeriesToCollect().get(0).getTxnName()).isEqualTo("txn");
+    assertThat(dataCollectionInfo.getTimeSeriesToCollect().get(0).getFilter())
+        .isEqualTo(
+            "metric.type=\"kubernetes.io/container/restart_count\" resource.type=\"k8s_container\" resource.label.\"cluster_name\"=\"harness-test\"");
+    assertThat(dataCollectionInfo.getTimeSeriesToCollect().get(0).getAggregation().getGroupByFields().size())
+        .isEqualTo(1);
+    assertThat(dataCollectionInfo.getTimeSeriesToCollect().get(0).getAggregation().getGroupByFields().get(0))
+        .isEqualTo("resource.label.\"cluster_name\"");
   }
 
   @Test

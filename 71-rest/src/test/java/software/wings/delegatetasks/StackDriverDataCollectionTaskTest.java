@@ -40,14 +40,16 @@ import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
-import software.wings.service.impl.stackdriver.StackDriverMetric;
 import software.wings.service.impl.stackdriver.StackDriverNameSpace;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.stackdriver.StackDriverDelegateService;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
+import software.wings.verification.stackdriver.StackDriverMetricDefinition;
+import software.wings.verification.stackdriver.StackDriverMetricDefinition.Aggregation;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -163,14 +165,12 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
         .stateExecutionId(stateExecutionId)
         .initialDelayMinutes(0)
         .timeSeriesMlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
-        .podMetrics(Arrays.asList(StackDriverMetric.builder()
-                                      .metricName("kubernetes.io/container/memory/request_utilization")
-                                      .metric("MemoryRequestUtilization")
-                                      .displayName("Memory Request Utilization")
-                                      .unit("number")
-                                      .kind("VALUE")
-                                      .valueType("Int64")
-                                      .build()))
+        .timeSeriesToCollect(Collections.singletonList(StackDriverMetricDefinition.builder()
+                                                           .metricName("MemoryRequestUtilization")
+                                                           .txnName("Memory Request Utilization")
+                                                           .metricType("VALUE")
+                                                           .aggregation(new Aggregation())
+                                                           .build()))
         .gcpConfig(GcpConfig.builder().accountId(accountId).build())
         .startTime(Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(2))
         .build();

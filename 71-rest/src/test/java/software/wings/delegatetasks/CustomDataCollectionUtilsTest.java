@@ -64,4 +64,26 @@ public class CustomDataCollectionUtilsTest extends WingsBaseTest {
     String maskedString = CustomDataCollectionUtils.getMaskedString(stringToMask, matchPattern, stringsToReplace);
     assertThat(maskedString).isEqualTo(expectedMaskedString);
   }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testResolveField_emptyString() {
+    String string = "";
+    String returnValue = CustomDataCollectionUtils.resolveField(string, "%", "test");
+    assertThat(returnValue).isEqualTo(string);
+
+    string = null;
+    returnValue = CustomDataCollectionUtils.resolveField(string, "%", "test");
+    assertThat(returnValue).isNull();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testResolveField_nonEmptyString() {
+    String string = "test${replace}";
+    String returnValue = CustomDataCollectionUtils.resolveField(string, "${replace}", "replace");
+    assertThat(returnValue).isEqualTo("testreplace");
+  }
 }

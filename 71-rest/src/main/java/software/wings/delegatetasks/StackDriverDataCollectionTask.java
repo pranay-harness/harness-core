@@ -6,8 +6,6 @@ import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
-import static software.wings.service.impl.stackdriver.StackDriverNameSpace.LOADBALANCER;
-import static software.wings.service.impl.stackdriver.StackDriverNameSpace.POD_NAME;
 
 import com.google.api.services.monitoring.v3.Monitoring;
 import com.google.api.services.monitoring.v3.model.ListTimeSeriesResponse;
@@ -45,6 +43,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -297,6 +296,9 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
         if (dataFetchParameters.getPerSeriesAligner().isPresent()) {
           list = list.setAggregationPerSeriesAligner(dataFetchParameters.getPerSeriesAligner().get());
         }
+        if (dataFetchParameters.getCrossSeriesReducer().isPresent()) {
+          list.setAggregationCrossSeriesReducer(dataFetchParameters.getCrossSeriesReducer().get());
+        }
         response = list.execute();
       } catch (Exception e) {
         apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
@@ -341,7 +343,8 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
           }
           newRelicMetricDataRecord.getValues().put(dataFetchParameters.getMetric(), value);
 
-          rv.put(dataFetchParameters.getNameSpace(), timeStamp, newRelicMetricDataRecord);
+          rv.put(dataFetchParameters.getNameSpace() + dataFetchParameters.getDimensionValue(), timeStamp,
+              newRelicMetricDataRecord);
         }));
       }
     }
@@ -393,51 +396,33 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       long endTime = collectionStartTime;
       long startTime = endTime - TimeUnit.MINUTES.toMillis(1);
 
-      if (!isEmpty(dataCollectionInfo.getLoadBalancerMetrics())) {
-        dataCollectionInfo.getLoadBalancerMetrics().forEach(
-            (forwardRule, stackDriverMetrics) -> stackDriverMetrics.forEach(stackDriverMetric -> {
-              StackdriverDataFetchParameters dataFetchParameters = createDataFetchParameters(startTime, endTime);
-              dataFetchParameters.setFilter(stackDriverDelegateService.createFilter(
-                  LOADBALANCER, stackDriverMetric.getMetricName(), forwardRule));
-              dataFetchParameters.setGroupName(DEFAULT_GROUP_NAME);
-              dataFetchParameters.setDimensionValue(forwardRule);
-              dataFetchParameters.setMetric(stackDriverMetric.getMetric());
-              dataFetchParameters.setNameSpace(LOADBALANCER.name());
-              callables.add(() -> getMetricDataRecords(dataFetchParameters));
-            }));
-      }
-
-      if (!isEmpty(dataCollectionInfo.getPodMetrics())) {
-        dataCollectionInfo.getHosts().forEach(
-            (host, groupName) -> dataCollectionInfo.getPodMetrics().forEach(stackDriverMetric -> {
+      if (!isEmpty(dataCollectionInfo.getTimeSeriesToCollect())) {
+        Map<String, String> hostToGroupNameMap = new HashMap<>();
+        if (is24X7Task()) {
+          hostToGroupNameMap.put("dummyHost", DEFAULT_GROUP_NAME);
+        } else {
+          hostToGroupNameMap = dataCollectionInfo.getHosts();
+        }
+        hostToGroupNameMap.forEach(
+            (host, groupName) -> dataCollectionInfo.getTimeSeriesToCollect().forEach(timeSeriesDefinition -> {
               StackdriverDataFetchParameters dataFetchParameters = createDataFetchParameters(startTime, endTime);
               dataFetchParameters.setGroupName(groupName);
               dataFetchParameters.setDimensionValue(host);
-              dataFetchParameters.setMetric(stackDriverMetric.getMetric());
-              dataFetchParameters.setNameSpace(POD_NAME.name());
+              dataFetchParameters.setMetric(timeSeriesDefinition.getMetricName());
+              dataFetchParameters.setNameSpace(timeSeriesDefinition.getTxnName());
               dataFetchParameters.setFilter(
-                  stackDriverDelegateService.createFilter(POD_NAME, stackDriverMetric.getMetricName(), host));
-
+                  CustomDataCollectionUtils.resolveField(timeSeriesDefinition.getFilter(), "${host}", host));
+              dataFetchParameters.setGroupByFields(
+                  Optional.ofNullable(timeSeriesDefinition.getAggregation().getGroupByFields()));
+              dataFetchParameters.setPerSeriesAligner(
+                  Optional.ofNullable(timeSeriesDefinition.getAggregation().getPerSeriesAligner()));
+              dataFetchParameters.setCrossSeriesReducer(
+                  Optional.ofNullable(timeSeriesDefinition.getAggregation().getCrossSeriesReducer()));
+              dataFetchParameters.setStartTime(dataCollectionInfo.getStartTime());
+              dataFetchParameters.setEndTime(dataCollectionInfo.getStartTime()
+                  + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime()));
               callables.add(() -> getMetricDataRecords(dataFetchParameters));
             }));
-      }
-
-      if (!isEmpty(dataCollectionInfo.getTimeSeriesToCollect()) && is24X7Task()) {
-        // This is exclusively for 24/7 Service guard as of now.
-        dataCollectionInfo.getTimeSeriesToCollect().forEach(timeSeriesDefinition -> {
-          StackdriverDataFetchParameters dataFetchParameters = createDataFetchParameters(startTime, endTime);
-          dataFetchParameters.setGroupName(timeSeriesDefinition.getTxnName());
-          dataFetchParameters.setDimensionValue("dummyHost");
-          dataFetchParameters.setMetric(timeSeriesDefinition.getMetricName());
-          dataFetchParameters.setNameSpace(timeSeriesDefinition.getTxnName());
-          dataFetchParameters.setFilter(timeSeriesDefinition.getFilter());
-          dataFetchParameters.setGroupByFields(Optional.ofNullable(timeSeriesDefinition.getGroupByFields()));
-          dataFetchParameters.setPerSeriesAligner(Optional.ofNullable(timeSeriesDefinition.getPerSeriesAligner()));
-          dataFetchParameters.setStartTime(dataCollectionInfo.getStartTime());
-          dataFetchParameters.setEndTime(
-              dataCollectionInfo.getStartTime() + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime()));
-          callables.add(() -> getMetricDataRecords(dataFetchParameters));
-        });
       }
 
       logger.debug("fetching stackdriver metrics for {} strategy {} for min {}",

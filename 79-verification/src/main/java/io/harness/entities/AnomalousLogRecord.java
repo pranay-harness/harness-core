@@ -53,7 +53,7 @@ public class AnomalousLogRecord implements GoogleDataStoreAware {
 
   private StateType stateType;
   private String logMessage;
-  private double riskLevel = 1.0;
+  @Builder.Default private double riskLevel = 1.0;
 
   private long createdAt;
   private long lastUpdatedAt;

@@ -29,7 +29,6 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
-import software.wings.service.impl.stackdriver.StackDriverMetric;
 import software.wings.service.intfc.stackdriver.StackDriverService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -43,7 +42,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
@@ -58,36 +56,19 @@ public class StackDriverState extends AbstractMetricAnalysisState {
 
   private String analysisServerConfigId;
 
-  private String region = "us-east-1";
-
-  private Map<String, List<StackDriverMetric>> loadBalancerMetrics;
-
   private boolean isLogState;
 
-  private List<StackDriverMetric> podMetrics;
+  private List<StackDriverMetricDefinition> metricDefinitions;
 
-  public String getRegion() {
-    return region;
+  public List<StackDriverMetricDefinition> fetchMetricDefinitions() {
+    return metricDefinitions;
   }
 
-  public void setRegion(String region) {
-    this.region = region;
-  }
-
-  public Map<String, List<StackDriverMetric>> fetchLoadBalancerMetrics() {
-    return loadBalancerMetrics;
-  }
-
-  public void setLoadBalancerMetrics(Map<String, List<StackDriverMetric>> loadBalancerMetrics) {
-    this.loadBalancerMetrics = loadBalancerMetrics;
-  }
-
-  public List<StackDriverMetric> fetchPodMetrics() {
-    return podMetrics;
-  }
-
-  public void setPodMetrics(List<StackDriverMetric> podMetrics) {
-    this.podMetrics = podMetrics;
+  public void setMetricDefinitions(List<StackDriverMetricDefinition> metricDefinitions) {
+    this.metricDefinitions = metricDefinitions;
+    if (isNotEmpty(metricDefinitions)) {
+      metricDefinitions.forEach(StackDriverMetricDefinition::extractJson);
+    }
   }
 
   /**
@@ -116,10 +97,8 @@ public class StackDriverState extends AbstractMetricAnalysisState {
   }
 
   public void saveMetricTemplates(ExecutionContext context) {
-    Map<String, List<StackDriverMetric>> stackDriverMetrics = stackDriverService.getMetrics();
-
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.STACK_DRIVER,
-        context.getStateExecutionInstanceId(), null, fetchMetricTemplates(stackDriverMetrics));
+        context.getStateExecutionInstanceId(), null, fetchMetricTemplates(metricDefinitions));
   }
 
   @Override
@@ -145,10 +124,8 @@ public class StackDriverState extends AbstractMetricAnalysisState {
 
     // StartTime will be current time in milliseconds
     final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
-    Map<String, List<StackDriverMetric>> stackDriverMetrics = stackDriverService.getMetrics();
 
-    metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.STACK_DRIVER,
-        context.getStateExecutionInstanceId(), null, fetchMetricTemplates(stackDriverMetrics));
+    saveMetricTemplates(context);
 
     final StackDriverDataCollectionInfo dataCollectionInfo =
         StackDriverDataCollectionInfo.builder()
@@ -170,8 +147,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
             .encryptedDataDetails(
                 secretManager.getEncryptionDetails(gcpConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(hosts)
-            .loadBalancerMetrics(loadBalancerMetrics)
-            .podMetrics(podMetrics)
+            .timeSeriesToCollect(metricDefinitions)
             .build();
 
     String waitId = generateUuid();
@@ -203,17 +179,15 @@ public class StackDriverState extends AbstractMetricAnalysisState {
   }
 
   public static Map<String, TimeSeriesMetricDefinition> fetchMetricTemplates(
-      Map<String, List<StackDriverMetric>> timeSeriesToCollect) {
+      List<StackDriverMetricDefinition> timeSeriesToCollect) {
     Map<String, TimeSeriesMetricDefinition> rv = new HashMap<>();
 
-    for (Entry<String, List<StackDriverMetric>> entry : timeSeriesToCollect.entrySet()) {
-      for (StackDriverMetric stackDriverMetric : entry.getValue()) {
-        rv.put(stackDriverMetric.getMetric(),
-            TimeSeriesMetricDefinition.builder()
-                .metricName(stackDriverMetric.getMetric())
-                .metricType(MetricType.valueOf(stackDriverMetric.getKind()))
-                .build());
-      }
+    for (StackDriverMetricDefinition metricDefinition : timeSeriesToCollect) {
+      rv.put(metricDefinition.getMetricName(),
+          TimeSeriesMetricDefinition.builder()
+              .metricName(metricDefinition.getMetricName())
+              .metricType(MetricType.valueOf(metricDefinition.getMetricType()))
+              .build());
     }
     return rv;
   }
@@ -253,7 +227,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
       List<StackDriverMetricDefinition> metricDefinitions, boolean serviceLevel) {
     Map<String, String> invalidFields = new HashMap<>();
     if (isEmpty(metricDefinitions)) {
-      invalidFields.put("metricDefinitions", "No metrics given to analyze.");
+      invalidFields.put("Invalid Setup: ", "No metrics given to analyze.");
       return invalidFields;
     }
     Map<String, String> metricNameToType = new HashMap<>();
@@ -263,11 +237,16 @@ public class StackDriverState extends AbstractMetricAnalysisState {
       MetricType metricType = MetricType.valueOf(timeSeries.getMetricType());
       final String filter = timeSeries.getFilter();
       if (isEmpty(filter)) {
-        invalidFields.put("No Filter JSON specified for ",
-            "Group: " + timeSeries.getTxnName() + " Metric: " + timeSeries.getMetricName());
+        invalidFields.put("Invalid metrics: ",
+            "No Filter JSON specified for group: " + timeSeries.getTxnName()
+                + " and metric: " + timeSeries.getMetricName());
       }
 
-      // TODO: When we have filterJSON for workflow, add logic here for checking host field in query json
+      if (!serviceLevel && !filter.contains("${host}")) {
+        invalidFields.put("Invalid query: ",
+            "Host field not specified for group: " + timeSeries.getTxnName()
+                + " and metric: " + timeSeries.getMetricName());
+      }
 
       if (metricNameToType.get(timeSeries.getMetricName()) == null) {
         metricNameToType.put(timeSeries.getMetricName(), timeSeries.getMetricType());
@@ -290,15 +269,15 @@ public class StackDriverState extends AbstractMetricAnalysisState {
       if (txnRow.containsKey(MetricType.ERROR) || txnRow.containsKey(MetricType.RESP_TIME)) {
         if (!txnRow.containsKey(MetricType.THROUGHPUT)) {
           invalidFields.put("Invalid metrics for group: " + txnName,
-              txnName + " has error metrics "
+              txnName + " has error metrics: "
                   + (txnRow.get(MetricType.ERROR) == null ? Collections.emptySet() : txnRow.get(MetricType.ERROR))
-                  + " and/or response time metrics "
+                  + " and/or response time metrics: "
                   + (txnRow.get(MetricType.RESP_TIME) == null ? Collections.emptySet()
                                                               : txnRow.get(MetricType.RESP_TIME))
                   + " but no throughput metrics.");
         } else if (txnRow.get(MetricType.THROUGHPUT).size() > 1) {
           invalidFields.put("Invalid metrics for group: " + txnName,
-              txnName + " has more than one throughput metrics " + txnRow.get(MetricType.THROUGHPUT) + " defined.");
+              txnName + " has more than one throughput metrics are defined: " + txnRow.get(MetricType.THROUGHPUT));
         }
       }
 
@@ -310,5 +289,10 @@ public class StackDriverState extends AbstractMetricAnalysisState {
     });
 
     return invalidFields;
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    return validateMetricDefinitions(metricDefinitions, false);
   }
 }

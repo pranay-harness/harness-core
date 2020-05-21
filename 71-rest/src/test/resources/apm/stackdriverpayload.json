@@ -3,13 +3,15 @@
     {
       "timeSeriesFilter": {
         "filter": "metric.type=\"kubernetes.io/container/restart_count\" resource.type=\"k8s_container\" resource.label.\"cluster_name\"=\"harness-test\"",
-        "perSeriesAligner": "ALIGN_RATE",
-        "crossSeriesReducer": "REDUCE_SUM",
         "secondaryCrossSeriesReducer": "REDUCE_NONE",
+        "aggregations": [{
+          "perSeriesAligner": "ALIGN_RATE",
+          "crossSeriesReducer": "REDUCE_SUM",
+          "groupByFields": [
+            "resource.label.\"cluster_name\""
+          ]
+        }],
         "minAlignmentPeriod": "60s",
-        "groupByFields": [
-          "resource.label.\"cluster_name\""
-        ],
         "unitOverride": "1"
       },
       "targetAxis": "Y1",

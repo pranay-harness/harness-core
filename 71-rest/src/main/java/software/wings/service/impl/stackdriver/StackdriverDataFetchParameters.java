@@ -21,6 +21,7 @@ public class StackdriverDataFetchParameters {
   private Monitoring monitoring;
   private Optional<List<String>> groupByFields;
   private Optional<String> perSeriesAligner;
+  private Optional<String> crossSeriesReducer;
   private long startTime;
   private long endTime;
   private int dataCollectionMinute;
