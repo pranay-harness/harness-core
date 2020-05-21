@@ -34,8 +34,9 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testSetDelegateId() {
+    long lastContextUpdated = 1L;
     String taskId = perpetualTaskRecordDao.save(PerpetualTaskRecord.builder().accountId(ACCOUNT_ID).build());
-    perpetualTaskRecordDao.setDelegateId(taskId, DELEGATE_ID);
+    perpetualTaskRecordDao.appointDelegate(taskId, DELEGATE_ID, lastContextUpdated);
     PerpetualTaskRecord task = perpetualTaskRecordDao.getTask(taskId);
     assertThat(task).isNotNull();
     assertThat(task.getDelegateId()).isEqualTo(DELEGATE_ID);
@@ -78,12 +79,17 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
-  public void testListAssignedTaskIds() {
-    String taskIdOne = perpetualTaskRecordDao.save(getPerpetualTaskRecord());
-    String taskIdTwo = perpetualTaskRecordDao.save(getPerpetualTaskRecord());
-    List<String> taskIds = perpetualTaskRecordDao.listAssignedTaskIds(DELEGATE_ID, ACCOUNT_ID);
-    assertThat(taskIds).hasSize(2);
-    assertThat(taskIds).containsExactlyInAnyOrder(taskIdOne, taskIdTwo);
+  public void testListAssignedTasks() {
+    PerpetualTaskRecord taskRecord = getPerpetualTaskRecord();
+    perpetualTaskRecordDao.save(taskRecord);
+    List<PerpetualTaskRecord> taskIds = perpetualTaskRecordDao.listAssignedTasks(DELEGATE_ID, ACCOUNT_ID);
+    assertThat(taskIds).hasSize(1);
+    for (PerpetualTaskRecord record : taskIds) {
+      assertThat(record.getClientContext()).isNotNull();
+      assertThat(record.getUuid()).isEqualTo(taskRecord.getUuid());
+      assertThat(record.getClientContext().getLastContextUpdated())
+          .isEqualTo(taskRecord.getClientContext().getLastContextUpdated());
+    }
   }
 
   @Test
@@ -92,12 +98,13 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   public void testGetExistingPerpetualTask() {
     PerpetualTaskClientContext clientContext = getClientContext();
     PerpetualTaskRecord perpetualTaskRecord = getPerpetualTaskRecord();
+    perpetualTaskRecord.setClientContext(clientContext);
     String taskId = perpetualTaskRecordDao.save(perpetualTaskRecord);
     Optional<PerpetualTaskRecord> existingPerpetualTask =
         perpetualTaskRecordDao.getExistingPerpetualTask(ACCOUNT_ID, PerpetualTaskType.K8S_WATCH, clientContext);
     PerpetualTaskRecord savedPerpetualTaskRecord = existingPerpetualTask.get();
     assertThat(savedPerpetualTaskRecord).isNotNull();
-    assertThat(savedPerpetualTaskRecord.getClientContext()).isEqualTo(getClientContext());
+    assertThat(savedPerpetualTaskRecord.getClientContext()).isEqualTo(clientContext);
   }
 
   public PerpetualTaskClientContext getClientContext() {

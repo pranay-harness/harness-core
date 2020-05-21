@@ -12,7 +12,7 @@ public interface PerpetualTaskService {
 
   boolean deleteTask(String accountId, String taskId);
 
-  List<String> listAssignedTaskIds(String delegateId);
+  List<PerpetualTaskAssignDetails> listAssignedTasks(String delegateId);
 
   PerpetualTaskRecord getTaskRecord(String taskId);
 
@@ -22,7 +22,7 @@ public interface PerpetualTaskService {
 
   boolean triggerCallback(String taskId, long heartbeatMillis, PerpetualTaskResponse perpetualTaskResponse);
 
-  void setDelegateId(String taskId, String delegateId);
+  void appointDelegate(String taskId, String delegateId, long lastContextUpdated);
 
   void setTaskState(String taskId, String state);
 }

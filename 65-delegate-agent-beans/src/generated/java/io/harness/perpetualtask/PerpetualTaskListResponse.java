@@ -16,7 +16,7 @@ public final class PerpetualTaskListResponse extends com.google.protobuf.Generat
     super(builder);
   }
   private PerpetualTaskListResponse() {
-    taskIds_ = java.util.Collections.emptyList();
+    perpetualTaskAssignDetails_ = java.util.Collections.emptyList();
   }
 
   @java.
@@ -43,10 +43,12 @@ public final class PerpetualTaskListResponse extends com.google.protobuf.Generat
             break;
           case 10: {
             if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-              taskIds_ = new java.util.ArrayList<io.harness.perpetualtask.PerpetualTaskId>();
+              perpetualTaskAssignDetails_ =
+                  new java.util.ArrayList<io.harness.perpetualtask.PerpetualTaskAssignDetails>();
               mutable_bitField0_ |= 0x00000001;
             }
-            taskIds_.add(input.readMessage(io.harness.perpetualtask.PerpetualTaskId.parser(), extensionRegistry));
+            perpetualTaskAssignDetails_.add(
+                input.readMessage(io.harness.perpetualtask.PerpetualTaskAssignDetails.parser(), extensionRegistry));
             break;
           }
           default: {
@@ -63,7 +65,7 @@ public final class PerpetualTaskListResponse extends com.google.protobuf.Generat
       throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
     } finally {
       if (((mutable_bitField0_ & 0x00000001) != 0)) {
-        taskIds_ = java.util.Collections.unmodifiableList(taskIds_);
+        perpetualTaskAssignDetails_ = java.util.Collections.unmodifiableList(perpetualTaskAssignDetails_);
       }
       this.unknownFields = unknownFields.build();
       makeExtensionsImmutable();
@@ -83,37 +85,39 @@ public final class PerpetualTaskListResponse extends com.google.protobuf.Generat
             io.harness.perpetualtask.PerpetualTaskListResponse.Builder.class);
   }
 
-  public static final int TASK_IDS_FIELD_NUMBER = 1;
-  private java.util.List<io.harness.perpetualtask.PerpetualTaskId> taskIds_;
+  public static final int PERPETUALTASKASSIGNDETAILS_FIELD_NUMBER = 1;
+  private java.util.List<io.harness.perpetualtask.PerpetualTaskAssignDetails> perpetualTaskAssignDetails_;
   /**
-   * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
    */
-  public java.util.List<io.harness.perpetualtask.PerpetualTaskId> getTaskIdsList() {
-    return taskIds_;
+  public java.util.List<io.harness.perpetualtask.PerpetualTaskAssignDetails> getPerpetualTaskAssignDetailsList() {
+    return perpetualTaskAssignDetails_;
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
    */
-  public java.util.List<? extends io.harness.perpetualtask.PerpetualTaskIdOrBuilder> getTaskIdsOrBuilderList() {
-    return taskIds_;
+  public java.util.List<? extends io.harness.perpetualtask.PerpetualTaskAssignDetailsOrBuilder>
+  getPerpetualTaskAssignDetailsOrBuilderList() {
+    return perpetualTaskAssignDetails_;
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
    */
-  public int getTaskIdsCount() {
-    return taskIds_.size();
+  public int getPerpetualTaskAssignDetailsCount() {
+    return perpetualTaskAssignDetails_.size();
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
    */
-  public io.harness.perpetualtask.PerpetualTaskId getTaskIds(int index) {
-    return taskIds_.get(index);
+  public io.harness.perpetualtask.PerpetualTaskAssignDetails getPerpetualTaskAssignDetails(int index) {
+    return perpetualTaskAssignDetails_.get(index);
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
    */
-  public io.harness.perpetualtask.PerpetualTaskIdOrBuilder getTaskIdsOrBuilder(int index) {
-    return taskIds_.get(index);
+  public io.harness.perpetualtask.PerpetualTaskAssignDetailsOrBuilder getPerpetualTaskAssignDetailsOrBuilder(
+      int index) {
+    return perpetualTaskAssignDetails_.get(index);
   }
 
   private byte memoizedIsInitialized = -1;
@@ -131,8 +135,8 @@ public final class PerpetualTaskListResponse extends com.google.protobuf.Generat
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    for (int i = 0; i < taskIds_.size(); i++) {
-      output.writeMessage(1, taskIds_.get(i));
+    for (int i = 0; i < perpetualTaskAssignDetails_.size(); i++) {
+      output.writeMessage(1, perpetualTaskAssignDetails_.get(i));
     }
     unknownFields.writeTo(output);
   }
@@ -144,8 +148,8 @@ public final class PerpetualTaskListResponse extends com.google.protobuf.Generat
       return size;
 
     size = 0;
-    for (int i = 0; i < taskIds_.size(); i++) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, taskIds_.get(i));
+    for (int i = 0; i < perpetualTaskAssignDetails_.size(); i++) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, perpetualTaskAssignDetails_.get(i));
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -162,7 +166,7 @@ public final class PerpetualTaskListResponse extends com.google.protobuf.Generat
     }
     io.harness.perpetualtask.PerpetualTaskListResponse other = (io.harness.perpetualtask.PerpetualTaskListResponse) obj;
 
-    if (!getTaskIdsList().equals(other.getTaskIdsList()))
+    if (!getPerpetualTaskAssignDetailsList().equals(other.getPerpetualTaskAssignDetailsList()))
       return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
@@ -176,9 +180,9 @@ public final class PerpetualTaskListResponse extends com.google.protobuf.Generat
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    if (getTaskIdsCount() > 0) {
-      hash = (37 * hash) + TASK_IDS_FIELD_NUMBER;
-      hash = (53 * hash) + getTaskIdsList().hashCode();
+    if (getPerpetualTaskAssignDetailsCount() > 0) {
+      hash = (37 * hash) + PERPETUALTASKASSIGNDETAILS_FIELD_NUMBER;
+      hash = (53 * hash) + getPerpetualTaskAssignDetailsList().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -288,17 +292,17 @@ public final class PerpetualTaskListResponse extends com.google.protobuf.Generat
     }
     private void maybeForceBuilderInitialization() {
       if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
-        getTaskIdsFieldBuilder();
+        getPerpetualTaskAssignDetailsFieldBuilder();
       }
     }
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      if (taskIdsBuilder_ == null) {
-        taskIds_ = java.util.Collections.emptyList();
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
+        perpetualTaskAssignDetails_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000001);
       } else {
-        taskIdsBuilder_.clear();
+        perpetualTaskAssignDetailsBuilder_.clear();
       }
       return this;
     }
@@ -332,14 +336,14 @@ public final class PerpetualTaskListResponse extends com.google.protobuf.Generat
       io.harness.perpetualtask.PerpetualTaskListResponse result =
           new io.harness.perpetualtask.PerpetualTaskListResponse(this);
       int from_bitField0_ = bitField0_;
-      if (taskIdsBuilder_ == null) {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
         if (((bitField0_ & 0x00000001) != 0)) {
-          taskIds_ = java.util.Collections.unmodifiableList(taskIds_);
+          perpetualTaskAssignDetails_ = java.util.Collections.unmodifiableList(perpetualTaskAssignDetails_);
           bitField0_ = (bitField0_ & ~0x00000001);
         }
-        result.taskIds_ = taskIds_;
+        result.perpetualTaskAssignDetails_ = perpetualTaskAssignDetails_;
       } else {
-        result.taskIds_ = taskIdsBuilder_.build();
+        result.perpetualTaskAssignDetails_ = perpetualTaskAssignDetailsBuilder_.build();
       }
       onBuilt();
       return result;
@@ -383,28 +387,29 @@ public final class PerpetualTaskListResponse extends com.google.protobuf.Generat
     public Builder mergeFrom(io.harness.perpetualtask.PerpetualTaskListResponse other) {
       if (other == io.harness.perpetualtask.PerpetualTaskListResponse.getDefaultInstance())
         return this;
-      if (taskIdsBuilder_ == null) {
-        if (!other.taskIds_.isEmpty()) {
-          if (taskIds_.isEmpty()) {
-            taskIds_ = other.taskIds_;
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
+        if (!other.perpetualTaskAssignDetails_.isEmpty()) {
+          if (perpetualTaskAssignDetails_.isEmpty()) {
+            perpetualTaskAssignDetails_ = other.perpetualTaskAssignDetails_;
             bitField0_ = (bitField0_ & ~0x00000001);
           } else {
-            ensureTaskIdsIsMutable();
-            taskIds_.addAll(other.taskIds_);
+            ensurePerpetualTaskAssignDetailsIsMutable();
+            perpetualTaskAssignDetails_.addAll(other.perpetualTaskAssignDetails_);
           }
           onChanged();
         }
       } else {
-        if (!other.taskIds_.isEmpty()) {
-          if (taskIdsBuilder_.isEmpty()) {
-            taskIdsBuilder_.dispose();
-            taskIdsBuilder_ = null;
-            taskIds_ = other.taskIds_;
+        if (!other.perpetualTaskAssignDetails_.isEmpty()) {
+          if (perpetualTaskAssignDetailsBuilder_.isEmpty()) {
+            perpetualTaskAssignDetailsBuilder_.dispose();
+            perpetualTaskAssignDetailsBuilder_ = null;
+            perpetualTaskAssignDetails_ = other.perpetualTaskAssignDetails_;
             bitField0_ = (bitField0_ & ~0x00000001);
-            taskIdsBuilder_ =
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ? getTaskIdsFieldBuilder() : null;
+            perpetualTaskAssignDetailsBuilder_ = com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                ? getPerpetualTaskAssignDetailsFieldBuilder()
+                : null;
           } else {
-            taskIdsBuilder_.addAllMessages(other.taskIds_);
+            perpetualTaskAssignDetailsBuilder_.addAllMessages(other.perpetualTaskAssignDetails_);
           }
         }
       }
@@ -436,228 +441,242 @@ public final class PerpetualTaskListResponse extends com.google.protobuf.Generat
     }
     private int bitField0_;
 
-    private java.util.List<io.harness.perpetualtask.PerpetualTaskId> taskIds_ = java.util.Collections.emptyList();
-    private void ensureTaskIdsIsMutable() {
+    private java.util.List<io.harness.perpetualtask.PerpetualTaskAssignDetails> perpetualTaskAssignDetails_ =
+        java.util.Collections.emptyList();
+    private void ensurePerpetualTaskAssignDetailsIsMutable() {
       if (!((bitField0_ & 0x00000001) != 0)) {
-        taskIds_ = new java.util.ArrayList<io.harness.perpetualtask.PerpetualTaskId>(taskIds_);
+        perpetualTaskAssignDetails_ =
+            new java.util.ArrayList<io.harness.perpetualtask.PerpetualTaskAssignDetails>(perpetualTaskAssignDetails_);
         bitField0_ |= 0x00000001;
       }
     }
 
-    private com.google.protobuf.RepeatedFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskId,
-        io.harness.perpetualtask.PerpetualTaskId.Builder, io.harness.perpetualtask.PerpetualTaskIdOrBuilder>
-        taskIdsBuilder_;
+    private com.google.protobuf.RepeatedFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskAssignDetails,
+        io.harness.perpetualtask.PerpetualTaskAssignDetails.Builder,
+        io.harness.perpetualtask.PerpetualTaskAssignDetailsOrBuilder> perpetualTaskAssignDetailsBuilder_;
 
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public java.util.List<io.harness.perpetualtask.PerpetualTaskId> getTaskIdsList() {
-      if (taskIdsBuilder_ == null) {
-        return java.util.Collections.unmodifiableList(taskIds_);
+    public java.util.List<io.harness.perpetualtask.PerpetualTaskAssignDetails> getPerpetualTaskAssignDetailsList() {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
+        return java.util.Collections.unmodifiableList(perpetualTaskAssignDetails_);
       } else {
-        return taskIdsBuilder_.getMessageList();
+        return perpetualTaskAssignDetailsBuilder_.getMessageList();
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public int getTaskIdsCount() {
-      if (taskIdsBuilder_ == null) {
-        return taskIds_.size();
+    public int getPerpetualTaskAssignDetailsCount() {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
+        return perpetualTaskAssignDetails_.size();
       } else {
-        return taskIdsBuilder_.getCount();
+        return perpetualTaskAssignDetailsBuilder_.getCount();
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public io.harness.perpetualtask.PerpetualTaskId getTaskIds(int index) {
-      if (taskIdsBuilder_ == null) {
-        return taskIds_.get(index);
+    public io.harness.perpetualtask.PerpetualTaskAssignDetails getPerpetualTaskAssignDetails(int index) {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
+        return perpetualTaskAssignDetails_.get(index);
       } else {
-        return taskIdsBuilder_.getMessage(index);
+        return perpetualTaskAssignDetailsBuilder_.getMessage(index);
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public Builder setTaskIds(int index, io.harness.perpetualtask.PerpetualTaskId value) {
-      if (taskIdsBuilder_ == null) {
+    public Builder setPerpetualTaskAssignDetails(int index, io.harness.perpetualtask.PerpetualTaskAssignDetails value) {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
         }
-        ensureTaskIdsIsMutable();
-        taskIds_.set(index, value);
+        ensurePerpetualTaskAssignDetailsIsMutable();
+        perpetualTaskAssignDetails_.set(index, value);
         onChanged();
       } else {
-        taskIdsBuilder_.setMessage(index, value);
+        perpetualTaskAssignDetailsBuilder_.setMessage(index, value);
       }
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public Builder setTaskIds(int index, io.harness.perpetualtask.PerpetualTaskId.Builder builderForValue) {
-      if (taskIdsBuilder_ == null) {
-        ensureTaskIdsIsMutable();
-        taskIds_.set(index, builderForValue.build());
+    public Builder setPerpetualTaskAssignDetails(
+        int index, io.harness.perpetualtask.PerpetualTaskAssignDetails.Builder builderForValue) {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
+        ensurePerpetualTaskAssignDetailsIsMutable();
+        perpetualTaskAssignDetails_.set(index, builderForValue.build());
         onChanged();
       } else {
-        taskIdsBuilder_.setMessage(index, builderForValue.build());
+        perpetualTaskAssignDetailsBuilder_.setMessage(index, builderForValue.build());
       }
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public Builder addTaskIds(io.harness.perpetualtask.PerpetualTaskId value) {
-      if (taskIdsBuilder_ == null) {
+    public Builder addPerpetualTaskAssignDetails(io.harness.perpetualtask.PerpetualTaskAssignDetails value) {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
         }
-        ensureTaskIdsIsMutable();
-        taskIds_.add(value);
+        ensurePerpetualTaskAssignDetailsIsMutable();
+        perpetualTaskAssignDetails_.add(value);
         onChanged();
       } else {
-        taskIdsBuilder_.addMessage(value);
+        perpetualTaskAssignDetailsBuilder_.addMessage(value);
       }
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public Builder addTaskIds(int index, io.harness.perpetualtask.PerpetualTaskId value) {
-      if (taskIdsBuilder_ == null) {
+    public Builder addPerpetualTaskAssignDetails(int index, io.harness.perpetualtask.PerpetualTaskAssignDetails value) {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
         }
-        ensureTaskIdsIsMutable();
-        taskIds_.add(index, value);
+        ensurePerpetualTaskAssignDetailsIsMutable();
+        perpetualTaskAssignDetails_.add(index, value);
         onChanged();
       } else {
-        taskIdsBuilder_.addMessage(index, value);
+        perpetualTaskAssignDetailsBuilder_.addMessage(index, value);
       }
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public Builder addTaskIds(io.harness.perpetualtask.PerpetualTaskId.Builder builderForValue) {
-      if (taskIdsBuilder_ == null) {
-        ensureTaskIdsIsMutable();
-        taskIds_.add(builderForValue.build());
+    public Builder addPerpetualTaskAssignDetails(
+        io.harness.perpetualtask.PerpetualTaskAssignDetails.Builder builderForValue) {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
+        ensurePerpetualTaskAssignDetailsIsMutable();
+        perpetualTaskAssignDetails_.add(builderForValue.build());
         onChanged();
       } else {
-        taskIdsBuilder_.addMessage(builderForValue.build());
+        perpetualTaskAssignDetailsBuilder_.addMessage(builderForValue.build());
       }
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public Builder addTaskIds(int index, io.harness.perpetualtask.PerpetualTaskId.Builder builderForValue) {
-      if (taskIdsBuilder_ == null) {
-        ensureTaskIdsIsMutable();
-        taskIds_.add(index, builderForValue.build());
+    public Builder addPerpetualTaskAssignDetails(
+        int index, io.harness.perpetualtask.PerpetualTaskAssignDetails.Builder builderForValue) {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
+        ensurePerpetualTaskAssignDetailsIsMutable();
+        perpetualTaskAssignDetails_.add(index, builderForValue.build());
         onChanged();
       } else {
-        taskIdsBuilder_.addMessage(index, builderForValue.build());
+        perpetualTaskAssignDetailsBuilder_.addMessage(index, builderForValue.build());
       }
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public Builder addAllTaskIds(java.lang.Iterable<? extends io.harness.perpetualtask.PerpetualTaskId> values) {
-      if (taskIdsBuilder_ == null) {
-        ensureTaskIdsIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, taskIds_);
+    public Builder addAllPerpetualTaskAssignDetails(
+        java.lang.Iterable<? extends io.harness.perpetualtask.PerpetualTaskAssignDetails> values) {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
+        ensurePerpetualTaskAssignDetailsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, perpetualTaskAssignDetails_);
         onChanged();
       } else {
-        taskIdsBuilder_.addAllMessages(values);
+        perpetualTaskAssignDetailsBuilder_.addAllMessages(values);
       }
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public Builder clearTaskIds() {
-      if (taskIdsBuilder_ == null) {
-        taskIds_ = java.util.Collections.emptyList();
+    public Builder clearPerpetualTaskAssignDetails() {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
+        perpetualTaskAssignDetails_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000001);
         onChanged();
       } else {
-        taskIdsBuilder_.clear();
+        perpetualTaskAssignDetailsBuilder_.clear();
       }
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public Builder removeTaskIds(int index) {
-      if (taskIdsBuilder_ == null) {
-        ensureTaskIdsIsMutable();
-        taskIds_.remove(index);
+    public Builder removePerpetualTaskAssignDetails(int index) {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
+        ensurePerpetualTaskAssignDetailsIsMutable();
+        perpetualTaskAssignDetails_.remove(index);
         onChanged();
       } else {
-        taskIdsBuilder_.remove(index);
+        perpetualTaskAssignDetailsBuilder_.remove(index);
       }
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public io.harness.perpetualtask.PerpetualTaskId.Builder getTaskIdsBuilder(int index) {
-      return getTaskIdsFieldBuilder().getBuilder(index);
+    public io.harness.perpetualtask.PerpetualTaskAssignDetails.Builder getPerpetualTaskAssignDetailsBuilder(int index) {
+      return getPerpetualTaskAssignDetailsFieldBuilder().getBuilder(index);
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public io.harness.perpetualtask.PerpetualTaskIdOrBuilder getTaskIdsOrBuilder(int index) {
-      if (taskIdsBuilder_ == null) {
-        return taskIds_.get(index);
+    public io.harness.perpetualtask.PerpetualTaskAssignDetailsOrBuilder getPerpetualTaskAssignDetailsOrBuilder(
+        int index) {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
+        return perpetualTaskAssignDetails_.get(index);
       } else {
-        return taskIdsBuilder_.getMessageOrBuilder(index);
+        return perpetualTaskAssignDetailsBuilder_.getMessageOrBuilder(index);
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public java.util.List<? extends io.harness.perpetualtask.PerpetualTaskIdOrBuilder> getTaskIdsOrBuilderList() {
-      if (taskIdsBuilder_ != null) {
-        return taskIdsBuilder_.getMessageOrBuilderList();
+    public java.util.List<? extends io.harness.perpetualtask.PerpetualTaskAssignDetailsOrBuilder>
+    getPerpetualTaskAssignDetailsOrBuilderList() {
+      if (perpetualTaskAssignDetailsBuilder_ != null) {
+        return perpetualTaskAssignDetailsBuilder_.getMessageOrBuilderList();
       } else {
-        return java.util.Collections.unmodifiableList(taskIds_);
+        return java.util.Collections.unmodifiableList(perpetualTaskAssignDetails_);
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public io.harness.perpetualtask.PerpetualTaskId.Builder addTaskIdsBuilder() {
-      return getTaskIdsFieldBuilder().addBuilder(io.harness.perpetualtask.PerpetualTaskId.getDefaultInstance());
+    public io.harness.perpetualtask.PerpetualTaskAssignDetails.Builder addPerpetualTaskAssignDetailsBuilder() {
+      return getPerpetualTaskAssignDetailsFieldBuilder().addBuilder(
+          io.harness.perpetualtask.PerpetualTaskAssignDetails.getDefaultInstance());
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public io.harness.perpetualtask.PerpetualTaskId.Builder addTaskIdsBuilder(int index) {
-      return getTaskIdsFieldBuilder().addBuilder(index, io.harness.perpetualtask.PerpetualTaskId.getDefaultInstance());
+    public io.harness.perpetualtask.PerpetualTaskAssignDetails.Builder addPerpetualTaskAssignDetailsBuilder(int index) {
+      return getPerpetualTaskAssignDetailsFieldBuilder().addBuilder(
+          index, io.harness.perpetualtask.PerpetualTaskAssignDetails.getDefaultInstance());
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.PerpetualTaskId task_ids = 1;</code>
+     * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
      */
-    public java.util.List<io.harness.perpetualtask.PerpetualTaskId.Builder> getTaskIdsBuilderList() {
-      return getTaskIdsFieldBuilder().getBuilderList();
+    public java.util.List<io.harness.perpetualtask.PerpetualTaskAssignDetails.Builder>
+    getPerpetualTaskAssignDetailsBuilderList() {
+      return getPerpetualTaskAssignDetailsFieldBuilder().getBuilderList();
     }
-    private com.google.protobuf.RepeatedFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskId,
-        io.harness.perpetualtask.PerpetualTaskId.Builder, io.harness.perpetualtask.PerpetualTaskIdOrBuilder>
-    getTaskIdsFieldBuilder() {
-      if (taskIdsBuilder_ == null) {
-        taskIdsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskId,
-            io.harness.perpetualtask.PerpetualTaskId.Builder, io.harness.perpetualtask.PerpetualTaskIdOrBuilder>(
-            taskIds_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
-        taskIds_ = null;
+    private com.google.protobuf.RepeatedFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskAssignDetails,
+        io.harness.perpetualtask.PerpetualTaskAssignDetails.Builder,
+        io.harness.perpetualtask.PerpetualTaskAssignDetailsOrBuilder>
+    getPerpetualTaskAssignDetailsFieldBuilder() {
+      if (perpetualTaskAssignDetailsBuilder_ == null) {
+        perpetualTaskAssignDetailsBuilder_ =
+            new com.google.protobuf.RepeatedFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskAssignDetails,
+                io.harness.perpetualtask.PerpetualTaskAssignDetails.Builder,
+                io.harness.perpetualtask.PerpetualTaskAssignDetailsOrBuilder>(
+                perpetualTaskAssignDetails_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
+        perpetualTaskAssignDetails_ = null;
       }
-      return taskIdsBuilder_;
+      return perpetualTaskAssignDetailsBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

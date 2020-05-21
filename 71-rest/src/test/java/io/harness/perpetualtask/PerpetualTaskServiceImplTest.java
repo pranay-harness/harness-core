@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.util.Durations;
 
 import io.harness.category.element.UnitTests;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +25,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
 
   private final String ACCOUNT_ID = "test-account-id";
   private final String REGION = "region";
+  private final String DELEGATE_ID = "test-delegate-id";
   private final String SETTING_ID = "settingId";
   private final String CLUSTER_NAME = "clusterName";
   private final long HEARTBEAT_MILLIS = Instant.now().plus(1, ChronoUnit.DAYS).toEpochMilli();
@@ -36,11 +38,15 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testCreateTask() {
+    PerpetualTaskClientContext clientContext = clientContext();
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+    perpetualTaskRecord.setClientContext(clientContext);
+
     String taskId = perpetualTaskService.createTask(
-        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext(), perpetualTaskSchedule(), false);
+        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false);
     assertThat(taskId).isNotNull();
     String taskIdDuplicate = perpetualTaskService.createTask(
-        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext(), perpetualTaskSchedule(), false);
+        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false);
     assertThat(taskIdDuplicate).isEqualTo(taskId);
   }
 
@@ -82,6 +88,15 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     return PerpetualTaskSchedule.newBuilder()
         .setInterval(Durations.fromSeconds(600))
         .setTimeout(Durations.fromMillis(180000))
+        .build();
+  }
+
+  public PerpetualTaskRecord perpetualTaskRecord() {
+    return PerpetualTaskRecord.builder()
+        .accountId(ACCOUNT_ID)
+        .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
+        .clientContext(clientContext())
+        .delegateId(DELEGATE_ID)
         .build();
   }
 }

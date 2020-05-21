@@ -25,6 +25,11 @@ message PerpetualTaskSchedule {
   google.protobuf.Duration timeout = 2;
 }
 
+message PerpetualTaskAssignDetails {
+  PerpetualTaskId task_id = 1;
+  google.protobuf.Timestamp last_context_updated = 2;
+}
+
 message PerpetualTaskContext {
   PerpetualTaskParams task_params = 1;
   PerpetualTaskSchedule task_schedule = 2;

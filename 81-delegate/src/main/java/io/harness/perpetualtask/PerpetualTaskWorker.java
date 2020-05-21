@@ -24,6 +24,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
@@ -35,8 +36,9 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 @Singleton
 public class PerpetualTaskWorker {
-  @Getter private Set<PerpetualTaskId> assignedTasks;
-  @Getter private final Map<PerpetualTaskId, PerpetualTaskHandle> runningTaskMap = new ConcurrentHashMap<>();
+  @Getter private Set<PerpetualTaskAssignDetails> assignedTasks;
+  @Getter private final Map<PerpetualTaskId, PerpetualTaskAssignRecord> runningTaskMap = new ConcurrentHashMap<>();
+
   private ScheduledExecutorService scheduledService;
 
   private final BackoffScheduler backoffScheduler;
@@ -94,22 +96,27 @@ public class PerpetualTaskWorker {
   }
 
   @VisibleForTesting
-  void startTask(PerpetualTaskId taskId) {
-    try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
+  void startTask(PerpetualTaskAssignDetails task) {
+    try (AutoLogContext ignore1 = new PerpetualTaskLogContext(task.getTaskId().getId(), OVERRIDE_ERROR)) {
       try {
-        logger.info("Starting perpetual task with id: {}.", taskId.getId());
-        PerpetualTaskContext context = perpetualTaskServiceGrpcClient.perpetualTaskContext(taskId);
+        logger.info("Starting perpetual task with id: {}.", task.getTaskId().getId());
+        PerpetualTaskContext context = perpetualTaskServiceGrpcClient.perpetualTaskContext(task.getTaskId());
         PerpetualTaskSchedule schedule = context.getTaskSchedule();
         long intervalSeconds = Durations.toSeconds(schedule.getInterval());
 
-        PerpetualTaskLifecycleManager perpetualTaskLifecycleManager =
-            new PerpetualTaskLifecycleManager(taskId, context, factoryMap, perpetualTaskServiceGrpcClient, timeLimiter);
+        PerpetualTaskLifecycleManager perpetualTaskLifecycleManager = new PerpetualTaskLifecycleManager(
+            task.getTaskId(), context, factoryMap, perpetualTaskServiceGrpcClient, timeLimiter);
         ScheduledFuture<?> taskHandle = scheduledService.scheduleWithFixedDelay(
             perpetualTaskLifecycleManager::startTask, 0, intervalSeconds, TimeUnit.SECONDS);
 
         PerpetualTaskHandle perpetualTaskHandle = new PerpetualTaskHandle(taskHandle, perpetualTaskLifecycleManager);
 
-        runningTaskMap.put(taskId, perpetualTaskHandle);
+        PerpetualTaskAssignRecord perpetualTaskAssignRecord = PerpetualTaskAssignRecord.builder()
+                                                                  .perpetualTaskHandle(perpetualTaskHandle)
+                                                                  .perpetualTaskAssignDetails(task)
+                                                                  .build();
+
+        runningTaskMap.put(task.getTaskId(), perpetualTaskAssignRecord);
       } catch (Exception ex) {
         logger.error("Exception in starting perpetual task ", ex);
       }
@@ -121,10 +128,10 @@ public class PerpetualTaskWorker {
     if (assignedTasks == null) {
       return;
     }
-    for (PerpetualTaskId taskId : assignedTasks) {
+    for (PerpetualTaskAssignDetails task : assignedTasks) {
       // start the task if the task is not currently running
-      if (!runningTaskMap.containsKey(taskId)) {
-        startTask(taskId);
+      if (!runningTaskMap.containsKey(task.getTaskId())) {
+        startTask(task);
       }
     }
   }
@@ -132,21 +139,24 @@ public class PerpetualTaskWorker {
   @VisibleForTesting
   void stopTask(PerpetualTaskId taskId) {
     try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
-      PerpetualTaskHandle perpetualTaskHandle = runningTaskMap.get(taskId);
-      if (perpetualTaskHandle == null) {
+      PerpetualTaskAssignRecord perpetualTaskAssignRecord = runningTaskMap.get(taskId);
+      if (perpetualTaskAssignRecord == null) {
         logger.error(
             "The request to delete a task with id={} cannot be fulfilled since such task does not exist.", taskId);
         return;
       }
-      perpetualTaskHandle.getTaskLifecycleManager().stopTask();
-      perpetualTaskHandle.getTaskHandle().cancel(true);
+      perpetualTaskAssignRecord.getPerpetualTaskHandle().getTaskLifecycleManager().stopTask();
+      perpetualTaskAssignRecord.getPerpetualTaskHandle().getTaskHandle().cancel(true);
       runningTaskMap.remove(taskId);
     }
   }
 
   private void stopCancelledTasks() {
     for (PerpetualTaskId taskId : runningTaskMap.keySet()) {
-      if (!assignedTasks.contains(taskId)) {
+      Optional<PerpetualTaskAssignDetails> perpetualTaskAssignDetailsOptional =
+          assignedTasks.stream().filter(taskDetails -> taskId.equals(taskDetails.getTaskId())).findFirst();
+
+      if (!perpetualTaskAssignDetailsOptional.isPresent()) {
         logger.info("Stopping the task with id: {}", taskId.getId());
         stopTask(taskId);
       }

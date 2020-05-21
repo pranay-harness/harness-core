@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.internal;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -57,7 +58,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
     when(k8sWatchPerpetualTaskServiceClient.getValidationTask(isA(PerpetualTaskClientContext.class), anyString()))
         .thenReturn(delegateTask);
 
-    doNothing().when(perpetualTaskService).setDelegateId(anyString(), eq(delegateId));
+    doNothing().when(perpetualTaskService).appointDelegate(anyString(), eq(delegateId), anyLong());
   }
 
   @Test
@@ -70,7 +71,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
                                                   .build();
     when(delegateService.executeTask(isA(DelegateTask.class))).thenReturn(response);
     perpetualTaskRecordHandler.handle(record);
-    verify(perpetualTaskService).setDelegateId(anyString(), eq(delegateId));
+    verify(perpetualTaskService).appointDelegate(anyString(), eq(delegateId), anyLong());
   }
 
   @Test
@@ -80,6 +81,6 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
     RemoteMethodReturnValueData response = RemoteMethodReturnValueData.builder().build();
     when(delegateService.executeTask(isA(DelegateTask.class))).thenReturn(response);
     perpetualTaskRecordHandler.handle(record);
-    verify(perpetualTaskService, times(0)).setDelegateId(anyString(), eq(delegateId));
+    verify(perpetualTaskService, times(0)).appointDelegate(anyString(), eq(delegateId), anyLong());
   }
 }

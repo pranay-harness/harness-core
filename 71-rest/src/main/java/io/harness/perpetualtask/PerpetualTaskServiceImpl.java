@@ -22,6 +22,7 @@ import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -91,10 +92,18 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   }
 
   @Override
-  public List<String> listAssignedTaskIds(String delegateId) {
+  public List<PerpetualTaskAssignDetails> listAssignedTasks(String delegateId) {
     String accountId = DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY.get(Context.current());
-    logger.debug("Account id: {}", accountId);
-    return perpetualTaskRecordDao.listAssignedTaskIds(delegateId, accountId);
+
+    List<PerpetualTaskRecord> taskRecords = perpetualTaskRecordDao.listAssignedTasks(delegateId, accountId);
+
+    return taskRecords.stream()
+        .map(task
+            -> PerpetualTaskAssignDetails.newBuilder()
+                   .setTaskId(PerpetualTaskId.newBuilder().setId(task.getUuid()))
+                   .setLastContextUpdated(HTimestamps.fromMillis(task.getClientContext().getLastContextUpdated()))
+                   .build())
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -145,8 +154,8 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   }
 
   @Override
-  public void setDelegateId(String taskId, String delegateId) {
-    perpetualTaskRecordDao.setDelegateId(taskId, delegateId);
+  public void appointDelegate(String taskId, String delegateId, long lastContextUpdated) {
+    perpetualTaskRecordDao.appointDelegate(taskId, delegateId, lastContextUpdated);
   }
 
   @Override

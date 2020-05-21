@@ -7,9 +7,9 @@ import io.grpc.stub.StreamObserver;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.HeartbeatRequest;
 import io.harness.perpetualtask.HeartbeatResponse;
+import io.harness.perpetualtask.PerpetualTaskAssignDetails;
 import io.harness.perpetualtask.PerpetualTaskContextRequest;
 import io.harness.perpetualtask.PerpetualTaskContextResponse;
-import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskListRequest;
 import io.harness.perpetualtask.PerpetualTaskListResponse;
 import io.harness.perpetualtask.PerpetualTaskResponse;
@@ -17,7 +17,6 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskState;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Singleton
 public class PerpetualTaskServiceGrpc
@@ -27,10 +26,10 @@ public class PerpetualTaskServiceGrpc
   @Override
   public void perpetualTaskList(
       PerpetualTaskListRequest request, StreamObserver<PerpetualTaskListResponse> responseObserver) {
-    List<String> taskIds = perpetualTaskService.listAssignedTaskIds(request.getDelegateId().getId());
-    List<PerpetualTaskId> perpetualTaskIds =
-        taskIds.stream().map(taskId -> PerpetualTaskId.newBuilder().setId(taskId).build()).collect(Collectors.toList());
-    PerpetualTaskListResponse response = PerpetualTaskListResponse.newBuilder().addAllTaskIds(perpetualTaskIds).build();
+    List<PerpetualTaskAssignDetails> perpetualTaskAssignDetails =
+        perpetualTaskService.listAssignedTasks(request.getDelegateId().getId());
+    PerpetualTaskListResponse response =
+        PerpetualTaskListResponse.newBuilder().addAllPerpetualTaskAssignDetails(perpetualTaskAssignDetails).build();
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }
