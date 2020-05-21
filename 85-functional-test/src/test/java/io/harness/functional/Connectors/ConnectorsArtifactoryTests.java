@@ -110,7 +110,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = MEENAKSHI)
+  @Owner(developers = MEENAKSHI, intermittent = true)
   @Category(FunctionalTests.class)
   public void runArtifactoryConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC13_createArtifactoryConnector, booleanMatcher, true);

@@ -531,9 +531,9 @@ public class NodeSelectStateTest extends WingsBaseTest {
                           .withCount(2);
     final ServiceInstanceSelectionParams selectionParams =
         nodeSelectState.generateSelectionParamsForAllInstances(builder, 5);
-    assertThat(selectionParams.isSelectSpecificHosts()).isTrue();
-    assertThat(selectionParams.getHostNames()).containsExactly("host-1", "host-2");
-    assertThat(selectionParams.getCount()).isEqualTo(2);
+    assertThat(selectionParams.isSelectSpecificHosts()).isFalse();
+    assertThat(selectionParams.getHostNames()).isEmpty();
+    assertThat(selectionParams.getCount()).isEqualTo(5);
     assertThat(selectionParams.getExcludedServiceInstanceIds()).isEmpty();
   }
 
