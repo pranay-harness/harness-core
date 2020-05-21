@@ -44,6 +44,21 @@ public class PipelineDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(qlPipeline.getId()).isEqualTo(pipeline.getUuid());
     assertThat(qlPipeline.getName()).isEqualTo(PIPELINE1);
 
+    try {
+      qlPipeline = pipelineDataFetcher.fetch(
+          QLPipelineQueryParameters.builder().pipelineName(pipeline.getName()).build(), ACCOUNT1_ID);
+      fail("Empty Application Id");
+    } catch (Exception e) {
+      assertThat(e).isInstanceOf(InvalidRequestException.class);
+    }
+
+    qlPipeline = pipelineDataFetcher.fetch(
+        QLPipelineQueryParameters.builder().pipelineName(pipeline.getName()).applicationId(pipeline.getAppId()).build(),
+        ACCOUNT1_ID);
+
+    assertThat(qlPipeline.getAppId()).isEqualTo(APP1_ID_ACCOUNT1);
+    assertThat(qlPipeline.getName()).isEqualTo(PIPELINE1);
+
     String workflowExecutionId = createWorkflowExecution(ACCOUNT1_ID, APP1_ID_ACCOUNT1, qlPipeline.getId());
     qlPipeline = pipelineDataFetcher.fetch(
         QLPipelineQueryParameters.builder().executionId(workflowExecutionId).build(), ACCOUNT1_ID);

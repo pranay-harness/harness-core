@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
@@ -25,15 +26,27 @@ import software.wings.security.annotations.AuthRule;
 @Slf4j
 public class PipelineDataFetcher extends AbstractObjectDataFetcher<QLPipeline, QLPipelineQueryParameters> {
   public static final String PIPELINE_DOES_NOT_EXIST_MSG = "Pipeline does not exist";
+  public static final String EMPTY_PIPELINE_NAME = "Empty Pipeline name";
+  public static final String EMPTY_APPLICATION_ID = "Empty Application Id";
+
   @Inject HPersistence persistence;
 
   @Override
   @AuthRule(permissionType = PermissionType.PIPELINE, action = Action.READ)
   public QLPipeline fetch(QLPipelineQueryParameters qlQuery, String accountId) {
     Pipeline pipeline = null;
+
     if (qlQuery.getPipelineId() != null) {
       pipeline = persistence.get(Pipeline.class, qlQuery.getPipelineId());
     } else if (qlQuery.getPipelineName() != null) {
+      if (EmptyPredicate.isEmpty(qlQuery.getApplicationId())) {
+        throw new InvalidRequestException(EMPTY_APPLICATION_ID, WingsException.USER);
+      }
+
+      if (EmptyPredicate.isEmpty(qlQuery.getPipelineName())) {
+        throw new InvalidRequestException(EMPTY_PIPELINE_NAME, WingsException.USER);
+      }
+
       pipeline = persistence.createQuery(Pipeline.class)
                      .filter(PipelineKeys.appId, qlQuery.getApplicationId())
                      .filter(PipelineKeys.name, qlQuery.getPipelineName())
