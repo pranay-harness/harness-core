@@ -57,7 +57,6 @@ import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
@@ -92,7 +91,6 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private QueuePublisher<ExecutionEvent> executionEventQueue;
   @Inject private AlertService alertService;
   @Inject private TriggerService triggerService;
-  @Inject private transient DeploymentTriggerService deploymentTriggerService;
   @Inject private transient AppService appService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ResourceConstraintService resourceConstraintService;
@@ -238,12 +236,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       }
     } else {
       if (status == SUCCESS) {
-        String accountId = appService.getAccountIdByAppId(appId);
-        if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
-          triggerService.triggerExecutionPostPipelineCompletionAsync(appId, workflowId);
-        } else {
-          deploymentTriggerService.triggerExecutionPostPipelineCompletionAsync(appId, workflowId);
-        }
+        triggerService.triggerExecutionPostPipelineCompletionAsync(appId, workflowId);
       }
     }
     if (ExecutionStatus.isFinalStatus(status)) {

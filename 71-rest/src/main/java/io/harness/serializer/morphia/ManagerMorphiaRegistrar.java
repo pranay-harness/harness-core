@@ -426,9 +426,7 @@ import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.command.PcfCommandTemplate;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
-import software.wings.beans.trigger.ArtifactCondition;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
-import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.NewInstanceTriggerCondition;
 import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
@@ -841,7 +839,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DeploymentPreference.class);
     set.add(DeploymentSpecification.class);
     set.add(DeploymentSummary.class);
-    set.add(DeploymentTrigger.class);
     set.add(DirectKubernetesInfrastructureMapping.class);
     set.add(DockerArtifactStream.class);
     set.add(DynaTraceCVServiceConfiguration.class);
@@ -1303,7 +1300,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.template.command.PcfCommandTemplate", PcfCommandTemplate.class);
     w.put("beans.template.command.ShellScriptTemplate", ShellScriptTemplate.class);
     w.put("beans.template.command.SshCommandTemplate", SshCommandTemplate.class);
-    w.put("beans.trigger.ArtifactCondition", ArtifactCondition.class);
     w.put("beans.trigger.ArtifactTriggerCondition", ArtifactTriggerCondition.class);
     w.put("beans.trigger.NewInstanceTriggerCondition", NewInstanceTriggerCondition.class);
     w.put("beans.trigger.PipelineTriggerCondition", PipelineTriggerCondition.class);

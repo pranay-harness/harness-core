@@ -24,7 +24,6 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.yaml.YamlGitService;
@@ -258,8 +257,6 @@ public class YamlHelper {
         return wingsPersistence.createQuery(Pipeline.class).filter(ID_KEY, entityId).get().getCreatedAt();
       case TRIGGER:
         return wingsPersistence.createQuery(Trigger.class).filter(ID_KEY, entityId).get().getCreatedAt();
-      case DEPLOYMENT_TRIGGER:
-        return wingsPersistence.createQuery(DeploymentTrigger.class).filter(ID_KEY, entityId).get().getCreatedAt();
       case PROVISIONER:
         return wingsPersistence.createQuery(InfrastructureProvisioner.class)
             .filter(ID_KEY, entityId)

@@ -34,7 +34,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
@@ -44,7 +43,6 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.TriggerService;
-import software.wings.service.intfc.trigger.DeploymentTriggerService;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
@@ -57,7 +55,6 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
   @Mock private ArtifactService artifactService;
   @Mock private TriggerService triggerService;
-  @Mock private DeploymentTriggerService deploymentTriggerService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ExecutorService executorService;
 
@@ -97,7 +94,6 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM_UNSTABLE, BUILD_DETAILS_2)).thenReturn(ARTIFACT_2);
     when(artifactService.create(ARTIFACT_1)).thenReturn(ARTIFACT_1);
     when(artifactService.create(ARTIFACT_2)).thenReturn(ARTIFACT_2);
-    when(featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, ACCOUNT_ID)).thenReturn(false);
     buildSourceCallback.setAccountId(ACCOUNT_ID);
     buildSourceCallback.setSettingId(SETTING_ID);
   }
@@ -118,13 +114,9 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldNotifyOnSuccessTriggerRefactor() {
-    when(featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
     buildSourceCallback.handleResponseForSuccessInternal(prepareBuildSourceExecutionResponse(true), ARTIFACT_STREAM);
     verify(artifactStreamService, never()).updateCollectionStatus(ACCOUNT_ID, ARTIFACT_STREAM_ID_1, STABLE.name());
-    verify(deploymentTriggerService)
-        .triggerExecutionPostArtifactCollectionAsync(
-            ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID_1, asList(ARTIFACT_1, ARTIFACT_2));
   }
 
   @Test

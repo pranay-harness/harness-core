@@ -113,7 +113,6 @@ import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.loginSettings.LoginSettingsServiceImpl;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
-import software.wings.beans.trigger.Condition.Type;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
@@ -401,14 +400,8 @@ import software.wings.service.impl.servicenow.ServiceNowServiceImpl;
 import software.wings.service.impl.splunk.SplunkAnalysisServiceImpl;
 import software.wings.service.impl.stackdriver.StackDriverServiceImpl;
 import software.wings.service.impl.sumo.SumoLogicAnalysisServiceImpl;
-import software.wings.service.impl.trigger.ArtifactTriggerProcessor;
-import software.wings.service.impl.trigger.DeploymentTriggerServiceImpl;
-import software.wings.service.impl.trigger.PipelineTriggerProcessor;
-import software.wings.service.impl.trigger.ScheduleTriggerProcessor;
 import software.wings.service.impl.trigger.TriggerExecutionServiceImpl;
-import software.wings.service.impl.trigger.TriggerProcessor;
 import software.wings.service.impl.trigger.TriggerServiceImpl;
-import software.wings.service.impl.trigger.WebhookConditionTriggerProcessor;
 import software.wings.service.impl.verification.CV24x7DashboardServiceImpl;
 import software.wings.service.impl.verification.CVActivityLogServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
@@ -599,7 +592,6 @@ import software.wings.service.intfc.splunk.SplunkAnalysisService;
 import software.wings.service.intfc.stackdriver.StackDriverService;
 import software.wings.service.intfc.sumo.SumoLogicAnalysisService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
-import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVActivityLogService;
@@ -735,7 +727,6 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(StateExecutionService.class).to(StateExecutionServiceImpl.class);
     bind(ConfigService.class).to(ConfigServiceImpl.class);
     bind(AppContainerService.class).to(AppContainerServiceImpl.class);
-    bind(DeploymentTriggerService.class).to(DeploymentTriggerServiceImpl.class);
     bind(CatalogService.class).to(CatalogServiceImpl.class);
     bind(HostService.class).to(HostServiceImpl.class);
     bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
@@ -1010,14 +1001,6 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(FailedLoginAttemptCountChecker.class).to(FailedLoginAttemptCountCheckerImpl.class);
 
     bind(SegmentGroupEventJobService.class).to(SegmentGroupEventJobServiceImpl.class);
-
-    MapBinder<String, TriggerProcessor> triggerProcessorMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, TriggerProcessor.class);
-
-    triggerProcessorMapBinder.addBinding(Type.NEW_ARTIFACT.name()).to(ArtifactTriggerProcessor.class);
-    triggerProcessorMapBinder.addBinding(Type.SCHEDULED.name()).to(ScheduleTriggerProcessor.class);
-    triggerProcessorMapBinder.addBinding(Type.PIPELINE_COMPLETION.name()).to(PipelineTriggerProcessor.class);
-    triggerProcessorMapBinder.addBinding(Type.WEBHOOK.name()).to(WebhookConditionTriggerProcessor.class);
 
     // To support storing 'Files' in google cloud storage besides default Mongo GridFs.
     if (configuration.getFileStorageMode() == null) {

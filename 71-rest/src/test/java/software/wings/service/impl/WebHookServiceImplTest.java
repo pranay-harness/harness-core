@@ -6,10 +6,8 @@ import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
@@ -19,13 +17,9 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.service.impl.WebHookServiceImpl.X_BIT_BUCKET_EVENT;
 import static software.wings.service.impl.WebHookServiceImpl.X_GIT_HUB_EVENT;
-import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildJenkinsArtifactStream;
-import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.BUILD_NO;
-import static software.wings.utils.WingsTestConstants.ENTITY_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -53,40 +47,26 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
-import software.wings.beans.EntityType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.trigger.BitBucketPayloadSource;
-import software.wings.beans.trigger.CustomPayloadExpression;
-import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.GithubAction;
-import software.wings.beans.trigger.PipelineAction;
 import software.wings.beans.trigger.ReleaseAction;
 import software.wings.beans.trigger.Trigger;
-import software.wings.beans.trigger.TriggerArgs;
-import software.wings.beans.trigger.TriggerArtifactSelectionLastCollected;
-import software.wings.beans.trigger.TriggerArtifactVariable;
 import software.wings.beans.trigger.WebHookTriggerCondition;
-import software.wings.beans.trigger.WebhookCondition;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.service.impl.trigger.WebhookTriggerDeploymentExecution;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
-import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.utils.CryptoUtils;
 
 import java.io.File;
@@ -102,7 +82,6 @@ import javax.ws.rs.core.Response;
 
 public class WebHookServiceImplTest extends WingsBaseTest {
   @Mock private TriggerService triggerService;
-  @Mock private DeploymentTriggerService deploymentTriggerService;
   @Mock private AppService appService;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
   @Mock HttpHeaders httpHeaders;
@@ -112,7 +91,6 @@ public class WebHookServiceImplTest extends WingsBaseTest {
   @Inject ManagerExpressionEvaluator expressionEvaluator;
 
   @Inject @InjectMocks private WebHookService webHookService;
-  @Inject @InjectMocks private WebhookTriggerDeploymentExecution webhookTriggerDeploymentExecution;
   @Inject WingsPersistence wingsPersistence;
 
   final String token = CryptoUtils.secureRandAlphaNumString(40);
@@ -148,45 +126,6 @@ public class WebHookServiceImplTest extends WingsBaseTest {
                          .build())
           .build();
 
-  DeploymentTrigger deploymentTrigger =
-      DeploymentTrigger.builder()
-          .uuid(TRIGGER_ID)
-          .appId(APP_ID)
-          .name(TRIGGER_NAME)
-          .accountId(ACCOUNT_ID)
-          .condition(WebhookCondition.builder()
-                         .payloadSource(
-                             BitBucketPayloadSource.builder()
-                                 .bitBucketEvents(asList(BitBucketEventType.PULL_REQUEST_CREATED))
-                                 .customPayloadExpressions(asList(CustomPayloadExpression.builder()
-                                                                      .expression("${pullrequest.source.branch.name}")
-                                                                      .value("harshBranch(.*)")
-                                                                      .build()))
-                                 .build())
-                         .webHookToken(WebHookToken.builder().webHookToken(token).build())
-                         .build())
-          .action(PipelineAction.builder()
-                      .pipelineId(PIPELINE_ID)
-                      .triggerArgs(TriggerArgs.builder()
-                                       .triggerArtifactVariables(asList(
-                                           TriggerArtifactVariable.builder()
-                                               .variableName("${pullrequest.VARIABLE_NAME}")
-                                               .variableValue(TriggerArtifactSelectionLastCollected.builder()
-                                                                  .artifactStreamId("${pullrequest.ARTIFACT_STREAM_ID}")
-                                                                  .artifactServerId("${pullrequest.SETTING_ID}")
-                                                                  .artifactFilter("${pullrequest.ARTIFACT_FILTER}")
-                                                                  .build())
-                                               .entityId(ENTITY_ID)
-                                               .entityType(EntityType.SERVICE)
-                                               .build()))
-                                       .build())
-                      .build())
-          .build();
-
-  SettingAttribute settingAttribute = buildSettingAttribute();
-
-  ArtifactStream artifactStream = buildJenkinsArtifactStream();
-
   WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
   WebHookTriggerCondition webHookTriggerConditionWithBranch =
       (WebHookTriggerCondition) triggerWithBranchNameRegex.getCondition();
@@ -201,16 +140,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
         .triggerExecutionByWebHook(anyString(), anyString(), anyMap(), anyMap(), any());
 
     doReturn(trigger).when(triggerService).getTriggerByWebhookToken(anyString());
-    on(webhookTriggerDeploymentExecution).set("appService", appService);
-    on(webhookTriggerDeploymentExecution).set("settingsService", settingsService);
-    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(buildJenkinsArtifactStream());
-    when(artifactStreamService.getArtifactStreamByName(anyString(), anyString(), anyString()))
-        .thenReturn(buildJenkinsArtifactStream());
-    on(webhookTriggerDeploymentExecution).set("artifactStreamService", artifactStreamService);
-    doReturn(execution).when(deploymentTriggerService).triggerExecutionByWebHook(any(), any(), any(), any());
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
-    when(settingsService.getByName(anyString(), anyString(), anyString())).thenReturn(settingAttribute);
-    when(artifactStreamService.getArtifactStreamByName(anyString(), anyString())).thenReturn(artifactStream);
   }
 
   @Test
@@ -395,49 +325,6 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
 
     WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
-    assertThat(response).isNotNull();
-    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
-  }
-
-  @Test
-  @Owner(developers = HARSH)
-  @Category(UnitTests.class)
-  public void shouldTestJsonBitBucketDeploymentTrigger() throws IOException {
-    webHookTriggerConditionWithBranch.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
-    webHookTriggerConditionWithBranch.setBitBucketEvents(Arrays.asList(BitBucketEventType.PULL_REQUEST_CREATED));
-    when(featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, ACCOUNT_ID)).thenReturn(true);
-    when(deploymentTriggerService.getTriggerByWebhookToken(token)).thenReturn(deploymentTrigger);
-
-    ClassLoader classLoader = getClass().getClassLoader();
-    File file = new File(
-        classLoader.getResource("software/wings/service/impl/webhook/bitbucket_deployment_trigger_pull_request.json")
-            .getFile());
-    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
-
-    doReturn("pullrequest:created").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
-    doReturn(execution).when(deploymentTriggerService).triggerExecutionByWebHook(any(), anyMap(), any(), any());
-
-    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
-    assertThat(response).isNotNull();
-    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
-  }
-
-  @Test
-  @Owner(developers = HARSH)
-  @Category(UnitTests.class)
-  public void shouldExecuteDeploymentTriggerWithExpression() {
-    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(true);
-    when(deploymentTriggerService.getTriggerByWebhookToken(token)).thenReturn(deploymentTrigger);
-
-    Map<String, String> parameters = new HashMap<>();
-    parameters.put("VARIABLE_NAME", "VARIABLE_NAME");
-    parameters.put("ARTIFACT_STREAM_ID", "ARTIFACT_STREAM_ID");
-    parameters.put("SETTING_ID", "SETTING_ID");
-    parameters.put("ARTIFACT_FILTER", "ARTIFACT_FILTER");
-    parameters.put("pullrequest.source.branch.name", "harshBranch");
-    WebHookRequest request = WebHookRequest.builder().parameters(parameters).application(APP_ID).build();
-
-    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
   }

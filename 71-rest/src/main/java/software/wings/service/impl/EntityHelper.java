@@ -76,7 +76,6 @@ import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
-import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
@@ -280,15 +279,6 @@ public class EntityHelper {
       affectedResourceId = trigger.getUuid();
       affectedResourceName = trigger.getName();
       affectedResourceType = EntityType.TRIGGER.name();
-      affectedResourceOperation = type.name();
-    } else if (entity instanceof DeploymentTrigger) {
-      DeploymentTrigger trigger = (DeploymentTrigger) entity;
-      entityType = EntityType.DEPLOYMENT_TRIGGER.name();
-      entityName = trigger.getName();
-      appId = trigger.getAppId();
-      affectedResourceId = trigger.getUuid();
-      affectedResourceName = trigger.getName();
-      affectedResourceType = EntityType.DEPLOYMENT_TRIGGER.name();
       affectedResourceOperation = type.name();
     } else if (entity instanceof ArtifactStream) {
       ArtifactStream artifactStream = (ArtifactStream) entity;
@@ -798,9 +788,6 @@ public class EntityHelper {
         finalYaml = format("%s/%s", yamlPrefix, INDEX_YAML);
       } else if (entity instanceof Trigger) {
         Trigger trigger = (Trigger) entity;
-        finalYaml = format("%s/%s%s", yamlPrefix, trigger.getName(), YAML_EXTENSION);
-      } else if (entity instanceof DeploymentTrigger) {
-        DeploymentTrigger trigger = (DeploymentTrigger) entity;
         finalYaml = format("%s/%s%s", yamlPrefix, trigger.getName(), YAML_EXTENSION);
       } else if (entity instanceof ConfigFile) {
         ConfigFile configFile = (ConfigFile) entity;

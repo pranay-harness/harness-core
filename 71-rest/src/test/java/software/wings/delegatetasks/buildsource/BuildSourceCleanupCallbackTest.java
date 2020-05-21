@@ -42,7 +42,6 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
-import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;
@@ -227,7 +226,6 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
 
     when(artifactService.create(ARTIFACT_1)).thenReturn(ARTIFACT_1);
     when(artifactService.create(ARTIFACT_2)).thenReturn(ARTIFACT_2);
-    when(featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, ACCOUNT_ID)).thenReturn(false);
     buildSourceCleanupCallback.setAccountId(ACCOUNT_ID);
   }
 

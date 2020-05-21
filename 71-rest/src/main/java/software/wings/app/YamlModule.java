@@ -49,10 +49,7 @@ import com.google.inject.multibindings.MapBinder;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.InfrastructureType;
-import software.wings.beans.trigger.Action.ActionType;
-import software.wings.beans.trigger.Condition.Type;
 import software.wings.beans.trigger.PayloadSource;
-import software.wings.beans.trigger.TriggerArtifactSelectionValue.ArtifactSelectionType;
 import software.wings.common.TemplateConstants;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.YamlArtifactStreamServiceImpl;
@@ -162,26 +159,12 @@ import software.wings.service.impl.yaml.handler.templatelibrary.HttpTemplateYaml
 import software.wings.service.impl.yaml.handler.templatelibrary.PcfCommandTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.ShellScriptTemplateYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibraryYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.ActionYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.BitbucketPayloadSourceYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.ConditionYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.CustomPayloadSourceYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.GithubPayloadSourceYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.GitlabPayloadSourceYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.NewArtifactConditionYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.PayloadSourceYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.PipelineActionYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.PipelineCompletionConditionYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.ScheduledConditionYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.TriggerArtifactFromSourceArtifactYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.TriggerArtifactFromSourcePipelineYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.TriggerArtifactLastCollectedYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.TriggerArtifactLastDeployedYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.TriggerArtifactValueYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.TriggerArtifactWebhookYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.WebhookConditionYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.WorkflowActionYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.BasicWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.BlueGreenWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.BuildWorkflowYamlHandler;
@@ -443,38 +426,12 @@ public class YamlModule extends CommandLibrarySharedModule {
     triggerYamlHelperMapBinder.addBinding(WEBHOOK.name()).to(WebhookTriggerConditionHandler.class);
     triggerYamlHelperMapBinder.addBinding(PIPELINE_COMPLETION.name()).to(PipelineTriggerConditionHandler.class);
 
-    MapBinder<String, ConditionYamlHandler> triggerConditionMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, ConditionYamlHandler.class);
-    triggerConditionMapBinder.addBinding(Type.NEW_ARTIFACT.name()).to(NewArtifactConditionYamlHandler.class);
-    triggerConditionMapBinder.addBinding(Type.SCHEDULED.name()).to(ScheduledConditionYamlHandler.class);
-    triggerConditionMapBinder.addBinding(Type.PIPELINE_COMPLETION.name())
-        .to(PipelineCompletionConditionYamlHandler.class);
-    triggerConditionMapBinder.addBinding(Type.WEBHOOK.name()).to(WebhookConditionYamlHandler.class);
-
-    MapBinder<String, ActionYamlHandler> triggerActionMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, ActionYamlHandler.class);
-    triggerActionMapBinder.addBinding(ActionType.PIPELINE.name()).to(PipelineActionYamlHandler.class);
-    triggerActionMapBinder.addBinding(ActionType.WORKFLOW.name()).to(WorkflowActionYamlHandler.class);
-
     MapBinder<String, PayloadSourceYamlHandler> payloadSourceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, PayloadSourceYamlHandler.class);
     payloadSourceMapBinder.addBinding(PayloadSource.Type.BITBUCKET.name()).to(BitbucketPayloadSourceYamlHandler.class);
     payloadSourceMapBinder.addBinding(PayloadSource.Type.GITHUB.name()).to(GithubPayloadSourceYamlHandler.class);
     payloadSourceMapBinder.addBinding(PayloadSource.Type.GITLAB.name()).to(GitlabPayloadSourceYamlHandler.class);
     payloadSourceMapBinder.addBinding(PayloadSource.Type.CUSTOM.name()).to(CustomPayloadSourceYamlHandler.class);
-
-    MapBinder<String, TriggerArtifactValueYamlHandler> triggerArtifactValueMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, TriggerArtifactValueYamlHandler.class);
-    triggerArtifactValueMapBinder.addBinding(ArtifactSelectionType.LAST_COLLECTED.name())
-        .to(TriggerArtifactLastCollectedYamlHandler.class);
-    triggerArtifactValueMapBinder.addBinding(ArtifactSelectionType.LAST_DEPLOYED.name())
-        .to(TriggerArtifactLastDeployedYamlHandler.class);
-    triggerArtifactValueMapBinder.addBinding(ArtifactSelectionType.ARTIFACT_SOURCE.name())
-        .to(TriggerArtifactFromSourceArtifactYamlHandler.class);
-    triggerArtifactValueMapBinder.addBinding(ArtifactSelectionType.PIPELINE_SOURCE.name())
-        .to(TriggerArtifactFromSourcePipelineYamlHandler.class);
-    triggerArtifactValueMapBinder.addBinding(ArtifactSelectionType.WEBHOOK_VARIABLE.name())
-        .to(TriggerArtifactWebhookYamlHandler.class);
 
     MapBinder<String, InfrastructureProvisionerYamlHandler> infrastructureProvisionerYamlHandlerMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvisionerYamlHandler.class);

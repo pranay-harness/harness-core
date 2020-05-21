@@ -42,13 +42,11 @@ import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTag.HarnessTagKeys;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
 import software.wings.beans.User;
-import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.TagsFeature;
@@ -61,11 +59,9 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.impl.trigger.TriggerAuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
@@ -73,7 +69,6 @@ import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.ArrayList;
@@ -104,12 +99,9 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   @Inject private PipelineService pipelineService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private TriggerService triggerService;
-  @Inject private DeploymentTriggerService deploymentTriggerService;
-  @Inject private TriggerAuthHandler triggerAuthHandler;
   @Inject private AuthService authService;
   @Inject private AppService appService;
   @Inject private EntityNameCache entityNameCache;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject @Named(TagsFeature.FEATURE_NAME) private PremiumFeature tagsFeature;
 
   public static final Set<EntityType> supportedTagEntityTypes =
@@ -629,7 +621,7 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       return;
     }
 
-    if (EntityType.TRIGGER == entityType || (EntityType.DEPLOYMENT_TRIGGER == entityType)) {
+    if (EntityType.TRIGGER == entityType) {
       // For Read action, we check if the user has access to App or not.
       // This is consistent with what is done in trigger resource list
       if (Action.READ == action) {
@@ -658,19 +650,11 @@ public class HarnessTagServiceImpl implements HarnessTagService {
   }
 
   private void authorizeTriggers(String appId, String entityId, String accountId) {
-    if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
-      DeploymentTrigger existingDTrigger = deploymentTriggerService.get(appId, entityId, false);
-      if (existingDTrigger == null) {
-        throw new TriggerException("Trigger does not exist", USER);
-      }
-      triggerAuthHandler.authorize(existingDTrigger, true);
-    } else {
-      Trigger existingTrigger = triggerService.get(appId, entityId);
-      if (existingTrigger == null) {
-        throw new TriggerException("Trigger does not exist", USER);
-      }
-      triggerService.authorize(existingTrigger, true);
+    Trigger existingTrigger = triggerService.get(appId, entityId);
+    if (existingTrigger == null) {
+      throw new TriggerException("Trigger does not exist", USER);
     }
+    triggerService.authorize(existingTrigger, true);
   }
 
   private void authorizeApplication(String appId, String accountId, Action action) {
@@ -748,8 +732,6 @@ public class HarnessTagServiceImpl implements HarnessTagService {
       case TRIGGER:
         return triggerService.get(appId, entityId);
 
-      case DEPLOYMENT_TRIGGER:
-        return deploymentTriggerService.get(appId, entityId, false);
       case APPLICATION:
         return appService.get(entityId, false);
 

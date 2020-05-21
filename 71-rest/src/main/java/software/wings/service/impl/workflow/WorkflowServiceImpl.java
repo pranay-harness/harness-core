@@ -219,7 +219,6 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByWorkflow;
 import software.wings.service.intfc.personalization.PersonalizationService;
 import software.wings.service.intfc.template.TemplateService;
-import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -343,7 +342,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
-  @Inject private DeploymentTriggerService deploymentTriggerService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -1182,9 +1180,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     List<String> triggerNames;
-    if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, workflow.getAccountId())) {
-      triggerNames = deploymentTriggerService.getTriggersHasWorkflowAction(workflow.getAppId(), workflow.getUuid());
-    } else {
+    {
       List<Trigger> triggers = triggerService.getTriggersHasWorkflowAction(workflow.getAppId(), workflow.getUuid());
       if (isEmpty(triggers)) {
         return;
