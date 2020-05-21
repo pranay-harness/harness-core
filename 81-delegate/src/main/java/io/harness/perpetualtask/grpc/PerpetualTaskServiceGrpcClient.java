@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import io.harness.delegate.DelegateId;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.HeartbeatRequest;
+import io.harness.perpetualtask.PerpetualTaskAssignDetails;
 import io.harness.perpetualtask.PerpetualTaskContext;
 import io.harness.perpetualtask.PerpetualTaskContextRequest;
 import io.harness.perpetualtask.PerpetualTaskId;
@@ -29,13 +30,13 @@ public class PerpetualTaskServiceGrpcClient {
     serviceBlockingStub = perpetualTaskServiceBlockingStub;
   }
 
-  public List<PerpetualTaskId> perpetualTaskList(String delegateId) {
+  public List<PerpetualTaskAssignDetails> perpetualTaskList(String delegateId) {
     PerpetualTaskListResponse response =
         serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
             .perpetualTaskList(PerpetualTaskListRequest.newBuilder()
                                    .setDelegateId(DelegateId.newBuilder().setId(delegateId).build())
                                    .build());
-    return response.getTaskIdsList();
+    return response.getPerpetualTaskAssignDetailsList();
   }
 
   public PerpetualTaskContext perpetualTaskContext(PerpetualTaskId taskId) {

@@ -13,7 +13,6 @@ import software.wings.dl.WingsPersistence;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class PerpetualTaskRecordDao {
@@ -24,8 +23,14 @@ public class PerpetualTaskRecordDao {
     this.persistence = persistence;
   }
 
-  public void setDelegateId(String taskId, String delegateId) {
-    persistence.updateField(PerpetualTaskRecord.class, taskId, PerpetualTaskRecordKeys.delegateId, delegateId);
+  public void appointDelegate(String taskId, String delegateId, long lastContextUpdated) {
+    Query<PerpetualTaskRecord> query =
+        persistence.createQuery(PerpetualTaskRecord.class).filter(PerpetualTaskRecordKeys.uuid, taskId);
+    UpdateOperations<PerpetualTaskRecord> updateOperations =
+        persistence.createUpdateOperations(PerpetualTaskRecord.class)
+            .set(PerpetualTaskRecordKeys.delegateId, delegateId)
+            .set(PerpetualTaskRecordKeys.client_context_last_updated, lastContextUpdated);
+    persistence.update(query, updateOperations);
   }
 
   public void setTaskState(String taskId, String state) {
@@ -55,15 +60,15 @@ public class PerpetualTaskRecordDao {
     return persistence.delete(query);
   }
 
-  public List<String> listAssignedTaskIds(String delegateId, String accountId) {
-    List<PerpetualTaskRecord> records = persistence.createQuery(PerpetualTaskRecord.class)
-                                            .field(PerpetualTaskRecordKeys.accountId)
-                                            .equal(accountId)
-                                            .field(PerpetualTaskRecordKeys.delegateId)
-                                            .equal(delegateId)
-                                            .asList();
-
-    return records.stream().map(PerpetualTaskRecord::getUuid).collect(Collectors.toList());
+  public List<PerpetualTaskRecord> listAssignedTasks(String delegateId, String accountId) {
+    return persistence.createQuery(PerpetualTaskRecord.class)
+        .field(PerpetualTaskRecordKeys.accountId)
+        .equal(accountId)
+        .field(PerpetualTaskRecordKeys.delegateId)
+        .equal(delegateId)
+        .project(PerpetualTaskRecordKeys.uuid, true)
+        .project(PerpetualTaskRecordKeys.client_context_last_updated, true)
+        .asList();
   }
 
   public PerpetualTaskRecord getTask(String taskId) {

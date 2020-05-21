@@ -24,6 +24,10 @@ public final class PerpetualTask {
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_perpetualtask_PerpetualTaskSchedule_fieldAccessorTable;
   static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_perpetualtask_PerpetualTaskAssignDetails_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_perpetualtask_PerpetualTaskAssignDetails_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
       .Descriptor internal_static_io_harness_perpetualtask_PerpetualTaskContext_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_perpetualtask_PerpetualTaskContext_fieldAccessorTable;
@@ -42,13 +46,17 @@ public final class PerpetualTask {
         + "\030\001 \001(\0132\024.google.protobuf.Any\"p\n\025Perpetua"
         + "lTaskSchedule\022+\n\010interval\030\001 \001(\0132\031.google"
         + ".protobuf.Duration\022*\n\007timeout\030\002 \001(\0132\031.go"
-        + "ogle.protobuf.Duration\"\333\001\n\024PerpetualTask"
-        + "Context\022B\n\013task_params\030\001 \001(\0132-.io.harnes"
-        + "s.perpetualtask.PerpetualTaskParams\022F\n\rt"
-        + "ask_schedule\030\002 \001(\0132/.io.harness.perpetua"
-        + "ltask.PerpetualTaskSchedule\0227\n\023heartbeat"
-        + "_timestamp\030\003 \001(\0132\032.google.protobuf.Times"
-        + "tampB\002P\001b\006proto3"};
+        + "ogle.protobuf.Duration\"\222\001\n\032PerpetualTask"
+        + "AssignDetails\022:\n\007task_id\030\001 \001(\0132).io.harn"
+        + "ess.perpetualtask.PerpetualTaskId\0228\n\024las"
+        + "t_context_updated\030\002 \001(\0132\032.google.protobu"
+        + "f.Timestamp\"\333\001\n\024PerpetualTaskContext\022B\n\013"
+        + "task_params\030\001 \001(\0132-.io.harness.perpetual"
+        + "task.PerpetualTaskParams\022F\n\rtask_schedul"
+        + "e\030\002 \001(\0132/.io.harness.perpetualtask.Perpe"
+        + "tualTaskSchedule\0227\n\023heartbeat_timestamp\030"
+        + "\003 \001(\0132\032.google.protobuf.TimestampB\002P\001b\006p"
+        + "roto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -87,7 +95,16 @@ public final class PerpetualTask {
                 "Interval",
                 "Timeout",
             });
-    internal_static_io_harness_perpetualtask_PerpetualTaskContext_descriptor = getDescriptor().getMessageTypes().get(3);
+    internal_static_io_harness_perpetualtask_PerpetualTaskAssignDetails_descriptor =
+        getDescriptor().getMessageTypes().get(3);
+    internal_static_io_harness_perpetualtask_PerpetualTaskAssignDetails_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_perpetualtask_PerpetualTaskAssignDetails_descriptor,
+            new java.lang.String[] {
+                "TaskId",
+                "LastContextUpdated",
+            });
+    internal_static_io_harness_perpetualtask_PerpetualTaskContext_descriptor = getDescriptor().getMessageTypes().get(4);
     internal_static_io_harness_perpetualtask_PerpetualTaskContext_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_perpetualtask_PerpetualTaskContext_descriptor,

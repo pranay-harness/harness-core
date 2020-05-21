@@ -39,8 +39,11 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
 
   String taskIdString1 = "TASK_ID_1";
   PerpetualTaskId taskId1 = PerpetualTaskId.newBuilder().setId(taskIdString1).build();
+  PerpetualTaskAssignDetails task1 = PerpetualTaskAssignDetails.newBuilder().setTaskId(taskId1).build();
+
   String taskIdString2 = "TASK_ID_2";
   PerpetualTaskId taskId2 = PerpetualTaskId.newBuilder().setId(taskIdString2).build();
+  PerpetualTaskAssignDetails task2 = PerpetualTaskAssignDetails.newBuilder().setTaskId(taskId2).build();
 
   KubernetesClusterConfig kubernetesClusterConfig;
   PerpetualTaskParams params;
@@ -79,8 +82,8 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testStartTask() {
-    worker.startTask(taskId1);
-    worker.startTask(taskId2);
+    worker.startTask(task1);
+    worker.startTask(task2);
     assertThat(worker.getRunningTaskMap()).hasSize(2);
   }
 
@@ -88,8 +91,8 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testStartAssignedTasks() {
-    worker.startTask(taskId1);
-    worker.startTask(taskId2);
+    worker.startTask(task1);
+    worker.startTask(task2);
     worker.startAssignedTasks();
     verify(perpetualTaskServiceGrpcClient, times(2)).perpetualTaskContext(isA(PerpetualTaskId.class));
   }
@@ -98,7 +101,7 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testStopTask() {
-    worker.startTask(taskId1);
+    worker.startTask(task1);
     assertThat(worker.getRunningTaskMap()).hasSize(1);
     worker.stopTask(taskId1);
     assertThat(worker.getRunningTaskMap()).hasSize(0);

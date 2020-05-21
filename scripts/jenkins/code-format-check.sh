@@ -56,6 +56,8 @@ echo "Running Sort Pom"
 executeWithRetry 'sortpom:sort'
 echo "Sort Pom Completed"
 
+executeWithRetry 'install -pl 64-delegate-beans'
+
 echo "Generating Resources For Protobuf"
 executeWithRetry '-P protobuf clean generate-sources'
 echo "Protobuf completed"
