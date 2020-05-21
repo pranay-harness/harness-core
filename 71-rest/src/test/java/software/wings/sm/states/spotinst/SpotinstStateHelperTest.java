@@ -16,8 +16,10 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -41,23 +43,28 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.rule.Owner;
+import io.harness.rule.OwnerRule;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -76,6 +83,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.WorkflowStandardParams;
@@ -91,6 +99,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   @Mock private ActivityService mockActivityService;
   @Mock private ServiceResourceService mockServiceResourceService;
   @Mock private AwsCommandHelper mockCommandHelper;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   @Spy @Inject @InjectMocks SpotInstStateHelper spotInstStateHelper;
 
@@ -331,5 +340,46 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
     assertThat(dataBag.getInfrastructureMapping()).isNotNull();
     assertThat(dataBag.getAwsConfig()).isNotNull();
     assertThat(dataBag.getSpotinstConfig()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void testSaveInfoToSweepingOutput() {
+    InstanceInfoVariables value;
+    ExecutionContext context = Mockito.mock(ExecutionContextImpl.class);
+    doReturn(SweepingOutputInstance.builder())
+        .when(context)
+        .prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW);
+    doReturn("some-string").when(context).appendStateExecutionId(anyString());
+
+    spotInstStateHelper.saveInstanceInfoToSweepingOutput(context, Arrays.asList(anInstanceElement().build()));
+
+    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(1)).save(captor.capture());
+    value = (InstanceInfoVariables) captor.getValue().getValue();
+    assertThat(value.getInstanceElements()).hasSize(1);
+    assertThat(value.getInstanceDetails()).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void testSaveInfoToSweepingOutputWithTrafficShift() {
+    InstanceInfoVariables value;
+    ExecutionContext context = Mockito.mock(ExecutionContextImpl.class);
+    doReturn(SweepingOutputInstance.builder())
+        .when(context)
+        .prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW);
+    doReturn("some-string").when(context).appendStateExecutionId(anyString());
+    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+
+    spotInstStateHelper.saveInstanceInfoToSweepingOutput(context, 35);
+
+    verify(sweepingOutputService, times(1)).save(captor.capture());
+    value = (InstanceInfoVariables) captor.getValue().getValue();
+    assertThat(value.getNewInstanceTrafficPercent()).isEqualTo(35);
+    assertThat(value.getInstanceDetails()).isNull();
+    assertThat(value.getInstanceElements()).isNull();
   }
 }

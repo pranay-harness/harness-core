@@ -48,8 +48,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
-import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -63,6 +63,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionData;
@@ -199,11 +200,11 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
     assertThat(param.getInstanceElements().get(1).getUuid()).isEqualTo(oldId);
     assertThat(param.getInstanceElements().get(1).isNewInstance()).isFalse();
 
-    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
-    verify(sweepingOutputService, times(1)).save(captor.capture());
-    InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) captor.getValue().getValue();
-    assertThat(instanceInfoVariables.getInstanceElements()).hasSize(2);
-    assertThat(instanceInfoVariables.getInstanceDetails()).hasSize(2);
+    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+    verify(mockSpotinstStateHelper, times(1))
+        .saveInstanceInfoToSweepingOutput(any(ExecutionContext.class), captor.capture());
+    assertThat(captor.getValue()).hasSize(2);
+    assertThat(captor.getValue().stream().map(InstanceElement.class ::cast).count()).isEqualTo(2);
   }
 
   @Test

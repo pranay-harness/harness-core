@@ -67,6 +67,7 @@ import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactElements;
 import software.wings.api.artifact.ServiceArtifactVariableElement;
 import software.wings.api.artifact.ServiceArtifactVariableElements;
+import software.wings.api.instancedetails.InstanceApiResponse;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
@@ -132,6 +133,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -1346,7 +1348,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   @Override
-  public List<String> renderExpressionsForInstanceDetails(String expression, boolean newInstancesOnly) {
+  public InstanceApiResponse renderExpressionsForInstanceDetails(String expression, boolean newInstancesOnly) {
     List<SweepingOutput> sweepingOutputs = sweepingOutputService.findSweepingOutputsWithNamePrefix(
         prepareSweepingOutputInquiryBuilder().name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME).build(), Scope.PHASE);
 
@@ -1355,7 +1357,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   @Override
-  public List<String> renderExpressionsForInstanceDetailsForWorkflow(String expression, boolean newInstancesOnly) {
+  public InstanceApiResponse renderExpressionsForInstanceDetailsForWorkflow(
+      String expression, boolean newInstancesOnly) {
     List<SweepingOutput> sweepingOutputs = sweepingOutputService.findSweepingOutputsWithNamePrefix(
         prepareSweepingOutputInquiryBuilder().name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME).build(), Scope.WORKFLOW);
 
@@ -1373,16 +1376,16 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
 
     Set<String> newHosts = new HashSet<>();
-    List<InstanceInfoVariables> instanceInfoVariables =
-        sweepingOutputs.stream().map(s -> (InstanceInfoVariables) s).collect(toList());
-    instanceInfoVariables.forEach(instanceInfoVariable -> {
+    final List<InstanceInfoVariables> instanceInfoVariables = getAllStateSweepingOutputs(sweepingOutputs);
+    final List<InstanceInfoVariables> instanceInfoVariableDeployed = getDeployStateSweepingOutputs(sweepingOutputs);
+    instanceInfoVariableDeployed.forEach(instanceInfoVariable -> {
       newHosts.addAll(instanceInfoVariable.getInstanceDetails()
                           .stream()
                           .filter(InstanceDetails::isNewInstance)
                           .map(InstanceDetails::getHostName)
                           .collect(Collectors.toSet()));
     });
-    InstanceInfoVariables finalInstanceInfo = Iterables.getLast(instanceInfoVariables);
+    InstanceInfoVariables finalInstanceInfo = Iterables.getLast(instanceInfoVariableDeployed);
     Set<String> finalInstances =
         finalInstanceInfo.getInstanceElements().stream().map(InstanceElement::getHostName).collect(Collectors.toSet());
     List<InstanceElement> instanceElements = finalInstanceInfo.getInstanceElements();
@@ -1402,11 +1405,34 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       }
     });
 
-    return InstanceInfoVariables.builder().instanceDetails(instanceDetails).instanceElements(instanceElements).build();
+    return InstanceInfoVariables.builder()
+        .instanceDetails(instanceDetails)
+        .instanceElements(instanceElements)
+        .newInstanceTrafficPercent(getMostRecentTrafficShiftToNewInstances(instanceInfoVariables))
+        .build();
+  }
+
+  private Integer getMostRecentTrafficShiftToNewInstances(List<InstanceInfoVariables> instanceInfoVariables) {
+    return instanceInfoVariables.stream()
+        .map(InstanceInfoVariables::getNewInstanceTrafficPercent)
+        .filter(Objects::nonNull)
+        .reduce((first, second) -> second)
+        .orElse(null);
+  }
+
+  private List<InstanceInfoVariables> getAllStateSweepingOutputs(List<SweepingOutput> sweepingOutputs) {
+    return sweepingOutputs.stream().map(InstanceInfoVariables.class ::cast).collect(toList());
+  }
+
+  private List<InstanceInfoVariables> getDeployStateSweepingOutputs(List<SweepingOutput> sweepingOutputs) {
+    return sweepingOutputs.stream()
+        .map(InstanceInfoVariables.class ::cast)
+        .filter(InstanceInfoVariables::isDeployStateInfo)
+        .collect(toList());
   }
 
   @VisibleForTesting
-  List<String> renderExpressionFromInstanceInfoVariables(
+  InstanceApiResponse renderExpressionFromInstanceInfoVariables(
       String expression, boolean newInstancesOnly, InstanceInfoVariables instanceInfoVariables) {
     List<String> list = new ArrayList<>();
     Map<String, InstanceDetails> hostNameToDetailMap = new HashMap<>();
@@ -1434,7 +1460,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
                       .collect(toList()));
     }
 
-    return list;
+    return InstanceApiResponse.builder()
+        .instances(list)
+        .newInstanceTrafficPercent(instanceInfoVariables.getNewInstanceTrafficPercent())
+        .build();
   }
 
   @Override

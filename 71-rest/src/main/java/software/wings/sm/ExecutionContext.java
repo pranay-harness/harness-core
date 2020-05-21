@@ -15,6 +15,7 @@ import io.harness.context.ContextElementType;
 import io.harness.logging.AutoLogContext;
 import software.wings.api.InfraMappingElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.instancedetails.InstanceApiResponse;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
@@ -111,9 +112,9 @@ public interface ExecutionContext {
 
   AutoLogContext autoLogContext();
 
-  List<String> renderExpressionsForInstanceDetails(String expression, boolean newInstancesOnly);
+  InstanceApiResponse renderExpressionsForInstanceDetails(String expression, boolean newInstancesOnly);
 
-  List<String> renderExpressionsForInstanceDetailsForWorkflow(String expression, boolean newInstancesOnly);
+  InstanceApiResponse renderExpressionsForInstanceDetailsForWorkflow(String expression, boolean newInstancesOnly);
 
   String appendStateExecutionId(String str);
 }

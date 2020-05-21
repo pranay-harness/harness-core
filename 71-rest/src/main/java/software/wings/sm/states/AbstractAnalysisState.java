@@ -54,6 +54,7 @@ import software.wings.api.PcfInstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.ServiceElement;
+import software.wings.api.instancedetails.InstanceApiResponse;
 import software.wings.api.k8s.K8sElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AmiDeploymentType;
@@ -1210,22 +1211,32 @@ public abstract class AbstractAnalysisState extends State {
 
   protected NodePair getControlAndTestNodes(ExecutionContext context) {
     Set<String> controlNodes, testNodes;
+    InstanceApiResponse instanceApiResponse;
+    Optional<Integer> newNodesTrafficShift;
     String hostNameTemplate = isEmpty(getHostnameTemplate()) ? DEFAULT_HOSTNAME_TEMPLATE : getHostnameTemplate();
 
     if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
-      testNodes = new HashSet<>(context.renderExpressionsForInstanceDetails(hostNameTemplate, true));
+      instanceApiResponse = context.renderExpressionsForInstanceDetails(hostNameTemplate, true);
+      testNodes = new HashSet<>(instanceApiResponse.getInstances());
+      newNodesTrafficShift = instanceApiResponse.getNewInstanceTrafficPercent();
       controlNodes = new HashSet<>();
     } else {
       Set<String> allNodes =
-          new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, false));
-      testNodes = includePreviousPhaseNodes
-          ? new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, true))
-          : new HashSet<>(context.renderExpressionsForInstanceDetails(hostNameTemplate, true));
+          new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, false).getInstances());
+      instanceApiResponse = includePreviousPhaseNodes
+          ? context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, true)
+          : context.renderExpressionsForInstanceDetails(hostNameTemplate, true);
+      testNodes = new HashSet<>(instanceApiResponse.getInstances());
+      newNodesTrafficShift = instanceApiResponse.getNewInstanceTrafficPercent();
       Set<String> allPhaseNewNodes =
-          new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, true));
+          new HashSet<>(context.renderExpressionsForInstanceDetailsForWorkflow(hostNameTemplate, true).getInstances());
       controlNodes = Sets.difference(allNodes, allPhaseNewNodes);
     }
-    return NodePair.builder().controlNodes(controlNodes).testNodes(testNodes).build();
+    return NodePair.builder()
+        .controlNodes(controlNodes)
+        .testNodes(testNodes)
+        .newNodesTrafficShiftPercent(newNodesTrafficShift)
+        .build();
   }
 
   protected void campareAndLogNodesUsingNewInstanceAPI(
@@ -1241,11 +1252,14 @@ public abstract class AbstractAnalysisState extends State {
       }
 
       long startTime = System.currentTimeMillis();
+      DeploymentType deploymentType = getDeploymentType(context);
       NodePair nodePair = getControlAndTestNodes(context);
       getLogger().info(
           "[NewInstanceAPI] Time taken to get control and test nodes: {} ms", System.currentTimeMillis() - startTime);
+      nodePair.getNewNodesTrafficShiftPercent().ifPresent(value
+          -> getLogger().info(
+              "[NewInstanceAPI] traffic for new instances {}% deploymentType {}", value, deploymentType));
       Set<String> newControlNodes = nodePair.getControlNodes(), newTestNodes = nodePair.getTestNodes();
-      DeploymentType deploymentType = getDeploymentType(context);
       String message = EMPTY;
       if (isEmpty(newTestNodes)) {
         message = "[EmptyTestNodeError] Empty New Test Nodes";
@@ -1274,5 +1288,6 @@ public abstract class AbstractAnalysisState extends State {
   protected static class NodePair {
     private Set<String> controlNodes;
     private Set<String> testNodes;
+    private Optional<Integer> newNodesTrafficShiftPercent;
   }
 }

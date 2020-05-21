@@ -23,6 +23,8 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.rule.Owner;
@@ -37,6 +39,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionData;
@@ -99,7 +102,10 @@ public class SpotinstTrafficShiftAlbSwitchRoutesStateTest extends WingsBaseTest 
     on(state).set("activityService", mockActivityService);
     SpotInstStateHelper mockSpotinstStateHelper = mock(SpotInstStateHelper.class);
     on(state).set("spotinstStateHelper", mockSpotinstStateHelper);
+    on(state).set("sweepingOutputService", mock(SweepingOutputService.class));
     ExecutionContext mockContext = mock(ExecutionContext.class);
+    doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(Scope.WORKFLOW);
+    doReturn("some-string").when(mockContext).appendStateExecutionId(anyString());
     SpotinstTrafficShiftAlbSwapRoutesExecutionData data =
         SpotinstTrafficShiftAlbSwapRoutesExecutionData.builder().build();
     doReturn(data).when(mockContext).getStateExecutionData();

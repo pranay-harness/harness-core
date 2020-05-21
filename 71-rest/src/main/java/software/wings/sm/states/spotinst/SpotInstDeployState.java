@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
-import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -38,7 +37,6 @@ import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
-import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -263,17 +261,8 @@ public class SpotInstDeployState extends State {
       }
     }
 
-    if (isNotEmpty(instanceElements)) {
-      // This sweeping element will be used by verification or other consumers.
-      sweepingOutputService.save(
-          context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-              .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
-              .value(InstanceInfoVariables.builder()
-                         .instanceElements(instanceElements)
-                         .instanceDetails(awsStateHelper.generateAmInstanceDetails(instanceElements))
-                         .build())
-              .build());
-    }
+    spotInstStateHelper.saveInstanceInfoToSweepingOutput(context, instanceElements);
+
     InstanceElementListParam instanceElementListParam =
         InstanceElementListParam.builder().instanceElements(instanceElements).build();
 

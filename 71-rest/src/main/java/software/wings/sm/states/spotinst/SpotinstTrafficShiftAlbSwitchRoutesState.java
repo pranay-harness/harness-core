@@ -40,6 +40,7 @@ import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -59,6 +60,7 @@ public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
   @Inject private DelegateService delegateService;
   @Inject private ActivityService activityService;
   @Inject private SpotInstStateHelper spotinstStateHelper;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   public SpotinstTrafficShiftAlbSwitchRoutesState(String name) {
     super(name, StateType.SPOTINST_LISTENER_ALB_SHIFT.name());
@@ -182,6 +184,8 @@ public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
     stateExecutionData.setStatus(executionStatus);
+
+    spotinstStateHelper.saveInstanceInfoToSweepingOutput(context, getNewElastigroupWeight(context));
 
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)

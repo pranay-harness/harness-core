@@ -15,4 +15,9 @@ public class InstanceInfoVariables implements SweepingOutput {
 
   private List<InstanceDetails> instanceDetails;
   private List<InstanceElement> instanceElements;
+  private Integer newInstanceTrafficPercent;
+
+  public boolean isDeployStateInfo() {
+    return newInstanceTrafficPercent == null;
+  }
 }
