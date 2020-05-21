@@ -6,12 +6,14 @@ import static com.google.common.collect.Sets.difference;
 import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
+import static software.wings.beans.FeatureName.MOVE_AWS_AMI_SPOT_INST_INSTANCE_SYNC_TO_PERPETUAL_TASK;
 import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_AMI_SPOT_INST_DEPLOYMENTS;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -20,6 +22,9 @@ import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupInstancesResponse;
+import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +48,8 @@ import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.SpotinstAmiInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDeploymentKey;
+import software.wings.service.InstanceSyncPerpetualTaskCreator;
+import software.wings.service.SpotinstAmiInstanceSyncPerpetualTaskCreator;
 import software.wings.service.impl.spotinst.SpotinstHelperServiceManager;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
@@ -56,8 +63,9 @@ import java.util.Set;
 
 @Slf4j
 @Singleton
-public class SpotinstAmiInstanceHandler extends InstanceHandler {
+public class SpotinstAmiInstanceHandler extends InstanceHandler implements InstanceSyncByPerpetualTaskHandler {
   @Inject private SpotinstHelperServiceManager spotinstHelperServiceManager;
+  @Inject private SpotinstAmiInstanceSyncPerpetualTaskCreator perpetualTaskCreator;
 
   @Override
   public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
@@ -78,10 +86,35 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler {
     }
 
     elastigroupIds.forEach(elastigroupId -> {
-      syncInstancesForElastigroup(elastigroupId, awsConfig, awsEncryptedDataDetails, spotinstConfig,
-          spotinstEncryptedDataDetails, region, elastigroupIdToInstancesInDbMap.get(elastigroupId), false, appId, null,
-          infrastructureMapping);
+      Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceIdToEc2InstanceMap =
+          getLatestEc2InstanceIdToEc2InstanceMap(elastigroupId, awsConfig, awsEncryptedDataDetails, spotinstConfig,
+              spotinstEncryptedDataDetails, region, appId);
+
+      syncInstancesForElastigroup(elastigroupId, elastigroupIdToInstancesInDbMap.get(elastigroupId),
+          latestEc2InstanceIdToEc2InstanceMap, false, null, infrastructureMapping, instanceSyncFlow);
     });
+  }
+
+  @Override
+  public void processInstanceSyncResponseFromPerpetualTask(
+      InfrastructureMapping infrastructureMapping, ResponseData response) {
+    SpotInstTaskExecutionResponse spotInstTaskExecutionResponse = (SpotInstTaskExecutionResponse) response;
+    SpotInstListElastigroupInstancesResponse listElastigroupInstancesResponse =
+        (SpotInstListElastigroupInstancesResponse) spotInstTaskExecutionResponse.getSpotInstTaskResponse();
+    List<com.amazonaws.services.ec2.model.Instance> elastiGroupEc2Instances =
+        listElastigroupInstancesResponse.getElastigroupInstances();
+
+    Multimap<String, Instance> elastigroupIdToInstancesInDbMap =
+        getCurrentInstancesInDb(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
+    Map<String, com.amazonaws.services.ec2.model.Instance> elastiGroupEc2InstancesMap =
+        elastiGroupEc2Instances.stream().collect(
+            toMap(com.amazonaws.services.ec2.model.Instance::getInstanceId, identity()));
+
+    String elastigroupId = listElastigroupInstancesResponse.getElastigroupId();
+    Collection<Instance> currentInstancesInDb = elastigroupIdToInstancesInDbMap.get(elastigroupId);
+
+    syncInstancesForElastigroup(elastigroupId, currentInstancesInDb, elastiGroupEc2InstancesMap, false, null,
+        (AwsAmiInfrastructureMapping) infrastructureMapping, InstanceSyncFlow.PERPETUAL_TASK);
   }
 
   @Override
@@ -111,14 +144,20 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler {
                                  .map(summary -> summary.getSpotinstAmiDeploymentKey().getElastigroupId())
                                  .collect(toSet()));
     if (isNotEmpty(allElastigroupIds)) {
-      allElastigroupIds.forEach(elastigroupId
-          -> syncInstancesForElastigroup(elastigroupId, awsConfig, awsEncryptedDataDetails, spotinstConfig,
-              spotinstEncryptedDataDetails, region, elastigroupIdToInstancesInDbMap.get(elastigroupId), rollback, appId,
-              deploymentSummaries.stream()
-                  .filter(summary -> summary.getSpotinstAmiDeploymentKey().getElastigroupId().equals(elastigroupId))
-                  .findFirst()
-                  .orElse(null),
-              infrastructureMapping));
+      allElastigroupIds.forEach(elastigroupId -> {
+        Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceIdToEc2InstanceMap =
+            getLatestEc2InstanceIdToEc2InstanceMap(elastigroupId, awsConfig, awsEncryptedDataDetails, spotinstConfig,
+                spotinstEncryptedDataDetails, region, appId);
+        DeploymentSummary eligibleDeploymentSummary =
+            deploymentSummaries.stream()
+                .filter(summary -> summary.getSpotinstAmiDeploymentKey().getElastigroupId().equals(elastigroupId))
+                .findFirst()
+                .orElse(null);
+
+        syncInstancesForElastigroup(elastigroupId, elastigroupIdToInstancesInDbMap.get(elastigroupId),
+            latestEc2InstanceIdToEc2InstanceMap, rollback, eligibleDeploymentSummary, infrastructureMapping,
+            InstanceSyncFlow.NEW_DEPLOYMENT);
+      });
     }
   }
 
@@ -127,16 +166,39 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler {
     return STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_AMI_SPOT_INST_DEPLOYMENTS;
   }
 
+  @Override
+  public FeatureName getFeatureFlagToEnablePerpetualTaskForInstanceSync() {
+    return MOVE_AWS_AMI_SPOT_INST_INSTANCE_SYNC_TO_PERPETUAL_TASK;
+  }
+
+  @Override
+  public InstanceSyncPerpetualTaskCreator getInstanceSyncPerpetualTaskCreator() {
+    return perpetualTaskCreator;
+  }
+
+  @Override
+  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+    SpotInstTaskExecutionResponse spotInstTaskExecutionResponse = (SpotInstTaskExecutionResponse) response;
+    SpotInstListElastigroupInstancesResponse listElastigroupInstancesResponse =
+        (SpotInstListElastigroupInstancesResponse) spotInstTaskExecutionResponse.getSpotInstTaskResponse();
+
+    boolean success = spotInstTaskExecutionResponse.getCommandExecutionStatus() == SUCCESS;
+    boolean deleteTask = success && isEmpty(listElastigroupInstancesResponse.getElastigroupInstances());
+    String errorMessage = success ? null : spotInstTaskExecutionResponse.getErrorMessage();
+
+    return Status.builder().success(success).errorMessage(errorMessage).retryable(!deleteTask).build();
+  }
+
   @VisibleForTesting
-  void syncInstancesForElastigroup(String elastigroupId, AwsConfig awsConfig,
-      List<EncryptedDataDetail> awsEncryptedDataDetails, SpotInstConfig spotInstConfig,
-      List<EncryptedDataDetail> spotinstEncryptedDataDetails, String region, Collection<Instance> currentInstancesInDb,
-      boolean rollback, String appId, DeploymentSummary deploymentSummary,
-      AwsAmiInfrastructureMapping infrastructureMapping) {
+  void syncInstancesForElastigroup(String elastigroupId, Collection<Instance> currentInstancesInDb,
+      Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceIdToEc2InstanceMap, boolean rollback,
+      DeploymentSummary deploymentSummary, AwsAmiInfrastructureMapping infrastructureMapping,
+      InstanceSyncFlow instanceSyncFlow) {
     Map<String, Instance> ec2InstanceIdToInstanceInDbMap = getEc2InstanceIdToInstanceInDbMap(currentInstancesInDb);
-    Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceIdToEc2InstanceMap =
-        getLatestEc2InstanceIdToEc2InstanceMap(elastigroupId, awsConfig, awsEncryptedDataDetails, spotInstConfig,
-            spotinstEncryptedDataDetails, region, appId);
+
+    if (!canUpdateInstancesInDb(instanceSyncFlow, infrastructureMapping.getAccountId())) {
+      return;
+    }
 
     handleEc2InstanceDelete(ec2InstanceIdToInstanceInDbMap, latestEc2InstanceIdToEc2InstanceMap);
 

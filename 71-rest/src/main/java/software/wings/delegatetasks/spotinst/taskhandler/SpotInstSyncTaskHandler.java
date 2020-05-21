@@ -56,7 +56,10 @@ public class SpotInstSyncTaskHandler extends SpotInstTaskHandler {
             (SpotInstListElastigroupInstancesParameters) spotInstTaskParameters;
         List<Instance> instances = getAllEc2InstancesOfElastiGroup(awsConfig, listInstancesParams.getAwsRegion(),
             spotInstToken, spotInstAccountId, listInstancesParams.getElastigroupId());
-        syncTaskResponse = SpotInstListElastigroupInstancesResponse.builder().elastigroupInstances(instances).build();
+        syncTaskResponse = SpotInstListElastigroupInstancesResponse.builder()
+                               .elastigroupId(listInstancesParams.getElastigroupId())
+                               .elastigroupInstances(instances)
+                               .build();
         break;
       }
       default: {
