@@ -35,7 +35,7 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
   public void write(List<? extends SettingAttribute> dummySettingAttributeList) {
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
 
-    List<SettingAttribute> ceConnectorsList = cloudToHarnessMappingService.getSettingAttributes(
+    List<SettingAttribute> ceConnectorsList = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
         accountId, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingValue.SettingVariableTypes.CE_AWS);
 
     logger.info("Processing batch size of {} in S3SyncEventWriter", ceConnectorsList.size());

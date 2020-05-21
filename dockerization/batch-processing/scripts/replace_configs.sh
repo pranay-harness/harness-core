@@ -60,15 +60,15 @@ if [[ "" != "$S3_SYNC_CONFIG_REGION" ]]; then
 fi
 
 if [[ "" != "$DATA_PIPELINE_CONFIG_GCP_SERVICE_ACCOUNT" ]]; then
-  yq write -i $CONFIG_FILE awsDataPipelineConfig.gcpServiceAccount "$DATA_PIPELINE_CONFIG_GCP_SERVICE_ACCOUNT"
+  yq write -i $CONFIG_FILE billingDataPipelineConfig.gcpServiceAccount "$DATA_PIPELINE_CONFIG_GCP_SERVICE_ACCOUNT"
 fi
 
 if [[ "" != "$DATA_PIPELINE_CONFIG_GCP_PROJECT_ID" ]]; then
-  yq write -i $CONFIG_FILE awsDataPipelineConfig.gcpProjectId "$DATA_PIPELINE_CONFIG_GCP_PROJECT_ID"
+  yq write -i $CONFIG_FILE billingDataPipelineConfig.gcpProjectId "$DATA_PIPELINE_CONFIG_GCP_PROJECT_ID"
 fi
 
 if [[ "" != "$DATA_PIPELINE_CONFIG_GCS_BASE_PATH" ]]; then
-  yq write -i $CONFIG_FILE awsDataPipelineConfig.gcsBasePath "$DATA_PIPELINE_CONFIG_GCS_BASE_PATH"
+  yq write -i $CONFIG_FILE billingDataPipelineConfig.gcsBasePath "$DATA_PIPELINE_CONFIG_GCS_BASE_PATH"
 fi
 
 if [[ "" != "$SMTP_HOST" ]]; then

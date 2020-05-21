@@ -2,6 +2,10 @@ package io.harness.ccm.setup;
 
 import com.google.inject.AbstractModule;
 
+import io.harness.ccm.billing.GcpResourceManagerService;
+import io.harness.ccm.billing.GcpResourceManagerServiceImpl;
+import io.harness.ccm.billing.GcpServiceAccountService;
+import io.harness.ccm.billing.GcpServiceAccountServiceImpl;
 import io.harness.ccm.config.CEGcpServiceAccountService;
 import io.harness.ccm.config.CEGcpServiceAccountServiceImpl;
 import io.harness.ccm.config.GcpBillingAccountService;
@@ -39,5 +43,7 @@ public class CESetupServiceModule extends AbstractModule {
     bind(AWSCEConfigValidationService.class).to(AWSCEConfigValidationServiceImpl.class);
     bind(GcpOrganizationService.class).to(GcpOrganizationServiceImpl.class);
     bind(CEGcpServiceAccountService.class).to(CEGcpServiceAccountServiceImpl.class);
+    bind(GcpServiceAccountService.class).to(GcpServiceAccountServiceImpl.class);
+    bind(GcpResourceManagerService.class).to(GcpResourceManagerServiceImpl.class);
   }
 }

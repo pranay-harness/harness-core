@@ -4,7 +4,7 @@ import com.google.api.services.iam.v1.model.ServiceAccount;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.ccm.GcpServiceAccountService;
+import io.harness.ccm.billing.GcpServiceAccountService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.service.intfc.AccountService;
@@ -49,7 +49,8 @@ public class CEGcpServiceAccountServiceImpl implements CEGcpServiceAccountServic
     GcpServiceAccount gcpServiceAccount = getByAccountId(accountId);
     if (gcpServiceAccount == null) {
       String serviceAccountEmail = create(accountId);
-      gcpServiceAccountService.setIamPolicy(serviceAccountEmail);
+      gcpServiceAccountService.setIamPolicies(serviceAccountEmail);
+      gcpServiceAccountService.addRoleToServiceAccount(serviceAccountEmail, "roles/bigquery.admin");
       gcpServiceAccount = getByAccountId(accountId);
     }
     return gcpServiceAccount;

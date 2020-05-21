@@ -9,7 +9,7 @@ import com.google.cloud.bigquery.BigQuery;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.GcpServiceAccountService;
+import io.harness.ccm.billing.GcpServiceAccountServiceImpl;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountBuilder;
 import io.harness.exception.InvalidRequestException;
@@ -41,7 +41,7 @@ public class GcpBillingAccountServiceImplTest extends CategoryTest {
 
   @Mock private GcpBillingAccountDao gcpBillingAccountDao;
   @Mock private GcpOrganizationService gcpOrganizationService;
-  @Mock private GcpServiceAccountService gcpServiceAccountService;
+  @Mock private GcpServiceAccountServiceImpl gcpServiceAccountService;
   @Mock private BigQueryService bigQueryService;
   @Mock private BigQuery bigQuery;
   @InjectMocks private GcpBillingAccountServiceImpl gcpBillingAccountService;

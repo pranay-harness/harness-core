@@ -39,7 +39,7 @@ public class BillingDataPipelineRecordDaoImplTest extends WingsBaseTest {
                                                        .settingId(settingId)
                                                        .dataSetId(dataSetId)
                                                        .dataTransferJobName(dataTransferJobName)
-                                                       .fallbackTableScheduledQueryName(fallBackTableName)
+                                                       .awsFallbackTableScheduledQueryName(fallBackTableName)
                                                        .preAggregatedScheduledQueryName(preAggTableName)
                                                        .build();
     billingDataPipelineRecordDao.create(dataPipelineRecord);

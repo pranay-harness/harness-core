@@ -66,7 +66,7 @@ public class S3SyncEventWriterTest extends CategoryTest {
     Mockito.doNothing().when(awsS3SyncService).syncBuckets(any());
     Mockito.doReturn(Arrays.asList(settingAttribute))
         .when(cloudToHarnessMappingService)
-        .getSettingAttributes(any(), any(), any());
+        .listSettingAttributesCreatedInDuration(any(), any(), any());
     Mockito.doReturn(TEST_ACCOUNT_ID).when(parameters).getString(any());
 
     List<SettingAttribute> settingAttributeList = new ArrayList<>();

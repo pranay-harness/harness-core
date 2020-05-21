@@ -2,7 +2,9 @@ package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.reader.SettingAttributeReader;
-import io.harness.batch.processing.writer.BillingDataPipelineWriter;
+import io.harness.batch.processing.writer.AwsBillingDataPipelineWriter;
+import io.harness.batch.processing.writer.GcpBillingDataPipelineWriter;
+import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -20,19 +22,28 @@ import software.wings.beans.SettingAttribute;
 @Configuration
 public class BillingDataPipelineConfiguration {
   private static final int BATCH_SIZE = 10;
+  @Autowired BatchMainConfig config;
+  @Autowired HPersistence hPersistence;
 
   @Bean
   public ItemWriter<SettingAttribute> awsBillingDataPipelineWriter() {
-    return new BillingDataPipelineWriter();
+    return new AwsBillingDataPipelineWriter();
+  }
+
+  @Bean
+  public ItemWriter<SettingAttribute> gcpBillingDataPipelineWriter() {
+    return new GcpBillingDataPipelineWriter();
   }
 
   @Bean
   @Autowired
-  @Qualifier(value = "awsBillingDataPipelineJob")
-  public Job awsBillingDataPipelineJob(JobBuilderFactory jobBuilderFactory, Step awsBillingDataPipelineStep) {
+  @Qualifier(value = "billingDataPipelineJob")
+  public Job billingDataPipelineJob(
+      JobBuilderFactory jobBuilderFactory, Step awsBillingDataPipelineStep, Step gcpBillingDataPipelineStep) {
     return jobBuilderFactory.get(BatchJobType.BILLING_DATA_PIPELINE.name())
         .incrementer(new RunIdIncrementer())
         .start(awsBillingDataPipelineStep)
+        .next(gcpBillingDataPipelineStep)
         .build();
   }
 
@@ -43,6 +54,16 @@ public class BillingDataPipelineConfiguration {
         .<SettingAttribute, SettingAttribute>chunk(BATCH_SIZE)
         .reader(settingAttributeReader)
         .writer(awsBillingDataPipelineWriter())
+        .build();
+  }
+
+  @Bean
+  public Step gcpBillingDataPipelineStep(
+      StepBuilderFactory stepBuilderFactory, SettingAttributeReader settingAttributeReader) {
+    return stepBuilderFactory.get("gcpBillingDataPipelineStep")
+        .<SettingAttribute, SettingAttribute>chunk(BATCH_SIZE)
+        .reader(settingAttributeReader)
+        .writer(gcpBillingDataPipelineWriter())
         .build();
   }
 }

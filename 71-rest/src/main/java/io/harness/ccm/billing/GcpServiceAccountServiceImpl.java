@@ -1,4 +1,4 @@
-package io.harness.ccm;
+package io.harness.ccm.billing;
 
 import static com.hazelcast.util.Preconditions.checkFalse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -18,6 +18,8 @@ import com.google.api.services.iam.v1.model.CreateServiceAccountRequest;
 import com.google.api.services.iam.v1.model.Policy;
 import com.google.api.services.iam.v1.model.ServiceAccount;
 import com.google.api.services.iam.v1.model.SetIamPolicyRequest;
+import com.google.auth.Credentials;
+import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -36,11 +38,12 @@ import java.util.Arrays;
 
 @Slf4j
 @Singleton
-public class GcpServiceAccountService {
+public class GcpServiceAccountServiceImpl implements GcpServiceAccountService {
   public static final String CE_GCP_CREDENTIALS_PATH = "CE_GCP_CREDENTIALS_PATH";
   private Iam iamService;
 
   @Inject private MainConfiguration mainConfiguration;
+  @Inject private GcpResourceManagerService gcpResourceManagerService;
 
   private void initService() {
     if (iamService != null) {
@@ -62,6 +65,7 @@ public class GcpServiceAccountService {
     }
   }
 
+  @Override
   public ServiceAccount create(String serviceAccountId, String displayName) {
     initService();
     ServiceAccount serviceAccount = null;
@@ -84,13 +88,14 @@ public class GcpServiceAccountService {
     return serviceAccount;
   }
 
-  public void setIamPolicy(String serviceAccountEmail) throws IOException {
+  @Override
+  public void setIamPolicies(String serviceAccountEmail) throws IOException {
     initService();
     String resource = format("projects/-/serviceAccounts/%s", serviceAccountEmail);
 
     SetIamPolicyRequest requestBody = new SetIamPolicyRequest();
     Policy policy = new Policy();
-    policy.setEtag("ACAB"); // BwWlUsx6uYk=
+    policy.setEtag("ACAB");
     ServiceAccountCredentials serviceAccountCredentials = getCredentials(CE_GCP_CREDENTIALS_PATH);
     String member = serviceAccountCredentials.getClientEmail();
     Binding binding1 = new Binding();
@@ -104,8 +109,16 @@ public class GcpServiceAccountService {
 
     Iam.Projects.ServiceAccounts.SetIamPolicy request =
         iamService.projects().serviceAccounts().setIamPolicy(resource, requestBody);
-
     request.execute();
+  }
+
+  public void addRoleToServiceAccount(String serviceAccountEmail, String role) {
+    CESetUpConfig ceSetUpConfig = mainConfiguration.getCeSetUpConfig();
+    String projectId = ceSetUpConfig.getGcpProjectId();
+    com.google.api.services.cloudresourcemanager.model.Policy projectPolicy =
+        gcpResourceManagerService.getIamPolicy(projectId); // TODO: should check if the policy is empty
+    GcpResourceManagerUtils.addBinding(projectPolicy, role, format("serviceAccount:%s", serviceAccountEmail));
+    gcpResourceManagerService.setPolicy(projectId, projectPolicy);
   }
 
   // read the credential path from env variables
@@ -113,15 +126,25 @@ public class GcpServiceAccountService {
     String googleCredentialsPath = System.getenv(googleCredentialPathSystemEnv);
     checkFalse(isEmpty(googleCredentialsPath), "Missing environment variable for GCP credentials.");
     File credentialsFile = new File(googleCredentialsPath);
-    ServiceAccountCredentials sourceCredentials = null;
+    ServiceAccountCredentials credentials = null;
     try (FileInputStream serviceAccountStream = new FileInputStream(credentialsFile)) {
-      sourceCredentials = ServiceAccountCredentials.fromStream(serviceAccountStream);
+      credentials = ServiceAccountCredentials.fromStream(serviceAccountStream);
     } catch (FileNotFoundException e) {
       logger.error("Failed to find Google credential file for the CE service account in the specified path.", e);
     } catch (IOException e) {
       logger.error("Failed to get Google credential file for the CE service account.", e);
     }
-    return sourceCredentials;
+    return credentials;
+  }
+
+  public static Credentials getImpersonatedCredentials(
+      ServiceAccountCredentials sourceCredentials, String impersonatedServiceAccount) {
+    if (impersonatedServiceAccount == null) {
+      return sourceCredentials;
+    } else {
+      return ImpersonatedCredentials.create(sourceCredentials, impersonatedServiceAccount, null,
+          Arrays.asList("https://www.googleapis.com/auth/cloud-platform"), 300);
+    }
   }
 
   public static GoogleCredential toGoogleCredential(ServiceAccountCredentials serviceAccountCredentials)
