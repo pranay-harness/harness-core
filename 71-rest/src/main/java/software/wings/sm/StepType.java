@@ -6,6 +6,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
+import static io.harness.beans.OrchestrationWorkflowType.MULTI_SERVICE;
+import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -366,7 +368,7 @@ public enum StepType {
       asList(PhaseType.NON_ROLLBACK)),
   KUBERNETES_DEPLOY(KubernetesDeploy.class, KUBERNETES_UPGRADE_CONTAINERS, asList(WorkflowStepType.KUBERNETES),
       asList(CONTAINER_DEPLOY, WRAP_UP), Lists.newArrayList(DeploymentType.KUBERNETES),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN, MULTI_SERVICE)),
   KUBERNETES_STEADY_STATE_CHECK(KubernetesSteadyStateCheck.class, WorkflowServiceHelper.KUBERNETES_STEADY_STATE_CHECK,
       asList(WorkflowStepType.KUBERNETES), asList(CONTAINER_DEPLOY, CONTAINER_SETUP),
       Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
@@ -388,19 +390,20 @@ public enum StepType {
       Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM), asList(PhaseType.ROLLBACK)),
   KUBERNETES_SWAP_SERVICE_SELECTORS(KubernetesSwapServiceSelectors.class, SWAP_SERVICE_SELECTORS, asList(KUBERNETES),
       asList(CONTAINER_SETUP, CONTAINER_DEPLOY, ROUTE_UPDATE, WRAP_UP, K8S_PHASE_STEP),
-      Lists.newArrayList(DeploymentType.KUBERNETES), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      Lists.newArrayList(DeploymentType.KUBERNETES), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK),
+      asList(BASIC, ROLLING, CANARY, BLUE_GREEN, MULTI_SERVICE)),
   K8S_TRAFFIC_SPLIT(K8sTrafficSplitState.class, K8S_TRAFFIC_SPLIT_STATE_NAME, asList(KUBERNETES),
       asList(K8S_PHASE_STEP, WRAP_UP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), asList(ROLLING, CANARY, BLUE_GREEN, MULTI_SERVICE)),
   K8S_SCALE(K8sScale.class, WorkflowConstants.K8S_SCALE, asList(KUBERNETES), asList(K8S_PHASE_STEP, WRAP_UP),
       Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), asList(ROLLING, CANARY, BLUE_GREEN, MULTI_SERVICE)),
   K8S_DELETE(K8sDelete.class, WorkflowConstants.K8S_DELETE, asList(KUBERNETES), asList(K8S_PHASE_STEP, WRAP_UP),
       Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), asList(ROLLING, CANARY, BLUE_GREEN, MULTI_SERVICE)),
   K8S_APPLY(K8sApplyState.class, K8S_APPLY_STATE, asList(KUBERNETES), asList(K8S_PHASE_STEP, WRAP_UP),
       Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), asList(ROLLING, CANARY, BLUE_GREEN, MULTI_SERVICE)),
   ROLLING_NODE_SELECT(RollingNodeSelectState.class, ROLLING_SELECT_NODES, asList(WorkflowStepType.KUBERNETES),
       asList(SELECT_NODE), asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK)),
 
