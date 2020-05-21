@@ -97,6 +97,7 @@ import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.impl.security.SecretManagementException;
+import software.wings.service.impl.security.SecretText;
 import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.service.intfc.AccountService;
@@ -272,10 +273,12 @@ public class VaultTest extends WingsBaseTest {
     vaultConfig.setDefault(false);
     String configId = vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
     assertThat(configId).isNotNull();
-    String secretId = secretManager.saveSecret(accountId, configId, secretName, null, "/value/utkarsh#key", null);
+    SecretText secretText = SecretText.builder().name(secretName).kmsId(configId).path("/value/utkarsh#key").build();
+    String secretId = secretManager.saveSecret(accountId, secretText);
     assertThat(secretId).isNotNull();
     try {
-      secretManager.saveSecret(accountId, configId, secretName, secretValue, null, null);
+      secretText = SecretText.builder().name(secretName).kmsId(configId).value(secretValue).build();
+      secretManager.saveSecret(accountId, secretText);
       fail("Should not have been able to create encrypted text with read only vault");
     } catch (SecretManagementException e) {
       logger.info("Error", e);
@@ -1027,7 +1030,8 @@ public class VaultTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
+    SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
+    String secretId = secretManager.saveSecret(accountId, secretText);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
@@ -1052,7 +1056,8 @@ public class VaultTest extends WingsBaseTest {
 
     secretName = UUID.randomUUID().toString();
     secretValue = UUID.randomUUID().toString();
-    secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
+    secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
+    secretId = secretManager.saveSecret(accountId, secretText);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", "newName");
@@ -1090,7 +1095,8 @@ public class VaultTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
+    SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
+    String secretId = secretManager.saveSecret(accountId, secretText);
 
     String serviceId = wingsPersistence.save(Service.builder().name(UUID.randomUUID().toString()).build());
     String serviceTemplateId =
@@ -1649,7 +1655,13 @@ public class VaultTest extends WingsBaseTest {
     vaultService.saveOrUpdateVaultConfig(accountId, KryoUtils.clone(vaultConfig));
 
     String secretName = UUID.randomUUID().toString();
-    secretManager.saveSecret(accountId, kmsId, secretName, "MySecret", null, new UsageRestrictions());
+    SecretText secretText = SecretText.builder()
+                                .name(secretName)
+                                .kmsId(kmsId)
+                                .value("MySecret")
+                                .usageRestrictions(new UsageRestrictions())
+                                .build();
+    secretManager.saveSecret(accountId, secretText);
 
     PageRequest<EncryptedData> pageRequest =
         aPageRequest()

@@ -113,6 +113,7 @@ import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.impl.security.SecretManagementDelegateException;
 import software.wings.service.impl.security.SecretManagementException;
+import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -804,7 +805,8 @@ public class KmsTest extends WingsBaseTest {
   public void noKmsEncryptionUpdateServiceVariable() {
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
+    SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
+    String secretId = secretManager.saveSecret(accountId, secretText);
 
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .templateId(UUID.randomUUID().toString())
@@ -840,7 +842,8 @@ public class KmsTest extends WingsBaseTest {
 
     secretName = UUID.randomUUID().toString();
     secretValue = UUID.randomUUID().toString();
-    secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
+    secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
+    secretId = secretManager.saveSecret(accountId, secretText);
 
     String updatedAppId = UUID.randomUUID().toString();
     String updatedName = UUID.randomUUID().toString();
@@ -1146,7 +1149,8 @@ public class KmsTest extends WingsBaseTest {
     // update to encrypt the variable
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
+    SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
+    String secretId = secretManager.saveSecret(accountId, secretText);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
@@ -1205,7 +1209,8 @@ public class KmsTest extends WingsBaseTest {
     // update to encrypt the variable
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
+    SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
+    String secretId = secretManager.saveSecret(accountId, secretText);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
@@ -1247,7 +1252,8 @@ public class KmsTest extends WingsBaseTest {
     // update to encrypt the variable
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
+    SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
+    String secretId = secretManager.saveSecret(accountId, secretText);
 
     UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTest.getUserPermissionInfo(
         ImmutableList.of(appId), ImmutableList.of(envId), ImmutableSet.of(Action.UPDATE));
@@ -1276,8 +1282,17 @@ public class KmsTest extends WingsBaseTest {
         AppEnvRestriction.builder()
             .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
             .envFilter(EnvFilter.builder().filterTypes(ImmutableSet.of(EnvFilter.FilterType.PROD)).build());
-    secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null,
-        UsageRestrictions.builder().appEnvRestrictions(ImmutableSet.of(appEnvRestrictionBuilder.build())).build());
+
+    SecretText secretText =
+        SecretText.builder()
+            .name(secretName)
+            .kmsId(kmsId)
+            .value(secretValue)
+            .usageRestrictions(UsageRestrictions.builder()
+                                   .appEnvRestrictions(ImmutableSet.of(appEnvRestrictionBuilder.build()))
+                                   .build())
+            .build();
+    String secretId = secretManager.saveSecret(accountId, secretText);
 
     UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTest.getUserPermissionInfo(
         ImmutableList.of(appId), ImmutableList.of(envId), ImmutableSet.of(Action.UPDATE, Action.CREATE, Action.READ));
@@ -1317,7 +1332,8 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
+    SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
+    String secretId = secretManager.saveSecret(accountId, secretText);
 
     // try with invalid secret id
     final ServiceVariable serviceVariable = ServiceVariable.builder()
@@ -1353,7 +1369,8 @@ public class KmsTest extends WingsBaseTest {
 
     secretName = UUID.randomUUID().toString();
     secretValue = UUID.randomUUID().toString();
-    secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
+    secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
+    secretId = secretManager.saveSecret(accountId, secretText);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", "newName");
@@ -1408,7 +1425,8 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
+    SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
+    String secretId = secretManager.saveSecret(accountId, secretText);
 
     String serviceId = wingsPersistence.save(Service.builder().name(UUID.randomUUID().toString()).build());
     String serviceTemplateId =
@@ -1451,7 +1469,8 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
+    SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
+    String secretId = secretManager.saveSecret(accountId, secretText);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
@@ -1488,8 +1507,9 @@ public class KmsTest extends WingsBaseTest {
     String updatedName = UUID.randomUUID().toString();
     String updatedSecretName = UUID.randomUUID().toString();
     String updatedSecretValue = UUID.randomUUID().toString();
-    String updatedSecretId =
-        secretManager.saveSecret(accountId, kmsId, updatedSecretName, updatedSecretValue, null, null);
+    SecretText updatedSecretText =
+        SecretText.builder().name(updatedSecretName).kmsId(kmsId).value(updatedSecretValue).build();
+    String updatedSecretId = secretManager.saveSecret(accountId, updatedSecretText);
 
     final Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", updatedName);
@@ -2863,7 +2883,8 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, kmsId, secretName, secretValue, null, null);
+    SecretText secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).build();
+    String secretId = secretManager.saveSecret(accountId, secretText);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())

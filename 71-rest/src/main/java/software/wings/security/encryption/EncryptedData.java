@@ -78,7 +78,8 @@ public class EncryptedData
 
   @NotEmpty private char[] encryptedValue;
 
-  // When 'path' value is set, no actual encryption is needed since it's just referring to a secret in a Vault path.
+  // When 'path' value is set, no actual encryption is needed since it's just referring to a secret in a Secret Manager
+  // path.
   @Indexed private String path;
 
   @NotEmpty private SettingVariableTypes type;

@@ -17,6 +17,7 @@ import software.wings.graphql.schema.type.secrets.QLEncryptedTextUpdate;
 import software.wings.graphql.schema.type.secrets.QLSecretType;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.UsageRestrictions;
 
@@ -64,8 +65,15 @@ public class EncryptedTextController {
       secretManager.validateThatSecretManagerSupportsText(accountId, secretMangerId);
     }
 
-    return secretManager.saveSecret(accountId, secretMangerId, secretName, secretValue, path,
-        usageScopeController.populateUsageRestrictions(encryptedText.getUsageScope(), accountId));
+    SecretText secretText =
+        SecretText.builder()
+            .name(secretName)
+            .kmsId(secretMangerId)
+            .value(secretValue)
+            .path(path)
+            .usageRestrictions(usageScopeController.populateUsageRestrictions(encryptedText.getUsageScope(), accountId))
+            .build();
+    return secretManager.saveSecret(accountId, secretText);
   }
 
   public void updateEncryptedText(QLEncryptedTextUpdate encryptedTextUpdate, String encryptedTextId, String accountId) {
@@ -120,6 +128,8 @@ public class EncryptedTextController {
       QLUsageScope usageScopeUpdate = encryptedTextUpdate.getUsageScope().getValue().orElse(null);
       usageRestrictions = usageScopeController.populateUsageRestrictions(usageScopeUpdate, accountId);
     }
-    secretManager.updateSecret(accountId, encryptedTextId, name, value, secretReference, usageRestrictions);
+    SecretText secretText =
+        SecretText.builder().name(name).value(value).path(secretReference).usageRestrictions(usageRestrictions).build();
+    secretManager.updateSecret(accountId, encryptedTextId, secretText);
   }
 }

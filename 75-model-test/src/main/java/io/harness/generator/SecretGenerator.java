@@ -10,6 +10,7 @@ import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import software.wings.beans.Account;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManager;
 
 @Singleton
@@ -23,8 +24,12 @@ public class SecretGenerator {
       return encryptedData.getUuid();
     }
 
-    return secretManager.saveSecretUsingLocalMode(
-        accountId, name.getValue(), scmSecret.decryptToString(name), null, getAllAppAllEnvUsageRestrictions());
+    SecretText secretText = SecretText.builder()
+                                .name(name.getValue())
+                                .value(scmSecret.decryptToString(name))
+                                .usageRestrictions(getAllAppAllEnvUsageRestrictions())
+                                .build();
+    return secretManager.saveSecretUsingLocalMode(accountId, secretText);
   }
 
   public String ensureStored(Owners owners, SecretName name) {

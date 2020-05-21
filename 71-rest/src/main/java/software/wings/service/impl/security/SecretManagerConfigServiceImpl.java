@@ -236,6 +236,9 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
 
   @Override
   public EncryptionType getEncryptionBySecretManagerId(String kmsId, String accountId) {
+    if (kmsId.equals(accountId)) {
+      return LOCAL;
+    }
     SecretManagerConfig secretManager = wingsPersistence.get(SecretManagerConfig.class, kmsId);
     if (secretManager == null) {
       throw new SecretManagementException("The secret manager Id supplied is wrong");

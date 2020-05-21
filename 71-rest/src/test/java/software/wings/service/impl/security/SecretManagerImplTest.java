@@ -283,8 +283,9 @@ public class SecretManagerImplTest extends WingsBaseTest {
     when(gcpKmsService.encrypt(
              eq(secretValue), eq(account.getUuid()), any(GcpKmsConfig.class), any(EncryptedData.class)))
         .thenReturn(encryptedData);
-    String secretId =
-        secretManager.saveSecret(account.getUuid(), gcpKmsConfig.getUuid(), secretName, secretValue, null, null);
+    SecretText secretText =
+        SecretText.builder().name(secretName).kmsId(gcpKmsConfig.getUuid()).value(secretValue).build();
+    String secretId = secretManager.saveSecret(account.getUuid(), secretText);
     assertThat(secretId).isNotNull();
   }
 
@@ -295,7 +296,8 @@ public class SecretManagerImplTest extends WingsBaseTest {
     Account newAccount = getAccount(AccountType.PAID);
     newAccount.setLocalEncryptionEnabled(true);
     String accountId = wingsPersistence.save(newAccount);
-    String secretId = secretManager.saveSecretUsingLocalMode(accountId, secretName, secretValue, null, null);
+    SecretText secretText = SecretText.builder().name(secretName).value(secretValue).build();
+    String secretId = secretManager.saveSecretUsingLocalMode(accountId, secretText);
     assertThat(secretId).isNotNull();
   }
 
