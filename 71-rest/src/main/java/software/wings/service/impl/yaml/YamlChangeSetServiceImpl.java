@@ -176,7 +176,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Override
   public synchronized YamlChangeSet getQueuedChangeSetForWaitingQueueKey(
       String accountId, String queueKey, int maxRunningChangesetsForAccount) {
-    try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId, Duration.ofMinutes(2))) {
+    try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
+             YamlChangeSet.class, accountId, Duration.ofMinutes(2), Duration.ofSeconds(10))) {
       if (anyChangeSetRunningFoQueueKey(accountId, queueKey)) {
         logger.info("Found running changeset for queuekey. Returning null");
         return null;
@@ -340,24 +341,28 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
   @Override
   public void markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(String accountId) {
-    UpdateOperations<YamlChangeSet> ops = wingsPersistence.createUpdateOperations(YamlChangeSet.class);
-    setUnset(ops, YamlChangeSetKeys.status, SKIPPED);
-    setUnset(ops, YamlChangeSetKeys.messageCode, MAX_RETRY_COUNT_EXCEEDED_CODE);
+    try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
+             YamlChangeSet.class, accountId, Duration.ofMinutes(1), Duration.ofSeconds(10))) {
+      UpdateOperations<YamlChangeSet> ops = wingsPersistence.createUpdateOperations(YamlChangeSet.class);
+      setUnset(ops, YamlChangeSetKeys.status, SKIPPED);
+      setUnset(ops, YamlChangeSetKeys.messageCode, MAX_RETRY_COUNT_EXCEEDED_CODE);
 
-    Query<YamlChangeSet> yamlChangeSetQuery = wingsPersistence.createQuery(YamlChangeSet.class)
-                                                  .filter(YamlChangeSetKeys.accountId, accountId)
-                                                  .filter(YamlChangeSetKeys.status, QUEUED)
-                                                  .field(YamlChangeSetKeys.retryCount)
-                                                  .greaterThan(MAX_RETRY_COUNT);
-    UpdateResults status = wingsPersistence.update(yamlChangeSetQuery, ops);
-    logger.info(
-        "Updated the status of [{}] YamlChangeSets to Skipped. Max retry count exceeded", status.getUpdatedCount());
+      Query<YamlChangeSet> yamlChangeSetQuery = wingsPersistence.createQuery(YamlChangeSet.class)
+                                                    .filter(YamlChangeSetKeys.accountId, accountId)
+                                                    .filter(YamlChangeSetKeys.status, QUEUED)
+                                                    .field(YamlChangeSetKeys.retryCount)
+                                                    .greaterThan(MAX_RETRY_COUNT);
+      UpdateResults status = wingsPersistence.update(yamlChangeSetQuery, ops);
+      logger.info(
+          "Updated the status of [{}] YamlChangeSets to Skipped. Max retry count exceeded", status.getUpdatedCount());
+    }
   }
 
   @Override
   public boolean updateStatusAndIncrementRetryCountForYamlChangeSets(
       String accountId, Status newStatus, List<Status> currentStatuses, List<String> yamlChangeSetIds) {
-    try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId, Duration.ofMinutes(1))) {
+    try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
+             YamlChangeSet.class, accountId, Duration.ofMinutes(1), Duration.ofSeconds(10))) {
       if (isEmpty(yamlChangeSetIds)) {
         return true;
       }
@@ -380,7 +385,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Override
   public boolean updateStatusForGivenYamlChangeSets(
       String accountId, Status newStatus, List<Status> currentStatuses, List<String> yamlChangeSetIds) {
-    try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId, Duration.ofMinutes(1))) {
+    try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
+             YamlChangeSet.class, accountId, Duration.ofMinutes(1), Duration.ofSeconds(10))) {
       if (isEmpty(yamlChangeSetIds)) {
         return true;
       }
