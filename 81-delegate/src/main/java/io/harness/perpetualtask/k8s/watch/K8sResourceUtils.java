@@ -1,6 +1,5 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableMap;
@@ -33,8 +32,7 @@ public class K8sResourceUtils {
 
   private static Resource.Quantity getCpuRequest(Container k8sContainer) {
     Builder cpuRequestBuilder = Resource.Quantity.newBuilder();
-    if (isNull(k8sContainer.getResources())) {
-      logger.warn("This k8s container is missing resource.");
+    if (k8sContainer.getResources() == null) {
       return cpuRequestBuilder.build();
     }
 
@@ -51,8 +49,7 @@ public class K8sResourceUtils {
 
   private static Resource.Quantity getMemRequest(Container k8sContainer) {
     Builder memRequestBuilder = Resource.Quantity.newBuilder();
-    if (isNull(k8sContainer.getResources())) {
-      logger.warn("This k8s container is missing resource.");
+    if (k8sContainer.getResources() == null) {
       return memRequestBuilder.build();
     }
 
@@ -69,8 +66,7 @@ public class K8sResourceUtils {
 
   private static Resource.Quantity getCpuLimit(Container k8sContainer) {
     Builder cpuLimitBuilder = Resource.Quantity.newBuilder();
-    if (isNull(k8sContainer.getResources())) {
-      logger.warn("This k8s container is missing resource.");
+    if (k8sContainer.getResources() == null) {
       return cpuLimitBuilder.build();
     }
 
@@ -87,8 +83,7 @@ public class K8sResourceUtils {
 
   private static Resource.Quantity getMemLimit(Container k8sContainer) {
     Builder memLimitBuilder = Resource.Quantity.newBuilder();
-    if (isNull(k8sContainer.getResources())) {
-      logger.warn("This k8s container is missing resource.");
+    if (k8sContainer.getResources() == null) {
       return memLimitBuilder.build();
     }
 
@@ -133,7 +128,7 @@ public class K8sResourceUtils {
         .build();
   }
 
-  public static Map<String, Resource.Quantity> getResourceMap(Map<String, Quantity> resourceMap) {
+  static Map<String, Resource.Quantity> getResourceMap(Map<String, Quantity> resourceMap) {
     long cpuNanos = getCpuNanos(resourceMap);
     long memBytes = getMemBytes(resourceMap);
     return ImmutableMap.<String, Resource.Quantity>builder()

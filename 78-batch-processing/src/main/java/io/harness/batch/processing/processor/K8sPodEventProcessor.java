@@ -12,7 +12,7 @@ import org.springframework.batch.item.ItemProcessor;
 public class K8sPodEventProcessor implements ItemProcessor<PublishedMessage, InstanceEvent> {
   @Override
   public InstanceEvent process(PublishedMessage publishedMessage) throws Exception {
-    PodEvent podEvent = (PodEvent) publishedMessage.getMessage(); // TODO: move this logic to reader
+    PodEvent podEvent = (PodEvent) publishedMessage.getMessage();
     EventType type = null;
     switch (podEvent.getType()) {
       case EVENT_TYPE_TERMINATED:

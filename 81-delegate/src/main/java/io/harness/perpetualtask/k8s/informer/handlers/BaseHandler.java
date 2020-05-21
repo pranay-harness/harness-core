@@ -10,6 +10,7 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.watch.K8sObjectReference;
 import io.harness.perpetualtask.k8s.watch.K8sWatchEvent;
+import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
 import io.harness.reflection.ReflectionUtils;
 import io.kubernetes.client.informer.ResourceEventHandler;
 import io.kubernetes.client.openapi.models.V1DaemonSet;
@@ -67,21 +68,31 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
   }
 
   private final EventPublisher eventPublisher;
-  private final K8sWatchEvent clusterDetailsProto;
+  private final ClusterDetails clusterDetails;
 
   public BaseHandler(EventPublisher eventPublisher, ClusterDetails clusterDetails) {
     this.eventPublisher = eventPublisher;
-    this.clusterDetailsProto = K8sWatchEvent.newBuilder()
-                                   .setClusterId(clusterDetails.getClusterId())
-                                   .setCloudProviderId(clusterDetails.getCloudProviderId())
-                                   .setClusterName(clusterDetails.getClusterName())
-                                   .setKubeSystemUid(clusterDetails.getKubeSystemUid())
-                                   .build();
+    this.clusterDetails = clusterDetails;
   }
 
-  protected void publishMessage(K8sWatchEvent resourceDetailsProto, Timestamp occurredAt) {
-    eventPublisher.publishMessage(K8sWatchEvent.newBuilder(clusterDetailsProto).mergeFrom(resourceDetailsProto).build(),
-        occurredAt, ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterDetailsProto.getClusterId()));
+  private void publishWatchEvent(K8sWatchEvent resourceDetailsProto, Timestamp occurredAt) {
+    eventPublisher.publishMessage(K8sWatchEvent.newBuilder(resourceDetailsProto)
+                                      .setClusterId(clusterDetails.getClusterId())
+                                      .setCloudProviderId(clusterDetails.getCloudProviderId())
+                                      .setClusterName(clusterDetails.getClusterName())
+                                      .setKubeSystemUid(clusterDetails.getKubeSystemUid())
+                                      .build(),
+        occurredAt, ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId()));
+  }
+
+  final void publishWorkloadSpec(K8sWorkloadSpec workloadSpecProto, Timestamp occurredAt) {
+    eventPublisher.publishMessage(K8sWorkloadSpec.newBuilder(workloadSpecProto)
+                                      .setClusterId(clusterDetails.getClusterId())
+                                      .setCloudProviderId(clusterDetails.getCloudProviderId())
+                                      .setClusterName(clusterDetails.getClusterName())
+                                      .setKubeSystemUid(clusterDetails.getKubeSystemUid())
+                                      .build(),
+        occurredAt, ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId()));
   }
 
   @Override
@@ -97,15 +108,25 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
                                       .map(V1ObjectMeta::getCreationTimestamp)
                                       .map(dt -> Instant.ofEpochMilli(dt.getMillis()))
                                       .orElse(Instant.EPOCH);
-      publishMessage(K8sWatchEvent.newBuilder()
-                         .setType(K8sWatchEvent.Type.TYPE_ADDED)
-                         .setResourceRef(createObjectReference(resource))
-                         .setNewResourceVersion(getResourceVersion(resource))
-                         .setNewResourceYaml(yamlDump(resource))
-                         .setDescription(String.format("%s created", getKind()))
-                         .build(),
-          HTimestamps.fromInstant(creationTimestamp));
+      Timestamp occurredAt = HTimestamps.fromInstant(creationTimestamp);
+      publishWatchEvent(K8sWatchEvent.newBuilder()
+                            .setType(K8sWatchEvent.Type.TYPE_ADDED)
+                            .setResourceRef(createObjectReference(resource))
+                            .setNewResourceVersion(getResourceVersion(resource))
+                            .setNewResourceYaml(yamlDump(resource))
+                            .setDescription(String.format("%s created", getKind()))
+                            .build(),
+          occurredAt);
+      publishWorkloadSpecOnAdd(resource, occurredAt);
     }
+  }
+
+  protected void publishWorkloadSpecOnAdd(ApiType resource, Timestamp occurredAt) {
+    // default noop
+  }
+
+  protected void publishWorkloadSpecIfChangedOnUpdate(ApiType oldResource, ApiType newResource, Timestamp occurredAt) {
+    // default noop
   }
 
   private void handleMissingKindAndApiVersion(ApiType resource) {
@@ -138,16 +159,18 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
     } else if (!specChanged) {
       logger.debug("Skipping publish for resource updated since no yaml change");
     } else {
-      publishMessage(K8sWatchEvent.newBuilder()
-                         .setType(K8sWatchEvent.Type.TYPE_UPDATED)
-                         .setResourceRef(objectReference)
-                         .setOldResourceVersion(getResourceVersion(oldResource))
-                         .setOldResourceYaml(oldYaml)
-                         .setNewResourceVersion(getResourceVersion(newResource))
-                         .setNewResourceYaml(newYaml)
-                         .setDescription(String.format("%s updated", getKind()))
-                         .build(),
-          HTimestamps.fromInstant(Instant.now()));
+      Timestamp occurredAt = HTimestamps.fromInstant(Instant.now());
+      publishWatchEvent(K8sWatchEvent.newBuilder()
+                            .setType(K8sWatchEvent.Type.TYPE_UPDATED)
+                            .setResourceRef(objectReference)
+                            .setOldResourceVersion(getResourceVersion(oldResource))
+                            .setOldResourceYaml(oldYaml)
+                            .setNewResourceVersion(getResourceVersion(newResource))
+                            .setNewResourceYaml(newYaml)
+                            .setDescription(String.format("%s updated", getKind()))
+                            .build(),
+          occurredAt);
+      publishWorkloadSpecIfChangedOnUpdate(oldResource, newResource, occurredAt);
     }
   }
 
@@ -193,7 +216,7 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
       if (!finalStateUnknown) {
         builder.setOldResourceVersion(getResourceVersion(resource)).setOldResourceYaml(yamlDump(resource));
       }
-      publishMessage(builder.build(), HTimestamps.fromInstant(Instant.now()));
+      publishWatchEvent(builder.build(), HTimestamps.fromInstant(Instant.now()));
     }
   }
 

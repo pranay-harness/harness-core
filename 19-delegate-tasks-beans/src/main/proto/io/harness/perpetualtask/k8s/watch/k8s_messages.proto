@@ -152,3 +152,24 @@ message K8sWatchEvent {
   string description = 10;
   string kube_system_uid = 11;
 }
+
+// Resource specification for a k8s workload
+message K8sWorkloadSpec {
+  message ContainerSpec {
+    string name = 1;
+    map<string, string> requests = 2;
+    map<string, string> limits = 3;
+  }
+
+  string cluster_id = 1;
+  string cluster_name = 2;
+  string cloud_provider_id = 3;
+  string kube_system_uid = 4;
+
+  string workload_kind = 5;
+  string workload_name = 6;
+  string namespace = 7;
+
+  repeated ContainerSpec container_specs = 8;
+  repeated ContainerSpec init_container_specs = 9;
+}
