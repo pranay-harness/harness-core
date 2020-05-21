@@ -19,6 +19,7 @@ public class InstanceInfo {
   InstanceType instanceType;
   InstanceState instanceState;
   Resource resource;
+  Resource resourceLimit;
   Resource allocatableResource;
   List<Container> containerList;
   Map<String, String> labels;

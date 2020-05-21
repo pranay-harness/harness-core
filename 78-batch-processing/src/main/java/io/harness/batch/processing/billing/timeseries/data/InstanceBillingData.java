@@ -49,6 +49,14 @@ public class InstanceBillingData {
   private double maxMemoryUtilization;
   private double avgCpuUtilization;
   private double avgMemoryUtilization;
+  private double maxCpuUtilizationValue;
+  private double maxMemoryUtilizationValue;
+  private double avgCpuUtilizationValue;
+  private double avgMemoryUtilizationValue;
+  private double cpuRequest;
+  private double cpuLimit;
+  private double memoryRequest;
+  private double memoryLimit;
   private double cpuUnitSeconds;
   private double memoryMbSeconds;
   private double usageDurationSeconds;

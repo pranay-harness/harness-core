@@ -21,6 +21,7 @@ import io.harness.batch.processing.billing.writer.support.BillingDataGenerationV
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
@@ -66,6 +67,10 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
 
   private final double CPU_UNIT_SECONDS = 400;
   private final double MEMORY_MB_SECONDS = 400;
+  private final double CPU_UNIT_LIMIT = 1024;
+  private final double CPU_UNIT_REQUEST = 1024;
+  private final double MEMORY_MB_LIMIT = 2048;
+  private final double MEMORY_MB_REQUEST = 2096;
   private final double USAGE_DURATION_SECONDS = 400;
   private final double CPU_UTILIZATION = 1;
   private final double MEMORY_UTILIZATION = 1;
@@ -223,15 +228,18 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
             .avgCpuUtilization(CPU_UTILIZATION)
             .avgMemoryUtilization(MEMORY_UTILIZATION)
             .build());
-    InstanceData instanceData = InstanceData.builder()
-                                    .instanceType(InstanceType.EC2_INSTANCE)
-                                    .metaData(metaDataMap)
-                                    .accountId(ACCOUNT_ID)
-                                    .instanceId(INSTANCE_ID)
-                                    .clusterId(CLUSTER_ID)
-                                    .clusterName(CLUSTER_NAME)
-                                    .harnessServiceInfo(getHarnessServiceInfo())
-                                    .build();
+    InstanceData instanceData =
+        InstanceData.builder()
+            .instanceType(InstanceType.EC2_INSTANCE)
+            .metaData(metaDataMap)
+            .accountId(ACCOUNT_ID)
+            .instanceId(INSTANCE_ID)
+            .clusterId(CLUSTER_ID)
+            .clusterName(CLUSTER_NAME)
+            .totalResource(Resource.builder().cpuUnits(CPU_UNIT_REQUEST).memoryMb(MEMORY_MB_REQUEST).build())
+            .limitResource(Resource.builder().cpuUnits(CPU_UNIT_LIMIT).memoryMb(MEMORY_MB_LIMIT).build())
+            .harnessServiceInfo(getHarnessServiceInfo())
+            .build();
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.BATCH_JOB_TYPE)).thenReturn(BatchJobType.INSTANCE_BILLING.name());
@@ -260,6 +268,10 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     assertThat(instanceBillingData.getUsageDurationSeconds()).isEqualTo(USAGE_DURATION_SECONDS);
     assertThat(instanceBillingData.getCpuUnitSeconds()).isEqualTo(CPU_UNIT_SECONDS);
     assertThat(instanceBillingData.getMemoryMbSeconds()).isEqualTo(MEMORY_MB_SECONDS);
+    assertThat(instanceBillingData.getCpuLimit()).isEqualTo(CPU_UNIT_LIMIT);
+    assertThat(instanceBillingData.getMemoryLimit()).isEqualTo(MEMORY_MB_LIMIT);
+    assertThat(instanceBillingData.getCpuRequest()).isEqualTo(CPU_UNIT_REQUEST);
+    assertThat(instanceBillingData.getMemoryRequest()).isEqualTo(MEMORY_MB_REQUEST);
     assertThat(instanceBillingData.getCloudProvider()).isEqualTo(CloudProvider.AWS.name());
     assertThat(instanceBillingData.getStartTimestamp()).isEqualTo(START_TIME_MILLIS);
     assertThat(instanceBillingData.getEndTimestamp()).isEqualTo(END_TIME_MILLIS);
