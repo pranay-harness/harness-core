@@ -167,6 +167,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         executionDataBuilder.containerInfos(
             containerInfos.stream().filter(ContainerInfo::isNewContainer).collect(toList()));
       }
+      containerInfos.forEach(executionDataBuilder::allContainerInfo);
       logContainerInfos(containerInfos, executionLogCallback);
       logger.info("Successfully completed resize operation");
       executionLogCallback.saveExecutionLog(format("Completed operation%n%s%n", DASH_STRING));

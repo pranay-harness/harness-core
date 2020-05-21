@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 @UtilityClass
-public final class HelmStateHelper {
+public final class ContainerHelper {
   @Nonnull
   public static List<InstanceDetails> generateInstanceDetails(List<ContainerInfo> containerInfos) {
     if (isNotEmpty(containerInfos)) {

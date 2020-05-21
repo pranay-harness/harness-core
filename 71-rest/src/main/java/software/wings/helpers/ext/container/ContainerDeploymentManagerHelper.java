@@ -73,25 +73,7 @@ public class ContainerDeploymentManagerHelper {
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
     if (isNotEmpty(containerInfos)) {
       for (ContainerInfo containerInfo : containerInfos) {
-        HostElement hostElement = HostElement.builder()
-                                      .hostName(containerInfo.getHostName())
-                                      .ip(containerInfo.getIp())
-                                      .ec2Instance(containerInfo.getEc2Instance())
-                                      .build();
-        InstanceElement instanceElement =
-            anInstanceElement()
-                .uuid(containerInfo.getContainerId() == null ? UUIDGenerator.generateUuid()
-                                                             : containerInfo.getContainerId())
-                .dockerId(containerInfo.getContainerId())
-                .hostName(containerInfo.getHostName())
-                .host(hostElement)
-                .serviceTemplateElement(serviceTemplateElement)
-                .displayName(containerInfo.getContainerId())
-                .podName(containerInfo.getPodName())
-                .workloadName(containerInfo.getWorkloadName())
-                .ecsContainerDetails(containerInfo.getEcsContainerDetails())
-                .newInstance(containerInfo.isNewContainer())
-                .build();
+        InstanceElement instanceElement = buildInstanceElement(serviceTemplateElement, containerInfo);
         ExecutionStatus status =
             containerInfo.getStatus() == Status.SUCCESS ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
         instanceStatusSummaries.add(
@@ -99,6 +81,27 @@ public class ContainerDeploymentManagerHelper {
       }
     }
     return instanceStatusSummaries;
+  }
+
+  public InstanceElement buildInstanceElement(
+      ServiceTemplateElement serviceTemplateElement, ContainerInfo containerInfo) {
+    HostElement hostElement = HostElement.builder()
+                                  .hostName(containerInfo.getHostName())
+                                  .ip(containerInfo.getIp())
+                                  .ec2Instance(containerInfo.getEc2Instance())
+                                  .build();
+    return anInstanceElement()
+        .uuid(containerInfo.getContainerId() == null ? UUIDGenerator.generateUuid() : containerInfo.getContainerId())
+        .dockerId(containerInfo.getContainerId())
+        .hostName(containerInfo.getHostName())
+        .host(hostElement)
+        .serviceTemplateElement(serviceTemplateElement)
+        .displayName(containerInfo.getContainerId())
+        .podName(containerInfo.getPodName())
+        .workloadName(containerInfo.getWorkloadName())
+        .ecsContainerDetails(containerInfo.getEcsContainerDetails())
+        .newInstance(containerInfo.isNewContainer())
+        .build();
   }
 
   public List<InstanceStatusSummary> getInstanceStatusSummaries(
