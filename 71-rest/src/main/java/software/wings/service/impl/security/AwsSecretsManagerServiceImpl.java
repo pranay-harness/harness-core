@@ -19,7 +19,6 @@ import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KE
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS_SECRETS_MANAGER;
 
 import com.google.common.io.Files;
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -42,8 +41,6 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.EncryptedDataParent;
-import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -68,9 +65,6 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
   private static final String SECRET_KEY_NAME_SUFFIX = "_secretKey";
   private static final String AWS_SECRETS_MANAGER_VALIDATION_URL = "aws_secrets_manager_validation";
-
-  @Inject private AlertService alertService;
-  @Inject private AccountService accountService;
 
   private void validateSecretName(String name) {
     if (!AWS_SECRET_NAME_PATTERN.matcher(name).find()) {

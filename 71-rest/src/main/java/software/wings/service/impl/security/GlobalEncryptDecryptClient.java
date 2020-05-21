@@ -47,7 +47,6 @@ public class GlobalEncryptDecryptClient {
   @Inject private FileService fileService;
   @Inject private GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient;
   @Inject private KmsEncryptDecryptClient kmsEncryptDecryptClient;
-  @Inject private SecretManager secretManager;
   @Inject private FeatureFlagService featureFlagService;
 
   public EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) {

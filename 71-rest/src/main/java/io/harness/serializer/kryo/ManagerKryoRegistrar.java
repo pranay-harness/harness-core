@@ -510,6 +510,8 @@ import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.SecretChangeLog;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.MasterUrlFetchTaskParameter;
 import software.wings.service.impl.SlackMessageSenderImpl;
@@ -1604,7 +1606,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BasicHttpStateParameters.class, 7374);
     kryo.register(ImportedTemplateMetadata.class, 7375);
     kryo.register(CopiedTemplateMetadata.class, 7376);
-
     kryo.register(ShellScriptVariablesSweepingOutput.class, 7377);
+    kryo.register(CustomSecretsManagerConfig.class, 7378);
+    kryo.register(CustomSecretsManagerShellScript.class, 7379);
   }
 }

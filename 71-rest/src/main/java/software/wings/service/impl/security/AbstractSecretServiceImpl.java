@@ -40,7 +40,7 @@ import java.util.UUID;
 public abstract class AbstractSecretServiceImpl {
   static final String SECRET_MASK = SecretString.SECRET_MASK;
   static final String REASON_KEY = "reason";
-  static final String ID_KEY = "_id";
+  protected static final String ID_KEY = "_id";
 
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected DelegateProxyFactory delegateProxyFactory;
@@ -107,7 +107,7 @@ public abstract class AbstractSecretServiceImpl {
     }
   }
 
-  void checkIfSecretsManagerConfigCanBeCreatedOrUpdated(String accountId) {
+  protected void checkIfSecretsManagerConfigCanBeCreatedOrUpdated(String accountId) {
     Account account = accountService.get(accountId);
     if (account.isLocalEncryptionEnabled()) {
       // Reject creation of new Vault secret manager if 'localEncryptionEnabled' account flag is set
@@ -120,12 +120,13 @@ public abstract class AbstractSecretServiceImpl {
     }
   }
 
-  void generateAuditForSecretManager(String accountId, SecretManagerConfig oldConfig, SecretManagerConfig newConfig) {
+  protected void generateAuditForSecretManager(
+      String accountId, SecretManagerConfig oldConfig, SecretManagerConfig newConfig) {
     Type type = oldConfig == null ? Type.CREATE : Type.UPDATE;
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, oldConfig, newConfig, type);
   }
 
-  boolean deleteSecretManagerAndGenerateAudit(String accountId, SecretManagerConfig secretManagerConfig) {
+  protected boolean deleteSecretManagerAndGenerateAudit(String accountId, SecretManagerConfig secretManagerConfig) {
     boolean deleted = false;
     if (secretManagerConfig != null) {
       String secretManagerConfigId = secretManagerConfig.getUuid();
