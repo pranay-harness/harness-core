@@ -4528,6 +4528,28 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testCategoriesForBuildWorkflow() throws IllegalArgumentException {
+    Workflow workflow = workflowService.createWorkflow(constructBuildWorkflow());
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+    String phaseId =
+        ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
+
+    WorkflowCategorySteps workflowCategorySteps =
+        workflowService.calculateCategorySteps(workflow, user.getUuid(), phaseId, WRAP_UP.name(), 1, false);
+    assertThat(workflowCategorySteps.getCategories()).isNotEmpty();
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(WorkflowCategoryStepsMeta::getName)
+        .doesNotContain(WorkflowStepType.KUBERNETES.name());
+
+    assertThat(workflowCategorySteps.getSteps().keySet())
+        .doesNotContain(K8S_BLUE_GREEN_DEPLOY.name(), K8S_DEPLOYMENT_ROLLING.name(),
+            KUBERNETES_SWAP_SERVICE_SELECTORS.name(), K8S_TRAFFIC_SPLIT.name(), K8S_SCALE.name(), K8S_DELETE.name(),
+            K8S_APPLY.name());
+  }
+
+  @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void categoriesForK8sBlueGreenWorkflow() throws IllegalArgumentException {
