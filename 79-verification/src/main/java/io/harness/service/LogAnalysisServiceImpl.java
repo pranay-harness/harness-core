@@ -14,6 +14,7 @@ import static software.wings.beans.FeatureName.DISABLE_SERVICEGUARD_LOG_ALERTS;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.NON_HOST_PREVIOUS_ANALYSIS;
+import static software.wings.common.VerificationConstants.NUM_LOG_RECORDS;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.service.intfc.analysis.ClusterLevel.H0;
 import static software.wings.service.intfc.analysis.ClusterLevel.H1;
@@ -217,7 +218,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
             "State is no longer active " + stateExecutionId + ". Sending delegate abort request " + delegateTaskId);
         return false;
       }
-      logger.info("inserting " + logData.size() + " pieces of log data");
+      logger.info("inserting {}  pieces of log data for cvConfigId: {}, stateExecutionId: {}", logData.size(),
+          cvConfigId, stateExecutionId);
 
       if (logData.isEmpty()) {
         return true;
@@ -293,6 +295,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
           Switch.unhandled(clusterLevel);
           return false;
       }
+      metricRegistry.recordGaugeValue(NUM_LOG_RECORDS, null, logData.size());
       return true;
     } catch (Exception ex) {
       logger.error("Save log data failed for {}", stateExecutionId, ex);

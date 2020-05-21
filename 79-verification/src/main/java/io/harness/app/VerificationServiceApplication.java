@@ -12,6 +12,7 @@ import static software.wings.common.VerificationConstants.CV_TASK_CRON_POLL_INTE
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_LABELS;
 import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_NAME;
+import static software.wings.common.VerificationConstants.NUM_LOG_RECORDS;
 import static software.wings.common.VerificationConstants.getDataAnalysisMetricHelpDocument;
 
 import com.google.common.collect.Lists;
@@ -245,6 +246,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
     VerificationConstants.LEARNING_ENGINE_TASKS_METRIC_LIST.forEach(
         metricName -> registerGaugeMetric(metricName, null));
     registerGaugeMetric(DATA_COLLECTION_TASKS_PER_MINUTE, null);
+    registerGaugeMetric(NUM_LOG_RECORDS, null);
     registerGaugeMetric(IGNORED_ERRORS_METRIC_NAME, IGNORED_ERRORS_METRIC_LABELS);
   }
 
