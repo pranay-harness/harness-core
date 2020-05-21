@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +44,6 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService {
-  private static final int TIMEOUT = 10 * 1000;
   @Inject private EncryptionService encryptionService;
 
   @Override
@@ -67,7 +67,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
                 e.getMessage() + "."
                     + "SocketTimeout: ServiceNow server may not be running");
       }
-      throw new WingsException(SERVICENOW_ERROR, USER, e).addParam("message", ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
   }
 
@@ -94,8 +94,8 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
                       .getChangeTaskStates(Credentials.basic(config.getUsername(), new String(config.getPassword())));
         break;
       default:
-        throw new WingsException(SERVICENOW_ERROR, USER)
-            .addParam("message", "Invalid ticket type : " + taskParameters.getTicketType());
+        throw new ServiceNowException(
+            "Invalid ticket type : " + taskParameters.getTicketType(), SERVICENOW_ERROR, USER);
     }
 
     Response<JsonNode> response = null;
@@ -124,7 +124,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
       throw e;
     } catch (Exception e) {
       String errorMsg = "Error in fetching states from serviceNow";
-      throw new WingsException(SERVICENOW_ERROR, USER, e).addParam("message", errorMsg + ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(errorMsg + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
   }
 
@@ -150,8 +150,8 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
         responseMap.put("changeTaskType", getChangeTaskType(taskParameters));
         return responseMap;
       default:
-        throw new WingsException(SERVICENOW_ERROR, USER)
-            .addParam("message", "Invalid ticket type : " + taskParameters.getTicketType());
+        throw new ServiceNowException(
+            "Invalid ticket type : " + taskParameters.getTicketType(), SERVICENOW_ERROR, USER);
     }
   }
 
@@ -185,23 +185,20 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
         }
         return fields;
       } else {
-        throw new WingsException(SERVICENOW_ERROR, USER)
-            .addParam("message",
-                "Failed to fetch additional fields for ticket type " + taskParameters.getTicketType()
-                    + " response: " + response);
+        throw new ServiceNowException("Failed to fetch additional fields for ticket type "
+                + taskParameters.getTicketType() + " response: " + response,
+            SERVICENOW_ERROR, USER);
       }
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       String errorMsg = "Failed to fetch additional fields for ticket type " + taskParameters.getTicketType();
-      throw new WingsException(SERVICENOW_ERROR, USER, e)
-          .addParam("message", errorMsg + " " + ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(errorMsg + " " + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
   }
 
   private List<ServiceNowMetaDTO> getImpacts(ServiceNowTaskParameters taskParameters) {
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
-    Response<JsonNode> response;
     Call<JsonNode> request = getRestClient(taskParameters)
                                  .getImpact(Credentials.basic(config.getUsername(), new String(config.getPassword())));
     return handleGetCallForFields(request, "impact");
@@ -209,7 +206,6 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
 
   private List<ServiceNowMetaDTO> getChangeRequestType(ServiceNowTaskParameters taskParameters) {
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
-    Response<JsonNode> response;
     Call<JsonNode> request =
         getRestClient(taskParameters)
             .getChangeRequestTypes(Credentials.basic(config.getUsername(), new String(config.getPassword())));
@@ -218,7 +214,6 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
 
   private List<ServiceNowMetaDTO> getChangeTaskType(ServiceNowTaskParameters taskParameters) {
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
-    Response<JsonNode> response;
     Call<JsonNode> request =
         getRestClient(taskParameters)
             .getChangeTaskTypes(Credentials.basic(config.getUsername(), new String(config.getPassword())));
@@ -227,7 +222,6 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
 
   private List<ServiceNowMetaDTO> getPriority(ServiceNowTaskParameters taskParameters) {
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
-    Response<JsonNode> response;
     Call<JsonNode> request =
         getRestClient(taskParameters)
             .getPriority(Credentials.basic(config.getUsername(), new String(config.getPassword())));
@@ -236,7 +230,6 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
 
   private List<ServiceNowMetaDTO> getRisk(ServiceNowTaskParameters taskParameters) {
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
-    Response<JsonNode> response;
     Call<JsonNode> request = getRestClient(taskParameters)
                                  .getRisk(Credentials.basic(config.getUsername(), new String(config.getPassword())));
     return handleGetCallForFields(request, "risk");
@@ -244,7 +237,6 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
 
   private List<ServiceNowMetaDTO> getUrgency(ServiceNowTaskParameters taskParameters) {
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
-    Response<JsonNode> response;
     Call<JsonNode> request = getRestClient(taskParameters)
                                  .getUrgency(Credentials.basic(config.getUsername(), new String(config.getPassword())));
     return handleGetCallForFields(request, "urgency");
@@ -267,14 +259,14 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
         }
         return fields;
       } else {
-        throw new WingsException(SERVICENOW_ERROR, USER)
-            .addParam("message", "Response for fetching " + field + " is not an array. Response: " + response);
+        throw new ServiceNowException(
+            "Response for fetching " + field + " is not an array. Response: " + response, SERVICENOW_ERROR, USER);
       }
     } catch (WingsException we) {
       throw we;
     } catch (Exception e) {
       String errorMsg = "Error in fetching " + field + " from serviceNow. ";
-      throw new WingsException(SERVICENOW_ERROR, USER, e).addParam("message", errorMsg + ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(errorMsg + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
   }
 
@@ -302,16 +294,15 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
         }
 
       } else {
-        throw new WingsException(SERVICENOW_ERROR, USER)
-            .addParam(
-                "message", "Failed to fetch issueNumber " + taskParameters.getIssueNumber() + "response: " + response);
+        throw new ServiceNowException(
+            "Failed to fetch issueNumber " + taskParameters.getIssueNumber() + "response: " + response,
+            SERVICENOW_ERROR, USER);
       }
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       String errorMsg = "Error in fetching issueNumber " + taskParameters.getIssueNumber();
-      throw new WingsException(SERVICENOW_ERROR, USER, e)
-          .addParam("message", errorMsg + " " + ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(errorMsg + " " + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
   }
 
@@ -336,16 +327,15 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
       return;
     }
     if (response.code() == 401) {
-      throw new WingsException(SERVICENOW_ERROR, USER).addParam("message", "Invalid ServiceNow credentials");
+      throw new ServiceNowException("Invalid ServiceNow credentials", SERVICENOW_ERROR, USER);
     }
     if (response.code() == 404) {
-      throw new WingsException(SERVICENOW_ERROR, USER).addParam("message", "404 Not found");
+      throw new ServiceNowException("404 Not found", SERVICENOW_ERROR, USER);
     }
     if (response.errorBody() == null) {
-      throw new WingsException(SERVICENOW_ERROR, USER).addParam("message", message + " : " + response.message());
+      throw new ServiceNowException(message + " : " + response.message(), SERVICENOW_ERROR, USER);
     }
-    throw new WingsException(SERVICENOW_ERROR, USER)
-        .addParam("message", message + " : " + response.errorBody().string());
+    throw new ServiceNowException(response.errorBody().string(), SERVICENOW_ERROR, USER);
   }
 
   public ServiceNowRestClient getRestClient(ServiceNowTaskParameters taskParameters) {

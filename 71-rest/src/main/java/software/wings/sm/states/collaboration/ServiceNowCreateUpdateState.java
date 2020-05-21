@@ -14,7 +14,9 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
@@ -113,8 +115,8 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
     ServiceNowTaskParameters serviceNowTaskParameters;
     if (serviceNowCreateUpdateParams.getAction() == ServiceNowAction.IMPORT_SET) {
       if (!isJSONValid(serviceNowCreateUpdateParams.getJsonBody())) {
-        throw new WingsException(
-            "Json Body is not a valid Json: " + serviceNowCreateUpdateParams.getJsonBody(), WingsException.USER);
+        throw new ServiceNowException("Json Body is not a valid Json: " + serviceNowCreateUpdateParams.getJsonBody(),
+            ErrorCode.SERVICENOW_ERROR, WingsException.USER);
       }
       serviceNowTaskParameters = ServiceNowTaskParameters.builder()
                                      .serviceNowConfig(config)

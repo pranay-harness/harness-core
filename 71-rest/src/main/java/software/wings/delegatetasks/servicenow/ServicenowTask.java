@@ -21,6 +21,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
@@ -133,7 +134,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
       throw we;
     } catch (Exception e) {
       String errorMsg = "Error while creating serviceNow ticket: ";
-      throw new WingsException(SERVICENOW_ERROR, USER, e).addParam("message", errorMsg + ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(errorMsg + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
   }
 
@@ -175,7 +176,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
       throw we;
     } catch (Exception e) {
       String errorMsg = "Error while creating import set: ";
-      throw new WingsException(SERVICENOW_ERROR, USER, e).addParam("message", errorMsg + ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(errorMsg + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
   }
 
@@ -231,7 +232,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
       throw we;
     } catch (Exception e) {
       String errorMsg = "Error while updating serviceNow ticket: " + parameters.getIssueNumber();
-      throw new WingsException(SERVICENOW_ERROR, USER, e).addParam("message", errorMsg + ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(errorMsg + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
   }
 
@@ -296,8 +297,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
         throw we;
       } catch (Exception e) {
         String errorMsg = "Error while updating serviceNow task: " + changeTaskId;
-        throw new WingsException(SERVICENOW_ERROR, USER, e)
-            .addParam("message", errorMsg + ExceptionUtils.getMessage(e));
+        throw new ServiceNowException(errorMsg + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
       }
     }
     return ServiceNowExecutionData.builder()
@@ -342,15 +342,15 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
         }
         return changeTaskIds;
       } else {
-        throw new WingsException(SERVICENOW_ERROR, USER)
-            .addParam("message", "Response for fetching changeTasks is not an array. Response: " + response);
+        throw new ServiceNowException(
+            "Response for fetching changeTasks is not an array. Response: " + response, SERVICENOW_ERROR, USER);
       }
 
     } catch (WingsException we) {
       throw we;
     } catch (Exception e) {
       String errorMsg = "Error while fetching change tasks for : " + changeRequestNumber;
-      throw new WingsException(SERVICENOW_ERROR, USER, e).addParam("message", errorMsg + ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(errorMsg + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
   }
 
@@ -370,7 +370,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
         if (responseObj.size() > 1) {
           String errorMsg =
               "Multiple issues found for " + parameters.getIssueNumber() + "Please enter unique issueNumber";
-          throw new WingsException(SERVICENOW_ERROR, USER).addParam("message", errorMsg);
+          throw new ServiceNowException(errorMsg, SERVICENOW_ERROR, USER);
         }
         JsonNode issueObj = responseObj.get(0);
         if (issueObj != null) {
@@ -378,19 +378,18 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
           parameters.setIssueId(issueId);
         } else {
           String errorMsg = "Error in fetching issue " + parameters.getIssueNumber() + " .Issue does not exist";
-          throw new WingsException(SERVICENOW_ERROR, USER).addParam("message", errorMsg);
+          throw new ServiceNowException(errorMsg, SERVICENOW_ERROR, USER);
         }
       } else {
-        throw new WingsException(SERVICENOW_ERROR, USER)
-            .addParam(
-                "message", "Failed to fetch issueNumber " + parameters.getIssueNumber() + "response: " + response);
+        throw new ServiceNowException(
+            "Failed to fetch issueNumber " + parameters.getIssueNumber() + "response: " + response, SERVICENOW_ERROR,
+            USER);
       }
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       String errorMsg = "Error in fetching issueNumber " + parameters.getIssueNumber();
-      throw new WingsException(SERVICENOW_ERROR, USER, e)
-          .addParam("message", errorMsg + " " + ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(errorMsg + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
   }
 
