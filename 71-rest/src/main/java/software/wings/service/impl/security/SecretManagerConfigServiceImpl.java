@@ -79,8 +79,6 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
       logger.info("Set all other secret managers as non-default in account {}", accountId);
     }
 
-    secretManagerConfig.setEncryptionType(secretManagerConfig.getEncryptionType());
-
     return wingsPersistence.save(secretManagerConfig);
   }
 
@@ -228,6 +226,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
       case CYBERARK:
         cyberArkService.decryptCyberArkConfigSecrets(accountId, (CyberArkConfig) secretManagerConfig, maskSecrets);
         break;
+      case CUSTOM:
       case LOCAL:
         break;
       default:

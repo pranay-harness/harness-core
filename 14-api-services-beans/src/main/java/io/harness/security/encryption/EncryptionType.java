@@ -10,7 +10,8 @@ public enum EncryptionType {
   AWS_SECRETS_MANAGER("awssecretsmanager"),
   AZURE_VAULT("azurevault"),
   CYBERARK("cyberark"),
-  VAULT("hashicorpvault");
+  VAULT("hashicorpvault"),
+  CUSTOM("custom");
 
   private final String yamlName;
 

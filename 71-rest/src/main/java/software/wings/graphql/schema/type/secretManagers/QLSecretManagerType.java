@@ -13,7 +13,8 @@ public enum QLSecretManagerType implements QLEnum {
   HASHICORP_VAULT,
   AZURE_KEY_VAULT,
   CYBERARK,
-  GOOGLE_KMS;
+  GOOGLE_KMS,
+  CUSTOM;
 
   // Since entity name are different in DB we have to translate the GraphQL entity Name.
   private String getEntityType(String value) {

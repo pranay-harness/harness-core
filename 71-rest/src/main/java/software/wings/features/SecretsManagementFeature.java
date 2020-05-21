@@ -70,8 +70,10 @@ public class SecretsManagementFeature extends AbstractPremiumFeature implements 
   }
 
   private Collection<Usage> getUsages(String accountId) {
-    Collection<Usage> usages =
-        getCustomSecretManagers(accountId).stream().map(SecretsManagementFeature::toUsage).collect(Collectors.toList());
+    Collection<Usage> usages = getCustomerSecretManagers(accountId)
+                                   .stream()
+                                   .map(SecretsManagementFeature::toUsage)
+                                   .collect(Collectors.toList());
 
     logger.info("Secret manager usages in account {} are: {}", accountId, usages);
     return usages;
@@ -90,7 +92,7 @@ public class SecretsManagementFeature extends AbstractPremiumFeature implements 
     return FEATURE_NAME;
   }
 
-  private List<EncryptionConfig> getCustomSecretManagers(String accountId) {
+  private List<EncryptionConfig> getCustomerSecretManagers(String accountId) {
     return secretManager.listSecretManagers(accountId)
         .stream()
         .filter(secretManagerConfig -> !isHarnessSecretManager(secretManagerConfig))

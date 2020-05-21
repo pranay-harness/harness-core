@@ -14,9 +14,7 @@ import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CYBERARK;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.exception.WingsException;
@@ -27,13 +25,9 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.CyberArkConfig.CyberArkConfigKeys;
 import software.wings.beans.SyncTaskContext;
-import software.wings.features.SecretsManagementFeature;
-import software.wings.features.api.PremiumFeature;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.EncryptedDataParent;
-import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
@@ -47,10 +41,6 @@ import java.util.Objects;
 @Slf4j
 public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements CyberArkService {
   private static final String CLIENT_CERTIFICATE_NAME_SUFFIX = "_clientCertificate";
-
-  @Inject private AlertService alertService;
-  @Inject private AccountService accountService;
-  @Inject @Named(SecretsManagementFeature.FEATURE_NAME) private PremiumFeature secretsManagementFeature;
 
   @Override
   public char[] decrypt(EncryptedData data, String accountId, CyberArkConfig cyberArkConfig) {
