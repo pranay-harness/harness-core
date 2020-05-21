@@ -124,11 +124,11 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.sm.ContainerHelper;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
-import software.wings.sm.HelmStateHelper;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
@@ -968,7 +968,7 @@ public class HelmDeployState extends State {
           InstanceElementListParam.builder().instanceElements(instanceElements).build();
 
       List<InstanceDetails> instanceDetails =
-          HelmStateHelper.generateInstanceDetails(helmInstallCommandResponse.getContainerInfoList());
+          ContainerHelper.generateInstanceDetails(helmInstallCommandResponse.getContainerInfoList());
       saveInstanceInfoToSweepingOutput(context, instanceElements, instanceDetails);
 
       executionResponseBuilder.contextElement(instanceElementListParam);

@@ -16,12 +16,14 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -39,6 +41,7 @@ import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
@@ -65,6 +68,8 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.sm.ContainerHelper;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
@@ -90,6 +95,7 @@ public abstract class ContainerServiceDeploy extends State {
   @Inject @Transient private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Inject @Transient protected transient FeatureFlagService featureFlagService;
   @Inject @Transient private transient AwsCommandHelper awsCommandHelper;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   ContainerServiceDeploy(String name, String type) {
     super(name, type);
@@ -237,12 +243,24 @@ public abstract class ContainerServiceDeploy extends State {
           buildInstanceStatusSummaries(appId, serviceId, envId, serviceElement, response));
 
       updateContainerElementAfterSuccessfulResize(context);
+      saveInstanceDetailsToSweepingOutput(context, buildInstanceElements(response), buildInstanceDetails(response));
       return buildEndStateExecution(executionData, commandExecutionResult, ExecutionStatus.SUCCESS);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  private void saveInstanceDetailsToSweepingOutput(
+      ExecutionContext context, List<InstanceElement> instanceElements, List<InstanceDetails> instanceDetails) {
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                   .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+                                   .value(InstanceInfoVariables.builder()
+                                              .instanceElements(instanceElements)
+                                              .instanceDetails(instanceDetails)
+                                              .build())
+                                   .build());
   }
 
   protected void updateContainerElementAfterSuccessfulResize(ExecutionContext context) {
@@ -323,6 +341,31 @@ public abstract class ContainerServiceDeploy extends State {
           resizeExecutionData.getContainerInfos(), serviceTemplateElement));
     }
     return instanceStatusSummaries;
+  }
+
+  private List<InstanceDetails> buildInstanceDetails(Map<String, ResponseData> response) {
+    CommandExecutionData commandExecutionData =
+        ((CommandExecutionResult) response.values().iterator().next()).getCommandExecutionData();
+    ResizeCommandUnitExecutionData resizeExecutionData = (ResizeCommandUnitExecutionData) commandExecutionData;
+    List<InstanceDetails> instanceDetails = new ArrayList<>();
+    if (resizeExecutionData != null) {
+      instanceDetails.addAll(ContainerHelper.generateInstanceDetails(resizeExecutionData.getAllContainerInfos()));
+    }
+    return instanceDetails;
+  }
+
+  private List<InstanceElement> buildInstanceElements(Map<String, ResponseData> response) {
+    CommandExecutionData commandExecutionData =
+        ((CommandExecutionResult) response.values().iterator().next()).getCommandExecutionData();
+    ResizeCommandUnitExecutionData resizeExecutionData = (ResizeCommandUnitExecutionData) commandExecutionData;
+    List<InstanceElement> instanceElements = new ArrayList<>();
+    if (resizeExecutionData != null && resizeExecutionData.getAllContainerInfos() != null) {
+      instanceElements = resizeExecutionData.getAllContainerInfos()
+                             .stream()
+                             .map(containerInfo -> containerDeploymentHelper.buildInstanceElement(null, containerInfo))
+                             .collect(toList());
+    }
+    return instanceElements;
   }
 
   protected static class ContextData {

@@ -11,13 +11,17 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.rule.OwnerRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElement;
+import software.wings.api.ServiceTemplateElement;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.cloudprovider.ContainerInfo;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.service.intfc.SettingsService;
@@ -50,5 +54,30 @@ public class ContainerDeploymentManagerHelperTest extends WingsBaseTest {
     assertThat(k8sClusterConfig.getCloudProviderName()).isEqualTo(SETTING_NAME);
     assertThat(k8sClusterConfig.getClusterName()).isNull();
     assertThat(k8sClusterConfig.getNamespace()).isEqualTo("default");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void buildInstanceElement() {
+    final ServiceTemplateElement serviceTemplateElement =
+        ServiceTemplateElement.Builder.aServiceTemplateElement().build();
+    final InstanceElement instanceElement =
+        containerDeploymentManagerHelper.buildInstanceElement(serviceTemplateElement,
+            ContainerInfo.builder()
+                .workloadName("workload")
+                .ip("ip")
+                .podName("podname")
+                .hostName("hostname")
+                .newContainer(true)
+                .containerId("containerId")
+                .build());
+    assertThat(instanceElement.getServiceTemplateElement()).isEqualTo(serviceTemplateElement);
+    assertThat(instanceElement.getWorkloadName()).isEqualTo("workload");
+    assertThat(instanceElement.getDockerId()).isEqualTo("containerId");
+    assertThat(instanceElement.isNewInstance()).isTrue();
+    assertThat(instanceElement.getPodName()).isEqualTo("podname");
+    assertThat(instanceElement.getHostName()).isEqualTo("hostname");
+    assertThat(instanceElement.getHost().getIp()).isEqualTo("ip");
   }
 }

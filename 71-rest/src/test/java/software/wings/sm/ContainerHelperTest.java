@@ -2,7 +2,7 @@ package software.wings.sm;
 
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.sm.HelmStateHelper.generateInstanceDetails;
+import static software.wings.sm.ContainerHelper.generateInstanceDetails;
 
 import io.harness.category.element.UnitTests;
 import io.harness.deployment.InstanceDetails;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class HelmStateHelperTest extends WingsBaseTest {
+public class ContainerHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
