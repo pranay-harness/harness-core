@@ -25,11 +25,15 @@ public class BillingDataPipelineRecord implements PersistentEntity, UuidAware, C
 
   private String accountId;
   private String settingId;
-  private String masterAccountId;
   private String accountName;
+  private String cloudProvider;
 
   private String dataSetId;
   private String dataTransferJobName;
-  private String fallbackTableScheduledQueryName;
   private String preAggregatedScheduledQueryName;
+
+  private String gcpBqProjectId;
+  private String gcpBqDatasetId;
+  private String awsMasterAccountId;
+  private String awsFallbackTableScheduledQueryName;
 }

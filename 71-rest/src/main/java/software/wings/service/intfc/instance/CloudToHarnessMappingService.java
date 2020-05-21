@@ -1,5 +1,6 @@
 package software.wings.service.intfc.instance;
 
+import io.harness.ccm.config.GcpBillingAccount;
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.Account;
 import software.wings.beans.ResourceLookup;
@@ -31,11 +32,13 @@ public interface CloudToHarnessMappingService {
 
   List<DeploymentSummary> getDeploymentSummary(String accountId, String offset, Instant startTime, Instant endTime);
 
-  List<SettingAttribute> getSettingAttributes(
+  List<SettingAttribute> listSettingAttributesCreatedInDuration(
       String accountId, SettingCategory category, SettingVariableTypes valueType);
 
-  List<SettingAttribute> getSettingAttributes(
+  List<SettingAttribute> listSettingAttributesCreatedInDuration(
       String accountId, SettingCategory category, SettingVariableTypes valueType, long startTime, long endTime);
+
+  List<GcpBillingAccount> listGcpBillingAccountUpdatedInDuration(String accountId, long startTime, long endTime);
 
   String getEntityName(BillingDataQueryMetadata.BillingDataMetaDataFields field, String entityId);
 }

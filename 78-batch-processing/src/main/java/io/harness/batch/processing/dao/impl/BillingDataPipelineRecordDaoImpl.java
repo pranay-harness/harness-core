@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 @Slf4j
 public class BillingDataPipelineRecordDaoImpl implements BillingDataPipelineRecordDao {
@@ -21,9 +23,31 @@ public class BillingDataPipelineRecordDaoImpl implements BillingDataPipelineReco
   }
 
   @Override
-  public BillingDataPipelineRecord getByMasterAccountId(String masterAccountId) {
+  public BillingDataPipelineRecord getByMasterAccountId(String accountId, String awsMasterAccountId) {
     return hPersistence.createQuery(BillingDataPipelineRecord.class)
-        .filter(BillingDataPipelineRecordKeys.masterAccountId, masterAccountId)
+        .field(BillingDataPipelineRecordKeys.accountId)
+        .equal(accountId)
+        .filter(BillingDataPipelineRecordKeys.awsMasterAccountId, awsMasterAccountId)
         .get();
+  }
+
+  @Override
+  public BillingDataPipelineRecord getByAccountId(String accountId) {
+    return hPersistence.createQuery(BillingDataPipelineRecord.class)
+        .filter(BillingDataPipelineRecordKeys.accountId, accountId)
+        .get();
+  }
+
+  @Override
+  public List<BillingDataPipelineRecord> listByGcpBillingAccountDataset(
+      String accountId, String gcpBqProjectId, String gcpBqDatasetId) {
+    return hPersistence.createQuery(BillingDataPipelineRecord.class)
+        .field(BillingDataPipelineRecordKeys.accountId)
+        .equal(accountId)
+        .field(BillingDataPipelineRecordKeys.gcpBqProjectId)
+        .equal(gcpBqProjectId)
+        .field(BillingDataPipelineRecordKeys.gcpBqDatasetId)
+        .equal(gcpBqDatasetId)
+        .asList();
   }
 }

@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.GcpServiceAccountService;
+import io.harness.ccm.billing.GcpServiceAccountServiceImpl;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -31,7 +31,7 @@ public class CEGcpServiceAccountServiceImplTest extends CategoryTest {
 
   @Mock AccountService accountService;
   @Mock GcpServiceAccountDao gcpServiceAccountDao;
-  @Mock GcpServiceAccountService gcpServiceAccountService;
+  @Mock GcpServiceAccountServiceImpl gcpServiceAccountService;
   @InjectMocks CEGcpServiceAccountServiceImpl ceGcpServiceAccountService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 

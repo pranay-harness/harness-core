@@ -6,7 +6,7 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.ccm.GcpServiceAccountService;
+import io.harness.ccm.billing.GcpServiceAccountService;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;

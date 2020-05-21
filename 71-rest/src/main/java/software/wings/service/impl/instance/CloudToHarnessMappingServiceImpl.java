@@ -13,10 +13,13 @@ import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
+import io.harness.ccm.config.GcpBillingAccount;
+import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.IteratorUtils;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -169,7 +172,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   }
 
   @Override
-  public List<SettingAttribute> getSettingAttributes(
+  public List<SettingAttribute> listSettingAttributesCreatedInDuration(
       String accountId, SettingCategory category, SettingVariableTypes valueType) {
     List<SettingAttribute> settingAttributes = new ArrayList<>();
     try (HIterator<SettingAttribute> query =
@@ -186,7 +189,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   }
 
   @Override
-  public List<SettingAttribute> getSettingAttributes(
+  public List<SettingAttribute> listSettingAttributesCreatedInDuration(
       String accountId, SettingCategory category, SettingVariableTypes valueType, long startTime, long endTime) {
     List<SettingAttribute> settingAttributes = new ArrayList<>();
     try (HIterator<SettingAttribute> query =
@@ -204,6 +207,17 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
       }
     }
     return settingAttributes;
+  }
+
+  public List<GcpBillingAccount> listGcpBillingAccountUpdatedInDuration(
+      String accountId, long startTime, long endTime) {
+    return IteratorUtils.toList(new HIterator<>(persistence.createQuery(GcpBillingAccount.class, excludeAuthority)
+                                                    .filter(GcpBillingAccountKeys.accountId, accountId)
+                                                    .field(GcpBillingAccountKeys.lastUpdatedAt)
+                                                    .greaterThan(startTime)
+                                                    .field(GcpBillingAccountKeys.lastUpdatedAt)
+                                                    .lessThan(endTime)
+                                                    .fetch()));
   }
 
   @Override

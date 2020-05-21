@@ -13,7 +13,7 @@ import com.google.api.services.iam.v1.model.ServiceAccount;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.GcpServiceAccountService;
+import io.harness.ccm.billing.GcpServiceAccountService;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,9 +33,7 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
   private String gcpOrganizationId1 = "GCP_ORGANIZATION_ID_1";
   private String organizationName1 = "ORGANIZATION_NAME_1";
   private String organizationName2 = "ORGANIZATION_NAME_2";
-  private String serviceAccountEmail1 = "SERVICE_ACCOUNT_EMAIL_1";
   private GcpOrganization gcpOrganization1;
-  private GcpOrganization gcpOrganization2;
   private String serviceAccountEmail = "SERVICE_ACCOUNT_EMAIL";
 
   private ServiceAccount serviceAccount = new ServiceAccount();
@@ -56,7 +54,6 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
                            .organizationName(organizationName1)
                            .serviceAccountEmail(serviceAccountEmail)
                            .build();
-    gcpOrganization2 = GcpOrganization.builder().accountId(accountId).organizationName(organizationName2).build();
     serviceAccount.setEmail(serviceAccountEmail);
     when(gcpServiceAccountService.create(anyString(), anyString())).thenReturn(serviceAccount);
     when(ceGcpServiceAccountService.getByAccountId(eq(accountId)))

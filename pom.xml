@@ -603,6 +603,11 @@
             </dependency>
             <dependency>
                 <groupId>com.google.cloud</groupId>
+                <artifactId>google-cloud-resourcemanager</artifactId>
+                <version>0.117.2-alpha</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.cloud</groupId>
                 <artifactId>google-cloud-storage</artifactId>
                 <version>1.52.0</version>
             </dependency>

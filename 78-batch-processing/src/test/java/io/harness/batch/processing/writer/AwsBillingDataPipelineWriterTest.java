@@ -5,6 +5,7 @@ import static io.harness.batch.processing.service.impl.BillingDataPipelineServic
 import static io.harness.batch.processing.service.impl.BillingDataPipelineServiceImpl.scheduledQueryKey;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,8 +43,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
-public class BillingDataPipelineWriterTest extends CategoryTest {
-  @InjectMocks BillingDataPipelineWriter billingDataPipelineWriter;
+public class AwsBillingDataPipelineWriterTest extends CategoryTest {
+  @InjectMocks AwsBillingDataPipelineWriter awsBillingDataPipelineWriter;
   @Mock BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   @Mock BillingDataPipelineServiceImpl billingDataPipelineService;
   @Mock CloudToHarnessMappingService cloudToHarnessMappingService;
@@ -53,7 +54,6 @@ public class BillingDataPipelineWriterTest extends CategoryTest {
   private static final String masterAccountId = "masterAccountId";
   private static final String accountId = "accountId";
   private static final String accountName = "accountName";
-  private static final String accountType = "PAID";
   private static final String dataSetId = "datasetId";
   private static final String transferJobName = "transferJobName";
   private static final Instant instant = Instant.now();
@@ -75,21 +75,21 @@ public class BillingDataPipelineWriterTest extends CategoryTest {
     JobParameters jobParameters = new JobParameters(parameters);
 
     when(stepExecution.getJobExecution()).thenReturn(new JobExecution(startTime, jobParameters));
-    billingDataPipelineWriter.beforeStep(stepExecution);
+    awsBillingDataPipelineWriter.beforeStep(stepExecution);
 
     when(cloudToHarnessMappingService.getAccountInfoFromId(accountId))
         .thenReturn(Account.Builder.anAccount().withAccountName(accountName).build());
-    when(cloudToHarnessMappingService.getSettingAttributes(accountId, SettingAttribute.SettingCategory.CE_CONNECTOR,
-             SettingValue.SettingVariableTypes.CE_AWS, startTime, endTime))
+    when(cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(accountId,
+             SettingAttribute.SettingCategory.CE_CONNECTOR, SettingValue.SettingVariableTypes.CE_AWS, startTime,
+             endTime))
         .thenReturn(Collections.singletonList(settingAttribute));
-    when(billingDataPipelineService.createDataSet(accountId, accountName, masterAccountId, accountType))
-        .thenReturn(dataSetId);
-    when(billingDataPipelineService.createDataTransferJob(dataSetId, settingId, accountId, accountName))
+    when(billingDataPipelineService.createDataSet(any())).thenReturn(dataSetId);
+    when(billingDataPipelineService.createDataTransferJobFromGCS(dataSetId, settingId, accountId, accountName))
         .thenReturn(transferJobName);
     HashMap<String, String> scheduledQueryJobsMap = new HashMap<>();
     scheduledQueryJobsMap.put(scheduledQueryKey, scheduledQueryName);
     scheduledQueryJobsMap.put(preAggQueryKey, preAggQueryName);
-    when(billingDataPipelineService.createScheduledQueries(dataSetId, accountId, accountName))
+    when(billingDataPipelineService.createScheduledQueriesForAWS(dataSetId, accountId, accountName))
         .thenReturn(scheduledQueryJobsMap);
   }
 
@@ -97,7 +97,7 @@ public class BillingDataPipelineWriterTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testWrite() {
-    billingDataPipelineWriter.write(Collections.EMPTY_LIST);
+    awsBillingDataPipelineWriter.write(Collections.EMPTY_LIST);
     ArgumentCaptor<BillingDataPipelineRecord> billingDataPipelineRecordArgumentCaptor =
         ArgumentCaptor.forClass(BillingDataPipelineRecord.class);
     verify(billingDataPipelineRecordDao).create(billingDataPipelineRecordArgumentCaptor.capture());
@@ -106,7 +106,7 @@ public class BillingDataPipelineWriterTest extends CategoryTest {
     assertThat(value.getAccountName()).isEqualTo(accountName);
     assertThat(value.getSettingId()).isEqualTo(settingId);
     assertThat(value.getDataTransferJobName()).isEqualTo(transferJobName);
-    assertThat(value.getFallbackTableScheduledQueryName()).isEqualTo(scheduledQueryName);
+    assertThat(value.getAwsFallbackTableScheduledQueryName()).isEqualTo(scheduledQueryName);
     assertThat(value.getPreAggregatedScheduledQueryName()).isEqualTo(preAggQueryName);
   }
 
@@ -114,9 +114,9 @@ public class BillingDataPipelineWriterTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testWriteTransferJobThrowsException() throws IOException {
-    when(billingDataPipelineService.createDataTransferJob(dataSetId, settingId, accountId, accountName))
+    when(billingDataPipelineService.createDataTransferJobFromGCS(dataSetId, settingId, accountId, accountName))
         .thenThrow(IOException.class);
-    billingDataPipelineWriter.write(Collections.EMPTY_LIST);
+    awsBillingDataPipelineWriter.write(Collections.EMPTY_LIST);
     ArgumentCaptor<BillingDataPipelineRecord> billingDataPipelineRecordArgumentCaptor =
         ArgumentCaptor.forClass(BillingDataPipelineRecord.class);
     verify(billingDataPipelineRecordDao).create(billingDataPipelineRecordArgumentCaptor.capture());
@@ -128,14 +128,14 @@ public class BillingDataPipelineWriterTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testScheduledQueriesThrowsException() throws IOException {
-    when(billingDataPipelineService.createScheduledQueries(dataSetId, accountId, accountName))
+    when(billingDataPipelineService.createScheduledQueriesForAWS(dataSetId, accountId, accountName))
         .thenThrow(IOException.class);
-    billingDataPipelineWriter.write(Collections.EMPTY_LIST);
+    awsBillingDataPipelineWriter.write(Collections.EMPTY_LIST);
     ArgumentCaptor<BillingDataPipelineRecord> billingDataPipelineRecordArgumentCaptor =
         ArgumentCaptor.forClass(BillingDataPipelineRecord.class);
     verify(billingDataPipelineRecordDao).create(billingDataPipelineRecordArgumentCaptor.capture());
     BillingDataPipelineRecord value = billingDataPipelineRecordArgumentCaptor.getValue();
     assertThat(value.getPreAggregatedScheduledQueryName()).isNull();
-    assertThat(value.getFallbackTableScheduledQueryName()).isNull();
+    assertThat(value.getAwsFallbackTableScheduledQueryName()).isNull();
   }
 }
