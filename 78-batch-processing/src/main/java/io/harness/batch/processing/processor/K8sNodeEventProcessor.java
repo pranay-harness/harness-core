@@ -11,8 +11,8 @@ import org.springframework.batch.item.ItemProcessor;
 @Slf4j
 public class K8sNodeEventProcessor implements ItemProcessor<PublishedMessage, InstanceEvent> {
   @Override
-  public InstanceEvent process(PublishedMessage publishedMessage) throws Exception {
-    NodeEvent nodeEvent = (NodeEvent) publishedMessage.getMessage(); // TODO: move this logic to reader
+  public InstanceEvent process(PublishedMessage publishedMessage) {
+    NodeEvent nodeEvent = (NodeEvent) publishedMessage.getMessage();
     EventType type = null;
     switch (nodeEvent.getType()) {
       case EVENT_TYPE_START:

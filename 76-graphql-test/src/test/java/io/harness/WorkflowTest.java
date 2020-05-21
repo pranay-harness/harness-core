@@ -56,7 +56,7 @@ public class WorkflowTest extends GraphQLTest {
   @Inject private HarnessTagService harnessTagService;
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = GEORGE, intermittent = true)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryWorkflow() {
     final Seed seed = new Seed(0);

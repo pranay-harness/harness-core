@@ -29,9 +29,9 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
   @Autowired private InstanceDataService instanceDataService;
   @Autowired private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
   @Autowired private WorkloadRepository workloadRepository;
-  private static String POD = "Pod";
-  private static String KUBE_SYSTEM_NAMESPACE = "kube-system";
-  private static String KUBE_PROXY_POD_PREFIX = "kube-proxy";
+  private static final String POD = "Pod";
+  private static final String KUBE_SYSTEM_NAMESPACE = "kube-system";
+  private static final String KUBE_PROXY_POD_PREFIX = "kube-proxy";
 
   @Override
   public InstanceInfo process(PublishedMessage publishedMessage) {
@@ -114,10 +114,8 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
         .resourceLimit(resourceLimit)
         .allocatableResource(resource)
         .metaData(metaData)
-        //.containerList(podInfo.getContainersList())
         .labels(labelsMap)
         .harnessServiceInfo(harnessServiceInfo)
-        // TODO: add missing fields in PodInfo
         .build();
   }
 }

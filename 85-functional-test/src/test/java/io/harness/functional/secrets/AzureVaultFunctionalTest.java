@@ -72,7 +72,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ANKIT)
+  @Owner(developers = ANKIT, intermittent = true)
   @Category(FunctionalTests.class)
   public void testCRUDSecrets() {
     String value = randomAlphanumeric(7);

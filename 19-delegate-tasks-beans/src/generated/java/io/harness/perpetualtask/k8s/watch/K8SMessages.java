@@ -83,6 +83,22 @@ public final class K8SMessages {
       .Descriptor internal_static_io_harness_perpetualtask_k8s_watch_K8sWatchEvent_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_perpetualtask_k8s_watch_K8sWatchEvent_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_RequestsEntry_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_RequestsEntry_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_LimitsEntry_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_LimitsEntry_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -180,7 +196,24 @@ public final class K8SMessages {
         + " \001(\t\022\023\n\013description\030\n \001(\t\022\027\n\017kube_system"
         + "_uid\030\013 \001(\t\"P\n\004Type\022\024\n\020TYPE_UNSPECIFIED\020\000"
         + "\022\016\n\nTYPE_ADDED\020\001\022\020\n\014TYPE_UPDATED\020\002\022\020\n\014TY"
-        + "PE_DELETED\020\003B\002P\001b\006proto3"};
+        + "PE_DELETED\020\003\"\257\005\n\017K8sWorkloadSpec\022\022\n\nclus"
+        + "ter_id\030\001 \001(\t\022\024\n\014cluster_name\030\002 \001(\t\022\031\n\021cl"
+        + "oud_provider_id\030\003 \001(\t\022\027\n\017kube_system_uid"
+        + "\030\004 \001(\t\022\025\n\rworkload_kind\030\005 \001(\t\022\025\n\rworkloa"
+        + "d_name\030\006 \001(\t\022\021\n\tnamespace\030\007 \001(\t\022Z\n\017conta"
+        + "iner_specs\030\010 \003(\0132A.io.harness.perpetualt"
+        + "ask.k8s.watch.K8sWorkloadSpec.ContainerS"
+        + "pec\022_\n\024init_container_specs\030\t \003(\0132A.io.h"
+        + "arness.perpetualtask.k8s.watch.K8sWorklo"
+        + "adSpec.ContainerSpec\032\277\002\n\rContainerSpec\022\014"
+        + "\n\004name\030\001 \001(\t\022a\n\010requests\030\002 \003(\0132O.io.harn"
+        + "ess.perpetualtask.k8s.watch.K8sWorkloadS"
+        + "pec.ContainerSpec.RequestsEntry\022]\n\006limit"
+        + "s\030\003 \003(\0132M.io.harness.perpetualtask.k8s.w"
+        + "atch.K8sWorkloadSpec.ContainerSpec.Limit"
+        + "sEntry\032/\n\rRequestsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005"
+        + "value\030\002 \001(\t:\0028\001\032-\n\013LimitsEntry\022\013\n\003key\030\001 "
+        + "\001(\t\022\r\n\005value\030\002 \001(\t:\0028\001B\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -403,6 +436,52 @@ public final class K8SMessages {
                 "NewResourceYaml",
                 "Description",
                 "KubeSystemUid",
+            });
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_descriptor =
+        getDescriptor().getMessageTypes().get(11);
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_descriptor,
+            new java.lang.String[] {
+                "ClusterId",
+                "ClusterName",
+                "CloudProviderId",
+                "KubeSystemUid",
+                "WorkloadKind",
+                "WorkloadName",
+                "Namespace",
+                "ContainerSpecs",
+                "InitContainerSpecs",
+            });
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_descriptor =
+        internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_descriptor.getNestedTypes().get(0);
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_descriptor,
+            new java.lang.String[] {
+                "Name",
+                "Requests",
+                "Limits",
+            });
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_RequestsEntry_descriptor =
+        internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_descriptor.getNestedTypes()
+            .get(0);
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_RequestsEntry_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_RequestsEntry_descriptor,
+            new java.lang.String[] {
+                "Key",
+                "Value",
+            });
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_LimitsEntry_descriptor =
+        internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_descriptor.getNestedTypes()
+            .get(1);
+    internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_LimitsEntry_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_perpetualtask_k8s_watch_K8sWorkloadSpec_ContainerSpec_LimitsEntry_descriptor,
+            new java.lang.String[] {
+                "Key",
+                "Value",
             });
     com.google.protobuf.TimestampProto.getDescriptor();
   }
