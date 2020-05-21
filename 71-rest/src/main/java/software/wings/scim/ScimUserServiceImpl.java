@@ -48,7 +48,7 @@ public class ScimUserServiceImpl implements ScimUserService {
 
   @Override
   public Response createUser(ScimUser userQuery, String accountId) {
-    logger.info("SCIM: Creating user call: {}", userQuery);
+    logger.info("SCIM: Creating user call for accountId {} with query {}", accountId, userQuery);
     String primaryEmail = getPrimaryEmail(userQuery);
 
     User user = userService.getUserByEmail(primaryEmail, accountId);
@@ -56,12 +56,11 @@ public class ScimUserServiceImpl implements ScimUserService {
     if (user != null) {
       userQuery.setId(user.getUuid());
       userQuery.setActive(true);
-      // if the user already exists with with that email and is disabled, activate him.
-      if (user.isDisabled() || !StringUtils.equals(user.getName(), userQuery.getDisplayName())
-          || !StringUtils.equals(user.getEmail(), userQuery.getUserName())) {
-        updateUser(user.getUuid(), accountId, userQuery);
+      if (shouldUpdateUser(userQuery, user)) {
+        logger.info("SCIM: Creating user call for accountId {} with updation {}", accountId, userQuery);
         return Response.status(Status.CREATED).entity(getUser(user.getUuid(), accountId)).build();
       } else {
+        logger.info("SCIM: Creating user call for accountId {} with conflict {}", accountId, userQuery);
         return Response.status(Status.CONFLICT).entity(getUser(user.getUuid(), accountId)).build();
       }
     }
@@ -83,11 +82,19 @@ public class ScimUserServiceImpl implements ScimUserService {
 
     if (user != null) {
       userQuery.setId(user.getUuid());
-      logger.info("SCIM: Completed creating user call: {}", userQuery);
+      logger.info("SCIM: Completed creating user call for accountId {} with query {}", accountId, userQuery);
       return Response.status(Status.CREATED).entity(getUser(user.getUuid(), accountId)).build();
     } else {
       return Response.status(Status.NOT_FOUND).build();
     }
+  }
+
+  private boolean shouldUpdateUser(ScimUser userQuery, User user) {
+    return user.isDisabled() || !StringUtils.equals(user.getName(), userQuery.getDisplayName())
+        || !StringUtils.equals(user.getEmail(), userQuery.getUserName())
+        || (userQuery.getName() != null
+               && (!StringUtils.equals(userQuery.getName().get(GIVEN_NAME).asText(), user.getGivenName())
+                      || !StringUtils.equals(userQuery.getName().get(FAMILY_NAME).asText(), user.getFamilyName())));
   }
 
   private String getGivenNameFromScimUser(@NotNull ScimUser userQuery) {
@@ -301,14 +308,14 @@ public class ScimUserServiceImpl implements ScimUserService {
 
       if (userResource.getName() != null) {
         if (userResource.getName().get(GIVEN_NAME) != null
-            && !userResource.getName().get(GIVEN_NAME).asText().equals(user.getGivenName())) {
+            && !StringUtils.equals(userResource.getName().get(GIVEN_NAME).asText(), user.getGivenName())) {
           userUpdate = true;
           updateOperations.set(UserKeys.givenName, userResource.getName().get(GIVEN_NAME).asText());
           logger.info(
               "SCIM: Updated user's {} given name: {}", userId, userResource.getName().get(GIVEN_NAME).asText());
         }
         if (userResource.getName().get(FAMILY_NAME) != null
-            && !userResource.getName().get(FAMILY_NAME).asText().equals(user.getFamilyName())) {
+            && !StringUtils.equals(userResource.getName().get(FAMILY_NAME).asText(), user.getFamilyName())) {
           userUpdate = true;
           updateOperations.set(UserKeys.familyName, userResource.getName().get(FAMILY_NAME).asText());
           logger.info(
