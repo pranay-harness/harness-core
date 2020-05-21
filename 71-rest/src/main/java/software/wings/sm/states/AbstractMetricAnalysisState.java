@@ -507,8 +507,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .encryptedDataDetails(
                 secretManager.getEncryptionDetails(gcpConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(new HashMap<>())
-            .loadBalancerMetrics(stackDriverState.fetchLoadBalancerMetrics())
-            .podMetrics(stackDriverState.fetchPodMetrics())
+            .timeSeriesToCollect(stackDriverState.fetchMetricDefinitions())
             .build();
 
       default:

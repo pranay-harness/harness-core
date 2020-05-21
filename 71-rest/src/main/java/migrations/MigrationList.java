@@ -121,6 +121,7 @@ import migrations.all.SetNamespaceInContainerInstanceInfo;
 import migrations.all.SetNamespaceToKubernetesInstanceInfo;
 import migrations.all.SetRollbackFlagToWorkflows;
 import migrations.all.SettingAttributesCategoryMigration;
+import migrations.all.StackdriverMetricServiceGuardJsonMigration;
 import migrations.all.StackdriverServiceGuardMetricsGroupingMigration;
 import migrations.all.SweepingPhaseMigration;
 import migrations.all.SweepingStateMigration;
@@ -333,6 +334,7 @@ public class MigrationList {
         .add(Pair.of(308, AddScopedToAccountAttributeToEncryptedData.class))
         .add(Pair.of(309, BaseMigration.class))
         .add(Pair.of(310, DropAppIdIndexOnCommandLogs.class))
+        .add(Pair.of(311, StackdriverMetricServiceGuardJsonMigration.class))
         .build();
   }
 }

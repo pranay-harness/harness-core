@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import lombok.experimental.UtilityClass;
@@ -20,6 +21,17 @@ import java.util.regex.Pattern;
 @Slf4j
 public class CustomDataCollectionUtils {
   private static final String ISO_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+
+  public static String resolveField(String string, String fieldToResolve, String value) {
+    if (isEmpty(string)) {
+      return string;
+    }
+    String result = string;
+    if (result.contains(fieldToResolve)) {
+      result = result.replace(fieldToResolve, value);
+    }
+    return result;
+  }
 
   public static String resolvedUrl(String url, String host, long startTime, long endTime, String query) {
     String result = url;

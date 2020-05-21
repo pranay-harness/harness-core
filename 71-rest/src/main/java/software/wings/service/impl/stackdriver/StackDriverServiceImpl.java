@@ -1,10 +1,12 @@
 package software.wings.service.impl.stackdriver;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.STACKDRIVER_ERROR;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.STACK_DRIVER_METRIC;
 import static software.wings.common.VerificationConstants.TIME_DURATION_FOR_LOGS_IN_MINUTES;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
+import static software.wings.sm.StateType.STACK_DRIVER;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -14,6 +16,7 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.YamlUtils;
@@ -33,6 +36,8 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.stackdriver.StackDriverDelegateService;
 import software.wings.service.intfc.stackdriver.StackDriverService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.StackDriverState;
+import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 
 import java.io.IOException;
 import java.net.URL;
@@ -75,11 +80,24 @@ public class StackDriverServiceImpl implements StackDriverService {
   }
 
   @Override
+  public void validateMetricDefinitions(List<StackDriverMetricDefinition> metricDefinitions) {
+    Map<String, String> errorMap = StackDriverState.validateMetricDefinitions(metricDefinitions, true);
+    if (isNotEmpty(errorMap)) {
+      throw new VerificationOperationException(
+          ErrorCode.STACKDRIVER_CONFIGURATION_ERROR, errorMap.get(errorMap.keySet().iterator().next()));
+    }
+  }
+
+  @Override
   public VerificationNodeDataSetupResponse getDataForNode(StackDriverSetupTestNodeData setupTestNodeData) {
     String hostName = null;
     // check if it is for service level, serviceId is empty then get hostname
     if (!setupTestNodeData.isServiceLevel()) {
       hostName = mlServiceUtils.getHostName(setupTestNodeData);
+    }
+
+    if (setupTestNodeData.getStateType() == STACK_DRIVER) {
+      validateMetricDefinitions(setupTestNodeData.getMetricDefinitions());
     }
 
     try {
@@ -110,8 +128,7 @@ public class StackDriverServiceImpl implements StackDriverService {
       }
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
-      throw new WingsException(STACKDRIVER_ERROR)
-          .addParam("reason", "Error in getting metric data for the node. " + e.getMessage());
+      throw new WingsException(STACKDRIVER_ERROR).addParam("reason", e.getMessage());
     }
   }
 

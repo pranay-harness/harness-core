@@ -11,8 +11,6 @@ import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_HO
 import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
 import static software.wings.common.VerificationConstants.STACK_DRIVER_QUERY_SEPARATER;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
-import static software.wings.service.impl.stackdriver.StackDriverNameSpace.LOADBALANCER;
-import static software.wings.service.impl.stackdriver.StackDriverNameSpace.POD_NAME;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.compute.model.ForwardingRule;
@@ -23,6 +21,7 @@ import com.google.api.services.logging.v2.model.ListLogEntriesResponse;
 import com.google.api.services.logging.v2.model.LogEntry;
 import com.google.api.services.monitoring.v3.Monitoring;
 import com.google.api.services.monitoring.v3.model.ListTimeSeriesResponse;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -40,6 +39,7 @@ import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.http.HttpStatus;
 import org.joda.time.DateTime;
 import software.wings.beans.GcpConfig;
+import software.wings.delegatetasks.CustomDataCollectionUtils;
 import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cv.DataCollectionException;
@@ -52,6 +52,7 @@ import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.stackdriver.StackDriverDelegateService;
+import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -95,35 +96,16 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     long startTime = setupTestNodeData.getFromTime() * TimeUnit.SECONDS.toMillis(1);
     long endTime = setupTestNodeData.getToTime() * TimeUnit.SECONDS.toMillis(1);
 
-    if (!isEmpty(setupTestNodeData.getPodMetrics())) {
-      setupTestNodeData.getPodMetrics().forEach(metric -> {
-        String podFilter = createFilter(POD_NAME, metric.getMetricName(), hostName);
-        ListTimeSeriesResponse response = getTimeSeriesResponse(
-            monitoring, projectResource, gcpConfig, podFilter, startTime, endTime, apiCallLog.copy());
-        if (isNotEmpty(response)) {
-          responses.add(response);
-        }
-      });
-    }
-
-    if (!isEmpty(setupTestNodeData.getLoadBalancerMetrics())) {
-      setupTestNodeData.getLoadBalancerMetrics().forEach((ruleName, lbMetrics) -> lbMetrics.forEach(lbMetric -> {
-        String lbFilter = createFilter(LOADBALANCER, lbMetric.getMetricName(), ruleName);
-        ListTimeSeriesResponse response = getTimeSeriesResponse(
-            monitoring, projectResource, gcpConfig, lbFilter, startTime, endTime, apiCallLog.copy());
-        if (isNotEmpty(response)) {
-          responses.add(response);
-        }
-      }));
-    }
-
     if (!isEmpty(setupTestNodeData.getMetricDefinitions())) {
       setupTestNodeData.getMetricDefinitions().forEach(metricDefinition -> {
-        String filter = metricDefinition.getFilter();
         ListTimeSeriesResponse response = getTimeSeriesResponse(
-            monitoring, projectResource, gcpConfig, filter, startTime, endTime, apiCallLog.copy());
+            monitoring, projectResource, gcpConfig, metricDefinition, startTime, endTime, apiCallLog.copy(), hostName);
         if (isNotEmpty(response)) {
           responses.add(response);
+          Preconditions.checkState(response.getTimeSeries().size() == 1,
+              "Multiple time series values are returned for metric name " + metricDefinition.getMetricName()
+                  + " and group name " + metricDefinition.getTxnName()
+                  + ". Please add more filters to your query to return only one time series.");
         }
       });
     }
@@ -199,7 +181,13 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
   }
 
   private ListTimeSeriesResponse getTimeSeriesResponse(Monitoring monitoring, String projectResource, GcpConfig config,
-      String filter, long startTime, long endTime, ThirdPartyApiCallLog apiCallLog) {
+      StackDriverMetricDefinition metricDefinition, long startTime, long endTime, ThirdPartyApiCallLog apiCallLog,
+      String hostName) {
+    String filter = metricDefinition.getFilter();
+    if (isNotEmpty(hostName)) {
+      filter = CustomDataCollectionUtils.resolveField(filter, "${host}", hostName);
+    }
+
     String projectId = getProjectId(config);
     apiCallLog.setTitle("Fetching metric data from project " + projectId
         + " for the time range: " + getDateFormatTime(startTime) + " to " + getDateFormatTime(endTime));
@@ -220,13 +208,18 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
 
     ListTimeSeriesResponse response;
     try {
-      response = monitoring.projects()
-                     .timeSeries()
-                     .list(projectResource)
-                     .setFilter(filter)
-                     .setIntervalStartTime(getDateFormatTime(startTime))
-                     .setIntervalEndTime(getDateFormatTime(endTime))
-                     .execute();
+      Monitoring.Projects.TimeSeries.List list =
+          monitoring.projects()
+              .timeSeries()
+              .list(projectResource)
+              .setFilter(filter)
+              .setAggregationGroupByFields(metricDefinition.getAggregation().getGroupByFields())
+              .setAggregationAlignmentPeriod("60s")
+              .setIntervalStartTime(getDateFormatTime(startTime))
+              .setIntervalEndTime(getDateFormatTime(endTime))
+              .setAggregationPerSeriesAligner(metricDefinition.getAggregation().getPerSeriesAligner())
+              .setAggregationCrossSeriesReducer(metricDefinition.getAggregation().getCrossSeriesReducer());
+      response = list.execute();
     } catch (IOException e) {
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);

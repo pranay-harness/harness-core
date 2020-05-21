@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.annotation.HarnessEntity;
-import io.harness.exception.WingsException;
+import io.harness.exception.EncryptDecryptException;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
@@ -56,7 +56,7 @@ public class TimeSeriesAnomaliesRecord extends Base implements AccountAccess {
       setCompressedAnomalies(compressString(JsonUtils.asJson(anomalies)));
       setAnomalies(null);
     } catch (IOException e) {
-      throw new WingsException(e);
+      throw new EncryptDecryptException(e.getMessage());
     }
   }
 
@@ -70,7 +70,7 @@ public class TimeSeriesAnomaliesRecord extends Base implements AccountAccess {
           new TypeReference<Map<String, Map<String, List<TimeSeriesMLHostSummary>>>>() {}));
       setCompressedAnomalies(null);
     } catch (IOException e) {
-      throw new WingsException(e);
+      throw new EncryptDecryptException(e.getMessage());
     }
   }
 }
