@@ -42,7 +42,6 @@ import software.wings.beans.PipelineExecution;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
@@ -203,9 +202,9 @@ public class TriggerFunctionalTest extends AbstractFunctionalTest {
     deleteTrigger(savedTrigger.getUuid(), application.getUuid());
 
     // Make sure that it is deleted
-    DeploymentTrigger deploymentTrigger = getDeploymentTrigger(savedTrigger.getUuid(), application.getUuid());
+    Trigger deleteTrigger = getTrigger(savedTrigger.getUuid(), application.getUuid());
 
-    assertThat(deploymentTrigger).isNull();
+    assertThat(deleteTrigger).isNull();
   }
 
   public void deleteTrigger(String uuId, String appId) {
@@ -214,22 +213,22 @@ public class TriggerFunctionalTest extends AbstractFunctionalTest {
         .oauth2(bearerToken)
         .queryParam("appId", appId)
         .pathParam("triggerId", uuId)
-        .delete("/deployment-triggers/{triggerId}")
+        .delete("/triggers/{triggerId}")
         .then()
         .statusCode(200);
   }
 
-  public DeploymentTrigger getDeploymentTrigger(String uuId, String appId) {
+  public Trigger getTrigger(String uuId, String appId) {
     GenericType<RestResponse<Trigger>> triggerType = new GenericType<RestResponse<Trigger>>() {
 
     };
-    RestResponse<DeploymentTrigger> savedTriggerResponse = Setup.portal()
-                                                               .auth()
-                                                               .oauth2(bearerToken)
-                                                               .queryParam("appId", appId)
-                                                               .pathParam("triggerId", uuId)
-                                                               .get("/deployment-triggers/{triggerId}")
-                                                               .as(triggerType.getType());
+    RestResponse<Trigger> savedTriggerResponse = Setup.portal()
+                                                     .auth()
+                                                     .oauth2(bearerToken)
+                                                     .queryParam("appId", appId)
+                                                     .pathParam("triggerId", uuId)
+                                                     .get("/triggers/{triggerId}")
+                                                     .as(triggerType.getType());
 
     return savedTriggerResponse.getResource();
   }

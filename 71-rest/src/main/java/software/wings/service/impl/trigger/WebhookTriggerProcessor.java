@@ -23,17 +23,12 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.GitConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
-import software.wings.beans.trigger.Condition;
-import software.wings.beans.trigger.DeploymentTrigger;
-import software.wings.beans.trigger.GitHubPayloadSource;
-import software.wings.beans.trigger.PayloadSource.Type;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerCondition;
 import software.wings.beans.trigger.TriggerExecution;
 import software.wings.beans.trigger.TriggerExecution.Status;
 import software.wings.beans.trigger.TriggerExecution.WebhookEventDetails;
 import software.wings.beans.trigger.WebHookTriggerCondition;
-import software.wings.beans.trigger.WebhookCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.trigger.request.TriggerDeploymentNeededRequest;
 import software.wings.service.intfc.AppService;
@@ -99,20 +94,6 @@ public class WebhookTriggerProcessor {
     if (condition instanceof WebHookTriggerCondition) {
       WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) condition;
       return webHookTriggerCondition.isCheckFileContentChanged();
-    }
-    return false;
-  }
-
-  public boolean checkFileContentOptionSelected(DeploymentTrigger trigger) {
-    Condition condition = trigger.getCondition();
-    if (condition instanceof WebhookCondition) {
-      WebhookCondition webHookTriggerCondition = (WebhookCondition) condition;
-      if (webHookTriggerCondition.getPayloadSource().getType() == Type.GITHUB) {
-        GitHubPayloadSource gitHubPayloadSource = (GitHubPayloadSource) webHookTriggerCondition.getPayloadSource();
-        return gitHubPayloadSource.getWebhookGitParam() != null;
-      } else {
-        return false;
-      }
     }
     return false;
   }

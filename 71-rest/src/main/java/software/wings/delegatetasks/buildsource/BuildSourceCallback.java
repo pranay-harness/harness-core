@@ -23,7 +23,6 @@ import io.harness.waiter.NotifyCallback;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
-import software.wings.beans.FeatureName;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.artifact.Artifact;
@@ -40,7 +39,6 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PermitService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
-import software.wings.service.intfc.trigger.DeploymentTriggerService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,7 +67,6 @@ public class BuildSourceCallback implements NotifyCallback {
   @Inject private transient WingsPersistence wingsPersistence;
   @Inject private transient ArtifactStreamService artifactStreamService;
   @Inject private transient TriggerService triggerService;
-  @Inject private transient DeploymentTriggerService deploymentTriggerService;
   @Inject private transient FeatureFlagService featureFlagService;
   @Inject private transient PermitService permitService;
   @Inject private transient AlertService alertService;
@@ -155,13 +152,8 @@ public class BuildSourceCallback implements NotifyCallback {
         }
 
         // Invoke triggers for only stable artifact streams.
-        if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
-          triggerService.triggerExecutionPostArtifactCollectionAsync(
-              accountId, artifactStream.fetchAppId(), artifactStreamId, artifacts);
-        } else {
-          deploymentTriggerService.triggerExecutionPostArtifactCollectionAsync(
-              accountId, artifactStream.fetchAppId(), artifactStreamId, artifacts);
-        }
+        triggerService.triggerExecutionPostArtifactCollectionAsync(
+            accountId, artifactStream.fetchAppId(), artifactStreamId, artifacts);
       }
 
       updatePermit(artifactStream, false);

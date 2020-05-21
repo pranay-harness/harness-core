@@ -110,7 +110,6 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.artifact.ArtifactStreamServiceObserver;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 import software.wings.service.intfc.template.TemplateService;
-import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue;
 import software.wings.stencils.DataProvider;
@@ -164,7 +163,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private TriggerService triggerService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private EventPublishHelper eventPublishHelper;
-  @Inject private DeploymentTriggerService deploymentTriggerService;
   @Inject @Getter private Subject<ArtifactStreamServiceObserver> subject = new Subject<>();
 
   @Override
@@ -924,15 +922,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private void validateTriggerUsages(String accountId, String appId, String artifactStreamId) {
     List<String> triggerNames;
-    if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
-      triggerNames = deploymentTriggerService.getTriggersHasArtifactStreamAction(accountId, appId, artifactStreamId);
-    } else {
-      List<Trigger> triggers = triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
-      if (isEmpty(triggers)) {
-        return;
-      }
-      triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
+    List<Trigger> triggers = triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
+    if (isEmpty(triggers)) {
+      return;
     }
+    triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
 
     if (isNotEmpty(triggerNames)) {
       throw new InvalidRequestException(

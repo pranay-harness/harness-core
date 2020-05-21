@@ -43,7 +43,6 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
-import static software.wings.utils.WingsTestConstants.DEPLOYMENT_TRIGGER_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -109,7 +108,6 @@ import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
-import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.AppPermissionSummary;
@@ -642,8 +640,6 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     configFile.setEntityId(entityId);
 
     Trigger trigger = Trigger.builder().name(TRIGGER_NAME).appId(app.getUuid()).build();
-    DeploymentTrigger deploymentTrigger =
-        DeploymentTrigger.builder().name(DEPLOYMENT_TRIGGER_NAME).appId(app.getUuid()).build();
 
     // mock stuff
     when(appService.get(APP_ID)).thenReturn(app);
@@ -710,9 +706,6 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
         env.getName(), CONFIG_FILES_FOLDER, GLOBAL_SERVICE_NAME_FOR_YAML));
 
     path = yamlDirectoryService.obtainEntityRootPath(null, trigger);
-    assertThat(path).isEqualTo(join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), TRIGGER_FOLDER));
-
-    path = yamlDirectoryService.obtainEntityRootPath(null, deploymentTrigger);
     assertThat(path).isEqualTo(join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), TRIGGER_FOLDER));
   }
 

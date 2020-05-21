@@ -49,7 +49,6 @@ import static software.wings.beans.yaml.YamlType.CONFIG_FILE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.CONFIG_FILE_OVERRIDE_CONTENT;
 import static software.wings.beans.yaml.YamlType.CV_CONFIGURATION;
 import static software.wings.beans.yaml.YamlType.DEPLOYMENT_SPECIFICATION;
-import static software.wings.beans.yaml.YamlType.DEPLOYMENT_TRIGGER;
 import static software.wings.beans.yaml.YamlType.ENVIRONMENT;
 import static software.wings.beans.yaml.YamlType.GLOBAL_TEMPLATE_LIBRARY;
 import static software.wings.beans.yaml.YamlType.INFRA_DEFINITION;
@@ -216,7 +215,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         APPLICATION_MANIFEST_HELM_OVERRIDES_ALL_SERVICE, APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE,
         MANIFEST_FILE_VALUES_ENV_OVERRIDE, MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE,
         MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE, MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE,
-        TRIGGER, DEPLOYMENT_TRIGGER);
+        TRIGGER);
   }
 
   @Override
@@ -872,18 +871,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
                                    .findFirst();
 
     if (first.isPresent()) {
-      if (first.get() == TRIGGER && isTriggerRefactor(accountId)) {
-        return DEPLOYMENT_TRIGGER;
-      } else {
-        return first.get();
-      }
+      return first.get();
     } else {
       throw new YamlException("Unknown yaml type for path: " + yamlFilePath, null);
     }
-  }
-
-  private boolean isTriggerRefactor(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId);
   }
 
   /**

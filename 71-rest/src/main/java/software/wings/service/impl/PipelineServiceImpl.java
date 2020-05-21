@@ -108,7 +108,6 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByPipeline;
-import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachine;
 
@@ -143,7 +142,6 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private AppService appService;
   @Inject private ExecutorService executorService;
   @Inject private TriggerService triggerService;
-  @Inject private DeploymentTriggerService deploymentTriggerService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
   @Inject private WorkflowExecutionService workflowExecutionService;
@@ -373,15 +371,11 @@ public class PipelineServiceImpl implements PipelineService {
         || pageResponse.getResponse().stream().allMatch(
                pipelineExecution -> ExecutionStatus.isFinalStatus(pipelineExecution.getStatus()))) {
       List<String> triggerNames;
-      if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, pipeline.getAccountId())) {
-        triggerNames = deploymentTriggerService.getTriggersHasPipelineAction(pipeline.getAppId(), pipeline.getUuid());
-      } else {
-        List<Trigger> triggers = triggerService.getTriggersHasPipelineAction(pipeline.getAppId(), pipeline.getUuid());
-        if (isEmpty(triggers)) {
-          return;
-        }
-        triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
+      List<Trigger> triggers = triggerService.getTriggersHasPipelineAction(pipeline.getAppId(), pipeline.getUuid());
+      if (isEmpty(triggers)) {
+        return;
       }
+      triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
       throw new InvalidRequestException(
           format("Pipeline associated as a trigger action to triggers [%s]", join(", ", triggerNames)), USER);
     }

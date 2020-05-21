@@ -169,12 +169,6 @@ deploymentSummary {"name": "infraMappingId_1", "background": true} {"infraMappin
 deploymentSummary {"name": "inframappingId_containerlabelsAndVersion", "background": true} {"infraMappingId": 1, "containerDeploymentKey.labels": 1, "containerDeploymentKey.newVersion": 1, "createdAt": -1}
 deploymentTimeSeriesEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 deploymentTimeSeriesEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
-deploymentTriggers {"name": "accountId_1", "background": true} {"accountId": 1}
-deploymentTriggers {"name": "createdAt_1", "background": true} {"createdAt": 1}
-deploymentTriggers {"name": "iterations", "background": true} {"type": 1, "nextIterations": 1}
-deploymentTriggers {"name": "tokenIdx", "background": true} {"accountId": 1, "token": 1}
-deploymentTriggers {"name": "uniqueTriggerIdx", "unique": true} {"appId": 1, "name": 1}
-deploymentTriggers {"name": "uniqueTypeIdx", "background": true} {"accountId": 1, "appId": 1, "type": 1}
 ecsPollingJobEntity {"name": "clusterName_1", "background": true} {"clusterName": 1}
 ecsPollingJobEntity {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 ecsServiceSpecification {"name": "accountId_1", "background": true} {"accountId": 1}

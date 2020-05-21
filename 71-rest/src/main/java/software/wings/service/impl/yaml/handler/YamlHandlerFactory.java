@@ -31,7 +31,6 @@ import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.template.Template;
-import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerArtifactVariable;
 import software.wings.beans.trigger.WebhookSource.WebhookEvent;
@@ -72,12 +71,8 @@ import software.wings.service.impl.yaml.handler.setting.verificationprovider.Ver
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHandler;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.TemplateLibraryYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.ActionYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.ArtifactSelectionYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.ConditionYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.DeploymentTriggerYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.PayloadSourceYamlHandler;
-import software.wings.service.impl.yaml.handler.trigger.TriggerArtifactValueYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHandler;
 import software.wings.service.impl.yaml.handler.trigger.TriggerYamlHandler;
 import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestrictionsYamlHandler;
@@ -118,10 +113,7 @@ public class YamlHandlerFactory {
   @Inject private Map<String, InfraMappingYamlHandler> infraMappingHelperMap;
   @Inject private Map<String, WorkflowYamlHandler> workflowYamlHelperMap;
   @Inject private Map<String, TriggerConditionYamlHandler> triggerYamlHelperMapBinder;
-  @Inject private Map<String, ConditionYamlHandler> triggerConditionMapBinder;
   @Inject private Map<String, PayloadSourceYamlHandler> payloadSourceMapBinder;
-  @Inject private Map<String, ActionYamlHandler> triggerActionMapBinder;
-  @Inject private Map<String, TriggerArtifactValueYamlHandler> triggerArtifactValueMapBinder;
   @Inject private Map<String, InfrastructureProvisionerYamlHandler> provisionerYamlHandlerMap;
   @Inject private Map<String, CommandUnitYamlHandler> commandUnitYamlHandlerMap;
   @Inject private Map<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHandlerMap;
@@ -138,7 +130,6 @@ public class YamlHandlerFactory {
 
   @Inject private ApplicationYamlHandler applicationYamlHandler;
   @Inject private TriggerYamlHandler triggerYamlHandler;
-  @Inject private DeploymentTriggerYamlHandler deploymentTriggerYamlHandler;
   @Inject private EnvironmentYamlHandler environmentYamlHandler;
   @Inject private ServiceYamlHandler serviceYamlHandler;
   @Inject private ConfigFileYamlHandler configFileYamlHandler;
@@ -215,9 +206,6 @@ public class YamlHandlerFactory {
       case TRIGGER:
         yamlHandler = triggerYamlHandler;
         break;
-      case DEPLOYMENT_TRIGGER:
-        yamlHandler = deploymentTriggerYamlHandler;
-        break;
       case APPLICATION:
         yamlHandler = applicationYamlHandler;
         break;
@@ -262,15 +250,6 @@ public class YamlHandlerFactory {
         break;
       case TRIGGER_CONDITION:
         yamlHandler = triggerYamlHelperMapBinder.get(subType);
-        break;
-      case CONDITION:
-        yamlHandler = triggerConditionMapBinder.get(subType);
-        break;
-      case ACTION:
-        yamlHandler = triggerActionMapBinder.get(subType);
-        break;
-      case TRIGGER_ARTIFACT_VALUE:
-        yamlHandler = triggerArtifactValueMapBinder.get(subType);
         break;
       case PAYLOAD_SOURCE:
         yamlHandler = payloadSourceMapBinder.get(subType);
@@ -424,8 +403,6 @@ public class YamlHandlerFactory {
       return YamlType.CV_CONFIGURATION;
     } else if (entity instanceof Trigger) {
       return YamlType.TRIGGER;
-    } else if (entity instanceof DeploymentTrigger) {
-      return YamlType.DEPLOYMENT_TRIGGER;
     } else if (entity instanceof TriggerArtifactVariable) {
       return YamlType.TRIGGER_ARTIFACT_VARIABLE;
     } else if (entity instanceof WebhookEvent) {
@@ -488,8 +465,6 @@ public class YamlHandlerFactory {
       return ((CVConfiguration) entity).getName();
     } else if (entity instanceof Trigger) {
       return ((Trigger) entity).getName();
-    } else if (entity instanceof DeploymentTrigger) {
-      return ((DeploymentTrigger) entity).getName();
     } else if (entity instanceof Template) {
       return ((Template) entity).getName();
     }
@@ -616,7 +591,7 @@ public class YamlHandlerFactory {
         "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
         "DatadogLogCVConfiguration", "InstanaCVConfiguration", "PrometheusCVServiceConfiguration",
         "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration", "AzureInfrastructureMapping",
-        "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner", "DeploymentTrigger", "Template");
+        "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner", "Template");
   }
 
   private static List<String> obtainLeafEntitiesWithFeatureFlag() {
@@ -635,6 +610,6 @@ public class YamlHandlerFactory {
         "CloudWatchCVServiceConfiguration", "NewRelicCVServiceConfiguration", "DatadogCVServiceConfiguration",
         "DatadogLogCVConfiguration", "InstanaCVConfiguration", "PrometheusCVServiceConfiguration",
         "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration", "AzureInfrastructureMapping",
-        "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner", "DeploymentTrigger", "Template");
+        "InfrastructureDefinition", "ShellScriptInfrastructureProvisioner", "Template");
   }
 }

@@ -20,7 +20,6 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.template.Template;
-import software.wings.beans.trigger.DeploymentTrigger;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.infra.InfrastructureDefinition;
@@ -110,8 +109,6 @@ public interface YamlDirectoryService {
   String getRootPathByWorkflow(Workflow workflow);
 
   String getRootPathByTrigger(Trigger trigger);
-
-  String getRootPathByDeploymentTrigger(DeploymentTrigger trigger);
 
   String getRootPathByArtifactStream(ArtifactStream artifactStream);
 

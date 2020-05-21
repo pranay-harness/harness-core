@@ -15,7 +15,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.trigger.Condition.Type;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -43,7 +42,6 @@ public class TriggerExecution extends Base {
   private String workflowExecutionName;
   @NotNull private Status status;
   private String message;
-  private Condition.Type type;
   private String webhookToken;
   private WebhookEventDetails webhookEventDetails;
   private String envId;
@@ -57,7 +55,7 @@ public class TriggerExecution extends Base {
   @Builder
   public TriggerExecution(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String entityYamlPath, String triggerId, String triggerName, String workflowExecutionId,
-      String workflowExecutionName, Status status, String message, Type type, String webhookToken,
+      String workflowExecutionName, Status status, String message, String webhookToken,
       WebhookEventDetails webhookEventDetails) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.triggerId = triggerId;
@@ -66,7 +64,6 @@ public class TriggerExecution extends Base {
     this.workflowExecutionName = workflowExecutionName;
     this.status = status;
     this.message = message;
-    this.type = type;
     this.webhookToken = webhookToken;
     this.webhookEventDetails = webhookEventDetails;
   }

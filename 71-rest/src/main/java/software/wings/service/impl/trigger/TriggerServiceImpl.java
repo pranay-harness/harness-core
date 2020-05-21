@@ -300,128 +300,107 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public void triggerExecutionPostArtifactCollectionAsync(
       String appId, String artifactStreamId, List<Artifact> artifacts) {
-    String accountId = appService.getAccountIdByAppId(appId);
-    if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
-      executorService.execute(() -> triggerExecutionPostArtifactCollection(appId, artifactStreamId, artifacts));
-    }
+    executorService.execute(() -> triggerExecutionPostArtifactCollection(appId, artifactStreamId, artifacts));
   }
 
   @Override
   public void triggerExecutionPostArtifactCollectionAsync(
       String accountId, String appId, String artifactStreamId, List<Artifact> artifacts) {
-    if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
-      executorService.execute(() -> {
-        if (featureFlagService.isEnabled(FeatureName.TRIGGER_FOR_ALL_ARTIFACTS, accountId)) {
-          triggerExecutionPostArtifactCollectionForAllArtifacts(appId, artifactStreamId, artifacts);
-        } else {
-          triggerExecutionPostArtifactCollection(appId, artifactStreamId, artifacts);
-        }
-      });
-    }
+    executorService.execute(() -> {
+      if (featureFlagService.isEnabled(FeatureName.TRIGGER_FOR_ALL_ARTIFACTS, accountId)) {
+        triggerExecutionPostArtifactCollectionForAllArtifacts(appId, artifactStreamId, artifacts);
+      } else {
+        triggerExecutionPostArtifactCollection(appId, artifactStreamId, artifacts);
+      }
+    });
   }
 
   private void triggerExecutionPostArtifactCollectionForAllArtifacts(
       String appId, String artifactStreamId, List<Artifact> collectedArtifacts) {
-    String accountId = appService.getAccountIdByAppId(appId);
-    if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
-      if (isEmpty(collectedArtifacts)) {
+    if (isEmpty(collectedArtifacts)) {
+      return;
+    }
+    triggerServiceHelper.getNewArtifactTriggers(appId, artifactStreamId).forEach(trigger -> {
+      logger.info("Trigger found with name {} and Id {} for artifactStreamId {}", trigger.getName(), trigger.getUuid(),
+          artifactStreamId);
+      ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
+      List<Artifact> artifacts = new ArrayList<>();
+      if (isEmpty(artifactTriggerCondition.getArtifactFilter())) {
+        logger.info("No artifact filter set. Triggering with all artifacts");
+        artifacts.addAll(collectedArtifacts);
+      } else {
+        logger.info("Artifact filter {} set. Going over all the artifacts to find the matched artifacts",
+            artifactTriggerCondition.getArtifactFilter());
+        List<Artifact> matchedArtifacts =
+            collectedArtifacts.stream()
+                .filter(artifact
+                    -> triggerServiceHelper.checkArtifactMatchesArtifactFilter(trigger.getUuid(), artifact,
+                        artifactTriggerCondition.getArtifactFilter(), artifactTriggerCondition.isRegex()))
+                .collect(Collectors.toList());
+        if (isNotEmpty(matchedArtifacts)) {
+          logger.info("Matched artifacts size {}", matchedArtifacts.size());
+          artifacts.addAll(matchedArtifacts);
+        } else {
+          logger.info("Artifacts {} not matched with the given artifact filter", artifacts);
+        }
+      }
+      if (isEmpty(artifacts)) {
+        logger.warn(
+            "Skipping execution - artifact does not match with the given filter. So, skipping the complete deployment {}",
+            artifactTriggerCondition);
         return;
       }
-      triggerServiceHelper.getNewArtifactTriggers(appId, artifactStreamId).forEach(trigger -> {
-        logger.info("Trigger found with name {} and Id {} for artifactStreamId {}", trigger.getName(),
-            trigger.getUuid(), artifactStreamId);
-        ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
-        List<Artifact> artifacts = new ArrayList<>();
-        if (isEmpty(artifactTriggerCondition.getArtifactFilter())) {
-          logger.info("No artifact filter set. Triggering with all artifacts");
-          artifacts.addAll(collectedArtifacts);
-        } else {
-          logger.info("Artifact filter {} set. Going over all the artifacts to find the matched artifacts",
-              artifactTriggerCondition.getArtifactFilter());
-          List<Artifact> matchedArtifacts =
-              collectedArtifacts.stream()
-                  .filter(artifact
-                      -> triggerServiceHelper.checkArtifactMatchesArtifactFilter(trigger.getUuid(), artifact,
-                          artifactTriggerCondition.getArtifactFilter(), artifactTriggerCondition.isRegex()))
-                  .collect(Collectors.toList());
-          if (isNotEmpty(matchedArtifacts)) {
-            logger.info("Matched artifacts size {}", matchedArtifacts.size());
-            artifacts.addAll(matchedArtifacts);
-          } else {
-            logger.info("Artifacts {} not matched with the given artifact filter", artifacts);
+      List<Artifact> artifactsFromSelections = new ArrayList<>();
+      if (isNotEmpty(trigger.getArtifactSelections())) {
+        logger.info("Artifact selections found collecting artifacts as per artifactStream selections");
+        addArtifactsFromSelections(trigger.getAppId(), trigger, artifactsFromSelections);
+      }
+      if (isNotEmpty(artifacts)) {
+        logger.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
+            artifacts.stream().map(Artifact::getUuid).collect(toList()));
+        for (Artifact artifact : artifacts) {
+          logger.info("Triggering deployment with artifact {}", artifact.getUuid());
+          try {
+            List<Artifact> selectedArtifacts = new ArrayList<>(artifactsFromSelections);
+            selectedArtifacts.add(artifact);
+            triggerDeployment(selectedArtifacts, trigger, null);
+          } catch (WingsException exception) {
+            exception.addContext(Application.class, trigger.getAppId());
+            exception.addContext(ArtifactStream.class, artifactStreamId);
+            exception.addContext(Trigger.class, trigger.getUuid());
+            ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
           }
         }
-        if (isEmpty(artifacts)) {
-          logger.warn(
-              "Skipping execution - artifact does not match with the given filter. So, skipping the complete deployment {}",
-              artifactTriggerCondition);
-          return;
-        }
-        List<Artifact> artifactsFromSelections = new ArrayList<>();
-        if (isNotEmpty(trigger.getArtifactSelections())) {
-          logger.info("Artifact selections found collecting artifacts as per artifactStream selections");
-          addArtifactsFromSelections(trigger.getAppId(), trigger, artifactsFromSelections);
-        }
-        if (isNotEmpty(artifacts)) {
-          logger.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
-              artifacts.stream().map(Artifact::getUuid).collect(toList()));
-          for (Artifact artifact : artifacts) {
-            logger.info("Triggering deployment with artifact {}", artifact.getUuid());
-            try {
-              List<Artifact> selectedArtifacts = new ArrayList<>(artifactsFromSelections);
-              selectedArtifacts.add(artifact);
-              triggerDeployment(selectedArtifacts, trigger, null);
-            } catch (WingsException exception) {
-              exception.addContext(Application.class, trigger.getAppId());
-              exception.addContext(ArtifactStream.class, artifactStreamId);
-              exception.addContext(Trigger.class, trigger.getUuid());
-              ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
-            }
-          }
-        } else {
-          logger.info("No Artifacts matched. Hence Skipping the deployment");
-          return;
-        }
-      });
-    }
+      } else {
+        logger.info("No Artifacts matched. Hence Skipping the deployment");
+        return;
+      }
+    });
   }
 
   @Override
   public void triggerExecutionPostPipelineCompletionAsync(String appId, String sourcePipelineId) {
-    String accountId = appService.getAccountIdByAppId(appId);
-    if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
-      executorService.submit(() -> triggerExecutionPostPipelineCompletion(appId, sourcePipelineId));
-    }
+    executorService.submit(() -> triggerExecutionPostPipelineCompletion(appId, sourcePipelineId));
   }
 
   @Override
   public void triggerScheduledExecutionAsync(Trigger trigger, Date scheduledFireTime) {
-    String accountId = appService.getAccountIdByAppId(trigger.getAppId());
-    if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
-      if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
-        executorService.submit(() -> triggerScheduledExecution(trigger, scheduledFireTime));
-      }
-    }
+    executorService.submit(() -> triggerScheduledExecution(trigger, scheduledFireTime));
   }
 
   @Override
   public WorkflowExecution triggerExecutionByWebHook(String appId, String webHookToken,
       Map<String, ArtifactSummary> serviceArtifactMapping, Map<String, String> parameters,
       TriggerExecution triggerExecution) {
-    String accountId = appService.getAccountIdByAppId(appId);
-    if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
-      List<Artifact> artifacts = new ArrayList<>();
-      Trigger trigger = triggerServiceHelper.getTrigger(appId, webHookToken);
-      logger.info("Received WebHook request  for the Trigger {} with Service Build Numbers {}  and parameters {}",
-          trigger.getPipelineId(), serviceArtifactMapping, parameters);
-      if (isNotEmpty(serviceArtifactMapping)) {
-        addArtifactsFromVersionsOfWebHook(trigger, serviceArtifactMapping, artifacts);
-      }
-      addArtifactsFromSelections(appId, trigger, artifacts);
-      return triggerDeployment(artifacts, trigger, parameters, triggerExecution);
-    } else {
-      return null;
+    List<Artifact> artifacts = new ArrayList<>();
+    Trigger trigger = triggerServiceHelper.getTrigger(appId, webHookToken);
+    logger.info("Received WebHook request  for the Trigger {} with Service Build Numbers {}  and parameters {}",
+        trigger.getPipelineId(), serviceArtifactMapping, parameters);
+    if (isNotEmpty(serviceArtifactMapping)) {
+      addArtifactsFromVersionsOfWebHook(trigger, serviceArtifactMapping, artifacts);
     }
+    addArtifactsFromSelections(appId, trigger, artifacts);
+    return triggerDeployment(artifacts, trigger, parameters, triggerExecution);
   }
 
   @Override
@@ -432,12 +411,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public WorkflowExecution triggerExecutionByWebHook(
       Trigger trigger, Map<String, String> parameters, TriggerExecution triggerExecution) {
-    String accountId = appService.getAccountIdByAppId(trigger.getAppId());
-    if (!featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
-      return triggerDeployment(null, trigger, parameters, triggerExecution);
-    } else {
-      return null;
-    }
+    return triggerDeployment(null, trigger, parameters, triggerExecution);
   }
 
   @Override

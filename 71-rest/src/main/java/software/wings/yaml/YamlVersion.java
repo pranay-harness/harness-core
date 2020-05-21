@@ -140,7 +140,6 @@ public class YamlVersion extends Base implements YamlHistory {
     PIPELINE,
     PROVISIONER,
     TRIGGER,
-    DEPLOYMENT_TRIGGER,
     ARTIFACT_STREAM,
     INFRA_MAPPING,
     INFRA_DEFINITION,
