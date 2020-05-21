@@ -43,6 +43,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -67,6 +70,8 @@ public class BudgetServiceImpl implements BudgetService {
   private String NO_BUDGET_AMOUNT_EXCEPTION = "Error in creating budget. No budget amount specified.";
   private String BUDGET_AMOUNT_NOT_WITHIN_BOUNDS_EXCEPTION =
       "Error in creating budget. The budget amount should be positive and less than 100 million dollars.";
+  private String DEFAULT_TIMEZONE = "GMT";
+  private static final long ONE_DAY_MILLIS = 86400000;
 
   private static final long CACHE_SIZE = 10000;
   private static final int MAX_RETRY = 3;
@@ -159,7 +164,8 @@ public class BudgetServiceImpl implements BudgetService {
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(budget.getScope().getBudgetScopeFilter());
     addAdditionalFiltersBasedOnScope(budget, filters);
-    filters.add(getEndTimeFilterForCurrentBillingCycle());
+    filters.add(getStartOfMonthFilterForCurrentBillingCycle());
+    filters.add(getEndOfMonthFilterForCurrentBillingCycle());
     List<QLCCMAggregationFunction> aggregationFunction = new ArrayList<>();
     aggregationFunction.add(BudgetUtils.makeBillingAmtAggregation());
     QLBillingAmountData billingAmountData =
@@ -320,16 +326,25 @@ public class BudgetServiceImpl implements BudgetService {
         .build();
   }
 
-  private QLBillingDataFilter getEndTimeFilterForCurrentBillingCycle() {
-    Calendar c = Calendar.getInstance();
-    c.set(Calendar.DAY_OF_MONTH, c.getActualMaximum(Calendar.DAY_OF_MONTH));
-    c.set(Calendar.HOUR, c.getActualMaximum(Calendar.HOUR));
-    c.set(Calendar.MINUTE, c.getActualMaximum(Calendar.MINUTE));
-    c.set(Calendar.SECOND, c.getActualMaximum(Calendar.SECOND));
-    c.set(Calendar.MILLISECOND, c.getActualMaximum(Calendar.MILLISECOND));
-    long endTime = c.getTimeInMillis();
+  private QLBillingDataFilter getEndOfMonthFilterForCurrentBillingCycle() {
+    ZoneId zoneId = ZoneId.of(DEFAULT_TIMEZONE);
+    LocalDate today = LocalDate.now(zoneId);
+    Calendar cal = Calendar.getInstance();
+    int daysInMonth = cal.getActualMaximum(Calendar.DATE);
+    ZonedDateTime zdtStart = today.withDayOfMonth(daysInMonth).atStartOfDay(zoneId);
+    long endTime = zdtStart.toEpochSecond() * 1000 + ONE_DAY_MILLIS - 1000;
     return QLBillingDataFilter.builder()
         .endTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(endTime).build())
+        .build();
+  }
+
+  private QLBillingDataFilter getStartOfMonthFilterForCurrentBillingCycle() {
+    ZoneId zoneId = ZoneId.of(DEFAULT_TIMEZONE);
+    LocalDate today = LocalDate.now(zoneId);
+    ZonedDateTime zdtStart = today.withDayOfMonth(1).atStartOfDay(zoneId);
+    long startTime = zdtStart.toEpochSecond() * 1000;
+    return QLBillingDataFilter.builder()
+        .startTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(startTime).build())
         .build();
   }
 
