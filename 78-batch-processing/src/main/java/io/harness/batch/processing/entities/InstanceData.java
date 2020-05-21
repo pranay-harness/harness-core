@@ -68,6 +68,7 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
   String clusterId;
   InstanceType instanceType;
   Resource totalResource;
+  Resource limitResource;
   Resource allocatableResource;
   List<Container> containerList;
   Map<String, String> labels;

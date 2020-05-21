@@ -1,5 +1,7 @@
 package io.harness.batch.processing.processor;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceState;
@@ -94,6 +96,10 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
     }
 
     Resource resource = K8sResourceUtils.getResource(podInfo.getTotalResource().getRequestsMap());
+    Resource resourceLimit = Resource.builder().cpuUnits(0.0).memoryMb(0.0).build();
+    if (!isEmpty(podInfo.getTotalResource().getLimitsMap())) {
+      resourceLimit = K8sResourceUtils.getResource(podInfo.getTotalResource().getLimitsMap());
+    }
 
     return InstanceInfo.builder()
         .accountId(accountId)
@@ -105,6 +111,7 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
         .instanceType(InstanceType.K8S_POD)
         .instanceState(InstanceState.INITIALIZING)
         .resource(resource)
+        .resourceLimit(resourceLimit)
         .allocatableResource(resource)
         .metaData(metaData)
         //.containerList(podInfo.getContainersList())

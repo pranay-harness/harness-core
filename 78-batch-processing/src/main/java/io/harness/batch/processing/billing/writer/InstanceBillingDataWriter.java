@@ -13,6 +13,7 @@ import io.harness.batch.processing.billing.writer.support.BillingDataGenerationV
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
@@ -81,6 +82,12 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
             String instanceName = (instanceData.getInstanceName() == null) ? instanceData.getInstanceId()
                                                                            : instanceData.getInstanceName();
 
+            Resource totalResource = instanceData.getTotalResource();
+            Resource limitResource = Resource.builder().cpuUnits(0.0).memoryMb(0.0).build();
+            if (null != instanceData.getLimitResource()) {
+              limitResource = instanceData.getLimitResource();
+            }
+
             InstanceBillingData instanceBillingData =
                 InstanceBillingData.builder()
                     .accountId(instanceData.getAccountId())
@@ -127,6 +134,14 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
                     .maxMemoryUtilization(utilizationData.getMaxMemoryUtilization())
                     .avgCpuUtilization(utilizationData.getAvgCpuUtilization())
                     .avgMemoryUtilization(utilizationData.getAvgMemoryUtilization())
+                    .cpuRequest(totalResource.getCpuUnits())
+                    .memoryRequest(totalResource.getMemoryMb())
+                    .cpuLimit(limitResource.getCpuUnits())
+                    .memoryLimit(limitResource.getMemoryMb())
+                    .maxCpuUtilizationValue(utilizationData.getMaxCpuUtilizationValue())
+                    .maxMemoryUtilizationValue(utilizationData.getMaxMemoryUtilizationValue())
+                    .avgCpuUtilizationValue(utilizationData.getAvgCpuUtilizationValue())
+                    .avgMemoryUtilizationValue(utilizationData.getAvgMemoryUtilizationValue())
                     // Actual idle cost and unallocated cost for node/container will get updated by actualIdleCost job
                     .actualIdleCost(billingData.getIdleCostData().getIdleCost())
                     .cpuActualIdleCost(billingData.getIdleCostData().getCpuIdleCost())

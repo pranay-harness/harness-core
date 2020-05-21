@@ -11,6 +11,7 @@ import migrations.timescaledb.AddIdleUnallocatedColumns;
 import migrations.timescaledb.AddIndexToInstanceV2Migration;
 import migrations.timescaledb.AddInstancesDeployedToDeployment;
 import migrations.timescaledb.AddMaxUtilColumns;
+import migrations.timescaledb.AddRequestColumnToBillingData;
 import migrations.timescaledb.AddRollbackToDeployment;
 import migrations.timescaledb.AddSchemaForServiceGuardStats;
 import migrations.timescaledb.AddSystemCostBillingData;
@@ -61,6 +62,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(23, AddIdleUnallocatedColumns.class))
         .add(Pair.of(24, AddMaxUtilColumns.class))
         .add(Pair.of(25, CreateBillingDataHourly.class))
+        .add(Pair.of(26, AddRequestColumnToBillingData.class))
         .build();
   }
 }

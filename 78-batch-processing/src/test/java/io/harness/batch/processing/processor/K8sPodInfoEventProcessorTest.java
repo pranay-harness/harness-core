@@ -60,6 +60,8 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   private static final String KUBE_PROXY_POD_NAME = "kube-proxy-pod";
   private static final long CPU_AMOUNT = 1_000_000_000L; // 1 vcpu in nanocores
   private static final long MEMORY_AMOUNT = 1024L * 1024; // 1Mi in bytes
+  private static final long CPU_LIMIT_AMOUNT = 2_000_000_000L;
+  private static final long MEMORY_LIMIT_AMOUNT = 1024L * 1024 * 2;
   private static final String NODE_NAME = "node_name";
   private static final String CLOUD_PROVIDER_ID = "cloud_provider_id";
   private static final String ACCOUNT_ID = "account_id";
@@ -118,20 +120,26 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     Map<String, Quantity> requestQuantity = new HashMap<>();
     requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M"));
     requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M"));
-    Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).build();
+    Map<String, Quantity> limitQuantity = new HashMap<>();
+    limitQuantity.put("cpu", getQuantity(CPU_LIMIT_AMOUNT, "M"));
+    limitQuantity.put("memory", getQuantity(MEMORY_LIMIT_AMOUNT, "M"));
+    Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).putAllLimits(limitQuantity).build();
     PublishedMessage k8sPodInfoMessage =
         getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME,
             NAMESPACE, label, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
     InstanceInfo instanceInfo = k8sPodInfoProcessor.process(k8sPodInfoMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
+    io.harness.batch.processing.ccm.Resource limitResource = instanceInfo.getResourceLimit();
     Map<String, String> metaData = instanceInfo.getMetaData();
     assertThat(instanceInfo).isNotNull();
     assertThat(instanceInfo.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(instanceInfo.getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(instanceInfo.getClusterName()).isEqualTo(CLUSTER_NAME);
     assertThat(instanceInfo.getInstanceType()).isEqualTo(InstanceType.K8S_POD);
-    assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
     assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
+    assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
+    assertThat(limitResource.getMemoryMb()).isEqualTo(2.0);
+    assertThat(limitResource.getCpuUnits()).isEqualTo(2048.0);
     assertThat(metaData.get(InstanceMetaDataConstants.WORKLOAD_NAME)).isEqualTo(WORKLOAD_NAME);
     assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY))
         .isEqualTo(String.valueOf((double) MEMORY_AMOUNT));
@@ -162,6 +170,8 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
             CLUSTER_NAME, KUBE_SYSTEM_NAMESPACE, label, resource, START_TIMESTAMP, "", "", "");
     InstanceInfo instanceInfo = k8sPodInfoProcessor.process(k8sPodInfoMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
+    io.harness.batch.processing.ccm.Resource limitResource = instanceInfo.getResourceLimit();
+
     Map<String, String> metaData = instanceInfo.getMetaData();
     assertThat(instanceInfo).isNotNull();
     assertThat(instanceInfo.getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -170,6 +180,8 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     assertThat(instanceInfo.getInstanceType()).isEqualTo(InstanceType.K8S_POD);
     assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
     assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
+    assertThat(limitResource.getCpuUnits()).isEqualTo(0.0);
+    assertThat(limitResource.getMemoryMb()).isEqualTo(0.0);
     assertThat(metaData.get(InstanceMetaDataConstants.WORKLOAD_NAME)).isEqualTo("kube-proxy");
     assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY))
         .isEqualTo(String.valueOf((double) MEMORY_AMOUNT));
