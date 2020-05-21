@@ -20,4 +20,5 @@ public class UpdateServiceCountRequestData {
   private ExecutionLogCallback executionLogCallback;
   private List<EncryptedDataDetail> encryptedDataDetails;
   private int desiredCount;
+  private Integer timeOut;
 }
