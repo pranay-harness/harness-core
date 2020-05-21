@@ -156,7 +156,12 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback.saveExecutionLog(TIMED_OUT_IN_STEADY_STATE, LogLevel.ERROR);
       return HelmInstallCommandResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .output(ExceptionUtils.getMessage(e))
+          .output(new StringBuilder(256)
+                      .append(TIMED_OUT_IN_STEADY_STATE)
+                      .append(": [")
+                      .append(e.getMessage())
+                      .append(" ]")
+                      .toString())
           .helmChartInfo(helmChartInfo)
           .build();
     } catch (WingsException e) {
@@ -168,7 +173,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       return HelmInstallCommandResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .output(exceptionMessage)
+          .output(msg)
           .helmChartInfo(helmChartInfo)
           .build();
     } finally {
