@@ -9,5 +9,6 @@ import java.util.List;
 @Data
 @Builder
 public class SpotInstListElastigroupInstancesResponse implements SpotInstTaskResponse {
+  private String elastigroupId;
   private List<Instance> elastigroupInstances;
 }

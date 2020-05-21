@@ -112,4 +112,5 @@ public class InstanceSyncTestConstants {
   public static final String KUBE_CLUSTER = "kubeCluster";
 
   public static final String PERPETUAL_TASK_ID = "perp-task_id";
+  public static final String SPOTINST_CLOUD_PROVIDER = "spotinstCloudProiver";
 }
