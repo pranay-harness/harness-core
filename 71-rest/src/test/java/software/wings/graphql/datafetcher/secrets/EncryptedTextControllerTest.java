@@ -22,6 +22,7 @@ import software.wings.graphql.schema.type.secrets.QLEncryptedTextInput;
 import software.wings.graphql.schema.type.secrets.QLEncryptedTextUpdate;
 import software.wings.graphql.schema.type.secrets.QLSecretType;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManager;
 
 /*
@@ -32,7 +33,7 @@ public class EncryptedTextControllerTest extends WingsBaseTest {
   @Inject @InjectMocks EncryptedTextController encryptedTextController;
   @Mock SecretManager secretManager;
   private String accountId = "accountId";
-  private String secretManagerId = "secretId";
+  private String secretManagerId = "secretManagerId";
   private String secretReference = "secretReference";
   private String secretName = "testSecret";
   private String secretId = "secretId";
@@ -51,8 +52,8 @@ public class EncryptedTextControllerTest extends WingsBaseTest {
     QLCreateSecretInput createSecretInput =
         QLCreateSecretInput.builder().secretType(QLSecretType.ENCRYPTED_TEXT).encryptedText(encryptedText).build();
     encryptedTextController.createEncryptedText(createSecretInput, accountId);
-    verify(secretManager, times(1))
-        .saveSecret(eq(accountId), eq(secretManagerId), eq(secretName), eq(null), eq(secretReference), eq(null));
+    SecretText secretText = SecretText.builder().name(secretName).kmsId(secretManagerId).path(secretReference).build();
+    verify(secretManager, times(1)).saveSecret(eq(accountId), eq(secretText));
   }
 
   @Test
@@ -71,8 +72,8 @@ public class EncryptedTextControllerTest extends WingsBaseTest {
                                                   .secretReference(RequestField.ofNullable(secretReference))
                                                   .build();
     encryptedTextController.updateEncryptedText(createSecretInput, secretId, accountId);
-    verify(secretManager, times(1))
-        .updateSecret(eq(accountId), eq(secretManagerId), eq(secretName), eq(null), eq(secretReference), eq(null));
+    SecretText secretText = SecretText.builder().name(secretName).path(secretReference).build();
+    verify(secretManager, times(1)).updateSecret(eq(accountId), eq(secretId), eq(secretText));
   }
 
   @Test
@@ -90,7 +91,7 @@ public class EncryptedTextControllerTest extends WingsBaseTest {
                                                   .secretReference(RequestField.ofNullable(newSecretReference))
                                                   .build();
     encryptedTextController.updateEncryptedText(createSecretInput, secretId, accountId);
-    verify(secretManager, times(1))
-        .updateSecret(eq(accountId), eq(secretManagerId), eq(secretName), eq(null), eq(newSecretReference), eq(null));
+    SecretText secretText = SecretText.builder().name(secretName).path(newSecretReference).build();
+    verify(secretManager, times(1)).updateSecret(eq(accountId), eq(secretId), eq(secretText));
   }
 }

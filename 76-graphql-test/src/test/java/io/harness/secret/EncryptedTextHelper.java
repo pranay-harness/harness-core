@@ -9,6 +9,7 @@ import io.harness.generator.Randomizer;
 import lombok.Data;
 import software.wings.beans.Account;
 import software.wings.graphql.schema.type.secrets.QLEncryptedText;
+import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManager;
 
 @Singleton
@@ -31,6 +32,7 @@ public class EncryptedTextHelper {
     final OwnerManager.Owners owners = ownerManager.create();
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     accountId = account.getUuid();
-    return secretManager.saveSecret(accountId, null, name, secret, null, null);
+    SecretText secretText = SecretText.builder().name(name).value(secret).build();
+    return secretManager.saveSecret(accountId, secretText);
   }
 }

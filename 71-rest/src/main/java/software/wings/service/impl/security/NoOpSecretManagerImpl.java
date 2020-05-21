@@ -163,8 +163,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String saveSecret(
-      String accountId, String kmsId, String name, String value, String path, UsageRestrictions usageRestrictions) {
+  public String saveSecret(String accountId, SecretText secretText) {
     throw new UnsupportedOperationException();
   }
 
@@ -179,8 +178,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public boolean updateSecret(
-      String accountId, String uuId, String name, String value, String path, UsageRestrictions usageRestrictions) {
+  public boolean updateSecret(String accountId, String uuid, SecretText secretText) {
     throw new UnsupportedOperationException();
   }
 
@@ -245,8 +243,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String saveSecretUsingLocalMode(
-      String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
+  public String saveSecretUsingLocalMode(String accountId, SecretText secretText) {
     throw new UnsupportedOperationException();
   }
 

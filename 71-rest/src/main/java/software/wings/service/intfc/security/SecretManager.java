@@ -96,8 +96,7 @@ public interface SecretManager extends OwnedByAccount {
 
   EncryptedData getSecretByName(String accountId, String name);
 
-  String saveSecret(
-      String accountId, String kmsId, String name, String value, String path, UsageRestrictions usageRestrictions);
+  String saveSecret(String accountId, SecretText secretText);
 
   List<String> importSecrets(String accountId, List<SecretText> secretTexts);
 
@@ -105,8 +104,7 @@ public interface SecretManager extends OwnedByAccount {
 
   void validateThatSecretManagerSupportsText(String accountId, @NotNull String secretManagerId);
 
-  boolean updateSecret(
-      String accountId, String uuId, String name, String value, String path, UsageRestrictions usageRestrictions);
+  boolean updateSecret(String accountId, String uuId, SecretText secretText);
 
   /**
    *  This method is called when removing application/environment, and all its referring secrets need to clear their
@@ -136,8 +134,7 @@ public interface SecretManager extends OwnedByAccount {
   PageResponse<EncryptedData> listSecretsMappedToAccount(
       String accountId, PageRequest<EncryptedData> pageRequest, boolean details) throws IllegalAccessException;
 
-  String saveSecretUsingLocalMode(
-      String accountId, String name, String value, String path, UsageRestrictions usageRestrictions);
+  String saveSecretUsingLocalMode(String accountId, SecretText secretText);
 
   boolean transitionAllSecretsToHarnessSecretManager(String accountId);
 

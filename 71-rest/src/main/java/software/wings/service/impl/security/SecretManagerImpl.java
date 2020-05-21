@@ -1254,9 +1254,8 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String saveSecret(
-      String accountId, String kmsId, String name, String value, String path, UsageRestrictions usageRestrictions) {
-    return upsertSecretInternal(accountId, kmsId, null, name, value, path, usageRestrictions);
+  public String saveSecret(String accountId, SecretText secretText) {
+    return saveSecretInternal(accountId, secretText);
   }
 
   @Override
@@ -1297,8 +1296,7 @@ public class SecretManagerImpl implements SecretManager {
     List<String> secretIds = new ArrayList<>();
     for (SecretText secretText : secretTexts) {
       try {
-        String secretId = upsertSecretInternal(accountId, secretText.getKmsId(), null, secretText.getName(),
-            secretText.getValue(), secretText.getPath(), secretText.getUsageRestrictions());
+        String secretId = saveSecret(accountId, secretText);
         secretIds.add(secretId);
         logger.info("Imported secret '{}' successfully with uid: {}", secretText.getName(), secretId);
       } catch (WingsException e) {
@@ -1309,9 +1307,9 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String saveSecretUsingLocalMode(
-      String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
-    return upsertSecretInternal(accountId, null, null, name, value, path, EncryptionType.LOCAL, usageRestrictions);
+  public String saveSecretUsingLocalMode(String accountId, SecretText secretText) {
+    secretText.setKmsId(accountId);
+    return saveSecretInternal(accountId, secretText);
   }
 
   @Override
@@ -1382,186 +1380,164 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public boolean updateSecret(
-      String accountId, String uuId, String name, String value, String path, UsageRestrictions usageRestrictions) {
-    String encryptedDataId =
-        upsertSecretInternal(accountId, null, uuId, name, value, path, getEncryptionType(accountId), usageRestrictions);
-    return encryptedDataId != null;
-  }
+  public boolean updateSecret(String accountId, String encryptedDataId, SecretText secretText) {
+    EncryptedData savedData = Optional.ofNullable(wingsPersistence.get(EncryptedData.class, encryptedDataId))
+                                  .<SecretManagementException>orElseThrow(() -> {
+                                    String reason = "Secret " + secretText.getName() + "does not exists";
+                                    throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, null, USER);
+                                  });
+    EncryptedData oldEntity = KryoUtils.clone(savedData);
 
-  private String upsertSecretInternal(String accountId, String kmsId, String uuid, String name, String value,
-      String path, UsageRestrictions usageRestrictions) {
-    return upsertSecretInternal(accountId, kmsId, uuid, name, value, path, null, usageRestrictions);
-  }
-
-  /**
-   * This API is to combine multiple secret operations such as INSERT/UPDATE/UPSERT.
-   * <p>
-   * If 'uuid' passed in is null, this is an INSERT operation. If 'upsert' flag is true, it's an UPSERT operation it
-   * will UPDATE if the record already exists, and INSERT if it doesn't exists.
-   * <p>
-   * It will return the generated UUID in a INSERT operation, and return null in the UPDATE operation if the record
-   * doesn't exist.
-   * If the kmsId is null, we will use harness Key Store.
-   */
-  private String upsertSecretInternal(String accountId, String kmsId, String uuid, String name, String value,
-      String path, EncryptionType encryptionType, UsageRestrictions usageRestrictions) {
-    String auditMessage;
-    String encryptedDataId;
-
-    if (containsIllegalCharacters(name)) {
+    if (containsIllegalCharacters(secretText.getName())) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
           "Secret name should not have any of the following characters " + ILLEGAL_CHARACTERS, USER);
     }
 
-    char[] secretValue = isEmpty(value) ? null : value.toCharArray();
-    if (isEmpty(uuid)) {
-      // INSERT use case
-      usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, usageRestrictions);
-      // If kmsId is null and encryptionType is also null then use account level encryption, this case won't happen
-      // because we are always sending encryption type or ksmID.
-      if (kmsId == null && encryptionType != LOCAL) {
-        encryptionType = getEncryptionType(accountId);
-      }
-      // For each secret we are finding the encryption type sent by the UI
-      if (encryptionType == null) {
-        encryptionType = getEncryptionBySecretManagerId(kmsId, accountId);
-      }
-      validateSecretPath(encryptionType, path);
-      EncryptedData encrypted = EncryptedData.builder()
-                                    .name(name)
-                                    .path(path)
-                                    .accountId(accountId)
-                                    .type(SettingVariableTypes.SECRET_TEXT)
-                                    .encryptionType(encryptionType)
-                                    .kmsId(kmsId)
-                                    .enabled(true)
-                                    .build();
-      EncryptedData encryptedData =
-          encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue, path, encrypted, name, usageRestrictions);
-      encryptedData.addSearchTag(name);
-      try {
-        encryptedDataId = saveEncryptedData(encryptedData);
-        generateAuditForEncryptedRecord(accountId, null, encryptedDataId);
-      } catch (DuplicateKeyException e) {
-        String reason = "Variable " + name + " already exists";
-        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, e, USER);
-      }
+    char[] secretValue = isEmpty(secretText.getValue()) ? null : secretText.getValue().toCharArray();
 
-      auditMessage = "Created";
-    } else {
-      // UPDATE use case
-      EncryptedData savedData = wingsPersistence.get(EncryptedData.class, uuid);
-      if (savedData == null) {
-        // UPDATE use case. Return directly when record doesn't exist.
-        return null;
-      }
+    // PL-3160: Make sure update/edit of existing secret to stick with the currently associated secret manager
+    // Not switching to the current default secret manager.
+    EncryptionType encryptionType = savedData.getEncryptionType();
+    validateSecretPath(encryptionType, secretText.getPath());
 
-      // PL-3160: Make sure update/edit of existing secret to stick with the currently associated secret manager
-      // Not switching to the current default secret manager.
-      encryptionType = savedData.getEncryptionType();
-      validateSecretPath(encryptionType, path);
-
-      // savedData will be updated and saved again as a part of update, so need this oldEntity
-      EncryptedData oldEntity = KryoUtils.clone(savedData);
-
-      // validate usage restriction.
-      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-          accountId, savedData.getUsageRestrictions(), usageRestrictions);
-      if (!Objects.equals(savedData.getUsageRestrictions(), usageRestrictions)) {
-        // Validate if change of the usage scope is resulting in with dangling references in service/environments.
-        validateAppEnvChangesInUsageRestrictions(savedData, usageRestrictions);
-      }
-
-      encryptedDataId = uuid;
-      boolean nameChanged = !Objects.equals(name, savedData.getName());
-      boolean valueChanged = isNotEmpty(value) && !value.equals(SECRET_MASK);
-      boolean pathChanged = !Objects.equals(path, savedData.getPath());
-
-      boolean needReencryption = false;
-
-      StringBuilder builder = new StringBuilder();
-      if (nameChanged) {
-        builder.append("Changed name");
-        savedData.removeSearchTag(null, savedData.getName(), null);
-        savedData.setName(name);
-        savedData.addSearchTag(name);
-
-        // PL-1125: Remove old secret name in Vault if secret text's name changed to not have dangling entries.
-        if (isEmpty(savedData.getPath())) {
-          // For harness managed secrets, we need to delete the corresponding entries in the secret manager.
-          String secretName = savedData.getEncryptionKey();
-          switch (savedData.getEncryptionType()) {
-            case VAULT:
-              needReencryption = true;
-              VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, savedData.getKmsId());
-              if (!valueChanged) {
-                // retrieve/decrypt the old secret value.
-                secretValue = vaultService.decrypt(savedData, accountId, vaultConfig);
-              }
-              vaultService.deleteSecret(accountId, secretName, vaultConfig);
-              break;
-            case AWS_SECRETS_MANAGER:
-              needReencryption = true;
-              AwsSecretsManagerConfig secretsManagerConfig =
-                  secretsManagerService.getAwsSecretsManagerConfig(accountId, savedData.getKmsId());
-              if (!valueChanged) {
-                // retrieve/decrypt the old secret value.
-                secretValue = secretsManagerService.decrypt(savedData, accountId, secretsManagerConfig);
-              }
-              secretsManagerService.deleteSecret(accountId, secretName, secretsManagerConfig);
-              break;
-            case AZURE_VAULT:
-              needReencryption = true;
-              AzureVaultConfig azureVaultConfig =
-                  azureSecretsManagerService.getEncryptionConfig(accountId, savedData.getKmsId());
-              if (!valueChanged) {
-                // retrieve/decrypt the old secret value.
-                secretValue = azureVaultService.decrypt(savedData, accountId, azureVaultConfig);
-              }
-              azureVaultService.delete(accountId, secretName, azureVaultConfig);
-              break;
-            default:
-              // Not relevant for other secret manager types
-              break;
-          }
-        }
-      }
-      if (valueChanged) {
-        needReencryption = true;
-        builder.append(builder.length() > 0 ? " & value" : " Changed value");
-      }
-      if (pathChanged) {
-        needReencryption = true;
-        builder.append(builder.length() > 0 ? " & path" : " Changed path");
-        savedData.setPath(path);
-      }
-      if (usageRestrictions != null) {
-        builder.append(builder.length() > 0 ? " & usage restrictions" : "Changed usage restrictions");
-      }
-      auditMessage = builder.toString();
-
-      // Re-encrypt if secret value or path has changed. Update should not change the existing Encryption type and
-      // secret manager if the secret is 'path' enabled!
-      if (needReencryption) {
-        EncryptedData encryptedData =
-            encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue, path, savedData, name, usageRestrictions);
-        savedData.setEncryptionKey(encryptedData.getEncryptionKey());
-        savedData.setEncryptedValue(encryptedData.getEncryptedValue());
-        savedData.setEncryptionType(encryptedData.getEncryptionType());
-        savedData.setKmsId(encryptedData.getKmsId());
-        savedData.setBackupKmsId(encryptedData.getBackupKmsId());
-        savedData.setBackupEncryptionType(encryptedData.getBackupEncryptionType());
-        savedData.setBackupEncryptedValue(encryptedData.getBackupEncryptedValue());
-        savedData.setBackupEncryptionKey(encryptedData.getBackupEncryptionKey());
-      }
-      savedData.setUsageRestrictions(usageRestrictions);
-      saveEncryptedData(savedData);
-      if (eligibleForCrudAudit(savedData)) {
-        auditServiceHelper.reportForAuditingUsingAccountId(savedData.getAccountId(), oldEntity, savedData, Type.UPDATE);
-      }
+    // validate usage restriction.
+    usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+        accountId, savedData.getUsageRestrictions(), secretText.getUsageRestrictions());
+    if (!Objects.equals(savedData.getUsageRestrictions(), secretText.getUsageRestrictions())) {
+      // Validate if change of the usage scope is resulting in with dangling references in service/environments.
+      validateAppEnvChangesInUsageRestrictions(savedData, secretText.getUsageRestrictions());
     }
 
+    boolean nameChanged = !Objects.equals(secretText.getName(), savedData.getName());
+    boolean valueChanged = isNotEmpty(secretText.getValue()) && !secretText.getValue().equals(SECRET_MASK);
+    boolean pathChanged = !Objects.equals(secretText.getPath(), savedData.getPath());
+
+    boolean needReencryption = false;
+
+    StringBuilder builder = new StringBuilder();
+    if (nameChanged) {
+      builder.append("Changed name");
+      savedData.removeSearchTag(null, savedData.getName(), null);
+      savedData.setName(secretText.getName());
+      savedData.addSearchTag(secretText.getName());
+
+      // PL-1125: Remove old secret name in Vault if secret text's name changed to not have dangling entries.
+      if (isEmpty(savedData.getPath())) {
+        // For harness managed secrets, we need to delete the corresponding entries in the secret manager.
+        String secretName = savedData.getEncryptionKey();
+        switch (savedData.getEncryptionType()) {
+          case VAULT:
+            needReencryption = true;
+            VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, savedData.getKmsId());
+            if (!valueChanged) {
+              // retrieve/decrypt the old secret value.
+              secretValue = vaultService.decrypt(savedData, accountId, vaultConfig);
+            }
+            vaultService.deleteSecret(accountId, secretName, vaultConfig);
+            break;
+          case AWS_SECRETS_MANAGER:
+            needReencryption = true;
+            AwsSecretsManagerConfig secretsManagerConfig =
+                secretsManagerService.getAwsSecretsManagerConfig(accountId, savedData.getKmsId());
+            if (!valueChanged) {
+              // retrieve/decrypt the old secret value.
+              secretValue = secretsManagerService.decrypt(savedData, accountId, secretsManagerConfig);
+            }
+            secretsManagerService.deleteSecret(accountId, secretName, secretsManagerConfig);
+            break;
+          case AZURE_VAULT:
+            needReencryption = true;
+            AzureVaultConfig azureVaultConfig =
+                azureSecretsManagerService.getEncryptionConfig(accountId, savedData.getKmsId());
+            if (!valueChanged) {
+              // retrieve/decrypt the old secret value.
+              secretValue = azureVaultService.decrypt(savedData, accountId, azureVaultConfig);
+            }
+            azureVaultService.delete(accountId, secretName, azureVaultConfig);
+            break;
+          default:
+            // Not relevant for other secret manager types
+            break;
+        }
+      }
+    }
+    if (valueChanged) {
+      needReencryption = true;
+      builder.append(builder.length() > 0 ? " & value" : " Changed value");
+    }
+    if (pathChanged) {
+      needReencryption = true;
+      builder.append(builder.length() > 0 ? " & path" : " Changed path");
+    }
+    if (secretText.getUsageRestrictions() != null) {
+      builder.append(builder.length() > 0 ? " & usage restrictions" : "Changed usage restrictions");
+    }
+    String auditMessage = builder.toString();
+
+    // Re-encrypt if secret value or path has changed. Update should not change the existing Encryption type and
+    // secret manager if the secret is 'path' enabled!
+    if (needReencryption) {
+      EncryptedData encryptedData = encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue,
+          secretText.getPath(), savedData, secretText.getName(), secretText.getUsageRestrictions());
+      savedData.setEncryptionKey(encryptedData.getEncryptionKey());
+      savedData.setEncryptedValue(encryptedData.getEncryptedValue());
+      savedData.setEncryptionType(encryptedData.getEncryptionType());
+      savedData.setKmsId(encryptedData.getKmsId());
+      savedData.setBackupKmsId(encryptedData.getBackupKmsId());
+      savedData.setBackupEncryptionType(encryptedData.getBackupEncryptionType());
+      savedData.setBackupEncryptedValue(encryptedData.getBackupEncryptedValue());
+      savedData.setBackupEncryptionKey(encryptedData.getBackupEncryptionKey());
+      savedData.setPath(encryptedData.getPath());
+    }
+    savedData.setUsageRestrictions(secretText.getUsageRestrictions());
+    saveEncryptedData(savedData);
+    if (eligibleForCrudAudit(savedData)) {
+      auditServiceHelper.reportForAuditingUsingAccountId(savedData.getAccountId(), oldEntity, savedData, Type.UPDATE);
+    }
+
+    insertSecretChangeLog(accountId, encryptedDataId, auditMessage);
+    return encryptedDataId != null;
+  }
+
+  private String saveSecretInternal(String accountId, SecretText secretText) {
+    if (containsIllegalCharacters(secretText.getName())) {
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+          "Secret name should not have any of the following characters " + ILLEGAL_CHARACTERS, USER);
+    }
+    char[] secretValue = isEmpty(secretText.getValue()) ? null : secretText.getValue().toCharArray();
+    // INSERT use case
+    usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, secretText.getUsageRestrictions());
+    EncryptionType encryptionType = secretText.getKmsId() == null
+        ? getEncryptionType(accountId)
+        : getEncryptionBySecretManagerId(secretText.getKmsId(), accountId);
+
+    validateSecretPath(encryptionType, secretText.getPath());
+    EncryptedData encrypted = EncryptedData.builder()
+                                  .name(secretText.getName())
+                                  .path(secretText.getPath())
+                                  .accountId(accountId)
+                                  .type(SettingVariableTypes.SECRET_TEXT)
+                                  .encryptionType(encryptionType)
+                                  .kmsId(secretText.getKmsId())
+                                  .enabled(true)
+                                  .build();
+    EncryptedData encryptedData = encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue,
+        secretText.getPath(), encrypted, secretText.getName(), secretText.getUsageRestrictions());
+    encryptedData.addSearchTag(secretText.getName());
+    String encryptedDataId;
+    try {
+      encryptedDataId = saveEncryptedData(encryptedData);
+      generateAuditForEncryptedRecord(accountId, null, encryptedDataId);
+    } catch (DuplicateKeyException e) {
+      String reason = "Variable " + secretText.getName() + " already exists";
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, e, USER);
+    }
+    String auditMessage = "Created";
+    insertSecretChangeLog(accountId, encryptedDataId, auditMessage);
+    return encryptedDataId;
+  }
+
+  private void insertSecretChangeLog(String accountId, String encryptedDataId, String auditMessage) {
     if (UserThreadLocal.get() != null) {
       wingsPersistence.save(SecretChangeLog.builder()
                                 .accountId(accountId)
@@ -1574,8 +1550,6 @@ public class SecretManagerImpl implements SecretManager {
                                           .build())
                                 .build());
     }
-
-    return encryptedDataId;
   }
 
   private void validateSecretPath(EncryptionType encryptionType, String path) {

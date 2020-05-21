@@ -153,8 +153,7 @@ public class SecretManagementResource {
   public RestResponse<String> saveSecret(@QueryParam("accountId") final String accountId, @Body SecretText secretText) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       logger.info("Adding a secret");
-      return new RestResponse<>(secretManager.saveSecret(accountId, secretText.getKmsId(), secretText.getName(),
-          secretText.getValue(), secretText.getPath(), secretText.getUsageRestrictions()));
+      return new RestResponse<>(secretManager.saveSecret(accountId, secretText));
     }
   }
 
@@ -164,8 +163,7 @@ public class SecretManagementResource {
   @ExceptionMetered
   public RestResponse<String> saveSecretUsingLocalMode(
       @QueryParam("accountId") final String accountId, @Body SecretText secretText) {
-    return new RestResponse<>(secretManager.saveSecretUsingLocalMode(accountId, secretText.getName(),
-        secretText.getValue(), secretText.getPath(), secretText.getUsageRestrictions()));
+    return new RestResponse<>(secretManager.saveSecretUsingLocalMode(accountId, secretText));
   }
 
   @POST
@@ -173,9 +171,8 @@ public class SecretManagementResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> updateSecret(@QueryParam("accountId") final String accountId,
-      @QueryParam("uuid") final String uuId, @Body SecretText secretText) {
-    return new RestResponse<>(secretManager.updateSecret(accountId, uuId, secretText.getName(), secretText.getValue(),
-        secretText.getPath(), secretText.getUsageRestrictions()));
+      @QueryParam("uuid") final String uuid, @Body SecretText secretText) {
+    return new RestResponse<>(secretManager.updateSecret(accountId, uuid, secretText));
   }
 
   @DELETE
