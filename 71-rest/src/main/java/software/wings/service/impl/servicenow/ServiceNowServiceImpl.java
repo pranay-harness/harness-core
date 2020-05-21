@@ -1,6 +1,8 @@
 package software.wings.service.impl.servicenow;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
+import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.ApprovalUtils.checkApproval;
 
@@ -8,7 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.eraro.ErrorCode;
+import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.Builder;
@@ -91,8 +93,8 @@ public class ServiceNowServiceImpl implements ServiceNowService {
       serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
     } catch (Exception e) {
       logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
-      throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER)
-          .addParam("message", "Error getting ServiceNow connector " + ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(
+          "Error getting ServiceNow connector " + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
 
     ServiceNowTaskParameters taskParameters =
@@ -117,8 +119,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
       serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
     } catch (Exception e) {
       logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
-      throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER)
-          .addParam("message", ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
     ServiceNowTaskParameters taskParameters =
         ServiceNowTaskParameters.builder()
@@ -141,8 +142,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
       serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
     } catch (Exception e) {
       logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
-      throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER)
-          .addParam("message", ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
     ServiceNowTaskParameters taskParameters =
         ServiceNowTaskParameters.builder()
@@ -166,8 +166,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
       serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
     } catch (Exception e) {
       logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
-      throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER)
-          .addParam("message", ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
 
     ServiceNowTaskParameters taskParameters =
@@ -194,8 +193,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
       serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
     } catch (Exception e) {
       logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
-      throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER)
-          .addParam("message", ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
     ServiceNowTaskParameters taskParameters =
         ServiceNowTaskParameters.builder()
@@ -233,8 +231,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
       serviceNowConfig = (ServiceNowConfig) settingService.get(approvalPollingJobEntity.getConnectorId()).getValue();
     } catch (Exception e) {
       logger.error("Error getting ServiceNow connector for ID: {}", approvalPollingJobEntity.getConnectorId());
-      throw new WingsException(ErrorCode.SERVICENOW_ERROR, WingsException.USER)
-          .addParam("message", ExceptionUtils.getMessage(e));
+      throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
     ServiceNowTaskParameters taskParameters =
         ServiceNowTaskParameters.builder()
