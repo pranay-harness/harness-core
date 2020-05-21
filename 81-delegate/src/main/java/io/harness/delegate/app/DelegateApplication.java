@@ -16,7 +16,6 @@ import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractTarget;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -41,6 +40,7 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import io.harness.utils.ProcessControl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -63,12 +63,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-/**
- * Created by peeyushaggarwal on 11/29/16.
- */
 @Slf4j
 public class DelegateApplication {
-  private static String processId;
+  private static String processId = String.valueOf(ProcessControl.myProcessId());
   private static DelegateConfiguration configuration;
 
   public static String getProcessId() {
@@ -81,8 +78,6 @@ public class DelegateApplication {
 
   public static void main(String... args) throws IOException {
     try {
-      processId = Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
-
       String proxyUser = System.getenv("PROXY_USER");
       if (isNotBlank(proxyUser)) {
         System.setProperty("http.proxyUser", proxyUser);
