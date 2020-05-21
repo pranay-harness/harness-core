@@ -31,7 +31,7 @@ public class SectionState implements State, ChildExecutable {
   }
 
   @Override
-  public StateResponse handleAsyncResponse(
+  public StateResponse handleChildResponse(
       Ambiance ambiance, StateParameters stateParameters, Map<String, ResponseData> responseDataMap) {
     StateResponseBuilder responseBuilder = StateResponse.builder();
     StatusNotifyResponseData statusNotifyResponseData =

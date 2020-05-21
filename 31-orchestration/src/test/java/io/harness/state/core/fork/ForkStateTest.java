@@ -62,7 +62,7 @@ public class ForkStateTest extends OrchestrationTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
-  public void shouldTestHandleAsyncResponse() {
+  public void shouldTestHandleChildrenResponse() {
     Ambiance ambiance = Ambiance.builder().build();
     ForkStateParameters stateParameters =
         ForkStateParameters.builder().parallelNodeId(FIRST_CHILD_ID).parallelNodeId(SECOND_CHILD_ID).build();
@@ -72,7 +72,7 @@ public class ForkStateTest extends OrchestrationTest {
             .put(FIRST_CHILD_ID, StatusNotifyResponseData.builder().status(NodeExecutionStatus.SUCCEEDED).build())
             .put(SECOND_CHILD_ID, StatusNotifyResponseData.builder().status(NodeExecutionStatus.FAILED).build())
             .build();
-    StateResponse stateResponse = forkState.handleAsyncResponse(ambiance, stateParameters, responseDataMap);
+    StateResponse stateResponse = forkState.handleChildrenResponse(ambiance, stateParameters, responseDataMap);
     assertThat(stateResponse.getStatus()).isEqualTo(NodeExecutionStatus.FAILED);
   }
 }

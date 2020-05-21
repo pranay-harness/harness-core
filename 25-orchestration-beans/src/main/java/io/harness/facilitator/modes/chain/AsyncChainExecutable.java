@@ -17,7 +17,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Redesign
 public interface AsyncChainExecutable {
-  AsyncExecutableResponse executeAsync(Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs);
+  AsyncExecutableResponse executeChainAsync(Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs);
 
   AsyncChainResponse handleAsyncIntermediate(Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs,
       Map<String, ResponseData> responseDataMap);

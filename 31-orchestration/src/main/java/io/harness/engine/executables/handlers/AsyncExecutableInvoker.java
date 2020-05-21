@@ -2,7 +2,7 @@ package io.harness.engine.executables.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.execution.status.NodeExecutionStatus.TASK_WAITING;
+import static io.harness.execution.status.NodeExecutionStatus.ASYNC_WAITING;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.common.base.Preconditions;
@@ -56,6 +56,6 @@ public class AsyncExecutableInvoker implements ExecutableInvoker {
 
     // Update Execution Node Instance state to TASK_WAITING
     engineStatusHelper.updateNodeInstance(
-        nodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.status, TASK_WAITING));
+        nodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.status, ASYNC_WAITING));
   }
 }
