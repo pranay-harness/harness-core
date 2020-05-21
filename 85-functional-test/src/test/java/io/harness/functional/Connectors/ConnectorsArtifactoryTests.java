@@ -405,8 +405,8 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   public boolean TC13_createArtifactoryConnector() {
-    String ARTIFACTORY_URL = "https://harness.jfrog.io/harness";
-    String USER_NAME = "admin";
+    String ARTIFACTORY_URL = "https://jfrog.dev.harness.io/artifactory/";
+    String USER_NAME = "harnessadmin";
 
     SettingAttribute settingAttribute =
         aSettingAttribute()
