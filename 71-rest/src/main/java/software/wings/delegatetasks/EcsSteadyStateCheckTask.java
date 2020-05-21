@@ -76,6 +76,11 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
           String.format("Waiting for running count to reach: %d for Ecs service: %s in Ecs cluster: %s.",
               service.getDesiredCount(), params.getServiceName(), params.getClusterName()));
 
+      int timeoutInterval = (int) TimeUnit.MILLISECONDS.toMinutes(params.getTimeoutInMs());
+      if (timeoutInterval < 10) {
+        timeoutInterval = 10;
+      }
+
       UpdateServiceCountRequestData updateCountRequestData =
           UpdateServiceCountRequestData.builder()
               .region(params.getRegion())
@@ -86,6 +91,7 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
               .serviceName(params.getServiceName())
               .serviceEvents(ecsContainerService.getEventsFromService(service))
               .awsConfig(params.getAwsConfig())
+              .timeOut(timeoutInterval)
               .build();
       ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(updateCountRequestData);
 
@@ -93,8 +99,7 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
       executionLogCallback.saveExecutionLog(
           String.format("Starting to wait for steady state for Ecs service: %s in Ecs cluster: %s.",
               params.getServiceName(), params.getClusterName()));
-      ecsContainerService.waitForServiceToReachSteadyState(
-          (int) TimeUnit.MILLISECONDS.toMinutes(params.getTimeoutInMs()), updateCountRequestData);
+      ecsContainerService.waitForServiceToReachSteadyState(timeoutInterval, updateCountRequestData);
       executionLogCallback.saveExecutionLog(String.format(
           "Completed wait for steady state for Ecs service: %s in Ecs cluster: %s. Now getting all container infos.",
           params.getServiceName(), params.getClusterName()));

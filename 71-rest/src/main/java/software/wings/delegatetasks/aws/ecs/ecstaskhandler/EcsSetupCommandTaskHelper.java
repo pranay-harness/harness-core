@@ -44,8 +44,6 @@ import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DesiredStatus;
 import com.amazonaws.services.ecs.model.KeyValuePair;
 import com.amazonaws.services.ecs.model.LaunchType;
-import com.amazonaws.services.ecs.model.ListServicesRequest;
-import com.amazonaws.services.ecs.model.ListServicesResult;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.LoadBalancer;
 import com.amazonaws.services.ecs.model.NetworkConfiguration;
@@ -1031,35 +1029,18 @@ public class EcsSetupCommandTaskHelper {
   public Optional<Service> getExistingServiceMetadataSnapshot(EcsSetupParams setupParams,
       SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, String ecsServiceName,
       AwsHelperService awsHelperService) {
-    awsHelperService.getServiceForCluster((AwsConfig) cloudProviderSetting.getValue(), encryptedDataDetails,
-        setupParams.getClusterName(), setupParams.getRegion());
-    ListServicesRequest listServicesRequest = new ListServicesRequest().withCluster(setupParams.getClusterName());
-    ListServicesResult listServicesResult = awsHelperService.listServices(setupParams.getRegion(),
-        (AwsConfig) cloudProviderSetting.getValue(), encryptedDataDetails, listServicesRequest);
+    List<Service> services =
+        awsHelperService
+            .describeServices(setupParams.getRegion(), (AwsConfig) cloudProviderSetting.getValue(),
+                encryptedDataDetails,
+                new DescribeServicesRequest().withCluster(setupParams.getClusterName()).withServices(ecsServiceName))
+            .getServices();
 
-    List<Service> services = new ArrayList<>();
-
-    if (isNotEmpty(listServicesResult.getServiceArns())) {
-      do {
-        services.addAll(awsHelperService
-                            .describeServices(setupParams.getRegion(), (AwsConfig) cloudProviderSetting.getValue(),
-                                encryptedDataDetails,
-                                new DescribeServicesRequest()
-                                    .withCluster(setupParams.getClusterName())
-                                    .withServices(listServicesResult.getServiceArns()))
-                            .getServices());
-
-        listServicesRequest.setNextToken(listServicesResult.getNextToken());
-      } while (listServicesResult.getNextToken() != null && listServicesResult.getServiceArns().size() == 10);
-
-      Optional<Service> serviceOptional =
-          services.stream().filter(service -> service.getServiceName().equals(ecsServiceName)).findFirst();
-      if (serviceOptional.isPresent()) {
-        return serviceOptional;
-      }
+    if (isEmpty(services)) {
+      return empty();
     }
 
-    return empty();
+    return Optional.of(services.get(0));
   }
 
   public String getJsonForAwsServiceConfig(Service service, Logger logger) {

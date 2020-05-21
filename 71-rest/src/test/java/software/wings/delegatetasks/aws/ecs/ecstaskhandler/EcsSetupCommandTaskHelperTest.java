@@ -45,7 +45,6 @@ import com.amazonaws.services.ecs.model.DeleteServiceRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
 import com.amazonaws.services.ecs.model.KeyValuePair;
 import com.amazonaws.services.ecs.model.LaunchType;
-import com.amazonaws.services.ecs.model.ListServicesResult;
 import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.LoadBalancer;
 import com.amazonaws.services.ecs.model.NetworkMode;
@@ -929,9 +928,6 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
-    doReturn(new ListServicesResult().withServiceArns("arn__1"))
-        .when(mockAwsHelperService)
-        .listServices(anyString(), any(), anyList(), any());
     doReturn(new DescribeServicesResult().withServices(new Service().withServiceName("foo__1")))
         .when(mockAwsHelperService)
         .describeServices(anyString(), any(), anyList(), any());

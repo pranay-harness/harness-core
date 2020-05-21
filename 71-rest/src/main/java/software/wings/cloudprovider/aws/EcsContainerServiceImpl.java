@@ -932,19 +932,21 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                        .executionLogCallback(new ExecutionLogCallback())
                                        .desiredCount(createServiceRequest.getDesiredCount())
                                        .serviceEvents(serviceEvents)
+                                       .timeOut(10)
                                        .build());
 
     return createServiceResult.getService().getServiceArn();
   }
 
   private void waitForTasksToBeInRunningState(UpdateServiceCountRequestData requestData) {
+    long timeoutDuration = requestData.getTimeOut() == null ? 10L : requestData.getTimeOut().longValue();
     try {
       timeLimiter.callWithTimeout(() -> {
         while (notAllDesiredTasksRunning(requestData)) {
           sleep(ofSeconds(10));
         }
         return true;
-      }, 10L, TimeUnit.MINUTES, true);
+      }, timeoutDuration, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
       throw new TimeoutException(
           "Timed out waiting for tasks to be in running state", "Timeout", e, WingsException.SRE);
@@ -1040,16 +1042,18 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           serviceEvents.addAll(service.getEvents());
         }
 
-        UpdateServiceCountRequestData serviceCountRequestData = UpdateServiceCountRequestData.builder()
-                                                                    .region(region)
-                                                                    .encryptedDataDetails(encryptedDataDetails)
-                                                                    .cluster(clusterName)
-                                                                    .serviceName(serviceName)
-                                                                    .desiredCount(desiredCount)
-                                                                    .executionLogCallback(executionLogCallback)
-                                                                    .awsConfig(awsConfig)
-                                                                    .serviceEvents(serviceEvents)
-                                                                    .build();
+        UpdateServiceCountRequestData serviceCountRequestData =
+            UpdateServiceCountRequestData.builder()
+                .region(region)
+                .encryptedDataDetails(encryptedDataDetails)
+                .cluster(clusterName)
+                .serviceName(serviceName)
+                .desiredCount(desiredCount)
+                .executionLogCallback(executionLogCallback)
+                .awsConfig(awsConfig)
+                .serviceEvents(serviceEvents)
+                .timeOut(serviceSteadyStateTimeout < 10 ? 10 : serviceSteadyStateTimeout)
+                .build();
 
         updateServiceCount(serviceCountRequestData);
         executionLogCallback.saveExecutionLog("Service update request successfully submitted.", LogLevel.INFO);
