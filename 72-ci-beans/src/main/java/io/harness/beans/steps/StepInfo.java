@@ -18,7 +18,7 @@ import io.harness.state.io.StepParameters;
       @JsonSubTypes.Type(value = TestStepInfo.class, name = "TEST")
 })
 public interface StepInfo extends StepParameters, BaseStepTemplate {
-  CIStepType getType();
+  StepInfoType getType();
 
   StepType getStateType();
 

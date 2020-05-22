@@ -16,16 +16,16 @@ import java.util.List;
 @Value
 @Builder
 public class TestStepInfo implements StepInfo {
-  @NotNull private CIStepType type = CIStepType.TEST;
+  @NotNull private StepInfoType type = StepInfoType.TEST;
   @javax.validation.constraints.NotNull
-  private StepType stateType = StepType.builder().type(CIStepType.TEST.name()).build();
+  private StepType stateType = StepType.builder().type(StepInfoType.TEST.name()).build();
 
   @NotEmpty private String identifier;
   @NotEmpty private String numParallel;
   private List<ScriptInfo> scriptInfos;
 
   @Override
-  public CIStepType getType() {
+  public StepInfoType getType() {
     return type;
   }
 
