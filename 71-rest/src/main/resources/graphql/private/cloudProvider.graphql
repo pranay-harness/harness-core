@@ -18,6 +18,7 @@ input CreateCloudProviderInput {
   spotInstCloudProvider: SpotInstCloudProviderInput
   gcpCloudProvider: GcpCloudProviderInput
   k8sCloudProvider: K8sCloudProviderInput
+  physicalDataCenterCloudProvider: PhysicalDataCenterCloudProviderInput
 }
 
 input UpdateCloudProviderInput {
@@ -28,6 +29,7 @@ input UpdateCloudProviderInput {
   spotInstCloudProvider: SpotInstCloudProviderInput
   gcpCloudProvider: GcpCloudProviderInput
   k8sCloudProvider: K8sCloudProviderInput
+  physicalDataCenterCloudProvider: PhysicalDataCenterCloudProviderInput
 }
 
 input DeleteCloudProviderInput {
@@ -71,4 +73,9 @@ input GcpCloudProviderInput {
   usageScope: UsageScopeInput
 
   serviceAccountKeySecretId: String
+}
+
+input PhysicalDataCenterCloudProviderInput {
+  name: String
+  usageScope: UsageScopeInput
 }

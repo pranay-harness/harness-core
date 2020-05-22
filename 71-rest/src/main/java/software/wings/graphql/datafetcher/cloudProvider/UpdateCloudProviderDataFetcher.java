@@ -29,6 +29,7 @@ public class UpdateCloudProviderDataFetcher
   @Inject private GcpDataFetcherHelper gcpDataFetcherHelper;
   @Inject private SpotInstDataFetcherHelper spotInstDataFetcherHelper;
   @Inject private PcfDataFetcherHelper pcfDataFetcherHelper;
+  @Inject private PhysicalDataCenterDataFetcherHelper physicalDataCenterDataFetcherHelper;
 
   public UpdateCloudProviderDataFetcher() {
     super(QLUpdateCloudProviderInput.class, QLUpdateCloudProviderPayload.class);
@@ -80,6 +81,11 @@ public class UpdateCloudProviderDataFetcher
         checkIfInputIsNotPresent(input.getCloudProviderType(), input.getK8sCloudProvider());
         k8sDataFetcherHelper.updateSettingAttribute(
             settingAttribute, input.getK8sCloudProvider(), mutationContext.getAccountId());
+        break;
+      case PHYSICAL_DATA_CENTER:
+        checkIfInputIsNotPresent(input.getCloudProviderType(), input.getPhysicalDataCenterCloudProvider());
+        physicalDataCenterDataFetcherHelper.updateSettingAttribute(
+            settingAttribute, input.getPhysicalDataCenterCloudProvider(), mutationContext.getAccountId());
         break;
       default:
         throw new InvalidRequestException("Invalid cloud provider type");

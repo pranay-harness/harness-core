@@ -23,6 +23,7 @@ import org.mockito.MockitoAnnotations;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
@@ -31,6 +32,7 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLCreateCloudProvide
 import software.wings.graphql.schema.mutation.cloudProvider.QLCreateCloudProviderPayload;
 import software.wings.graphql.schema.mutation.cloudProvider.QLGcpCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLPcfCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLPhysicalDataCenterCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLSpotInstCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLInheritClusterDetails;
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLK8sCloudProviderInput;
@@ -40,6 +42,7 @@ import software.wings.graphql.schema.type.QLGenericFilterType;
 import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
+import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLSpotInstCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.k8s.QLClusterDetailsType;
 import software.wings.graphql.schema.type.secrets.QLAppEnvScope;
@@ -48,6 +51,7 @@ import software.wings.graphql.schema.type.secrets.QLEnvScopeFilter;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue;
 
 import java.sql.SQLException;
 
@@ -61,6 +65,7 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
   @Mock private SpotInstDataFetcherHelper spotInstDataFetcherHelper;
   @Mock private GcpDataFetcherHelper gcpDataFetcherHelper;
   @Mock private K8sDataFetcherHelper k8sDataFetcherHelper;
+  @Mock private PhysicalDataCenterDataFetcherHelper physicalDataCenterDataFetcherHelper;
 
   @InjectMocks private CreateCloudProviderDataFetcher dataFetcher = new CreateCloudProviderDataFetcher();
 
@@ -244,6 +249,49 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
     assertThat(payload.getCloudProvider()).isNotNull();
     assertThat(payload.getCloudProvider()).isInstanceOf(QLKubernetesClusterCloudProvider.class);
     assertThat(payload.getCloudProvider().getId()).isEqualTo(CLOUD_PROVIDER_ID);
+  }
+
+  @Test
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void createPhysicalDataCenter() {
+    SettingAttribute setting =
+        SettingAttribute.Builder.aSettingAttribute()
+            .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
+            .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
+                           .withType(SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+                           .build())
+            .build();
+
+    doReturn(setting)
+        .when(physicalDataCenterDataFetcherHelper)
+        .toSettingAttribute(isA(QLPhysicalDataCenterCloudProviderInput.class), isA(String.class));
+
+    doReturn(setting)
+        .when(settingsService)
+        .saveWithPruning(isA(SettingAttribute.class), isA(String.class), isA(String.class));
+
+    doNothing()
+        .when(settingServiceHelper)
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    QLCreateCloudProviderPayload payload =
+        dataFetcher.mutateAndFetch(QLCreateCloudProviderInput.builder()
+                                       .cloudProviderType(QLCloudProviderType.PHYSICAL_DATA_CENTER)
+                                       .physicalDataCenterCloudProvider(QLPhysicalDataCenterCloudProviderInput.builder()
+                                                                            .name(RequestField.ofNullable("NAME"))
+                                                                            .usageScope(RequestField.ofNull())
+                                                                            .build())
+                                       .build(),
+            MutationContext.builder().accountId(ACCOUNT_ID).build());
+
+    verify(settingsService, times(1))
+        .saveWithPruning(isA(SettingAttribute.class), isA(String.class), isA(String.class));
+    verify(settingServiceHelper, times(1))
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    assertThat(payload.getCloudProvider()).isNotNull();
+    assertThat(payload.getCloudProvider()).isInstanceOf(QLPhysicalDataCenterCloudProvider.class);
   }
 
   public static QLUsageScope usageScope() {
