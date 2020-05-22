@@ -112,7 +112,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
       protected void configure() {
         MapBinder<String, TaskExecutor> taskExecutorMap =
             MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
-        taskExecutorMap.addBinding(DummyTask.class.getCanonicalName()).to(DummyTaskExecutor.class);
+        taskExecutorMap.addBinding(DummyTask.TASK_IDENTIFIER).to(DummyTaskExecutor.class);
       }
     });
 

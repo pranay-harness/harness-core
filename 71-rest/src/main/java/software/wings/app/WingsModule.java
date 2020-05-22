@@ -1100,7 +1100,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
-    taskExecutorMap.addBinding(DelegateTask.class.getCanonicalName()).to(DelegateService.class);
+    taskExecutorMap.addBinding(DelegateTask.TASK_IDENTIFIER).to(DelegateService.class);
   }
 
   private void bindFeatures() {
