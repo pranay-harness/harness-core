@@ -11,7 +11,7 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.state.StateType;
 import io.harness.state.Step;
-import io.harness.state.io.StateParameters;
+import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
@@ -34,9 +34,9 @@ public class BuildEnvSetupStep implements Step, SyncExecutable {
 
   @Override
   public StepResponse executeSync(
-      Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs, PassThroughData passThroughData) {
+      Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
     try {
-      BuildEnvSetupStepInfo envSetupStepInfo = (BuildEnvSetupStepInfo) parameters;
+      BuildEnvSetupStepInfo envSetupStepInfo = (BuildEnvSetupStepInfo) stepParameters;
 
       // TODO Handle response and fetch cluster from input element
       buildSetupUtils.executeCISetupTask(envSetupStepInfo, "kubernetes_clusterqqq");

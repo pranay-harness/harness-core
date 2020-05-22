@@ -6,7 +6,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.shell.ScriptType;
-import io.harness.state.io.StateParameters;
+import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -23,7 +23,7 @@ import java.util.List;
 @Redesign
 @Value
 @Builder
-public class ShellScriptStateParameters implements StateParameters {
+public class ShellScriptStepParameters implements StepParameters {
   @Attributes(title = "Execute on Delegate") boolean executeOnDelegate;
   @NotEmpty @Attributes(title = "Target Host") String host;
   @NotEmpty @Attributes(title = "Tags") List<String> tags;

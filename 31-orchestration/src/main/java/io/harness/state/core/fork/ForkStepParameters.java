@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.state.io.StateParameters;
+import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
@@ -16,6 +16,6 @@ import javax.validation.constraints.Size;
 @Value
 @Builder
 @Redesign
-public class ForkStateParameters implements StateParameters {
+public class ForkStepParameters implements StepParameters {
   @Singular @Size(min = 2) List<String> parallelNodeIds;
 }

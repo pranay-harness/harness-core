@@ -11,7 +11,7 @@ import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.state.StateType;
 import io.harness.state.Step;
-import io.harness.state.io.StateParameters;
+import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
 import io.harness.waiter.StringNotifyResponseData;
@@ -28,7 +28,7 @@ public class TestAsyncStep implements Step, AsyncExecutable {
 
   @Override
   public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs) {
+      Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
     String resumeId = generateUuid();
     waitNotifyEngine.doneWith(resumeId, StringNotifyResponseData.builder().data("SUCCESS").build());
     return AsyncExecutableResponse.builder().callbackId(resumeId).build();
@@ -36,7 +36,7 @@ public class TestAsyncStep implements Step, AsyncExecutable {
 
   @Override
   public StepResponse handleAsyncResponse(
-      Ambiance ambiance, StateParameters parameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
   }
 

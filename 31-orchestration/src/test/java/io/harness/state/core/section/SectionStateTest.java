@@ -44,7 +44,7 @@ public class SectionStateTest extends OrchestrationTest {
   public void shouldTestObtainChildren() {
     Ambiance ambiance = Ambiance.builder().build();
     List<StepTransput> stepTransputList = new ArrayList<>();
-    SectionStateParameters stateParameters = SectionStateParameters.builder().childNodeId(CHILD_ID).build();
+    SectionStepParameters stateParameters = SectionStepParameters.builder().childNodeId(CHILD_ID).build();
     ChildExecutableResponse childExecutableResponse =
         sectionState.obtainChild(ambiance, stateParameters, stepTransputList);
     assertThat(childExecutableResponse).isNotNull();
@@ -56,7 +56,7 @@ public class SectionStateTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldTestHandleChildResponse() {
     Ambiance ambiance = Ambiance.builder().build();
-    SectionStateParameters stateParameters = SectionStateParameters.builder().childNodeId(CHILD_ID).build();
+    SectionStepParameters stateParameters = SectionStepParameters.builder().childNodeId(CHILD_ID).build();
 
     Map<String, ResponseData> responseDataMap =
         ImmutableMap.<String, ResponseData>builder()

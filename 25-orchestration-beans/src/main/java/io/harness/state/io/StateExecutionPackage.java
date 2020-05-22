@@ -17,5 +17,5 @@ import java.util.List;
 public class StateExecutionPackage {
   Ambiance ambiance;
   List<StepTransput> inputs;
-  StateParameters stateParameter;
+  StepParameters stateParameter;
 }

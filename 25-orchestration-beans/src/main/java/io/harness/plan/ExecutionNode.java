@@ -8,7 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.references.RefObject;
 import io.harness.state.StateType;
-import io.harness.state.io.StateParameters;
+import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -26,7 +26,7 @@ public class ExecutionNode {
   @NonNull @Getter String identifier;
 
   // Input/Outputs
-  @Getter StateParameters stateParameters;
+  @Getter StepParameters stepParameters;
   @Singular @Getter List<RefObject> refObjects;
 
   // Hooks
@@ -35,14 +35,14 @@ public class ExecutionNode {
 
   @Builder
   public ExecutionNode(@NonNull String uuid, @NonNull String name, @NonNull StateType stateType,
-      @NonNull String identifier, StateParameters stateParameters, @Singular List<RefObject> refObjects,
+      @NonNull String identifier, StepParameters stepParameters, @Singular List<RefObject> refObjects,
       @Singular List<AdviserObtainment> adviserObtainments,
       @Singular List<FacilitatorObtainment> facilitatorObtainments) {
     this.uuid = uuid;
     this.name = name;
     this.stateType = stateType;
     this.identifier = identifier;
-    this.stateParameters = stateParameters;
+    this.stepParameters = stepParameters;
     this.refObjects = refObjects;
     this.adviserObtainments = adviserObtainments;
     this.facilitatorObtainments = facilitatorObtainments;

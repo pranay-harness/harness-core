@@ -28,7 +28,7 @@ public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeCon
         .uuid(step.getStepMetadata().getUuid())
         .stateType(step.getStepInfo().getStateType())
         .identifier(step.getStepInfo().getStepIdentifier())
-        .stateParameters(step.getStepInfo())
+        .stepParameters(step.getStepInfo())
         .facilitatorObtainment(getFacilitatorsFromMetaData(step.getStepMetadata()))
         .adviserObtainments(getAdviserObtainmentFromMetaData(step.getStepMetadata(), nextStepUuid))
         .build();

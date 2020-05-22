@@ -20,7 +20,7 @@ import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
-import io.harness.redesign.states.http.BasicHttpStateParameters;
+import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.redesign.states.shell.ShellScriptVariablesSweepingOutput;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.serializer.KryoRegistrar;
@@ -1603,7 +1603,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ShellScriptType.class, 7371);
     kryo.register(CIK8CleanupTaskParams.class, 7372);
     kryo.register(HarnessImportedTemplateDetails.class, 7373);
-    kryo.register(BasicHttpStateParameters.class, 7374);
+    kryo.register(BasicHttpStepParameters.class, 7374);
     kryo.register(ImportedTemplateMetadata.class, 7375);
     kryo.register(CopiedTemplateMetadata.class, 7376);
     kryo.register(ShellScriptVariablesSweepingOutput.class, 7377);

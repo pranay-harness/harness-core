@@ -27,8 +27,9 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
-import io.harness.redesign.states.http.BasicHttpStateParameters;
-import io.harness.redesign.states.wait.WaitStateParameters;
+import io.harness.redesign.states.http.BasicHttpStepParameters;
+import io.harness.redesign.states.shell.ShellScriptStepParameters;
+import io.harness.redesign.states.wait.WaitStepParameters;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
@@ -1057,8 +1058,9 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
 
     // Redesign Classes
     h.put("redesign.advisers.HttpResponseCodeSwitchAdviserParameters", HttpResponseCodeSwitchAdviserParameters.class);
-    h.put("redesign.states.http.BasicHttpStateParameters", BasicHttpStateParameters.class);
-    h.put("redesign.states.wait.WaitStateParameters", WaitStateParameters.class);
+    h.put("redesign.states.http.BasicHttpStepParameters", BasicHttpStepParameters.class);
+    h.put("redesign.states.wait.WaitStepParameters", WaitStepParameters.class);
+    h.put("redesign.states.shell.ShellScriptStepParameters", ShellScriptStepParameters.class);
 
     final HelperPut w = (name, clazz) -> map.put(PKG_WINGS + name, clazz);
 

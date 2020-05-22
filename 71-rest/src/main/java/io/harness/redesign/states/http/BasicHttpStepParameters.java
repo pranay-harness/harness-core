@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.state.io.StateParameters;
+import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Value;
 
@@ -13,7 +13,7 @@ import lombok.Value;
 @Value
 @Builder
 @Redesign
-public class BasicHttpStateParameters implements StateParameters {
+public class BasicHttpStepParameters implements StepParameters {
   @Attributes(required = true, title = "URL") String url;
   @Attributes(required = true, enums = {"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}, title = "Method")
   String method;

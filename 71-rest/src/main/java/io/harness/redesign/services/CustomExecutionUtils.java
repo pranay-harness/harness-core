@@ -18,13 +18,13 @@ import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
-import io.harness.redesign.states.http.BasicHttpStateParameters;
-import io.harness.redesign.states.shell.ShellScriptStateParameters;
-import io.harness.redesign.states.wait.WaitStateParameters;
+import io.harness.redesign.states.http.BasicHttpStepParameters;
+import io.harness.redesign.states.shell.ShellScriptStepParameters;
+import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.references.OutcomeRefObject;
 import io.harness.state.StateType;
-import io.harness.state.core.fork.ForkStateParameters;
-import io.harness.state.core.section.SectionStateParameters;
+import io.harness.state.core.fork.ForkStepParameters;
+import io.harness.state.core.section.SectionStepParameters;
 import lombok.experimental.UtilityClass;
 import software.wings.sm.states.ShellScriptState;
 
@@ -51,14 +51,14 @@ public class CustomExecutionUtils {
     String dummyNode3Id = generateUuid();
     String waitNodeId = generateUuid();
 
-    BasicHttpStateParameters basicHttpStateParameters =
-        BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+    BasicHttpStepParameters basicHttpStateParameters =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
     return Plan.builder()
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId)
                   .name("Basic Http")
                   .stateType(BASIC_HTTP_STATE_TYPE)
-                  .stateParameters(basicHttpStateParameters)
+                  .stepParameters(basicHttpStateParameters)
                   .identifier("http")
                   .adviserObtainment(AdviserObtainment.builder()
                                          .type(AdviserType.builder().type("HTTP_RESPONSE_CODE_SWITCH").build())
@@ -120,7 +120,7 @@ public class CustomExecutionUtils {
                   .name("Wait Node")
                   .identifier("wait")
                   .stateType(StateType.builder().type("WAIT_STATE").build())
-                  .stateParameters(WaitStateParameters.builder().waitDurationSeconds(5).build())
+                  .stepParameters(WaitStepParameters.builder().waitDurationSeconds(5).build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
                                              .build())
@@ -139,18 +139,18 @@ public class CustomExecutionUtils {
     String forkNodeId = generateUuid();
     String dummyNodeId = generateUuid();
 
-    BasicHttpStateParameters basicHttpStateParameters1 =
-        BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+    BasicHttpStepParameters basicHttpStateParameters1 =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
 
-    BasicHttpStateParameters basicHttpStateParameters2 =
-        BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
+    BasicHttpStepParameters basicHttpStateParameters2 =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
     return Plan.builder()
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId1)
                   .name("Basic Http 1")
                   .stateType(BASIC_HTTP_STATE_TYPE)
                   .identifier("http_parallel_1")
-                  .stateParameters(basicHttpStateParameters1)
+                  .stepParameters(basicHttpStateParameters1)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
                                              .build())
@@ -160,7 +160,7 @@ public class CustomExecutionUtils {
                   .name("Basic Http 2")
                   .stateType(BASIC_HTTP_STATE_TYPE)
                   .identifier("http_parallel_2")
-                  .stateParameters(basicHttpStateParameters2)
+                  .stepParameters(basicHttpStateParameters2)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
                                              .build())
@@ -171,8 +171,8 @@ public class CustomExecutionUtils {
                 .name("FORK")
                 .stateType(StateType.builder().type("FORK").build())
                 .identifier("fork")
-                .stateParameters(
-                    ForkStateParameters.builder().parallelNodeId(httpNodeId1).parallelNodeId(httpNodeId2).build())
+                .stepParameters(
+                    ForkStepParameters.builder().parallelNodeId(httpNodeId1).parallelNodeId(httpNodeId2).build())
                 .adviserObtainment(AdviserObtainment.builder()
                                        .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
                                        .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
@@ -204,11 +204,11 @@ public class CustomExecutionUtils {
     String httpNodeId2 = generateUuid();
     String dummyNodeId = generateUuid();
 
-    BasicHttpStateParameters basicHttpStateParameters1 =
-        BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+    BasicHttpStepParameters basicHttpStateParameters1 =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
 
-    BasicHttpStateParameters basicHttpStateParameters2 =
-        BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
+    BasicHttpStepParameters basicHttpStateParameters2 =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
     return Plan.builder()
         .node(
             ExecutionNode.builder()
@@ -216,7 +216,7 @@ public class CustomExecutionUtils {
                 .name("Basic Http 1")
                 .stateType(BASIC_HTTP_STATE_TYPE)
                 .identifier("http_1")
-                .stateParameters(basicHttpStateParameters1)
+                .stepParameters(basicHttpStateParameters1)
                 .facilitatorObtainment(FacilitatorObtainment.builder()
                                            .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
                                            .build())
@@ -230,7 +230,7 @@ public class CustomExecutionUtils {
                   .name("Basic Http 2")
                   .stateType(BASIC_HTTP_STATE_TYPE)
                   .identifier("http_2")
-                  .stateParameters(basicHttpStateParameters2)
+                  .stepParameters(basicHttpStateParameters2)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
                                              .build())
@@ -241,7 +241,7 @@ public class CustomExecutionUtils {
                 .name("Section")
                 .stateType(StateType.builder().type("SECTION").build())
                 .identifier("section_1")
-                .stateParameters(SectionStateParameters.builder().childNodeId(httpNodeId1).build())
+                .stepParameters(SectionStepParameters.builder().childNodeId(httpNodeId1).build())
                 .adviserObtainment(AdviserObtainment.builder()
                                        .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
                                        .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
@@ -268,8 +268,8 @@ public class CustomExecutionUtils {
 
   public static Plan provideHttpRetryPlan() {
     String httpNodeId = generateUuid();
-    BasicHttpStateParameters basicHttpStateParameters =
-        BasicHttpStateParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+    BasicHttpStepParameters basicHttpStateParameters =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
     return Plan.builder()
         .uuid(generateUuid())
         .startingNodeId(httpNodeId)
@@ -278,7 +278,7 @@ public class CustomExecutionUtils {
                   .name("Basic Http 1")
                   .stateType(BASIC_HTTP_STATE_TYPE)
                   .identifier("dummy")
-                  .stateParameters(basicHttpStateParameters)
+                  .stepParameters(basicHttpStateParameters)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
                                              .build())
@@ -297,8 +297,8 @@ public class CustomExecutionUtils {
 
   public static Plan provideSimpleShellScriptPlan() {
     String shellScriptNodeId = generateUuid();
-    ShellScriptStateParameters shellScriptStateParameters =
-        ShellScriptStateParameters.builder()
+    ShellScriptStepParameters shellScriptStateParameters =
+        ShellScriptStepParameters.builder()
             .executeOnDelegate(true)
             .connectionType(ShellScriptState.ConnectionType.SSH)
             .scriptType(ScriptType.BASH)
@@ -316,7 +316,7 @@ public class CustomExecutionUtils {
                   .identifier("shell_script_1")
                   .stateType(StateType.builder().type(software.wings.sm.StateType.SHELL_SCRIPT.name()).build())
                   .identifier("shell_script_1")
-                  .stateParameters(shellScriptStateParameters)
+                  .stepParameters(shellScriptStateParameters)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
                                              .build())

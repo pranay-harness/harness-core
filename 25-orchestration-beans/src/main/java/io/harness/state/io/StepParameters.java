@@ -9,4 +9,4 @@ import io.harness.annotations.dev.OwnedBy;
 @OwnedBy(CDC)
 @Redesign
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "class")
-public interface StateParameters {}
+public interface StepParameters {}

@@ -63,22 +63,22 @@ public class EngineResumeExecutor implements Runnable {
         case CHILDREN:
           ChildrenExecutable childrenExecutable = (ChildrenExecutable) stepRegistry.obtain(node.getStateType());
           stepResponse = childrenExecutable.handleChildrenResponse(
-              nodeExecution.getAmbiance(), node.getStateParameters(), response);
+              nodeExecution.getAmbiance(), node.getStepParameters(), response);
           break;
         case ASYNC:
           AsyncExecutable asyncExecutable = (AsyncExecutable) stepRegistry.obtain(node.getStateType());
           stepResponse =
-              asyncExecutable.handleAsyncResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
+              asyncExecutable.handleAsyncResponse(nodeExecution.getAmbiance(), node.getStepParameters(), response);
           break;
         case CHILD:
           ChildExecutable childExecutable = (ChildExecutable) stepRegistry.obtain(node.getStateType());
           stepResponse =
-              childExecutable.handleChildResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
+              childExecutable.handleChildResponse(nodeExecution.getAmbiance(), node.getStepParameters(), response);
           break;
         case ASYNC_TASK:
           AsyncTaskExecutable asyncTaskExecutable = (AsyncTaskExecutable) stepRegistry.obtain(node.getStateType());
           stepResponse =
-              asyncTaskExecutable.handleTaskResult(nodeExecution.getAmbiance(), node.getStateParameters(), response);
+              asyncTaskExecutable.handleTaskResult(nodeExecution.getAmbiance(), node.getStepParameters(), response);
           break;
         default:
           throw new InvalidRequestException("Resume not handled for execution Mode : " + nodeExecution.getMode());

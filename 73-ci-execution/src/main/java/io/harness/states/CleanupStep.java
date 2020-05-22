@@ -12,7 +12,7 @@ import io.harness.managerclient.ManagerCIResource;
 import io.harness.network.SafeHttpCall;
 import io.harness.state.StateType;
 import io.harness.state.Step;
-import io.harness.state.io.StateParameters;
+import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ public class CleanupStep implements Step, SyncExecutable {
 
   @Override
   public StepResponse executeSync(
-      Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs, PassThroughData passThroughData) {
+      Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
     try {
       // TODO Use k8 connector from element input, handle response
 

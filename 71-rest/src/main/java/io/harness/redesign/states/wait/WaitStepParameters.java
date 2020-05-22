@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.state.io.StateParameters;
+import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Value;
 
@@ -12,6 +12,6 @@ import lombok.Value;
 @Value
 @Builder
 @Redesign
-public class WaitStateParameters implements StateParameters {
+public class WaitStepParameters implements StepParameters {
   long waitDurationSeconds;
 }
