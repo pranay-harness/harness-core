@@ -318,27 +318,72 @@ public class CustomExecutionUtils {
   }
 
   public static Plan provideSimpleShellScriptPlan() {
-    String shellScriptNodeId = generateUuid();
-    ShellScriptStepParameters shellScriptStateParameters =
+    String section1NodeId = generateUuid();
+    String section2NodeId = generateUuid();
+    String shellScript1NodeId = generateUuid();
+    String shellScript2NodeId = generateUuid();
+    ShellScriptStepParameters shellScript1StepParameters =
         ShellScriptStepParameters.builder()
             .executeOnDelegate(true)
             .connectionType(ShellScriptState.ConnectionType.SSH)
             .scriptType(ScriptType.BASH)
-            .scriptString("echo 'Hello, world, from the new engine!'\nexport HELLO='hello!'\nexport HI='hi!'")
+            .scriptString("echo 'Hello, world, from script 1!'\nexport HELLO='hello!'\nexport HI='hi!'")
             .outputVars("HELLO,HI")
             .sweepingOutputName("shellscript")
+            .build();
+    ShellScriptStepParameters shellScript2StepParameters =
+        ShellScriptStepParameters.builder()
+            .executeOnDelegate(true)
+            .connectionType(ShellScriptState.ConnectionType.SSH)
+            .scriptType(ScriptType.BASH)
+            .scriptString(
+                "echo 'Hello, world, from script 2!'\necho \"${output.shellscript.variables.HELLO}\"\necho \"${output.shellscript.variables.HI}\"\necho \"${runtime.section1.shell1.outcome.data.activityId}\"")
             .build();
 
     return Plan.builder()
         .uuid(generateUuid())
-        .startingNodeId(shellScriptNodeId)
+        .startingNodeId(section1NodeId)
         .node(ExecutionNode.builder()
-                  .uuid(shellScriptNodeId)
-                  .name("Basic Shell Script")
-                  .identifier("shell_script_1")
+                  .uuid(section1NodeId)
+                  .name("Section 1")
+                  .identifier("section1")
+                  .stepType(StepType.builder().type("SECTION").build())
+                  .stepParameters(SectionStepParameters.builder().childNodeId(shellScript1NodeId).build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(section2NodeId).build())
+                          .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                             .build())
+                  .build())
+        .node(ExecutionNode.builder()
+                  .uuid(section2NodeId)
+                  .name("Section 2")
+                  .identifier("section2")
+                  .stepType(StepType.builder().type("SECTION").build())
+                  .stepParameters(SectionStepParameters.builder().childNodeId(shellScript2NodeId).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                             .build())
+                  .build())
+        .node(ExecutionNode.builder()
+                  .uuid(shellScript1NodeId)
+                  .name("Shell Script 1")
+                  .identifier("shell1")
                   .stepType(StepType.builder().type(software.wings.sm.StateType.SHELL_SCRIPT.name()).build())
-                  .identifier("shell_script_1")
-                  .stepParameters(shellScriptStateParameters)
+                  .stepParameters(shellScript1StepParameters)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                             .build())
+                  .build())
+        .node(ExecutionNode.builder()
+                  .uuid(shellScript2NodeId)
+                  .name("Shell Script 2")
+                  .identifier("shell2")
+                  .stepType(StepType.builder().type(software.wings.sm.StateType.SHELL_SCRIPT.name()).build())
+                  .stepParameters(shellScript2StepParameters)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
                                              .build())

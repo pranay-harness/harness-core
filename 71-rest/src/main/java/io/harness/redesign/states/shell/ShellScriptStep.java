@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -27,6 +28,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.shell.ScriptType;
+import io.harness.engine.expresssions.EngineExpressionService;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
@@ -71,6 +73,7 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Redesign
+@ExcludeRedesign
 @Slf4j
 public class ShellScriptStep implements Step, AsyncTaskExecutable {
   public static final StepType STATE_TYPE = StepType.builder().type(SHELL_SCRIPT.name()).build();
@@ -81,6 +84,7 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
   @Inject private SecretManager secretManager;
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
   @Inject private ExecutionSweepingOutputResolver executionSweepingOutputResolver;
+  @Inject private EngineExpressionService engineExpressionService;
   @Inject private FeatureFlagService featureFlagService;
 
   @Override
@@ -190,6 +194,8 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
       renderedTags = trimStrings(renderedTags);
     }
 
+    String scriptString = shellScriptStateParameters.getScriptString();
+    scriptString = engineExpressionService.renderExpression(ambiance, scriptString);
     ShellScriptParametersBuilder shellScriptParameters =
         ShellScriptParameters.builder()
             .accountId(getAccountId(ambiance))
@@ -203,7 +209,7 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
             .keyEncryptedDataDetails(keyEncryptionDetails)
             .workingDirectory(commandPath)
             .scriptType(scriptType)
-            .script(shellScriptStateParameters.getScriptString())
+            .script(scriptString)
             .executeOnDelegate(shellScriptStateParameters.isExecuteOnDelegate())
             .outputVars(shellScriptStateParameters.getOutputVars())
             .hostConnectionAttributes(hostConnectionAttributes)
