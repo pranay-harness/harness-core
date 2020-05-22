@@ -19,10 +19,10 @@ import io.harness.facilitator.modes.task.AsyncTaskExecutable;
 import io.harness.state.StateType;
 import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
-import io.harness.state.io.StateResponse;
-import io.harness.state.io.StateResponse.FailureInfo;
-import io.harness.state.io.StateResponse.StateResponseBuilder;
-import io.harness.state.io.StateTransput;
+import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponse.FailureInfo;
+import io.harness.state.io.StepResponse.StepResponseBuilder;
+import io.harness.state.io.StepTransput;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.TaskType;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
@@ -38,7 +38,7 @@ public class BasicHttpStep implements Step, AsyncTaskExecutable {
   public static final StateType STATE_TYPE = StateType.builder().type("BASIC_HTTP").build();
 
   @Override
-  public DelegateTask obtainTask(Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs) {
+  public DelegateTask obtainTask(Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs) {
     BasicHttpStateParameters stateParameters = (BasicHttpStateParameters) parameters;
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
                                                 .url(stateParameters.getUrl())
@@ -63,10 +63,10 @@ public class BasicHttpStep implements Step, AsyncTaskExecutable {
   }
 
   @Override
-  public StateResponse handleTaskResult(
+  public StepResponse handleTaskResult(
       Ambiance ambiance, StateParameters parameters, Map<String, ResponseData> responseDataMap) {
     BasicHttpStateParameters stateParameters = (BasicHttpStateParameters) parameters;
-    StateResponseBuilder responseBuilder = StateResponse.builder();
+    StepResponseBuilder responseBuilder = StepResponse.builder();
     ResponseData notifyResponseData = responseDataMap.values().iterator().next();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) notifyResponseData;

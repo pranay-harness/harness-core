@@ -15,10 +15,10 @@ import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Children
 import io.harness.state.StateType;
 import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
-import io.harness.state.io.StateResponse;
-import io.harness.state.io.StateResponse.StateResponseBuilder;
-import io.harness.state.io.StateTransput;
 import io.harness.state.io.StatusNotifyResponseData;
+import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponse.StepResponseBuilder;
+import io.harness.state.io.StepTransput;
 
 import java.util.List;
 import java.util.Map;
@@ -31,7 +31,7 @@ public class ForkStep implements Step, ChildrenExecutable {
 
   @Override
   public ChildrenExecutableResponse obtainChildren(
-      Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs) {
+      Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs) {
     ForkStateParameters forkStateParameters = (ForkStateParameters) parameters;
     ChildrenExecutableResponseBuilder responseBuilder = ChildrenExecutableResponse.builder();
     for (String nodeId : forkStateParameters.getParallelNodeIds()) {
@@ -41,9 +41,9 @@ public class ForkStep implements Step, ChildrenExecutable {
   }
 
   @Override
-  public StateResponse handleChildrenResponse(
+  public StepResponse handleChildrenResponse(
       Ambiance ambiance, StateParameters stateParameters, Map<String, ResponseData> responseDataMap) {
-    StateResponseBuilder responseBuilder = StateResponse.builder().status(NodeExecutionStatus.SUCCEEDED);
+    StepResponseBuilder responseBuilder = StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED);
     for (ResponseData responseData : responseDataMap.values()) {
       NodeExecutionStatus executionStatus = ((StatusNotifyResponseData) responseData).getStatus();
       if (executionStatus != NodeExecutionStatus.SUCCEEDED) {

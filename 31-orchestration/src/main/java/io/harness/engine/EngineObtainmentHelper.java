@@ -18,7 +18,7 @@ import io.harness.plan.Plan;
 import io.harness.references.RefObject;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.resolvers.Resolver;
-import io.harness.state.io.StateTransput;
+import io.harness.state.io.StepTransput;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,9 +30,9 @@ public class EngineObtainmentHelper {
   @Inject private HPersistence hPersistence;
   @Inject private ResolverRegistry resolverRegistry;
 
-  public List<StateTransput> obtainInputs(
-      Ambiance ambiance, List<RefObject> refObjects, List<? extends StateTransput> additionalInputs) {
-    List<StateTransput> inputs = new ArrayList<>();
+  public List<StepTransput> obtainInputs(
+      Ambiance ambiance, List<RefObject> refObjects, List<? extends StepTransput> additionalInputs) {
+    List<StepTransput> inputs = new ArrayList<>();
 
     if (additionalInputs != null) {
       inputs.addAll(additionalInputs);

@@ -16,7 +16,7 @@ import io.harness.persistence.UuidAware;
 import io.harness.persistence.converters.DurationConverter;
 import io.harness.plan.ExecutionNode;
 import io.harness.serializer.KryoUtils;
-import io.harness.state.io.StateTransput;
+import io.harness.state.io.StepTransput;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
@@ -65,7 +65,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   private Long expiryTs;
 
   // Applicable only for child/children states
-  @Singular List<StateTransput> additionalInputs;
+  @Singular List<StepTransput> additionalInputs;
 
   @Singular List<String> retryIds;
 

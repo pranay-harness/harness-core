@@ -11,7 +11,7 @@ import io.harness.engine.ExecutionEngine;
 import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.facilitator.modes.sync.SyncExecutable;
-import io.harness.state.io.StateResponse;
+import io.harness.state.io.StepResponse;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
@@ -24,8 +24,8 @@ public class SyncExecutableInvoker implements ExecutableInvoker {
   public void invokeExecutable(InvokerPackage invokerPackage) {
     SyncExecutable syncExecutable = (SyncExecutable) invokerPackage.getStep();
     Ambiance ambiance = invokerPackage.getAmbiance();
-    StateResponse stateResponse = syncExecutable.executeSync(
+    StepResponse stepResponse = syncExecutable.executeSync(
         ambiance, invokerPackage.getParameters(), invokerPackage.getInputs(), invokerPackage.getPassThroughData());
-    engine.handleStateResponse(ambiance.obtainCurrentRuntimeId(), stateResponse);
+    engine.handleStepResponse(ambiance.obtainCurrentRuntimeId(), stepResponse);
   }
 }

@@ -6,7 +6,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.registries.RegistrableEntity;
-import io.harness.state.io.StateTransput;
+import io.harness.state.io.StepTransput;
 
 import java.util.List;
 
@@ -15,5 +15,5 @@ import java.util.List;
 public interface Facilitator extends RegistrableEntity<FacilitatorType> {
   FacilitatorType getType();
 
-  FacilitatorResponse facilitate(Ambiance ambiance, FacilitatorParameters parameters, List<StateTransput> inputs);
+  FacilitatorResponse facilitate(Ambiance ambiance, FacilitatorParameters parameters, List<StepTransput> inputs);
 }

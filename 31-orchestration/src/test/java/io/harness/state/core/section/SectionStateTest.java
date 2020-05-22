@@ -15,9 +15,9 @@ import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.rule.Owner;
 import io.harness.state.StateType;
-import io.harness.state.io.StateResponse;
-import io.harness.state.io.StateTransput;
 import io.harness.state.io.StatusNotifyResponseData;
+import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepTransput;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -43,10 +43,10 @@ public class SectionStateTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldTestObtainChildren() {
     Ambiance ambiance = Ambiance.builder().build();
-    List<StateTransput> stateTransputList = new ArrayList<>();
+    List<StepTransput> stepTransputList = new ArrayList<>();
     SectionStateParameters stateParameters = SectionStateParameters.builder().childNodeId(CHILD_ID).build();
     ChildExecutableResponse childExecutableResponse =
-        sectionState.obtainChild(ambiance, stateParameters, stateTransputList);
+        sectionState.obtainChild(ambiance, stateParameters, stepTransputList);
     assertThat(childExecutableResponse).isNotNull();
     assertThat(childExecutableResponse.getChildNodeId()).isEqualTo(CHILD_ID);
   }
@@ -62,7 +62,7 @@ public class SectionStateTest extends OrchestrationTest {
         ImmutableMap.<String, ResponseData>builder()
             .put(CHILD_ID, StatusNotifyResponseData.builder().status(NodeExecutionStatus.FAILED).build())
             .build();
-    StateResponse stateResponse = sectionState.handleChildResponse(ambiance, stateParameters, responseDataMap);
-    assertThat(stateResponse.getStatus()).isEqualTo(NodeExecutionStatus.FAILED);
+    StepResponse stepResponse = sectionState.handleChildResponse(ambiance, stateParameters, responseDataMap);
+    assertThat(stepResponse.getStatus()).isEqualTo(NodeExecutionStatus.FAILED);
   }
 }

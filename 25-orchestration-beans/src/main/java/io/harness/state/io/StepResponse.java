@@ -18,9 +18,9 @@ import java.util.Map;
 @Value
 @Builder
 @Redesign
-public class StateResponse {
+public class StepResponse {
   @NonNull NodeExecutionStatus status;
-  @Singular Map<String, StateTransput> outcomes;
+  @Singular Map<String, StepTransput> outcomes;
   FailureInfo failureInfo;
 
   @Value

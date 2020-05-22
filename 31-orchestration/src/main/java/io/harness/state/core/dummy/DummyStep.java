@@ -12,8 +12,8 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.StateType;
 import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
-import io.harness.state.io.StateResponse;
-import io.harness.state.io.StateTransput;
+import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepTransput;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -26,10 +26,10 @@ public class DummyStep implements Step, SyncExecutable {
   public static final StateType STATE_TYPE = StateType.builder().type("DUMMY").build();
 
   @Override
-  public StateResponse executeSync(
-      Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs, PassThroughData passThroughData) {
+  public StepResponse executeSync(
+      Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs, PassThroughData passThroughData) {
     logger.info("Dummy State getting executed");
-    return StateResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
+    return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
   }
 
   @Override

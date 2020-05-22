@@ -12,8 +12,8 @@ import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.state.StateType;
 import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
-import io.harness.state.io.StateResponse;
-import io.harness.state.io.StateTransput;
+import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepTransput;
 import io.harness.waiter.StringNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
@@ -28,16 +28,16 @@ public class TestAsyncStep implements Step, AsyncExecutable {
 
   @Override
   public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs) {
+      Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs) {
     String resumeId = generateUuid();
     waitNotifyEngine.doneWith(resumeId, StringNotifyResponseData.builder().data("SUCCESS").build());
     return AsyncExecutableResponse.builder().callbackId(resumeId).build();
   }
 
   @Override
-  public StateResponse handleAsyncResponse(
+  public StepResponse handleAsyncResponse(
       Ambiance ambiance, StateParameters parameters, Map<String, ResponseData> responseDataMap) {
-    return StateResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
+    return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
   }
 
   @Override
