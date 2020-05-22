@@ -38,8 +38,8 @@ gazelle_dependencies()
 go_repository(
     name = "com_github_pkg_errors",
     importpath = "github.com/pkg/errors",
-    sum = "h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=",
-    version = "v0.8.1",
+    sum = "h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=",
+    version = "v0.9.1",
 )
 
 http_archive(
@@ -175,8 +175,8 @@ go_repository(
 go_repository(
     name = "com_github_stretchr_testify",
     importpath = "github.com/stretchr/testify",
-    sum = "h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=",
-    version = "v1.4.0",
+    sum = "h1:nOGnQDM7FYENwehXlg/kFVnos3rEvtKTjRvOWSzb6H4=",
+    version = "v1.5.1",
 )
 
 go_repository(
@@ -224,15 +224,15 @@ go_repository(
 go_repository(
     name = "org_golang_x_net",
     importpath = "golang.org/x/net",
-    sum = "h1:R/3boaszxrf1GEUWTVDzSKVwLmSJpwZ1yqXm8j0v2QI=",
-    version = "v0.0.0-20190620200207-3b0461eec859",
+    sum = "h1:CCH4IOTTfewWjGOlSp+zGcjutRKlBEZQ6wTn8ozI/nI=",
+    version = "v0.0.0-20200202094626-16171245cfb2",
 )
 
 go_repository(
     name = "org_golang_x_sync",
     importpath = "golang.org/x/sync",
-    sum = "h1:8gQV6CLnAEikrhgkHFbMAEhagSSnXWGV915qUMm9mrU=",
-    version = "v0.0.0-20190423024810-112230192c58",
+    sum = "h1:vcxGaoTs7kV8m5Np9uUNQin4BrLOthgV7252N8V+FwY=",
+    version = "v0.0.0-20190911185100-cd5d95a43a6e",
 )
 
 go_repository(
@@ -331,4 +331,39 @@ go_repository(
     importpath = "github.com/alexflint/go-scalar",
     sum = "h1:NGupf1XV/Xb04wXskDFzS0KWOLH632W/EO4fAFi+A70=",
     version = "v1.0.0",
+)
+
+go_repository(
+    name = "com_github_aws_aws_sdk_go",
+    importpath = "github.com/aws/aws-sdk-go",
+    sum = "h1:NXNqBS9hjOCpDL8SyCyl38gZX3LLLunKOJc5E7vJ8P0=",
+    version = "v1.30.29",
+)
+
+go_repository(
+    name = "com_github_golang_mock",
+    importpath = "github.com/golang/mock",
+    sum = "h1:GV+pQPG/EUUbkh47niozDcADz6go/dUwhVzdUQHIVRw=",
+    version = "v1.4.3",
+)
+
+go_repository(
+    name = "com_github_jmespath_go_jmespath",
+    importpath = "github.com/jmespath/go-jmespath",
+    sum = "h1:OS12ieG61fsCg5+qLJ+SsW9NicxNkg3b25OyT2yCeUc=",
+    version = "v0.3.0",
+)
+
+go_repository(
+    name = "io_rsc_quote_v3",
+    importpath = "rsc.io/quote/v3",
+    sum = "h1:9JKUTTIUgS6kzR9mK1YuGKv6Nl+DijDNIc0ghT58FaY=",
+    version = "v3.1.0",
+)
+
+go_repository(
+    name = "io_rsc_sampler",
+    importpath = "rsc.io/sampler",
+    sum = "h1:7uVkIFmeBqHfdjD+gZwtXXI+RODJ2Wc4O7MPEh/QiW4=",
+    version = "v1.3.0",
 )

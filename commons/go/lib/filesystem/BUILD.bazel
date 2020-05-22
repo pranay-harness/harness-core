@@ -2,20 +2,15 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
-    srcs = [
-        "kvmap.go",
-        "utils.go",
-    ],
-    importpath = "github.com/wings-software/portal/commons/go/lib/utils",
+    srcs = ["filesystem.go"],
+    importpath = "github.com/wings-software/portal/commons/go/lib/filesystem",
     visibility = ["//visibility:public"],
+    deps = ["//commons/go/lib/logs:go_default_library"],
 )
 
 go_test(
     name = "go_default_test",
-    srcs = [
-        "kvmap_test.go",
-        "utils_test.go",
-    ],
+    srcs = ["filesystem_test.go"],
     embed = [":go_default_library"],
     deps = ["@com_github_stretchr_testify//assert:go_default_library"],
 )
