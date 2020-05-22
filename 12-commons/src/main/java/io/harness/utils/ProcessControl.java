@@ -42,7 +42,6 @@ public class ProcessControl {
       }
       new ProcessExecutor().command("kill", "-9", pid).execute();
     } catch (IOException | TimeoutException e) {
-      logger.error("Error killing process {}", pid, e);
       throw new GeneralException("Error killing process " + pid, e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
