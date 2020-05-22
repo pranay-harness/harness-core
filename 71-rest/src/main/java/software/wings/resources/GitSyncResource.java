@@ -243,7 +243,7 @@ public class GitSyncResource {
   @Path("commits")
   public RestResponse<PageResponse<GitFileActivitySummary>> listCommits(
       @BeanParam PageRequest<GitFileActivitySummary> pageRequest,
-      @QueryParam("gitToHarness") @Nullable Boolean gitToHarness, @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("gitToharness") @Nullable Boolean gitToHarness, @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("appId") @NotEmpty String appId) {
     PageResponse<GitFileActivitySummary> pageResponse =
         gitSyncService.fetchGitCommits(pageRequest, gitToHarness, accountId, appId);
