@@ -62,6 +62,6 @@ public class ResourceLookup implements PersistentEntity, UuidAware, CreatedAtAwa
   @NotEmpty private String resourceType;
   private String resourceName;
   private List<NameValuePair> tags;
-  private long createdAt;
+  @Indexed private long createdAt;
   private long lastUpdatedAt;
 }
