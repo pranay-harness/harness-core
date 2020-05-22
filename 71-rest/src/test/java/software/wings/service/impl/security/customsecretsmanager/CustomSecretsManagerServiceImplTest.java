@@ -48,6 +48,7 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.SecretVariable;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.intfc.AccountService;
@@ -58,9 +59,9 @@ import software.wings.service.intfc.template.TemplateService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Mock private AccountService accountService;
@@ -155,13 +156,13 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     return wingsPersistence.save(settingAttribute);
   }
 
-  private Map<String, String> obtainTestParameters(String connectorId) {
-    Map<String, String> testParams = new HashMap<>();
-    testParams.put("var1", "value");
+  private Set<SecretVariable> obtainTestVariables(String connectorId) {
+    Set<SecretVariable> testVariables = new HashSet<>();
+    testVariables.add(SecretVariable.builder().name("var1").value("value").build());
     if (!isEmpty(connectorId)) {
-      testParams.put("connectorId", connectorId);
+      testVariables.add(SecretVariable.builder().name("connectorId").value(connectorId).build());
     }
-    return testParams;
+    return testVariables;
   }
 
   private List<String> obtainDelegateSelectors() {
@@ -173,7 +174,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveSecretsManagerExecuteOnDelegate_shouldPass() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -181,7 +182,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .delegateSelectors(obtainDelegateSelectors())
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -196,7 +197,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     assertThat(savedConfig.getHost()).isNull();
     assertThat(savedConfig.getConnectorId()).isNull();
     assertThat(savedConfig.getCommandPath()).isEqualTo("/tmp");
-    assertThat(savedConfig.getTestParameters()).isEqualTo(testParams);
+    assertThat(savedConfig.getTestVariables()).isEqualTo(testVariables);
     assertThat(savedConfig.getCustomSecretsManagerShellScript()).isNull();
     assertThat(savedConfig.getRemoteHostConnector()).isNull();
   }
@@ -206,7 +207,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveSecretsManagerExecuteOnDelegate_shouldFail_TestParamsMissing() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = new HashMap<>();
+    Set<SecretVariable> testVariables = new HashSet<>();
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -214,7 +215,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .delegateSelectors(new ArrayList<>())
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -224,7 +225,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void saveSecretsManagerExecuteOnDelegate_shouldFail_MissingTemplate() {
-    Map<String, String> testParams = new HashMap<>();
+    Set<SecretVariable> testVariables = new HashSet<>();
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -232,7 +233,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .templateId(generateUuid())
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -243,7 +244,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveSecretsManagerExecuteOnDelegate_shouldFail_IncorrectTemplate() {
     String templateId = obtainCommandTemplate();
-    Map<String, String> testParams = new HashMap<>();
+    Set<SecretVariable> testVariables = new HashSet<>();
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -251,7 +252,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .templateId(templateId)
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -262,8 +263,8 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveSecretsManagerExecuteOnDelegate_shouldFail_IncorrectVariables() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = new HashMap<>();
-    testParams.put("incorrectKey", "value");
+    Set<SecretVariable> testVariables = new HashSet<>();
+    testVariables.add(SecretVariable.builder().name("incorrectKey").value("value").build());
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -271,7 +272,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .templateId(templateId)
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -282,7 +283,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveSecretsManagerExecuteOnDelegate_shouldFail_IncorrectName() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager@")
@@ -290,7 +291,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .templateId(templateId)
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -302,7 +303,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   public void saveSecretsManagerWithSSHConnectorNotTemplatized_shouldSucceed() {
     String connectorId = obtainSshSettingAttribute();
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -312,7 +313,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .isConnectorTemplatized(false)
                                             .host("app.harness.io")
                                             .connectorId(connectorId)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -327,7 +328,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     assertThat(savedConfig.getHost()).isEqualTo(config.getHost());
     assertThat(savedConfig.getConnectorId()).isEqualTo(config.getConnectorId());
     assertThat(savedConfig.getCommandPath()).isEqualTo("/tmp");
-    assertThat(savedConfig.getTestParameters()).isEqualTo(testParams);
+    assertThat(savedConfig.getTestVariables()).isEqualTo(testVariables);
     assertThat(savedConfig.getCustomSecretsManagerShellScript()).isNull();
     assertThat(savedConfig.getRemoteHostConnector()).isNull();
   }
@@ -338,7 +339,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   public void saveSecretsManagerWithWinRMConnectorNotTemplatized_shouldSucceed() {
     String connectorId = obtainWinrmSettingAttribute();
     String templateId = obtainTemplate(ScriptType.POWERSHELL);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -348,7 +349,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .isConnectorTemplatized(false)
                                             .host("app.harness.io")
                                             .connectorId(connectorId)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -363,7 +364,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     assertThat(savedConfig.getHost()).isEqualTo(config.getHost());
     assertThat(savedConfig.getConnectorId()).isEqualTo(config.getConnectorId());
     assertThat(savedConfig.getCommandPath()).isEqualTo("%TEMP%");
-    assertThat(savedConfig.getTestParameters()).isEqualTo(testParams);
+    assertThat(savedConfig.getTestVariables()).isEqualTo(testVariables);
     assertThat(savedConfig.getCustomSecretsManagerShellScript()).isNull();
     assertThat(savedConfig.getRemoteHostConnector()).isNull();
   }
@@ -373,7 +374,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveSecretsManagerWithConnectorNotTemplatized_shouldFail_ConnectorNotFound() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -383,7 +384,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .isConnectorTemplatized(false)
                                             .host("app.harness.io")
                                             .connectorId(generateUuid())
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -395,7 +396,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   public void saveSecretsManagerWithConnectorNotTemplatized_shouldFail_WrongConnectorType1() {
     String connectorId = obtainWinrmSettingAttribute();
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -405,7 +406,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .isConnectorTemplatized(false)
                                             .host("app.harness.io")
                                             .connectorId(connectorId)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -417,7 +418,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   public void saveSecretsManagerWithConnectorNotTemplatized_shouldFail_WrongConnectorType2() {
     String connectorId = obtainSshSettingAttribute();
     String templateId = obtainTemplate(ScriptType.POWERSHELL);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -427,7 +428,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .isConnectorTemplatized(false)
                                             .host("app.harness.io")
                                             .connectorId(connectorId)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -439,7 +440,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   public void saveSecretsManagerWithConnectorNotTemplatized_shouldFail_MissingTargetHost() {
     String connectorId = obtainSshSettingAttribute();
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -448,7 +449,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .executeOnDelegate(false)
                                             .isConnectorTemplatized(false)
                                             .connectorId(connectorId)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -460,7 +461,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   public void saveSecretsManagerWithConnectorTemplatized_shouldSucceed() {
     String connectorId = obtainWinrmSettingAttribute();
     String templateId = obtainTemplate(ScriptType.POWERSHELL);
-    Map<String, String> testParams = obtainTestParameters(connectorId);
+    Set<SecretVariable> testVariables = obtainTestVariables(connectorId);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -469,7 +470,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .executeOnDelegate(false)
                                             .isConnectorTemplatized(true)
                                             .host("app.harness.io")
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -484,7 +485,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     assertThat(savedConfig.getHost()).isEqualTo(config.getHost());
     assertThat(savedConfig.getConnectorId()).isNull();
     assertThat(savedConfig.getCommandPath()).isEqualTo("%TEMP%");
-    assertThat(savedConfig.getTestParameters()).isEqualTo(testParams);
+    assertThat(savedConfig.getTestVariables()).isEqualTo(testVariables);
     assertThat(savedConfig.getCustomSecretsManagerShellScript()).isNull();
     assertThat(savedConfig.getRemoteHostConnector()).isNull();
   }
@@ -494,7 +495,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveSecretsManagerWithConnectorTemplatized_shouldFail_missingConnectorInParams() {
     String templateId = obtainTemplate(ScriptType.POWERSHELL);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -503,7 +504,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .executeOnDelegate(false)
                                             .isConnectorTemplatized(true)
                                             .host("app.harness.io")
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -518,7 +519,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     assertThat(savedConfig.getHost()).isEqualTo(config.getHost());
     assertThat(savedConfig.getConnectorId()).isNull();
     assertThat(savedConfig.getCommandPath()).isEqualTo("%TEMP%");
-    assertThat(savedConfig.getTestParameters()).isEqualTo(testParams);
+    assertThat(savedConfig.getTestVariables()).isEqualTo(testVariables);
     assertThat(savedConfig.getCustomSecretsManagerShellScript()).isNull();
     assertThat(savedConfig.getRemoteHostConnector()).isNull();
   }
@@ -528,7 +529,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void updateSecretsManager_shouldSucceed() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -536,7 +537,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .delegateSelectors(obtainDelegateSelectors())
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -551,7 +552,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     assertThat(savedConfig.getHost()).isNull();
     assertThat(savedConfig.getConnectorId()).isNull();
     assertThat(savedConfig.getCommandPath()).isEqualTo("/tmp");
-    assertThat(savedConfig.getTestParameters()).isEqualTo(testParams);
+    assertThat(savedConfig.getTestVariables()).isEqualTo(testVariables);
     assertThat(savedConfig.getCustomSecretsManagerShellScript()).isNull();
     assertThat(savedConfig.getRemoteHostConnector()).isNull();
 
@@ -570,7 +571,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     assertThat(savedConfig.getHost()).isNull();
     assertThat(savedConfig.getConnectorId()).isNull();
     assertThat(savedConfig.getCommandPath()).isEqualTo("/tmp");
-    assertThat(savedConfig.getTestParameters()).isEqualTo(testParams);
+    assertThat(savedConfig.getTestVariables()).isEqualTo(testVariables);
     assertThat(savedConfig.getCustomSecretsManagerShellScript()).isNull();
     assertThat(savedConfig.getRemoteHostConnector()).isNull();
   }
@@ -580,7 +581,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void updateSecretsManager_shouldFail_ConfigNotFound() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -588,7 +589,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .delegateSelectors(obtainDelegateSelectors())
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     config.setUuid(generateUuid());
@@ -600,7 +601,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void updateSecretsManager_shouldFail_IdisNull() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -608,7 +609,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .delegateSelectors(obtainDelegateSelectors())
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     customSecretsManagerService.updateSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -619,7 +620,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void getSecretsManager_shouldPass() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -627,7 +628,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .delegateSelectors(obtainDelegateSelectors())
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -643,7 +644,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     assertThat(savedConfig.getHost()).isNull();
     assertThat(savedConfig.getConnectorId()).isNull();
     assertThat(savedConfig.getCommandPath()).isEqualTo("/tmp");
-    assertThat(savedConfig.getTestParameters()).isEqualTo(testParams);
+    assertThat(savedConfig.getTestVariables()).isEqualTo(testVariables);
     assertThat(savedConfig.getCustomSecretsManagerShellScript()).isNotNull();
     assertThat(savedConfig.getRemoteHostConnector()).isNull();
   }
@@ -653,7 +654,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void deleteSecretsManager_shouldPass() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -661,7 +662,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .delegateSelectors(obtainDelegateSelectors())
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -676,7 +677,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void deleteSecretsManager_shouldFail_SecretsFound() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -684,7 +685,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .delegateSelectors(obtainDelegateSelectors())
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -705,7 +706,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void validateSecretsManagerExecuteOnDelegate_shouldPass() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -713,7 +714,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .delegateSelectors(obtainDelegateSelectors())
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     boolean valid = customSecretsManagerService.validateSecretsManager(GLOBAL_ACCOUNT_ID, config);
@@ -726,7 +727,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   public void validateSecretsManagerWithConnector_shouldPass() {
     String connectorId = obtainSshSettingAttribute();
     String templateId = obtainTemplate(ScriptType.BASH);
-    Map<String, String> testParams = obtainTestParameters(null);
+    Set<SecretVariable> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -736,7 +737,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                             .isConnectorTemplatized(false)
                                             .host("app.harness.io")
                                             .connectorId(connectorId)
-                                            .testParameters(testParams)
+                                            .testVariables(testVariables)
                                             .build();
     config.setDefault(false);
     boolean valid = customSecretsManagerService.validateSecretsManager(GLOBAL_ACCOUNT_ID, config);
