@@ -8,8 +8,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
-import io.harness.state.State;
 import io.harness.state.StateType;
+import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateResponse.StateResponseBuilder;
@@ -19,8 +19,8 @@ import io.harness.state.io.StatusNotifyResponseData;
 import java.util.List;
 import java.util.Map;
 @OwnedBy(CDC)
-@Produces(State.class)
-public class SectionState implements State, ChildExecutable {
+@Produces(Step.class)
+public class SectionStep implements Step, ChildExecutable {
   public static final StateType STATE_TYPE = StateType.builder().type("SECTION").build();
 
   @Override

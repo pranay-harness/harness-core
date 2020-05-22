@@ -10,13 +10,14 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.steps.BuildStepInfo;
+import io.harness.beans.steps.BuildEnvSetupStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.stateutils.buildstate.BuildSetupUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,29 +28,32 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.io.IOException;
 
-public class BuildStateTest extends CIExecutionTest {
-  @Inject private BuildState buildState;
+public class BuildEnvSetupStepTest extends CIExecutionTest {
+  @Inject private BuildEnvSetupStep buildEnvSetupStep;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Mock private ManagerCIResource managerCIResource;
+  @Mock private BuildSetupUtils buildSetupUtils;
 
   @Before
   public void setUp() {
-    on(buildState).set("managerCIResource", managerCIResource);
+    on(buildEnvSetupStep).set("managerCIResource", managerCIResource);
+    on(buildEnvSetupStep).set("buildSetupUtils", buildSetupUtils);
   }
 
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
-  public void shouldExecuteCIBuildTask() throws IOException {
+  public void shouldExecuteCISetupTask() throws IOException {
     Call<RestResponse<K8sTaskExecutionResponse>> requestCall = mock(Call.class);
+    RestResponse<K8sTaskExecutionResponse> restResponse =
+        new RestResponse<>(K8sTaskExecutionResponse.builder().build());
 
     when(requestCall.execute())
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
-    when(managerCIResource.podCommandExecutionTask(any(), any())).thenReturn(requestCall);
+    when(buildSetupUtils.executeCISetupTask(any(), any())).thenReturn(restResponse);
 
-    buildState.executeSync(null,
-        BuildStepInfo.builder().scriptInfos(ciExecutionPlanTestHelper.getBuildCommandSteps()).build(), null, null);
+    buildEnvSetupStep.executeSync(null, BuildEnvSetupStepInfo.builder().build(), null, null);
 
-    verify(managerCIResource, times(1)).podCommandExecutionTask(any(), any());
+    verify(buildSetupUtils, times(1)).executeCISetupTask(any(), any());
   }
 }

@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 public class SectionStateTest extends OrchestrationTest {
-  @Inject private SectionState sectionState;
+  @Inject private SectionStep sectionState;
 
   private static final String CHILD_ID = generateUuid();
   private static final StateType STATE_TYPE = StateType.builder().type("SECTION").build();

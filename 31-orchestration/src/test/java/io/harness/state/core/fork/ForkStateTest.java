@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ForkStateTest extends OrchestrationTest {
-  @Inject private ForkState forkState;
+  @Inject private ForkStep forkState;
 
   private static final String FIRST_CHILD_ID = generateUuid();
   private static final String SECOND_CHILD_ID = generateUuid();

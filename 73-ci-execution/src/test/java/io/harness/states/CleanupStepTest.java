@@ -27,14 +27,14 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.io.IOException;
 
-public class CleanupStateTest extends CIExecutionTest {
-  @Inject private CleanupState cleanupState;
+public class CleanupStepTest extends CIExecutionTest {
+  @Inject private CleanupStep cleanupStep;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Mock private ManagerCIResource managerCIResource;
 
   @Before
   public void setUp() {
-    on(cleanupState).set("managerCIResource", managerCIResource);
+    on(cleanupStep).set("managerCIResource", managerCIResource);
   }
 
   @Test
@@ -47,7 +47,7 @@ public class CleanupStateTest extends CIExecutionTest {
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(managerCIResource.podCleanupTask(any())).thenReturn(requestCall);
 
-    cleanupState.executeSync(null, CleanupStepInfo.builder().build(), null, null);
+    cleanupStep.executeSync(null, CleanupStepInfo.builder().build(), null, null);
 
     verify(managerCIResource, times(1)).podCleanupTask(any());
   }

@@ -10,8 +10,8 @@ import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.network.SafeHttpCall;
-import io.harness.state.State;
 import io.harness.state.StateType;
+import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
@@ -23,9 +23,9 @@ import java.util.List;
  * State sends cleanup task to finish CI build job. It has to be executed in the end once all steps are complete
  */
 
-@Produces(State.class)
+@Produces(Step.class)
 @Slf4j
-public class CleanupState implements State, SyncExecutable {
+public class CleanupStep implements Step, SyncExecutable {
   @Inject private ManagerCIResource managerCIResource;
 
   // TODO Async can not be supported at this point. We have to build polling framework on CI manager.

@@ -16,8 +16,8 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
-import io.harness.state.State;
 import io.harness.state.StateType;
+import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
@@ -35,8 +35,8 @@ import java.util.concurrent.TimeUnit;
 @OwnedBy(CDC)
 @Redesign
 @ExcludeRedesign
-@Produces(State.class)
-public class WaitState implements State, AsyncExecutable {
+@Produces(Step.class)
+public class WaitStep implements Step, AsyncExecutable {
   public static final StateType STATE_TYPE = StateType.builder().type("WAIT_STATE").build();
 
   @Inject @Named("waitStateResumer") @Transient private ScheduledExecutorService executorService;

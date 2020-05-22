@@ -9,8 +9,8 @@ import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.managerclient.ManagerCIResource;
-import io.harness.state.State;
 import io.harness.state.StateType;
+import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
@@ -23,9 +23,9 @@ import java.util.List;
  * This state will setup the build environment, clone the git repository for running CI job.
  */
 
-@Produces(State.class)
+@Produces(Step.class)
 @Slf4j
-public class BuildEnvSetupState implements State, SyncExecutable {
+public class BuildEnvSetupStep implements Step, SyncExecutable {
   @Inject private ManagerCIResource managerCIResource;
   @Inject private BuildSetupUtils buildSetupUtils;
 
