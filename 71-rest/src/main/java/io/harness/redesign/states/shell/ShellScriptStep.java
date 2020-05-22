@@ -34,8 +34,8 @@ import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.task.AsyncTaskExecutable;
 import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputResolver;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.state.State;
 import io.harness.state.StateType;
+import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateResponse.StateResponseBuilder;
@@ -72,7 +72,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Redesign
 @Slf4j
-public class ShellScriptState implements State, AsyncTaskExecutable {
+public class ShellScriptStep implements Step, AsyncTaskExecutable {
   public static final StateType STATE_TYPE = StateType.builder().type(SHELL_SCRIPT.name()).build();
 
   @Inject private ActivityService activityService;

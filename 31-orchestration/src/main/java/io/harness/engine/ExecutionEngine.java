@@ -47,7 +47,7 @@ import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StateRegistry;
 import io.harness.resolvers.Resolver;
-import io.harness.state.State;
+import io.harness.state.Step;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
 import io.harness.state.io.StatusNotifyResponseData;
@@ -182,13 +182,13 @@ public class ExecutionEngine implements Engine {
   public void invokeState(Ambiance ambiance, FacilitatorResponse facilitatorResponse) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
     ExecutionNode node = nodeExecution.getNode();
-    State currentState = stateRegistry.obtain(node.getStateType());
-    injector.injectMembers(currentState);
+    Step currentStep = stateRegistry.obtain(node.getStateType());
+    injector.injectMembers(currentStep);
     List<StateTransput> inputs =
         engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
     ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(facilitatorResponse.getExecutionMode());
     invoker.invokeExecutable(InvokerPackage.builder()
-                                 .state(currentState)
+                                 .step(currentStep)
                                  .ambiance(ambiance)
                                  .inputs(inputs)
                                  .parameters(node.getStateParameters())
@@ -263,10 +263,6 @@ public class ExecutionEngine implements Engine {
   public void resume(String nodeInstanceId, Map<String, ResponseData> response, boolean asyncError) {
     NodeExecution nodeExecution = engineStatusHelper.updateNodeInstance(
         nodeInstanceId, ops -> ops.set(NodeExecutionKeys.status, NodeExecutionStatus.RUNNING));
-
-    ExecutionNode node = nodeExecution.getNode();
-    State currentState = stateRegistry.obtain(node.getStateType());
-    injector.injectMembers(currentState);
     if (nodeExecution.getStatus() != NodeExecutionStatus.RUNNING) {
       logger.warn("nodeInstance: {} status {} is no longer in RUNNING state", nodeExecution.getUuid(),
           nodeExecution.getStatus());

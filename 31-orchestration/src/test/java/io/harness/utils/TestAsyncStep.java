@@ -9,8 +9,8 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
-import io.harness.state.State;
 import io.harness.state.StateType;
+import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
@@ -21,7 +21,7 @@ import org.mongodb.morphia.annotations.Transient;
 import java.util.List;
 import java.util.Map;
 
-public class TestAsyncState implements State, AsyncExecutable {
+public class TestAsyncStep implements Step, AsyncExecutable {
   public static final StateType ASYNC_STATE_TYPE = StateType.builder().type("TEST_STATE_PLAN_ASYNC").build();
 
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;

@@ -50,7 +50,7 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
   @Override
   public void invokeExecutable(InvokerPackage invokerPackage) {
     Ambiance ambiance = invokerPackage.getAmbiance();
-    ChildrenExecutable childrenExecutable = (ChildrenExecutable) invokerPackage.getState();
+    ChildrenExecutable childrenExecutable = (ChildrenExecutable) invokerPackage.getStep();
     ChildrenExecutableResponse response =
         childrenExecutable.obtainChildren(ambiance, invokerPackage.getParameters(), invokerPackage.getInputs());
     handleResponse(ambiance, response);

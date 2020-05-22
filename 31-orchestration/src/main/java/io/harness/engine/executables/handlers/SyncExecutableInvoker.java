@@ -22,7 +22,7 @@ public class SyncExecutableInvoker implements ExecutableInvoker {
 
   @Override
   public void invokeExecutable(InvokerPackage invokerPackage) {
-    SyncExecutable syncExecutable = (SyncExecutable) invokerPackage.getState();
+    SyncExecutable syncExecutable = (SyncExecutable) invokerPackage.getStep();
     Ambiance ambiance = invokerPackage.getAmbiance();
     StateResponse stateResponse = syncExecutable.executeSync(
         ambiance, invokerPackage.getParameters(), invokerPackage.getInputs(), invokerPackage.getPassThroughData());

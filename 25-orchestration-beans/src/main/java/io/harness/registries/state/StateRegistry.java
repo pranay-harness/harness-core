@@ -12,8 +12,8 @@ import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
-import io.harness.state.State;
 import io.harness.state.StateType;
+import io.harness.state.Step;
 import lombok.NonNull;
 
 import java.util.Map;
@@ -22,19 +22,19 @@ import java.util.concurrent.ConcurrentHashMap;
 @OwnedBy(CDC)
 @Redesign
 @Singleton
-public class StateRegistry implements Registry<StateType, Class<? extends State>> {
+public class StateRegistry implements Registry<StateType, Class<? extends Step>> {
   @Inject private Injector injector;
 
-  Map<StateType, Class<? extends State>> registry = new ConcurrentHashMap<>();
+  Map<StateType, Class<? extends Step>> registry = new ConcurrentHashMap<>();
 
-  public void register(@NonNull StateType stateType, @NonNull Class<? extends State> state) {
+  public void register(@NonNull StateType stateType, @NonNull Class<? extends Step> state) {
     if (registry.containsKey(stateType)) {
       throw new DuplicateRegistryException(getType(), "State Already Registered with this type: " + stateType);
     }
     registry.put(stateType, state);
   }
 
-  public State obtain(@NonNull StateType stateType) {
+  public Step obtain(@NonNull StateType stateType) {
     if (registry.containsKey(stateType)) {
       return injector.getInstance(registry.get(stateType));
     }

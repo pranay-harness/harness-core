@@ -2,6 +2,7 @@ package io.harness.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.utils.TestAsyncStep.ASYNC_STATE_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -36,13 +37,13 @@ import io.harness.plan.Plan;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.state.StateRegistry;
 import io.harness.rule.Owner;
-import io.harness.state.State;
 import io.harness.state.StateType;
+import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
 import io.harness.testlib.RealMongo;
-import io.harness.utils.TestAsyncState;
+import io.harness.utils.TestAsyncStep;
 import io.harness.utils.TestStateParameters;
 import org.awaitility.Awaitility;
 import org.junit.Before;
@@ -67,8 +68,8 @@ public class ExecutionEngineTest extends OrchestrationTest {
   @Before
   public void setUp() {
     adviserRegistry.register(TEST_ADVISER_TYPE, TestHttpResponseCodeSwitchAdviser.class);
-    stateRegistry.register(TEST_STATE_TYPE, TestSyncState.class);
-    stateRegistry.register(TestAsyncState.ASYNC_STATE_TYPE, TestAsyncState.class);
+    stateRegistry.register(TEST_STATE_TYPE, TestSyncStep.class);
+    stateRegistry.register(ASYNC_STATE_TYPE, TestAsyncStep.class);
   }
 
   @Test
@@ -186,7 +187,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
                       .uuid(testWaitNodeId)
                       .name("Finish Node")
                       .identifier("finish")
-                      .stateType(TestAsyncState.ASYNC_STATE_TYPE)
+                      .stateType(ASYNC_STATE_TYPE)
                       .stateParameters(TestStateParameters.builder().param("Param").build())
                       .facilitatorObtainment(
                           FacilitatorObtainment.builder()
@@ -264,7 +265,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
     }
   }
 
-  private static class TestSyncState implements State, SyncExecutable {
+  private static class TestSyncStep implements Step, SyncExecutable {
     @Override
     public StateResponse executeSync(
         Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs, PassThroughData passThroughData) {

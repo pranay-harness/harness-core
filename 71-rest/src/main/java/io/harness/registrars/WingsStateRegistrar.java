@@ -3,12 +3,12 @@ package io.harness.registrars;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.redesign.states.http.BasicHttpState;
-import io.harness.redesign.states.shell.ShellScriptState;
-import io.harness.redesign.states.wait.WaitState;
+import io.harness.redesign.states.http.BasicHttpStep;
+import io.harness.redesign.states.shell.ShellScriptStep;
+import io.harness.redesign.states.wait.WaitStep;
 import io.harness.registries.registrar.StateRegistrar;
-import io.harness.state.State;
 import io.harness.state.StateType;
+import io.harness.state.Step;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Set;
@@ -16,9 +16,9 @@ import java.util.Set;
 @OwnedBy(CDC)
 public class WingsStateRegistrar implements StateRegistrar {
   @Override
-  public void register(Set<Pair<StateType, Class<? extends State>>> stateClasses) {
-    stateClasses.add(Pair.of(BasicHttpState.STATE_TYPE, BasicHttpState.class));
-    stateClasses.add(Pair.of(WaitState.STATE_TYPE, WaitState.class));
-    stateClasses.add(Pair.of(ShellScriptState.STATE_TYPE, ShellScriptState.class));
+  public void register(Set<Pair<StateType, Class<? extends Step>>> stateClasses) {
+    stateClasses.add(Pair.of(BasicHttpStep.STATE_TYPE, BasicHttpStep.class));
+    stateClasses.add(Pair.of(WaitStep.STATE_TYPE, WaitStep.class));
+    stateClasses.add(Pair.of(ShellScriptStep.STATE_TYPE, ShellScriptStep.class));
   }
 }

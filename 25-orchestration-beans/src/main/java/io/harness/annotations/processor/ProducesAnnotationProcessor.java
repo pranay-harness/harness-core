@@ -6,7 +6,7 @@ import io.harness.adviser.Adviser;
 import io.harness.annotations.Produces;
 import io.harness.facilitator.Facilitator;
 import io.harness.resolvers.Resolver;
-import io.harness.state.State;
+import io.harness.state.Step;
 
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -27,7 +27,7 @@ public class ProducesAnnotationProcessor extends AbstractProcessor {
           .put(Adviser.class.getCanonicalName(), Adviser.class.getCanonicalName())
           .put(Facilitator.class.getCanonicalName(), Facilitator.class.getCanonicalName())
           .put(Resolver.class.getCanonicalName(), Resolver.class.getCanonicalName())
-          .put(State.class.getCanonicalName(), State.class.getCanonicalName())
+          .put(Step.class.getCanonicalName(), Step.class.getCanonicalName())
           .build();
 
   @Override

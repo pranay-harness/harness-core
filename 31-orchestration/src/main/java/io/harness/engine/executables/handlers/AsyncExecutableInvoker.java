@@ -36,7 +36,7 @@ public class AsyncExecutableInvoker implements ExecutableInvoker {
 
   @Override
   public void invokeExecutable(InvokerPackage invokerPackage) {
-    AsyncExecutable asyncExecutable = (AsyncExecutable) invokerPackage.getState();
+    AsyncExecutable asyncExecutable = (AsyncExecutable) invokerPackage.getStep();
     Ambiance ambiance = invokerPackage.getAmbiance();
     AsyncExecutableResponse asyncExecutableResponse =
         asyncExecutable.executeAsync(ambiance, invokerPackage.getParameters(), invokerPackage.getInputs());

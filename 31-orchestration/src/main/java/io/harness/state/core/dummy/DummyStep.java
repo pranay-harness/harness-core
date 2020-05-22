@@ -9,8 +9,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
-import io.harness.state.State;
 import io.harness.state.StateType;
+import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateTransput;
@@ -21,8 +21,8 @@ import java.util.List;
 @OwnedBy(CDC)
 @Slf4j
 @Redesign
-@Produces(State.class)
-public class DummyState implements State, SyncExecutable {
+@Produces(Step.class)
+public class DummyStep implements Step, SyncExecutable {
   public static final StateType STATE_TYPE = StateType.builder().type("DUMMY").build();
 
   @Override

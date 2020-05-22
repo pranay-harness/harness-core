@@ -6,7 +6,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.PassThroughData;
-import io.harness.state.State;
+import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateTransput;
 import lombok.Builder;
@@ -19,7 +19,7 @@ import java.util.List;
 @Builder
 @Redesign
 public class InvokerPackage {
-  State state;
+  Step step;
   Ambiance ambiance;
   StateParameters parameters;
   List<StateTransput> inputs;

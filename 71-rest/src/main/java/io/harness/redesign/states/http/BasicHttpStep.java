@@ -16,8 +16,8 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.task.AsyncTaskExecutable;
-import io.harness.state.State;
 import io.harness.state.StateType;
+import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateResponse.FailureInfo;
@@ -33,8 +33,8 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Redesign
 @ExcludeRedesign
-@Produces(State.class)
-public class BasicHttpState implements State, AsyncTaskExecutable {
+@Produces(Step.class)
+public class BasicHttpStep implements Step, AsyncTaskExecutable {
   public static final StateType STATE_TYPE = StateType.builder().type("BASIC_HTTP").build();
 
   @Override
