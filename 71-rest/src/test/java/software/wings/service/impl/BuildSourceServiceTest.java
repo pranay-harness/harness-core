@@ -8,6 +8,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping.builder;
@@ -26,6 +27,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -103,6 +105,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Mock ServiceResourceService serviceResourceService;
   @Inject @InjectMocks private BuildSourceServiceImpl buildSourceService;
   @Mock DelegateProxyFactory delegateProxyFactory;
+  @Mock ExpressionEvaluator evaluator;
 
   @Test
   @Owner(developers = AADITI)
@@ -1044,5 +1047,83 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     nexusArtifactStream.setArtifactStreamParameterized(true);
     when(artifactStreamService.get(anyString())).thenReturn(nexusArtifactStream);
     buildSourceService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void getBuildForNexus2xMavenArtifactStream() {
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("${repo}")
+                                                  .groupId("${group}")
+                                                  .artifactPaths(asList("${path}"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .uuid(ARTIFACT_STREAM_ID)
+                                                  .build();
+    nexusArtifactStream.setArtifactStreamParameterized(true);
+    when(artifactStreamService.get(anyString())).thenReturn(nexusArtifactStream);
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withValue(NexusConfig.builder().build())
+                                            .build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    Map<String, Object> runtimeValues = new HashMap<>();
+    runtimeValues.put("repo", "releases");
+    runtimeValues.put("group", "mygroup");
+    runtimeValues.put("path", "todolist");
+    runtimeValues.put("buildNo", "1.0");
+    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
+    when(evaluator.evaluate(eq("repo"), eq(runtimeValues))).thenReturn("releases");
+    when(evaluator.evaluate(eq("group"), eq(runtimeValues))).thenReturn("mygroup");
+    when(evaluator.evaluate(eq("path"), eq(runtimeValues))).thenReturn("todolist");
+    when(artifactStreamServiceBindingService.getService(anyString(), anyString(), anyBoolean()))
+        .thenReturn(Service.builder().build());
+    when(nexusBuildService.getBuild(anyString(), any(), any(), any(), anyString()))
+        .thenReturn(BuildDetails.Builder.aBuildDetails().withNumber("1.0").build());
+    BuildDetails buildDetails = buildSourceService.getBuild(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID, runtimeValues);
+    assertThat(buildDetails).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void getBuildForNexus2xNPMArtifactStream() {
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("${repo}")
+                                                  .packageName("${packageName}")
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .uuid(ARTIFACT_STREAM_ID)
+                                                  .repositoryFormat(RepositoryFormat.npm.name())
+                                                  .build();
+    nexusArtifactStream.setArtifactStreamParameterized(true);
+    when(artifactStreamService.get(anyString())).thenReturn(nexusArtifactStream);
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withValue(NexusConfig.builder().build())
+                                            .build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    Map<String, Object> runtimeValues = new HashMap<>();
+    runtimeValues.put("repo", "releases");
+    runtimeValues.put("packageName", "abbrev");
+    runtimeValues.put("buildNo", "1.0.0");
+    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
+    when(evaluator.evaluate(eq("repo"), eq(runtimeValues))).thenReturn("releases");
+    when(evaluator.evaluate(eq("packageName"), eq(runtimeValues))).thenReturn("abbrev");
+    when(artifactStreamServiceBindingService.getService(anyString(), anyString(), anyBoolean()))
+        .thenReturn(Service.builder().build());
+    when(nexusBuildService.getBuild(anyString(), any(), any(), any(), anyString()))
+        .thenReturn(BuildDetails.Builder.aBuildDetails().withNumber("1.0.0").build());
+    BuildDetails buildDetails = buildSourceService.getBuild(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID, runtimeValues);
+    assertThat(buildDetails).isNotNull();
   }
 }

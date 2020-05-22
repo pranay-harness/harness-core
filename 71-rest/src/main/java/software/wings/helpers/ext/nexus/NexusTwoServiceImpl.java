@@ -269,8 +269,8 @@ public class NexusTwoServiceImpl {
         }
       }
     }
-    return nexusHelper.constructBuildDetails(
-        repoId, groupId, artifactName, versions, versionToArtifactUrls, versionToArtifactDownloadUrls);
+    return nexusHelper.constructBuildDetails(repoId, groupId, artifactName, versions, versionToArtifactUrls,
+        versionToArtifactDownloadUrls, extension, classifier);
   }
 
   public boolean existsVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
@@ -340,6 +340,43 @@ public class NexusTwoServiceImpl {
     return true;
   }
 
+  @SuppressWarnings("squid:S00107")
+  public List<BuildDetails> getVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoId, String groupId, String artifactName, String extension, String classifier, String buildNo)
+      throws IOException {
+    logger.info(
+        "Retrieving version {} for repoId {} groupId {} and artifactName {}", buildNo, repoId, groupId, artifactName);
+    String url = getIndexContentPathUrl(nexusConfig, repoId, getGroupId(groupId)) + artifactName + "/" + buildNo + "/";
+    final Response<IndexBrowserTreeViewResponse> response =
+        getIndexBrowserTreeViewResponseResponse(getRestClient(nexusConfig, encryptionDetails), nexusConfig, url);
+    List<String> versions = new ArrayList<>();
+    Map<String, String> versionToArtifactUrls = new HashMap<>();
+    Map<String, List<ArtifactFileMetadata>> versionToArtifactDownloadUrls = new HashMap<>();
+    if (isSuccessful(response)) {
+      final List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
+      if (treeNodes != null) {
+        for (IndexBrowserTreeNode treeNode : treeNodes) {
+          if (treeNode.getType().equals("A")) {
+            List<IndexBrowserTreeNode> children = treeNode.getChildren();
+            for (IndexBrowserTreeNode child : children) {
+              if (child.getType().equals("V")) {
+                versions.add(child.getNodeName());
+                List<ArtifactFileMetadata> artifactFileMetadata =
+                    constructArtifactDownloadUrls(nexusConfig, child, extension, classifier);
+                if (isNotEmpty(artifactFileMetadata)) {
+                  versionToArtifactUrls.put(child.getNodeName(), artifactFileMetadata.get(0).getUrl());
+                }
+                versionToArtifactDownloadUrls.put(child.getNodeName(), artifactFileMetadata);
+              }
+            }
+          }
+        }
+      }
+    }
+    return nexusHelper.constructBuildDetails(repoId, groupId, artifactName, versions, versionToArtifactUrls,
+        versionToArtifactDownloadUrls, extension, classifier);
+  }
+
   public List<BuildDetails> getVersions(String repositoryFormat, NexusConfig nexusConfig,
       List<EncryptedDataDetail> encryptionDetails, String repositoryId, String packageName) throws IOException {
     switch (repositoryFormat) {
@@ -349,6 +386,19 @@ public class NexusTwoServiceImpl {
         return getVersionsForNPM(nexusConfig, encryptionDetails, repositoryId, packageName);
       default:
         throw new WingsException("Unsupported format for Nexus 3.x", WingsException.USER);
+    }
+  }
+
+  public BuildDetails getVersion(String repositoryFormat, NexusConfig nexusConfig,
+      List<EncryptedDataDetail> encryptionDetails, String repositoryId, String packageName, String buildNo)
+      throws IOException {
+    switch (repositoryFormat) {
+      case "nuget":
+        return getVersionForNuGet(nexusConfig, encryptionDetails, repositoryId, packageName, buildNo);
+      case "npm":
+        return getVersionForNPM(nexusConfig, encryptionDetails, repositoryId, packageName, buildNo);
+      default:
+        throw new InvalidRequestException("Unsupported format for Nexus 2.x");
     }
   }
 
@@ -437,6 +487,31 @@ public class NexusTwoServiceImpl {
     return artifactFileMetadata;
   }
 
+  private BuildDetails getVersionForNuGet(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repositoryId, String packageName, String version) {
+    try {
+      List<ArtifactFileMetadata> artifactFileMetadata = getArtifactDownloadMetadataForVersionForNuGet(
+          nexusConfig, encryptionDetails, repositoryId, packageName, version);
+      if (isNotEmpty(artifactFileMetadata)) {
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put(ArtifactMetadataKeys.repositoryName, repositoryId);
+        metadata.put(ArtifactMetadataKeys.nexusPackageName, packageName);
+        metadata.put(ArtifactMetadataKeys.version, version);
+        return aBuildDetails()
+            .withNumber(version)
+            .withRevision(version)
+            .withBuildUrl(artifactFileMetadata.get(0).getUrl())
+            .withMetadata(metadata)
+            .withUiDisplayName("Version# " + version)
+            .withArtifactDownloadMetadata(artifactFileMetadata)
+            .build();
+      }
+    } catch (IOException e) {
+      logger.error("Failed in getting artifact download urls", e);
+    }
+    return null;
+  }
+
   @NotNull
   private List<BuildDetails> getVersionsForNPM(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repositoryId, String packageName) throws IOException {
@@ -494,6 +569,41 @@ public class NexusTwoServiceImpl {
         .collect(toList());
   }
 
+  private BuildDetails getVersionForNPM(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repositoryId, String packageName, String version) throws IOException {
+    logger.info("Retrieving version {} for NPM repositoryId {} for packageName {}", version, repositoryId, packageName);
+    Call<JsonNode> request;
+    if (nexusConfig.hasCredentials()) {
+      request = getRestClientJacksonConverter(nexusConfig, encryptionDetails)
+                    .getVersion(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
+                        repositoryId, packageName, version);
+    } else {
+      request = getRestClientJacksonConverter(nexusConfig, encryptionDetails)
+                    .getVersionWithoutCredentials(repositoryId, packageName, version);
+    }
+    final Response<JsonNode> response = request.execute();
+    if (isSuccessful(response) && response.body().at("/version").asText().equals(version)) {
+      String artifactUrl = response.body().at("/dist/tarball").asText();
+      logger.info("Artifact Download Url {}", artifactUrl);
+      final String artifactName = artifactUrl.substring(artifactUrl.lastIndexOf('/') + 1);
+      Map<String, String> metadata = new HashMap<>();
+      metadata.put(ArtifactMetadataKeys.repositoryName, repositoryId);
+      metadata.put(ArtifactMetadataKeys.nexusPackageName, packageName);
+      metadata.put(ArtifactMetadataKeys.version, version);
+      metadata.put(ArtifactMetadataKeys.url, artifactUrl);
+      return aBuildDetails()
+          .withNumber(version)
+          .withRevision(version)
+          .withBuildUrl(artifactUrl)
+          .withMetadata(metadata)
+          .withUiDisplayName("Version# " + version)
+          .withArtifactDownloadMetadata(
+              asList(ArtifactFileMetadata.builder().fileName(artifactName).url(artifactUrl).build()))
+          .build();
+    }
+    return null;
+  }
+
   private List<ArtifactFileMetadata> constructArtifactDownloadUrls(
       NexusConfig nexusConfig, IndexBrowserTreeNode child, String extension, String classifier) {
     List<ArtifactFileMetadata> artifactUrls = new ArrayList<>();
@@ -538,37 +648,58 @@ public class NexusTwoServiceImpl {
       List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes,
       Map<String, String> artifactMetadata, String delegateId, String taskId, String accountId,
       ListNotifyResponseData notifyResponseData) throws IOException {
-    final String repositoryName = artifactStreamAttributes.getRepositoryName();
+    final String repositoryName = artifactStreamAttributes.getRepositoryName().contains("${")
+        ? artifactMetadata.get(ArtifactMetadataKeys.repositoryName)
+        : artifactStreamAttributes.getRepositoryName();
     final String repositoryFormat = artifactStreamAttributes.getRepositoryFormat();
     final String version = artifactMetadata.get(ArtifactMetadataKeys.buildNo);
     if (repositoryFormat == null || repositoryFormat.equals(RepositoryFormat.maven.name())) {
-      logger.info("Downloading artifact of repo {} group {} artifact {} and version {}", repositoryName,
-          artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(), version);
-      final String url = getIndexContentPathUrl(nexusConfig, repositoryName,
-          getGroupId(artifactStreamAttributes.getGroupId()) + artifactStreamAttributes.getArtifactName() + "/" + version
-              + "/");
+      final String groupId = artifactStreamAttributes.getGroupId().contains("${")
+          ? artifactMetadata.get(ArtifactMetadataKeys.nexusGroupId)
+          : artifactStreamAttributes.getGroupId();
+      final String artifactId = artifactStreamAttributes.getArtifactName().contains("${")
+          ? artifactMetadata.get(ArtifactMetadataKeys.nexusArtifactId)
+          : artifactStreamAttributes.getArtifactName();
+      logger.info("Downloading artifact of repo {} group {} artifact {} and version {}", repositoryName, groupId,
+          artifactId, version);
+      final String url =
+          getIndexContentPathUrl(nexusConfig, repositoryName, getGroupId(groupId) + artifactId + "/" + version + "/");
       logger.info("Index Content Url {}", url);
       final Response<IndexBrowserTreeViewResponse> response =
           getIndexBrowserTreeViewResponseResponse(getRestClient(nexusConfig, encryptionDetails), nexusConfig, url);
+      String extension;
+      String classifier;
       if (isSuccessful(response)) {
-        final String extension = artifactStreamAttributes.getExtension();
-        final String classifier = artifactStreamAttributes.getClassifier();
+        if (isNotEmpty(artifactStreamAttributes.getExtension())
+            && artifactStreamAttributes.getExtension().contains("${")) {
+          extension = artifactMetadata.get(ArtifactMetadataKeys.extension);
+        } else {
+          extension = artifactStreamAttributes.getExtension();
+        }
+        if (isNotEmpty(artifactStreamAttributes.getClassifier())
+            && artifactStreamAttributes.getClassifier().contains("${")) {
+          classifier = artifactMetadata.get(ArtifactMetadataKeys.classifier);
+        } else {
+          classifier = artifactStreamAttributes.getClassifier();
+        }
         return getUrlInputStream(nexusConfig, encryptionDetails, response.body().getData().getChildren(), delegateId,
             taskId, accountId, notifyResponseData, extension, classifier);
       }
     } else if (repositoryFormat.equals(RepositoryFormat.nuget.name())) {
-      logger.info("Retrieving artifacts of NuGet Repository {}, Package {} of Version {}", repositoryName,
-          artifactStreamAttributes.getNexusPackageName(), version);
+      final String packageName = artifactStreamAttributes.getNexusPackageName().contains("${")
+          ? artifactMetadata.get(ArtifactMetadataKeys.nexusPackageName)
+          : artifactStreamAttributes.getNexusPackageName();
+      logger.info("Retrieving artifacts of NuGet Repository {}, Package {} of Version {}", repositoryName, packageName,
+          version);
       Call<ContentListResourceResponse> request;
       if (nexusConfig.hasCredentials()) {
         request = getRestClient(nexusConfig, encryptionDetails)
                       .getRepositoryContents(
                           Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
-                          repositoryName, artifactStreamAttributes.getNexusPackageName() + "/" + version);
+                          repositoryName, packageName + "/" + version);
       } else {
         request = getRestClient(nexusConfig, encryptionDetails)
-                      .getRepositoryContentsWithoutCredentials(
-                          repositoryName, artifactStreamAttributes.getNexusPackageName() + "/" + version);
+                      .getRepositoryContentsWithoutCredentials(repositoryName, packageName + "/" + version);
       }
       final Response<ContentListResourceResponse> response = request.execute();
       if (isSuccessful(response)) {

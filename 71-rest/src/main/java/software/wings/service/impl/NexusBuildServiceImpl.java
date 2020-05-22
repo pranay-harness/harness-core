@@ -28,6 +28,7 @@ import software.wings.service.intfc.NexusBuildService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -71,6 +72,18 @@ public class NexusBuildServiceImpl implements NexusBuildService {
         artifactStreamAttributes, config, encryptionDetails);
   }
 
+  @Override
+  public BuildDetails getBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes, NexusConfig config,
+      List<EncryptedDataDetail> encryptionDetails, String buildNo) {
+    List<BuildDetails> buildDetails =
+        wrapNewBuildsWithLabels(getBuildInternal(appId, artifactStreamAttributes, config, encryptionDetails, buildNo),
+            artifactStreamAttributes, config, encryptionDetails);
+    if (isNotEmpty(buildDetails)) {
+      return buildDetails.get(0);
+    }
+    return null;
+  }
+
   private List<BuildDetails> getBuildsInternal(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
@@ -101,6 +114,23 @@ public class NexusBuildServiceImpl implements NexusBuildService {
             artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier());
       }
     }
+  }
+
+  private List<BuildDetails> getBuildInternal(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      NexusConfig config, List<EncryptedDataDetail> encryptionDetails, String buildNo) {
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
+    if (!appId.equals(GLOBAL_APP_ID)) {
+      if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.nuget.name())
+          || artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.npm.name())) {
+        return nexusService.getVersion(artifactStreamAttributes.getRepositoryFormat(), config, encryptionDetails,
+            artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName(), buildNo);
+      } else {
+        return nexusService.getVersion(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+            artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(),
+            artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier(), buildNo);
+      }
+    }
+    return new ArrayList<>();
   }
 
   @Override

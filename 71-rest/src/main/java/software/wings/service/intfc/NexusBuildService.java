@@ -66,6 +66,11 @@ public interface NexusBuildService extends BuildService<NexusConfig> {
       List<EncryptedDataDetail> encryptionDetails);
 
   @Override
+  @DelegateTaskType(TaskType.NEXUS_GET_BUILDS)
+  BuildDetails getBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes, NexusConfig config,
+      List<EncryptedDataDetail> encryptionDetails, String buildNo);
+
+  @Override
   @DelegateTaskType(TaskType.NEXUS_LAST_SUCCESSFUL_BUILD)
   BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails);

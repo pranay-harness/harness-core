@@ -76,6 +76,16 @@ public interface NexusRestClient {
   @GET("content/repositories/{repoId}/{packageName}")
   Call<JsonNode> getVersionsWithoutCredentials(@Path("repoId") String repoId, @Path("packageName") String packageName);
 
+  @Headers("Accept: application/json")
+  @GET("content/repositories/{repoId}/{packageName}/{version}")
+  Call<JsonNode> getVersion(@Header("Authorization") String authorization, @Path("repoId") String repoId,
+      @Path("packageName") String packageName, @Path("version") String version);
+
+  @Headers("Accept: application/json")
+  @GET("content/repositories/{repoId}/{packageName}/{version}")
+  Call<JsonNode> getVersionWithoutCredentials(
+      @Path("repoId") String repoId, @Path("packageName") String packageName, @Path("version") String version);
+
   /**
    * List Repository contents call.
    *

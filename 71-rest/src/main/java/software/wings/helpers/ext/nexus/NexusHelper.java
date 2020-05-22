@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.nexus;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -23,9 +24,10 @@ import java.util.Map;
 @Slf4j
 public class NexusHelper {
   @NotNull
+  @SuppressWarnings("squid:S00107")
   public List<BuildDetails> constructBuildDetails(String repoId, String groupId, String artifactName,
       List<String> versions, Map<String, String> versionToArtifactUrls,
-      Map<String, List<ArtifactFileMetadata>> versionToArtifactDownloadUrls) {
+      Map<String, List<ArtifactFileMetadata>> versionToArtifactDownloadUrls, String extension, String classifier) {
     logger.info("Versions come from nexus server {}", versions);
     versions = versions.stream().sorted(new AlphanumComparator()).collect(toList());
     logger.info("After sorting alphanumerically versions {}", versions);
@@ -37,6 +39,12 @@ public class NexusHelper {
           metadata.put(ArtifactMetadataKeys.nexusGroupId, groupId);
           metadata.put(ArtifactMetadataKeys.nexusArtifactId, artifactName);
           metadata.put(ArtifactMetadataKeys.version, version);
+          if (isNotEmpty(extension)) {
+            metadata.put(ArtifactMetadataKeys.extension, extension);
+          }
+          if (isNotEmpty(classifier)) {
+            metadata.put(ArtifactMetadataKeys.classifier, classifier);
+          }
           return aBuildDetails()
               .withNumber(version)
               .withRevision(version)
