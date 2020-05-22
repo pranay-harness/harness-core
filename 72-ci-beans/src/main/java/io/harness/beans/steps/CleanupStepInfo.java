@@ -14,13 +14,13 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 public class CleanupStepInfo implements StepInfo {
-  @NotNull private CIStepType type = CIStepType.CLEANUP;
-  @NotNull public static final StepType stateType = StepType.builder().type(CIStepType.CLEANUP.name()).build();
+  @NotNull private StepInfoType type = StepInfoType.CLEANUP;
+  @NotNull public static final StepType stateType = StepType.builder().type(StepInfoType.CLEANUP.name()).build();
 
   @NotEmpty private String identifier;
 
   @Override
-  public CIStepType getType() {
+  public StepInfoType getType() {
     return type;
   }
 

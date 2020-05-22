@@ -16,13 +16,13 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 public class BuildStepInfo implements StepInfo {
-  @NotNull private CIStepType type = CIStepType.BUILD;
-  @NotNull public static final StepType stateType = StepType.builder().type(CIStepType.BUILD.name()).build();
+  @NotNull private StepInfoType type = StepInfoType.BUILD;
+  @NotNull public static final StepType stateType = StepType.builder().type(StepInfoType.BUILD.name()).build();
   private List<ScriptInfo> scriptInfos;
   @NotEmpty private String identifier;
 
   @Override
-  public CIStepType getType() {
+  public StepInfoType getType() {
     return type;
   }
 

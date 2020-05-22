@@ -14,8 +14,8 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 public class BuildEnvSetupStepInfo implements StepInfo {
-  @NotNull private CIStepType type = CIStepType.SETUP_ENV;
-  @NotNull public static final StepType stateType = StepType.builder().type(CIStepType.SETUP_ENV.name()).build();
+  @NotNull private StepInfoType type = StepInfoType.SETUP_ENV;
+  @NotNull public static final StepType stateType = StepType.builder().type(StepInfoType.SETUP_ENV.name()).build();
 
   @NotNull private BuildJobEnvInfo buildJobEnvInfo;
   @NotNull private String gitConnectorIdentifier;
@@ -23,7 +23,7 @@ public class BuildEnvSetupStepInfo implements StepInfo {
   @NotNull private String identifier;
 
   @Override
-  public CIStepType getType() {
+  public StepInfoType getType() {
     return type;
   }
 

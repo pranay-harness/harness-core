@@ -14,14 +14,14 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 public class ArtifactUploadStepInfo implements StepInfo {
-  @NotNull private CIStepType type = CIStepType.UPLOAD_ARTIFACT;
-  @NotNull private StepType stateType = StepType.builder().type(CIStepType.UPLOAD_ARTIFACT.name()).build();
+  @NotNull private StepInfoType type = StepInfoType.UPLOAD_ARTIFACT;
+  @NotNull private StepType stateType = StepType.builder().type(StepInfoType.UPLOAD_ARTIFACT.name()).build();
   private ArtifactUploadInfo artifactUploadInfo;
 
   @NotNull private String identifier;
 
   @Override
-  public CIStepType getType() {
+  public StepInfoType getType() {
     return type;
   }
 
