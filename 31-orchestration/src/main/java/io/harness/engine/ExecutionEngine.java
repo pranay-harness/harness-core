@@ -45,7 +45,7 @@ import io.harness.plan.Plan;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.resolver.ResolverRegistry;
-import io.harness.registries.state.StateRegistry;
+import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.state.Step;
 import io.harness.state.io.StateResponse;
@@ -72,7 +72,7 @@ public class ExecutionEngine implements Engine {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Injector injector;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
-  @Inject private StateRegistry stateRegistry;
+  @Inject private StepRegistry stepRegistry;
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private ResolverRegistry resolverRegistry;
@@ -182,8 +182,7 @@ public class ExecutionEngine implements Engine {
   public void invokeState(Ambiance ambiance, FacilitatorResponse facilitatorResponse) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
     ExecutionNode node = nodeExecution.getNode();
-    Step currentStep = stateRegistry.obtain(node.getStateType());
-    injector.injectMembers(currentStep);
+    Step currentStep = stepRegistry.obtain(node.getStateType());
     List<StateTransput> inputs =
         engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
     ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(facilitatorResponse.getExecutionMode());
@@ -273,7 +272,7 @@ public class ExecutionEngine implements Engine {
                                 .response(response)
                                 .asyncError(asyncError)
                                 .executionEngine(this)
-                                .stateRegistry(stateRegistry)
+                                .stepRegistry(stepRegistry)
                                 .injector(injector)
                                 .build());
   }

@@ -8,11 +8,11 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class OrchestrationStateRegistrarTest extends OrchestrationTest {
+public class OrchestrationStepRegistrarTest extends OrchestrationTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegister() {
-    new OrchestrationStateRegistrar().testClassesModule();
+    new OrchestrationStepRegistrar().testClassesModule();
   }
 }

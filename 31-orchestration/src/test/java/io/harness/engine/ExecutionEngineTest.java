@@ -35,7 +35,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
 import io.harness.registries.adviser.AdviserRegistry;
-import io.harness.registries.state.StateRegistry;
+import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
 import io.harness.state.StateType;
 import io.harness.state.Step;
@@ -56,7 +56,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ExecutionEngineTest extends OrchestrationTest {
   @Inject private AdviserRegistry adviserRegistry;
-  @Inject private StateRegistry stateRegistry;
+  @Inject private StepRegistry stepRegistry;
   @Inject private HPersistence hPersistence;
   @Inject private ExecutionEngine executionEngine;
 
@@ -68,8 +68,8 @@ public class ExecutionEngineTest extends OrchestrationTest {
   @Before
   public void setUp() {
     adviserRegistry.register(TEST_ADVISER_TYPE, TestHttpResponseCodeSwitchAdviser.class);
-    stateRegistry.register(TEST_STATE_TYPE, TestSyncStep.class);
-    stateRegistry.register(ASYNC_STATE_TYPE, TestAsyncStep.class);
+    stepRegistry.register(TEST_STATE_TYPE, TestSyncStep.class);
+    stepRegistry.register(ASYNC_STATE_TYPE, TestAsyncStep.class);
   }
 
   @Test

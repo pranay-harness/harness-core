@@ -18,7 +18,7 @@ import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
 import io.harness.facilitator.modes.task.AsyncTaskExecutable;
 import io.harness.plan.ExecutionNode;
-import io.harness.registries.state.StateRegistry;
+import io.harness.registries.state.StepRegistry;
 import io.harness.state.io.StateResponse;
 import io.harness.state.io.StateResponse.FailureInfo;
 import lombok.Builder;
@@ -39,7 +39,7 @@ public class EngineResumeExecutor implements Runnable {
   NodeExecution nodeExecution;
   ExecutionEngine executionEngine;
   Injector injector;
-  StateRegistry stateRegistry;
+  StepRegistry stepRegistry;
 
   @Override
   public void run() {
@@ -61,22 +61,22 @@ public class EngineResumeExecutor implements Runnable {
       StateResponse stateResponse = null;
       switch (nodeExecution.getMode()) {
         case CHILDREN:
-          ChildrenExecutable childrenExecutable = (ChildrenExecutable) stateRegistry.obtain(node.getStateType());
+          ChildrenExecutable childrenExecutable = (ChildrenExecutable) stepRegistry.obtain(node.getStateType());
           stateResponse = childrenExecutable.handleChildrenResponse(
               nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;
         case ASYNC:
-          AsyncExecutable asyncExecutable = (AsyncExecutable) stateRegistry.obtain(node.getStateType());
+          AsyncExecutable asyncExecutable = (AsyncExecutable) stepRegistry.obtain(node.getStateType());
           stateResponse =
               asyncExecutable.handleAsyncResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;
         case CHILD:
-          ChildExecutable childExecutable = (ChildExecutable) stateRegistry.obtain(node.getStateType());
+          ChildExecutable childExecutable = (ChildExecutable) stepRegistry.obtain(node.getStateType());
           stateResponse =
               childExecutable.handleChildResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;
         case ASYNC_TASK:
-          AsyncTaskExecutable asyncTaskExecutable = (AsyncTaskExecutable) stateRegistry.obtain(node.getStateType());
+          AsyncTaskExecutable asyncTaskExecutable = (AsyncTaskExecutable) stepRegistry.obtain(node.getStateType());
           stateResponse =
               asyncTaskExecutable.handleTaskResult(nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;

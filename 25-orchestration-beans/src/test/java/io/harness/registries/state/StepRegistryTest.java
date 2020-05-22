@@ -19,22 +19,22 @@ import lombok.Value;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class StateRegistryTest extends OrchestrationBeansTest {
-  @Inject private StateRegistry stateRegistry;
+public class StepRegistryTest extends OrchestrationBeansTest {
+  @Inject private StepRegistry stepRegistry;
 
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
     StateType stateType = StateType.builder().type("DUMMY_TEST").build();
-    stateRegistry.register(stateType, DummyStep.class);
-    Step step = stateRegistry.obtain(stateType);
+    stepRegistry.register(stateType, DummyStep.class);
+    Step step = stepRegistry.obtain(stateType);
     assertThat(step).isNotNull();
 
-    assertThatThrownBy(() -> stateRegistry.register(stateType, DummyStep.class))
+    assertThatThrownBy(() -> stepRegistry.register(stateType, DummyStep.class))
         .isInstanceOf(DuplicateRegistryException.class);
 
-    assertThatThrownBy(() -> stateRegistry.obtain(StateType.builder().type("RANDOM").build()))
+    assertThatThrownBy(() -> stepRegistry.obtain(StateType.builder().type("RANDOM").build()))
         .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 
@@ -42,7 +42,7 @@ public class StateRegistryTest extends OrchestrationBeansTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestGetType() {
-    assertThat(stateRegistry.getType()).isEqualTo(RegistryType.STATE);
+    assertThat(stepRegistry.getType()).isEqualTo(RegistryType.STEP);
   }
 
   @Value
