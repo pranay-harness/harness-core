@@ -12,8 +12,8 @@ import io.harness.facilitator.modes.children.ChildrenExecutable;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.ChildrenExecutableResponseBuilder;
-import io.harness.state.StateType;
 import io.harness.state.Step;
+import io.harness.state.StepType;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
@@ -27,7 +27,7 @@ import java.util.Map;
 @Redesign
 @Produces(Step.class)
 public class ForkStep implements Step, ChildrenExecutable {
-  public static final StateType STATE_TYPE = StateType.builder().type("FORK").build();
+  public static final StepType STATE_TYPE = StepType.builder().type("FORK").build();
 
   @Override
   public ChildrenExecutableResponse obtainChildren(
@@ -54,7 +54,7 @@ public class ForkStep implements Step, ChildrenExecutable {
   }
 
   @Override
-  public StateType getType() {
+  public StepType getType() {
     return STATE_TYPE;
   }
 }

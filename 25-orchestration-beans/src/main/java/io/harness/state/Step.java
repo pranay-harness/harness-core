@@ -8,6 +8,6 @@ import io.harness.registries.RegistrableEntity;
 
 @OwnedBy(CDC)
 @Redesign
-public interface Step extends RegistrableEntity<StateType> {
-  StateType getType();
+public interface Step extends RegistrableEntity<StepType> {
+  StepType getType();
 }

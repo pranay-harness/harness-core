@@ -158,7 +158,7 @@ public class ExecutionEngine implements Engine {
       }
     }
     Preconditions.checkNotNull(facilitatorResponse,
-        "No execution mode detected for State. Name: " + node.getName() + "Type : " + node.getStateType());
+        "No execution mode detected for State. Name: " + node.getName() + "Type : " + node.getStepType());
     ExecutionMode mode = facilitatorResponse.getExecutionMode();
     Consumer<UpdateOperations<NodeExecution>> ops = op -> op.set(NodeExecutionKeys.mode, mode);
     if (facilitatorResponse.getInitialWait() != null && facilitatorResponse.getInitialWait().getSeconds() != 0) {
@@ -182,7 +182,7 @@ public class ExecutionEngine implements Engine {
   public void invokeState(Ambiance ambiance, FacilitatorResponse facilitatorResponse) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
     ExecutionNode node = nodeExecution.getNode();
-    Step currentStep = stepRegistry.obtain(node.getStateType());
+    Step currentStep = stepRegistry.obtain(node.getStepType());
     List<StepTransput> inputs =
         engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
     ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(facilitatorResponse.getExecutionMode());

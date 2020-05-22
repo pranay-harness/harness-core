@@ -19,7 +19,7 @@ import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.plan.ExecutionNode;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.state.StateType;
+import io.harness.state.StepType;
 import io.harness.state.io.StatusNotifyResponseData;
 
 import java.time.Duration;
@@ -36,7 +36,7 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(LevelType.class, 2505);
     kryo.register(NodeExecution.class, 2506);
     kryo.register(ExecutionNode.class, 2508);
-    kryo.register(StateType.class, 2509);
+    kryo.register(StepType.class, 2509);
     kryo.register(ExecutionMode.class, 2510);
     kryo.register(AdviserObtainment.class, 2511);
     kryo.register(FacilitatorObtainment.class, 2512);

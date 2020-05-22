@@ -2,7 +2,7 @@ package io.harness.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ALEXEI;
-import static io.harness.utils.TestAsyncStep.ASYNC_STATE_TYPE;
+import static io.harness.utils.TestAsyncStep.ASYNC_STEP_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -37,8 +37,8 @@ import io.harness.plan.Plan;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
-import io.harness.state.StateType;
 import io.harness.state.Step;
+import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
@@ -62,14 +62,14 @@ public class ExecutionEngineTest extends OrchestrationTest {
 
   private static final AdviserType TEST_ADVISER_TYPE =
       AdviserType.builder().type("TEST_HTTP_RESPONSE_CODE_SWITCH").build();
-  private static final StateType TEST_STATE_TYPE = StateType.builder().type("TEST_STATE_PLAN").build();
-  private static final StateType DUMMY_STATE_TYPE = StateType.builder().type("DUMMY").build();
+  private static final StepType TEST_STEP_TYPE = StepType.builder().type("TEST_STATE_PLAN").build();
+  private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
 
   @Before
   public void setUp() {
     adviserRegistry.register(TEST_ADVISER_TYPE, TestHttpResponseCodeSwitchAdviser.class);
-    stepRegistry.register(TEST_STATE_TYPE, TestSyncStep.class);
-    stepRegistry.register(ASYNC_STATE_TYPE, TestAsyncStep.class);
+    stepRegistry.register(TEST_STEP_TYPE, TestSyncStep.class);
+    stepRegistry.register(ASYNC_STEP_TYPE, TestAsyncStep.class);
   }
 
   @Test
@@ -85,7 +85,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
                       .name("Test Node")
                       .uuid(testNodeId)
                       .identifier("test1")
-                      .stateType(TEST_STATE_TYPE)
+                      .stepType(TEST_STEP_TYPE)
                       .facilitatorObtainment(FacilitatorObtainment.builder()
                                                  .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                                  .build())
@@ -122,7 +122,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
                       .name("Test Node")
                       .uuid(testStartNodeId)
                       .identifier("test1")
-                      .stateType(TEST_STATE_TYPE)
+                      .stepType(TEST_STEP_TYPE)
                       .adviserObtainment(
                           AdviserObtainment.builder()
                               .type(OnSuccessAdviser.ADVISER_TYPE)
@@ -136,7 +136,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
                       .name("Test Node 2")
                       .uuid(testSecondNodeId)
                       .identifier("test2")
-                      .stateType(DUMMY_STATE_TYPE)
+                      .stepType(DUMMY_STEP_TYPE)
                       .facilitatorObtainment(FacilitatorObtainment.builder()
                                                  .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                                  .build())
@@ -173,7 +173,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
                       .name("Test Node")
                       .uuid(testStartNodeId)
                       .identifier("test1")
-                      .stateType(TEST_STATE_TYPE)
+                      .stepType(TEST_STEP_TYPE)
                       .adviserObtainment(
                           AdviserObtainment.builder()
                               .type(OnSuccessAdviser.ADVISER_TYPE)
@@ -187,7 +187,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
                       .uuid(testWaitNodeId)
                       .name("Finish Node")
                       .identifier("finish")
-                      .stateType(ASYNC_STATE_TYPE)
+                      .stepType(ASYNC_STEP_TYPE)
                       .stepParameters(TestStepParameters.builder().param("Param").build())
                       .facilitatorObtainment(
                           FacilitatorObtainment.builder()
@@ -273,8 +273,8 @@ public class ExecutionEngineTest extends OrchestrationTest {
     }
 
     @Override
-    public StateType getType() {
-      return TEST_STATE_TYPE;
+    public StepType getType() {
+      return TEST_STEP_TYPE;
     }
   }
 }

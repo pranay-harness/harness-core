@@ -14,7 +14,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.rule.Owner;
-import io.harness.state.StateType;
+import io.harness.state.StepType;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
@@ -29,7 +29,7 @@ public class SectionStateTest extends OrchestrationTest {
   @Inject private SectionStep sectionState;
 
   private static final String CHILD_ID = generateUuid();
-  private static final StateType STATE_TYPE = StateType.builder().type("SECTION").build();
+  private static final StepType STATE_TYPE = StepType.builder().type("SECTION").build();
 
   @Test
   @Owner(developers = PRASHANT)

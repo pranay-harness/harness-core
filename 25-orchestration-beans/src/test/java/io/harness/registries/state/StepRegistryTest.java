@@ -12,8 +12,8 @@ import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
-import io.harness.state.StateType;
 import io.harness.state.Step;
+import io.harness.state.StepType;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -26,15 +26,15 @@ public class StepRegistryTest extends OrchestrationBeansTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
-    StateType stateType = StateType.builder().type("DUMMY_TEST").build();
-    stepRegistry.register(stateType, DummyStep.class);
-    Step step = stepRegistry.obtain(stateType);
+    StepType stepType = StepType.builder().type("DUMMY_TEST").build();
+    stepRegistry.register(stepType, DummyStep.class);
+    Step step = stepRegistry.obtain(stepType);
     assertThat(step).isNotNull();
 
-    assertThatThrownBy(() -> stepRegistry.register(stateType, DummyStep.class))
+    assertThatThrownBy(() -> stepRegistry.register(stepType, DummyStep.class))
         .isInstanceOf(DuplicateRegistryException.class);
 
-    assertThatThrownBy(() -> stepRegistry.obtain(StateType.builder().type("RANDOM").build()))
+    assertThatThrownBy(() -> stepRegistry.obtain(StepType.builder().type("RANDOM").build()))
         .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 
@@ -49,8 +49,8 @@ public class StepRegistryTest extends OrchestrationBeansTest {
   @Builder
   private static class DummyStep implements Step {
     @Override
-    public StateType getType() {
-      return StateType.builder().type("DUMMY_TEST").build();
+    public StepType getType() {
+      return StepType.builder().type("DUMMY_TEST").build();
     }
   }
 }

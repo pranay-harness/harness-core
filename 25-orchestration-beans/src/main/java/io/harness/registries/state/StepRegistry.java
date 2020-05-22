@@ -12,8 +12,8 @@ import io.harness.registries.Registry;
 import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
-import io.harness.state.StateType;
 import io.harness.state.Step;
+import io.harness.state.StepType;
 import lombok.NonNull;
 
 import java.util.Map;
@@ -22,23 +22,23 @@ import java.util.concurrent.ConcurrentHashMap;
 @OwnedBy(CDC)
 @Redesign
 @Singleton
-public class StepRegistry implements Registry<StateType, Class<? extends Step>> {
+public class StepRegistry implements Registry<StepType, Class<? extends Step>> {
   @Inject private Injector injector;
 
-  Map<StateType, Class<? extends Step>> registry = new ConcurrentHashMap<>();
+  Map<StepType, Class<? extends Step>> registry = new ConcurrentHashMap<>();
 
-  public void register(@NonNull StateType stateType, @NonNull Class<? extends Step> state) {
-    if (registry.containsKey(stateType)) {
-      throw new DuplicateRegistryException(getType(), "State Already Registered with this type: " + stateType);
+  public void register(@NonNull StepType stepType, @NonNull Class<? extends Step> state) {
+    if (registry.containsKey(stepType)) {
+      throw new DuplicateRegistryException(getType(), "State Already Registered with this type: " + stepType);
     }
-    registry.put(stateType, state);
+    registry.put(stepType, state);
   }
 
-  public Step obtain(@NonNull StateType stateType) {
-    if (registry.containsKey(stateType)) {
-      return injector.getInstance(registry.get(stateType));
+  public Step obtain(@NonNull StepType stepType) {
+    if (registry.containsKey(stepType)) {
+      return injector.getInstance(registry.get(stepType));
     }
-    throw new UnregisteredKeyAccessException(getType(), "No State registered for type: " + stateType);
+    throw new UnregisteredKeyAccessException(getType(), "No State registered for type: " + stepType);
   }
 
   @Override

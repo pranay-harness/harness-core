@@ -22,7 +22,7 @@ import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.references.OutcomeRefObject;
-import io.harness.state.StateType;
+import io.harness.state.StepType;
 import io.harness.state.core.fork.ForkStepParameters;
 import io.harness.state.core.section.SectionStepParameters;
 import lombok.experimental.UtilityClass;
@@ -37,8 +37,8 @@ import java.util.Collections;
 public class CustomExecutionUtils {
   private static final String BASIC_HTTP_STATE_URL_500 = "http://httpstat.us/500";
   private static final String BASIC_HTTP_STATE_URL_200 = "http://httpstat.us/200";
-  private static final StateType DUMMY_STATE_TYPE = StateType.builder().type("DUMMY").build();
-  private static final StateType BASIC_HTTP_STATE_TYPE = StateType.builder().type("BASIC_HTTP").build();
+  private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
+  private static final StepType BASIC_HTTP_STEP_TYPE = StepType.builder().type("BASIC_HTTP").build();
 
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
   private static final String APP_ID = "XEsfW6D_RJm1IaGpDidD3g";
@@ -57,7 +57,7 @@ public class CustomExecutionUtils {
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId)
                   .name("Basic Http")
-                  .stateType(BASIC_HTTP_STATE_TYPE)
+                  .stepType(BASIC_HTTP_STEP_TYPE)
                   .stepParameters(basicHttpStateParameters)
                   .identifier("http")
                   .adviserObtainment(AdviserObtainment.builder()
@@ -76,7 +76,7 @@ public class CustomExecutionUtils {
             ExecutionNode.builder()
                 .uuid(dummyNode1Id)
                 .name("Dummy Node 1")
-                .stateType(DUMMY_STATE_TYPE)
+                .stepType(DUMMY_STEP_TYPE)
                 .identifier("dummy1")
                 .adviserObtainment(AdviserObtainment.builder()
                                        .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
@@ -91,7 +91,7 @@ public class CustomExecutionUtils {
             ExecutionNode.builder()
                 .uuid(dummyNode2Id)
                 .name("Dummy Node 2")
-                .stateType(DUMMY_STATE_TYPE)
+                .stepType(DUMMY_STEP_TYPE)
                 .identifier("dummy2")
                 .adviserObtainment(AdviserObtainment.builder()
                                        .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
@@ -105,7 +105,7 @@ public class CustomExecutionUtils {
             ExecutionNode.builder()
                 .uuid(dummyNode3Id)
                 .name("Dummy Node 3")
-                .stateType(DUMMY_STATE_TYPE)
+                .stepType(DUMMY_STEP_TYPE)
                 .identifier("dummy3")
                 .adviserObtainment(AdviserObtainment.builder()
                                        .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
@@ -119,7 +119,7 @@ public class CustomExecutionUtils {
                   .uuid(waitNodeId)
                   .name("Wait Node")
                   .identifier("wait")
-                  .stateType(StateType.builder().type("WAIT_STATE").build())
+                  .stepType(StepType.builder().type("WAIT_STATE").build())
                   .stepParameters(WaitStepParameters.builder().waitDurationSeconds(5).build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
@@ -148,7 +148,7 @@ public class CustomExecutionUtils {
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId1)
                   .name("Basic Http 1")
-                  .stateType(BASIC_HTTP_STATE_TYPE)
+                  .stepType(BASIC_HTTP_STEP_TYPE)
                   .identifier("http_parallel_1")
                   .stepParameters(basicHttpStateParameters1)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
@@ -158,7 +158,7 @@ public class CustomExecutionUtils {
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId2)
                   .name("Basic Http 2")
-                  .stateType(BASIC_HTTP_STATE_TYPE)
+                  .stepType(BASIC_HTTP_STEP_TYPE)
                   .identifier("http_parallel_2")
                   .stepParameters(basicHttpStateParameters2)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
@@ -169,7 +169,7 @@ public class CustomExecutionUtils {
             ExecutionNode.builder()
                 .uuid(forkNodeId)
                 .name("FORK")
-                .stateType(StateType.builder().type("FORK").build())
+                .stepType(StepType.builder().type("FORK").build())
                 .identifier("fork")
                 .stepParameters(
                     ForkStepParameters.builder().parallelNodeId(httpNodeId1).parallelNodeId(httpNodeId2).build())
@@ -185,7 +185,7 @@ public class CustomExecutionUtils {
                   .uuid(dummyNodeId)
                   .name("Dummy Node 1")
                   .identifier("dummy1")
-                  .stateType(DUMMY_STATE_TYPE)
+                  .stepType(DUMMY_STEP_TYPE)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                              .build())
@@ -214,7 +214,7 @@ public class CustomExecutionUtils {
             ExecutionNode.builder()
                 .uuid(httpNodeId1)
                 .name("Basic Http 1")
-                .stateType(BASIC_HTTP_STATE_TYPE)
+                .stepType(BASIC_HTTP_STEP_TYPE)
                 .identifier("http_1")
                 .stepParameters(basicHttpStateParameters1)
                 .facilitatorObtainment(FacilitatorObtainment.builder()
@@ -228,7 +228,7 @@ public class CustomExecutionUtils {
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId2)
                   .name("Basic Http 2")
-                  .stateType(BASIC_HTTP_STATE_TYPE)
+                  .stepType(BASIC_HTTP_STEP_TYPE)
                   .identifier("http_2")
                   .stepParameters(basicHttpStateParameters2)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
@@ -239,7 +239,7 @@ public class CustomExecutionUtils {
             ExecutionNode.builder()
                 .uuid(sectionNodeId)
                 .name("Section")
-                .stateType(StateType.builder().type("SECTION").build())
+                .stepType(StepType.builder().type("SECTION").build())
                 .identifier("section_1")
                 .stepParameters(SectionStepParameters.builder().childNodeId(httpNodeId1).build())
                 .adviserObtainment(AdviserObtainment.builder()
@@ -254,7 +254,7 @@ public class CustomExecutionUtils {
                   .uuid(dummyNodeId)
                   .name("Dummy Node 1")
                   .identifier("dummy")
-                  .stateType(DUMMY_STATE_TYPE)
+                  .stepType(DUMMY_STEP_TYPE)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                              .build())
@@ -276,7 +276,7 @@ public class CustomExecutionUtils {
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId)
                   .name("Basic Http 1")
-                  .stateType(BASIC_HTTP_STATE_TYPE)
+                  .stepType(BASIC_HTTP_STEP_TYPE)
                   .identifier("dummy")
                   .stepParameters(basicHttpStateParameters)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
@@ -314,7 +314,7 @@ public class CustomExecutionUtils {
                   .uuid(shellScriptNodeId)
                   .name("Basic Shell Script")
                   .identifier("shell_script_1")
-                  .stateType(StateType.builder().type(software.wings.sm.StateType.SHELL_SCRIPT.name()).build())
+                  .stepType(StepType.builder().type(software.wings.sm.StateType.SHELL_SCRIPT.name()).build())
                   .identifier("shell_script_1")
                   .stepParameters(shellScriptStateParameters)
                   .facilitatorObtainment(FacilitatorObtainment.builder()

@@ -13,7 +13,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.Plan.PlanKeys;
 import io.harness.rule.Owner;
-import io.harness.state.StateType;
+import io.harness.state.StepType;
 import io.harness.testlib.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -24,7 +24,7 @@ public class PlanTest extends OrchestrationBeansTest {
   private static final String DUMMY_NODE_2_ID = generateUuid();
   private static final String DUMMY_NODE_3_ID = generateUuid();
 
-  private static final StateType DUMMY_STATE_TYPE = StateType.builder().type("DUMMY").build();
+  private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
 
   @Inject private HPersistence hPersistence;
 
@@ -81,19 +81,19 @@ public class PlanTest extends OrchestrationBeansTest {
         .node(ExecutionNode.builder()
                   .uuid(DUMMY_NODE_1_ID)
                   .name("Dummy Node 1")
-                  .stateType(DUMMY_STATE_TYPE)
+                  .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy1")
                   .build())
         .node(ExecutionNode.builder()
                   .uuid(DUMMY_NODE_2_ID)
                   .name("Dummy Node 2")
-                  .stateType(DUMMY_STATE_TYPE)
+                  .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy2")
                   .build())
         .node(ExecutionNode.builder()
                   .uuid(DUMMY_NODE_3_ID)
                   .name("Dummy Node 3")
-                  .stateType(DUMMY_STATE_TYPE)
+                  .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy3")
                   .build())
         .startingNodeId(DUMMY_NODE_1_ID)

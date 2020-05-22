@@ -9,8 +9,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
-import io.harness.state.StateType;
 import io.harness.state.Step;
+import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
@@ -23,7 +23,7 @@ import java.util.List;
 @Redesign
 @Produces(Step.class)
 public class DummyStep implements Step, SyncExecutable {
-  public static final StateType STATE_TYPE = StateType.builder().type("DUMMY").build();
+  public static final StepType STATE_TYPE = StepType.builder().type("DUMMY").build();
 
   @Override
   public StepResponse executeSync(
@@ -33,7 +33,7 @@ public class DummyStep implements Step, SyncExecutable {
   }
 
   @Override
-  public StateType getType() {
+  public StepType getType() {
     return STATE_TYPE;
   }
 }
