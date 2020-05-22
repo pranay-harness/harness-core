@@ -2,7 +2,7 @@ package io.harness.beans.steps;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.environment.BuildJobEnvInfo;
-import io.harness.state.StateType;
+import io.harness.state.StepType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
@@ -14,8 +14,8 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 public class BuildEnvSetupStepInfo implements StepInfo {
-  @NotNull private StepType type = StepType.SETUP_ENV;
-  @NotNull public static final StateType stateType = StateType.builder().type(StepType.SETUP_ENV.name()).build();
+  @NotNull private CIStepType type = CIStepType.SETUP_ENV;
+  @NotNull public static final StepType stateType = StepType.builder().type(CIStepType.SETUP_ENV.name()).build();
 
   @NotNull private BuildJobEnvInfo buildJobEnvInfo;
   @NotNull private String gitConnectorIdentifier;
@@ -23,12 +23,12 @@ public class BuildEnvSetupStepInfo implements StepInfo {
   @NotNull private String identifier;
 
   @Override
-  public StepType getType() {
+  public CIStepType getType() {
     return type;
   }
 
   @Override
-  public StateType getStateType() {
+  public StepType getStateType() {
     return stateType;
   }
 

@@ -34,8 +34,8 @@ import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.task.AsyncTaskExecutable;
 import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputResolver;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.state.StateType;
 import io.harness.state.Step;
+import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
@@ -73,7 +73,7 @@ import java.util.Map;
 @Redesign
 @Slf4j
 public class ShellScriptStep implements Step, AsyncTaskExecutable {
-  public static final StateType STATE_TYPE = StateType.builder().type(SHELL_SCRIPT.name()).build();
+  public static final StepType STATE_TYPE = StepType.builder().type(SHELL_SCRIPT.name()).build();
 
   @Inject private ActivityService activityService;
   @Inject private ActivityHelperService activityHelperService;
@@ -84,7 +84,7 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
   @Inject private FeatureFlagService featureFlagService;
 
   @Override
-  public StateType getType() {
+  public StepType getType() {
     return STATE_TYPE;
   }
 

@@ -15,7 +15,7 @@ import io.harness.node.BasicStepToExecutionNodeConverter;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
 import io.harness.rule.Owner;
-import io.harness.state.StateType;
+import io.harness.state.StepType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,7 +45,7 @@ public class BasicExecutionPlanGeneratorTest extends CIExecutionTest {
                                       .uuid(UUID)
                                       .name(NAME)
                                       .identifier(generateUuid())
-                                      .stateType(StateType.builder().type("DUMMY").build())
+                                      .stepType(StepType.builder().type("DUMMY").build())
                                       .build();
 
     when(basicStepToExecutionNodeConverter.convertStep(any(), any())).thenReturn(executionNode);

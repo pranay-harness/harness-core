@@ -15,7 +15,7 @@ import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.rule.Owner;
-import io.harness.state.StateType;
+import io.harness.state.StepType;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
@@ -32,7 +32,7 @@ public class ForkStateTest extends OrchestrationTest {
 
   private static final String FIRST_CHILD_ID = generateUuid();
   private static final String SECOND_CHILD_ID = generateUuid();
-  private static final StateType STATE_TYPE = StateType.builder().type("FORK").build();
+  private static final StepType STATE_TYPE = StepType.builder().type("FORK").build();
 
   @Test
   @Owner(developers = PRASHANT)

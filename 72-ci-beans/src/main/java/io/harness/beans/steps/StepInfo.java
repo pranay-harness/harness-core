@@ -5,7 +5,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.beans.template.BaseStepTemplate;
-import io.harness.state.StateType;
+import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = EXTERNAL_PROPERTY)
@@ -18,9 +18,9 @@ import io.harness.state.io.StepParameters;
       @JsonSubTypes.Type(value = TestStepInfo.class, name = "TEST")
 })
 public interface StepInfo extends StepParameters, BaseStepTemplate {
-  StepType getType();
+  CIStepType getType();
 
-  StateType getStateType();
+  StepType getStateType();
 
   String getStepIdentifier();
 }

@@ -13,7 +13,7 @@ import lombok.Value;
 @Value
 @Builder
 @Redesign
-public class StateType implements RegistryKey {
+public class StepType implements RegistryKey {
   // Provided From the orchestration layer system states
 
   public static final String FORK = "FORK";

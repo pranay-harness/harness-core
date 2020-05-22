@@ -18,7 +18,7 @@ import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.rule.Owner;
-import io.harness.state.StateType;
+import io.harness.state.StepType;
 import io.harness.testlib.RealMongo;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,7 +53,7 @@ public class RetryHandlerTest extends OrchestrationTest {
                                                 .uuid(NODE_SETUP_ID)
                                                 .name("DUMMY")
                                                 .identifier("dummy")
-                                                .stateType(StateType.builder().type("DUMMY").build())
+                                                .stepType(StepType.builder().type("DUMMY").build())
                                                 .build())
                                       .startTs(System.currentTimeMillis())
                                       .status(NodeExecutionStatus.FAILED)

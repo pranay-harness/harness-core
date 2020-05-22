@@ -9,8 +9,8 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
-import io.harness.state.StateType;
 import io.harness.state.Step;
+import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 public class TestAsyncStep implements Step, AsyncExecutable {
-  public static final StateType ASYNC_STATE_TYPE = StateType.builder().type("TEST_STATE_PLAN_ASYNC").build();
+  public static final StepType ASYNC_STEP_TYPE = StepType.builder().type("TEST_STATE_PLAN_ASYNC").build();
 
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
 
@@ -41,7 +41,7 @@ public class TestAsyncStep implements Step, AsyncExecutable {
   }
 
   @Override
-  public StateType getType() {
-    return ASYNC_STATE_TYPE;
+  public StepType getType() {
+    return ASYNC_STEP_TYPE;
   }
 }

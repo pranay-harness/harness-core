@@ -10,8 +10,8 @@ import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.network.SafeHttpCall;
-import io.harness.state.StateType;
 import io.harness.state.Step;
+import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
@@ -47,7 +47,7 @@ public class CleanupStep implements Step, SyncExecutable {
   }
 
   @Override
-  public StateType getType() {
+  public StepType getType() {
     return CleanupStepInfo.stateType;
   }
 }

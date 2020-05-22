@@ -61,22 +61,22 @@ public class EngineResumeExecutor implements Runnable {
       StepResponse stepResponse = null;
       switch (nodeExecution.getMode()) {
         case CHILDREN:
-          ChildrenExecutable childrenExecutable = (ChildrenExecutable) stepRegistry.obtain(node.getStateType());
+          ChildrenExecutable childrenExecutable = (ChildrenExecutable) stepRegistry.obtain(node.getStepType());
           stepResponse = childrenExecutable.handleChildrenResponse(
               nodeExecution.getAmbiance(), node.getStepParameters(), response);
           break;
         case ASYNC:
-          AsyncExecutable asyncExecutable = (AsyncExecutable) stepRegistry.obtain(node.getStateType());
+          AsyncExecutable asyncExecutable = (AsyncExecutable) stepRegistry.obtain(node.getStepType());
           stepResponse =
               asyncExecutable.handleAsyncResponse(nodeExecution.getAmbiance(), node.getStepParameters(), response);
           break;
         case CHILD:
-          ChildExecutable childExecutable = (ChildExecutable) stepRegistry.obtain(node.getStateType());
+          ChildExecutable childExecutable = (ChildExecutable) stepRegistry.obtain(node.getStepType());
           stepResponse =
               childExecutable.handleChildResponse(nodeExecution.getAmbiance(), node.getStepParameters(), response);
           break;
         case ASYNC_TASK:
-          AsyncTaskExecutable asyncTaskExecutable = (AsyncTaskExecutable) stepRegistry.obtain(node.getStateType());
+          AsyncTaskExecutable asyncTaskExecutable = (AsyncTaskExecutable) stepRegistry.obtain(node.getStepType());
           stepResponse =
               asyncTaskExecutable.handleTaskResult(nodeExecution.getAmbiance(), node.getStepParameters(), response);
           break;

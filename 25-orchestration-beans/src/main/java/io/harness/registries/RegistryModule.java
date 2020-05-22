@@ -25,8 +25,8 @@ import io.harness.registries.registrar.StepRegistrar;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
-import io.harness.state.StateType;
 import io.harness.state.Step;
+import io.harness.state.StepType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.util.ConcurrentHashSet;
@@ -82,7 +82,7 @@ public class RegistryModule extends DependencyModule {
   StepRegistry providesStateRegistry(Injector injector) {
     StepRegistry stepRegistry = new StepRegistry();
     stepClasses.forEach(pair -> {
-      Pair<StateType, Class<? extends Step>> statePair = (Pair<StateType, Class<? extends Step>>) pair;
+      Pair<StepType, Class<? extends Step>> statePair = (Pair<StepType, Class<? extends Step>>) pair;
       stepRegistry.register(statePair.getLeft(), statePair.getRight());
     });
     injector.injectMembers(stepRegistry);
