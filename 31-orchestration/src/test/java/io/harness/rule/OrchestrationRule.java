@@ -12,6 +12,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.MapBinder;
 
 import io.harness.OrchestrationModule;
 import io.harness.config.PublisherConfiguration;
@@ -27,11 +28,14 @@ import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.tasks.TaskExecutor;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.harness.utils.DummyTask;
+import io.harness.utils.DummyTaskExecutor;
 import io.harness.version.VersionInfoManager;
 import io.harness.version.VersionModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -100,6 +104,15 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
           Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
         return QueueFactory.createQueueConsumer(injector, NotifyEvent.class, ofSeconds(5),
             asList(asList(versionInfoManager.getVersionInfo().getVersion()), asList(TEST_PUBLISHER)), config);
+      }
+    });
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        MapBinder<String, TaskExecutor> taskExecutorMap =
+            MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
+        taskExecutorMap.addBinding(DummyTask.class.getCanonicalName()).to(DummyTaskExecutor.class);
       }
     });
 

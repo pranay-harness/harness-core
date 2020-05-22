@@ -31,8 +31,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 import io.harness.execution.status.NodeExecutionStatus;
-import io.harness.facilitator.modes.async.AsyncExecutable;
-import io.harness.facilitator.modes.async.AsyncExecutableResponse;
+import io.harness.facilitator.modes.task.TaskWrapperExecutable;
 import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputResolver;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.state.State;
@@ -63,7 +62,6 @@ import software.wings.exception.ShellScriptException;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -74,7 +72,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Redesign
 @Slf4j
-public class ShellScriptState implements State, AsyncExecutable {
+public class ShellScriptState implements State, TaskWrapperExecutable {
   public static final StateType STATE_TYPE = StateType.builder().type(SHELL_SCRIPT.name()).build();
 
   @Inject private ActivityService activityService;
@@ -82,7 +80,6 @@ public class ShellScriptState implements State, AsyncExecutable {
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
-  @Inject private DelegateService delegateService;
   @Inject private ExecutionSweepingOutputResolver executionSweepingOutputResolver;
   @Inject private FeatureFlagService featureFlagService;
 
@@ -92,8 +89,7 @@ public class ShellScriptState implements State, AsyncExecutable {
   }
 
   @Override
-  public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs) {
+  public DelegateTask obtainTask(Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs) {
     ShellScriptStateParameters shellScriptStateParameters = (ShellScriptStateParameters) parameters;
     String activityId = createActivity(ambiance);
 
@@ -222,30 +218,26 @@ public class ShellScriptState implements State, AsyncExecutable {
             .keyName(keyName);
 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .accountId(getAccountId(ambiance))
-            .waitId(activityId)
-            .tags(renderedTags)
-            .appId(getAppId(ambiance))
-            .data(TaskData.builder()
-                      .async(true)
-                      .taskType(TaskType.SCRIPT.name())
-                      .parameters(new Object[] {shellScriptParameters.build()})
-                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                      .expressionFunctorToken(expressionFunctorToken)
-                      .build())
-            .envId(environment == null ? null : environment.getUuid())
-            .infrastructureMappingId(infrastructureMapping == null ? null : infrastructureMapping.getUuid())
-            .serviceTemplateId(serviceTemplateId)
-            .build();
-
-    delegateService.queueTask(delegateTask);
-    return AsyncExecutableResponse.builder().callbackId(activityId).build();
+    return DelegateTask.builder()
+        .accountId(getAccountId(ambiance))
+        .waitId(activityId)
+        .tags(renderedTags)
+        .appId(getAppId(ambiance))
+        .data(TaskData.builder()
+                  .async(true)
+                  .taskType(TaskType.SCRIPT.name())
+                  .parameters(new Object[] {shellScriptParameters.build()})
+                  .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                  .expressionFunctorToken(expressionFunctorToken)
+                  .build())
+        .envId(environment == null ? null : environment.getUuid())
+        .infrastructureMappingId(infrastructureMapping == null ? null : infrastructureMapping.getUuid())
+        .serviceTemplateId(serviceTemplateId)
+        .build();
   }
 
   @Override
-  public StateResponse handleAsyncResponse(
+  public StateResponse handleTaskResult(
       Ambiance ambiance, StateParameters parameters, Map<String, ResponseData> response) {
     ShellScriptStateParameters shellScriptStateParameters = (ShellScriptStateParameters) parameters;
     StateResponseBuilder stateResponseBuilder = StateResponse.builder();

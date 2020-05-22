@@ -14,6 +14,7 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+import io.harness.tasks.Task;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -54,7 +55,7 @@ import javax.validation.constraints.NotNull;
         , @Field(DelegateTaskKeys.status), @Field("data.async"), @Field(DelegateTaskKeys.expiry),
       }), @Index(options = @IndexOptions(name = "data_async"), fields = { @Field("data.async") })
 })
-public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, Task {
   // TODO: this is temporary to propagate if the compatibility framework is enabled for particular task
   private boolean capabilityFrameworkEnabled;
 

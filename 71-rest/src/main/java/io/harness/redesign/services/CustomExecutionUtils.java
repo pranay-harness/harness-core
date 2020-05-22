@@ -40,6 +40,9 @@ public class CustomExecutionUtils {
   private static final StateType DUMMY_STATE_TYPE = StateType.builder().type("DUMMY").build();
   private static final StateType BASIC_HTTP_STATE_TYPE = StateType.builder().type("BASIC_HTTP").build();
 
+  private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
+  private static final String APP_ID = "XEsfW6D_RJm1IaGpDidD3g";
+
   public static Plan provideHttpSwitchPlan() {
     String planId = generateUuid();
     String httpNodeId = generateUuid();
@@ -66,7 +69,7 @@ public class CustomExecutionUtils {
                                                          .build())
                                          .build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK_WRAPPER).build())
                                              .build())
                   .build())
         .node(
@@ -123,10 +126,8 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(httpNodeId)
-        .setupAbstractions(ImmutableMap.<String, String>builder()
-                               .put("accountId", "kmpySmUISimoRrJL6NL73w")
-                               .put("appId", "XEsfW6D_RJm1IaGpDidD3g")
-                               .build())
+        .setupAbstractions(
+            ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
         .uuid(planId)
         .build();
   }
@@ -151,7 +152,7 @@ public class CustomExecutionUtils {
                   .identifier("http_parallel_1")
                   .stateParameters(basicHttpStateParameters1)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK_WRAPPER).build())
                                              .build())
                   .build())
         .node(ExecutionNode.builder()
@@ -161,7 +162,7 @@ public class CustomExecutionUtils {
                   .identifier("http_parallel_2")
                   .stateParameters(basicHttpStateParameters2)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK_WRAPPER).build())
                                              .build())
                   .build())
         .node(
@@ -190,10 +191,8 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(forkNodeId)
-        .setupAbstractions(ImmutableMap.<String, String>builder()
-                               .put("accountId", "kmpySmUISimoRrJL6NL73w")
-                               .put("appId", "XEsfW6D_RJm1IaGpDidD3g")
-                               .build())
+        .setupAbstractions(
+            ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
         .uuid(planId)
         .build();
   }
@@ -219,7 +218,7 @@ public class CustomExecutionUtils {
                 .identifier("http_1")
                 .stateParameters(basicHttpStateParameters1)
                 .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                           .type(FacilitatorType.builder().type(FacilitatorType.TASK_WRAPPER).build())
                                            .build())
                 .adviserObtainment(AdviserObtainment.builder()
                                        .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
@@ -233,7 +232,7 @@ public class CustomExecutionUtils {
                   .identifier("http_2")
                   .stateParameters(basicHttpStateParameters2)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK_WRAPPER).build())
                                              .build())
                   .build())
         .node(
@@ -261,10 +260,8 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(sectionNodeId)
-        .setupAbstractions(ImmutableMap.<String, String>builder()
-                               .put("accountId", "kmpySmUISimoRrJL6NL73w")
-                               .put("appId", "XEsfW6D_RJm1IaGpDidD3g")
-                               .build())
+        .setupAbstractions(
+            ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
         .uuid(planId)
         .build();
   }
@@ -283,7 +280,7 @@ public class CustomExecutionUtils {
                   .identifier("dummy")
                   .stateParameters(basicHttpStateParameters)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK_WRAPPER).build())
                                              .build())
                   .adviserObtainment(AdviserObtainment.builder()
                                          .type(AdviserType.builder().type(AdviserType.RETRY).build())
@@ -293,10 +290,8 @@ public class CustomExecutionUtils {
                                                          .build())
                                          .build())
                   .build())
-        .setupAbstractions(ImmutableMap.<String, String>builder()
-                               .put("accountId", "kmpySmUISimoRrJL6NL73w")
-                               .put("appId", "XEsfW6D_RJm1IaGpDidD3g")
-                               .build())
+        .setupAbstractions(
+            ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
         .build();
   }
 
@@ -320,15 +315,14 @@ public class CustomExecutionUtils {
                   .name("Basic Shell Script")
                   .identifier("shell_script_1")
                   .stateType(StateType.builder().type(software.wings.sm.StateType.SHELL_SCRIPT.name()).build())
+                  .identifier("shell_script_1")
                   .stateParameters(shellScriptStateParameters)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK_WRAPPER).build())
                                              .build())
                   .build())
-        .setupAbstractions(ImmutableMap.<String, String>builder()
-                               .put("accountId", "kmpySmUISimoRrJL6NL73w")
-                               .put("appId", "d9cTupsyQjWqbhUmZ8XPdQ")
-                               .build())
+        .setupAbstractions(
+            ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
         .build();
   }
 }

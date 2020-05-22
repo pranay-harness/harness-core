@@ -10,6 +10,7 @@ import io.harness.engine.executables.handlers.AsyncExecutableInvoker;
 import io.harness.engine.executables.handlers.ChildExecutableInvoker;
 import io.harness.engine.executables.handlers.ChildrenExecutableInvoker;
 import io.harness.engine.executables.handlers.SyncExecutableInvoker;
+import io.harness.engine.executables.handlers.TaskWrapperInvoker;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitator.modes.ExecutionMode;
 
@@ -20,6 +21,7 @@ public class ExecutableInvokerFactory {
   @Inject private SyncExecutableInvoker syncExecutableInvoker;
   @Inject private ChildrenExecutableInvoker childrenExecutableInvoker;
   @Inject private ChildExecutableInvoker childExecutableInvoker;
+  @Inject private TaskWrapperInvoker taskWrapperInvoker;
 
   public ExecutableInvoker obtainInvoker(ExecutionMode mode) {
     switch (mode) {
@@ -31,6 +33,8 @@ public class ExecutableInvokerFactory {
         return childrenExecutableInvoker;
       case CHILD:
         return childExecutableInvoker;
+      case TASK_WRAPPER:
+        return taskWrapperInvoker;
       default:
         throw new InvalidRequestException("No Invoker present for execution mode :" + mode);
     }
