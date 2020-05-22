@@ -39,13 +39,16 @@ public class AsyncTaskInvoker implements ExecutableInvoker {
 
   private void handleResponse(@NonNull Ambiance ambiance, @NonNull Task task) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
-    TaskExecutor taskExecutor = taskExecutorMap.get(task.getClass().getCanonicalName());
+    TaskExecutor taskExecutor = taskExecutorMap.get(task.getTaskIdentifier());
     String taskId = Preconditions.checkNotNull(taskExecutor.queueTask(ambiance, task));
     NotifyCallback callback = EngineResumeCallback.builder().nodeInstanceId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, task.getWaitId());
 
     // Update Execution Node Instance state to TASK_WAITING
     engineStatusHelper.updateNodeInstance(nodeExecution.getUuid(),
-        ops -> ops.set(NodeExecutionKeys.status, TASK_WAITING).set(NodeExecutionKeys.taskId, taskId));
+        ops
+        -> ops.set(NodeExecutionKeys.status, TASK_WAITING)
+               .set(NodeExecutionKeys.taskId, taskId)
+               .set(NodeExecutionKeys.taskIdentifier, task.getTaskIdentifier()));
   }
 }

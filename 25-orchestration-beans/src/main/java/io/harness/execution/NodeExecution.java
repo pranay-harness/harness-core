@@ -58,6 +58,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   String previousId;
 
   String taskId;
+  String taskIdentifier;
 
   // Mutable
   long lastUpdatedAt;

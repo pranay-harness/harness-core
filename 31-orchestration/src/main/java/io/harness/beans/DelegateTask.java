@@ -1,5 +1,6 @@
 package io.harness.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.DelegateTask.ParametersConverter;
@@ -36,6 +37,7 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nonnull;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -56,6 +58,8 @@ import javax.validation.constraints.NotNull;
       }), @Index(options = @IndexOptions(name = "data_async"), fields = { @Field("data.async") })
 })
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, Task {
+  public static final String TASK_IDENTIFIER = "DELEGATE_TASK";
+
   // TODO: this is temporary to propagate if the compatibility framework is enabled for particular task
   private boolean capabilityFrameworkEnabled;
 
@@ -101,6 +105,13 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   @Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
+
+  @Override
+  @JsonIgnore
+  @Nonnull
+  public String getTaskIdentifier() {
+    return TASK_IDENTIFIER;
+  }
 
   public static class ParametersConverter extends KryoConverter {
     public ParametersConverter() {
