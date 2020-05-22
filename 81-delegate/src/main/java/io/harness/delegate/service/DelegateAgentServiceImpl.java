@@ -132,7 +132,6 @@ import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -567,6 +566,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             logger.error("Failed to install kustomize after {} retries", CLIENT_TOOL_RETRIES);
           }
         });
+      }
+
+      if (delegateLocalConfigService.isLocalConfigPresent()) {
+        Map<String, String> localSecrets = delegateLocalConfigService.getLocalDelegateSecrets();
+        if (isNotEmpty(localSecrets)) {
+          delegateLogService.registerLogSanitizer(new GenericLogSanitizer(new HashSet<>(localSecrets.values())));
+        }
       }
 
       synchronized (waiter) {
@@ -1790,20 +1796,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
     }
 
-    if (delegateLocalConfigService.isLocalConfigPresent()) {
-      appendSecretsToSanitizeFromDelegateConfig(secrets);
-      return Optional.of(new GenericLogSanitizer(secrets));
-    } else if (isNotBlank(activityId) && isNotEmpty(secrets)) {
+    if (isNotBlank(activityId) && isNotEmpty(secrets)) {
       return Optional.of(new ActivityBasedLogSanitizer(activityId, secrets));
     } else {
       return Optional.empty();
-    }
-  }
-
-  private void appendSecretsToSanitizeFromDelegateConfig(Set<String> secrets) {
-    Map<String, String> localSecrets = delegateLocalConfigService.getLocalDelegateSecrets();
-    if (!MapUtils.isEmpty(localSecrets)) {
-      secrets.addAll(localSecrets.values());
     }
   }
 

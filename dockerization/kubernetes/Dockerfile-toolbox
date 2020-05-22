@@ -1,6 +1,6 @@
 FROM gcr.io/gke-release/istio/coreos/hyperkube:v1.7.6_coreos.0
 
-RUN apt-get update && apt-get install -y curl
+RUN apt-get update && apt-get install -y curl jq
 
 #
 # mongo
