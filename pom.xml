@@ -18,14 +18,12 @@
         <module>31-orchestration</module>
         <module>35-yaml-beans</module>
         <module>38-execution-plan</module>
-        <module>41-cv-nextgen-beans</module>
-        <module>42-cv-nextgen-commons</module>
-        <module>45-cv-nextgen</module>
         <module>57-command-library-common</module>
         <module>64-events-framework</module>
         <module>64-delegate-beans</module>
         <module>65-delegate-agent-beans</module>
         <module>65-delegate-service-beans</module>
+        <module>66-cv-nextgen-commons</module>
         <module>70-delegate-agent</module>
         <module>70-delegate-service</module>
         <module>71-rest</module>
@@ -36,6 +34,7 @@
         <module>75-model-test</module>
         <module>76-graphql-test</module>
         <module>78-batch-processing</module>
+        <module>80-cv-nextgen</module>
         <module>79-verification</module>
         <module>81-delegate</module>
         <module>82-watcher</module>
