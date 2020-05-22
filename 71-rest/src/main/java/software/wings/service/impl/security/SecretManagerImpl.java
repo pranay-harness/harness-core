@@ -1468,6 +1468,7 @@ public class SecretManagerImpl implements SecretManager {
     if (pathChanged) {
       needReencryption = true;
       builder.append(builder.length() > 0 ? " & path" : " Changed path");
+      savedData.setPath(secretText.getPath());
     }
     if (secretText.getUsageRestrictions() != null) {
       builder.append(builder.length() > 0 ? " & usage restrictions" : "Changed usage restrictions");
@@ -1487,7 +1488,6 @@ public class SecretManagerImpl implements SecretManager {
       savedData.setBackupEncryptionType(encryptedData.getBackupEncryptionType());
       savedData.setBackupEncryptedValue(encryptedData.getBackupEncryptedValue());
       savedData.setBackupEncryptionKey(encryptedData.getBackupEncryptionKey());
-      savedData.setPath(encryptedData.getPath());
     }
     savedData.setUsageRestrictions(secretText.getUsageRestrictions());
     saveEncryptedData(savedData);
