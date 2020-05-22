@@ -10,6 +10,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Set;
 
 @OwnedBy(CDC)
-public interface StateRegistrar extends EngineRegistrar<StateType, Step> {
+public interface StepRegistrar extends EngineRegistrar<StateType, Step> {
   void register(Set<Pair<StateType, Class<? extends Step>>> stateClasses);
 }

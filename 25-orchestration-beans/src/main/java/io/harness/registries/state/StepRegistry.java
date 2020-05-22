@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @OwnedBy(CDC)
 @Redesign
 @Singleton
-public class StateRegistry implements Registry<StateType, Class<? extends Step>> {
+public class StepRegistry implements Registry<StateType, Class<? extends Step>> {
   @Inject private Injector injector;
 
   Map<StateType, Class<? extends Step>> registry = new ConcurrentHashMap<>();
@@ -43,6 +43,6 @@ public class StateRegistry implements Registry<StateType, Class<? extends Step>>
 
   @Override
   public RegistryType getType() {
-    return RegistryType.STATE;
+    return RegistryType.STEP;
   }
 }

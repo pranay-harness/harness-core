@@ -21,9 +21,9 @@ import io.harness.registries.registrar.AdviserRegistrar;
 import io.harness.registries.registrar.EngineRegistrar;
 import io.harness.registries.registrar.FacilitatorRegistrar;
 import io.harness.registries.registrar.ResolverRegistrar;
-import io.harness.registries.registrar.StateRegistrar;
+import io.harness.registries.registrar.StepRegistrar;
 import io.harness.registries.resolver.ResolverRegistry;
-import io.harness.registries.state.StateRegistry;
+import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.state.StateType;
 import io.harness.state.Step;
@@ -50,13 +50,13 @@ public class RegistryModule extends DependencyModule {
 
   private static final Map<RegistryType, Class<? extends EngineRegistrar>> registryTypeClassMap =
       ImmutableMap.<RegistryType, Class<? extends EngineRegistrar>>builder()
-          .put(RegistryType.STATE, StateRegistrar.class)
+          .put(RegistryType.STEP, StepRegistrar.class)
           .put(RegistryType.ADVISER, AdviserRegistrar.class)
           .put(RegistryType.FACILITATOR, FacilitatorRegistrar.class)
           .put(RegistryType.RESOLVER, ResolverRegistrar.class)
           .build();
 
-  private static final Set stateClasses = collectClasses(RegistryType.STATE);
+  private static final Set stepClasses = collectClasses(RegistryType.STEP);
   private static final Set adviserClasses = collectClasses(RegistryType.ADVISER);
   private static final Set facilitatorClasses = collectClasses(RegistryType.FACILITATOR);
   private static final Set resolverClasses = collectClasses(RegistryType.RESOLVER);
@@ -79,14 +79,14 @@ public class RegistryModule extends DependencyModule {
 
   @Provides
   @Singleton
-  StateRegistry providesStateRegistry(Injector injector) {
-    StateRegistry stateRegistry = new StateRegistry();
-    stateClasses.forEach(pair -> {
+  StepRegistry providesStateRegistry(Injector injector) {
+    StepRegistry stepRegistry = new StepRegistry();
+    stepClasses.forEach(pair -> {
       Pair<StateType, Class<? extends Step>> statePair = (Pair<StateType, Class<? extends Step>>) pair;
-      stateRegistry.register(statePair.getLeft(), statePair.getRight());
+      stepRegistry.register(statePair.getLeft(), statePair.getRight());
     });
-    injector.injectMembers(stateRegistry);
-    return stateRegistry;
+    injector.injectMembers(stepRegistry);
+    return stepRegistry;
   }
 
   @Provides

@@ -8,11 +8,11 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 
-public class WingsStateRegistrarTest extends WingsBaseTest {
+public class WingsStepRegistrarTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegister() {
-    new WingsStateRegistrar().testClassesModule();
+    new WingsStepRegistrar().testClassesModule();
   }
 }
