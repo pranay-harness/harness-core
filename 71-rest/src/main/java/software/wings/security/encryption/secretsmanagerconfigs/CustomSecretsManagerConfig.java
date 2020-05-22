@@ -10,9 +10,10 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SecretManagerConfig;
+import software.wings.security.encryption.SecretVariable;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 @Data
 @Builder
@@ -22,7 +23,7 @@ public class CustomSecretsManagerConfig extends SecretManagerConfig {
   @NonNull @NotEmpty @Attributes(title = "Name") private String name;
   @NonNull @NotEmpty @Attributes(title = "Template Shell Script") private String templateId;
   @NonNull @Attributes(title = "Delegate Selectors") private List<String> delegateSelectors;
-  @NonNull @Attributes(title = "Test Parameters") private Map<String, String> testParameters;
+  @NonNull @Attributes(title = "Test Parameters") private Set<SecretVariable> testVariables;
   @Attributes(title = "Execute on Delegate") private boolean executeOnDelegate;
   @Attributes(title = "Templatize Connector") private boolean isConnectorTemplatized;
   @Attributes(title = "Target Host") private String host;

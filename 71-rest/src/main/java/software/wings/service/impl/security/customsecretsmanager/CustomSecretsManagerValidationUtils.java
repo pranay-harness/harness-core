@@ -9,13 +9,13 @@ import io.harness.exception.InvalidArgumentsException;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.security.encryption.SecretVariable;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
-import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig.CustomSecretsManagerConfigKeys;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @UtilityClass
 class CustomSecretsManagerValidationUtils {
@@ -29,17 +29,12 @@ class CustomSecretsManagerValidationUtils {
     }
   }
 
-  void validateParams(
-      @NonNull CustomSecretsManagerConfig customSecretsManagerConfig, @NonNull Map<String, String> testParameters) {
-    if (!customSecretsManagerConfig.isExecuteOnDelegate() && customSecretsManagerConfig.isConnectorTemplatized()) {
-      if (!testParameters.containsKey(CustomSecretsManagerConfigKeys.connectorId)) {
-        String message = "Templatized connector not present in the given test parameters";
-        throw new InvalidArgumentsException(message, USER);
-      }
-    }
-    Set<String> variables =
+  void validateVariables(
+      @NonNull CustomSecretsManagerConfig customSecretsManagerConfig, @NonNull Set<SecretVariable> testVariables) {
+    Set<String> shellScriptVariables =
         new HashSet<>(customSecretsManagerConfig.getCustomSecretsManagerShellScript().getVariables());
-    Set<String> diff = Sets.difference(variables, testParameters.keySet());
+    Set<String> receivedVariables = testVariables.stream().map(SecretVariable::getName).collect(Collectors.toSet());
+    Set<String> diff = Sets.difference(shellScriptVariables, receivedVariables);
     if (!diff.isEmpty()) {
       String message = String.format(
           "The values for the variables %s have not been provided as part of test parameters", String.join(", ", diff));

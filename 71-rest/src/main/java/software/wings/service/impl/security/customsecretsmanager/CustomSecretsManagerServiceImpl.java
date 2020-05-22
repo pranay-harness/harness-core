@@ -24,6 +24,7 @@ import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
+import software.wings.security.encryption.SecretVariable;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig.CustomSecretsManagerConfigKeys;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
@@ -32,9 +33,9 @@ import software.wings.service.impl.security.AbstractSecretServiceImpl;
 import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl implements CustomSecretsManagerService {
   private CustomSecretsManagerShellScriptHelper customSecretsManagerShellScriptHelper;
@@ -53,7 +54,7 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
 
     setShellScriptInConfig(customSecretsManagerConfig);
     if (!(customSecretsManagerConfig.isExecuteOnDelegate() || customSecretsManagerConfig.isConnectorTemplatized())) {
-      setConnectorInConfig(customSecretsManagerConfig, new HashMap<>());
+      setConnectorInConfig(customSecretsManagerConfig, new HashSet<>());
     }
 
     return customSecretsManagerConfig;
@@ -65,11 +66,11 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
     secretsManagerConfig.setAccountId(accountId);
     setShellScriptInConfig(secretsManagerConfig);
     setCommandPathInConfig(secretsManagerConfig);
-    Map<String, String> testParameters = secretsManagerConfig.getTestParameters();
+    Set<SecretVariable> testVariables = secretsManagerConfig.getTestVariables();
     if (!secretsManagerConfig.isExecuteOnDelegate()) {
-      setConnectorInConfig(secretsManagerConfig, testParameters);
+      setConnectorInConfig(secretsManagerConfig, testVariables);
     }
-    validateInternal(secretsManagerConfig, testParameters);
+    validateInternal(secretsManagerConfig, testVariables);
     return true;
   }
 
@@ -119,12 +120,12 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
   private void upsertSecretsManagerInternal(@NonNull CustomSecretsManagerConfig secretsManagerConfig) {
     secretsManagerConfig.setEncryptionType(CUSTOM);
     setShellScriptInConfig(secretsManagerConfig);
-    Map<String, String> testParameters = secretsManagerConfig.getTestParameters();
+    Set<SecretVariable> testVariables = secretsManagerConfig.getTestVariables();
     if (!secretsManagerConfig.isExecuteOnDelegate()) {
-      setConnectorInConfig(secretsManagerConfig, testParameters);
+      setConnectorInConfig(secretsManagerConfig, testVariables);
     }
     setCommandPathInConfig(secretsManagerConfig);
-    validateInternal(secretsManagerConfig, testParameters);
+    validateInternal(secretsManagerConfig, testVariables);
     String configId =
         Optional.ofNullable(secretManagerConfigService.save(secretsManagerConfig)).<UnexpectedException>orElseThrow(() -> {
           String errorMessage =
@@ -163,16 +164,16 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
     });
   }
 
-  private void validateInternal(CustomSecretsManagerConfig secretsManagerConfig, Map<String, String> testParameters) {
+  private void validateInternal(CustomSecretsManagerConfig secretsManagerConfig, Set<SecretVariable> testVariables) {
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(secretsManagerConfig.getAccountId());
     CustomSecretsManagerValidationUtils.validateName(secretsManagerConfig.getName());
     CustomSecretsManagerValidationUtils.validateConnectionAttributes(secretsManagerConfig);
-    CustomSecretsManagerValidationUtils.validateParams(secretsManagerConfig, testParameters);
-    validateConnectivity(secretsManagerConfig, testParameters);
+    CustomSecretsManagerValidationUtils.validateVariables(secretsManagerConfig, testVariables);
+    validateConnectivity(secretsManagerConfig, testVariables);
   }
 
   private void validateConnectivity(
-      CustomSecretsManagerConfig customSecretsManagerConfig, Map<String, String> testParameters) {
+      CustomSecretsManagerConfig customSecretsManagerConfig, Set<SecretVariable> testVariables) {
     // To be implemented
   }
 
@@ -184,24 +185,27 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
   }
 
   private void setConnectorInConfig(
-      CustomSecretsManagerConfig customSecretsManagerConfig, Map<String, String> testParameters) {
+      CustomSecretsManagerConfig customSecretsManagerConfig, Set<SecretVariable> testVariables) {
     String accountId = customSecretsManagerConfig.getAccountId();
     String connectorId = customSecretsManagerConfig.getConnectorId();
     ScriptType scriptType = customSecretsManagerConfig.getCustomSecretsManagerShellScript().getScriptType();
 
     if (customSecretsManagerConfig.isConnectorTemplatized()) {
-      connectorId = getConnectorIdFromTestParameters(testParameters);
+      connectorId = getConnectorIdFromTestVariables(testVariables);
     }
     EncryptableSetting remoteHostConnector =
         customSecretsManagerConnectorHelper.getConnector(accountId, connectorId, scriptType);
     customSecretsManagerConfig.setRemoteHostConnector(remoteHostConnector);
   }
 
-  private static String getConnectorIdFromTestParameters(Map<String, String> testParameters) {
-    return Optional.ofNullable(testParameters.get(CustomSecretsManagerConfigKeys.connectorId))
+  private static String getConnectorIdFromTestVariables(Set<SecretVariable> testVariables) {
+    return testVariables.stream()
+        .filter(secretVariable -> secretVariable.getName().equals(CustomSecretsManagerConfigKeys.connectorId))
+        .findFirst()
         .<InvalidArgumentsException>orElseThrow(() -> {
-          String errorMessage = "There is no connector supplied as a parameter although the connector was templatized";
+          String errorMessage = "There is no connector supplied as a variable although the connector was templatized";
           throw new InvalidArgumentsException(errorMessage, USER);
-        });
+        })
+        .getValue();
   }
 }
