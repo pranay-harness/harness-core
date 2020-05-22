@@ -1,0 +1,34 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["s3_uploader.go"],
+    importpath = "github.com/wings-software/portal/commons/go/lib/awsutils",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//commons/go/lib/filesystem:go_default_library",
+        "//commons/go/lib/logs:go_default_library",
+        "//commons/go/lib/utils:go_default_library",
+        "//commons/go/lib/x/trace:go_default_library",
+        "@com_github_aws_aws_sdk_go//aws:go_default_library",
+        "@com_github_aws_aws_sdk_go//aws/session:go_default_library",
+        "@com_github_aws_aws_sdk_go//service/s3/s3manager:go_default_library",
+        "@com_github_opentracing_opentracing_go//:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["s3_uploader_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "//commons/go/lib/awsutils/mocks:go_default_library",
+        "//commons/go/lib/filesystem/mocks:go_default_library",
+        "//commons/go/lib/logs:go_default_library",
+        "@com_github_aws_aws_sdk_go//service/s3/s3manager:go_default_library",
+        "@com_github_golang_mock//gomock:go_default_library",
+        "@com_github_stretchr_testify//assert:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)
