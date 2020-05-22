@@ -20,7 +20,7 @@ public class FacilitatorType implements RegistryKey {
   public static final String CHILD = "CHILD";
   public static final String CHILDREN = "CHILDREN";
   public static final String SKIP = "SKIP";
-  public static final String TASK_WRAPPER = "TASK_WRAPPER";
+  public static final String ASYNC_TASK = "ASYNC_TASK";
 
   @NonNull String type;
 }

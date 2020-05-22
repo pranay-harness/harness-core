@@ -16,7 +16,7 @@ import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
-import io.harness.facilitator.modes.task.TaskWrapperExecutable;
+import io.harness.facilitator.modes.task.AsyncTaskExecutable;
 import io.harness.plan.ExecutionNode;
 import io.harness.registries.state.StateRegistry;
 import io.harness.state.io.StateResponse;
@@ -75,11 +75,10 @@ public class EngineResumeExecutor implements Runnable {
           stateResponse =
               childExecutable.handleChildResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;
-        case TASK_WRAPPER:
-          TaskWrapperExecutable taskWrapperExecutable =
-              (TaskWrapperExecutable) stateRegistry.obtain(node.getStateType());
+        case ASYNC_TASK:
+          AsyncTaskExecutable asyncTaskExecutable = (AsyncTaskExecutable) stateRegistry.obtain(node.getStateType());
           stateResponse =
-              taskWrapperExecutable.handleTaskResult(nodeExecution.getAmbiance(), node.getStateParameters(), response);
+              asyncTaskExecutable.handleTaskResult(nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;
         default:
           throw new InvalidRequestException("Resume not handled for execution Mode : " + nodeExecution.getMode());

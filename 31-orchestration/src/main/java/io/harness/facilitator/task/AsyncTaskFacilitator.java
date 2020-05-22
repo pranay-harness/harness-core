@@ -18,9 +18,9 @@ import java.util.List;
 @OwnedBy(CDC)
 @Redesign
 @Produces(Facilitator.class)
-public class TaskWrapperFacilitator implements Facilitator {
+public class AsyncTaskFacilitator implements Facilitator {
   public static final FacilitatorType FACILITATOR_TYPE =
-      FacilitatorType.builder().type(FacilitatorType.TASK_WRAPPER).build();
+      FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build();
 
   @Override
   public FacilitatorType getType() {
@@ -31,7 +31,7 @@ public class TaskWrapperFacilitator implements Facilitator {
   public FacilitatorResponse facilitate(
       Ambiance ambiance, FacilitatorParameters parameters, List<StateTransput> inputs) {
     return FacilitatorResponse.builder()
-        .executionMode(ExecutionMode.TASK_WRAPPER)
+        .executionMode(ExecutionMode.ASYNC_TASK)
         .initialWait(parameters.getWaitDurationSeconds())
         .build();
   }
