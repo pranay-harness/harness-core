@@ -31,6 +31,7 @@ public class GrpcServiceConfigurationModule extends AbstractModule {
   protected void configure() {
     bind(KeySource.class).to(AccountKeySource.class).in(Singleton.class);
     Multibinder<BindableService> bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class);
+    bindableServiceMultibinder.addBinding().to(DelegateServiceGrpc.class);
     bindableServiceMultibinder.addBinding().to(PerpetualTaskServiceGrpc.class);
     bindableServiceMultibinder.addBinding().to(PingPongService.class);
 
