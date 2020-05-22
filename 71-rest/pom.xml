@@ -752,6 +752,11 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>66-cv-nextgen-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>xml-apis</groupId>
             <artifactId>xml-apis</artifactId>
         </dependency>

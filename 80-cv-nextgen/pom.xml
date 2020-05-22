@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>45-cv-nextgen</artifactId>
+    <artifactId>80-cv-nextgen</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.palominolabs.metrics</groupId>
