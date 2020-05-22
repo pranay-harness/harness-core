@@ -8,6 +8,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.execution.status.ExecutionInstanceStatus;
+import io.harness.input.InputSet;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -42,6 +43,7 @@ public final class PlanExecution implements PersistentRegularIterable, CreatedAt
   private EmbeddedUser createdBy;
   private long createdAt;
   private Plan plan;
+  private InputSet inputSet;
   private Long nextIteration;
   @Builder.Default private Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 

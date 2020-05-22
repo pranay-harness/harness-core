@@ -38,6 +38,7 @@ import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.facilitator.modes.ExecutionMode;
+import io.harness.input.InputSet;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
@@ -82,9 +83,14 @@ public class ExecutionEngine implements Engine {
   @Inject private DelayEventHelper delayEventHelper;
 
   public PlanExecution startExecution(@Valid Plan plan, EmbeddedUser createdBy) {
+    return startExecution(plan, null, createdBy);
+  }
+
+  public PlanExecution startExecution(@Valid Plan plan, InputSet inputSet, EmbeddedUser createdBy) {
     PlanExecution instance = PlanExecution.builder()
                                  .uuid(generateUuid())
                                  .plan(plan)
+                                 .inputSet(inputSet)
                                  .status(ExecutionInstanceStatus.RUNNING)
                                  .createdBy(createdBy)
                                  .startTs(System.currentTimeMillis())
