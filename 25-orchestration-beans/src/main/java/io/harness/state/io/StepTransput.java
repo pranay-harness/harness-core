@@ -8,6 +8,6 @@ import io.harness.references.RefType;
 
 @OwnedBy(CDC)
 @Redesign
-public interface StateTransput {
+public interface StepTransput {
   RefType getRefType();
 }

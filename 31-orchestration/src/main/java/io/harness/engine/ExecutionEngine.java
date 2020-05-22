@@ -48,9 +48,9 @@ import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.state.Step;
-import io.harness.state.io.StateResponse;
-import io.harness.state.io.StateTransput;
 import io.harness.state.io.StatusNotifyResponseData;
+import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -110,7 +110,7 @@ public class ExecutionEngine implements Engine {
                                       .get();
     ExecutionNode node = nodeExecution.getNode();
     // Facilitate and execute
-    List<StateTransput> inputs =
+    List<StepTransput> inputs =
         engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
     facilitateExecution(ambiance, node, inputs);
   }
@@ -147,7 +147,7 @@ public class ExecutionEngine implements Engine {
     return cloned;
   }
 
-  private void facilitateExecution(Ambiance ambiance, ExecutionNode node, List<StateTransput> inputs) {
+  private void facilitateExecution(Ambiance ambiance, ExecutionNode node, List<StepTransput> inputs) {
     FacilitatorResponse facilitatorResponse = null;
     for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
       Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
@@ -183,7 +183,7 @@ public class ExecutionEngine implements Engine {
     NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
     ExecutionNode node = nodeExecution.getNode();
     Step currentStep = stepRegistry.obtain(node.getStateType());
-    List<StateTransput> inputs =
+    List<StepTransput> inputs =
         engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
     ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(facilitatorResponse.getExecutionMode());
     invoker.invokeExecutable(InvokerPackage.builder()
@@ -195,13 +195,13 @@ public class ExecutionEngine implements Engine {
                                  .build());
   }
 
-  public void handleStateResponse(@NotNull String nodeExecutionId, StateResponse stateResponse) {
+  public void handleStepResponse(@NotNull String nodeExecutionId, StepResponse stepResponse) {
     NodeExecution nodeExecution = engineStatusHelper.updateNodeInstance(nodeExecutionId,
         ops
-        -> ops.set(NodeExecutionKeys.status, stateResponse.getStatus())
+        -> ops.set(NodeExecutionKeys.status, stepResponse.getStatus())
                .set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
     // TODO => handle before node execution update
-    handleOutcomes(nodeExecution.getAmbiance(), stateResponse.getOutcomes());
+    handleOutcomes(nodeExecution.getAmbiance(), stepResponse.getOutcomes());
 
     // TODO handle Failure
     ExecutionNode node = nodeExecution.getNode();
@@ -215,7 +215,7 @@ public class ExecutionEngine implements Engine {
       injector.injectMembers(adviser);
       advise = adviser.onAdviseEvent(AdvisingEvent.builder()
                                          .ambiance(nodeExecution.getAmbiance())
-                                         .stateResponse(stateResponse)
+                                         .stepResponse(stepResponse)
                                          .adviserParameters(obtainment.getParameters())
                                          .build());
       if (advise != null) {
@@ -230,7 +230,7 @@ public class ExecutionEngine implements Engine {
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private void handleOutcomes(Ambiance ambiance, Map<String, StateTransput> outcomes) {
+  private void handleOutcomes(Ambiance ambiance, Map<String, StepTransput> outcomes) {
     if (outcomes == null) {
       return;
     }

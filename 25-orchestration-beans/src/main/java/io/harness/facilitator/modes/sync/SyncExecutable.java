@@ -7,14 +7,14 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.PassThroughData;
 import io.harness.state.io.StateParameters;
-import io.harness.state.io.StateResponse;
-import io.harness.state.io.StateTransput;
+import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepTransput;
 
 import java.util.List;
 
 @OwnedBy(CDC)
 @Redesign
 public interface SyncExecutable {
-  StateResponse executeSync(
-      Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs, PassThroughData passThroughData);
+  StepResponse executeSync(
+      Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs, PassThroughData passThroughData);
 }

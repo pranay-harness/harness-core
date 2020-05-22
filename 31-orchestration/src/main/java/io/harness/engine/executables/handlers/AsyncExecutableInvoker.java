@@ -47,7 +47,7 @@ public class AsyncExecutableInvoker implements ExecutableInvoker {
     NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
     ExecutionNode nodeDefinition = nodeExecution.getNode();
     if (isEmpty(response.getCallbackIds())) {
-      logger.error("StateResponse has no callbackIds - currentState : " + nodeDefinition.getName()
+      logger.error("StepResponse has no callbackIds - currentState : " + nodeDefinition.getName()
           + ", nodeExecutionId: " + nodeExecution.getUuid());
       throw new InvalidRequestException("Callback Ids cannot be empty for Async Executable Response");
     }

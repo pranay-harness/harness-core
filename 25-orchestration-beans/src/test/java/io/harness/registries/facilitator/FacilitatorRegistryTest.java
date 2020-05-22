@@ -17,7 +17,7 @@ import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
-import io.harness.state.io.StateTransput;
+import io.harness.state.io.StepTransput;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -63,7 +63,7 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTest {
 
     @Override
     public FacilitatorResponse facilitate(
-        Ambiance ambiance, FacilitatorParameters parameters, List<StateTransput> inputs) {
+        Ambiance ambiance, FacilitatorParameters parameters, List<StepTransput> inputs) {
       return null;
     }
   }

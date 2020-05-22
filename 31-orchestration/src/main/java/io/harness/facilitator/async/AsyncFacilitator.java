@@ -11,7 +11,7 @@ import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.facilitator.modes.ExecutionMode;
-import io.harness.state.io.StateTransput;
+import io.harness.state.io.StepTransput;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ public class AsyncFacilitator implements Facilitator {
 
   @Override
   public FacilitatorResponse facilitate(
-      Ambiance ambiance, FacilitatorParameters parameters, List<StateTransput> inputs) {
+      Ambiance ambiance, FacilitatorParameters parameters, List<StepTransput> inputs) {
     return FacilitatorResponse.builder()
         .executionMode(ExecutionMode.ASYNC)
         .initialWait(parameters.getWaitDurationSeconds())

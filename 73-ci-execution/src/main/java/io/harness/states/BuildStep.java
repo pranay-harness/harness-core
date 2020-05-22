@@ -19,8 +19,8 @@ import io.harness.network.SafeHttpCall;
 import io.harness.state.StateType;
 import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
-import io.harness.state.io.StateResponse;
-import io.harness.state.io.StateTransput;
+import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepTransput;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ci.K8ExecCommandParams;
 import software.wings.beans.ci.ShellScriptType;
@@ -41,8 +41,8 @@ public class BuildStep implements Step, SyncExecutable {
   //     Async will be supported once we will have delegate microservice ready.
 
   @Override
-  public StateResponse executeSync(
-      Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs, PassThroughData passThroughData) {
+  public StepResponse executeSync(
+      Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs, PassThroughData passThroughData) {
     try {
       BuildStepInfo buildStepInfo = (BuildStepInfo) parameters;
 
@@ -70,12 +70,12 @@ public class BuildStep implements Step, SyncExecutable {
 
       SafeHttpCall.execute(managerCIResource.podCommandExecutionTask("kubernetes_clusterqqq", k8ExecCommandParams));
 
-      return StateResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
+      return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
     } catch (Exception e) {
       logger.error("state execution failed", e);
     }
 
-    return StateResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
+    return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
   }
 
   @Override

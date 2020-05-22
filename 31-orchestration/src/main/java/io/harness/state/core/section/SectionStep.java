@@ -11,10 +11,10 @@ import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.state.StateType;
 import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
-import io.harness.state.io.StateResponse;
-import io.harness.state.io.StateResponse.StateResponseBuilder;
-import io.harness.state.io.StateTransput;
 import io.harness.state.io.StatusNotifyResponseData;
+import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponse.StepResponseBuilder;
+import io.harness.state.io.StepTransput;
 
 import java.util.List;
 import java.util.Map;
@@ -24,16 +24,15 @@ public class SectionStep implements Step, ChildExecutable {
   public static final StateType STATE_TYPE = StateType.builder().type("SECTION").build();
 
   @Override
-  public ChildExecutableResponse obtainChild(
-      Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs) {
+  public ChildExecutableResponse obtainChild(Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs) {
     SectionStateParameters stateParameters = (SectionStateParameters) parameters;
     return ChildExecutableResponse.builder().childNodeId(stateParameters.getChildNodeId()).build();
   }
 
   @Override
-  public StateResponse handleChildResponse(
+  public StepResponse handleChildResponse(
       Ambiance ambiance, StateParameters stateParameters, Map<String, ResponseData> responseDataMap) {
-    StateResponseBuilder responseBuilder = StateResponse.builder();
+    StepResponseBuilder responseBuilder = StepResponse.builder();
     StatusNotifyResponseData statusNotifyResponseData =
         (StatusNotifyResponseData) responseDataMap.values().iterator().next();
     responseBuilder.status(statusNotifyResponseData.getStatus());

@@ -19,8 +19,8 @@ import io.harness.facilitator.modes.children.ChildrenExecutable;
 import io.harness.facilitator.modes.task.AsyncTaskExecutable;
 import io.harness.plan.ExecutionNode;
 import io.harness.registries.state.StepRegistry;
-import io.harness.state.io.StateResponse;
-import io.harness.state.io.StateResponse.FailureInfo;
+import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponse.FailureInfo;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -46,44 +46,44 @@ public class EngineResumeExecutor implements Runnable {
     try {
       if (asyncError) {
         ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) response.values().iterator().next();
-        StateResponse stateResponse = StateResponse.builder()
-                                          .status(NodeExecutionStatus.ERRORED)
-                                          .failureInfo(FailureInfo.builder()
-                                                           .failureTypes(errorNotifyResponseData.getFailureTypes())
-                                                           .errorMessage(errorNotifyResponseData.getErrorMessage())
-                                                           .build())
-                                          .build();
-        executionEngine.handleStateResponse(nodeExecution.getUuid(), stateResponse);
+        StepResponse stepResponse = StepResponse.builder()
+                                        .status(NodeExecutionStatus.ERRORED)
+                                        .failureInfo(FailureInfo.builder()
+                                                         .failureTypes(errorNotifyResponseData.getFailureTypes())
+                                                         .errorMessage(errorNotifyResponseData.getErrorMessage())
+                                                         .build())
+                                        .build();
+        executionEngine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
         return;
       }
 
       ExecutionNode node = nodeExecution.getNode();
-      StateResponse stateResponse = null;
+      StepResponse stepResponse = null;
       switch (nodeExecution.getMode()) {
         case CHILDREN:
           ChildrenExecutable childrenExecutable = (ChildrenExecutable) stepRegistry.obtain(node.getStateType());
-          stateResponse = childrenExecutable.handleChildrenResponse(
+          stepResponse = childrenExecutable.handleChildrenResponse(
               nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;
         case ASYNC:
           AsyncExecutable asyncExecutable = (AsyncExecutable) stepRegistry.obtain(node.getStateType());
-          stateResponse =
+          stepResponse =
               asyncExecutable.handleAsyncResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;
         case CHILD:
           ChildExecutable childExecutable = (ChildExecutable) stepRegistry.obtain(node.getStateType());
-          stateResponse =
+          stepResponse =
               childExecutable.handleChildResponse(nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;
         case ASYNC_TASK:
           AsyncTaskExecutable asyncTaskExecutable = (AsyncTaskExecutable) stepRegistry.obtain(node.getStateType());
-          stateResponse =
+          stepResponse =
               asyncTaskExecutable.handleTaskResult(nodeExecution.getAmbiance(), node.getStateParameters(), response);
           break;
         default:
           throw new InvalidRequestException("Resume not handled for execution Mode : " + nodeExecution.getMode());
       }
-      executionEngine.handleStateResponse(nodeExecution.getUuid(), stateResponse);
+      executionEngine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
 
     } catch (Exception ex) {
       logger.error(ex.getMessage());

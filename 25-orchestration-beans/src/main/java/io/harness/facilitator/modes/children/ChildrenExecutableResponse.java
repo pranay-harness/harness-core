@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.state.io.StateTransput;
+import io.harness.state.io.StepTransput;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
@@ -22,6 +22,6 @@ public class ChildrenExecutableResponse {
   @Builder
   public static class Child {
     String childNodeId;
-    @Singular List<StateTransput> additionalInputs;
+    @Singular List<StepTransput> additionalInputs;
   }
 }

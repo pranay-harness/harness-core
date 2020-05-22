@@ -19,8 +19,8 @@ import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.state.StateType;
 import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
-import io.harness.state.io.StateResponse;
-import io.harness.state.io.StateTransput;
+import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.WaitStateExecutionData;
@@ -44,7 +44,7 @@ public class WaitStep implements Step, AsyncExecutable {
 
   @Override
   public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs) {
+      Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs) {
     WaitStateParameters stateParameters = (WaitStateParameters) parameters;
     String resumeId = generateUuid();
     executorService.schedule(new SimpleNotifier(waitNotifyEngine, resumeId,
@@ -54,13 +54,13 @@ public class WaitStep implements Step, AsyncExecutable {
   }
 
   @Override
-  public StateResponse handleAsyncResponse(
+  public StepResponse handleAsyncResponse(
       Ambiance ambiance, StateParameters parameters, Map<String, ResponseData> responseDataMap) {
     WaitStateParameters waitStateParameters = (WaitStateParameters) parameters;
     WaitStateExecutionData waitStateExecutionData = new WaitStateExecutionData();
     waitStateExecutionData.setDuration(waitStateParameters.getWaitDurationSeconds());
     waitStateExecutionData.setWakeupTs(System.currentTimeMillis());
-    return StateResponse.builder()
+    return StepResponse.builder()
         .status(NodeExecutionStatus.SUCCEEDED)
         .outcome("waitData", waitStateExecutionData)
         .build();

@@ -37,9 +37,9 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.state.StateType;
 import io.harness.state.Step;
 import io.harness.state.io.StateParameters;
-import io.harness.state.io.StateResponse;
-import io.harness.state.io.StateResponse.StateResponseBuilder;
-import io.harness.state.io.StateTransput;
+import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponse.StepResponseBuilder;
+import io.harness.state.io.StepTransput;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
@@ -89,7 +89,7 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
   }
 
   @Override
-  public DelegateTask obtainTask(Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs) {
+  public DelegateTask obtainTask(Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs) {
     ShellScriptStateParameters shellScriptStateParameters = (ShellScriptStateParameters) parameters;
     String activityId = createActivity(ambiance);
 
@@ -237,10 +237,10 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
   }
 
   @Override
-  public StateResponse handleTaskResult(
+  public StepResponse handleTaskResult(
       Ambiance ambiance, StateParameters parameters, Map<String, ResponseData> response) {
     ShellScriptStateParameters shellScriptStateParameters = (ShellScriptStateParameters) parameters;
-    StateResponseBuilder stateResponseBuilder = StateResponse.builder();
+    StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     String activityId = response.keySet().iterator().next();
     ResponseData data = response.values().iterator().next();
     boolean saveSweepingOutputToContext = false;
@@ -251,19 +251,19 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
       switch (commandExecutionResult.getStatus()) {
         case SUCCESS:
           executionStatus = ExecutionStatus.SUCCESS;
-          stateResponseBuilder.status(NodeExecutionStatus.SUCCEEDED);
+          stepResponseBuilder.status(NodeExecutionStatus.SUCCEEDED);
           break;
         case FAILURE:
           executionStatus = ExecutionStatus.FAILED;
-          stateResponseBuilder.status(NodeExecutionStatus.FAILED);
+          stepResponseBuilder.status(NodeExecutionStatus.FAILED);
           break;
         case RUNNING:
           executionStatus = ExecutionStatus.RUNNING;
-          stateResponseBuilder.status(NodeExecutionStatus.RUNNING);
+          stepResponseBuilder.status(NodeExecutionStatus.RUNNING);
           break;
         case QUEUED:
           executionStatus = ExecutionStatus.QUEUED;
-          stateResponseBuilder.status(NodeExecutionStatus.QUEUED);
+          stepResponseBuilder.status(NodeExecutionStatus.QUEUED);
           break;
         default:
           throw new ShellScriptException(
@@ -271,8 +271,8 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
               ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
       }
 
-      stateResponseBuilder.failureInfo(
-          StateResponse.FailureInfo.builder().errorMessage(commandExecutionResult.getErrorMessage()).build());
+      stepResponseBuilder.failureInfo(
+          StepResponse.FailureInfo.builder().errorMessage(commandExecutionResult.getErrorMessage()).build());
 
       ScriptStateExecutionData scriptStateExecutionData =
           ScriptStateExecutionData.builder().activityId(activityId).build();
@@ -283,17 +283,17 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
         scriptStateExecutionData.setSweepingOutputEnvVariables(sweepingOutputEnvVariables);
         saveSweepingOutputToContext = true;
       }
-      stateResponseBuilder.outcome("data", scriptStateExecutionData);
+      stepResponseBuilder.outcome("data", scriptStateExecutionData);
     } else if (data instanceof ErrorNotifyResponseData) {
-      stateResponseBuilder.status(NodeExecutionStatus.FAILED);
-      stateResponseBuilder.failureInfo(
-          StateResponse.FailureInfo.builder().errorMessage(((ErrorNotifyResponseData) data).getErrorMessage()).build());
-      return stateResponseBuilder.build();
+      stepResponseBuilder.status(NodeExecutionStatus.FAILED);
+      stepResponseBuilder.failureInfo(
+          StepResponse.FailureInfo.builder().errorMessage(((ErrorNotifyResponseData) data).getErrorMessage()).build());
+      return stepResponseBuilder.build();
     } else {
       logger.error("Unhandled ResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
     }
 
-    StateResponse stateResponse = stateResponseBuilder.build();
+    StepResponse stepResponse = stepResponseBuilder.build();
 
     updateActivityStatus(activityId, getAppId(ambiance), executionStatus);
 
@@ -306,7 +306,7 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
           0);
     }
 
-    return stateResponse;
+    return stepResponse;
   }
 
   private String getAccountId(Ambiance ambiance) {

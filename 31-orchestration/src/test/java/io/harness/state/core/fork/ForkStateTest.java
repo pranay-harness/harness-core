@@ -16,9 +16,9 @@ import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.rule.Owner;
 import io.harness.state.StateType;
-import io.harness.state.io.StateResponse;
-import io.harness.state.io.StateTransput;
 import io.harness.state.io.StatusNotifyResponseData;
+import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepTransput;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -46,11 +46,11 @@ public class ForkStateTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldTestObtainChildren() {
     Ambiance ambiance = Ambiance.builder().build();
-    List<StateTransput> stateTransputList = new ArrayList<>();
+    List<StepTransput> stepTransputList = new ArrayList<>();
     ForkStateParameters stateParameters =
         ForkStateParameters.builder().parallelNodeId(FIRST_CHILD_ID).parallelNodeId(SECOND_CHILD_ID).build();
     ChildrenExecutableResponse childrenExecutableResponse =
-        forkState.obtainChildren(ambiance, stateParameters, stateTransputList);
+        forkState.obtainChildren(ambiance, stateParameters, stepTransputList);
     assertThat(childrenExecutableResponse).isNotNull();
     assertThat(childrenExecutableResponse.getChildren()).hasSize(2);
     List<String> childIds =
@@ -72,7 +72,7 @@ public class ForkStateTest extends OrchestrationTest {
             .put(FIRST_CHILD_ID, StatusNotifyResponseData.builder().status(NodeExecutionStatus.SUCCEEDED).build())
             .put(SECOND_CHILD_ID, StatusNotifyResponseData.builder().status(NodeExecutionStatus.FAILED).build())
             .build();
-    StateResponse stateResponse = forkState.handleChildrenResponse(ambiance, stateParameters, responseDataMap);
-    assertThat(stateResponse.getStatus()).isEqualTo(NodeExecutionStatus.FAILED);
+    StepResponse stepResponse = forkState.handleChildrenResponse(ambiance, stateParameters, responseDataMap);
+    assertThat(stepResponse.getStatus()).isEqualTo(NodeExecutionStatus.FAILED);
   }
 }
