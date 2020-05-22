@@ -10,7 +10,7 @@ import io.harness.tasks.Task;
 import java.util.List;
 import java.util.Map;
 
-public interface TaskWrapperExecutable {
+public interface AsyncTaskExecutable {
   Task obtainTask(Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs);
 
   StateResponse handleTaskResult(
