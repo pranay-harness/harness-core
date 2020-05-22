@@ -13,6 +13,7 @@ import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.tasks.TaskExecutor;
 import io.harness.validation.Create;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -30,7 +31,7 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
 
-public interface DelegateService extends OwnedByAccount {
+public interface DelegateService extends OwnedByAccount, TaskExecutor {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 
   boolean checkDelegateConnected(String delegateId);

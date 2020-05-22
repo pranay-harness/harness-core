@@ -4,8 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
-import com.google.inject.Inject;
-
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
@@ -17,8 +15,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.execution.status.NodeExecutionStatus;
-import io.harness.facilitator.modes.async.AsyncExecutable;
-import io.harness.facilitator.modes.async.AsyncExecutableResponse;
+import io.harness.facilitator.modes.task.TaskWrapperExecutable;
 import io.harness.state.State;
 import io.harness.state.StateType;
 import io.harness.state.io.StateParameters;
@@ -28,7 +25,6 @@ import io.harness.state.io.StateResponse.StateResponseBuilder;
 import io.harness.state.io.StateTransput;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.TaskType;
-import software.wings.service.intfc.DelegateService;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
 import java.util.List;
@@ -38,14 +34,11 @@ import java.util.Map;
 @Redesign
 @ExcludeRedesign
 @Produces(State.class)
-public class BasicHttpState implements State, AsyncExecutable {
+public class BasicHttpState implements State, TaskWrapperExecutable {
   public static final StateType STATE_TYPE = StateType.builder().type("BASIC_HTTP").build();
 
-  @Inject private DelegateService delegateService;
-
   @Override
-  public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs) {
+  public DelegateTask obtainTask(Ambiance ambiance, StateParameters parameters, List<StateTransput> inputs) {
     BasicHttpStateParameters stateParameters = (BasicHttpStateParameters) parameters;
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
                                                 .url(stateParameters.getUrl())
@@ -56,23 +49,21 @@ public class BasicHttpState implements State, AsyncExecutable {
                                                 .build();
 
     String waitId = generateUuid();
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ambiance.getSetupAbstractions().get("accountId"))
-                                    .waitId(waitId)
-                                    .appId(ambiance.getSetupAbstractions().get("appId"))
-                                    .data(TaskData.builder()
-                                              .taskType(TaskType.HTTP.name())
-                                              .parameters(new Object[] {httpTaskParameters})
-                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                              .build())
-                                    .infrastructureMappingId(waitId)
-                                    .build();
-    delegateService.queueTask(delegateTask);
-    return AsyncExecutableResponse.builder().callbackId(waitId).build();
+    return DelegateTask.builder()
+        .accountId(ambiance.getSetupAbstractions().get("accountId"))
+        .waitId(waitId)
+        .appId(ambiance.getSetupAbstractions().get("appId"))
+        .data(TaskData.builder()
+                  .taskType(TaskType.HTTP.name())
+                  .parameters(new Object[] {httpTaskParameters})
+                  .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                  .build())
+        .infrastructureMappingId(waitId)
+        .build();
   }
 
   @Override
-  public StateResponse handleAsyncResponse(
+  public StateResponse handleTaskResult(
       Ambiance ambiance, StateParameters parameters, Map<String, ResponseData> responseDataMap) {
     BasicHttpStateParameters stateParameters = (BasicHttpStateParameters) parameters;
     StateResponseBuilder responseBuilder = StateResponse.builder();

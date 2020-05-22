@@ -70,6 +70,7 @@ import com.mongodb.MongoGridFSException;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.PageRequest;
@@ -118,8 +119,10 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.serializer.KryoUtils;
 import io.harness.stream.BoundedInputStream;
+import io.harness.tasks.Task;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request.Builder;
@@ -764,6 +767,24 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       logger.warn("Exception in fetching delegate version", e);
     }
     return null;
+  }
+
+  @Override
+  public String queueTask(@NonNull Ambiance ambiance, @NonNull Task task) {
+    DelegateTask delegateTask = (DelegateTask) task;
+    return queueTask(delegateTask);
+  }
+
+  @Override
+  public void expireTask(@NonNull Ambiance ambiance, @NonNull String taskId) {
+    String accountId = ambiance.getSetupAbstractions().get("accountId");
+    expireTask(accountId, taskId);
+  }
+
+  @Override
+  public void abortTask(@NonNull Ambiance ambiance, @NonNull String taskId) {
+    String accountId = ambiance.getSetupAbstractions().get("accountId");
+    abortTask(accountId, taskId);
   }
 
   @Value
