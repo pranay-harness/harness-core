@@ -99,6 +99,7 @@ import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.SettingsService;
@@ -132,6 +133,7 @@ public class AccountServiceTest extends WingsBaseTest {
   @Mock private UserService userService;
   @Mock private SettingsService settingsService;
   @Mock private TemplateGalleryService templateGalleryService;
+  @Mock private DelegateProfileService profileService;
   @Mock private UserPermissionInfo mockUserPermissionInfo;
   @Mock private AuthService authService;
   @Mock private EmailNotificationService emailNotificationService;
@@ -378,6 +380,7 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(wingsPersistence.get(Account.class, accountId)).isNull();
     verify(appService).deleteByAccountId(accountId);
     verify(settingsService).deleteByAccountId(accountId);
+    verify(profileService).deleteByAccountId(accountId);
     verify(templateGalleryService).deleteByAccountId(accountId);
   }
 

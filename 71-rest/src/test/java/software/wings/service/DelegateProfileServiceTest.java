@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.MARKO;
+import static io.harness.rule.OwnerRule.NIKOLA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
@@ -245,5 +246,17 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     assertThat(updatedDelegateProfile.getDescription()).isEqualTo(updatedDescription);
     assertThat(updatedDelegateProfile.getStartupScript()).isEqualTo(updatedScript);
     assertThat(updatedDelegateProfile.isApprovalRequired()).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldDeleteByAccountId() {
+    DelegateProfileBuilder delegateProfileBuilder = createDelegateProfileBuilder();
+    DelegateProfile assignedDelegateProfile = delegateProfileBuilder.uuid(generateUuid()).build();
+    wingsPersistence.save(assignedDelegateProfile);
+
+    delegateProfileService.deleteByAccountId(ACCOUNT_ID);
+    assertThat(delegateProfileService.get(ACCOUNT_ID, assignedDelegateProfile.getUuid())).isNull();
   }
 }

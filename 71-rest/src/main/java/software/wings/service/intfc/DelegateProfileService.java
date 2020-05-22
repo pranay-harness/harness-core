@@ -3,8 +3,9 @@ package software.wings.service.intfc;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.beans.DelegateProfile;
+import software.wings.service.intfc.ownership.OwnedByAccount;
 
-public interface DelegateProfileService {
+public interface DelegateProfileService extends OwnedByAccount {
   PageResponse<DelegateProfile> list(PageRequest<DelegateProfile> pageRequest);
   DelegateProfile get(String accountId, String delegateProfileId);
   DelegateProfile fetchPrimaryProfile(String accountId);
