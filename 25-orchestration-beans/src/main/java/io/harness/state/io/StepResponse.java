@@ -16,7 +16,7 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Value
-@Builder
+@Builder(toBuilder = true)
 @Redesign
 public class StepResponse {
   @NonNull NodeExecutionStatus status;

@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -21,7 +20,6 @@ import java.util.function.Consumer;
 
 @OwnedBy(CDC)
 @Redesign
-@ExcludeRedesign
 public class EngineStatusHelper {
   @Inject HPersistence hPersistence;
 

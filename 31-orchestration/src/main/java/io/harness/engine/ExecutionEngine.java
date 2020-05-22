@@ -18,7 +18,6 @@ import io.harness.adviser.AdvisingEvent;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delay.DelayEventHelper;
@@ -65,7 +64,6 @@ import javax.validation.constraints.NotNull;
 
 @Slf4j
 @Redesign
-@ExcludeRedesign
 @OwnedBy(CDC)
 public class ExecutionEngine implements Engine {
   @Inject @Named("enginePersistence") private HPersistence hPersistence;

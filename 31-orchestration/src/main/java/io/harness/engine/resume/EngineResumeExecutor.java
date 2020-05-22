@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.google.inject.Injector;
 
 import io.harness.annotations.Redesign;
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
@@ -32,7 +31,6 @@ import java.util.Map;
 @Builder
 @Slf4j
 @Redesign
-@ExcludeRedesign
 public class EngineResumeExecutor implements Runnable {
   boolean asyncError;
   Map<String, ResponseData> response;

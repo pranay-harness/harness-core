@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.ExecutionEngine;
@@ -19,7 +18,6 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Converters({DurationConverter.class})
-@ExcludeRedesign
 public class EngineWaitResumeCallback implements NotifyCallback {
   @Inject private ExecutionEngine executionEngine;
 

@@ -62,7 +62,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
 
   private static final AdviserType TEST_ADVISER_TYPE =
       AdviserType.builder().type("TEST_HTTP_RESPONSE_CODE_SWITCH").build();
-  private static final StepType TEST_STEP_TYPE = StepType.builder().type("TEST_STATE_PLAN").build();
+  private static final StepType TEST_STEP_TYPE = StepType.builder().type("TEST_STEP_PLAN").build();
   private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
 
   @Before
@@ -76,7 +76,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
   @RealMongo
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void shouldStartSyncExecution() {
+  public void shouldStartOneNodeExecution() {
     String testNodeId = generateUuid();
     Plan oneNodePlan =
         Plan.builder()
@@ -112,7 +112,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
   @RealMongo
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void shouldStartAsyncExecution() {
+  public void shouldStartSyncExecution() {
     String testStartNodeId = generateUuid();
     String testSecondNodeId = generateUuid();
     Plan oneNodePlan =
@@ -163,7 +163,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
   @RealMongo
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void shouldTestShit() {
+  public void shouldStartAsyncExecution() {
     String testStartNodeId = generateUuid();
     String testWaitNodeId = generateUuid();
     Plan oneNodePlan =
