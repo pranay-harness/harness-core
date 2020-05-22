@@ -2,11 +2,13 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.sort;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -61,12 +63,14 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SortOrder;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
@@ -74,6 +78,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.InfrastructureMapping;
@@ -83,6 +88,7 @@ import software.wings.beans.LambdaSpecification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
@@ -879,8 +885,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (applyPermissions && isEmpty(allowedServices)) {
       return servicesFolder;
     }
-
-    List<Service> services = serviceResourceService.findServicesByApp(app.getAppId());
+    PageRequest<Service> pageRequest = aPageRequest()
+                                           .addFilter(ServiceKeys.appId, EQ, app.getAppId())
+                                           .addOrder(ServiceKeys.name, SortOrder.OrderType.ASC)
+                                           .build();
+    List<Service> services = serviceResourceService.list(pageRequest, false, false, false, null).getResponse();
 
     if (services != null) {
       // iterate over services
@@ -1293,8 +1302,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (applyPermissions && isEmpty(allowedEnvs)) {
       return environmentsFolder;
     }
-
-    List<Environment> environments = environmentService.getEnvByApp(app.getAppId());
+    PageRequest<Environment> pageRequestEnv = aPageRequest()
+                                                  .addFilter(EnvironmentKeys.appId, EQ, app.getAppId())
+                                                  .addOrder(EnvironmentKeys.name, SortOrder.OrderType.ASC)
+                                                  .build();
+    List<Environment> environments = environmentService.list(pageRequestEnv, false, null).getResponse();
 
     if (environments != null) {
       // iterate over environments
@@ -1707,7 +1719,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return workflowsFolder;
     }
 
-    PageRequest<Workflow> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, app.getAppId()).build();
+    PageRequest<Workflow> pageRequest = aPageRequest()
+                                            .addFilter("appId", Operator.EQ, app.getAppId())
+                                            .addOrder(Workflow.NAME_KEY, SortOrder.OrderType.ASC)
+                                            .build();
     List<Workflow> workflows = workflowService.listWorkflows(pageRequest).getResponse();
 
     if (workflows != null) {
@@ -1738,7 +1753,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return pipelinesFolder;
     }
 
-    PageRequest<Pipeline> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, app.getAppId()).build();
+    PageRequest<Pipeline> pageRequest = aPageRequest()
+                                            .addFilter("appId", Operator.EQ, app.getAppId())
+                                            .addOrder(Pipeline.NAME_KEY, SortOrder.OrderType.ASC)
+                                            .build();
     List<Pipeline> pipelines = pipelineService.listPipelines(pageRequest).getResponse();
 
     if (pipelines != null) {
@@ -1846,7 +1864,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     doCloudProviderType(accountId, cloudProvidersFolder, PHYSICAL_DATA_CENTER, directoryPath.clone());
     doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.PCF, directoryPath.clone());
     doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.SPOT_INST, directoryPath.clone());
-
+    sort(cloudProvidersFolder.getChildren(), new DirectoryComparator());
     return cloudProvidersFolder;
   }
 
@@ -1933,6 +1951,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.CUSTOM, directoryPath.clone());
     }
+    sort(artifactServersFolder.getChildren(), new DirectoryComparator());
     return artifactServersFolder;
   }
 
@@ -2001,7 +2020,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         accountId, collaborationProvidersFolder, SettingVariableTypes.JIRA, directoryPath.clone());
     doCollaborationProviderType(
         accountId, collaborationProvidersFolder, SettingVariableTypes.SERVICENOW, directoryPath.clone());
-
+    sort(collaborationProvidersFolder.getChildren(), new DirectoryComparator());
     return collaborationProvidersFolder;
   }
 
@@ -2081,7 +2100,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         accountId, verificationProvidersFolder, SettingVariableTypes.DYNA_TRACE, directoryPath.clone());
     doVerificationProviderType(
         accountId, verificationProvidersFolder, SettingVariableTypes.PROMETHEUS, directoryPath.clone());
-
+    sort(verificationProvidersFolder.getChildren(), new DirectoryComparator());
     return verificationProvidersFolder;
   }
 
@@ -2613,5 +2632,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private String getRootPathForTags() {
     return getRootPath() + PATH_DELIMITER;
+  }
+
+  class DirectoryComparator implements Comparator<DirectoryNode> {
+    @Override
+    public int compare(DirectoryNode o1, DirectoryNode o2) {
+      return StringUtils.compare(o1.getName(), o2.getName());
+    }
   }
 }
