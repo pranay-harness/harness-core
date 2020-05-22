@@ -140,6 +140,7 @@ import software.wings.service.intfc.AlertNotificationRuleService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -236,6 +237,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private SSOSettingServiceImpl ssoSettingService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private UserService userService;
+  @Inject private DelegateProfileService profileService;
   @Inject private LoginSettingsService loginSettingsService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private EmailNotificationService emailNotificationService;

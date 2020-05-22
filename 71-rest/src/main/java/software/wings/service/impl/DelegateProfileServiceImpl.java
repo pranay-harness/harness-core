@@ -118,6 +118,12 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     }
   }
 
+  @Override
+  public void deleteByAccountId(String accountId) {
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(DelegateProfile.class).filter(DelegateProfileKeys.accountId, accountId));
+  }
+
   private void ensureProfileSafeToDelete(String accountId, DelegateProfile delegateProfile) {
     if (delegateProfile.isPrimary()) {
       throw new InvalidRequestException("Primary Delegate Profile cannot be deleted.", USER);
