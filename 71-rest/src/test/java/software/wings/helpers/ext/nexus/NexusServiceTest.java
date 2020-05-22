@@ -453,6 +453,86 @@ public class NexusServiceTest extends WingsBaseTest {
       + "        </content-item>\n"
       + "    </data>\n"
       + "</content>";
+
+  private static final String XML_RESPONSE_INDEX_TREE_BROWSER_2 = "<indexBrowserTreeViewResponse>\n"
+      + "    <data>\n"
+      + "        <type>G</type>\n"
+      + "        <leaf>false</leaf>\n"
+      + "        <nodeName>4.0</nodeName>\n"
+      + "        <path>/mygroup/todolist/4.0/</path>\n"
+      + "        <children>\n"
+      + "            <indexBrowserTreeNode>\n"
+      + "                <type>A</type>\n"
+      + "                <leaf>false</leaf>\n"
+      + "                <nodeName>todolist</nodeName>\n"
+      + "                <path>/mygroup/todolist/</path>\n"
+      + "                <children>\n"
+      + "                    <indexBrowserTreeNode>\n"
+      + "                        <type>V</type>\n"
+      + "                        <leaf>false</leaf>\n"
+      + "                        <nodeName>4.0</nodeName>\n"
+      + "                        <path>/mygroup/todolist/4.0/</path>\n"
+      + "                        <children>\n"
+      + "                            <indexBrowserTreeNode>\n"
+      + "                                <type>artifact</type>\n"
+      + "                                <leaf>true</leaf>\n"
+      + "                                <nodeName>todolist-4.0.war</nodeName>\n"
+      + "                                <path>/mygroup/todolist/4.0/todolist-4.0.war</path>\n"
+      + "                                <groupId>mygroup</groupId>\n"
+      + "                                <artifactId>todolist</artifactId>\n"
+      + "                                <version>4.0</version>\n"
+      + "                                <repositoryId>releases</repositoryId>\n"
+      + "                                <locallyAvailable>false</locallyAvailable>\n"
+      + "                                <artifactTimestamp>0</artifactTimestamp>\n"
+      + "                                <extension>war</extension>\n"
+      + "                                <packaging>war</packaging>\n"
+      + "                                <artifactUri>\n"
+      + "https://nexus2.dev.harness.io/service/local/artifact/maven/redirect?r=releases&amp;g=mygroup&amp;a=todolist&amp;v=4.0&amp;p=war\n"
+      + "</artifactUri>\n"
+      + "                                <pomUri>\n"
+      + "https://nexus2.dev.harness.io/service/local/artifact/maven/redirect?r=releases&amp;g=mygroup&amp;a=todolist&amp;v=4.0&amp;p=pom\n"
+      + "</pomUri>\n"
+      + "                            </indexBrowserTreeNode>\n"
+      + "                            <indexBrowserTreeNode>\n"
+      + "                                <type>artifact</type>\n"
+      + "                                <leaf>true</leaf>\n"
+      + "                                <nodeName>todolist-4.0-sources.zip</nodeName>\n"
+      + "                                <path>/mygroup/todolist/4.0/todolist-4.0-sources.zip</path>\n"
+      + "                                <groupId>mygroup</groupId>\n"
+      + "                                <artifactId>todolist</artifactId>\n"
+      + "                                <version>4.0</version>\n"
+      + "                                <repositoryId>releases</repositoryId>\n"
+      + "                                <locallyAvailable>false</locallyAvailable>\n"
+      + "                                <artifactTimestamp>0</artifactTimestamp>\n"
+      + "                                <classifier>sources</classifier>\n"
+      + "                                <extension>zip</extension>\n"
+      + "                                <packaging>zip</packaging>\n"
+      + "                                <artifactUri>\n"
+      + "https://nexus2.dev.harness.io/service/local/artifact/maven/redirect?r=releases&amp;g=mygroup&amp;a=todolist&amp;v=4.0&amp;p=zip\n"
+      + "</artifactUri>\n"
+      + "                                <pomUri/>\n"
+      + "                            </indexBrowserTreeNode>\n"
+      + "                        </children>\n"
+      + "                        <groupId>mygroup</groupId>\n"
+      + "                        <artifactId>todolist</artifactId>\n"
+      + "                        <version>4.0</version>\n"
+      + "                        <repositoryId>releases</repositoryId>\n"
+      + "                        <locallyAvailable>false</locallyAvailable>\n"
+      + "                        <artifactTimestamp>0</artifactTimestamp>\n"
+      + "                    </indexBrowserTreeNode>\n"
+      + "                </children>\n"
+      + "                <groupId>mygroup</groupId>\n"
+      + "                <artifactId>todolist</artifactId>\n"
+      + "                <repositoryId>releases</repositoryId>\n"
+      + "                <locallyAvailable>false</locallyAvailable>\n"
+      + "                <artifactTimestamp>0</artifactTimestamp>\n"
+      + "            </indexBrowserTreeNode>\n"
+      + "        </children>\n"
+      + "        <repositoryId>releases</repositoryId>\n"
+      + "        <locallyAvailable>false</locallyAvailable>\n"
+      + "        <artifactTimestamp>0</artifactTimestamp>\n"
+      + "    </data>\n"
+      + "</indexBrowserTreeViewResponse>";
   /**
    * The Wire mock rule.
    */
@@ -1440,7 +1520,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  public void shouldDownloadNexus3xNPMArtifact() throws IOException {
+  public void shouldDownloadNexus3xNPMArtifact() {
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
                                                             .repositoryFormat(RepositoryFormat.npm.name())
                                                             .repositoryName("npm-test")
@@ -1460,5 +1540,108 @@ public class NexusServiceTest extends WingsBaseTest {
     nexusService.downloadArtifacts(
         nexusThreeConfig, null, artifactStreamAttributes, artifactMetadata, null, null, null, listNotifyResponseData);
     assertThat(listNotifyResponseData.getData().size()).isGreaterThan(0);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetVersionForNugetNexus2x() {
+    List<BuildDetails> buildDetails = nexusService.getVersion(
+        RepositoryFormat.nuget.name(), nexusConfig, null, "MyNuGet2", "NuGet.Sample.Package", "1.0.0.8279");
+    assertThat(buildDetails).hasSize(1).extracting(BuildDetails::getNumber).contains("1.0.0.8279");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("NuGet.Sample.Package-1.0.0.8279.nupkg");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo(
+            "http://localhost:8881/nexus/service/local/repositories/MyNuGet2/content/NuGet.Sample.Package/1.0.0.8279/NuGet.Sample.Package-1.0.0.8279.nupkg");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetVersionForNPMNexus2x() {
+    List<BuildDetails> buildDetails =
+        nexusService.getVersion(RepositoryFormat.npm.name(), nexusConfig, null, "npm-internal", "npm-app1", "1.0.0");
+    assertThat(buildDetails).hasSize(1).extracting(BuildDetails::getNumber).contains("1.0.0");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("npm-app1-1.0.0.tgz");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo("https://localhost:8881/nexus/content/repositories/npm-internal/npm-app1/-/npm-app1-1.0.0.tgz");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetVersionNexus2xMaven() {
+    wireMockRule.stubFor(
+        get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/mygroup/todolist/4.0/"))
+            .willReturn(aResponse()
+                            .withStatus(200)
+                            .withBody(XML_RESPONSE_INDEX_TREE_BROWSER_2)
+                            .withHeader("Content-Type", "application/xml")));
+
+    List<BuildDetails> buildDetails =
+        nexusService.getVersion(nexusConfig, null, "releases", "mygroup", "todolist", null, null, "4.0");
+    assertThat(buildDetails).hasSize(1).extracting(BuildDetails::getNumber).containsExactly("4.0");
+
+    assertThat(buildDetails)
+        .hasSize(1)
+        .extracting(BuildDetails::getBuildUrl)
+        .containsExactly(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=war&e=war");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("todolist-4.0.war");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=war&e=war");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(1))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("todolist-4.0-sources.zip");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(1))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetVersionWithExtensionAndClassifier() {
+    wireMockRule.stubFor(
+        get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/mygroup/todolist/4.0/"))
+            .willReturn(aResponse()
+                            .withStatus(200)
+                            .withBody(XML_RESPONSE_INDEX_TREE_BROWSER_2)
+                            .withHeader("Content-Type", "application/xml")));
+
+    List<BuildDetails> buildDetails =
+        nexusService.getVersion(nexusConfig, null, "releases", "mygroup", "todolist", "zip", "sources", "4.0");
+    assertThat(buildDetails).hasSize(1).extracting(BuildDetails::getNumber).containsExactly("4.0");
+
+    assertThat(buildDetails)
+        .hasSize(1)
+        .extracting(BuildDetails::getBuildUrl)
+        .containsExactly(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=war&e=zip&c=sources");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("todolist-4.0.zip");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=war&e=zip&c=sources");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(1))
+        .extracting(ArtifactFileMetadata::getFileName)
+        .isEqualTo("todolist-4.0-sources.zip");
+    assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(1))
+        .extracting(ArtifactFileMetadata::getUrl)
+        .isEqualTo(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources");
   }
 }

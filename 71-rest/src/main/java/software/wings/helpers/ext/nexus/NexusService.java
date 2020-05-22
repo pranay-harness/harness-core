@@ -100,6 +100,13 @@ public interface NexusService {
   List<BuildDetails> getVersions(String repositoryFormat, NexusConfig nexusConfig,
       List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName);
 
+  @SuppressWarnings("squid:S00107")
+  List<BuildDetails> getVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
+      String groupId, String artifactName, String extension, String classifier, String buildNo);
+
+  List<BuildDetails> getVersion(String repositoryFormat, NexusConfig nexusConfig,
+      List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName, String buildNo);
+
   /**
    * Gets the latest version of the given artifact
    *

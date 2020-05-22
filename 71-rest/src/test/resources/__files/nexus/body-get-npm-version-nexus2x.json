@@ -1,0 +1,33 @@
+{
+  "publishConfig": {
+    "registry": "http://localhost:8881/nexus/content/repositories/npm-internal/"
+  },
+  "maintainers": [
+    {
+      "name": "admin",
+      "email": "john.smith@my-org.com"
+    }
+  ],
+  "keywords": [],
+  "author": "",
+  "_npmVersion": "6.14.4",
+  "description": "",
+  "dist": {
+    "integrity": "sha512-gd83tuQzE6/dqyFvpPCZeT9yxpcgwpryEHh7xpKpXfSMdtCBL3C9Xab8rylyf0D64TIdaOVPEEDCCAJSUzHFEg==",
+    "shasum": "59e715a22475e5042c79c5590f9915202dd4aace",
+    "tarball": "https://localhost:8881/nexus/content/repositories/npm-internal/npm-app1/-/npm-app1-1.0.0.tgz"
+  },
+  "main": "index.js",
+  "readme": "ERROR: No README data found!",
+  "version": "1.0.0",
+  "license": "ISC",
+  "_npmUser": {
+    "name": "admin",
+    "email": "john.smith@my-org.com"
+  },
+  "name": "npm-app1",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "_nodeVersion": "14.2.0"
+}

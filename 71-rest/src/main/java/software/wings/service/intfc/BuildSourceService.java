@@ -140,6 +140,11 @@ public interface BuildSourceService {
     throw new UnsupportedOperationException();
   }
 
+  default BuildDetails getBuild(
+      String appId, String artifactStreamId, String settingId, Map<String, Object> runtimeValues) {
+    throw new UnsupportedOperationException();
+  }
+
   /**
    * Gets builds.
    *

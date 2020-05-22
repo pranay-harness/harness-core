@@ -70,6 +70,8 @@ public class Artifact extends Base {
     public static final String nexusArtifactId = "artifactId";
     public static final String versionId = "versionId";
     public static final String publishDate = "publishDate";
+    public static final String extension = "extension";
+    public static final String classifier = "classifier";
   }
 
   @UtilityClass

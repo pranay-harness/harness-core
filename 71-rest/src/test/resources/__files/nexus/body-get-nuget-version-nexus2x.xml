@@ -1,0 +1,12 @@
+<content>
+    <data>
+        <content-item>
+            <resourceURI>http://localhost:8881/nexus/service/local/repositories/MyNuGet2/content/NuGet.Sample.Package/1.0.0.8279/NuGet.Sample.Package-1.0.0.8279.nupkg</resourceURI>
+            <relativePath>/NuGet.Sample.Package/1.0.0.8279/NuGet.Sample.Package-1.0.0.8279.nupkg</relativePath>
+            <text>NuGet.Sample.Package-1.0.0.8279.nupkg</text>
+            <leaf>true</leaf>
+            <lastModified>2020-05-15 22:51:16.0 UTC</lastModified>
+            <sizeOnDisk>14458</sizeOnDisk>
+        </content-item>
+    </data>
+</content>

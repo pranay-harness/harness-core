@@ -616,8 +616,8 @@ public class NexusThreeServiceImpl {
                 "Failed to fetch the versions for groupId [" + groupId + "] and artifactId [" + artifactName + "]");
       }
     }
-    return nexusHelper.constructBuildDetails(
-        repoId, groupId, artifactName, versions, versionToArtifactUrls, versionToArtifactDownloadUrls);
+    return nexusHelper.constructBuildDetails(repoId, groupId, artifactName, versions, versionToArtifactUrls,
+        versionToArtifactDownloadUrls, extension, classifier);
   }
 
   private List<ArtifactFileMetadata> getDownloadUrlsForMaven(Response<Nexus3AssetResponse> response) {

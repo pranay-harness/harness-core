@@ -31,6 +31,7 @@ import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertType;
@@ -50,6 +51,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PermitService;
 import software.wings.service.intfc.SettingsService;
 
@@ -75,6 +77,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   @Inject private AwsCommandHelper awsCommandHelper;
   @Inject private PermitService permitService;
   @Inject private AlertService alertService;
+  @Inject private FeatureFlagService featureFlagService;
 
   // Default timeout of 1 minutes.
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
@@ -93,6 +96,11 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (artifactStream == null) {
       throw new InvalidRequestException("Artifact stream was deleted", USER);
+    }
+    if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, artifactStream.getAccountId())
+        && artifactStream.checkIfStreamParameterized()) {
+      throw new InvalidRequestException(
+          "Artifact stream [%s] is parameterized. Manual pull not available for parameterized artifact streams");
     }
     return collectArtifactWithoutLabels(artifactStream, buildDetails);
   }

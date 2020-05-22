@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -336,6 +337,52 @@ public class NexusServiceImpl implements NexusService {
       logger.error(
           format("Error occurred while retrieving versions from Nexus server %s for Repository %s under package %s",
               nexusConfig.getNexusUrl(), repoId, packageName),
+          e);
+      handleException(e);
+    }
+    return new ArrayList<>();
+  }
+
+  @Override
+  @SuppressWarnings("squid:S00107")
+  public List<BuildDetails> getVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoId, String groupId, String artifactName, String extension, String classifier, String buildNo) {
+    try {
+      boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
+      if (isNexusTwo) {
+        return nexusTwoService.getVersion(
+            nexusConfig, encryptionDetails, repoId, groupId, artifactName, extension, classifier, buildNo);
+      } else {
+        throw new InvalidArtifactServerException(
+            "Nexus 3.x does not support getVersion for parameterized artifact stream");
+      }
+    } catch (final IOException e) {
+      logger.error(
+          format(
+              "Error occurred while retrieving versions from Nexus server %s for Repository %s under group id %s and artifact name %s",
+              nexusConfig.getNexusUrl(), repoId, groupId, artifactName),
+          e);
+      handleException(e);
+    }
+    return new ArrayList<>();
+  }
+
+  @Override
+  public List<BuildDetails> getVersion(String repositoryFormat, NexusConfig nexusConfig,
+      List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName, String buildNo) {
+    try {
+      boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
+      if (isNexusTwo) {
+        return Collections.singletonList(
+            nexusTwoService.getVersion(repositoryFormat, nexusConfig, encryptionDetails, repoId, packageName, buildNo));
+      } else {
+        throw new InvalidArtifactServerException(
+            "Nexus 3.x does not support getVersion for parameterized artifact stream");
+      }
+    } catch (final IOException e) {
+      logger.error(
+          format("Error occurred while retrieving version %s from Nexus server %s for Repository %s under package %s",
+              buildNo, nexusConfig.getNexusUrl(), repoId, packageName),
           e);
       handleException(e);
     }

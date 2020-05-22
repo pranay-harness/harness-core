@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/nexus/content/repositories/npm-internal/npm-app1/1.0.0"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/nexus/body-get-npm-version-nexus2x.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
