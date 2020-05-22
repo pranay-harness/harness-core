@@ -24,4 +24,15 @@ public class PreAggregateConstants {
   public static final String entityConstantGcpSku = "gcpSkuDescription";
   public static final String entityConstantGcpCost = "sum_cost";
   public static final String entityCloudProviderConst = "cloudProvider";
+
+  public static final String entityConstantNoRegion = "No Region";
+  public static final String entityConstantAwsNoLinkedAccount = "No Linked Account";
+  public static final String entityConstantAwsNoUsageType = "No Usage Type";
+  public static final String entityConstantAwsNoInstanceType = "No Instance Type";
+  public static final String entityConstantAwsNoService = "No Service";
+  public static final String entityConstantGcpNoProjectId = "No Project";
+  public static final String entityConstantGcpNoProduct = "No Product";
+  public static final String entityConstantGcpNoSkuId = "No SkuId";
+  public static final String entityConstantGcpNoSku = "No Sku";
+  public static final String entityNoCloudProviderConst = "No Cloud Provider";
 }

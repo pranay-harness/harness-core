@@ -5,18 +5,29 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityC
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsBlendedCost;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsInstanceType;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsLinkedAccount;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsNoInstanceType;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsNoLinkedAccount;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsNoService;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsNoUsageType;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsService;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUnBlendedCost;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUsageType;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpBillingAccount;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpCost;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpNoProduct;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpNoProjectId;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpNoSku;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpNoSkuId;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpProduct;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpProjectId;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpSku;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpSkuId;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantNoRegion;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRegion;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityNoCloudProviderConst;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.maxPreAggStartTimeConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.minPreAggStartTimeConstant;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.nullStringValueConstant;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.Field;
@@ -125,7 +136,34 @@ public class PreAggregatedBillingDataHelper {
     if (value != null) {
       return value.toString();
     }
-    return PreAggregateConstants.nullStringValueConstant;
+    return getDefaultValue(field);
+  }
+
+  protected String getDefaultValue(Field field) {
+    switch (field.getName()) {
+      case entityConstantRegion:
+        return entityConstantNoRegion;
+      case entityConstantAwsLinkedAccount:
+        return entityConstantAwsNoLinkedAccount;
+      case entityConstantAwsService:
+        return entityConstantAwsNoService;
+      case entityConstantAwsUsageType:
+        return entityConstantAwsNoUsageType;
+      case entityConstantAwsInstanceType:
+        return entityConstantAwsNoInstanceType;
+      case entityConstantGcpProjectId:
+        return entityConstantGcpNoProjectId;
+      case entityConstantGcpProduct:
+        return entityConstantGcpNoProduct;
+      case entityConstantGcpSku:
+        return entityConstantGcpNoSku;
+      case entityConstantGcpSkuId:
+        return entityConstantGcpNoSkuId;
+      case entityCloudProviderConst:
+        return entityNoCloudProviderConst;
+      default:
+        return nullStringValueConstant;
+    }
   }
 
   private double getNumericValue(FieldValueList row, Field field) {
