@@ -1,18 +1,31 @@
 package io.harness.ccm.billing.preaggregated;
 
 import static com.google.cloud.bigquery.FieldValue.Attribute.PRIMITIVE;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityCloudProviderConst;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsBlendedCost;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsInstanceType;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsLinkedAccount;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsNoInstanceType;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsNoLinkedAccount;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsNoService;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsNoUsageType;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsService;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUnBlendedCost;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUsageType;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpCost;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpNoProduct;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpNoProjectId;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpNoSku;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpNoSkuId;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpProduct;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpProjectId;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpSku;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpSkuId;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantNoRegion;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRegion;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityNoCloudProviderConst;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.maxPreAggStartTimeConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.minPreAggStartTimeConstant;
-import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.nullStringValueConstant;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -154,13 +167,58 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
         trendStartTime);
     assertThat(dataPointList.size()).isEqualTo(1);
     assertThat(dataPointList.get(0).getRegion()).isEqualTo(entityConstantRegion);
-    assertThat(dataPointList.get(0).getAwsInstanceType()).isEqualTo(nullStringValueConstant);
+    assertThat(dataPointList.get(0).getAwsInstanceType()).isEqualTo(entityConstantAwsNoInstanceType);
     assertThat(dataPointList.get(0).getAwsLinkedAccount())
         .isEqualTo(AWS_ACCOUNT_NAME + " (" + entityConstantAwsLinkedAccount + ")");
     assertThat(dataPointList.get(0).getAwsUsageType()).isEqualTo(entityConstantAwsUsageType);
     assertThat(dataPointList.get(0).getAwsService()).isEqualTo(entityConstantAwsService);
     assertThat(dataPointList.get(0).getAwsUnblendedCost()).isEqualTo(UNBLENDED_COST);
     assertThat(dataPointList.get(0).getAwsBlendedCost()).isEqualTo(BLENDED_COST);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testGetDefaultValueMethod() {
+    Field field = Field.newBuilder(entityConstantRegion, StandardSQLTypeName.STRING).build();
+    String fieldConst = dataHelper.getDefaultValue(field);
+    assertThat(fieldConst).isEqualTo(entityConstantNoRegion);
+
+    field = Field.newBuilder(entityConstantAwsLinkedAccount, StandardSQLTypeName.STRING).build();
+    fieldConst = dataHelper.getDefaultValue(field);
+    assertThat(fieldConst).isEqualTo(entityConstantAwsNoLinkedAccount);
+
+    field = Field.newBuilder(entityConstantAwsService, StandardSQLTypeName.STRING).build();
+    fieldConst = dataHelper.getDefaultValue(field);
+    assertThat(fieldConst).isEqualTo(entityConstantAwsNoService);
+
+    field = Field.newBuilder(entityConstantAwsUsageType, StandardSQLTypeName.STRING).build();
+    fieldConst = dataHelper.getDefaultValue(field);
+    assertThat(fieldConst).isEqualTo(entityConstantAwsNoUsageType);
+
+    field = Field.newBuilder(entityConstantAwsUsageType, StandardSQLTypeName.STRING).build();
+    fieldConst = dataHelper.getDefaultValue(field);
+    assertThat(fieldConst).isEqualTo(entityConstantAwsNoUsageType);
+
+    field = Field.newBuilder(entityConstantGcpProjectId, StandardSQLTypeName.STRING).build();
+    fieldConst = dataHelper.getDefaultValue(field);
+    assertThat(fieldConst).isEqualTo(entityConstantGcpNoProjectId);
+
+    field = Field.newBuilder(entityConstantGcpProduct, StandardSQLTypeName.STRING).build();
+    fieldConst = dataHelper.getDefaultValue(field);
+    assertThat(fieldConst).isEqualTo(entityConstantGcpNoProduct);
+
+    field = Field.newBuilder(entityConstantGcpSku, StandardSQLTypeName.STRING).build();
+    fieldConst = dataHelper.getDefaultValue(field);
+    assertThat(fieldConst).isEqualTo(entityConstantGcpNoSku);
+
+    field = Field.newBuilder(entityConstantGcpSkuId, StandardSQLTypeName.STRING).build();
+    fieldConst = dataHelper.getDefaultValue(field);
+    assertThat(fieldConst).isEqualTo(entityConstantGcpNoSkuId);
+
+    field = Field.newBuilder(entityCloudProviderConst, StandardSQLTypeName.STRING).build();
+    fieldConst = dataHelper.getDefaultValue(field);
+    assertThat(fieldConst).isEqualTo(entityNoCloudProviderConst);
   }
 
   @Test

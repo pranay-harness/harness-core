@@ -2,6 +2,7 @@ extend type Query {
   cloudTimeSeriesStats(
     limit: Int
     offset: Int
+    includeOthers: Boolean
     filters: [CloudBillingFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CloudBillingGroupBy]
@@ -11,6 +12,7 @@ extend type Query {
   cloudEntityStats(
     limit: Int
     offset: Int
+    includeOthers: Boolean
     filters: [CloudBillingFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CloudBillingGroupBy]
