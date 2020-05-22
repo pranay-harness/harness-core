@@ -1,9 +1,13 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static java.util.Collections.singletonList;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -16,13 +20,19 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
+import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
+
+import com.google.common.collect.Lists;
 
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
+import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
+import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -45,11 +55,15 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.utils.ResourceTestRule;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -115,7 +129,7 @@ public class DelegateAgentResourceTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  public void shouldGetconnectionHeartbeat() {
+  public void shouldGetConnectionHeartbeat() {
     DelegateConnectionHeartbeat delegateConnectionHeartbeat = DelegateConnectionHeartbeat.builder().build();
     RestResponse<String> restResponse = RESOURCES.client()
                                             .target("/agent/delegates/connectionHeartbeat/" + DELEGATE_ID
@@ -219,5 +233,152 @@ public class DelegateAgentResourceTest {
 
     verify(instanceSyncResponseHandler, atLeastOnce())
         .processInstanceSyncResponseFromPerpetualTask(perpetualTaskId, responseData);
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateTaskEvents() {
+    List<DelegateTaskEvent> delegateTaskEventList =
+        singletonList(DelegateTaskEventBuilder.aDelegateTaskEvent().build());
+    when(delegateService.getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegateTaskEventList);
+    List<DelegateTaskEvent> restResponse = RESOURCES.client()
+                                               .target("/agent/delegates/" + DELEGATE_ID + "/task-events?delegateId="
+                                                   + DELEGATE_ID + "&accountId=" + ACCOUNT_ID + "&syncOnly=" + false)
+                                               .request()
+                                               .get(new GenericType<List<DelegateTaskEvent>>() {});
+
+    verify(delegateService, atLeastOnce()).getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, false);
+    assertThat(restResponse).isInstanceOf(List.class).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldCheckForUpgrade() throws IOException {
+    String version = "0.0.0";
+    String verificationUrl = httpServletRequest.getScheme() + "://" + httpServletRequest.getServerName() + ":"
+        + httpServletRequest.getServerPort();
+    DelegateScripts delegateScripts = DelegateScripts.builder().build();
+    when(delegateService.getDelegateScripts(
+             ACCOUNT_ID, version, subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl))
+        .thenReturn(delegateScripts);
+    RestResponse<DelegateScripts> restResponse = RESOURCES.client()
+                                                     .target("/agent/delegates/" + DELEGATE_ID + "/upgrade?delegateId="
+                                                         + DELEGATE_ID + "&accountId=" + ACCOUNT_ID)
+                                                     .request()
+                                                     .header("Version", version)
+                                                     .get(new GenericType<RestResponse<DelegateScripts>>() {});
+
+    verify(delegateService, atLeastOnce())
+        .getDelegateScripts(
+            ACCOUNT_ID, version, subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl);
+    assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldUpdateDelegateHB() {
+    Delegate delegate = Delegate.builder().polllingModeEnabled(true).build();
+    when(delegateService.updateHeartbeatForDelegateWithPollingEnabled(any(Delegate.class))).thenReturn(delegate);
+    RestResponse<Delegate> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/heartbeat-with-polling?accountId=" + ACCOUNT_ID)
+            .request()
+            .post(entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
+    verify(delegateService, atLeastOnce()).updateHeartbeatForDelegateWithPollingEnabled(delegate);
+    assertThat(restResponse.getResource()).isInstanceOf(Delegate.class).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldUpdateECSDelegateHB() {
+    Delegate delegate = Delegate.builder().polllingModeEnabled(true).delegateType("ECS").build();
+    when(delegateService.handleEcsDelegateRequest(any(Delegate.class))).thenReturn(delegate);
+    RestResponse<Delegate> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/heartbeat-with-polling?accountId=" + ACCOUNT_ID)
+            .request()
+            .post(entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
+    verify(delegateService, atLeastOnce()).handleEcsDelegateRequest(delegate);
+    assertThat(restResponse.getResource()).isInstanceOf(Delegate.class).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldCheckForProfile() {
+    DelegateProfileParams profileParams = DelegateProfileParams.builder().build();
+    when(delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "profile1", 99L)).thenReturn(profileParams);
+    RestResponse<DelegateProfileParams> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/" + DELEGATE_ID + "/profile?accountId=" + ACCOUNT_ID
+                + "&delegateId=" + DELEGATE_ID + "&profileId=profile1"
+                + "&lastUpdatedAt=" + 99L)
+            .request()
+            .get(new GenericType<RestResponse<DelegateProfileParams>>() {});
+    verify(delegateService, atLeastOnce()).checkForProfile(ACCOUNT_ID, DELEGATE_ID, "profile1", 99L);
+    assertThat(restResponse.getResource()).isInstanceOf(DelegateProfileParams.class).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateScripts() throws IOException {
+    String delegateVersion = "0.0.0";
+    String verificationUrl = httpServletRequest.getScheme() + "://" + httpServletRequest.getServerName() + ":"
+        + httpServletRequest.getServerPort();
+    DelegateScripts delegateScripts = DelegateScripts.builder().build();
+    when(delegateService.getDelegateScripts(ACCOUNT_ID, delegateVersion,
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl))
+        .thenReturn(delegateScripts);
+
+    RestResponse<DelegateScripts> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/delegateScripts?accountId=" + ACCOUNT_ID + "&delegateVersion=" + delegateVersion)
+            .request()
+            .get(new GenericType<RestResponse<DelegateScripts>>() {});
+
+    verify(delegateService, atLeastOnce())
+        .getDelegateScripts(ACCOUNT_ID, delegateVersion,
+            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl);
+    assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldSaveApiCallLogs() {
+    int numOfApiCallLogs = 10;
+    List<ThirdPartyApiCallLog> apiCallLogs = new ArrayList<>();
+    for (int i = 0; i < numOfApiCallLogs; i++) {
+      apiCallLogs.add(ThirdPartyApiCallLog.builder()
+                          .accountId(ACCOUNT_ID)
+                          .stateExecutionId(STATE_EXECUTION_ID)
+                          .requestTimeStamp(i)
+                          .request(Lists.newArrayList(ThirdPartyApiCallLog.ThirdPartyApiCallField.builder()
+                                                          .name(generateUuid())
+                                                          .value(generateUuid())
+                                                          .type(ThirdPartyApiCallLog.FieldType.TEXT)
+                                                          .build()))
+                          .response(Lists.newArrayList(ThirdPartyApiCallLog.ThirdPartyApiCallField.builder()
+                                                           .name(generateUuid())
+                                                           .value(generateUuid())
+                                                           .type(ThirdPartyApiCallLog.FieldType.TEXT)
+                                                           .build()))
+                          .delegateId(DELEGATE_ID)
+                          .delegateTaskId(generateUuid())
+                          .build());
+    }
+    RestResponse<String> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/" + DELEGATE_ID + "/state-executions?delegateId=" + DELEGATE_ID
+                + "&accountId=" + ACCOUNT_ID)
+            .request()
+            .post(entity(apiCallLogs, MediaType.APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+
+    verify(wingsPersistence, atLeastOnce()).save(apiCallLogs);
   }
 }
