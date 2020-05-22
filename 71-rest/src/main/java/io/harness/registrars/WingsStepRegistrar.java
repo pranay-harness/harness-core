@@ -3,6 +3,7 @@ package io.harness.registrars;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.redesign.states.email.EmailStep;
 import io.harness.redesign.states.http.BasicHttpStep;
 import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.redesign.states.wait.WaitStep;
@@ -20,5 +21,6 @@ public class WingsStepRegistrar implements StepRegistrar {
     stateClasses.add(Pair.of(BasicHttpStep.STEP_TYPE, BasicHttpStep.class));
     stateClasses.add(Pair.of(WaitStep.STEP_TYPE, WaitStep.class));
     stateClasses.add(Pair.of(ShellScriptStep.STATE_TYPE, ShellScriptStep.class));
+    stateClasses.add(Pair.of(EmailStep.STATE_TYPE, EmailStep.class));
   }
 }

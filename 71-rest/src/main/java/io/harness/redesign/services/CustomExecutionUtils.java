@@ -18,6 +18,8 @@ import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
+import io.harness.redesign.states.email.EmailStep;
+import io.harness.redesign.states.email.EmailStepParameters;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.redesign.states.wait.WaitStepParameters;
@@ -138,6 +140,7 @@ public class CustomExecutionUtils {
     String httpNodeId2 = generateUuid();
     String forkNodeId = generateUuid();
     String dummyNodeId = generateUuid();
+    String emailNodeId = generateUuid();
 
     BasicHttpStepParameters basicHttpStateParameters1 =
         BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
@@ -181,11 +184,30 @@ public class CustomExecutionUtils {
                                            .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
                                            .build())
                 .build())
+        .node(
+            ExecutionNode.builder()
+                .uuid(dummyNodeId)
+                .name("Dummy Node 1")
+                .identifier("dummy1")
+                .stepType(DUMMY_STEP_TYPE)
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(emailNodeId).build())
+                                       .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                           .build())
+                .build())
         .node(ExecutionNode.builder()
-                  .uuid(dummyNodeId)
-                  .name("Dummy Node 1")
-                  .identifier("dummy1")
-                  .stepType(DUMMY_STEP_TYPE)
+                  .uuid(emailNodeId)
+                  .name("Email Node")
+                  .identifier("email")
+                  .stepType(EmailStep.STATE_TYPE)
+                  .stepParameters(EmailStepParameters.builder()
+                                      .subject("subject")
+                                      .body("body")
+                                      .toAddress("to1@harness.io, to2@harness.io")
+                                      .build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                              .build())
