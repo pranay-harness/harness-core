@@ -190,7 +190,7 @@ public class ExecutionEngine implements Engine {
                                  .step(currentStep)
                                  .ambiance(ambiance)
                                  .inputs(inputs)
-                                 .parameters(node.getStateParameters())
+                                 .parameters(node.getStepParameters())
                                  .passThroughData(facilitatorResponse.getPassThroughData())
                                  .build());
   }

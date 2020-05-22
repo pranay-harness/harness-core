@@ -47,8 +47,8 @@ public class ForkStateTest extends OrchestrationTest {
   public void shouldTestObtainChildren() {
     Ambiance ambiance = Ambiance.builder().build();
     List<StepTransput> stepTransputList = new ArrayList<>();
-    ForkStateParameters stateParameters =
-        ForkStateParameters.builder().parallelNodeId(FIRST_CHILD_ID).parallelNodeId(SECOND_CHILD_ID).build();
+    ForkStepParameters stateParameters =
+        ForkStepParameters.builder().parallelNodeId(FIRST_CHILD_ID).parallelNodeId(SECOND_CHILD_ID).build();
     ChildrenExecutableResponse childrenExecutableResponse =
         forkState.obtainChildren(ambiance, stateParameters, stepTransputList);
     assertThat(childrenExecutableResponse).isNotNull();
@@ -64,8 +64,8 @@ public class ForkStateTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldTestHandleChildrenResponse() {
     Ambiance ambiance = Ambiance.builder().build();
-    ForkStateParameters stateParameters =
-        ForkStateParameters.builder().parallelNodeId(FIRST_CHILD_ID).parallelNodeId(SECOND_CHILD_ID).build();
+    ForkStepParameters stateParameters =
+        ForkStepParameters.builder().parallelNodeId(FIRST_CHILD_ID).parallelNodeId(SECOND_CHILD_ID).build();
 
     Map<String, ResponseData> responseDataMap =
         ImmutableMap.<String, ResponseData>builder()

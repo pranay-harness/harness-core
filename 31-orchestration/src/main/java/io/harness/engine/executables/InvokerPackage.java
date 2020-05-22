@@ -7,7 +7,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.PassThroughData;
 import io.harness.state.Step;
-import io.harness.state.io.StateParameters;
+import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
 import lombok.Builder;
 import lombok.Value;
@@ -21,7 +21,7 @@ import java.util.List;
 public class InvokerPackage {
   Step step;
   Ambiance ambiance;
-  StateParameters parameters;
+  StepParameters parameters;
   List<StepTransput> inputs;
   PassThroughData passThroughData;
 }

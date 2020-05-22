@@ -39,12 +39,12 @@ import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
 import io.harness.state.StateType;
 import io.harness.state.Step;
-import io.harness.state.io.StateParameters;
+import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.TestAsyncStep;
-import io.harness.utils.TestStateParameters;
+import io.harness.utils.TestStepParameters;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
@@ -188,7 +188,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
                       .name("Finish Node")
                       .identifier("finish")
                       .stateType(ASYNC_STATE_TYPE)
-                      .stateParameters(TestStateParameters.builder().param("Param").build())
+                      .stepParameters(TestStepParameters.builder().param("Param").build())
                       .facilitatorObtainment(
                           FacilitatorObtainment.builder()
                               .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
@@ -268,7 +268,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
   private static class TestSyncStep implements Step, SyncExecutable {
     @Override
     public StepResponse executeSync(
-        Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs, PassThroughData passThroughData) {
+        Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
       return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
     }
 

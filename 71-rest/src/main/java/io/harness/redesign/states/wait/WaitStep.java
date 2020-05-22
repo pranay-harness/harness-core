@@ -18,7 +18,7 @@ import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.state.StateType;
 import io.harness.state.Step;
-import io.harness.state.io.StateParameters;
+import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
@@ -44,21 +44,21 @@ public class WaitStep implements Step, AsyncExecutable {
 
   @Override
   public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs) {
-    WaitStateParameters stateParameters = (WaitStateParameters) parameters;
+      Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
+    WaitStepParameters parameters = (WaitStepParameters) stepParameters;
     String resumeId = generateUuid();
     executorService.schedule(new SimpleNotifier(waitNotifyEngine, resumeId,
                                  ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build()),
-        stateParameters.getWaitDurationSeconds(), TimeUnit.SECONDS);
+        parameters.getWaitDurationSeconds(), TimeUnit.SECONDS);
     return AsyncExecutableResponse.builder().callbackId(resumeId).build();
   }
 
   @Override
   public StepResponse handleAsyncResponse(
-      Ambiance ambiance, StateParameters parameters, Map<String, ResponseData> responseDataMap) {
-    WaitStateParameters waitStateParameters = (WaitStateParameters) parameters;
+      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+    WaitStepParameters parameters = (WaitStepParameters) stepParameters;
     WaitStateExecutionData waitStateExecutionData = new WaitStateExecutionData();
-    waitStateExecutionData.setDuration(waitStateParameters.getWaitDurationSeconds());
+    waitStateExecutionData.setDuration(parameters.getWaitDurationSeconds());
     waitStateExecutionData.setWakeupTs(System.currentTimeMillis());
     return StepResponse.builder()
         .status(NodeExecutionStatus.SUCCEEDED)

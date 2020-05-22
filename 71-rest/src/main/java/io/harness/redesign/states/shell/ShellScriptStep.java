@@ -36,7 +36,7 @@ import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputResolver;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.state.StateType;
 import io.harness.state.Step;
-import io.harness.state.io.StateParameters;
+import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepTransput;
@@ -89,8 +89,8 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
   }
 
   @Override
-  public DelegateTask obtainTask(Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs) {
-    ShellScriptStateParameters shellScriptStateParameters = (ShellScriptStateParameters) parameters;
+  public DelegateTask obtainTask(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
+    ShellScriptStepParameters shellScriptStateParameters = (ShellScriptStepParameters) stepParameters;
     String activityId = createActivity(ambiance);
 
     Environment environment =
@@ -238,8 +238,8 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, StateParameters parameters, Map<String, ResponseData> response) {
-    ShellScriptStateParameters shellScriptStateParameters = (ShellScriptStateParameters) parameters;
+      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> response) {
+    ShellScriptStepParameters shellScriptStateParameters = (ShellScriptStepParameters) stepParameters;
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     String activityId = response.keySet().iterator().next();
     ResponseData data = response.values().iterator().next();

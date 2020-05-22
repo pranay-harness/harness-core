@@ -18,7 +18,7 @@ import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.task.AsyncTaskExecutable;
 import io.harness.state.StateType;
 import io.harness.state.Step;
-import io.harness.state.io.StateParameters;
+import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.FailureInfo;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
@@ -38,14 +38,14 @@ public class BasicHttpStep implements Step, AsyncTaskExecutable {
   public static final StateType STATE_TYPE = StateType.builder().type("BASIC_HTTP").build();
 
   @Override
-  public DelegateTask obtainTask(Ambiance ambiance, StateParameters parameters, List<StepTransput> inputs) {
-    BasicHttpStateParameters stateParameters = (BasicHttpStateParameters) parameters;
+  public DelegateTask obtainTask(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
+    BasicHttpStepParameters parameters = (BasicHttpStepParameters) stepParameters;
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
-                                                .url(stateParameters.getUrl())
-                                                .body(stateParameters.getBody())
-                                                .header(stateParameters.getHeader())
-                                                .method(stateParameters.getMethod())
-                                                .socketTimeoutMillis(stateParameters.getSocketTimeoutMillis())
+                                                .url(parameters.getUrl())
+                                                .body(parameters.getBody())
+                                                .header(parameters.getHeader())
+                                                .method(parameters.getMethod())
+                                                .socketTimeoutMillis(parameters.getSocketTimeoutMillis())
                                                 .build();
 
     String waitId = generateUuid();
@@ -64,8 +64,8 @@ public class BasicHttpStep implements Step, AsyncTaskExecutable {
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, StateParameters parameters, Map<String, ResponseData> responseDataMap) {
-    BasicHttpStateParameters stateParameters = (BasicHttpStateParameters) parameters;
+      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+    BasicHttpStepParameters parameters = (BasicHttpStepParameters) stepParameters;
     StepResponseBuilder responseBuilder = StepResponse.builder();
     ResponseData notifyResponseData = responseDataMap.values().iterator().next();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
@@ -80,8 +80,8 @@ public class BasicHttpStep implements Step, AsyncTaskExecutable {
     } else {
       HttpStateExecutionResponse httpStateExecutionResponse = (HttpStateExecutionResponse) notifyResponseData;
       HttpStateExecutionData executionData = HttpStateExecutionData.builder()
-                                                 .httpUrl(stateParameters.getUrl())
-                                                 .httpMethod(stateParameters.getMethod())
+                                                 .httpUrl(parameters.getUrl())
+                                                 .httpMethod(parameters.getMethod())
                                                  .httpResponseCode(httpStateExecutionResponse.getHttpResponseCode())
                                                  .httpResponseBody(httpStateExecutionResponse.getHttpResponseBody())
                                                  .status(httpStateExecutionResponse.getExecutionStatus())

@@ -1,11 +1,11 @@
 package io.harness.state.core.dummy;
 
-import io.harness.state.io.StateParameters;
+import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Value;
 
 @Value
 @Builder
-public class DummyStateParameters implements StateParameters {
+public class DummyStepParameters implements StepParameters {
   String logExpression;
 }
