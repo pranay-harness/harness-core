@@ -23,12 +23,14 @@ import org.mockito.MockitoAnnotations;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.cloudProvider.QLGcpCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLPcfCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLPhysicalDataCenterCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLSpotInstCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderPayload;
@@ -38,10 +40,12 @@ import software.wings.graphql.schema.type.QLCloudProviderType;
 import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
+import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLSpotInstCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.k8s.QLClusterDetailsType;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue;
 
 import java.sql.SQLException;
 
@@ -55,6 +59,7 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
   @Mock private SpotInstDataFetcherHelper spotInstDataFetcherHelper;
   @Mock private GcpDataFetcherHelper gcpDataFetcherHelper;
   @Mock private K8sDataFetcherHelper k8sDataFetcherHelper;
+  @Mock private PhysicalDataCenterDataFetcherHelper physicalDataCenterDataFetcherHelper;
 
   @InjectMocks private UpdateCloudProviderDataFetcher dataFetcher = new UpdateCloudProviderDataFetcher();
 
@@ -250,6 +255,58 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
     assertThat(payload.getCloudProvider()).isNotNull();
     assertThat(payload.getCloudProvider()).isInstanceOf(QLKubernetesClusterCloudProvider.class);
     assertThat(payload.getCloudProvider().getId()).isEqualTo(CLOUD_PROVIDER_ID);
+  }
+
+  @Test
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void updatePhysicalDataCenter() {
+    SettingAttribute setting =
+        SettingAttribute.Builder.aSettingAttribute()
+            .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
+            .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
+                           .withType(SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+                           .build())
+            .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CLOUD_PROVIDER_ID);
+
+    doNothing()
+        .when(physicalDataCenterDataFetcherHelper)
+        .updateSettingAttribute(
+            isA(SettingAttribute.class), isA(QLPhysicalDataCenterCloudProviderInput.class), isA(String.class));
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute()
+                 .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
+                 .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
+                                .withType(SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+                                .build())
+                 .build())
+        .when(settingsService)
+        .updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+
+    doNothing()
+        .when(settingServiceHelper)
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    QLUpdateCloudProviderPayload payload =
+        dataFetcher.mutateAndFetch(QLUpdateCloudProviderInput.builder()
+                                       .cloudProviderId(CLOUD_PROVIDER_ID)
+                                       .cloudProviderType(QLCloudProviderType.PHYSICAL_DATA_CENTER)
+                                       .physicalDataCenterCloudProvider(QLPhysicalDataCenterCloudProviderInput.builder()
+                                                                            .name(RequestField.ofNullable("NAME"))
+                                                                            .usageScope(RequestField.ofNull())
+                                                                            .build())
+                                       .build(),
+            MutationContext.builder().accountId(ACCOUNT_ID).build());
+
+    verify(settingsService, times(1)).getByAccount(ACCOUNT_ID, CLOUD_PROVIDER_ID);
+    verify(settingsService, times(1)).updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+    verify(settingServiceHelper, times(1))
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    assertThat(payload.getCloudProvider()).isNotNull();
+    assertThat(payload.getCloudProvider()).isInstanceOf(QLPhysicalDataCenterCloudProvider.class);
   }
 
   @Test(expected = InvalidRequestException.class)
