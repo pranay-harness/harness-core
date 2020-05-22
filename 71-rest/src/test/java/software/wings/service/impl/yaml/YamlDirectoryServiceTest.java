@@ -385,7 +385,8 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     when(infrastructureDefinitionService.list(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(Arrays.asList(infraDefinition_1)).build(),
             aPageResponse().withResponse(Arrays.asList(infraDefinition_2)).build());
-    when(environmentService.getEnvByApp(APP_ID)).thenReturn(Arrays.asList(environment_1, environment_2));
+    when(environmentService.list(any(), anyBoolean(), anyString()))
+        .thenReturn(aPageResponse().withResponse(Arrays.asList(environment_1, environment_2)).build());
     when(applicationManifestService.getAllByEnvIdAndKind(
              environment_1.getAppId(), environment_1.getUuid(), AppManifestKind.VALUES))
         .thenReturn(Arrays.asList(applicationManifest));
@@ -730,11 +731,16 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
 
     doReturn(application).when(appService).get(anyString());
 
-    doReturn(
-        Arrays.asList(
-            Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).appId(APP_ID).artifactType(ArtifactType.PCF).build()))
+    doReturn(aPageResponse()
+                 .withResponse(Arrays.asList(Service.builder()
+                                                 .uuid(SERVICE_ID)
+                                                 .name(SERVICE_NAME)
+                                                 .appId(APP_ID)
+                                                 .artifactType(ArtifactType.PCF)
+                                                 .build()))
+                 .build())
         .when(serviceResourceService)
-        .findServicesByApp(anyString());
+        .list(any(), anyBoolean(), anyBoolean(), anyBoolean(), anyString());
 
     final Command command =
         Command.Builder.aCommand()
@@ -771,9 +777,11 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
 
     doReturn(Collections.EMPTY_LIST).when(configService).getConfigFilesForEntity(anyString(), anyString(), anyString());
 
-    doReturn(Arrays.asList(anEnvironment().name(ENV_NAME).uuid(ENV_ID).appId(APP_ID).build()))
+    doReturn(aPageResponse()
+                 .withResponse(Arrays.asList(anEnvironment().name(ENV_NAME).uuid(ENV_ID).appId(APP_ID).build()))
+                 .build())
         .when(environmentService)
-        .getEnvByApp(anyString());
+        .list(any(), anyBoolean(), anyString());
 
     PageResponse<InfrastructureMapping> mappingResponse =
         aPageResponse()

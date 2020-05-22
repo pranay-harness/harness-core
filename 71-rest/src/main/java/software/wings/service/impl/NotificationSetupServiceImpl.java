@@ -17,6 +17,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SortOrder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import io.harness.validation.PersistenceValidator;
@@ -83,8 +84,10 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Override
   public List<NotificationGroup> listNotificationGroups(String accountId) {
-    return listNotificationGroups(
-        aPageRequest().addFilter(NotificationGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId).build())
+    return listNotificationGroups(aPageRequest()
+                                      .addFilter(NotificationGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId)
+                                      .addOrder(NotificationGroup.NAME_KEY, SortOrder.OrderType.ASC)
+                                      .build())
         .getResponse();
   }
 
