@@ -26,7 +26,6 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter;
 import io.harness.beans.SortOrder;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.Getter;
@@ -375,10 +374,8 @@ public class GitSyncServiceImpl implements GitSyncService {
   @Override
   public PageResponse<GitFileActivitySummary> fetchGitCommits(
       PageRequest<GitFileActivitySummary> pageRequest, Boolean gitToHarness, String accountId, String appId) {
-    pageRequest.addFilter(GitFileActivitySummaryKeys.accountId, SearchFilter.Operator.HAS, accountId);
-    pageRequest.addFilter(GitFileActivitySummaryKeys.appId, EQ, appId);
     if (gitToHarness != null) {
-      pageRequest.addFilter(GitFileActivitySummaryKeys.gitToHarness, SearchFilter.Operator.HAS, gitToHarness);
+      pageRequest.addFilter(GitFileActivitySummaryKeys.gitToHarness, EQ, gitToHarness);
     }
     PageResponse<GitFileActivitySummary> pageResponse =
         wingsPersistence.query(GitFileActivitySummary.class, pageRequest);
