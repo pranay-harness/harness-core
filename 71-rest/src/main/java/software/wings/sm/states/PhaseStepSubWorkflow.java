@@ -556,49 +556,47 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     boolean addNotifyElement = false;
     List<ContextElement> contextElements = Lists.newArrayList();
     if (deploymentType.equals(DeploymentType.AWS_LAMBDA.name()) && phaseStepType == PhaseStepType.DEPLOY_AWS_LAMBDA) {
-      AwsLambdaContextElement awsLambdaContextElement = (AwsLambdaContextElement) notifiedElement(
-          elementNotifyResponseData, AwsLambdaContextElement.class, "Missing AwsLambdaContextElement");
-      contextElements.add(awsLambdaContextElement);
+      ContextElement contextElement =
+          fetchNotifiedContextElement(elementNotifyResponseData, AwsLambdaContextElement.class);
+      if (contextElement != null) {
+        contextElements.add(contextElement);
+      }
     } else if ((deploymentType.equals(DeploymentType.SSH.name()) || deploymentType.equals(DeploymentType.WINRM.name()))
         && phaseStepType == PhaseStepType.INFRASTRUCTURE_NODE) {
-      ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
-          elementNotifyResponseData, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
-      contextElements.add(serviceInstanceIdsParam);
+      ContextElement contextElement =
+          fetchNotifiedContextElement(elementNotifyResponseData, ServiceInstanceIdsParam.class);
+      if (contextElement != null) {
+        contextElements.add(contextElement);
+      }
     } else if (phaseStepType == PhaseStepType.CLUSTER_SETUP) {
-      ClusterElement clusterElement =
-          (ClusterElement) notifiedElement(elementNotifyResponseData, ClusterElement.class, "Missing ClusterElement");
-      contextElements.add(clusterElement);
-      addNotifyElement = true;
+      ContextElement contextElement = fetchNotifiedContextElement(elementNotifyResponseData, ClusterElement.class);
+      if (contextElement != null) {
+        contextElements.add(contextElement);
+        addNotifyElement = true;
+      }
     } else if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
-      ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
-          elementNotifyResponseData, ContainerServiceElement.class, "Missing ContainerServiceElement");
-      contextElements.add(containerServiceElement);
-      addNotifyElement = true;
-    } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
-      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
-          elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
-      contextElements.add(instanceElementListParam);
-    } else if (phaseStepType == PhaseStepType.DEPLOY_AWSCODEDEPLOY) {
-      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
-          elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
-      contextElements.add(instanceElementListParam);
+      ContextElement contextElement =
+          fetchNotifiedContextElement(elementNotifyResponseData, ContainerServiceElement.class);
+      if (contextElement != null) {
+        contextElements.add(contextElement);
+        addNotifyElement = true;
+      }
     } else if (phaseStepType == PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP) {
-      AmiServiceSetupElement amiServiceElement = (AmiServiceSetupElement) notifiedElement(
-          elementNotifyResponseData, AmiServiceSetupElement.class, "Missing AmiServiceElement Element");
-      contextElements.add(amiServiceElement);
-      addNotifyElement = true;
-    } else if (phaseStepType == PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP) {
-      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
-          elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
-      contextElements.add(instanceElementListParam);
-    } else if (phaseStepType == PhaseStepType.HELM_DEPLOY || phaseStepType == PhaseStepType.PCF_RESIZE) {
-      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
-          elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
-      contextElements.add(instanceElementListParam);
-    } else if (phaseStepType == PhaseStepType.K8S_PHASE_STEP) {
-      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
-          elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
-      contextElements.add(instanceElementListParam);
+      ContextElement contextElement =
+          fetchNotifiedContextElement(elementNotifyResponseData, AmiServiceSetupElement.class);
+      if (contextElement != null) {
+        contextElements.add(contextElement);
+        addNotifyElement = true;
+      }
+    } else if (phaseStepType == PhaseStepType.HELM_DEPLOY || phaseStepType == PhaseStepType.PCF_RESIZE
+        || phaseStepType == PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP
+        || phaseStepType == PhaseStepType.DEPLOY_AWSCODEDEPLOY || phaseStepType == PhaseStepType.CONTAINER_DEPLOY
+        || phaseStepType == PhaseStepType.K8S_PHASE_STEP || phaseStepType == PhaseStepType.SPOTINST_DEPLOY) {
+      ContextElement contextElement =
+          fetchNotifiedContextElement(elementNotifyResponseData, InstanceElementListParam.class);
+      if (contextElement != null) {
+        contextElements.add(contextElement);
+      }
     } else if (phaseStepType == PhaseStepType.PROVISION_INFRASTRUCTURE) {
       addProvisionerElements(elementNotifyResponseData, contextElements);
       addNotifyElement = true;
@@ -610,10 +608,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       ContextElement spotinstNotifiedContextElement = getSpotinstNotifiedContextElement(elementNotifyResponseData);
       contextElements.add(spotinstNotifiedContextElement);
       addNotifyElement = true;
-    } else if (phaseStepType == PhaseStepType.SPOTINST_DEPLOY) {
-      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
-          elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
-      contextElements.add(instanceElementListParam);
     }
 
     if (isNotEmpty(contextElements)) {
@@ -655,15 +649,15 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         || element instanceof CloudFormationRollbackInfoElement || element instanceof CloudFormationOutputInfoElement;
   }
 
-  private ContextElement notifiedElement(
-      ElementNotifyResponseData elementNotifyResponseData, Class<? extends ContextElement> cls, String message) {
+  private ContextElement fetchNotifiedContextElement(
+      ElementNotifyResponseData elementNotifyResponseData, Class<? extends ContextElement> cls) {
     List<ContextElement> elements = elementNotifyResponseData.getContextElements();
     if (isEmpty(elements)) {
       return null;
     }
     Optional<ContextElement> elementOptional = elements.stream().filter(cls::isInstance).findFirst();
     if (!elementOptional.isPresent()) {
-      throw new InvalidRequestException(message);
+      return null;
     }
     return elementOptional.get();
   }
