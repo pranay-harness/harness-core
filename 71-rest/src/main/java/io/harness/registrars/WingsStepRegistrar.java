@@ -20,7 +20,7 @@ public class WingsStepRegistrar implements StepRegistrar {
   public void register(Set<Pair<StepType, Class<? extends Step>>> stateClasses) {
     stateClasses.add(Pair.of(BasicHttpStep.STEP_TYPE, BasicHttpStep.class));
     stateClasses.add(Pair.of(WaitStep.STEP_TYPE, WaitStep.class));
-    stateClasses.add(Pair.of(ShellScriptStep.STATE_TYPE, ShellScriptStep.class));
-    stateClasses.add(Pair.of(EmailStep.STATE_TYPE, EmailStep.class));
+    stateClasses.add(Pair.of(ShellScriptStep.STEP_TYPE, ShellScriptStep.class));
+    stateClasses.add(Pair.of(EmailStep.STEP_TYPE, EmailStep.class));
   }
 }

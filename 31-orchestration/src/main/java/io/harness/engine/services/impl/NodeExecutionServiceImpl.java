@@ -1,6 +1,7 @@
 package io.harness.engine.services.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
@@ -12,7 +13,9 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.state.io.StepParameters;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,5 +35,14 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       }
     }
     return nodeExecutions;
+  }
+
+  @Override
+  public void updateResolvedStepParameters(String nodeExecutionId, StepParameters stepParameters) {
+    Query<NodeExecution> query =
+        hPersistence.createQuery(NodeExecution.class, excludeAuthority).filter(NodeExecutionKeys.uuid, nodeExecutionId);
+    UpdateOperations<NodeExecution> updateOperations = hPersistence.createUpdateOperations(NodeExecution.class);
+    setUnset(updateOperations, NodeExecutionKeys.resolvedStepParameters, stepParameters);
+    hPersistence.update(query, updateOperations);
   }
 }

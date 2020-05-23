@@ -1,4 +1,4 @@
-package io.harness.engine.expresssions.functors;
+package io.harness.engine.expressions.functors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

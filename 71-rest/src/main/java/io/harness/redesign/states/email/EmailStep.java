@@ -33,7 +33,7 @@ import java.util.List;
 @Produces(Step.class)
 @Slf4j
 public class EmailStep implements Step, SyncExecutable {
-  public static final StepType STATE_TYPE = StepType.builder().type("EMAIL").build();
+  public static final StepType STEP_TYPE = StepType.builder().type("EMAIL").build();
 
   private static final Splitter COMMA_SPLITTER = Splitter.on(",").omitEmptyStrings().trimResults();
   private static final String ACCOUNT_ID = "accountId";
@@ -70,7 +70,7 @@ public class EmailStep implements Step, SyncExecutable {
 
   @Override
   public StepType getType() {
-    return STATE_TYPE;
+    return STEP_TYPE;
   }
 
   private List<String> getEmailAddressList(String address) {
