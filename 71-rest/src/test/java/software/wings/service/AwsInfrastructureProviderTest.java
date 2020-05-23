@@ -24,7 +24,9 @@ import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.inject.Inject;
 
@@ -268,5 +270,40 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     verify(mockAwsAsgHelperServiceManager)
         .listAutoScalingGroupInstances(awsConfig, Collections.emptyList(), infrastructureMapping.getRegion(),
             infrastructureMapping.getAutoScalingGroupName(), APP_ID);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testMaybeSetAutoScaleCapacityAndGetHosts() {
+    String region = Regions.US_EAST_1.getName();
+    AwsInfrastructureMapping infrastructureMapping = anAwsInfrastructureMapping()
+                                                         .withRegion(region)
+                                                         .withProvisionInstances(true)
+                                                         .withAppId(APP_ID)
+                                                         .withAutoScalingGroupName("AUTOSCALING_GROUP")
+                                                         .withSetDesiredCapacity(false)
+                                                         .withDesiredCapacity(1)
+                                                         .withHostConnectionAttrs("hostConnectionAttr")
+                                                         .withServiceId(SERVICE_ID)
+                                                         .build();
+    when(mockAwsAsgHelperServiceManager.listAutoScalingGroupInstances(awsConfig, Collections.emptyList(),
+             infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName(), APP_ID))
+        .thenReturn(asList(new Instance()
+                               .withPrivateDnsName(HOST_NAME)
+                               .withPublicDnsName(HOST_NAME)
+                               .withInstanceId("INSTANCE_ID")
+                               .withState(new InstanceState().withName("running"))));
+    SettingAttribute computeProvider = aSettingAttribute().withValue(awsConfig).build();
+    List<Host> hosts = infrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
+        APP_ID, WORKFLOW_EXECUTION_ID, infrastructureMapping, computeProvider);
+    assertThat(hosts.get(0).getWinrmConnAttr()).isNull();
+
+    infrastructureMapping.setDeploymentType(DeploymentType.WINRM.name());
+    when(serviceResourceService.getDeploymentType(infrastructureMapping, null, SERVICE_ID))
+        .thenReturn(DeploymentType.WINRM);
+    hosts = infrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
+        APP_ID, WORKFLOW_EXECUTION_ID, infrastructureMapping, computeProvider);
+    assertThat(hosts.get(0).getWinrmConnAttr()).isEqualTo("hostConnectionAttr");
   }
 }
