@@ -37,7 +37,7 @@ public class ChildrenFacilitatorTest extends OrchestrationTest {
   public void shouldTestFacilitate() {
     Ambiance ambiance = Ambiance.builder().build();
     FacilitatorParameters parameters = DefaultFacilitatorParams.builder().build();
-    FacilitatorResponse response = childrenFacilitator.facilitate(ambiance, parameters, null);
+    FacilitatorResponse response = childrenFacilitator.facilitate(ambiance, null, parameters, null);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionMode()).isEqualTo(CHILDREN);
     assertThat(response.getInitialWait()).isEqualTo(Duration.ofSeconds(0));

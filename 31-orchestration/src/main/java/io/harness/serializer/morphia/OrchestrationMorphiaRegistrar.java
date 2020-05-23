@@ -65,6 +65,6 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
 
     // State Related Classes
     h.put("state.core.fork.ForkStepParameters", ForkStepParameters.class);
-    h.put("state.core.fork.SectionStepParameters", SectionStepParameters.class);
+    h.put("state.core.section.SectionStepParameters", SectionStepParameters.class);
   }
 }

@@ -37,7 +37,7 @@ public class SyncFacilitatorTest extends OrchestrationTest {
   public void shouldTestFacilitate() {
     Ambiance ambiance = Ambiance.builder().build();
     FacilitatorParameters parameters = DefaultFacilitatorParams.builder().build();
-    FacilitatorResponse response = syncFacilitator.facilitate(ambiance, parameters, null);
+    FacilitatorResponse response = syncFacilitator.facilitate(ambiance, null, parameters, null);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionMode()).isEqualTo(SYNC);
     assertThat(response.getInitialWait()).isEqualTo(Duration.ofSeconds(0));
