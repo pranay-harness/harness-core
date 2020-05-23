@@ -16,6 +16,7 @@ import static software.wings.sm.StateType.SHELL_SCRIPT;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
@@ -28,7 +29,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.shell.ScriptType;
-import io.harness.engine.expresssions.EngineExpressionService;
+import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
@@ -74,9 +75,10 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Redesign
 @ExcludeRedesign
+@Produces(Step.class)
 @Slf4j
 public class ShellScriptStep implements Step, AsyncTaskExecutable {
-  public static final StepType STATE_TYPE = StepType.builder().type(SHELL_SCRIPT.name()).build();
+  public static final StepType STEP_TYPE = StepType.builder().type(SHELL_SCRIPT.name()).build();
 
   @Inject private ActivityService activityService;
   @Inject private ActivityHelperService activityHelperService;
@@ -89,12 +91,12 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
 
   @Override
   public StepType getType() {
-    return STATE_TYPE;
+    return STEP_TYPE;
   }
 
   @Override
   public DelegateTask obtainTask(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
-    ShellScriptStepParameters shellScriptStateParameters = (ShellScriptStepParameters) stepParameters;
+    ShellScriptStepParameters shellScriptStepParameters = (ShellScriptStepParameters) stepParameters;
     String activityId = createActivity(ambiance);
 
     Environment environment =
@@ -121,19 +123,19 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
     HostConnectionAttributes hostConnectionAttributes = null;
 
     software.wings.sm.states.ShellScriptState.ConnectionType connectionType =
-        shellScriptStateParameters.getConnectionType();
+        shellScriptStepParameters.getConnectionType();
     if (connectionType == null) {
       connectionType = software.wings.sm.states.ShellScriptState.ConnectionType.SSH;
     }
 
-    ScriptType scriptType = shellScriptStateParameters.getScriptType();
+    ScriptType scriptType = shellScriptStepParameters.getScriptType();
     if (scriptType == null) {
       scriptType = ScriptType.BASH;
     }
 
-    if (!shellScriptStateParameters.isExecuteOnDelegate()) {
+    if (!shellScriptStepParameters.isExecuteOnDelegate()) {
       if (connectionType == software.wings.sm.states.ShellScriptState.ConnectionType.SSH) {
-        String sshKeyRef = shellScriptStateParameters.getSshKeyRef();
+        String sshKeyRef = shellScriptStepParameters.getSshKeyRef();
         if (isEmpty(sshKeyRef)) {
           throw new ShellScriptException("Valid SSH Connection Attribute not provided in Shell Script Step",
               ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
@@ -165,26 +167,26 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
 
       } else if (connectionType == software.wings.sm.states.ShellScriptState.ConnectionType.WINRM) {
         winRmConnectionAttributes =
-            setupWinrmCredentials(ambiance, shellScriptStateParameters.getConnectionAttributes());
+            setupWinrmCredentials(ambiance, shellScriptStepParameters.getConnectionAttributes());
         username = winRmConnectionAttributes.getUsername();
         winrmEdd = secretManager.getEncryptionDetails(
             winRmConnectionAttributes, getAppId(ambiance), ambiance.getPlanExecutionId());
       }
     }
 
-    String commandPath = shellScriptStateParameters.getCommandPath();
+    String commandPath = shellScriptStepParameters.getCommandPath();
     if (StringUtils.isEmpty(commandPath)) {
       if (scriptType == ScriptType.BASH) {
         commandPath = "/tmp";
       } else if (scriptType == ScriptType.POWERSHELL) {
         commandPath = "%TEMP%";
-        if (shellScriptStateParameters.isExecuteOnDelegate()) {
+        if (shellScriptStepParameters.isExecuteOnDelegate()) {
           commandPath = "/tmp";
         }
       }
     }
 
-    List<String> tags = shellScriptStateParameters.getTags();
+    List<String> tags = shellScriptStepParameters.getTags();
     List<String> allTags = newArrayList();
     List<String> renderedTags = newArrayList();
     if (isNotEmpty(tags)) {
@@ -194,14 +196,12 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
       renderedTags = trimStrings(renderedTags);
     }
 
-    String scriptString = shellScriptStateParameters.getScriptString();
-    scriptString = engineExpressionService.renderExpression(ambiance, scriptString);
     ShellScriptParametersBuilder shellScriptParameters =
         ShellScriptParameters.builder()
             .accountId(getAccountId(ambiance))
             .appId(getAppId(ambiance))
             .activityId(activityId)
-            .host(shellScriptStateParameters.getHost())
+            .host(shellScriptStepParameters.getHost())
             .connectionType(connectionType)
             .winrmConnectionAttributes(winRmConnectionAttributes)
             .winrmConnectionEncryptedDataDetails(winrmEdd)
@@ -209,9 +209,9 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
             .keyEncryptedDataDetails(keyEncryptionDetails)
             .workingDirectory(commandPath)
             .scriptType(scriptType)
-            .script(scriptString)
-            .executeOnDelegate(shellScriptStateParameters.isExecuteOnDelegate())
-            .outputVars(shellScriptStateParameters.getOutputVars())
+            .script(shellScriptStepParameters.getScriptString())
+            .executeOnDelegate(shellScriptStepParameters.isExecuteOnDelegate())
+            .outputVars(shellScriptStepParameters.getOutputVars())
             .hostConnectionAttributes(hostConnectionAttributes)
             .keyless(keyless)
             .keyPath(keyPath)

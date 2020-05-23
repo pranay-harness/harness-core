@@ -30,7 +30,7 @@ public class EmailStepTest extends WingsBaseTest {
   @Owner(developers = ALEXEI)
   @Category({UnitTests.class})
   public void shouldReturnEmailType() {
-    assertThat(emailStep.getType()).isEqualTo(EmailStep.STATE_TYPE);
+    assertThat(emailStep.getType()).isEqualTo(EmailStep.STEP_TYPE);
   }
 
   @Test

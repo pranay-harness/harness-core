@@ -1,4 +1,4 @@
-package io.harness.engine.expresssions;
+package io.harness.engine.expressions;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -17,5 +17,15 @@ public class EngineExpressionServiceImpl implements EngineExpressionService {
                                               .build();
     injector.injectMembers(evaluator);
     return evaluator.renderExpression(expression);
+  }
+
+  @Override
+  public Object resolve(Ambiance ambiance, Object o) {
+    EngineExpressionEvaluator evaluator = EngineExpressionEvaluator.builder()
+                                              .ambiance(ambiance)
+                                              .variableResolverTracker(new VariableResolverTracker())
+                                              .build();
+    injector.injectMembers(evaluator);
+    return evaluator.resolve(o);
   }
 }

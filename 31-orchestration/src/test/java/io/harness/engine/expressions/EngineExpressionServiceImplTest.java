@@ -1,4 +1,4 @@
-package io.harness.engine.expresssions;
+package io.harness.engine.expressions;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;

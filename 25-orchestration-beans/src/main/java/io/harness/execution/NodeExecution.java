@@ -16,6 +16,7 @@ import io.harness.persistence.UuidAware;
 import io.harness.persistence.converters.DurationConverter;
 import io.harness.plan.ExecutionNode;
 import io.harness.serializer.KryoUtils;
+import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
 import lombok.Builder;
 import lombok.Data;
@@ -48,6 +49,9 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   private Long startTs;
   private Long endTs;
   private Duration initialWaitDuration;
+
+  // Resolved StepParameters stored just before invoking step.
+  StepParameters resolvedStepParameters;
 
   // For Wait Notify
   String notifyId;

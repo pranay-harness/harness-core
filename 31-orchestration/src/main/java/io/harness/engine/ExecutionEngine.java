@@ -27,8 +27,10 @@ import io.harness.engine.advise.AdviseHandlerFactory;
 import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.ExecutableInvokerFactory;
 import io.harness.engine.executables.InvokerPackage;
+import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.resume.EngineResumeExecutor;
 import io.harness.engine.resume.EngineWaitResumeCallback;
+import io.harness.engine.services.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
@@ -49,6 +51,7 @@ import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.state.Step;
 import io.harness.state.io.StatusNotifyResponseData;
+import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
@@ -81,6 +84,8 @@ public class ExecutionEngine implements Engine {
   @Inject private ExecutableInvokerFactory executableInvokerFactory;
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
   @Inject private DelayEventHelper delayEventHelper;
+  @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private EngineExpressionService engineExpressionService;
 
   public PlanExecution startExecution(@Valid Plan plan, EmbeddedUser createdBy) {
     return startExecution(plan, null, createdBy);
@@ -116,7 +121,10 @@ public class ExecutionEngine implements Engine {
     // Facilitate and execute
     List<StepTransput> inputs =
         engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
-    facilitateExecution(ambiance, node, inputs);
+    StepParameters resolvedStepParameters =
+        (StepParameters) engineExpressionService.resolve(ambiance, node.getStepParameters());
+    nodeExecutionService.updateResolvedStepParameters(nodeExecution.getUuid(), resolvedStepParameters);
+    facilitateExecution(ambiance, nodeExecution, inputs);
   }
 
   public void triggerExecution(Ambiance ambiance, ExecutionNode node) {
@@ -151,13 +159,14 @@ public class ExecutionEngine implements Engine {
     return cloned;
   }
 
-  private void facilitateExecution(Ambiance ambiance, ExecutionNode node, List<StepTransput> inputs) {
+  private void facilitateExecution(Ambiance ambiance, NodeExecution nodeExecution, List<StepTransput> inputs) {
+    ExecutionNode node = nodeExecution.getNode();
     FacilitatorResponse facilitatorResponse = null;
     for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
       Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
       injector.injectMembers(facilitator);
-      facilitatorResponse =
-          facilitator.facilitate(ambiance, node.getStepParameters(), obtainment.getParameters(), inputs);
+      facilitatorResponse = facilitator.facilitate(
+          ambiance, nodeExecution.getResolvedStepParameters(), obtainment.getParameters(), inputs);
       if (facilitatorResponse != null) {
         break;
       }
@@ -195,7 +204,7 @@ public class ExecutionEngine implements Engine {
                                  .step(currentStep)
                                  .ambiance(ambiance)
                                  .inputs(inputs)
-                                 .parameters(node.getStepParameters())
+                                 .parameters(nodeExecution.getResolvedStepParameters())
                                  .passThroughData(facilitatorResponse.getPassThroughData())
                                  .build());
   }

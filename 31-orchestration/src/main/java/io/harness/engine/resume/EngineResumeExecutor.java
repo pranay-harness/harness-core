@@ -61,22 +61,22 @@ public class EngineResumeExecutor implements Runnable {
         case CHILDREN:
           ChildrenExecutable childrenExecutable = (ChildrenExecutable) stepRegistry.obtain(node.getStepType());
           stepResponse = childrenExecutable.handleChildrenResponse(
-              nodeExecution.getAmbiance(), node.getStepParameters(), response);
+              nodeExecution.getAmbiance(), nodeExecution.getResolvedStepParameters(), response);
           break;
         case ASYNC:
           AsyncExecutable asyncExecutable = (AsyncExecutable) stepRegistry.obtain(node.getStepType());
-          stepResponse =
-              asyncExecutable.handleAsyncResponse(nodeExecution.getAmbiance(), node.getStepParameters(), response);
+          stepResponse = asyncExecutable.handleAsyncResponse(
+              nodeExecution.getAmbiance(), nodeExecution.getResolvedStepParameters(), response);
           break;
         case CHILD:
           ChildExecutable childExecutable = (ChildExecutable) stepRegistry.obtain(node.getStepType());
-          stepResponse =
-              childExecutable.handleChildResponse(nodeExecution.getAmbiance(), node.getStepParameters(), response);
+          stepResponse = childExecutable.handleChildResponse(
+              nodeExecution.getAmbiance(), nodeExecution.getResolvedStepParameters(), response);
           break;
         case ASYNC_TASK:
           AsyncTaskExecutable asyncTaskExecutable = (AsyncTaskExecutable) stepRegistry.obtain(node.getStepType());
-          stepResponse =
-              asyncTaskExecutable.handleTaskResult(nodeExecution.getAmbiance(), node.getStepParameters(), response);
+          stepResponse = asyncTaskExecutable.handleTaskResult(
+              nodeExecution.getAmbiance(), nodeExecution.getResolvedStepParameters(), response);
           break;
         default:
           throw new InvalidRequestException("Resume not handled for execution Mode : " + nodeExecution.getMode());
