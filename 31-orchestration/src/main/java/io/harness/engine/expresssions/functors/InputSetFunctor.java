@@ -6,7 +6,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.LateBindingMap;
-import io.harness.input.InputSet;
+import io.harness.plan.input.InputSet;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
