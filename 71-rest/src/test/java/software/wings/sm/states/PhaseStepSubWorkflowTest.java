@@ -1,9 +1,12 @@
 package software.wings.sm.states;
 
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -12,9 +15,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.spy;
+import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
+import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
+import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
+import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
+import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
+import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.rule.Owner;
 import org.joor.Reflect;
 import org.junit.Before;
@@ -22,8 +33,16 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.AmiServiceSetupElement;
+import software.wings.api.AwsLambdaContextElement;
+import software.wings.api.ClusterElement;
+import software.wings.api.ContainerServiceElement;
+import software.wings.api.DeploymentType;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
+import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
@@ -36,7 +55,11 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionResponse;
 import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupElement;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   private static final String INFRA_DEFINITION_ID = "INFRA_DEFINITION_ID";
@@ -179,5 +202,108 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
             .build();
     ContextElement element = workflow.getSpotinstNotifiedContextElement(data);
     assertThat(element instanceof SpotinstTrafficShiftAlbSetupElement).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testHandleElementNotifyResponseData() {
+    when(workflowExecutionService.getPhaseStepExecutionSummary(anyString(), any(), anyString())).thenReturn(null);
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build())
+                                    .deploymentType(DeploymentType.KUBERNETES.name())
+                                    .build();
+    when(executionContext.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM))
+        .thenReturn(phaseElement);
+    when(executionContext.getStateExecutionData()).thenReturn(new PhaseStepExecutionData());
+
+    Map<String, ResponseData> response = new HashMap<>();
+
+    response.put("", getElementNotifyResponseData(null));
+    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", K8S_PHASE_STEP);
+    ExecutionResponse executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
+    assertThat(executionResponse.getContextElements()).isEmpty();
+    assertThat(executionResponse.getNotifyElements()).isEmpty();
+
+    response.put("", getElementNotifyResponseData(InstanceElementListParam.builder().build()));
+    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", K8S_PHASE_STEP);
+    executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
+    assertThat(executionResponse.getContextElements()).isNotEmpty();
+    assertThat(executionResponse.getNotifyElements()).isEmpty();
+
+    response.put("", getElementNotifyResponseData(null));
+    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", AMI_AUTOSCALING_GROUP_SETUP);
+    executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
+    assertThat(executionResponse.getContextElements()).isEmpty();
+    assertThat(executionResponse.getNotifyElements()).isEmpty();
+
+    response.put("", getElementNotifyResponseData(AmiServiceSetupElement.builder().build()));
+    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", AMI_AUTOSCALING_GROUP_SETUP);
+    executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
+    assertThat(executionResponse.getContextElements()).isNotEmpty();
+    assertThat(executionResponse.getContextElements().get(0)).isInstanceOf(AmiServiceSetupElement.class);
+    assertThat(executionResponse.getNotifyElements().get(0)).isInstanceOf(AmiServiceSetupElement.class);
+
+    response.put("", getElementNotifyResponseData(null));
+    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", CONTAINER_SETUP);
+    executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
+    assertThat(executionResponse.getContextElements()).isEmpty();
+    assertThat(executionResponse.getNotifyElements()).isEmpty();
+
+    response.put("", getElementNotifyResponseData(ContainerServiceElement.builder().build()));
+    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", CONTAINER_SETUP);
+    executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
+    assertThat(executionResponse.getContextElements()).isNotEmpty();
+    assertThat(executionResponse.getContextElements().get(0)).isInstanceOf(ContainerServiceElement.class);
+    assertThat(executionResponse.getNotifyElements().get(0)).isInstanceOf(ContainerServiceElement.class);
+
+    response.put("", getElementNotifyResponseData(null));
+    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", CLUSTER_SETUP);
+    executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
+    assertThat(executionResponse.getContextElements()).isEmpty();
+    assertThat(executionResponse.getNotifyElements()).isEmpty();
+
+    response.put("", getElementNotifyResponseData(ClusterElement.builder().build()));
+    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", CLUSTER_SETUP);
+    executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
+    assertThat(executionResponse.getContextElements()).isNotEmpty();
+    assertThat(executionResponse.getContextElements().get(0)).isInstanceOf(ClusterElement.class);
+    assertThat(executionResponse.getNotifyElements().get(0)).isInstanceOf(ClusterElement.class);
+
+    phaseElement.setDeploymentType(DeploymentType.SSH.name());
+    response.put("", getElementNotifyResponseData(null));
+    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", INFRASTRUCTURE_NODE);
+    executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
+    assertThat(executionResponse.getContextElements()).isEmpty();
+    assertThat(executionResponse.getNotifyElements()).isEmpty();
+
+    response.put("", getElementNotifyResponseData(new ServiceInstanceIdsParam()));
+    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", INFRASTRUCTURE_NODE);
+    executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
+    assertThat(executionResponse.getContextElements()).isNotEmpty();
+    assertThat(executionResponse.getContextElements().get(0)).isInstanceOf(ServiceInstanceIdsParam.class);
+    assertThat(executionResponse.getNotifyElements()).isEmpty();
+
+    phaseElement.setDeploymentType(DeploymentType.AWS_LAMBDA.name());
+    response.put("", getElementNotifyResponseData(null));
+    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", DEPLOY_AWS_LAMBDA);
+    executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
+    assertThat(executionResponse.getContextElements()).isEmpty();
+    assertThat(executionResponse.getNotifyElements()).isEmpty();
+
+    response.put("", getElementNotifyResponseData(AwsLambdaContextElement.builder().build()));
+    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", DEPLOY_AWS_LAMBDA);
+    executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
+    assertThat(executionResponse.getContextElements()).isNotEmpty();
+    assertThat(executionResponse.getContextElements().get(0)).isInstanceOf(AwsLambdaContextElement.class);
+    assertThat(executionResponse.getNotifyElements()).isEmpty();
+  }
+
+  private ElementNotifyResponseData getElementNotifyResponseData(ContextElement contextElement) {
+    return ElementNotifyResponseData.builder()
+        .executionStatus(ExecutionStatus.SUCCESS)
+        .contextElements(asList(contextElement))
+        .build();
   }
 }
