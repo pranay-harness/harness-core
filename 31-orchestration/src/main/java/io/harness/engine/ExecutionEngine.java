@@ -156,7 +156,8 @@ public class ExecutionEngine implements Engine {
     for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
       Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
       injector.injectMembers(facilitator);
-      facilitatorResponse = facilitator.facilitate(ambiance, obtainment.getParameters(), inputs);
+      facilitatorResponse =
+          facilitator.facilitate(ambiance, node.getStepParameters(), obtainment.getParameters(), inputs);
       if (facilitatorResponse != null) {
         break;
       }

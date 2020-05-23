@@ -37,7 +37,7 @@ public class AsyncFacilitatorTest extends OrchestrationTest {
   public void shouldTestFacilitate() {
     Ambiance ambiance = Ambiance.builder().build();
     FacilitatorParameters parameters = DefaultFacilitatorParams.builder().build();
-    FacilitatorResponse response = asyncFacilitator.facilitate(ambiance, parameters, null);
+    FacilitatorResponse response = asyncFacilitator.facilitate(ambiance, null, parameters, null);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionMode()).isEqualTo(ASYNC);
     assertThat(response.getInitialWait()).isEqualTo(Duration.ofSeconds(0));

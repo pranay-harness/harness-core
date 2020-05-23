@@ -11,6 +11,7 @@ import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.facilitator.modes.ExecutionMode;
+import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public class ChildFacilitator implements Facilitator {
 
   @Override
   public FacilitatorResponse facilitate(
-      Ambiance ambiance, FacilitatorParameters parameters, List<StepTransput> inputs) {
+      Ambiance ambiance, StepParameters stepParameters, FacilitatorParameters parameters, List<StepTransput> inputs) {
     return FacilitatorResponse.builder()
         .executionMode(ExecutionMode.CHILD)
         .initialWait(parameters.getWaitDurationSeconds())
