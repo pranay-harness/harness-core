@@ -327,6 +327,10 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     List<Instance> instances = awsAsgHelperServiceManager.listAutoScalingGroupInstances(awsConfig, encryptionDetails,
         infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName(),
         infrastructureMapping.getAppId());
+
+    DeploymentType deploymentType =
+        serviceResourceService.getDeploymentType(infrastructureMapping, null, infrastructureMapping.getServiceId());
+
     return instances.stream()
         .map(instance
             -> aHost()
@@ -336,6 +340,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                    .withAppId(infrastructureMapping.getAppId())
                    .withEnvId(infrastructureMapping.getEnvId())
                    .withHostConnAttr(infrastructureMapping.getHostConnectionAttrs())
+                   .withWinrmConnAttr(
+                       DeploymentType.WINRM == deploymentType ? infrastructureMapping.getHostConnectionAttrs() : null)
                    .withInfraMappingId(infrastructureMapping.getUuid())
                    .withServiceTemplateId(serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping))
                    .build())
