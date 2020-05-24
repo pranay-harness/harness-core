@@ -1,6 +1,7 @@
 package io.harness.adviser.impl.success;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.execution.status.NodeExecutionStatus.positiveStatuses;
 
 import com.google.common.base.Preconditions;
 
@@ -12,6 +13,7 @@ import io.harness.adviser.NextStepAdvise;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.state.io.StepResponse;
 
 @OwnedBy(CDC)
 @Redesign
@@ -21,6 +23,10 @@ public class OnSuccessAdviser implements Adviser {
 
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
+    StepResponse stateResponse = advisingEvent.getStepResponse();
+    if (!positiveStatuses().contains(stateResponse.getStatus())) {
+      return null;
+    }
     OnSuccessAdviserParameters parameters =
         (OnSuccessAdviserParameters) Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
     return NextStepAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();

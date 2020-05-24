@@ -254,15 +254,15 @@ public class ExecutionEngine implements Engine {
     });
   }
 
-  private void endTransition(NodeExecution nodeInstance) {
-    if (isNotEmpty(nodeInstance.getNotifyId())) {
+  private void endTransition(NodeExecution nodeExecution) {
+    if (isNotEmpty(nodeExecution.getNotifyId())) {
       StatusNotifyResponseData responseData =
-          StatusNotifyResponseData.builder().status(NodeExecutionStatus.SUCCEEDED).build();
-      waitNotifyEngine.doneWith(nodeInstance.getNotifyId(), responseData);
+          StatusNotifyResponseData.builder().status(nodeExecution.getStatus()).build();
+      waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
       logger.info("End Execution");
       engineStatusHelper.updateExecutionInstanceStatus(
-          nodeInstance.getAmbiance().getPlanExecutionId(), ExecutionInstanceStatus.SUCCEEDED);
+          nodeExecution.getAmbiance().getPlanExecutionId(), ExecutionInstanceStatus.SUCCEEDED);
     }
   }
 

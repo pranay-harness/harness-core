@@ -87,7 +87,13 @@ public class BasicHttpStep implements Step, AsyncTaskExecutable {
                                                  .status(httpStateExecutionResponse.getExecutionStatus())
                                                  .errorMsg(httpStateExecutionResponse.getErrorMessage())
                                                  .build();
-      responseBuilder.status(NodeExecutionStatus.SUCCEEDED);
+      // Just Place holder for now till we have assertions
+      if (httpStateExecutionResponse.getHttpResponseCode() == 500) {
+        responseBuilder.status(NodeExecutionStatus.FAILED);
+      } else {
+        responseBuilder.status(NodeExecutionStatus.SUCCEEDED);
+      }
+
       responseBuilder.outcome("http", executionData);
     }
     return responseBuilder.build();

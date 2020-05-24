@@ -1,6 +1,7 @@
 package io.harness.adviser.impl.fail;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.execution.status.NodeExecutionStatus.brokeStatuses;
 
 import com.google.common.base.Preconditions;
 
@@ -13,7 +14,6 @@ import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.status.NodeExecutionStatus;
-import io.harness.state.io.StepResponse;
 
 @OwnedBy(CDC)
 @Redesign
@@ -23,8 +23,7 @@ public class OnFailAdviser implements Adviser {
 
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
-    StepResponse stepResponse = advisingEvent.getStepResponse();
-    if (stepResponse.getStatus() != NodeExecutionStatus.FAILED) {
+    if (!brokeStatuses().contains(NodeExecutionStatus.FAILED)) {
       return null;
     }
     OnFailAdviserParameters parameters =

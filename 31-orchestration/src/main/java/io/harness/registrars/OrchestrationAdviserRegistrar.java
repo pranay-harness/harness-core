@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
+import io.harness.adviser.impl.fail.OnFailAdviser;
 import io.harness.adviser.impl.ignore.IgnoreAdviser;
 import io.harness.adviser.impl.interrupts.AbortAdviser;
 import io.harness.adviser.impl.retry.RetryAdviser;
@@ -22,5 +23,6 @@ public class OrchestrationAdviserRegistrar implements AdviserRegistrar {
     adviserClasses.add(Pair.of(OnSuccessAdviser.ADVISER_TYPE, OnSuccessAdviser.class));
     adviserClasses.add(Pair.of(RetryAdviser.ADVISER_TYPE, RetryAdviser.class));
     adviserClasses.add(Pair.of(AbortAdviser.ADVISER_TYPE, AbortAdviser.class));
+    adviserClasses.add(Pair.of(OnFailAdviser.ADVISER_TYPE, OnFailAdviser.class));
   }
 }
