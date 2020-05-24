@@ -75,7 +75,6 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
                                              .status(NodeExecutionStatus.QUEUED)
                                              .notifyId(uuid)
                                              .parentId(nodeExecution.getUuid())
-                                             .additionalInputs(child.getAdditionalInputs())
                                              .build();
       hPersistence.save(childNodeExecution);
       executorService.submit(
@@ -83,7 +82,7 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
     }
     NotifyCallback callback = EngineResumeCallback.builder().nodeInstanceId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, callbackIds.toArray(new String[0]));
-    engineStatusHelper.updateNodeInstance(
-        nodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.status, CHILDREN_WAITING));
+    engineStatusHelper.updateNodeInstance(nodeExecution.getUuid(),
+        ops -> ops.set(NodeExecutionKeys.status, CHILDREN_WAITING).set(NodeExecutionKeys.executableResponse, response));
   }
 }

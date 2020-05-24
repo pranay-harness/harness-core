@@ -55,7 +55,7 @@ public class AsyncExecutableInvoker implements ExecutableInvoker {
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, response.getCallbackIds().toArray(new String[0]));
 
     // Update Execution Node Instance state to TASK_WAITING
-    engineStatusHelper.updateNodeInstance(
-        nodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.status, ASYNC_WAITING));
+    engineStatusHelper.updateNodeInstance(nodeExecution.getUuid(),
+        ops -> ops.set(NodeExecutionKeys.status, ASYNC_WAITING).set(NodeExecutionKeys.executableResponse, response));
   }
 }

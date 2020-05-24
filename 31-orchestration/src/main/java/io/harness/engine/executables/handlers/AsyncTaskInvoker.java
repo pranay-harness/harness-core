@@ -15,6 +15,7 @@ import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.facilitator.modes.task.AsyncTaskExecutable;
+import io.harness.facilitator.modes.task.AsyncTaskExecutableResponse;
 import io.harness.tasks.Task;
 import io.harness.tasks.TaskExecutor;
 import io.harness.waiter.NotifyCallback;
@@ -48,7 +49,10 @@ public class AsyncTaskInvoker implements ExecutableInvoker {
     engineStatusHelper.updateNodeInstance(nodeExecution.getUuid(),
         ops
         -> ops.set(NodeExecutionKeys.status, TASK_WAITING)
-               .set(NodeExecutionKeys.taskId, taskId)
-               .set(NodeExecutionKeys.taskIdentifier, task.getTaskIdentifier()));
+               .set(NodeExecutionKeys.executableResponse,
+                   AsyncTaskExecutableResponse.builder()
+                       .taskId(taskId)
+                       .taskIdentifier(task.getTaskIdentifier())
+                       .build()));
   }
 }

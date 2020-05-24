@@ -12,6 +12,8 @@ import io.harness.engine.EngineStatusHelper;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.expressions.EngineExpressionServiceImpl;
+import io.harness.engine.interrupts.InterruptService;
+import io.harness.engine.interrupts.InterruptServiceImpl;
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.services.OutcomeService;
 import io.harness.engine.services.impl.NodeExecutionServiceImpl;
@@ -46,6 +48,7 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
   protected void configure() {
     bind(StateInspectionService.class).to(StateInspectionServiceImpl.class);
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class);
+    bind(InterruptService.class).to(InterruptServiceImpl.class);
     bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
     bind(OutcomeService.class).to(OutcomeServiceImpl.class);
     bind(HPersistence.class).annotatedWith(Names.named("enginePersistence")).to(MongoPersistence.class);

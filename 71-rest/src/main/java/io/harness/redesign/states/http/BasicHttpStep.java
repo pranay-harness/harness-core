@@ -23,6 +23,7 @@ import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.FailureInfo;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepTransput;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.TaskType;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
@@ -34,6 +35,7 @@ import java.util.Map;
 @Redesign
 @ExcludeRedesign
 @Produces(Step.class)
+@Slf4j
 public class BasicHttpStep implements Step, AsyncTaskExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("BASIC_HTTP").build();
 

@@ -11,8 +11,9 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAccess;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
-import lombok.experimental.NonFinal;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -22,19 +23,15 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 @Redesign
-@Entity(value = "interrupts", noClassnameStored = true)
+@Entity(value = "interrupts")
+@FieldNameConstants(innerTypeName = "InterruptKeys")
 public class Interrupt implements PersistentEntity, UuidAccess, CreatedAtAccess, UpdatedAtAccess, CreatedByAccess {
   @Id @NotNull String uuid;
-  @NotNull ExecutionInterruptType type;
-  @NotNull String planExecutionId;
+  @NonNull ExecutionInterruptType type;
+  @NonNull String planExecutionId;
   String nodeExecutionId;
-  EmbeddedUser createdBy;
+  @NonNull EmbeddedUser createdBy;
   long lastUpdatedAt;
   long createdAt;
-
-  @NonFinal boolean seized;
-
-  public void setSeized(boolean seized) {
-    this.seized = seized;
-  }
+  boolean seized;
 }

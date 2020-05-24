@@ -70,4 +70,10 @@ public class WaitStep implements Step, AsyncExecutable {
   public StepType getType() {
     return STEP_TYPE;
   }
+
+  @Override
+  public void handleAbort(
+      Ambiance ambiance, StepParameters stateParameters, AsyncExecutableResponse executableResponse) {
+    // TODO : Handle Abort
+  }
 }

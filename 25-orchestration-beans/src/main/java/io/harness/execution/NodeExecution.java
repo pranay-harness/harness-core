@@ -8,7 +8,9 @@ import io.harness.ambiance.Ambiance.AmbianceKeys;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.facilitator.modes.ExecutionMode;
+import io.harness.interrupts.InterruptEffect;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -17,7 +19,6 @@ import io.harness.persistence.converters.DurationConverter;
 import io.harness.plan.ExecutionNode;
 import io.harness.serializer.KryoUtils;
 import io.harness.state.io.StepParameters;
-import io.harness.state.io.StepTransput;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
@@ -61,18 +62,16 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   String nextId;
   String previousId;
 
-  String taskId;
-  String taskIdentifier;
-
   // Mutable
   long lastUpdatedAt;
   NodeExecutionStatus status;
   private Long expiryTs;
 
-  // Applicable only for child/children states
-  @Singular List<StepTransput> additionalInputs;
+  ExecutableResponse executableResponse;
 
   @Singular List<String> retryIds;
+
+  @Singular private List<InterruptEffect> interruptHistories;
 
   public boolean isRetry() {
     return isNotEmpty(retryIds);
@@ -83,6 +82,10 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
       return retryIds.size();
     }
     return 0;
+  }
+
+  public boolean isChildSpawningMode() {
+    return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN;
   }
 
   public NodeExecution deepCopy() {

@@ -23,6 +23,7 @@ import io.harness.redesign.states.email.EmailStep;
 import io.harness.redesign.states.email.EmailStepParameters;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
+import io.harness.redesign.states.wait.WaitStep;
 import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.references.OutcomeRefObject;
 import io.harness.state.StepType;
@@ -39,7 +40,7 @@ import java.util.Collections;
 @ExcludeRedesign
 @UtilityClass
 public class CustomExecutionUtils {
-  private static final String BASIC_HTTP_STATE_URL_500 = "http://httpstat.us/500";
+  private static final String BASIC_HTTP_STATE_URL_404 = "http://httpstat.us/404";
   private static final String BASIC_HTTP_STATE_URL_200 = "http://httpstat.us/200";
   private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
   private static final StepType BASIC_HTTP_STEP_TYPE = StepType.builder().type("BASIC_HTTP").build();
@@ -148,7 +149,7 @@ public class CustomExecutionUtils {
         BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
 
     BasicHttpStepParameters basicHttpStateParameters2 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
         .node(ExecutionNode.builder()
                   .uuid(httpNodeId1)
@@ -226,13 +227,14 @@ public class CustomExecutionUtils {
     String sectionNodeId = generateUuid();
     String httpNodeId1 = generateUuid();
     String httpNodeId2 = generateUuid();
+    String waitNodeId1 = generateUuid();
     String dummyNodeId = generateUuid();
 
     BasicHttpStepParameters basicHttpStateParameters1 =
         BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
 
     BasicHttpStepParameters basicHttpStateParameters2 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
         .node(
             ExecutionNode.builder()
@@ -243,6 +245,21 @@ public class CustomExecutionUtils {
                 .stepParameters(basicHttpStateParameters1)
                 .facilitatorObtainment(FacilitatorObtainment.builder()
                                            .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
+                                           .build())
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(waitNodeId1).build())
+                                       .build())
+                .build())
+        .node(
+            ExecutionNode.builder()
+                .uuid(waitNodeId1)
+                .name("Wait Step")
+                .stepType(WaitStep.STEP_TYPE)
+                .identifier("wait_1")
+                .stepParameters(WaitStepParameters.builder().waitDurationSeconds(5).build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
                                            .build())
                 .adviserObtainment(AdviserObtainment.builder()
                                        .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
@@ -332,7 +349,7 @@ public class CustomExecutionUtils {
         BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
 
     BasicHttpStepParameters basicHttpStateParameters2 =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
         .node(
             ExecutionNode.builder()

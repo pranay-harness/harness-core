@@ -13,7 +13,7 @@ import io.harness.adviser.NextStepAdvise;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.state.io.StepResponse;
 
 @OwnedBy(CDC)
 @Redesign
@@ -23,7 +23,8 @@ public class OnFailAdviser implements Adviser {
 
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
-    if (!brokeStatuses().contains(NodeExecutionStatus.FAILED)) {
+    StepResponse stepResponse = advisingEvent.getStepResponse();
+    if (!brokeStatuses().contains(stepResponse.getStatus())) {
       return null;
     }
     OnFailAdviserParameters parameters =

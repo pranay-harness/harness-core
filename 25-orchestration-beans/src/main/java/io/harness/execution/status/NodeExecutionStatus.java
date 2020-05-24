@@ -6,7 +6,6 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 
 import java.util.EnumSet;
-import java.util.Set;
 
 @OwnedBy(CDC)
 @Redesign
@@ -19,22 +18,42 @@ public enum NodeExecutionStatus {
   CHILDREN_WAITING,
   TIMED_WAITING,
 
+  DISCONTINUING,
+  PAUSING,
+
   // Final Statuses : All the final statuses named with ed in the end
   QUEUED,
   SKIPPED,
+  PAUSED,
+  ABORTED,
   ERRORED,
   FAILED,
   SUCCEEDED;
 
-  private static final Set<NodeExecutionStatus> POSITIVE_STATUSES = EnumSet.<NodeExecutionStatus>of(SUCCEEDED, SKIPPED);
+  // Status Groups
+  private static final EnumSet<NodeExecutionStatus> ABORTABLE_STATUSES = EnumSet.of(
+      QUEUED, RUNNING, PAUSED, PAUSING, ASYNC_WAITING, TASK_WAITING, CHILD_WAITING, CHILDREN_WAITING, TIMED_WAITING);
 
-  private static final Set<NodeExecutionStatus> BROKE_STATUSES = EnumSet.<NodeExecutionStatus>of(FAILED, ERRORED);
+  private static final EnumSet<NodeExecutionStatus> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED);
 
-  public static Set<NodeExecutionStatus> positiveStatuses() {
+  private static final EnumSet<NodeExecutionStatus> BROKE_STATUSES = EnumSet.of(FAILED, ERRORED);
+
+  private static final EnumSet<NodeExecutionStatus> RESUMABLE_STATUSES =
+      EnumSet.of(ASYNC_WAITING, CHILD_WAITING, CHILDREN_WAITING, TIMED_WAITING, TASK_WAITING);
+
+  public static EnumSet<NodeExecutionStatus> abortableStatuses() {
+    return ABORTABLE_STATUSES;
+  }
+
+  public static EnumSet<NodeExecutionStatus> positiveStatuses() {
     return POSITIVE_STATUSES;
   }
 
-  public static Set<NodeExecutionStatus> brokeStatuses() {
+  public static EnumSet<NodeExecutionStatus> brokeStatuses() {
     return BROKE_STATUSES;
+  }
+
+  public static EnumSet<NodeExecutionStatus> resumableStatuses() {
+    return RESUMABLE_STATUSES;
   }
 }
