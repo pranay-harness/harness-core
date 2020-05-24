@@ -27,6 +27,7 @@ import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
@@ -130,19 +131,33 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
       builder.withTemplateUuid(existingSvcCommand.getTemplateUuid());
       builder.withTemplateVersion(existingSvcCommand.getTemplateVersion());
       if (isNotEmpty(templateUri)) {
+        String templateVersion =
+            templateService.fetchTemplateVersionFromUri(existingSvcCommand.getTemplateUuid(), templateUri);
         builder.withTemplateVersion(
             templateService.fetchTemplateVersionFromUri(existingSvcCommand.getTemplateUuid(), templateUri));
+        Template template = templateService.get(existingSvcCommand.getTemplateUuid(), templateVersion);
+        builder.withImportedTemplateDetails(TemplateHelper.getImportedTemplateDetails(template, templateVersion));
+        builder.withTemplateMetadata(template.getTemplateMetadata());
       }
     } else {
       if (isNotEmpty(templateUri)) {
         String templateUuid;
+        String templateVersion;
         if (templateUri.startsWith(APP_PREFIX)) {
           templateUuid = templateService.fetchTemplateIdFromUri(accountId, appId, templateUri);
         } else {
           templateUuid = templateService.fetchTemplateIdFromUri(accountId, templateUri);
         }
+        templateVersion = templateService.fetchTemplateVersionFromUri(templateUuid, templateUri);
         builder.withTemplateUuid(templateUuid);
-        builder.withTemplateVersion(templateService.fetchTemplateVersionFromUri(templateUuid, templateUri));
+        builder.withTemplateVersion(templateVersion);
+
+        if (templateUuid != null && templateVersion != null) {
+          Template template = templateService.get(templateUuid, templateVersion);
+          notNullCheck(String.format("Template with uri %s is not found.", templateUri), template);
+          builder.withImportedTemplateDetails(TemplateHelper.getImportedTemplateDetails(template, templateVersion));
+          builder.withTemplateMetadata(template.getTemplateMetadata());
+        }
       }
     }
 

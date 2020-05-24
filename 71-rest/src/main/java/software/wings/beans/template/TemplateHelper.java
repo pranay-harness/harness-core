@@ -14,6 +14,7 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.template.Template.FOLDER_ID_KEY;
 import static software.wings.beans.template.Template.NAME_KEY;
 import static software.wings.beans.template.Template.TYPE_KEY;
+import static software.wings.common.TemplateConstants.DEFAULT_TAG;
 import static software.wings.common.TemplateConstants.GALLERY_TOP_LEVEL_PATH_DELIMITER;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 
@@ -38,6 +39,8 @@ import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.template.Template.TemplateKeys;
+import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
+import software.wings.beans.template.dto.ImportedTemplateDetails;
 import software.wings.common.TemplateConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.command.CommandHelper;
@@ -231,6 +234,18 @@ public class TemplateHelper {
           variable -> templateVariables.add(aVariable().name(variable.getName()).value(variable.getValue()).build()));
     }
     return templateVariables;
+  }
+
+  public static ImportedTemplateDetails getImportedTemplateDetails(Template template, String templateVersion) {
+    if (template.getImportedTemplateDetails() instanceof HarnessImportedTemplateDetails) {
+      HarnessImportedTemplateDetails importedTemplateDetails =
+          (HarnessImportedTemplateDetails) template.getImportedTemplateDetails();
+      if (DEFAULT_TAG.equals(templateVersion)) {
+        importedTemplateDetails.setCommandVersion(DEFAULT_TAG);
+      }
+      return importedTemplateDetails;
+    }
+    return null;
   }
 
   // Don't directly use this method as it isn't imported template version aware.

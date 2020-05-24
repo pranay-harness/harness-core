@@ -1830,6 +1830,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             updateOperation.set(
                 ServiceCommandKeys.importedTemplateDetails, serviceCommand.getImportedTemplateDetails());
           }
+          if (serviceCommand.getTemplateMetadata() != null) {
+            updateOperation.set(ServiceCommandKeys.templateMetadata, serviceCommand.getTemplateMetadata());
+          }
         } else {
           if (serviceCommand.getCommand() != null) {
             if (!fromTemplate) {
