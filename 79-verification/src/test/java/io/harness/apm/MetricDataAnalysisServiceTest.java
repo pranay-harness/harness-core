@@ -3,16 +3,20 @@ package io.harness.apm;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 import static software.wings.common.VerificationConstants.DEMO_FAILURE_TS_STATE_EXECUTION_ID;
 import static software.wings.common.VerificationConstants.DEMO_SUCCESS_TS_STATE_EXECUTION_ID;
 import static software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl.DEFAULT_PAGE_SIZE;
@@ -30,7 +34,9 @@ import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
+import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.ContinuousVerificationService;
@@ -43,7 +49,11 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import retrofit2.Call;
+import retrofit2.Response;
 import software.wings.beans.Application;
+import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.SettingsServiceImpl;
@@ -51,6 +61,7 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.DeploymentTimeSeriesAnalysis;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
@@ -72,6 +83,7 @@ import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -104,6 +116,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Mock private VerificationManagerClientHelper managerClientHelper;
   @Mock private UsageMetricsHelper usageMetricsHelper;
   @Mock private AppService appService;
+  @Mock private VerificationManagerClient verificationManagerClient;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject @InjectMocks private TimeSeriesAnalysisService metricDataAnalysisService;
@@ -255,6 +268,49 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     wingsPersistence.save(newRelicMetricAnalysisRecord);
 
     verifyAnalysisOffsetPageSizeAndSorting(total);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testSaveAnalysisRecordsML_throwsAlerts() throws IOException {
+    when(verificationManagerClient.triggerCVAlert(anyString(), any(ContinuousVerificationAlertData.class)))
+        .then(invocation -> {
+          Object[] args = invocation.getArguments();
+          wingsPersistence.save(Alert.builder().alertData((ContinuousVerificationAlertData) args[1]).build());
+          Call<RestResponse<Boolean>> restCall = mock(Call.class);
+          when(restCall.clone()).thenReturn(restCall);
+          when(restCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+          return restCall;
+        });
+    File file = new File(getClass().getClassLoader().getResource("./247_analysis_record_with_risk.json.zip").getFile());
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
+        JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
+    double riskScore = timeSeriesMLAnalysisRecord.getOverallMetricScores()
+                           .values()
+                           .stream()
+                           .mapToDouble(score -> score)
+                           .max()
+                           .orElse(0.0);
+    final NewRelicCVServiceConfiguration newRelicCVServiceConfiguration =
+        NewRelicCVServiceConfiguration.builder().build();
+    newRelicCVServiceConfiguration.setAlertEnabled(true);
+    newRelicCVServiceConfiguration.setAlertThreshold(0.0);
+    final String cvConfigId = wingsPersistence.save(newRelicCVServiceConfiguration);
+    final LearningEngineAnalysisTask learningEngineAnalysisTask =
+        LearningEngineAnalysisTask.builder().state_execution_id(generateUuid()).cluster_level(0).build();
+    final String taskId = wingsPersistence.save(learningEngineAnalysisTask);
+    timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+    List<Alert> alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+    assertThat(alerts).isEmpty();
+    metricDataAnalysisService.saveAnalysisRecordsML(accountId, StateType.NEW_RELIC, appId,
+        learningEngineAnalysisTask.getState_execution_id(), null, DEFAULT_GROUP_NAME, 10, taskId, null, cvConfigId,
+        timeSeriesMLAnalysisRecord, null);
+    alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+    assertThat(alerts.size()).isEqualTo(1);
+    ContinuousVerificationAlertData alertData = (ContinuousVerificationAlertData) alerts.get(0).getAlertData();
+    assertThat(alertData.getMlAnalysisType()).isEqualTo(MLAnalysisType.TIME_SERIES);
+    assertThat(alertData.getRiskScore()).isEqualTo(riskScore, offset(0.0001));
   }
 
   private void verifyAnalysisOffsetPageSizeAndSorting(int total) {
