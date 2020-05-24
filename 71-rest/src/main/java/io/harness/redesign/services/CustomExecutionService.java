@@ -17,5 +17,7 @@ public interface CustomExecutionService {
 
   PlanExecution executeRetryPlan();
 
+  PlanExecution executeRollbackPlan();
+
   PlanExecution executeSimpleShellScriptPlan();
 }

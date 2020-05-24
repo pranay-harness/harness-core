@@ -50,6 +50,13 @@ public class CustomExecutionResource {
   }
 
   @GET
+  @Path("/http-rollback")
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<PlanExecution> executeRollbackPlan() {
+    return new RestResponse<>(customExecutionService.executeRollbackPlan());
+  }
+
+  @GET
   @Path("/simple-shell-script")
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<PlanExecution> executeSimpleShellScriptPlan() {

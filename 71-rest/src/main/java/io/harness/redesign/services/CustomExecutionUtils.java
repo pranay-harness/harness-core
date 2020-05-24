@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
+import io.harness.adviser.impl.fail.OnFailAdviserParameters;
 import io.harness.adviser.impl.retry.RetryAdviserParameters;
 import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
@@ -28,6 +29,7 @@ import io.harness.state.StepType;
 import io.harness.state.core.fork.ForkStepParameters;
 import io.harness.state.core.section.SectionStepParameters;
 import lombok.experimental.UtilityClass;
+import software.wings.sm.StateType;
 import software.wings.sm.states.ShellScriptState;
 
 import java.util.Collections;
@@ -317,6 +319,102 @@ public class CustomExecutionUtils {
         .build();
   }
 
+  public static Plan provideHttpRollbackPlan() {
+    String planId = generateUuid();
+    String sectionNodeId = generateUuid();
+    String rollbackSectionNodeId = generateUuid();
+    String rollbackHttpNodeId1 = generateUuid();
+    String httpNodeId1 = generateUuid();
+    String httpNodeId2 = generateUuid();
+    String dummyNodeId = generateUuid();
+
+    BasicHttpStepParameters basicHttpStateParameters1 =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+
+    BasicHttpStepParameters basicHttpStateParameters2 =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
+    return Plan.builder()
+        .node(
+            ExecutionNode.builder()
+                .uuid(httpNodeId1)
+                .name("Basic Http 1")
+                .stepType(BASIC_HTTP_STEP_TYPE)
+                .identifier("http-1")
+                .stepParameters(basicHttpStateParameters1)
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
+                                           .build())
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(httpNodeId2).build())
+                                       .build())
+                .build())
+        .node(ExecutionNode.builder()
+                  .uuid(httpNodeId2)
+                  .name("Basic Http 2")
+                  .stepType(BASIC_HTTP_STEP_TYPE)
+                  .identifier("http-2")
+                  .stepParameters(basicHttpStateParameters2)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
+                                             .build())
+                  .build())
+        .node(
+            ExecutionNode.builder()
+                .uuid(sectionNodeId)
+                .name("Section")
+                .stepType(StepType.builder().type("SECTION").build())
+                .identifier("section-1")
+                .stepParameters(SectionStepParameters.builder().childNodeId(httpNodeId1).build())
+                .adviserObtainment(
+                    AdviserObtainment.builder()
+                        .type(AdviserType.builder().type(AdviserType.ON_FAIL).build())
+                        .parameters(OnFailAdviserParameters.builder().nextNodeId(rollbackSectionNodeId).build())
+                        .build())
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
+                                       .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                           .build())
+                .build())
+        .node(ExecutionNode.builder()
+                  .uuid(rollbackSectionNodeId)
+                  .name("Section")
+                  .stepType(StepType.builder().type("SECTION").build())
+                  .identifier("section-1")
+                  .stepParameters(SectionStepParameters.builder().childNodeId(rollbackHttpNodeId1).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                             .build())
+                  .build())
+        .node(ExecutionNode.builder()
+                  .uuid(rollbackHttpNodeId1)
+                  .name("Rollback Http 1")
+                  .stepType(BASIC_HTTP_STEP_TYPE)
+                  .identifier("rollback-http-1")
+                  .stepParameters(basicHttpStateParameters1)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
+                                             .build())
+                  .build())
+        .node(ExecutionNode.builder()
+                  .uuid(dummyNodeId)
+                  .name("Dummy Node 1")
+                  .identifier("dummy")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .startingNodeId(sectionNodeId)
+        .setupAbstractions(
+            ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
+        .uuid(planId)
+        .build();
+  }
+
   public static Plan provideSimpleShellScriptPlan() {
     String section1NodeId = generateUuid();
     String section2NodeId = generateUuid();
@@ -372,7 +470,7 @@ public class CustomExecutionUtils {
                   .uuid(shellScript1NodeId)
                   .name("Shell Script 1")
                   .identifier("shell1")
-                  .stepType(StepType.builder().type(software.wings.sm.StateType.SHELL_SCRIPT.name()).build())
+                  .stepType(StepType.builder().type(StateType.SHELL_SCRIPT.name()).build())
                   .stepParameters(shellScript1StepParameters)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
@@ -382,7 +480,7 @@ public class CustomExecutionUtils {
                   .uuid(shellScript2NodeId)
                   .name("Shell Script 2")
                   .identifier("shell2")
-                  .stepType(StepType.builder().type(software.wings.sm.StateType.SHELL_SCRIPT.name()).build())
+                  .stepType(StepType.builder().type(StateType.SHELL_SCRIPT.name()).build())
                   .stepParameters(shellScript2StepParameters)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())

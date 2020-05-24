@@ -46,6 +46,13 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
+  public PlanExecution executeRollbackPlan() {
+    User user = UserThreadLocal.get();
+    return engine.startExecution(CustomExecutionUtils.provideHttpRollbackPlan(),
+        EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
+  }
+
+  @Override
   public PlanExecution executeSimpleShellScriptPlan() {
     User user = UserThreadLocal.get();
     return engine.startExecution(CustomExecutionUtils.provideSimpleShellScriptPlan(),

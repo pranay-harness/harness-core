@@ -10,5 +10,6 @@ import io.harness.registries.RegistrableEntity;
 @Redesign
 public interface Adviser extends RegistrableEntity<AdviserType> {
   AdviserType getType();
+
   Advise onAdviseEvent(AdvisingEvent advisingEvent);
 }
