@@ -945,7 +945,7 @@ public class UserServiceImpl implements UserService {
       if (existingInvite != null && !areUserGroupsIdenticalForInvites(userInvite, existingInvite)) {
         wingsPersistence.updateField(
             UserInvite.class, existingInvite.getUuid(), "userGroups", userInvite.getUserGroups());
-        sendNewInvitationMail(userInvite, account, user);
+        sendNewInvitationMail(existingInvite, account, user);
       }
     }
 
@@ -2146,7 +2146,7 @@ public class UserServiceImpl implements UserService {
 
   private void deleteInternal(String accountId, String userId, boolean updateUsergroup) {
     User user = get(userId);
-    if (user.getAccounts() == null) {
+    if (user.getAccounts() == null && user.getPendingAccounts() == null) {
       return;
     }
 
@@ -2157,21 +2157,26 @@ public class UserServiceImpl implements UserService {
         new io.harness.limits.Action(accountId, ActionType.CREATE_USER));
 
     LimitEnforcementUtils.withCounterDecrement(checker, () -> {
-      for (Account account : user.getAccounts()) {
-        if (account.getUuid().equals(accountId)) {
-          user.getAccounts().remove(account);
-          break;
+      if (isNotEmpty(user.getAccounts())) {
+        for (Account account : user.getAccounts()) {
+          if (account.getUuid().equals(accountId)) {
+            user.getAccounts().remove(account);
+            break;
+          }
         }
       }
 
-      for (Account account : user.getPendingAccounts()) {
-        if (account.getUuid().equals(accountId)) {
-          user.getPendingAccounts().remove(account);
-          break;
+      if (isNotEmpty(user.getPendingAccounts())) {
+        for (Account account : user.getPendingAccounts()) {
+          if (account.getUuid().equals(accountId)) {
+            user.getPendingAccounts().remove(account);
+            break;
+          }
         }
       }
 
-      if (user.getAccounts().isEmpty() && wingsPersistence.delete(User.class, userId)) {
+      if (user.getAccounts().isEmpty() && user.getPendingAccounts().isEmpty()
+          && wingsPersistence.delete(User.class, userId)) {
         evictUserFromCache(userId);
         return;
       }
@@ -2203,7 +2208,8 @@ public class UserServiceImpl implements UserService {
 
       UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class)
                                             .set(UserKeys.roles, user.getRoles())
-                                            .set(UserKeys.accounts, user.getAccounts());
+                                            .set(UserKeys.accounts, user.getAccounts())
+                                            .set(UserKeys.pendingAccounts, user.getPendingAccounts());
 
       Query<User> updateQuery = wingsPersistence.createQuery(User.class).filter(ID_KEY, userId);
       wingsPersistence.update(updateQuery, updateOp);
