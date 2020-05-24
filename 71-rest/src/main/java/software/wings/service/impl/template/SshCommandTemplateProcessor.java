@@ -43,6 +43,7 @@ import software.wings.beans.template.ReferencedTemplate;
 import software.wings.beans.template.ReferencedTemplate.ReferencedTemplateBuilder;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.Template.TemplateKeys;
+import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.beans.yaml.YamlType;
@@ -288,6 +289,9 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
     Command command = (Command) transform(template, EntityType.COMMAND);
     serviceCommand.setCommand(command);
     serviceCommand.setName(command.getName());
+    serviceCommand.setTemplateMetadata(template.getTemplateMetadata());
+    serviceCommand.setImportedTemplateDetails(
+        TemplateHelper.getImportedTemplateDetails(template, serviceCommand.getTemplateVersion()));
   }
 
   private Object transform(Template template, EntityType entityType) {

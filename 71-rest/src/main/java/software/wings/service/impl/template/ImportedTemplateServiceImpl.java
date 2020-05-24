@@ -267,6 +267,7 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
     EnrichedCommandVersionDTO commandVersionDTO =
         downloadAndGetCommandVersionDTO(commandStoreName, commandName, version);
     Template template = createTemplateFromCommandVersionDTO(commandVersionDTO, importedTemplate, accountId);
+    template.setUuid(importedTemplate.getTemplateId());
     return templateService.updateReferenceTemplate(template);
   }
 

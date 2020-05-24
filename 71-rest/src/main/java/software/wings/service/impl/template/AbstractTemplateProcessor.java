@@ -177,10 +177,14 @@ public abstract class AbstractTemplateProcessor {
       for (GraphNode step : phaseStep.getSteps()) {
         if (template.getUuid().equals(step.getTemplateUuid())
             && ((step.getTemplateVersion() == null || TemplateConstants.LATEST_TAG.equals(step.getTemplateVersion()))
-                   || (step.getTemplateVersion() == null || isDefaultVersionOfTemplateChanged(template)))) {
+                   || ((TemplateConstants.DEFAULT_TAG.equals(step.getTemplateVersion()))
+                          && isDefaultVersionOfTemplateChanged(template)))) {
           GraphNode templateStep = (GraphNode) constructEntityFromTemplate(template, EntityType.WORKFLOW);
           step.setTemplateVariables(
               templateHelper.overrideVariables(templateStep.getTemplateVariables(), step.getTemplateVariables()));
+          step.setImportedTemplateDetails(
+              TemplateHelper.getImportedTemplateDetails(template, step.getTemplateVersion()));
+          step.setTemplateMetadata(template.getTemplateMetadata());
           updateNeeded = true;
         }
       }

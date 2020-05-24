@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -46,6 +47,7 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.data.structure.EmptyPredicate;
@@ -217,10 +219,13 @@ public class TemplateServiceImpl implements TemplateService {
     setTemplateFolderForImportedTemplate(template);
     saveOrUpdate(template);
     processTemplate(template);
-    Template oldTemplate = getOldTemplate(template.getImportedTemplateDetails(), template.getAccountId());
-    notNullCheck("Template " + template.getName() + " does not exist", oldTemplate);
-    template.setUuid(oldTemplate.getUuid());
 
+    Template oldTemplate = getOldTemplate(template.getImportedTemplateDetails(), template.getAccountId(),
+        template.getVersion() == 0 ? null : String.valueOf(template.getVersion()));
+    notNullCheck("Template " + template.getName() + " does not exist", oldTemplate);
+    if (!oldTemplate.getName().equals(template.getName())) {
+      throw new InvalidRequestException("Name of imported template cannot be changed.", USER);
+    }
     validateScope(template, oldTemplate);
     Set<String> existingKeywords = oldTemplate.getKeywords();
     Set<String> generatedKeywords = trimmedLowercaseSet(template.generateKeywords());
@@ -233,22 +238,29 @@ public class TemplateServiceImpl implements TemplateService {
       generatedKeywords.addAll(existingKeywords);
     }
     template.setKeywords(trimmedLowercaseSet(generatedKeywords));
-    VersionedTemplate newVersionedTemplate = buildTemplateDetails(template, template.getUuid());
-    validateTemplateVariables(newVersionedTemplate.getVariables());
-    TemplateVersion templateVersion = getTemplateVersionForCommand(template, template.getUuid(),
-        getImportedTemplateVersion(template.getImportedTemplateDetails(), template.getAccountId()));
-    newVersionedTemplate.setVersion(templateVersion.getVersion());
-    newVersionedTemplate.setImportedTemplateVersion(templateVersion.getImportedTemplateVersion());
-    saveVersionedTemplate(template, newVersionedTemplate);
-    processImportedTemplate(template, true);
 
+    boolean newVersionDownload = checkForNewVersionDownload(template);
+    Long templateVersionNumber = template.getVersion();
+    if (newVersionDownload) {
+      VersionedTemplate newVersionedTemplate = buildTemplateDetails(template, template.getUuid());
+      validateTemplateVariables(newVersionedTemplate.getVariables());
+      TemplateVersion templateVersion = getTemplateVersionForCommand(template, template.getUuid(),
+          getImportedTemplateVersion(template.getImportedTemplateDetails(), template.getAccountId()));
+      newVersionedTemplate.setVersion(templateVersion.getVersion());
+      newVersionedTemplate.setImportedTemplateVersion(templateVersion.getImportedTemplateVersion());
+      saveVersionedTemplate(template, newVersionedTemplate);
+      processImportedTemplate(template, true);
+      templateVersionNumber = templateVersion.getVersion();
+    }
+    ensureTemplateVersionIsLatest(template);
     PersistenceValidator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
 
-    Template savedTemplate = get(template.getAccountId(), template.getUuid(), String.valueOf(template.getVersion()));
+    Template savedTemplate = get(template.getAccountId(), template.getUuid(), String.valueOf(templateVersionNumber));
     if (isDefaultChanged(oldTemplate, template)) {
       executorService.submit(() -> updateLinkedEntities(savedTemplate));
     }
-    auditServiceHelper.reportForAuditingUsingAccountId(savedTemplate.getAccountId(), null, savedTemplate, Type.UPDATE);
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        savedTemplate.getAccountId(), oldTemplate, savedTemplate, Type.UPDATE);
 
     return savedTemplate;
   }
@@ -325,7 +337,7 @@ public class TemplateServiceImpl implements TemplateService {
   @ValidationGroups(Update.class)
   public Template update(Template template) {
     if (importedTemplateService.isImported(template.getUuid(), template.getAccountId())) {
-      throw new InvalidRequestException("Imported template cannot be updated.", USER);
+      return updateReferenceTemplate(template);
     }
     if (template.getTemplateMetadata() != null) {
       processTemplateMetadata(template, true);
@@ -368,7 +380,7 @@ public class TemplateServiceImpl implements TemplateService {
       saveVersionedTemplate(template, newVersionedTemplate);
       templateDetailsChanged = true;
     }
-
+    ensureTemplateVersionIsLatest(template);
     PersistenceValidator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
 
     Template savedTemplate = get(template.getAccountId(), template.getUuid(), String.valueOf(template.getVersion()));
@@ -381,6 +393,14 @@ public class TemplateServiceImpl implements TemplateService {
         template.getAccountId(), oldTemplate, template, Type.UPDATE, template.isSyncFromGit(), isRename);
 
     return savedTemplate;
+  }
+
+  private void ensureTemplateVersionIsLatest(Template template) {
+    TemplateVersion oldTemplateVersion =
+        templateVersionService.lastTemplateVersion(template.getAccountId(), template.getUuid());
+    if (template.getVersion() < oldTemplateVersion.getVersion()) {
+      template.setVersion(oldTemplateVersion.getVersion());
+    }
   }
 
   private void validateTemplateVariables(List<Variable> templateVariables) {
@@ -509,6 +529,23 @@ public class TemplateServiceImpl implements TemplateService {
     }
   }
 
+  private boolean checkForNewVersionDownload(Template template) {
+    PageRequest<TemplateVersion> pageRequest =
+        PageRequestBuilder.aPageRequest()
+            .addFilter(TemplateVersionKeys.accountId, EQ, template.getAccountId())
+            .addFilter(TemplateVersionKeys.templateUuid, EQ, template.getUuid())
+            .build();
+    List<TemplateVersion> templateVersions = templateVersionService.listTemplateVersions(pageRequest).getResponse();
+    HarnessImportedTemplateDetails templateDetails =
+        (HarnessImportedTemplateDetails) template.getImportedTemplateDetails();
+    Optional<TemplateVersion> version =
+        templateVersions.stream()
+            .filter(templateVersion
+                -> templateVersion.getImportedTemplateVersion().equals(templateDetails.getCommandVersion()))
+            .findFirst();
+    return !version.isPresent();
+  }
+
   private boolean checkTemplateDetailsChanged(Template template, BaseTemplate oldTemplate, BaseTemplate newTemplate) {
     AbstractTemplateProcessor abstractTemplateProcessor = getAbstractTemplateProcessor(template);
     return abstractTemplateProcessor.checkTemplateDetailsChanged(oldTemplate, newTemplate);
@@ -567,10 +604,10 @@ public class TemplateServiceImpl implements TemplateService {
     return template;
   }
 
-  private Template getReferencedTemplate(String commandId, String commandStoreId, String accountId) {
+  private Template getReferencedTemplate(String commandId, String commandStoreId, String accountId, String version) {
     Template template = importedTemplateService.getTemplateByCommandName(commandId, commandStoreId, accountId);
-    notNullCheck(String.format("Old template not found for command %s.", commandId), template);
-    return get(template.getUuid());
+    notNullCheck(String.format("No Template not found for command %s.", commandId), template);
+    return get(template.getUuid(), version);
   }
 
   @Override
@@ -592,7 +629,8 @@ public class TemplateServiceImpl implements TemplateService {
 
   private void setReferencedTemplateDetails(Template template, String version) {
     setTemplateDetails(template, version);
-    TemplateVersion templateVersion = getTemplateVersionObject(template.getUuid(), template.getVersion());
+    TemplateVersion templateVersion =
+        getTemplateVersionObject(template.getUuid(), fetchTemplateVersion(template, version));
     template.setVersionDetails(templateVersion.getVersionDetails());
     template.setImportedTemplateDetails(setImportedDetailsOfTemplate(template, templateVersion));
   }
@@ -635,7 +673,7 @@ public class TemplateServiceImpl implements TemplateService {
       templateVersion = getDefaultVersion(template);
     }
     if (templateVersion == null) {
-      templateVersion = version == null || version.equals(LATEST_TAG) ? template.getVersion() : Long.valueOf(version);
+      templateVersion = (version == null || version.equals(LATEST_TAG)) ? template.getVersion() : Long.valueOf(version);
     }
     return templateVersion;
   }
@@ -806,11 +844,12 @@ public class TemplateServiceImpl implements TemplateService {
     return null;
   }
 
-  private Template getOldTemplate(ImportedTemplateDetails importedTemplateDetails, String accountId) {
+  private Template getOldTemplate(ImportedTemplateDetails importedTemplateDetails, String accountId, String version) {
     // TODO: Refactor implementation.
     if (HarnessImportedTemplateDetails.class.equals(getImportedCommandDetailClass(importedTemplateDetails))) {
       HarnessImportedTemplateDetails templateDetails = (HarnessImportedTemplateDetails) importedTemplateDetails;
-      return getReferencedTemplate(templateDetails.getCommandName(), templateDetails.getCommandStoreName(), accountId);
+      return getReferencedTemplate(
+          templateDetails.getCommandName(), templateDetails.getCommandStoreName(), accountId, version);
     }
     return null;
   }
@@ -911,15 +950,16 @@ public class TemplateServiceImpl implements TemplateService {
 
   @Override
   public String fetchTemplateIdFromUri(String accountId, String appId, String templateUri) {
-    String folderPath = obtainTemplateFolderPath(templateUri);
     String galleryId =
         templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()).getUuid();
     TemplateFolder templateFolder;
     if (templateUri.startsWith(APP_PREFIX)) { // app level folder
+      String folderPath = obtainTemplateFolderPath(templateUri);
       templateFolder = templateFolderService.getByFolderPath(accountId, appId, folderPath, galleryId);
     } else if (templateUri.startsWith(IMPORTED_TEMPLATE_PREFIX)) {
       return getImportedTemplate(accountId, templateUri, appId).getUuid();
     } else { // root level folder
+      String folderPath = obtainTemplateFolderPath(templateUri);
       templateFolder = templateFolderService.getByFolderPath(accountId, folderPath, galleryId);
     }
     if (templateFolder == null) {
@@ -981,8 +1021,8 @@ public class TemplateServiceImpl implements TemplateService {
   public String fetchTemplateVersionFromVersion(String templateUuid, String templateVersion) {
     Template template = get(templateUuid);
     if (importedTemplateService.isImported(templateUuid, template.getAccountId())) {
-      if (LATEST_TAG.equals(templateVersion)) {
-        throw new InvalidRequestException("Latest is not supported for imported templates", USER);
+      if (DEFAULT_TAG.equals(templateVersion)) {
+        return templateVersion;
       }
       return importedTemplateService.getImportedTemplateVersionFromTemplateVersion(
           templateUuid, templateVersion, template.getAccountId());
@@ -995,6 +1035,9 @@ public class TemplateServiceImpl implements TemplateService {
     Template template = get(templateUuid);
     String templateVersion = obtainTemplateVersion(templateUri);
     if (importedTemplateService.isImported(templateUuid, template.getAccountId())) {
+      if (DEFAULT_TAG.equals(templateVersion)) {
+        return templateVersion;
+      }
       return importedTemplateService.getTemplateVersionFromImportedTemplateVersion(
           templateUuid, templateVersion, template.getAccountId());
     }
@@ -1098,12 +1141,12 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   private void setDetailsOfTemplate(Template template, String version, boolean defaultVersion) {
-    if (version != null || !defaultVersion) {
-      setDetailsOfTemplate(template, version);
-    }
-    if (importedTemplateService.isImported(template.getUuid(), template.getAccountId())) {
+    if (version == null && defaultVersion
+        && importedTemplateService.isImported(template.getUuid(), template.getAccountId())) {
       setDetailsOfTemplate(template, DEFAULT_TAG);
+      return;
     }
+    setDetailsOfTemplate(template, version);
   }
 
   private void setDetailsOfTemplate(Template template, String version) {

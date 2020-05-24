@@ -228,6 +228,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     Template template = templates.stream().findFirst().get();
 
     assertThat(template).isNotNull();
+    assertThat(template.getTemplateObject()).isNotNull();
     assertThat(template.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
     assertThat(template.getKeywords())
         .contains(TEMPLATE_CUSTOM_KEYWORD.toLowerCase(), template.getName().toLowerCase());
@@ -1077,9 +1078,10 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   public void shouldListVersionsOfImportedTemplate() {
     final String commandId = "COMMAND_ID";
     final String commandStoreId = "COMMAND_STORE_ID";
-    saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId, "1.2", false);
+    Template template_1 = saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId, "1.2", false);
     Template template = getSshCommandTemplate();
     template.setTemplateObject(SshCommandTemplate.builder().build());
+    template.setUuid(template_1.getUuid());
     saveImportedTemplate(template, commandId, commandStoreId, "1.3", true);
     ImportedCommand templateVersions =
         templateVersionService.listImportedTemplateVersions(commandId, commandStoreId, GLOBAL_ACCOUNT_ID);
@@ -1096,9 +1098,10 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   public void shouldGetAndListDefaultImportedTemplate() {
     final String commandId = "COMMAND_ID";
     final String commandStoreId = "COMMAND_STORE_ID";
-    saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId, "1.2", false);
+    Template template_1 = saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId, "1.2", false);
     Template template = getSshCommandTemplate();
     template.setTemplateObject(SshCommandTemplate.builder().build());
+    template.setUuid(template_1.getUuid());
     saveImportedTemplate(template, commandId, commandStoreId, "1.3", true);
     PageRequest<Template> pageRequest = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
 
@@ -1106,8 +1109,8 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
         pageRequest, Collections.singletonList(HARNESS_COMMAND_LIBRARY_GALLERY), GLOBAL_ACCOUNT_ID, true);
     assertThat(templates.get(0).getVersion()).isEqualTo(1L);
 
-    Template template_1 = templateService.get(template.getUuid(), "default");
-    assertThat(template_1.getVersion()).isEqualTo(1L);
+    Template template_2 = templateService.get(template.getUuid(), "default");
+    assertThat(template_2.getVersion()).isEqualTo(1L);
   }
 
   @Test
@@ -1116,19 +1119,21 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   public void shouldUpdateDefaultVersionAndGetImportedTemplate() {
     final String commandId = "COMMAND_ID";
     final String commandStoreId = "COMMAND_STORE_ID";
-    saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId, "1.2", false);
+    Template template_1 = saveImportedTemplate(getSshCommandTemplate(), commandId, commandStoreId, "1.2", false);
     Template template = getSshCommandTemplate();
     template.setTemplateObject(SshCommandTemplate.builder().build());
-    template.setTemplateMetadata(ImportedTemplateMetadata.builder().defaultVersion(2L).build());
+    template.setUuid(template_1.getUuid());
     saveImportedTemplate(template, commandId, commandStoreId, "1.3", true);
+    template.setTemplateMetadata(ImportedTemplateMetadata.builder().defaultVersion(2L).build());
+    templateService.update(template);
     PageRequest<Template> pageRequest = aPageRequest().addFilter("appId", EQ, GLOBAL_APP_ID).build();
 
     List<Template> templates = templateService.list(
         pageRequest, Collections.singletonList(HARNESS_COMMAND_LIBRARY_GALLERY), GLOBAL_ACCOUNT_ID, true);
     assertThat(templates.get(0).getVersion()).isEqualTo(2L);
 
-    Template template_1 = templateService.get(template.getUuid(), "default");
-    assertThat(template_1.getVersion()).isEqualTo(2L);
+    Template template_2 = templateService.get(template.getUuid(), "default");
+    assertThat(template_2.getVersion()).isEqualTo(2L);
   }
 
   @Test

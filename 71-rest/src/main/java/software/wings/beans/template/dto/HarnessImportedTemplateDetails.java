@@ -7,12 +7,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
 import java.util.Set;
 
 @JsonTypeName(HARNESS_COMMAND_LIBRARY_GALLERY)
-@Value
+@Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)

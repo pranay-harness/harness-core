@@ -28,6 +28,8 @@ import software.wings.beans.TemplateExpression;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
+import software.wings.beans.template.TemplateMetadata;
+import software.wings.beans.template.dto.ImportedTemplateDetails;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
@@ -110,6 +112,8 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     String templateUuid = null;
     String templateVersion = null;
     String templateUri = stepYaml.getTemplateUri();
+    ImportedTemplateDetails importedTemplateDetail = null;
+    TemplateMetadata templateMetadata = null;
     if (isNotEmpty(templateUri)) {
       if (templateUri.startsWith(APP_PREFIX)) {
         templateUri = templateUri.substring(APP_PREFIX.length());
@@ -120,6 +124,13 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
       templateVersion = templateService.fetchTemplateVersionFromUri(templateUuid, templateUri);
     }
 
+    if (templateUuid != null && templateVersion != null) {
+      Template template = templateService.get(templateUuid, templateVersion);
+      notNullCheck(String.format("Template with uri %s is not found.", templateUri), template);
+      importedTemplateDetail = TemplateHelper.getImportedTemplateDetails(template, templateVersion);
+      templateMetadata = template.getTemplateMetadata();
+    }
+
     return GraphNode.builder()
         .name(stepYaml.getName())
         .type(stepYaml.getType())
@@ -128,6 +139,8 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         .properties(outputProperties.isEmpty() ? null : outputProperties)
         .templateUuid(templateUuid)
         .templateVersion(templateVersion)
+        .templateMetadata(templateMetadata)
+        .importedTemplateDetails(importedTemplateDetail)
         .templateVariables(convertToEntityVariables(stepYaml.getTemplateVariables()))
         .build();
   }
