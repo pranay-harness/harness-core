@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.execution.status.NodeExecutionStatus.resumableStatuses;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.common.base.Preconditions;
@@ -112,15 +113,14 @@ public class ExecutionEngine implements Engine {
     return instance;
   }
 
-  public void startNodeExecution(Ambiance ambiance) {
+  public void startNodeExecution(Ambiance ambiance, List<StepTransput> additionalInputs) {
     // Update to Running Status
     NodeExecution nodeExecution = hPersistence.createQuery(NodeExecution.class)
                                       .filter(NodeExecutionKeys.uuid, ambiance.obtainCurrentRuntimeId())
                                       .get();
     ExecutionNode node = nodeExecution.getNode();
     // Facilitate and execute
-    List<StepTransput> inputs =
-        engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
+    List<StepTransput> inputs = engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), additionalInputs);
     StepParameters resolvedStepParameters =
         (StepParameters) engineExpressionService.resolve(ambiance, node.getStepParameters());
     nodeExecutionService.updateResolvedStepParameters(nodeExecution.getUuid(), resolvedStepParameters);
@@ -184,21 +184,23 @@ public class ExecutionEngine implements Engine {
       String resumeId =
           delayEventHelper.delay(finalFacilitatorResponse.getInitialWait().getSeconds(), Collections.emptyMap());
       waitNotifyEngine.waitForAllOn(ORCHESTRATION,
-          EngineWaitResumeCallback.builder().ambiance(ambiance).facilitatorResponse(finalFacilitatorResponse).build(),
+          EngineWaitResumeCallback.builder()
+              .ambiance(ambiance)
+              .facilitatorResponse(finalFacilitatorResponse)
+              .inputs(inputs)
+              .build(),
           resumeId);
     } else {
       Preconditions.checkNotNull(engineStatusHelper.updateNodeInstance(ambiance.obtainCurrentRuntimeId(),
           ops.andThen(op -> op.set(NodeExecutionKeys.status, NodeExecutionStatus.RUNNING))));
-      invokeState(ambiance, facilitatorResponse);
+      invokeState(ambiance, facilitatorResponse, inputs);
     }
   }
 
-  public void invokeState(Ambiance ambiance, FacilitatorResponse facilitatorResponse) {
+  public void invokeState(Ambiance ambiance, FacilitatorResponse facilitatorResponse, List<StepTransput> inputs) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
     ExecutionNode node = nodeExecution.getNode();
     Step currentStep = stepRegistry.obtain(node.getStepType());
-    List<StepTransput> inputs =
-        engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
     ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(facilitatorResponse.getExecutionMode());
     invoker.invokeExecutable(InvokerPackage.builder()
                                  .step(currentStep)
@@ -254,15 +256,15 @@ public class ExecutionEngine implements Engine {
     });
   }
 
-  private void endTransition(NodeExecution nodeExecution) {
+  public void endTransition(NodeExecution nodeExecution) {
     if (isNotEmpty(nodeExecution.getNotifyId())) {
       StatusNotifyResponseData responseData =
           StatusNotifyResponseData.builder().status(nodeExecution.getStatus()).build();
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
-      logger.info("End Execution");
-      engineStatusHelper.updateExecutionInstanceStatus(
-          nodeExecution.getAmbiance().getPlanExecutionId(), ExecutionInstanceStatus.SUCCEEDED);
+      logger.info("Ending Execution");
+      engineStatusHelper.updateExecutionInstanceStatus(nodeExecution.getAmbiance().getPlanExecutionId(),
+          ExecutionInstanceStatus.obtainForNodeExecutionStatus(nodeExecution.getStatus()));
     }
   }
 
@@ -274,15 +276,17 @@ public class ExecutionEngine implements Engine {
   }
 
   public void resume(String nodeInstanceId, Map<String, ResponseData> response, boolean asyncError) {
-    NodeExecution nodeExecution = engineStatusHelper.updateNodeInstance(
-        nodeInstanceId, ops -> ops.set(NodeExecutionKeys.status, NodeExecutionStatus.RUNNING));
-    if (nodeExecution.getStatus() != NodeExecutionStatus.RUNNING) {
-      logger.warn("nodeInstance: {} status {} is no longer in RUNNING state", nodeExecution.getUuid(),
+    NodeExecution nodeExecution =
+        hPersistence.createQuery(NodeExecution.class).filter(NodeExecutionKeys.uuid, nodeInstanceId).get();
+    if (!resumableStatuses().contains(nodeExecution.getStatus())) {
+      logger.warn("NodeExecution is no longer in RESUMABLE state Uuid: {} Status {} ", nodeExecution.getUuid(),
           nodeExecution.getStatus());
       return;
     }
+    NodeExecution updatedNodeExecution = Preconditions.checkNotNull(engineStatusHelper.updateNodeInstance(
+        nodeInstanceId, ops -> ops.set(NodeExecutionKeys.status, NodeExecutionStatus.RUNNING)));
     executorService.execute(EngineResumeExecutor.builder()
-                                .nodeExecution(nodeExecution)
+                                .nodeExecution(updatedNodeExecution)
                                 .response(response)
                                 .asyncError(asyncError)
                                 .executionEngine(this)

@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
 import io.harness.execution.PlanExecution;
+import io.harness.interrupts.Interrupt;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rest.RestResponse;
 import software.wings.security.annotations.AuthRule;
@@ -14,6 +15,7 @@ import software.wings.security.annotations.AuthRule;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 @Redesign
 @Path("/execute2")
@@ -61,5 +63,13 @@ public class CustomExecutionResource {
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<PlanExecution> executeSimpleShellScriptPlan() {
     return new RestResponse<>(customExecutionService.executeSimpleShellScriptPlan());
+  }
+
+  @GET
+  @Path("/abort-plan")
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<Interrupt> abortPlan(
+      @QueryParam("accountId") String accountId, @QueryParam("planExecutionId") String planExecutionId) {
+    return new RestResponse<>(customExecutionService.registerInterrupt(planExecutionId));
   }
 }

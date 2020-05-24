@@ -11,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.state.io.StepParameters;
@@ -18,11 +19,42 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 @OwnedBy(CDC)
 public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject @Named("enginePersistence") HPersistence hPersistence;
+
+  @Override
+  public List<NodeExecution> fetchNodeExecutionsByStatus(String planExecutionId, NodeExecutionStatus status) {
+    List<NodeExecution> nodeExecutions = new ArrayList<>();
+    Query<NodeExecution> nodeExecutionQuery = hPersistence.createQuery(NodeExecution.class, excludeAuthority)
+                                                  .filter(NodeExecutionKeys.planExecutionId, planExecutionId)
+                                                  .filter(NodeExecutionKeys.status, status);
+    try (HIterator<NodeExecution> nodeExecutionIterator = new HIterator<>(nodeExecutionQuery.fetch())) {
+      while (nodeExecutionIterator.hasNext()) {
+        nodeExecutions.add(nodeExecutionIterator.next());
+      }
+    }
+    return nodeExecutions;
+  }
+
+  @Override
+  public List<NodeExecution> fetchNodeExecutionsByStatuses(
+      String planExecutionId, EnumSet<NodeExecutionStatus> statuses) {
+    List<NodeExecution> nodeExecutions = new ArrayList<>();
+    Query<NodeExecution> nodeExecutionQuery = hPersistence.createQuery(NodeExecution.class, excludeAuthority)
+                                                  .filter(NodeExecutionKeys.planExecutionId, planExecutionId)
+                                                  .field(NodeExecutionKeys.status)
+                                                  .in(statuses);
+    try (HIterator<NodeExecution> nodeExecutionIterator = new HIterator<>(nodeExecutionQuery.fetch())) {
+      while (nodeExecutionIterator.hasNext()) {
+        nodeExecutions.add(nodeExecutionIterator.next());
+      }
+    }
+    return nodeExecutions;
+  }
 
   @Override
   public List<NodeExecution> fetchNodeExecutions(String planExecutionId) {

@@ -44,4 +44,10 @@ public class TestAsyncStep implements Step, AsyncExecutable {
   public StepType getType() {
     return ASYNC_STEP_TYPE;
   }
+
+  @Override
+  public void handleAbort(
+      Ambiance ambiance, StepParameters stateParameters, AsyncExecutableResponse executableResponse) {
+    // Do Nothing
+  }
 }
