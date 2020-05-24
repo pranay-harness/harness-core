@@ -7,7 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/awsutils/mocks"
-	"github.com/wings-software/portal/commons/go/lib/filesystem/mocks"
+	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	"go.uber.org/zap"
 	"io"
