@@ -41,6 +41,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.SMTP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SPLUNK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SPOT_INST;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SUMO;
+import static software.wings.settings.SettingValue.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -79,7 +80,7 @@ public class SettingServiceHelper {
       Sets.immutableEnumSet(AWS, AZURE, GCP, KUBERNETES_CLUSTER, PCF, SPOT_INST, APP_DYNAMICS, NEW_RELIC, INSTANA,
           PROMETHEUS, DATA_DOG, DYNA_TRACE, CLOUD_WATCH, DATA_DOG_LOG, BUG_SNAG, ELK, SPLUNK, SUMO, LOGZ,
           APM_VERIFICATION, JENKINS, BAMBOO, DOCKER, NEXUS, ARTIFACTORY, SMB, SFTP, AMAZON_S3_HELM_REPO, GCS_HELM_REPO,
-          HTTP_HELM_REPO, AZURE_ARTIFACTS_PAT, GIT, SMTP, JIRA, SERVICENOW);
+          HTTP_HELM_REPO, AZURE_ARTIFACTS_PAT, GIT, SMTP, JIRA, SERVICENOW, WINRM_CONNECTION_ATTRIBUTES);
 
   @Inject private SecretManager secretManager;
   @Inject private ManagerDecryptionService managerDecryptionService;
@@ -87,20 +88,22 @@ public class SettingServiceHelper {
   @Inject private UsageRestrictionsService usageRestrictionsService;
 
   public boolean hasReferencedSecrets(SettingAttribute settingAttribute) {
-    if (settingAttribute == null) {
-      return false;
-    }
-    // Only use referenced secrets feature if the feature flag is on and the setting attribute type supports it.
-    if (settingAttribute.getValue() == null || settingAttribute.getAccountId() == null
-        || settingAttribute.getValue().getSettingType() == null
-        || !featureFlagService.isEnabled(FeatureName.CONNECTORS_REF_SECRETS, settingAttribute.getAccountId())
-        || !ATTRIBUTES_USING_REFERENCES.contains(settingAttribute.getValue().getSettingType())) {
-      settingAttribute.setSecretsMigrated(false);
+    if (settingAttribute == null || settingAttribute.getValue() == null || settingAttribute.getAccountId() == null
+        || settingAttribute.getValue().getSettingType() == null) {
       return false;
     }
 
-    settingAttribute.setSecretsMigrated(true);
-    return true;
+    boolean isSecretsReferenceAllowed =
+        featureFlagService.isEnabled(FeatureName.CONNECTORS_REF_SECRETS, settingAttribute.getAccountId())
+        && ATTRIBUTES_USING_REFERENCES.contains(settingAttribute.getValue().getSettingType());
+    if (!isSecretsReferenceAllowed) {
+      return false;
+    }
+
+    if (settingAttribute.getUuid() == null) {
+      settingAttribute.setSecretsMigrated(true);
+    }
+    return settingAttribute.isSecretsMigrated();
   }
 
   public void updateSettingAttributeBeforeResponse(SettingAttribute settingAttribute, boolean maskEncryptedFields) {
