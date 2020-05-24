@@ -317,7 +317,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     riskSummary.compressMaps();
 
     mlAnalysisResponse.setAggregatedRisk(aggregatedRisk);
-    mlAnalysisResponse.bundleAsJosnAndCompress();
 
     if (mlAnalysisResponse instanceof ExperimentalMetricAnalysisRecord) {
       ((ExperimentalMetricAnalysisRecord) mlAnalysisResponse).setExperimentStatus(ExperimentStatus.UNDETERMINED);
@@ -406,7 +405,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         });
       }
     }
-    wingsPersistence.save(mlAnalysisResponse);
     wingsPersistence.save(riskSummary);
 
     try {
@@ -423,6 +421,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         mlAnalysisResponse.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(0.0);
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(
         cvConfigId, riskScore, mlAnalysisResponse.getAnalysisMinute());
+    mlAnalysisResponse.bundleAsJosnAndCompress();
+    wingsPersistence.save(mlAnalysisResponse);
     logger.info("inserted MetricAnalysisRecord to persistence layer for "
             + "stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: {}",
         stateType, workflowExecutionId, stateExecutionId);
