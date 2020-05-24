@@ -117,6 +117,7 @@ import software.wings.security.encryption.SecretUsageLog;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.security.encryption.setupusage.SecretSetupUsageService;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -193,6 +194,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private AzureSecretsManagerService azureSecretsManagerService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private SecretSetupUsageService secretSetupUsageService;
+  @Inject private SettingServiceHelper settingServiceHelper;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
@@ -697,9 +699,7 @@ public class SecretManagerImpl implements SecretManager {
       for (SettingAttribute settingAttribute : queryIter) {
         settingAttributeList.add(settingAttribute);
         settingAttributeIds.add(settingAttribute.getUuid());
-        if (settingAttribute.getValue() instanceof EncryptableSetting) {
-          maskEncryptedFields((EncryptableSetting) settingAttribute.getValue());
-        }
+        settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, true);
       }
     }
   }

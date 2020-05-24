@@ -586,10 +586,13 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     try {
+      SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
+      if (existingSetting != null) {
+        settingAttribute.setSecretsMigrated(existingSetting.isSecretsMigrated());
+      }
       if (settingServiceHelper.hasReferencedSecrets(settingAttribute)) {
         settingServiceHelper.updateReferencedSecrets(settingAttribute);
       } else {
-        SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
         if (existingSetting != null) {
           resetUnchangedEncryptedFields(existingSetting, settingAttribute);
         }
@@ -849,6 +852,7 @@ public class SettingsServiceImpl implements SettingsService {
 
     settingAttribute.setAccountId(existingSetting.getAccountId());
     settingAttribute.setAppId(existingSetting.getAppId());
+    settingAttribute.setSecretsMigrated(existingSetting.isSecretsMigrated());
     // e.g. User is saving GitConnector and setWebhookToken is needed.
     // This fields is populated by us and not by user
 
