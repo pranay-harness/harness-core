@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/aws/aws-sdk-go v1.30.29
+	cloud.google.com/go/storage v1.8.0
 	github.com/bazelbuild/bazel-gazelle v0.20.0 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/mock v1.4.3
@@ -12,5 +13,6 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.5.1
 	go.uber.org/zap v1.15.0
+	google.golang.org/api v0.24.0
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 )

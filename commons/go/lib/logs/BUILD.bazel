@@ -5,11 +5,13 @@ go_library(
     srcs = [
         "builder.go",
         "iface.go",
+        "iface_mock.go",
         "logs.go",
     ],
     importpath = "github.com/wings-software/portal/commons/go/lib/logs",
     visibility = ["//visibility:public"],
     deps = [
+        "@com_github_golang_mock//gomock:go_default_library",
         "@org_uber_go_zap//:go_default_library",
         "@org_uber_go_zap//zapcore:go_default_library",
         "@org_uber_go_zap//zaptest/obxxxxxxxxgo_default_library",

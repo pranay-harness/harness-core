@@ -2,10 +2,16 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
-    srcs = ["filesystem.go"],
+    srcs = [
+        "filesystem.go",
+        "filesystem_mock.go",
+    ],
     importpath = "github.com/wings-software/portal/commons/go/lib/filesystem",
     visibility = ["//visibility:public"],
-    deps = ["//commons/go/lib/logs:go_default_library"],
+    deps = [
+        "//commons/go/lib/logs:go_default_library",
+        "@com_github_golang_mock//gomock:go_default_library",
+    ],
 )
 
 go_test(
