@@ -2,9 +2,12 @@ package filesystem
 
 import (
 	"io"
+	"io/ioutil"
 	"os"
+	"path"
 	"sync"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 )
 
@@ -14,11 +17,14 @@ import (
 
 //FileSystem provides mock-able interfaces for common filesystem operations
 type FileSystem interface {
+	CloseWriters() error
 	ReadFile(filename string, op func(io.Reader) error) error
 	Open(name string) (File, error)
 	Stat(name string) (os.FileInfo, error)
 	Create(name string) (File, error)
 	Copy(dst io.Writer, src io.Reader) (int64, error)
+
+	WriteFile(filename string, op func(at io.WriterAt) error) error
 }
 
 // File represents methods allowed for a *os.File.
@@ -28,6 +34,7 @@ type File interface {
 	io.ReaderAt
 	io.Writer
 	io.Seeker
+
 	Stat() (os.FileInfo, error)
 }
 
@@ -37,7 +44,7 @@ type osFileSystem struct {
 	// A sync controlled map of things being written to. Adding to and removing from the map are protected
 	writeFileHandles struct {
 		sync.Mutex
-		Map map[string]*fileHandle
+		Map map[string]*fileHandle //key=filename, value=fileHandle
 	}
 }
 
@@ -78,6 +85,10 @@ func NewOSFileSystem(log logs.SugaredLoggerIface) FileSystem {
 //Close closes the fileHandle's tmp file and renames it to its final filename, returning an error if either of those
 // operations fail.
 func (f *fileHandle) Close() error {
+	if f.Tmpfile == nil {
+		return nil
+	}
+
 	if err := f.Tmpfile.Close(); err != nil {
 		return err
 	}
@@ -86,4 +97,68 @@ func (f *fileHandle) Close() error {
 		return err
 	}
 	return nil
+}
+
+//WriteFile writes a file, treating all of op as an atomic function using this technique:
+// a temp file is written then moved into place after writing is done
+func (fs *osFileSystem) WriteFile(filename string, op func(at io.WriterAt) error) error {
+	// If temp and destination files are not in target directory, there might be LinkError
+	//	like 'invalid cross-device link'.
+	//This occurs when they are not on the same block device/filesystem/partition/etc
+
+	tmpfile, err := ioutil.TempFile(path.Dir(filename), path.Base(filename))
+	if err != nil {
+		return err
+	}
+
+	f := &fileHandle{
+		FileName: filename,
+		Tmpfile:  tmpfile,
+	}
+
+	fs.addFileHandle(f)
+	defer fs.removeFileHandle(f.Tmpfile.Name())
+
+	//write to the temp file
+	err = op(tmpfile)
+	if err != nil {
+		_ = tmpfile.Close()
+		return err
+	}
+
+	//flush pending writes, close  temp file and rename to desired file name
+	return f.Close()
+}
+
+func (fs *osFileSystem) addFileHandle(handle *fileHandle) {
+	fs.writeFileHandles.Lock()
+	fs.writeFileHandles.Map[handle.Tmpfile.Name()] = handle
+	fs.writeFileHandles.Unlock()
+}
+
+func (fs *osFileSystem) removeFileHandle(name string) *fileHandle {
+	fs.writeFileHandles.Lock()
+	handle := fs.writeFileHandles.Map[name]
+	delete(fs.writeFileHandles.Map, name)
+	fs.writeFileHandles.Unlock()
+
+	return handle
+}
+
+// CloseWriters forecefully but gracefully shuts down all of the file system's currently open writers.
+//Writing to a file is PREVENTED until this is finished. Returns and error if anything failed to write
+//but this doesnt not necessarily mean the operation failed entirely, only that closing at least one
+//of the file handles failed
+func (fs *osFileSystem) CloseWriters() error {
+	fs.writeFileHandles.Lock()
+
+	var errs error
+	for tmpfile, fileHandle := range fs.writeFileHandles.Map {
+		if err := fileHandle.Close(); errs != nil {
+			errs = multierror.Append(errs, err)
+		}
+		delete(fs.writeFileHandles.Map, tmpfile)
+	}
+	fs.writeFileHandles.Unlock()
+	return errs
 }

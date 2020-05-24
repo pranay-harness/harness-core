@@ -3,11 +3,12 @@ module github.com/wings-software/portal/commons/go/lib
 go 1.14
 
 require (
-	github.com/aws/aws-sdk-go v1.30.29
 	cloud.google.com/go/storage v1.8.0
+	github.com/aws/aws-sdk-go v1.30.29
 	github.com/bazelbuild/bazel-gazelle v0.20.0 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/mock v1.4.3
+	github.com/hashicorp/go-multierror v1.1.0
 	github.com/mattn/go-shellwords v1.0.10 // indirect
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/satori/go.uuid v1.2.0
