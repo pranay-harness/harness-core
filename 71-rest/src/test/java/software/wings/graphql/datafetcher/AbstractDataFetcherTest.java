@@ -104,7 +104,7 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
   public static final String INSTANCE_TYPE1 = "INSTANCE_TYPE1";
   public static final String LABEL_NAME = "LABEL_NAME";
   public static final String LABEL_VALUE = "LABEL_VALUE";
-  public static final String LABEL = "LABEL_NAME:LABEL_VALUE";
+  public static final String LABEL = "LABEL_VALUE";
   public static final String SETTING_ID1 = "SETTING_ID1";
   public static final String QUERY1 =
       "SELECT PERCENTILE_DISC(0.50) WITHIN GROUP (ORDER BY SUM_VALUE) AS CNT, time_bucket_gapfill('1 hours',REPORTEDAT,'2009-02-12T11:19:15.233Z','2009-02-12T16:19:15.233Z') AS GRP_BY_TIME FROM (SELECT REPORTEDAT, SUM(INSTANCECOUNT) AS SUM_VALUE FROM INSTANCE_STATS WHERE  REPORTEDAT  >= timestamp '2009-02-12T11:19:15.233Z' AND REPORTEDAT  < timestamp '2009-02-12T16:19:15.233Z' AND ACCOUNTID = 'ACCOUNT1_ID' GROUP BY REPORTEDAT) INSTANCE_STATS GROUP BY GRP_BY_TIME ORDER BY GRP_BY_TIME";

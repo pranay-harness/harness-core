@@ -311,7 +311,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
         }
         label = BillingStatsDefaultKeys.DEFAULT_LABEL;
       } else {
-        label = labelName + ":" + workload.getLabels().get(labelName);
+        label = workload.getLabels().get(labelName);
       }
       return updateDataPointsForLabelAggregation(
           dataPoint, labelNameDataPointMap, numberOfDataPoints, label, operation);
@@ -451,7 +451,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
         }
         label = BillingStatsDefaultKeys.DEFAULT_LABEL;
       } else {
-        label = labelName + ":" + workload.getLabels().get(labelName);
+        label = workload.getLabels().get(labelName);
       }
 
       QLEntityTableData existingDataPoint = labelNameDataPointMap.get(label);
