@@ -1,4 +1,4 @@
-package io.harness.utils;
+package io.harness.utils.steps;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 

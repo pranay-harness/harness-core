@@ -7,5 +7,5 @@ import java.util.List;
 public interface InterruptService {
   List<Interrupt> fetchActiveInterrupts(String planExecutionId);
 
-  boolean seize(String interruptId);
+  Interrupt seize(String interruptId);
 }

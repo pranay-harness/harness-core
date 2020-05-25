@@ -22,13 +22,12 @@ public class InterruptServiceImpl implements InterruptService {
   @Inject @Named("enginePersistence") HPersistence hPersistence;
 
   @Override
-  public boolean seize(String interruptId) {
+  public Interrupt seize(String interruptId) {
     UpdateOperations<Interrupt> updateOps =
         hPersistence.createUpdateOperations(Interrupt.class).set(InterruptKeys.seized, Boolean.TRUE);
 
     Query<Interrupt> interruptQuery = hPersistence.createQuery(Interrupt.class).filter(InterruptKeys.uuid, interruptId);
-    Interrupt seizedInterrupt = hPersistence.findAndModify(interruptQuery, updateOps, HPersistence.returnNewOptions);
-    return seizedInterrupt != null;
+    return hPersistence.findAndModify(interruptQuery, updateOps, HPersistence.returnNewOptions);
   }
 
   @Override

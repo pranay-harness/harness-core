@@ -1,21 +1,14 @@
-/**
- *
- */
-
-package software.wings.sm.states;
+package io.harness.delay;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 
-/**
- * The type Simple notifier.
- *
- * @author Rishi
- */
 @OwnedBy(CDC)
+@Slf4j
 public class SimpleNotifier implements Runnable {
   private WaitNotifyEngine waitNotifyEngine;
   private String correlationId;
@@ -36,6 +29,7 @@ public class SimpleNotifier implements Runnable {
 
   @Override
   public void run() {
+    logger.info("Simple Notifier Notifying on correlation id : {}", correlationId);
     waitNotifyEngine.doneWith(correlationId, response);
   }
 }
