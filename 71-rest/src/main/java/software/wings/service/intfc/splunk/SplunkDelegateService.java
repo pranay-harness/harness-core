@@ -7,6 +7,7 @@ import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.LogElement;
+import software.wings.service.impl.splunk.SplunkSavedSearch;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -50,4 +51,6 @@ public interface SplunkDelegateService {
   List<LogElement> getLogResults(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String basicQuery, String hostNameField, String host, long startTime, long endTime,
       ThirdPartyApiCallLog apiCallLog, int logCollectionMinute, boolean isAdvancedQuery);
+  @DelegateTaskType(TaskType.SPLUNK_GET_SAVED_SEARCHES)
+  List<SplunkSavedSearch> getSavedSearches(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails);
 }

@@ -703,6 +703,7 @@ import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowMetaDTO;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
+import software.wings.service.impl.splunk.SplunkSavedSearch;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotinstAllPhaseRollbackData;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
@@ -1610,5 +1611,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CustomSecretsManagerConfig.class, 7378);
     kryo.register(CustomSecretsManagerShellScript.class, 7379);
     kryo.register(StackDriverMetricDefinition.Aggregation.class, 7380);
+    kryo.register(SplunkSavedSearch.class, 7381);
   }
 }
