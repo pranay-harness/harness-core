@@ -9,6 +9,7 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.splunk.Args;
 import com.splunk.Event;
 import com.splunk.HttpException;
 import com.splunk.HttpService;
@@ -17,6 +18,7 @@ import com.splunk.JobArgs;
 import com.splunk.JobResultsArgs;
 import com.splunk.ResultsReaderJson;
 import com.splunk.SSLSecurityProtocol;
+import com.splunk.SavedSearchCollection;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
 import io.harness.eraro.ErrorCode;
@@ -143,6 +145,20 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
       throw new WingsException(ErrorCode.SPLUNK_CONFIGURATION_ERROR).addParam("reason", e);
     }
+  }
+
+  @Override
+  public List<SplunkSavedSearch> getSavedSearches(
+      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
+    Args queryArgs = new Args();
+    queryArgs.put("app", "search");
+    SavedSearchCollection savedSearchCollection = splunkService.getSavedSearches(queryArgs);
+    return savedSearchCollection.values()
+        .stream()
+        .map(splunkSearch
+            -> SplunkSavedSearch.builder().title(splunkSearch.getTitle()).searchQuery(splunkSearch.getSearch()).build())
+        .collect(Collectors.toList());
   }
 
   private void addThirdPartyAPILogRequestFields(

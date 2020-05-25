@@ -5,6 +5,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -90,5 +91,18 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
         .loadResponse(VerificationLoadResponse.builder().loadResponse(responseWithoutHost).isLoadPresent(true).build())
         .dataForNode(responseWithHost)
         .build();
+  }
+
+  @Override
+  public List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorId) {
+    final SettingAttribute settingAttribute = settingsService.get(connectorId);
+
+    Preconditions.checkNotNull(settingAttribute, "No SettingAttribute exist for given connectorId " + connectorId);
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+    SyncTaskContext taskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    return delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
+        .getSavedSearches((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails);
   }
 }
