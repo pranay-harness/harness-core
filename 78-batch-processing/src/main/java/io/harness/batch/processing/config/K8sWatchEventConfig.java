@@ -104,8 +104,12 @@ public class K8sWatchEventConfig {
       String uid = k8sWatchEvent.getResourceRef().getUid();
       Map<String, String> labels = workloadRepository.getWorkload(accountId, clusterId, uid)
                                        .map(K8sWorkload::getLabels)
+                                       .map(K8sWorkload::decodeDotsInKey)
                                        .orElse(Collections.emptyMap());
       Optional<HarnessServiceInfo> serviceInfo = k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(accountId, labels);
+      if (!serviceInfo.isPresent()) {
+        logger.warn("Harness svc info not found for accountId={}, clusterId={}, uid={}", accountId, clusterId, uid);
+      }
       return new EnrichedEvent<>(accountId, k8sWatchEventMsg.getOccurredAt(), k8sWatchEvent, serviceInfo.orElse(null));
     };
   }
@@ -161,6 +165,9 @@ public class K8sWatchEventConfig {
                           .clusterId(k8sWatchEvent.getClusterId())
                           .startTimestamp(enrichedK8sEvent.getOccurredAt())
                           .eventDescription(k8sWatchEvent.getDescription())
+                          .namespace(k8sWatchEvent.getResourceRef().getNamespace())
+                          .workloadName(k8sWatchEvent.getResourceRef().getName())
+                          .workloadType(k8sWatchEvent.getResourceRef().getKind())
                           .billingAmount(watchEventCostEstimator.estimateCost(enrichedK8sEvent))
                           .oldYamlRef(oldYamlRef)
                           .newYamlRef(newYamlRef);

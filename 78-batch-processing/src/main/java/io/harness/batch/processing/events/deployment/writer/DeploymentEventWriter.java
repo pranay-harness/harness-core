@@ -62,48 +62,57 @@ public class DeploymentEventWriter implements ItemWriter<List<String>> {
   }
 
   private void createCostEvent(String accountId, List<DeploymentSummary> deploymentSummaries) {
-    List<HarnessServiceInfo> harnessServiceInfoList =
-        cloudToHarnessMappingService.getHarnessServiceInfoList((List<DeploymentSummary>) deploymentSummaries);
-    Map<String, HarnessServiceInfo> infraMappingHarnessServiceInfo =
-        harnessServiceInfoList.stream().collect(Collectors.toMap(
-            HarnessServiceInfo::getInfraMappingId, Function.identity(), (existing, replacement) -> existing));
+    if (!deploymentSummaries.isEmpty()) {
+      List<HarnessServiceInfo> harnessServiceInfoList =
+          cloudToHarnessMappingService.getHarnessServiceInfoList(deploymentSummaries);
+      Map<String, HarnessServiceInfo> infraMappingHarnessServiceInfo =
+          harnessServiceInfoList.stream().collect(Collectors.toMap(
+              HarnessServiceInfo::getInfraMappingId, Function.identity(), (existing, replacement) -> existing));
 
-    List<String> resourceIdList =
-        harnessServiceInfoList.stream().map(HarnessServiceInfo::getServiceId).collect(Collectors.toList());
-    resourceIdList.addAll(
-        harnessServiceInfoList.stream().map(HarnessServiceInfo::getEnvId).collect(Collectors.toList()));
+      List<String> resourceIdList =
+          harnessServiceInfoList.stream().map(HarnessServiceInfo::getServiceId).collect(Collectors.toList());
+      resourceIdList.addAll(
+          harnessServiceInfoList.stream().map(HarnessServiceInfo::getEnvId).collect(Collectors.toList()));
 
-    List<ResourceLookup> resourceList = cloudToHarnessMappingService.getResourceList(accountId, resourceIdList);
-    Map<String, ResourceLookup> resourceLookupMap = resourceList.stream().collect(
-        Collectors.toMap(ResourceLookup::getResourceId, Function.identity(), (existing, replacement) -> existing));
+      List<ResourceLookup> resourceList = cloudToHarnessMappingService.getResourceList(accountId, resourceIdList);
+      Map<String, ResourceLookup> resourceLookupMap = resourceList.stream().collect(
+          Collectors.toMap(ResourceLookup::getResourceId, Function.identity(), (existing, replacement) -> existing));
 
-    List<CostEventData> cloudEventDataList = new ArrayList<>();
-    deploymentSummaries.forEach(deploymentSummary -> {
-      HarnessServiceInfo harnessServiceInfo = infraMappingHarnessServiceInfo.get(deploymentSummary.getInfraMappingId());
-      String serviceId = harnessServiceInfo.getServiceId();
-      String envId = harnessServiceInfo.getEnvId();
-      String serviceName =
-          resourceLookupMap.containsKey(serviceId) ? resourceLookupMap.get(serviceId).getResourceName() : serviceId;
-      String envName = resourceLookupMap.containsKey(envId) ? resourceLookupMap.get(envId).getResourceName() : envId;
-      String deploymentEventDescription = String.format(DEPLOYMENT_EVENT_DESCRIPTION, serviceName, envName);
-      CostEventData cloudEventData = CostEventData.builder()
-                                         .accountId(accountId)
-                                         .appId(harnessServiceInfo.getAppId())
-                                         .serviceId(serviceId)
-                                         .envId(envId)
-                                         .cloudProviderId(harnessServiceInfo.getCloudProviderId())
-                                         .deploymentId(deploymentSummary.getUuid())
-                                         .eventDescription(deploymentEventDescription)
-                                         .costEventType(CostEventType.DEPLOYMENT.name())
-                                         .costEventSource(CostEventSource.HARNESS_CD.name())
-                                         .startTimestamp(deploymentSummary.getDeployedAt())
-                                         .build();
-      logger.debug("cloud event data {}", cloudEventData.toString());
-      cloudEventDataList.add(cloudEventData);
-    });
+      List<CostEventData> cloudEventDataList = new ArrayList<>();
+      deploymentSummaries.forEach(deploymentSummary -> {
+        HarnessServiceInfo harnessServiceInfo =
+            infraMappingHarnessServiceInfo.get(deploymentSummary.getInfraMappingId());
+        if (null != harnessServiceInfo) {
+          String serviceId = harnessServiceInfo.getServiceId();
+          String envId = harnessServiceInfo.getEnvId();
+          String serviceName =
+              resourceLookupMap.containsKey(serviceId) ? resourceLookupMap.get(serviceId).getResourceName() : serviceId;
+          String envName =
+              resourceLookupMap.containsKey(envId) ? resourceLookupMap.get(envId).getResourceName() : envId;
+          String deploymentEventDescription = String.format(DEPLOYMENT_EVENT_DESCRIPTION, serviceName, envName);
+          CostEventData cloudEventData = CostEventData.builder()
+                                             .accountId(accountId)
+                                             .appId(harnessServiceInfo.getAppId())
+                                             .serviceId(serviceId)
+                                             .envId(envId)
+                                             .cloudProviderId(harnessServiceInfo.getCloudProviderId())
+                                             .deploymentId(deploymentSummary.getUuid())
+                                             .eventDescription(deploymentEventDescription)
+                                             .costEventType(CostEventType.DEPLOYMENT.name())
+                                             .costEventSource(CostEventSource.HARNESS_CD.name())
+                                             .startTimestamp(deploymentSummary.getDeployedAt())
+                                             .build();
+          logger.debug("cloud event data {}", cloudEventData.toString());
+          cloudEventDataList.add(cloudEventData);
+        } else {
+          logger.warn("Harness service info not found {} infra {}", deploymentSummary.getUuid(),
+              deploymentSummary.getInfraMappingId());
+        }
+      });
 
-    if (!cloudEventDataList.isEmpty()) {
-      costEventService.create(cloudEventDataList);
+      if (!cloudEventDataList.isEmpty()) {
+        costEventService.create(cloudEventDataList);
+      }
     }
   }
 }

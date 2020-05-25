@@ -31,7 +31,6 @@ import java.util.List;
 public class InstanceDataDaoImpl implements InstanceDataDao {
   @Autowired @Inject private HPersistence hPersistence;
   @Autowired private CostEventService costEventService;
-  private final boolean DEPLOYMENT_EVENT_ENABLED = false;
 
   @Override
   public boolean create(InstanceData instanceData) {
@@ -127,7 +126,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
       InstanceData savedInstanceData = hPersistence.upsert(query, updateOperations, findAndModifyOptions);
 
-      if (DEPLOYMENT_EVENT_ENABLED && savedInstanceData.getHarnessServiceInfo() != null) {
+      if (savedInstanceData.getHarnessServiceInfo() != null) {
         try {
           updateDeploymentEvent(savedInstanceData);
         } catch (Exception e) {

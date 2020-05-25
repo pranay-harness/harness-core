@@ -1,10 +1,6 @@
 package io.harness.batch.processing.schedule;
 
-import static io.harness.batch.processing.ccm.BatchJobType.DEPLOYMENT_EVENT;
-import static io.harness.batch.processing.ccm.BatchJobType.K8S_WATCH_EVENT;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-
-import com.google.common.collect.ImmutableSet;
 
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
@@ -52,13 +48,13 @@ public class EventJobScheduler {
     try {
       k8sUtilizationGranularDataService.purgeOldKubernetesUtilData();
     } catch (Exception ex) {
-      logger.error("Exception while running runTimescalePurgeJob {}", ex);
+      logger.error("Exception while running runTimescalePurgeJob", ex);
     }
 
     try {
       billingDataService.purgeOldHourlyBillingData();
     } catch (Exception ex) {
-      logger.error("Exception while running purgeOldHourlyBillingData Job {}", ex);
+      logger.error("Exception while running purgeOldHourlyBillingData Job", ex);
     }
   }
 
@@ -68,15 +64,13 @@ public class EventJobScheduler {
       weeklyReportService.generateAndSendWeeklyReport();
       logger.info("Weekly billing report generated and send");
     } catch (Exception ex) {
-      logger.error("Exception while running weeklyReportJob {}", ex);
+      logger.error("Exception while running weeklyReportJob", ex);
     }
   }
 
+  @SuppressWarnings("squid:S1166") // not required to rethrow exceptions.
   private void runJob(String accountId, Job job) {
     try {
-      if (ImmutableSet.of(DEPLOYMENT_EVENT, K8S_WATCH_EVENT).contains(BatchJobType.fromJob(job))) {
-        return;
-      }
       try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
         batchJobRunner.runJob(accountId, job);
       }
