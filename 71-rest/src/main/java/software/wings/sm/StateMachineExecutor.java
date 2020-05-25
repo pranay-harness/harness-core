@@ -116,6 +116,7 @@ import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
+import software.wings.sm.status.StateStatusUpdateInfo;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -1185,9 +1186,9 @@ public class StateMachineExecutor implements StateInspectionListener {
           stateExecutionInstance.getUuid(), status, existingExecutionStatus);
       return false;
     }
-
-    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated, stateExecutionInstance.getAppId(),
-        stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid(), status);
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
+        StateStatusUpdateInfo.buildFromStateExecutionInstance(
+            stateExecutionInstance, reason != null && RESUME_ALL == reason.getExecutionInterruptType()));
     return true;
   }
 
@@ -1316,9 +1317,14 @@ public class StateMachineExecutor implements StateInspectionListener {
       return false;
     }
 
-    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated, stateExecutionInstance.getAppId(),
-        stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid(), status);
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
+        StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance,
+            isApprovalResumed(stateExecutionInstance.getStateType(), stateExecutionInstance.getStatus())));
     return true;
+  }
+
+  private boolean isApprovalResumed(String stateType, ExecutionStatus status) {
+    return StateType.APPROVAL.name().equals(stateType) && SUCCESS == status;
   }
 
   /**
@@ -1565,8 +1571,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
       throw new WingsException(ErrorCode.RETRY_FAILED).addParam("displayName", stateExecutionInstance.getDisplayName());
     }
-    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated, stateExecutionInstance.getAppId(),
-        stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid(), NEW);
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
+        StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance, false));
   }
 
   private boolean markAbortingState(@NotNull ExecutionInterrupt workflowExecutionInterrupt,

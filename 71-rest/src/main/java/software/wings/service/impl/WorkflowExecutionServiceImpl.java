@@ -36,6 +36,7 @@ import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
 import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
@@ -55,6 +56,7 @@ import static software.wings.beans.ElementExecutionSummary.ElementExecutionSumma
 import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.FeatureName.NODE_AGGREGATION;
+import static software.wings.beans.FeatureName.WE_STATUS_UPDATE;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER;
@@ -276,6 +278,9 @@ import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.sm.states.HoldingScope;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstDeployStateExecutionData;
+import software.wings.sm.status.StateStatusUpdateInfo;
+import software.wings.sm.status.WorkflowStatusPropagator;
+import software.wings.sm.status.WorkflowStatusPropagatorFactory;
 
 import java.io.ObjectStreamClass;
 import java.util.ArrayList;
@@ -359,6 +364,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
   @Inject @AccountExpiryCheck private PreDeploymentChecker accountExpirationChecker;
+  @Inject private WorkflowStatusPropagatorFactory workflowStatusPropagatorFactory;
 
   @Override
   public HIterator<WorkflowExecution> executions(
@@ -689,7 +695,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                    pipelineStageExecution -> pipelineStageExecution.getStatus() == WAITING)) {
       pipelineExecution.setStatus(WAITING);
     } else if (stageExecutionDataList.stream().anyMatch(pipelineStageExecution
-                   -> pipelineStageExecution.getStatus() == PAUSED || pipelineStageExecution.getStatus() == PAUSING)) {
+                   -> pipelineStageExecution.getStatus() == PAUSED || pipelineStageExecution.getStatus() == PAUSING)
+        && stageExecutionDataList.stream().noneMatch(se -> RUNNING == se.getStatus())) {
       pipelineExecution.setStatus(PAUSED);
     } else {
       pipelineExecution.setStatus(workflowExecution.getStatus());
@@ -824,18 +831,21 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public void stateExecutionStatusUpdated(
-      String appId, String workflowExecution, String stateExecutionInstanceId, ExecutionStatus status) {
-    // Starting is always followed with running. No need to force calculation for it.
-    //    if (status == STARTING) {
-    //      return;
-    //    }
-    //
-    //    executorService.submit(() -> {
-    //      if (proactiveGraphRenderings.get() < MAX_PROACTIVE_GRAPH_RENDERINGS) {
-    //        final Tree ignore = calculateTree(null, appId, workflowExecution, ExecutionStatus.RUNNING, emptySet());
-    //      }
-    //    });
+  public void stateExecutionStatusUpdated(@NotNull StateStatusUpdateInfo updateInfo) {
+    try (AutoLogContext ignore = new WorkflowExecutionLogContext(updateInfo.getWorkflowExecutionId(), OVERRIDE_NESTS);
+         AutoLogContext ignore2 =
+             new StateExecutionInstanceLogContext(updateInfo.getStateExecutionInstanceId(), OVERRIDE_NESTS)) {
+      if (!featureFlagService.isEnabled(WE_STATUS_UPDATE, appService.getAccountIdByAppId(updateInfo.getAppId()))) {
+        return;
+      }
+      WorkflowStatusPropagator workflowStatusPropagator =
+          workflowStatusPropagatorFactory.obtainHandler(updateInfo.getStatus());
+      workflowStatusPropagator.handleStatusUpdate(updateInfo);
+    } catch (Exception e) {
+      // Ignore Exception for Now
+      logger.error("Status Update Failed from propagator Hooks ExecutionId: {}, Status : {}",
+          updateInfo.getWorkflowExecutionId(), updateInfo.getStatus());
+    }
   }
 
   @Value
@@ -895,18 +905,24 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     TreeBuilder treeBuilder = Tree.builder().key(workflowExecutionId).params(params).contextOrder(lastUpdate);
-    if (allInstancesIdMap.values().stream().anyMatch(
-            i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
-      treeBuilder.overrideStatus(ExecutionStatus.PAUSED);
-    } else if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
-      treeBuilder.overrideStatus(ExecutionStatus.WAITING);
+    if (featureFlagService.isEnabled(WE_STATUS_UPDATE, appService.getAccountIdByAppId(appId))) {
+      if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
+        treeBuilder.overrideStatus(ExecutionStatus.WAITING);
+      }
     } else {
-      List<ExecutionInterrupt> executionInterrupts =
-          executionInterruptManager.checkForExecutionInterrupt(appId, workflowExecutionId);
-      if (executionInterrupts != null
-          && executionInterrupts.stream().anyMatch(
-                 e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL && !e.isSeized())) {
+      if (allInstancesIdMap.values().stream().anyMatch(
+              i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
         treeBuilder.overrideStatus(ExecutionStatus.PAUSED);
+      } else if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
+        treeBuilder.overrideStatus(ExecutionStatus.WAITING);
+      } else {
+        List<ExecutionInterrupt> executionInterrupts =
+            executionInterruptManager.checkForExecutionInterrupt(appId, workflowExecutionId);
+        if (executionInterrupts != null
+            && executionInterrupts.stream().anyMatch(
+                   e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL && !e.isSeized())) {
+          treeBuilder.overrideStatus(ExecutionStatus.PAUSED);
+        }
       }
     }
 
