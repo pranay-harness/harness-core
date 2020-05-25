@@ -60,8 +60,13 @@ public class GcpBillingAccountServiceImpl implements GcpBillingAccountService {
   }
 
   @Override
-  public boolean delete(String billingAccountId) {
-    return gcpBillingAccountDao.delete(billingAccountId);
+  public boolean delete(String accountId, String organizationSettingId) {
+    return gcpBillingAccountDao.delete(accountId, organizationSettingId);
+  }
+
+  @Override
+  public boolean delete(String accountId, String organizationSettingId, String billingAccountId) {
+    return gcpBillingAccountDao.delete(accountId, organizationSettingId, billingAccountId);
   }
 
   @Override

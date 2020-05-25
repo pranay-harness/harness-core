@@ -10,6 +10,7 @@ public interface GcpBillingAccountService {
   GcpBillingAccount create(GcpBillingAccount billingAccount);
   GcpBillingAccount get(String billingAccountId);
   List<GcpBillingAccount> list(String accountId, String organizationSettingId);
-  boolean delete(String billingAccountId);
+  boolean delete(String accountId, String organizationSettingId);
+  boolean delete(String accountId, String organizationSettingId, String billingAccountId);
   void update(String billingAccountId, GcpBillingAccount billingAccount);
 }

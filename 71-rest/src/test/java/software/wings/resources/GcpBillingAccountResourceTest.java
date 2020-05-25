@@ -3,10 +3,12 @@ package software.wings.resources;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -43,6 +45,7 @@ public class GcpBillingAccountResourceTest extends CategoryTest {
   @Before
   public void setUp() {
     gcpBillingAccount = GcpBillingAccount.builder().accountId(accountId).build();
+    when(gcpBillingAccountService.get(eq(billingAccountId))).thenReturn(gcpBillingAccount);
   }
 
   @Test
@@ -98,6 +101,6 @@ public class GcpBillingAccountResourceTest extends CategoryTest {
         .target(format("/billing-accounts/%s/?accountId=%s", billingAccountId, accountId))
         .request()
         .delete();
-    verify(gcpBillingAccountService).delete(eq(billingAccountId));
+    verify(gcpBillingAccountService).delete(eq(accountId), anyString(), eq(billingAccountId));
   }
 }

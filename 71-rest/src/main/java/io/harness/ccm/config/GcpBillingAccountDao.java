@@ -1,11 +1,13 @@
 package io.harness.ccm.config;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 
 import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
 import io.harness.persistence.HPersistence;
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -28,8 +30,21 @@ public class GcpBillingAccountDao {
     return query.asList();
   }
 
-  public boolean delete(String billingAccountId) {
-    return persistence.delete(GcpBillingAccount.class, billingAccountId);
+  public boolean delete(String accountId, String organizationSettingId) {
+    return delete(accountId, organizationSettingId, null);
+  }
+
+  public boolean delete(String accountId, String organizationSettingId, String billingAccountId) {
+    checkArgument(isNotEmpty(organizationSettingId));
+    Query<GcpBillingAccount> query = persistence.createQuery(GcpBillingAccount.class)
+                                         .field(GcpBillingAccountKeys.accountId)
+                                         .equal(accountId)
+                                         .field(GcpBillingAccountKeys.organizationSettingId)
+                                         .equal(organizationSettingId);
+    if (isNotEmpty(billingAccountId)) {
+      query.field(GcpBillingAccountKeys.uuid).equal(new ObjectId(billingAccountId));
+    }
+    return persistence.delete(query);
   }
 
   public GcpBillingAccount upsert(GcpBillingAccount billingAccount) {
