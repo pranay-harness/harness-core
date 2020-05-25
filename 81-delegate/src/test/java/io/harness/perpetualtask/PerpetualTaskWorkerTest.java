@@ -1,11 +1,8 @@
 package io.harness.perpetualtask;
 
-import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -19,6 +16,7 @@ import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
 import io.harness.perpetualtask.k8s.watch.K8sWatchTaskParams;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoUtils;
+import io.harness.threading.Concurrent;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Rule;
@@ -30,7 +28,11 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.KubernetesClusterConfig;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 public class PerpetualTaskWorkerTest extends CategoryTest {
@@ -71,39 +73,56 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = HANTANG)
-  @Category(UnitTests.class)
-  public void testUpdateAssignedTaskIds() {
-    worker.updateAssignedTaskIds();
-    verify(perpetualTaskServiceGrpcClient).perpetualTaskList(anyString());
-  }
-
-  @Test
-  @Owner(developers = HANTANG)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testStartTask() {
-    worker.startTask(task1);
-    worker.startTask(task2);
+    Concurrent.test(10, n -> {
+      worker.startTask(task1);
+      worker.startTask(task2);
+    });
     assertThat(worker.getRunningTaskMap()).hasSize(2);
   }
 
   @Test
-  @Owner(developers = HANTANG)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void testStartAssignedTasks() {
+  public void testStopTasks() {
     worker.startTask(task1);
     worker.startTask(task2);
-    worker.startAssignedTasks();
-    verify(perpetualTaskServiceGrpcClient, times(2)).perpetualTaskContext(isA(PerpetualTaskId.class));
+    Concurrent.test(10, n -> {
+      worker.stopTask(task1.getTaskId());
+      worker.stopTask(task2.getTaskId());
+    });
+    assertThat(worker.getRunningTaskMap()).hasSize(0);
   }
 
   @Test
-  @Owner(developers = HANTANG)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void testStopTask() {
-    worker.startTask(task1);
-    assertThat(worker.getRunningTaskMap()).hasSize(1);
-    worker.stopTask(taskId1);
-    assertThat(worker.getRunningTaskMap()).hasSize(0);
+  public void testSplitTasks() {
+    Set<PerpetualTaskId> runningTaskSet = new HashSet<>();
+    List<PerpetualTaskAssignDetails> assignedTasks = new ArrayList<>();
+    Set<PerpetualTaskId> stopTasks = new HashSet<>();
+    List<PerpetualTaskAssignDetails> startTasks = new ArrayList<>();
+
+    PerpetualTaskWorker.splitTasks(runningTaskSet, assignedTasks, stopTasks, startTasks);
+    assertThat(stopTasks).isEmpty();
+    assertThat(startTasks).isEmpty();
+
+    runningTaskSet.add(task1.getTaskId());
+    PerpetualTaskWorker.splitTasks(runningTaskSet, assignedTasks, stopTasks, startTasks);
+    assertThat(stopTasks).containsExactly(task1.getTaskId());
+    assertThat(startTasks).isEmpty();
+    stopTasks.clear();
+
+    assignedTasks.add(PerpetualTaskAssignDetails.newBuilder().setTaskId(task1.getTaskId()).build());
+    PerpetualTaskWorker.splitTasks(runningTaskSet, assignedTasks, stopTasks, startTasks);
+    assertThat(stopTasks).isEmpty();
+    assertThat(startTasks).isEmpty();
+
+    assignedTasks.add(PerpetualTaskAssignDetails.newBuilder().setTaskId(task2.getTaskId()).build());
+    PerpetualTaskWorker.splitTasks(runningTaskSet, assignedTasks, stopTasks, startTasks);
+    assertThat(stopTasks).isEmpty();
+    assertThat(startTasks).containsExactly(assignedTasks.get(1));
   }
 }

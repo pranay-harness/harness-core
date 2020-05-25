@@ -53,7 +53,9 @@ public class PerpetualTaskLifecycleManager {
 
   void stopTask() {
     try {
-      perpetualTaskExecutor.cleanup(taskId, params);
+      if (perpetualTaskExecutor != null) {
+        perpetualTaskExecutor.cleanup(taskId, params);
+      }
     } catch (Exception ex) {
       logger.error("Error while stopping task ", ex);
     }
