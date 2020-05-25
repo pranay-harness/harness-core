@@ -11,21 +11,20 @@ import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ExecutionStatus;
+import io.harness.delay.SimpleNotifier;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.state.Step;
 import io.harness.state.StepType;
+import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.WaitStateExecutionData;
-import software.wings.sm.ExecutionStatusData;
-import software.wings.sm.states.SimpleNotifier;
 
 import java.util.List;
 import java.util.Map;
@@ -48,7 +47,7 @@ public class WaitStep implements Step, AsyncExecutable {
     WaitStepParameters parameters = (WaitStepParameters) stepParameters;
     String resumeId = generateUuid();
     executorService.schedule(new SimpleNotifier(waitNotifyEngine, resumeId,
-                                 ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build()),
+                                 StatusNotifyResponseData.builder().status(NodeExecutionStatus.SUCCEEDED).build()),
         parameters.getWaitDurationSeconds(), TimeUnit.SECONDS);
     return AsyncExecutableResponse.builder().callbackId(resumeId).build();
   }

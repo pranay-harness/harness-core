@@ -2,7 +2,7 @@ package io.harness.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ALEXEI;
-import static io.harness.utils.TestAsyncStep.ASYNC_STEP_TYPE;
+import static io.harness.utils.steps.TestAsyncStep.ASYNC_STEP_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -22,7 +22,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.execution.status.ExecutionInstanceStatus;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.DefaultFacilitatorParams;
@@ -31,7 +30,6 @@ import io.harness.facilitator.FacilitatorType;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.maintenance.MaintenanceGuard;
-import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
 import io.harness.registries.adviser.AdviserRegistry;
@@ -43,22 +41,20 @@ import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
 import io.harness.testlib.RealMongo;
-import io.harness.utils.TestAsyncStep;
-import io.harness.utils.TestStepParameters;
-import org.awaitility.Awaitility;
+import io.harness.utils.steps.TestAsyncStep;
+import io.harness.utils.steps.TestStepParameters;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class ExecutionEngineTest extends OrchestrationTest {
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private StepRegistry stepRegistry;
-  @Inject private HPersistence hPersistence;
   @Inject private ExecutionEngine executionEngine;
+  @Inject private EngineTestHelper engineTestHelper;
 
   private static final AdviserType TEST_ADVISER_TYPE =
       AdviserType.builder().type("TEST_HTTP_RESPONSE_CODE_SWITCH").build();
@@ -101,8 +97,8 @@ public class ExecutionEngineTest extends OrchestrationTest {
 
     PlanExecution response = executionEngine.startExecution(oneNodePlan, user);
 
-    waitForPlanCompletion(response.getUuid());
-    response = getPlanExecutionStatus(response.getUuid());
+    engineTestHelper.waitForPlanCompletion(response.getUuid());
+    response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
 
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(ExecutionInstanceStatus.SUCCEEDED);
@@ -152,8 +148,8 @@ public class ExecutionEngineTest extends OrchestrationTest {
 
     PlanExecution response = executionEngine.startExecution(oneNodePlan, user);
 
-    waitForPlanCompletion(response.getUuid());
-    response = getPlanExecutionStatus(response.getUuid());
+    engineTestHelper.waitForPlanCompletion(response.getUuid());
+    response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
 
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(ExecutionInstanceStatus.SUCCEEDED);
@@ -208,8 +204,8 @@ public class ExecutionEngineTest extends OrchestrationTest {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
       PlanExecution response = executionEngine.startExecution(oneNodePlan, user);
 
-      waitForPlanCompletion(response.getUuid());
-      response = getPlanExecutionStatus(response.getUuid());
+      engineTestHelper.waitForPlanCompletion(response.getUuid());
+      response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
 
       assertThat(response).isNotNull();
       assertThat(response.getStatus()).isEqualTo(ExecutionInstanceStatus.SUCCEEDED);
@@ -236,21 +232,6 @@ public class ExecutionEngineTest extends OrchestrationTest {
     assertThatThrownBy(() -> executionEngine.startExecution(oneNodePlan, user))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageStartingWith(exceptionStartMessage);
-  }
-
-  private void waitForPlanCompletion(String uuid) {
-    final String finalStatusEnding = "ED";
-    Awaitility.await().atMost(15, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
-      final PlanExecution planExecution = getPlanExecutionStatus(uuid);
-      return planExecution != null && planExecution.getStatus().name().endsWith(finalStatusEnding);
-    });
-  }
-
-  private PlanExecution getPlanExecutionStatus(String uuid) {
-    return hPersistence.createQuery(PlanExecution.class)
-        .filter(PlanExecutionKeys.uuid, uuid)
-        .project(PlanExecutionKeys.status, true)
-        .get();
   }
 
   private static class TestHttpResponseCodeSwitchAdviser implements Adviser {

@@ -14,7 +14,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
@@ -49,7 +48,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
-@ExcludeRedesign
 public class AbortAllHandler implements InterruptHandler {
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private InterruptService interruptService;
@@ -64,8 +62,11 @@ public class AbortAllHandler implements InterruptHandler {
     Interrupt savedInterrupt =
         hPersistence.createQuery(Interrupt.class).filter(InterruptKeys.uuid, savedInterruptId).get();
     handleInternal(savedInterrupt);
-    interruptService.seize(savedInterrupt.getUuid());
-    return savedInterrupt;
+    Interrupt seizedInterrupt = interruptService.seize(savedInterrupt.getUuid());
+    if (seizedInterrupt == null) {
+      throw new InvalidRequestException("Cannot seized the handled ABORT_ALL interrupt {}:" + interrupt.getUuid());
+    }
+    return seizedInterrupt;
   }
 
   private String validateAndSave(@Valid @NonNull Interrupt interrupt) {
@@ -77,9 +78,9 @@ public class AbortAllHandler implements InterruptHandler {
       return hPersistence.save(interrupt);
     }
 
-    List<Boolean> seizeResults = new ArrayList<>();
-    interrupts.forEach(savedInterrupt -> seizeResults.add(interruptService.seize(savedInterrupt.getUuid())));
-    if (seizeResults.stream().allMatch(res -> res)) {
+    List<Interrupt> seizedInterrupts = new ArrayList<>();
+    interrupts.forEach(savedInterrupt -> seizedInterrupts.add(interruptService.seize(savedInterrupt.getUuid())));
+    if (seizedInterrupts.stream().allMatch(Interrupt::isSeized)) {
       return hPersistence.save(interrupt);
     }
     throw new InvalidRequestException("Cannot Validate and save Interrupt", USER);
