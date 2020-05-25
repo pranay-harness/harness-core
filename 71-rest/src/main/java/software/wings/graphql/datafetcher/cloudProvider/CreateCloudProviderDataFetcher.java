@@ -29,6 +29,7 @@ public class CreateCloudProviderDataFetcher
   @Inject private GcpDataFetcherHelper gcpDataFetcherHelper;
   @Inject private K8sDataFetcherHelper k8sDataFetcherHelper;
   @Inject private PhysicalDataCenterDataFetcherHelper physicalDataCenterDataFetcherHelper;
+  @Inject private AzureDataFetcherHelper azureDataFetcherHelper;
 
   public CreateCloudProviderDataFetcher() {
     super(QLCreateCloudProviderInput.class, QLCreateCloudProviderPayload.class);
@@ -71,6 +72,11 @@ public class CreateCloudProviderDataFetcher
         checkIfInputIsNotPresent(input.getCloudProviderType(), input.getPhysicalDataCenterCloudProvider());
         settingAttribute = physicalDataCenterDataFetcherHelper.toSettingAttribute(
             input.getPhysicalDataCenterCloudProvider(), mutationContext.getAccountId());
+        break;
+      case AZURE:
+        checkIfInputIsNotPresent(input.getCloudProviderType(), input.getAzureCloudProvider());
+        settingAttribute =
+            azureDataFetcherHelper.toSettingAttribute(input.getAzureCloudProvider(), mutationContext.getAccountId());
         break;
       default:
         throw new InvalidRequestException("Invalid cloud provider Type");
