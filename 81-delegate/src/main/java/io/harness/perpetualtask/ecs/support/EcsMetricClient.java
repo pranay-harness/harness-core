@@ -5,6 +5,7 @@ import static com.amazonaws.services.cloudwatch.model.Statistic.Maximum;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -31,6 +32,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -98,19 +100,21 @@ public class EcsMetricClient {
         }
       }
     }
-    final Map<String, MetricDataResult> metricDataResultMap =
-        awsCloudWatchHelperServiceDelegate
-            .getMetricData(AwsCloudWatchMetricDataRequest.builder()
-                               .awsConfig(awsConfig)
-                               .encryptionDetails(encryptionDetails)
-                               .region(ecsPerpetualTaskParams.getRegion())
-                               .startTime(startTime)
-                               .endTime(endTime)
-                               .metricDataQueries(aggregatedQuery)
-                               .build())
-            .getMetricDataResults()
-            .stream()
-            .collect(Collectors.toMap(MetricDataResult::getId, Function.identity()));
+    final Map<String, MetricDataResult> metricDataResultMap = new HashMap<>();
+    Iterables.partition(aggregatedQuery, AwsCloudWatchHelperServiceDelegate.MAX_QUERIES_PER_CALL).forEach(part -> {
+      metricDataResultMap.putAll(awsCloudWatchHelperServiceDelegate
+                                     .getMetricData(AwsCloudWatchMetricDataRequest.builder()
+                                                        .awsConfig(awsConfig)
+                                                        .encryptionDetails(encryptionDetails)
+                                                        .region(ecsPerpetualTaskParams.getRegion())
+                                                        .startTime(startTime)
+                                                        .endTime(endTime)
+                                                        .metricDataQueries(part)
+                                                        .build())
+                                     .getMetricDataResults()
+                                     .stream()
+                                     .collect(Collectors.toMap(MetricDataResult::getId, Function.identity())));
+    });
 
     List<EcsUtilization> utilizationMetrics = new ArrayList<>();
     // Add service level metrics

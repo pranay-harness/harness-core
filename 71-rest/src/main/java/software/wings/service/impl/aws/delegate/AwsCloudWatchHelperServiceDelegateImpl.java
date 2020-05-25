@@ -11,6 +11,7 @@ import com.amazonaws.services.cloudwatch.model.GetMetricDataRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricDataResult;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
+import com.amazonaws.services.cloudwatch.model.MetricDataResult;
 import io.harness.beans.ExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import software.wings.service.impl.aws.model.response.AwsCloudWatchMetricDataRes
 import software.wings.service.impl.aws.model.response.AwsCloudWatchStatisticsResponse;
 import software.wings.service.intfc.aws.delegate.AwsCloudWatchHelperServiceDelegate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
@@ -57,10 +59,17 @@ public class AwsCloudWatchHelperServiceDelegateImpl
                                                  .withStartTime(request.getStartTime())
                                                  .withEndTime(request.getEndTime())
                                                  .withMetricDataQueries(request.getMetricDataQueries());
-    GetMetricDataResult metricDataResult =
-        getMetricData(metricDataRequest, request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion());
+    List<MetricDataResult> metricDataResults = new ArrayList<>();
+    String nextToken = null;
+    do {
+      metricDataRequest.withNextToken(nextToken);
+      GetMetricDataResult metricDataResult =
+          getMetricData(metricDataRequest, request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion());
+      metricDataResults.addAll(metricDataResult.getMetricDataResults());
+      nextToken = metricDataResult.getNextToken();
+    } while (nextToken != null);
     return AwsCloudWatchMetricDataResponse.builder()
-        .metricDataResults(metricDataResult.getMetricDataResults())
+        .metricDataResults(metricDataResults)
         .executionStatus(ExecutionStatus.SUCCESS)
         .build();
   }

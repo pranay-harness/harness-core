@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
 
 import com.amazonaws.services.cloudwatch.model.MetricDataResult;
 import com.amazonaws.services.ecs.model.Cluster;
@@ -37,6 +38,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EcsMetricClientTest extends CategoryTest {
@@ -138,5 +141,42 @@ public class EcsMetricClientTest extends CategoryTest {
     assertThat(request.getRegion()).isEqualTo(region);
     // #(metrics)*#(stats)*#(clusters)*(1+#(services))
     assertThat(request.getMetricDataQueries()).hasSize(12);
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldMakePartitionedAggregatedQuery() throws Exception {
+    AwsConfig awsConfig = AwsConfig.builder().build();
+    List<EncryptedDataDetail> encryptionDetails = emptyList();
+    String region = "region";
+    String clusterId = "clusterId";
+    String settingId = "settingId";
+    EcsPerpetualTaskParams ecsPerpetualTaskParams =
+        EcsPerpetualTaskParams.newBuilder().setRegion(region).setClusterId(clusterId).setSettingId(settingId).build();
+    Instant now = Instant.now().truncatedTo(ChronoUnit.HOURS);
+    Date startTime = Date.from(now.minus(1, ChronoUnit.HOURS));
+    Date endTime = Date.from(now);
+    Cluster cluster = new Cluster().withClusterName("cluster1").withClusterArn("cluster1-arn");
+
+    List<Service> services =
+        IntStream.rangeClosed(1, 200)
+            .mapToObj(i -> new Service().withServiceName("svc" + i).withServiceArn("svc" + i + "-arn"))
+            .collect(Collectors.toList());
+
+    given(awsCloudWatchHelperServiceDelegate.getMetricData(any(AwsCloudWatchMetricDataRequest.class)))
+        .willReturn(AwsCloudWatchMetricDataResponse.builder().metricDataResults(emptyList()).build());
+
+    ecsMetricClient.getUtilizationMetrics(
+        awsConfig, encryptionDetails, startTime, endTime, cluster, services, ecsPerpetualTaskParams);
+
+    then(awsCloudWatchHelperServiceDelegate).should(times(2)).getMetricData(captor.capture());
+    List<AwsCloudWatchMetricDataRequest> requests = captor.getAllValues();
+
+    // Total = 4*(200+1) = 804
+    // 500 max per call
+    // So 500 in 1st call, 304 in 2nd call
+    assertThat(requests.get(0).getMetricDataQueries()).hasSize(500);
+    assertThat(requests.get(1).getMetricDataQueries()).hasSize(304);
   }
 }
