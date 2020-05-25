@@ -36,12 +36,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>41-cv-nextgen-beans</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>42-cv-nextgen-commons</artifactId>
+            <artifactId>66-cv-nextgen-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
