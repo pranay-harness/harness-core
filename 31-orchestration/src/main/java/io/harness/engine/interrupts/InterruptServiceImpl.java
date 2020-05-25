@@ -5,6 +5,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.persistence.HIterator;
@@ -27,7 +28,11 @@ public class InterruptServiceImpl implements InterruptService {
         hPersistence.createUpdateOperations(Interrupt.class).set(InterruptKeys.seized, Boolean.TRUE);
 
     Query<Interrupt> interruptQuery = hPersistence.createQuery(Interrupt.class).filter(InterruptKeys.uuid, interruptId);
-    return hPersistence.findAndModify(interruptQuery, updateOps, HPersistence.returnNewOptions);
+    Interrupt seizedInterrupt = hPersistence.findAndModify(interruptQuery, updateOps, HPersistence.returnNewOptions);
+    if (seizedInterrupt == null) {
+      throw new InvalidRequestException("Cannot seize the interrupt {} with id :" + interruptId);
+    }
+    return seizedInterrupt;
   }
 
   @Override

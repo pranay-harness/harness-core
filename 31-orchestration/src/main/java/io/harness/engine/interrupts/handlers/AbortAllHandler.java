@@ -57,16 +57,11 @@ public class AbortAllHandler implements InterruptHandler {
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
 
   @Override
-  public Interrupt handleInterrupt(Interrupt interrupt) {
+  public Interrupt registerInterrupt(Interrupt interrupt) {
     String savedInterruptId = validateAndSave(interrupt);
     Interrupt savedInterrupt =
         hPersistence.createQuery(Interrupt.class).filter(InterruptKeys.uuid, savedInterruptId).get();
-    handleInternal(savedInterrupt);
-    Interrupt seizedInterrupt = interruptService.seize(savedInterrupt.getUuid());
-    if (seizedInterrupt == null) {
-      throw new InvalidRequestException("Cannot seized the handled ABORT_ALL interrupt {}:" + interrupt.getUuid());
-    }
-    return seizedInterrupt;
+    return handleInterrupt(savedInterrupt);
   }
 
   private String validateAndSave(@Valid @NonNull Interrupt interrupt) {
@@ -86,20 +81,25 @@ public class AbortAllHandler implements InterruptHandler {
     throw new InvalidRequestException("Cannot Validate and save Interrupt", USER);
   }
 
-  void handleInternal(@NonNull @Valid Interrupt interrupt) {
+  @Override
+  public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt) {
     if (!markAbortingState(interrupt, NodeExecutionStatus.abortableStatuses())) {
-      return;
+      return interrupt;
     }
+
     List<NodeExecution> discontinuingNodeExecutions =
         nodeExecutionService.fetchNodeExecutionsByStatus(interrupt.getPlanExecutionId(), DISCONTINUING);
+
     if (isEmpty(discontinuingNodeExecutions)) {
       logger.warn("ABORT_ALL Interrupt being ignored as no running instance found for planExecutionId: {}",
           interrupt.getUuid());
-      return;
+      return interruptService.seize(interrupt.getUuid());
     }
+
     for (NodeExecution discontinuingNodeExecution : discontinuingNodeExecutions) {
       discontinueMarkedInstance(discontinuingNodeExecution);
     }
+    return interruptService.seize(interrupt.getUuid());
   }
 
   private void discontinueMarkedInstance(NodeExecution nodeExecution) {

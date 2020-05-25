@@ -22,6 +22,6 @@ public class InterruptManager {
                               .nodeExecutionId(nodeExecutionId)
                               .build();
     InterruptHandler interruptHandler = interruptHandlerFactory.obtainHandler(interruptType);
-    return interruptHandler.handleInterrupt(interrupt);
+    return interruptHandler.registerInterrupt(interrupt);
   }
 }
