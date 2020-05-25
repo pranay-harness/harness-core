@@ -23,14 +23,17 @@ public class GcpOrganizationServiceImpl implements GcpOrganizationService {
   private SettingsService settingsService;
   private CeConnectorDao ceConnectorDao;
   private CEGcpServiceAccountService ceGcpServiceAccountService;
+  private GcpBillingAccountService gcpBillingAccountService;
 
   @Inject
   public GcpOrganizationServiceImpl(GcpOrganizationDao gcpOrganizationDao, CeConnectorDao ceConnectorDao,
-      SettingsService settingsService, CEGcpServiceAccountService ceGcpServiceAccountService) {
+      SettingsService settingsService, CEGcpServiceAccountService ceGcpServiceAccountService,
+      GcpBillingAccountService gcpBillingAccountService) {
     this.gcpOrganizationDao = gcpOrganizationDao;
     this.ceConnectorDao = ceConnectorDao;
     this.settingsService = settingsService;
     this.ceGcpServiceAccountService = ceGcpServiceAccountService;
+    this.gcpBillingAccountService = gcpBillingAccountService;
   }
 
   @Override
@@ -82,9 +85,11 @@ public class GcpOrganizationServiceImpl implements GcpOrganizationService {
     return gcpOrganizationDao.list(accountId);
   }
 
+  @Override
   public boolean delete(String accountId, String uuid) {
+    gcpBillingAccountService.delete(accountId, uuid);
     SettingAttribute settingAttribute = ceConnectorDao.getCEGcpConfig(accountId, uuid);
     settingsService.delete(GLOBAL_APP_ID, settingAttribute.getUuid());
-    return gcpOrganizationDao.delete(uuid);
+    return gcpOrganizationDao.delete(accountId, uuid);
   }
 }

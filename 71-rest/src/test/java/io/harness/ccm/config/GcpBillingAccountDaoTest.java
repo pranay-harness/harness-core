@@ -17,14 +17,21 @@ import java.util.List;
 
 public class GcpBillingAccountDaoTest extends WingsBaseTest {
   private String accountId = "ACCOUNT_ID";
+  private String gcpOrganizationUuid = "1";
   private GcpBillingAccount gcpBillingAccount1;
   private GcpBillingAccount gcpBillingAccount2;
+  @Inject private GcpOrganizationDao gcpOrganizationDao;
   @Inject private GcpBillingAccountDao gcpBillingAccountDao;
 
   @Before
   public void setUp() {
-    gcpBillingAccount1 = GcpBillingAccount.builder().accountId(accountId).build();
-    gcpBillingAccount2 = GcpBillingAccount.builder().accountId(accountId).exportEnabled(true).build();
+    gcpBillingAccount1 =
+        GcpBillingAccount.builder().accountId(accountId).organizationSettingId(gcpOrganizationUuid).build();
+    gcpBillingAccount2 = GcpBillingAccount.builder()
+                             .accountId(accountId)
+                             .organizationSettingId(gcpOrganizationUuid)
+                             .exportEnabled(true)
+                             .build();
   }
 
   @Test
@@ -49,9 +56,15 @@ public class GcpBillingAccountDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void testDelete() {
-    String billingAccountId = gcpBillingAccountDao.save(gcpBillingAccount1);
-    boolean result = gcpBillingAccountDao.delete(billingAccountId);
+  public void shouldDelete() {
+    GcpOrganization upsertedGcpOrganization = gcpOrganizationDao.upsert(GcpOrganization.builder().build());
+    gcpBillingAccount1 = GcpBillingAccount.builder()
+                             .accountId(accountId)
+                             .organizationSettingId(upsertedGcpOrganization.getUuid())
+                             .build();
+    GcpBillingAccount upsertedGcpBillingAccount = gcpBillingAccountDao.upsert(gcpBillingAccount1);
+    boolean result =
+        gcpBillingAccountDao.delete(accountId, upsertedGcpOrganization.getUuid(), upsertedGcpBillingAccount.getUuid());
     assertThat(result).isTrue();
   }
 

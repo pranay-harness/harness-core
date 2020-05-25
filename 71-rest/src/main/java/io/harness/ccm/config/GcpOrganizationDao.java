@@ -48,8 +48,11 @@ public class GcpOrganizationDao {
     return query.asList();
   }
 
-  public boolean delete(String uuid) {
-    return persistence.delete(
-        persistence.createQuery(GcpOrganization.class).filter(GcpOrganizationKeys.uuid, new ObjectId(uuid)));
+  public boolean delete(String accountId, String uuid) {
+    Query<GcpOrganization> query = persistence.createQuery(GcpOrganization.class)
+                                       .field(GcpOrganizationKeys.accountId)
+                                       .equal(accountId)
+                                       .filter(GcpOrganizationKeys.uuid, new ObjectId(uuid));
+    return persistence.delete(query);
   }
 }

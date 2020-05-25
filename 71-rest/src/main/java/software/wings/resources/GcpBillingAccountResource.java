@@ -90,7 +90,9 @@ public class GcpBillingAccountResource {
   @ExceptionMetered
   public RestResponse delete(
       @NotEmpty @QueryParam("accountId") String accountId, @PathParam("id") String billingAccountId) {
-    gcpBillingAccountService.delete(billingAccountId);
+    GcpBillingAccount gcpBillingAccount = gcpBillingAccountService.get(billingAccountId);
+    gcpBillingAccountService.delete(
+        gcpBillingAccount.getAccountId(), gcpBillingAccount.getOrganizationSettingId(), billingAccountId);
     return new RestResponse();
   }
 }

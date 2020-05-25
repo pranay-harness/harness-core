@@ -44,6 +44,7 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
   @Mock private SettingsService settingsService;
   @Mock private CeConnectorDao ceConnectorDao;
   @Mock private CEGcpServiceAccountService ceGcpServiceAccountService;
+  @Mock private GcpBillingAccountService gcpBillingAccountService;
   @InjectMocks private GcpOrganizationServiceImpl gcpOrganizationService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -99,6 +100,6 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
     when(ceConnectorDao.getCEGcpConfig(eq(accountId), eq(organizationUuid))).thenReturn(settingAttribute);
     gcpOrganizationService.delete(accountId, organizationUuid);
     verify(settingsService).delete(eq(GLOBAL_APP_ID), eq(settingAttributeUuid));
-    verify(gcpOrganizationDao).delete(organizationUuid);
+    verify(gcpOrganizationDao).delete(eq(accountId), eq(organizationUuid));
   }
 }
