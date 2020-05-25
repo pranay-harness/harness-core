@@ -5,6 +5,7 @@ import io.harness.beans.PageResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.security.encryption.SecretVariable;
 import io.harness.stream.BoundedInputStream;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
@@ -65,7 +66,8 @@ public interface SecretManager extends OwnedByAccount {
   String encrypt(String accountId, String secret, UsageRestrictions usageRestrictions);
 
   EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret, String secretPath,
-      EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions);
+      Set<SecretVariable> parameters, EncryptedData encryptedData, String secretName,
+      UsageRestrictions usageRestrictions);
 
   Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId);
 

@@ -397,6 +397,7 @@ import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.SecretManagerConfigServiceImpl;
 import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.impl.security.VaultServiceImpl;
+import software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerEncryptionServiceImpl;
 import software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerServiceImpl;
 import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl;
@@ -578,6 +579,7 @@ import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.service.intfc.scalyr.ScalyrService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
+import software.wings.service.intfc.security.CustomSecretsManagerEncryptionService;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -875,6 +877,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(CommandLibraryService.class).to(CommandLibraryServiceImpl.class);
     bind(ErrorReporter.class).to(BugsnagErrorReporter.class);
     bind(CustomSecretsManagerService.class).to(CustomSecretsManagerServiceImpl.class);
+    bind(CustomSecretsManagerEncryptionService.class).to(CustomSecretsManagerEncryptionServiceImpl.class);
 
     requestStaticInjection(EncryptedData.class);
 

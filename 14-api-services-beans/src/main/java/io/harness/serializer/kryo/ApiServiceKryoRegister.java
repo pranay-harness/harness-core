@@ -54,6 +54,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.security.encryption.SecretVariable;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
@@ -124,5 +125,6 @@ public class ApiServiceKryoRegister implements KryoRegistrar {
     kryo.register(InstanceDetails.InstanceType.class, 1409);
     kryo.register(InstanceDetails.PHYSICAL_HOST.class, 1411);
     kryo.register(InstanceDetails.K8s.class, 1412);
+    kryo.register(SecretVariable.class, 1413);
   }
 }

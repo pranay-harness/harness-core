@@ -1,4 +1,4 @@
-package software.wings.security.encryption;
+package io.harness.security.encryption;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -7,7 +7,7 @@ import lombok.Value;
 
 @Value
 @Builder
-@EqualsAndHashCode(exclude = "value")
+@EqualsAndHashCode
 public class SecretVariable {
   @NonNull private String name;
   @NonNull private String value;

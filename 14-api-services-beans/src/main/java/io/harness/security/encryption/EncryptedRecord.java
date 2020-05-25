@@ -1,5 +1,7 @@
 package io.harness.security.encryption;
 
+import java.util.Set;
+
 /**
  * An interface to abstract the basic information available from an encrypted record.
  *
@@ -9,6 +11,7 @@ public interface EncryptedRecord {
   String getUuid();
   String getName();
   String getPath(); // Only relevant if this is a record encrypted by Vault.
+  Set<SecretVariable> getSecretVariables();
   String getEncryptionKey();
   char[] getEncryptedValue();
   String getKmsId();

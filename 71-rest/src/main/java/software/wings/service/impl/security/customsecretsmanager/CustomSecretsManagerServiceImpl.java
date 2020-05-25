@@ -17,6 +17,7 @@ import io.harness.eraro.Level;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.NoResultFoundException;
 import io.harness.exception.UnexpectedException;
+import io.harness.security.encryption.SecretVariable;
 import lombok.NonNull;
 import org.mongodb.morphia.query.Query;
 import software.wings.annotation.EncryptableSetting;
@@ -24,7 +25,6 @@ import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
-import software.wings.security.encryption.SecretVariable;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig.CustomSecretsManagerConfigKeys;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
@@ -51,13 +51,16 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
   @Override
   public CustomSecretsManagerConfig getSecretsManager(String accountId, String configId) {
     CustomSecretsManagerConfig customSecretsManagerConfig = getSecretsManagerInternal(accountId, configId);
+    setAdditionalDetails(customSecretsManagerConfig);
+    return customSecretsManagerConfig;
+  }
 
+  @Override
+  public void setAdditionalDetails(@NonNull CustomSecretsManagerConfig customSecretsManagerConfig) {
     setShellScriptInConfig(customSecretsManagerConfig);
     if (!(customSecretsManagerConfig.isExecuteOnDelegate() || customSecretsManagerConfig.isConnectorTemplatized())) {
       setConnectorInConfig(customSecretsManagerConfig, new HashSet<>());
     }
-
-    return customSecretsManagerConfig;
   }
 
   @Override

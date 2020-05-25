@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 
+import java.util.Set;
+
 /*
  * Encrypted record data implements EncryptedRecord for serialization purposes between the manager and the delegate.
  */
@@ -16,6 +18,7 @@ public class EncryptedRecordData implements EncryptedRecord {
   private String uuid;
   private String name;
   private String path;
+  private Set<SecretVariable> secretVariables;
   private String encryptionKey;
   private char[] encryptedValue;
   private String kmsId;

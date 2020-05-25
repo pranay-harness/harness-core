@@ -261,8 +261,8 @@ public class CyberArkTest extends WingsBaseTest {
     saveCyberArkConfig();
 
     // Encrypt of path reference will use a CyberArk decryption to validate the reference
-    EncryptedData encryptedData = secretManager.encrypt(
-        accountId, SettingVariableTypes.ARTIFACTORY, null, queryAsPath, null, secretName, new UsageRestrictions());
+    EncryptedData encryptedData = secretManager.encrypt(accountId, SettingVariableTypes.ARTIFACTORY, null, queryAsPath,
+        null, null, secretName, new UsageRestrictions());
     assertThat(encryptedData).isNotNull();
     assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.CYBERARK);
     assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.ARTIFACTORY);
@@ -271,7 +271,7 @@ public class CyberArkTest extends WingsBaseTest {
     // Encrypt of real secret text will use a LOCAL Harness SecretStore to encrypt, since CyberArk doesn't support
     // creating new reference now.
     encryptedData = secretManager.encrypt(accountId, SettingVariableTypes.ARTIFACTORY, secretValue.toCharArray(), null,
-        null, secretName, new UsageRestrictions());
+        null, null, secretName, new UsageRestrictions());
     assertThat(encryptedData).isNotNull();
     if (isGlobalKmsEnabled) {
       assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.KMS);
