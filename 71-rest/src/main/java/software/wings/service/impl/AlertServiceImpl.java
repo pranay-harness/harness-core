@@ -142,7 +142,7 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public void activeDelegateUpdated(String accountId, String delegateId) {
-    executorService.submit(() -> activeDelegateUpdatedInternal(accountId, delegateId));
+    // Do nothing until the performance of the reconciliation is fixed
   }
 
   @Override
