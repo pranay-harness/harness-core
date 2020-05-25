@@ -20,6 +20,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.PcfConfig;
@@ -28,6 +29,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.MutationContext;
+import software.wings.graphql.schema.mutation.cloudProvider.QLAzureCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLGcpCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLPcfCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLPhysicalDataCenterCloudProviderInput;
@@ -37,6 +39,7 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProvide
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLInheritClusterDetails;
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLK8sCloudProviderInput;
 import software.wings.graphql.schema.type.QLCloudProviderType;
+import software.wings.graphql.schema.type.cloudProvider.QLAzureCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLGcpCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
@@ -60,6 +63,7 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
   @Mock private GcpDataFetcherHelper gcpDataFetcherHelper;
   @Mock private K8sDataFetcherHelper k8sDataFetcherHelper;
   @Mock private PhysicalDataCenterDataFetcherHelper physicalDataCenterDataFetcherHelper;
+  @Mock private AzureDataFetcherHelper azureDataFetcherHelper;
 
   @InjectMocks private UpdateCloudProviderDataFetcher dataFetcher = new UpdateCloudProviderDataFetcher();
 
@@ -307,6 +311,53 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
 
     assertThat(payload.getCloudProvider()).isNotNull();
     assertThat(payload.getCloudProvider()).isInstanceOf(QLPhysicalDataCenterCloudProvider.class);
+  }
+
+  @Test
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void updateAzure() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
+                                   .withValue(AzureConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CLOUD_PROVIDER_ID);
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute()
+                 .withUuid(CLOUD_PROVIDER_ID)
+                 .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
+                 .withValue(AzureConfig.builder().accountId(ACCOUNT_ID).build())
+                 .build())
+        .when(settingsService)
+        .updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+
+    doNothing()
+        .when(settingServiceHelper)
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    QLUpdateCloudProviderPayload payload =
+        dataFetcher.mutateAndFetch(QLUpdateCloudProviderInput.builder()
+                                       .cloudProviderId(CLOUD_PROVIDER_ID)
+                                       .cloudProviderType(QLCloudProviderType.AZURE)
+                                       .azureCloudProvider(QLAzureCloudProviderInput.builder()
+                                                               .name(RequestField.ofNullable("Azure"))
+                                                               .usageScope(RequestField.ofNullable(usageScope()))
+                                                               .clientId(RequestField.ofNullable("CLIENT_ID"))
+                                                               .tenantId(RequestField.ofNullable("TENANT_ID"))
+                                                               .keySecretId(RequestField.ofNullable("KEY"))
+                                                               .build())
+                                       .build(),
+            MutationContext.builder().accountId(ACCOUNT_ID).build());
+
+    verify(settingsService, times(1)).getByAccount(ACCOUNT_ID, CLOUD_PROVIDER_ID);
+    verify(settingsService, times(1)).updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+    verify(settingServiceHelper, times(1))
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    assertThat(payload.getCloudProvider()).isNotNull();
+    assertThat(payload.getCloudProvider()).isInstanceOf(QLAzureCloudProvider.class);
+    assertThat(payload.getCloudProvider().getId()).isEqualTo(CLOUD_PROVIDER_ID);
   }
 
   @Test(expected = InvalidRequestException.class)

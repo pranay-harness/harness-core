@@ -19,6 +19,7 @@ input CreateCloudProviderInput {
   gcpCloudProvider: GcpCloudProviderInput
   k8sCloudProvider: K8sCloudProviderInput
   physicalDataCenterCloudProvider: PhysicalDataCenterCloudProviderInput
+  azureCloudProvider: AzureCloudProviderInput
 }
 
 input UpdateCloudProviderInput {
@@ -30,6 +31,7 @@ input UpdateCloudProviderInput {
   gcpCloudProvider: GcpCloudProviderInput
   k8sCloudProvider: K8sCloudProviderInput
   physicalDataCenterCloudProvider: PhysicalDataCenterCloudProviderInput
+  azureCloudProvider: AzureCloudProviderInput
 }
 
 input DeleteCloudProviderInput {
@@ -78,4 +80,13 @@ input GcpCloudProviderInput {
 input PhysicalDataCenterCloudProviderInput {
   name: String
   usageScope: UsageScopeInput
+}
+
+input AzureCloudProviderInput {
+  name: String
+  usageScope: UsageScopeInput
+
+  clientId: String
+  tenantId: String
+  keySecretId: String
 }

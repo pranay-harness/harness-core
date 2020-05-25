@@ -14,13 +14,14 @@ import software.wings.security.annotations.Scope;
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class QLUpdateCloudProviderInput implements QLMutationInput {
-  String clientMutationId;
+  private String clientMutationId;
 
-  String cloudProviderId;
-  QLCloudProviderType cloudProviderType;
-  QLPcfCloudProviderInput pcfCloudProvider;
-  QLSpotInstCloudProviderInput spotInstCloudProvider;
-  QLGcpCloudProviderInput gcpCloudProvider;
-  QLK8sCloudProviderInput k8sCloudProvider;
-  QLPhysicalDataCenterCloudProviderInput physicalDataCenterCloudProvider;
+  private String cloudProviderId;
+  private QLCloudProviderType cloudProviderType;
+  private QLPcfCloudProviderInput pcfCloudProvider;
+  private QLSpotInstCloudProviderInput spotInstCloudProvider;
+  private QLGcpCloudProviderInput gcpCloudProvider;
+  private QLK8sCloudProviderInput k8sCloudProvider;
+  private QLPhysicalDataCenterCloudProviderInput physicalDataCenterCloudProvider;
+  private QLAzureCloudProviderInput azureCloudProvider;
 }
