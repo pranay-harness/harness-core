@@ -136,6 +136,32 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
+  public void shouldGetMetricDataWithMultiplePages() throws Exception {
+    final AmazonCloudWatchClient amazonCloudWatchClientMock = mock(AmazonCloudWatchClient.class);
+    final AwsConfig awsConfig = AwsConfig.builder().build();
+    doReturn(amazonCloudWatchClientMock)
+        .when(awsCloudWatchHelperServiceDelegate)
+        .getAwsCloudWatchClient(eq("REGION"), refEq(awsConfig));
+
+    MetricDataResult dataResult1 = new MetricDataResult().withId("1");
+    MetricDataResult dataResult2 = new MetricDataResult().withId("2");
+
+    doReturn(new GetMetricDataResult().withMetricDataResults(dataResult1).withNextToken("token"))
+        .doReturn(new GetMetricDataResult().withMetricDataResults(dataResult2).withNextToken(null))
+        .when(amazonCloudWatchClientMock)
+        .getMetricData(any(GetMetricDataRequest.class));
+
+    final AwsCloudWatchMetricDataRequest awsCloudWatchMetricDataRequest =
+        AwsCloudWatchMetricDataRequest.builder().awsConfig(awsConfig).region("REGION").build();
+
+    final AwsCloudWatchMetricDataResponse metricDataResponse =
+        awsCloudWatchHelperServiceDelegate.getMetricData(awsCloudWatchMetricDataRequest);
+    assertThat(metricDataResponse.getMetricDataResults()).hasSize(2).containsExactly(dataResult1, dataResult2);
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
   public void shouldHandleAmazonServiceExceptionWhenGetMetricData() {
     final AmazonCloudWatchClient amazonCloudWatchClientMock = mock(AmazonCloudWatchClient.class);
     doReturn(amazonCloudWatchClientMock)
