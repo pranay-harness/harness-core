@@ -6,10 +6,10 @@ import static io.harness.exception.WingsException.USER;
 import com.google.common.collect.Sets;
 
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.security.encryption.SecretVariable;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.security.encryption.SecretVariable;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 
 import java.util.HashSet;

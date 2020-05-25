@@ -29,9 +29,11 @@ import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
+import software.wings.service.intfc.security.CustomSecretsManagerService;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
@@ -61,6 +63,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
   @Inject private LocalEncryptionService localEncryptionService;
   @Inject private AzureSecretsManagerService azureSecretsManagerService;
   @Inject private CyberArkService cyberArkService;
+  @Inject private CustomSecretsManagerService customSecretsManagerService;
   @Inject private FeatureFlagService featureFlagService;
 
   @Override
@@ -227,6 +230,8 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
         cyberArkService.decryptCyberArkConfigSecrets(accountId, (CyberArkConfig) secretManagerConfig, maskSecrets);
         break;
       case CUSTOM:
+        customSecretsManagerService.setAdditionalDetails((CustomSecretsManagerConfig) secretManagerConfig);
+        break;
       case LOCAL:
         break;
       default:

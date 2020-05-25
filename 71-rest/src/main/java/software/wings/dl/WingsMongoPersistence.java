@@ -540,7 +540,8 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   private String updateSecret(@NonNull String accountId, @NonNull EncryptedData encryptedData, @NonNull char[] secret,
       @NonNull String fieldName) {
     EncryptedData updatedEncryptedData = secretManager.encrypt(accountId, encryptedData.getType(), secret,
-        encryptedData.getPath(), encryptedData, encryptedData.getName(), encryptedData.getUsageRestrictions());
+        encryptedData.getPath(), encryptedData.getSecretVariables(), encryptedData, encryptedData.getName(),
+        encryptedData.getUsageRestrictions());
     encryptedData.setEncryptionKey(updatedEncryptedData.getEncryptionKey());
     encryptedData.setEncryptedValue(updatedEncryptedData.getEncryptedValue());
     encryptedData.setEncryptionType(updatedEncryptedData.getEncryptionType());
@@ -559,7 +560,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   private String createSecret(@NonNull String accountId, @NonNull char[] secret, @NonNull String fieldName,
       @NonNull SettingVariableTypes type) {
     EncryptedData encryptedData =
-        secretManager.encrypt(accountId, type, secret, null, null, UUID.randomUUID().toString(), null);
+        secretManager.encrypt(accountId, type, secret, null, null, null, UUID.randomUUID().toString(), null);
     encryptedData.setAccountId(accountId);
     String changeLogDescription = "Created";
 

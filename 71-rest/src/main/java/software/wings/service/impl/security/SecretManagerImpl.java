@@ -20,6 +20,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeCount;
 import static io.harness.security.encryption.EncryptionType.AWS_SECRETS_MANAGER;
 import static io.harness.security.encryption.EncryptionType.AZURE_VAULT;
+import static io.harness.security.encryption.EncryptionType.CUSTOM;
 import static io.harness.security.encryption.EncryptionType.CYBERARK;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.KMS;
@@ -70,6 +71,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.security.encryption.SecretVariable;
 import io.harness.serializer.KryoUtils;
 import io.harness.stream.BoundedInputStream;
 import lombok.Builder;
@@ -114,6 +116,7 @@ import software.wings.security.encryption.EncryptedDataParent.EncryptedDataParen
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretChangeLog.SecretChangeLogKeys;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.security.encryption.setupusage.SecretSetupUsageService;
 import software.wings.service.impl.AuditServiceHelper;
@@ -126,6 +129,7 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
+import software.wings.service.intfc.security.CustomSecretsManagerEncryptionService;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.GcpKmsService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
@@ -192,6 +196,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private UserService userService;
   @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private AzureSecretsManagerService azureSecretsManagerService;
+  @Inject private CustomSecretsManagerEncryptionService customSecretsManagerEncryptionService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private SecretSetupUsageService secretSetupUsageService;
   @Inject private SettingServiceHelper settingServiceHelper;
@@ -218,7 +223,8 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret, String path,
-      EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
+      Set<SecretVariable> secretVariables, EncryptedData encryptedData, String secretName,
+      UsageRestrictions usageRestrictions) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       logger.info("Encrypting a secret");
       String toEncrypt = secret == null ? null : String.valueOf(secret);
@@ -227,6 +233,7 @@ public class SecretManagerImpl implements SecretManager {
         encryptedData = EncryptedData.builder()
                             .name(secretName)
                             .path(path)
+                            .secretVariables(secretVariables)
                             .accountId(accountId)
                             .type(settingType)
                             .enabled(true)
@@ -325,6 +332,13 @@ public class SecretManagerImpl implements SecretManager {
           rv = encryptedData;
           break;
 
+        case CUSTOM:
+          CustomSecretsManagerConfig customSecretsManagerConfig =
+              (CustomSecretsManagerConfig) getSecretManager(accountId, kmsId, CUSTOM);
+          customSecretsManagerEncryptionService.validateSecret(encryptedData, customSecretsManagerConfig);
+          rv = encryptedData;
+          break;
+
         default:
           throw new IllegalStateException("Invalid type:  " + encryptionType);
       }
@@ -351,7 +365,7 @@ public class SecretManagerImpl implements SecretManager {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       logger.info("Encrypting a secret");
       EncryptedData encryptedData = encrypt(accountId, SettingVariableTypes.APM_VERIFICATION, secret.toCharArray(),
-          null, null, UUID.randomUUID().toString(), usageRestrictions);
+          null, null, null, UUID.randomUUID().toString(), usageRestrictions);
       String recordId = saveEncryptedData(encryptedData);
       generateAuditForEncryptedRecord(accountId, null, recordId);
       return recordId;
@@ -1411,6 +1425,7 @@ public class SecretManagerImpl implements SecretManager {
     boolean nameChanged = !Objects.equals(secretText.getName(), savedData.getName());
     boolean valueChanged = isNotEmpty(secretText.getValue()) && !secretText.getValue().equals(SECRET_MASK);
     boolean pathChanged = !Objects.equals(secretText.getPath(), savedData.getPath());
+    boolean variablesChanged = !Objects.equals(secretText.getVariables(), savedData.getSecretVariables());
 
     boolean needReencryption = false;
 
@@ -1470,6 +1485,11 @@ public class SecretManagerImpl implements SecretManager {
       builder.append(builder.length() > 0 ? " & path" : " Changed path");
       savedData.setPath(secretText.getPath());
     }
+    if (variablesChanged) {
+      needReencryption = true;
+      builder.append(builder.length() > 0 ? " & secret variables" : " Changed secret variables");
+      savedData.setSecretVariables(secretText.getVariables());
+    }
     if (secretText.getUsageRestrictions() != null) {
       builder.append(builder.length() > 0 ? " & usage restrictions" : "Changed usage restrictions");
     }
@@ -1478,8 +1498,9 @@ public class SecretManagerImpl implements SecretManager {
     // Re-encrypt if secret value or path has changed. Update should not change the existing Encryption type and
     // secret manager if the secret is 'path' enabled!
     if (needReencryption) {
-      EncryptedData encryptedData = encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue,
-          secretText.getPath(), savedData, secretText.getName(), secretText.getUsageRestrictions());
+      EncryptedData encryptedData =
+          encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue, secretText.getPath(),
+              secretText.getVariables(), savedData, secretText.getName(), secretText.getUsageRestrictions());
       savedData.setEncryptionKey(encryptedData.getEncryptionKey());
       savedData.setEncryptedValue(encryptedData.getEncryptedValue());
       savedData.setEncryptionType(encryptedData.getEncryptionType());
@@ -1515,14 +1536,16 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encrypted = EncryptedData.builder()
                                   .name(secretText.getName())
                                   .path(secretText.getPath())
+                                  .secretVariables(secretText.getVariables())
                                   .accountId(accountId)
                                   .type(SettingVariableTypes.SECRET_TEXT)
                                   .encryptionType(encryptionType)
                                   .kmsId(secretText.getKmsId())
                                   .enabled(true)
                                   .build();
-    EncryptedData encryptedData = encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue,
-        secretText.getPath(), encrypted, secretText.getName(), secretText.getUsageRestrictions());
+    EncryptedData encryptedData =
+        encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue, secretText.getPath(),
+            secretText.getVariables(), encrypted, secretText.getName(), secretText.getUsageRestrictions());
     encryptedData.addSearchTag(secretText.getName());
     String encryptedDataId;
     try {

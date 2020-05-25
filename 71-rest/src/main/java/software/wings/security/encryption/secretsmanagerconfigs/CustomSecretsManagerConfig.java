@@ -1,6 +1,7 @@
 package software.wings.security.encryption.secretsmanagerconfigs;
 
 import com.github.reinert.jjschema.Attributes;
+import io.harness.security.encryption.SecretVariable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,7 +11,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SecretManagerConfig;
-import software.wings.security.encryption.SecretVariable;
 
 import java.util.List;
 import java.util.Set;

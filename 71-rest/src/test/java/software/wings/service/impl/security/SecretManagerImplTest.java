@@ -138,7 +138,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
              eq(secretValue), eq(account.getUuid()), any(GcpKmsConfig.class), any(EncryptedData.class)))
         .thenReturn(encryptedData);
     EncryptedData savedEncryptedData = secretManager.encrypt(
-        account.getUuid(), SettingVariableTypes.GCP_KMS, secretValue.toCharArray(), null, null, secretName, null);
+        account.getUuid(), SettingVariableTypes.GCP_KMS, secretValue.toCharArray(), null, null, null, secretName, null);
     assertThat(savedEncryptedData.getKmsId()).isEqualTo(gcpKmsConfig.getUuid());
     assertThat(savedEncryptedData.getEncryptionType()).isEqualTo(gcpKmsConfig.getEncryptionType());
   }

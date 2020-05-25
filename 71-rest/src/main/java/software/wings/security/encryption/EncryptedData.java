@@ -15,6 +15,7 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.security.encryption.SecretVariable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -81,6 +82,8 @@ public class EncryptedData
   // When 'path' value is set, no actual encryption is needed since it's just referring to a secret in a Secret Manager
   // path.
   @Indexed private String path;
+
+  private Set<SecretVariable> secretVariables;
 
   @NotEmpty private SettingVariableTypes type;
 
