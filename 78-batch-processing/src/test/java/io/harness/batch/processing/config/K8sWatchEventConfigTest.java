@@ -217,7 +217,12 @@ public class K8sWatchEventConfigTest extends CategoryTest {
                               .setClusterId(CLUSTER_ID)
                               .setClusterName(CLUSTER_NAME)
                               .setCloudProviderId(CLOUD_PROVIDER_ID)
-                              .setResourceRef(K8sObjectReference.newBuilder().setUid(UID).build())
+                              .setResourceRef(K8sObjectReference.newBuilder()
+                                                  .setUid(UID)
+                                                  .setName("workload-name")
+                                                  .setNamespace("workload-namespace")
+                                                  .setKind("workload-kind")
+                                                  .build())
                               .setNewResourceYaml("added-yaml")
                               .setNewResourceVersion("12345")
                               .build();
@@ -242,6 +247,9 @@ public class K8sWatchEventConfigTest extends CategoryTest {
                          .cloudProviderId("cloud-provider-id")
                          .envId("env-id")
                          .billingAmount(BigDecimal.valueOf(12.34))
+                         .namespace("workload-namespace")
+                         .workloadName("workload-name")
+                         .workloadType("workload-kind")
                          .build());
     });
   }
@@ -266,7 +274,12 @@ public class K8sWatchEventConfigTest extends CategoryTest {
                               .setClusterId(CLUSTER_ID)
                               .setClusterName(CLUSTER_NAME)
                               .setCloudProviderId(CLOUD_PROVIDER_ID)
-                              .setResourceRef(K8sObjectReference.newBuilder().setUid(UID).build())
+                              .setResourceRef(K8sObjectReference.newBuilder()
+                                                  .setUid(UID)
+                                                  .setName("workload-name")
+                                                  .setNamespace("workload-namespace")
+                                                  .setKind("workload-kind")
+                                                  .build())
                               .setOldResourceYaml("old-yaml")
                               .setOldResourceVersion("12334")
                               .setNewResourceYaml("new-yaml")
@@ -294,6 +307,9 @@ public class K8sWatchEventConfigTest extends CategoryTest {
                          .cloudProviderId("cloud-provider-id")
                          .billingAmount(BigDecimal.valueOf(12.34))
                          .envId("env-id")
+                         .namespace("workload-namespace")
+                         .workloadName("workload-name")
+                         .workloadType("workload-kind")
                          .build());
     });
   }
@@ -316,7 +332,12 @@ public class K8sWatchEventConfigTest extends CategoryTest {
                               .setClusterId(CLUSTER_ID)
                               .setClusterName(CLUSTER_NAME)
                               .setCloudProviderId(CLOUD_PROVIDER_ID)
-                              .setResourceRef(K8sObjectReference.newBuilder().setUid(UID).build())
+                              .setResourceRef(K8sObjectReference.newBuilder()
+                                                  .setUid(UID)
+                                                  .setName("workload-name")
+                                                  .setNamespace("workload-namespace")
+                                                  .setKind("workload-kind")
+                                                  .build())
                               .setOldResourceYaml("deleted-yaml")
                               .setOldResourceVersion("12334")
                               .build();
@@ -341,6 +362,9 @@ public class K8sWatchEventConfigTest extends CategoryTest {
                          .cloudProviderId("cloud-provider-id")
                          .envId("env-id")
                          .billingAmount(BigDecimal.valueOf(12.34))
+                         .namespace("workload-namespace")
+                         .workloadName("workload-name")
+                         .workloadType("workload-kind")
                          .build());
     });
   }

@@ -1,7 +1,9 @@
 package io.harness.batch.processing.service.impl;
 
 import static io.harness.batch.processing.ccm.BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY;
+import static io.harness.batch.processing.ccm.BatchJobType.DEPLOYMENT_EVENT;
 import static io.harness.batch.processing.ccm.BatchJobType.INSTANCE_BILLING_HOURLY;
+import static io.harness.batch.processing.ccm.BatchJobType.K8S_WATCH_EVENT;
 import static io.harness.batch.processing.ccm.BatchJobType.UNALLOCATED_BILLING_HOURLY;
 
 import com.google.common.collect.ImmutableSet;
@@ -25,6 +27,7 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
   @Autowired protected LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
 
   private static final int MAX_HOURLY_DATA = 16;
+  private static final int MAX_EVENTS_DATA = 5;
 
   @Override
   public boolean create(BatchJobScheduledData batchJobScheduledData) {
@@ -42,6 +45,11 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
     if (ImmutableSet.of(INSTANCE_BILLING_HOURLY, ACTUAL_IDLE_COST_BILLING_HOURLY, UNALLOCATED_BILLING_HOURLY)
             .contains(batchJobType)) {
       Instant startInstant = Instant.now().minus(MAX_HOURLY_DATA, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      instant = startInstant.isAfter(instant) ? startInstant : instant;
+    }
+
+    if (ImmutableSet.of(K8S_WATCH_EVENT, DEPLOYMENT_EVENT).contains(batchJobType)) {
+      Instant startInstant = Instant.now().minus(MAX_EVENTS_DATA, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
     return instant;
