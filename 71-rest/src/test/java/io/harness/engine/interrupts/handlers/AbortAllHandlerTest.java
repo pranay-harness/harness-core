@@ -5,9 +5,7 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
-import io.harness.adviser.AdviserType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.ExecutionEngine;
@@ -18,10 +16,8 @@ import io.harness.execution.PlanExecution;
 import io.harness.execution.status.ExecutionInstanceStatus;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.Interrupt;
-import io.harness.persistence.HPersistence;
 import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
-import io.harness.state.StepType;
 import io.harness.testlib.RealMongo;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import org.junit.Before;
@@ -34,15 +30,10 @@ import software.wings.rules.Listeners;
 public class AbortAllHandlerTest extends WingsBaseTest {
   @Inject AbortAllHandler abortAllHandler;
   @Inject ExecutionEngine executionEngine;
-  @Inject @Named("enginePersistence") HPersistence hPersistence;
   @Inject private StepRegistry stepRegistry;
   @Inject private InterruptTestHelper interruptTestHelper;
 
   private static final EmbeddedUser EMBEDDED_USER = new EmbeddedUser(generateUuid(), PRASHANT, PRASHANT);
-
-  private static final AdviserType TEST_ADVISER_TYPE =
-      AdviserType.builder().type("TEST_HTTP_RESPONSE_CODE_SWITCH").build();
-  private static final StepType TEST_STEP_TYPE = StepType.builder().type("TEST_STEP_PLAN").build();
 
   @Before
   public void setUp() {
@@ -62,7 +53,7 @@ public class AbortAllHandlerTest extends WingsBaseTest {
                                       .createdBy(EMBEDDED_USER)
                                       .build();
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), ExecutionInstanceStatus.RUNNING);
-    Interrupt handledInterrupt = abortAllHandler.handleInterrupt(abortAllInterrupt);
+    Interrupt handledInterrupt = abortAllHandler.registerInterrupt(abortAllInterrupt);
     assertThat(handledInterrupt).isNotNull();
     assertThat(handledInterrupt.isSeized()).isTrue();
 
