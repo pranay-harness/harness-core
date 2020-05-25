@@ -186,7 +186,8 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
     }
   }
 
-  private boolean prepare(ExecutionLogCallback executionLogCallback) {
+  @VisibleForTesting
+  boolean prepare(ExecutionLogCallback executionLogCallback) {
     try {
       executionLogCallback.saveExecutionLog(
           "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
