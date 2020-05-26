@@ -102,10 +102,9 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     } catch (Exception e) {
       logger.error(String.format("Encountered exceptions when executing perpetual task with id=%s", taskId), e);
       try {
-        eventPublisher.publishMessage(CeExceptionMessage.newBuilder()
-                                          .setClusterId(watchTaskParams.getClusterId())
-                                          .setMessage(e.getMessage().substring(0, 280))
-                                          .build(),
+        String message = e.getMessage().substring(0, Math.min(e.getMessage().length(), 280));
+        eventPublisher.publishMessage(
+            CeExceptionMessage.newBuilder().setClusterId(watchTaskParams.getClusterId()).setMessage(message).build(),
             HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(), MESSAGE_PROCESSOR_TYPE);
       } catch (Exception ex) {
         logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
