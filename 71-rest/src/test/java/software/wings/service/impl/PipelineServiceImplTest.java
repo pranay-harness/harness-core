@@ -2,12 +2,15 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.POOJA;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
@@ -27,6 +30,8 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.common.collect.ImmutableMap;
@@ -68,8 +73,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PipelineServiceImpl.class)
@@ -834,5 +841,143 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     assertThat(pipelineVariables).isNotEmpty();
     assertThat(pipelineVariables.get(0).getName()).isEqualTo("srv");
     assertThat(pipelineVariables.get(0).getMetadata().get(Variable.INFRA_ID)).isEqualTo("I1,I2");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void
+
+  checkPipelineWithWorkflowVariables() {
+    HashMap<String, Object> metadataInfra = new HashMap<>();
+    metadataInfra.put(Variable.RELATED_FIELD, "Service");
+    metadataInfra.put(Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION);
+    metadataInfra.put(Variable.DEPLOYMENT_TYPE, DeploymentType.SSH.name());
+    Variable infraVarWorkflow = aVariable()
+                                    .entityType(INFRASTRUCTURE_DEFINITION)
+                                    .name("InfraDefinition_ECS")
+                                    .metadata(metadataInfra)
+                                    .mandatory(true)
+                                    .type(VariableType.ENTITY)
+                                    .build();
+
+    HashMap<String, Object> metadataSrv = new HashMap<>();
+    metadataSrv.put(Variable.RELATED_FIELD, "InfraDefinition_ECS");
+    metadataSrv.put(Variable.ENTITY_TYPE, SERVICE);
+    metadataSrv.put(Variable.DEPLOYMENT_TYPE, DeploymentType.SSH.name());
+    Variable srvVarWorkflow = aVariable()
+                                  .entityType(SERVICE)
+                                  .name("Service")
+                                  .metadata(metadataSrv)
+                                  .mandatory(true)
+                                  .type(VariableType.ENTITY)
+                                  .build();
+
+    List<Variable> userVariables = new ArrayList<>();
+    userVariables.add(infraVarWorkflow);
+    userVariables.add(srvVarWorkflow);
+
+    Workflow workflow =
+        aWorkflow()
+            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(userVariables).build())
+            .accountId("ACCOUNT_ID")
+            .name("Complete workflow")
+            .build();
+
+    Map<String, String> pseWorkflowVariables = new HashMap<>();
+    pseWorkflowVariables.put("InfraDefinition_ECS", "ID1");
+    pseWorkflowVariables.put("Service", "${srv}");
+
+    PipelineStageElement pse = PipelineStageElement.builder()
+                                   .name("Pipeline Step 1")
+                                   .workflowVariables(pseWorkflowVariables)
+                                   .valid(true)
+                                   .build();
+    PipelineStage pipelineStage =
+        PipelineStage.builder().pipelineStageElements(Arrays.asList(pse)).valid(true).name("Pipeline Stage 1").build();
+
+    Set<String> invalidWorkflows = new HashSet<>();
+    pipelineServiceImpl.validateWorkflowVariables(workflow, pse, pipelineStage, invalidWorkflows);
+    assertThat(invalidWorkflows).isEmpty();
+    assertThat(pse.isValid()).isTrue();
+
+    PipelineStageElement pse2 = PipelineStageElement.builder().name("Pipeline Step 2").build();
+    PipelineStage pipelineStage2 =
+        PipelineStage.builder().name("Pipeline Stage 2").pipelineStageElements(Arrays.asList(pse)).build();
+
+    pipelineServiceImpl.validateWorkflowVariables(workflow, pse2, pipelineStage2, invalidWorkflows);
+    assertThat(invalidWorkflows).containsExactly("Pipeline Step 2");
+    assertThat(pse2.isValid()).isFalse();
+    assertThat(pipelineStage2.isValid()).isFalse();
+
+    Workflow workflow2 = aWorkflow()
+                             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                             .accountId("ACCOUNT_ID")
+                             .name("Incomplete workflow")
+                             .build();
+
+    invalidWorkflows = new HashSet<>();
+    pipelineServiceImpl.validateWorkflowVariables(workflow2, pse, pipelineStage, invalidWorkflows);
+    assertThat(invalidWorkflows).containsExactly("Pipeline Step 1");
+    assertThat(pse.isValid()).isFalse();
+    assertThat(pipelineStage.isValid()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldNotPopulateErrorForMissingOptionalVariables() {
+    Variable optionalVariable = aVariable().name("test").mandatory(false).build();
+    Variable requiredVariable = aVariable().name("testReq").mandatory(true).build();
+    Workflow workflow =
+        aWorkflow()
+            .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                       .withUserVariables(Arrays.asList(optionalVariable, requiredVariable))
+                                       .build())
+            .accountId("ACCOUNT_ID")
+            .name("Complete workflow")
+            .build();
+
+    PipelineStageElement pse = PipelineStageElement.builder()
+                                   .workflowVariables(Collections.singletonMap("testReq", "value"))
+                                   .valid(true)
+                                   .build();
+    PipelineStage pipelineStage = PipelineStage.builder().pipelineStageElements(Arrays.asList(pse)).valid(true).build();
+    Set<String> invalidWorkflows = new HashSet<>();
+    pipelineServiceImpl.validateWorkflowVariables(workflow, pse, pipelineStage, invalidWorkflows);
+    assertThat(invalidWorkflows).isEmpty();
+    assertThat(pse.isValid()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldDetectInvalidWorkflowsInPipelines() {
+    Workflow workflow = aWorkflow()
+                            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                            .accountId("ACCOUNT_ID")
+                            .uuid(WORKFLOW_ID)
+                            .name(WORKFLOW_NAME)
+                            .build();
+
+    workflow.getOrchestrationWorkflow().setValid(false);
+
+    PipelineStageElement pse = PipelineStageElement.builder()
+                                   .workflowVariables(Collections.singletonMap("testReq", "value"))
+                                   .type("ENV_STATE")
+                                   .name("TEST_STEP")
+                                   .valid(true)
+                                   .properties(Collections.singletonMap("workflowId", WORKFLOW_ID))
+                                   .build();
+    PipelineStage pipelineStage =
+        PipelineStage.builder().pipelineStageElements(Arrays.asList(pse)).valid(true).name("TEST_STAGE").build();
+    Pipeline pipeline = Pipeline.builder().pipelineStages(Collections.singletonList(pipelineStage)).build();
+    pipeline.setWorkflowIds(Collections.singletonList(WORKFLOW_ID));
+
+    doReturn(workflow).when(mockWorkflowService).readWorkflowWithoutServices(anyString(), eq(WORKFLOW_ID), eq(false));
+    pipelineServiceImpl.setServicesAndPipelineVariables(pipeline);
+    assertThat(pipeline.isValid()).isFalse();
+    assertThat(pipelineStage.isValid()).isFalse();
+    assertThat(pipeline.getValidationMessage()).isEqualTo("Some steps [TEST_STEP] are found to be invalid/incomplete.");
   }
 }
