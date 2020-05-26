@@ -1,5 +1,6 @@
 package software.wings.service.intfc.splunk;
 
+import io.harness.cvng.beans.CVHistogram;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.splunk.SplunkSavedSearch;
 import software.wings.service.impl.splunk.SplunkSetupTestNodeData;
@@ -19,4 +20,8 @@ public interface SplunkAnalysisService {
    */
   VerificationNodeDataSetupResponse getLogDataByHost(String accountId, SplunkSetupTestNodeData elkSetupTestNodeData);
   List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorId);
+
+  CVHistogram getHistogram(String accountId, String connectorId, String query);
+
+  List<String> getSamples(String accountId, String connectorId, String query);
 }

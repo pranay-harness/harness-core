@@ -1,6 +1,7 @@
 package software.wings.service.intfc.splunk;
 
 import com.splunk.Service;
+import io.harness.cvng.beans.CVHistogram;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
@@ -53,4 +54,8 @@ public interface SplunkDelegateService {
       ThirdPartyApiCallLog apiCallLog, int logCollectionMinute, boolean isAdvancedQuery);
   @DelegateTaskType(TaskType.SPLUNK_GET_SAVED_SEARCHES)
   List<SplunkSavedSearch> getSavedSearches(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails);
+  @DelegateTaskType(TaskType.SPLUNK_GET_HISTOGRAM)
+  CVHistogram getHistogram(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query);
+  @DelegateTaskType(TaskType.SPLUNK_GET_SAMPLE)
+  List<String> getSamples(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query);
 }

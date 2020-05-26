@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -13,13 +14,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.splunk.Job;
 import com.splunk.JobArgs;
+import com.splunk.JobCollection;
 import com.splunk.SavedSearch;
 import com.splunk.SavedSearchCollection;
 import com.splunk.Service;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.beans.CVHistogram;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
@@ -31,6 +36,10 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.SplunkConfig;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -109,5 +118,55 @@ public class SplunkDelegateServiceImplTest extends WingsBaseTest {
     when(service.getSavedSearches(any(JobArgs.class))).thenThrow(new RuntimeException("from test"));
     assertThatThrownBy(() -> splunkDelegateService.getSavedSearches(splunkConfig, new ArrayList<>()))
         .hasMessage("from test");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetHistogram() throws IOException {
+    SplunkDelegateServiceImpl splunkDelegateService = spy(new SplunkDelegateServiceImpl());
+    Service service = mock(Service.class);
+    doReturn(service).when(splunkDelegateService).initSplunkService(any(), anyList());
+    SplunkConfig splunkConfig = mock(SplunkConfig.class);
+    JobCollection jobCollection = mock(JobCollection.class);
+    when(service.getJobs()).thenReturn(jobCollection);
+    Job job = mock(Job.class);
+    when(jobCollection.create(any(), any())).thenReturn(job);
+    when(job.getResults(any()))
+        .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_histogram_query.json"));
+    CVHistogram histogram = splunkDelegateService.getHistogram(splunkConfig, new ArrayList<>(), "exception");
+    verify(jobCollection).create(eq("search exception | timechart count span=6h | table _time, count"), any());
+    assertThat(histogram.getQuery()).isEqualTo("exception");
+    assertThat(histogram.getBars()).hasSize(29);
+    assertThat(histogram.getBars().get(0))
+        .isEqualTo(CVHistogram.Bar.builder().count(10).timestamp(1589889600000L).build());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetSamples() throws IOException {
+    SplunkDelegateServiceImpl splunkDelegateService = spy(new SplunkDelegateServiceImpl());
+    Service service = mock(Service.class);
+    doReturn(service).when(splunkDelegateService).initSplunkService(any(), anyList());
+    SplunkConfig splunkConfig = mock(SplunkConfig.class);
+    JobCollection jobCollection = mock(JobCollection.class);
+    when(service.getJobs()).thenReturn(jobCollection);
+    Job job = mock(Job.class);
+    when(jobCollection.create(any(), any())).thenReturn(job);
+    when(job.getResults(any()))
+        .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_samples_query.json"));
+    List<String> samples = splunkDelegateService.getSamples(splunkConfig, new ArrayList<>(), "exception");
+    verify(jobCollection).create(eq("search exception | head 10"), any());
+    assertThat(samples).hasSize(10);
+    assertThat(samples.get(0))
+        .isEqualTo(
+            "2020-05-26 18:10:39,278 [GitChangeSet] INFO  software.wings.yaml.gitSync.GitChangeSetRunnable - Not continuing with GitChangeSetRunnable job");
+  }
+
+  private InputStream getSplunkJsonResponseInputStream(String jsonFile) throws IOException {
+    String splunkResponse =
+        IOUtils.toString(SplunkDelegateServiceImpl.class.getResourceAsStream(jsonFile), StandardCharsets.UTF_8.name());
+    return IOUtils.toInputStream(splunkResponse, Charset.defaultCharset());
   }
 }

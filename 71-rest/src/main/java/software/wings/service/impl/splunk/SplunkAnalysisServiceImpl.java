@@ -9,9 +9,11 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.cvng.beans.CVHistogram;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
@@ -53,10 +55,8 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
     }
     ThirdPartyApiCallLog apiCallLog = createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid());
 
-    List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-    SyncTaskContext taskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptionDetails(settingAttribute);
+    SyncTaskContext taskContext = getSyncTaskContext(accountId);
     List<LogElement> responseWithoutHost =
         delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
             .getLogResults((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails,
@@ -95,14 +95,46 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
 
   @Override
   public List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorId) {
-    final SettingAttribute settingAttribute = settingsService.get(connectorId);
-
-    Preconditions.checkNotNull(settingAttribute, "No SettingAttribute exist for given connectorId " + connectorId);
-    List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-    SyncTaskContext taskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    final SettingAttribute settingAttribute = getSettingAttribute(connectorId);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptionDetails(settingAttribute);
+    SyncTaskContext taskContext = getSyncTaskContext(accountId);
     return delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
         .getSavedSearches((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails);
+  }
+
+  @Override
+  public CVHistogram getHistogram(String accountId, String connectorId, String query) {
+    final SettingAttribute settingAttribute = getSettingAttribute(connectorId);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptionDetails(settingAttribute);
+    SyncTaskContext taskContext = getSyncTaskContext(accountId);
+    return delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
+        .getHistogram((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails, query);
+  }
+
+  @Override
+  public List<String> getSamples(String accountId, String connectorId, String query) {
+    final SettingAttribute settingAttribute = getSettingAttribute(connectorId);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptionDetails(settingAttribute);
+    SyncTaskContext taskContext = getSyncTaskContext(accountId);
+    return delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
+        .getSamples((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails, query);
+  }
+
+  private List<EncryptedDataDetail> getEncryptionDetails(SettingAttribute settingAttribute) {
+    return secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+  }
+
+  private SyncTaskContext getSyncTaskContext(String accountId) {
+    return SyncTaskContext.builder()
+        .accountId(accountId)
+        .appId(GLOBAL_APP_ID)
+        .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+        .build();
+  }
+  @NotNull
+  private SettingAttribute getSettingAttribute(String connectorId) {
+    final SettingAttribute settingAttribute = settingsService.get(connectorId);
+    Preconditions.checkNotNull(settingAttribute, "No SettingAttribute exist for given connectorId " + connectorId);
+    return settingAttribute;
   }
 }
