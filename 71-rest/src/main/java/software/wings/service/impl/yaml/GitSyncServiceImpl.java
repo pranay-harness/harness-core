@@ -386,6 +386,22 @@ public class GitSyncServiceImpl implements GitSyncService {
     return pageResponse;
   }
 
+  @Override
+  public boolean deleteGitCommits(List<String> gitFileActivitySummaryIds, String accountId) {
+    return wingsPersistence.delete(wingsPersistence.createQuery(GitFileActivitySummary.class)
+                                       .filter(GitFileActivitySummaryKeys.accountId, accountId)
+                                       .field(GitFileActivitySummaryKeys.uuid)
+                                       .in(gitFileActivitySummaryIds));
+  }
+
+  @Override
+  public boolean deleteGitActivity(List<String> gitFileActivityIds, String accountId) {
+    return wingsPersistence.delete(wingsPersistence.createQuery(GitFileActivity.class)
+                                       .filter(GitFileActivityKeys.accountId, accountId)
+                                       .field(GitFileActivityKeys.uuid)
+                                       .in(gitFileActivityIds));
+  }
+
   private List<GitFileActivitySummary> populateConnectorNameInGitFileActivitySummaries(
       List<GitFileActivitySummary> gitFileActivitySummaries, String accountId) {
     if (isEmpty(gitFileActivitySummaries)) {

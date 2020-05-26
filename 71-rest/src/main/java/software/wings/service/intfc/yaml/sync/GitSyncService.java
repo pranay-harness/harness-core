@@ -36,15 +36,17 @@ public interface GitSyncService {
       PageRequest<GitFileActivitySummary> req, Boolean gitToHarness, String accountId, String appId);
 
   /**
-   *
    * @param req
    * @return
    */
   PageResponse<GitFileActivity> fetchGitSyncActivity(
       PageRequest<GitFileActivity> req, String accountId, String appId, boolean activityForFileHistory);
 
+  boolean deleteGitCommits(List<String> gitFileActivitySummaryIds, String accountId);
+
+  boolean deleteGitActivity(List<String> gitFileActivityIds, String accountId);
+
   /**
-   *
    * @param changeList
    * @param status
    * @param isGitToHarness
