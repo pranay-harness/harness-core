@@ -30,4 +30,8 @@ public class CECommunicationsServiceImpl implements CECommunicationsService {
       ceCommunicationsDao.update(accountId, email, type, enable);
     }
   }
+
+  public List<CECommunications> getEnabledEntries(String accountId, CommunicationType type) {
+    return ceCommunicationsDao.getEnabledEntries(accountId, type);
+  }
 }

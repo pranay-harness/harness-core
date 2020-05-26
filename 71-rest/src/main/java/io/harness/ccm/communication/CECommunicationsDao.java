@@ -61,4 +61,15 @@ public class CECommunicationsDao {
   public boolean delete(String uuid) {
     return persistence.delete(CECommunications.class, uuid);
   }
+
+  public List<CECommunications> getEnabledEntries(String accountId, CommunicationType type) {
+    Query<CECommunications> query = persistence.createQuery(CECommunications.class)
+                                        .field(CECommunicationsKeys.accountId)
+                                        .equal(accountId)
+                                        .field(CECommunicationsKeys.enabled)
+                                        .equal(true)
+                                        .field(CECommunicationsKeys.type)
+                                        .equal(type);
+    return query.asList(new FindOptions());
+  }
 }

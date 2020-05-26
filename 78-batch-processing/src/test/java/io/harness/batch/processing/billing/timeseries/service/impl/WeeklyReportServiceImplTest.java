@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -12,6 +11,8 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper;
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.communication.CECommunicationsServiceImpl;
+import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Before;
@@ -23,12 +24,14 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+import software.wings.beans.Account;
 import software.wings.service.impl.instance.CloudToHarnessMappingServiceImpl;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WeeklyReportServiceImplTest extends CategoryTest {
@@ -36,6 +39,7 @@ public class WeeklyReportServiceImplTest extends CategoryTest {
   @Mock private CEMailNotificationService emailNotificationService;
   @Mock private CloudToHarnessMappingServiceImpl cloudToHarnessMappingService;
   @Mock private WeeklyReportTemplateHelper templateHelper;
+  @Mock private CECommunicationsServiceImpl ceCommunicationsService;
   @InjectMocks private WeeklyReportServiceImpl weeklyReportService;
 
   @Mock Statement statement;
@@ -65,6 +69,10 @@ public class WeeklyReportServiceImplTest extends CategoryTest {
     when(mockStatement.executeQuery(anyString())).thenReturn(resetCountAndReturnResultSet());
     mockResultSet();
     when(emailNotificationService.send(any())).thenReturn(true);
+    when(cloudToHarnessMappingService.getCCMEnabledAccounts())
+        .thenReturn(Arrays.asList(Account.Builder.anAccount().withUuid(ACCOUNT_ID).build()));
+    when(ceCommunicationsService.getEnabledEntries(any(), any()))
+        .thenReturn(Arrays.asList(CECommunications.builder().emailId("mailId").build()));
   }
 
   @Test
@@ -72,7 +80,7 @@ public class WeeklyReportServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldHandle() {
     weeklyReportService.generateAndSendWeeklyReport();
-    verify(emailNotificationService, times(2)).send(any());
+    verify(emailNotificationService).send(any());
   }
 
   private void mockResultSet() throws SQLException {
