@@ -14,4 +14,5 @@ public class DelegateSelectionLogParams {
   private String delegateProfileName;
   private String conclusion;
   private String message;
+  private long eventTimestamp;
 }

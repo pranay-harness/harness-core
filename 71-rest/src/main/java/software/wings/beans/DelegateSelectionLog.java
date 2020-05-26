@@ -28,12 +28,16 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
-@Entity(value = "delegateSelectionLogs", noClassnameStored = true)
+@Entity(value = "delegateSelectionLogRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "DelegateSelectionLogKeys")
-@Indexes(@Index(options = @IndexOptions(name = "selectionLogs"),
-    fields = { @Field(value = DelegateSelectionLogKeys.accountId)
-               , @Field(value = DelegateSelectionLogKeys.taskId) }))
+@Indexes(@Index(options = @IndexOptions(name = "selectionLogsGroup", unique = true),
+    fields =
+    {
+      @Field(value = DelegateSelectionLogKeys.accountId)
+      , @Field(value = DelegateSelectionLogKeys.taskId), @Field(value = DelegateSelectionLogKeys.message),
+          @Field(value = DelegateSelectionLogKeys.groupId)
+    }))
 public class DelegateSelectionLog implements PersistentEntity, UuidAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
@@ -42,6 +46,11 @@ public class DelegateSelectionLog implements PersistentEntity, UuidAware, Accoun
   @NotEmpty private String taskId;
   @NotEmpty private String message;
   @NotEmpty private String conclusion;
+  @NotEmpty private long eventTimestamp;
+  /*
+   * Used for deduplication of logs. Standalone logs will have a unique value and groups will have fixed.
+   * */
+  @NotEmpty private String groupId;
 
   @Builder.Default
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))

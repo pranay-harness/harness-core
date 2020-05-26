@@ -39,3 +39,7 @@ metrics:
   - delegate_tasks_async_count:
       check_interval:   10      # seconds
       query:            "db.delegateTasks.find({async:true}).count()"
+
+  - delegate_tasks_count:
+      check_interval:   10      # seconds
+      query:            "db.delegateSelectionLogRecords.find({}).count()"

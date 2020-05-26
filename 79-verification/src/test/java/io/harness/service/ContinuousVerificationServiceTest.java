@@ -2966,7 +2966,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = PRAVEEN, intermittent = true)
   @Category(UnitTests.class)
   public void testCreateFeedbackAnalysisTask_NoPrevFeedbackAnalysisRecord() throws Exception {
     // setup mocks
