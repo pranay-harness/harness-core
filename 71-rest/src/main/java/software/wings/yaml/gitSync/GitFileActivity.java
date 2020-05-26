@@ -29,7 +29,9 @@ import software.wings.beans.yaml.Change.ChangeType;
         @Field("accountId"), @Field("processingCommitId"), @Field("status")
       }, options = @IndexOptions(background = true, name = "accountId_procCommitId_status")), @Index(fields = {
         @Field("accountId"), @Field("filePath")
-      }, options = @IndexOptions(background = true, name = "accountId_filePath")),
+      }, options = @IndexOptions(background = true, name = "accountId_filePath")), @Index(fields = {
+        @Field("accountId"), @Field("commitId")
+      }, options = @IndexOptions(background = true, name = "accountId_commitId_Idx"))
 })
 @Data
 @Builder

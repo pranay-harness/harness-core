@@ -446,12 +446,20 @@ public class GitSyncServiceImpl implements GitSyncService {
       String fileName = change.getFilePath();
       String appName = yamlHelper.getAppName(fileName);
       if (appName == null) {
+        // The file name doesn't follow appName pattern, it must be a global entity
         fileNameAppIdMap.put(fileName, GLOBAL_APP_ID);
       } else {
+        // The file name follows application name pattern
         if (appNameAppIdMap.containsKey(appName)) {
           fileNameAppIdMap.put(fileName, appNameAppIdMap.get(appName));
         } else {
           String appId = yamlService.obtainAppIdFromGitFileChange(accountId, fileName);
+          if (GLOBAL_APP_ID.equals(appId)) {
+            // The application was deleted/renamed that's why we couldn't get the appId
+            if (change.getYamlGitConfig() != null) {
+              appId = change.getYamlGitConfig().getAppId();
+            }
+          }
           appNameAppIdMap.put(appName, appId);
           fileNameAppIdMap.put(fileName, appId);
         }
@@ -617,8 +625,13 @@ public class GitSyncServiceImpl implements GitSyncService {
     final List<YamlChangeSet.Status> processingStatuses =
         Arrays.asList(YamlChangeSet.Status.QUEUED, YamlChangeSet.Status.RUNNING);
 
-    List<YamlChangeSet> changeSetsWithProcessingStatus = yamlChangeSetService.getChangeSetsWithStatus(
-        accountId, appId, yamlGitConfig, displayCount, processingStatuses, gitToHarness);
+    List<YamlChangeSet> changeSetsWithProcessingStatus;
+    if (gitToHarness != null && !gitToHarness) {
+      changeSetsWithProcessingStatus = Collections.emptyList();
+    } else {
+      changeSetsWithProcessingStatus = yamlChangeSetService.getChangeSetsWithStatus(
+          accountId, appId, yamlGitConfig, displayCount, processingStatuses, gitToHarness);
+    }
 
     return changeSetsWithProcessingStatus.stream()
         .map(changeSet -> {
