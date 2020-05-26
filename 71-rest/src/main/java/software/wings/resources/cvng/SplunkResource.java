@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.cvng.beans.CVHistogram;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.security.PermissionAttribute;
@@ -25,11 +26,29 @@ import javax.ws.rs.QueryParam;
 public class SplunkResource {
   @Inject SplunkAnalysisService splunkAnalysisService;
   @GET
-  @Path("get-saved-searches")
+  @Path("saved-searches")
   @Timed
   @ExceptionMetered
   public RestResponse<List<SplunkSavedSearch>> getSavedSearches(
       @QueryParam("accountId") @Valid final String accountId, @QueryParam("connectorId") String connectorId) {
     return new RestResponse<>(splunkAnalysisService.getSavedSearches(accountId, connectorId));
+  }
+
+  @GET
+  @Path("histogram")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<CVHistogram> getHistogram(@QueryParam("accountId") @Valid final String accountId,
+      @QueryParam("connectorId") String connectorId, @QueryParam("query") String query) {
+    return new RestResponse<>(splunkAnalysisService.getHistogram(accountId, connectorId, query));
+  }
+
+  @GET
+  @Path("samples")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getSamples(@QueryParam("accountId") @Valid final String accountId,
+      @QueryParam("connectorId") String connectorId, @QueryParam("query") String query) {
+    return new RestResponse<>(splunkAnalysisService.getSamples(accountId, connectorId, query));
   }
 }

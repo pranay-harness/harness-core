@@ -5,6 +5,7 @@ import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.URL_STRING;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -21,6 +22,8 @@ import com.splunk.SSLSecurityProtocol;
 import com.splunk.SavedSearchCollection;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
+import io.harness.cvng.beans.CVHistogram;
+import io.harness.cvng.beans.CVHistogram.CVHistogramBuilder;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -29,6 +32,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.http.HttpStatus;
 import org.apache.xerces.impl.dv.util.Base64;
+import org.jetbrains.annotations.NotNull;
 import software.wings.beans.SplunkConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cv.DataCollectionException;
@@ -39,11 +43,16 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -63,6 +72,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
   private static final FastDateFormat rfc3339 =
       FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC"));
   private static final int HTTP_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(25);
+  private static final long BAR_DURATION_IN_HOURS = 6;
 
   private final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   @Inject private EncryptionService encryptionService;
@@ -159,6 +169,68 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
         .map(splunkSearch
             -> SplunkSavedSearch.builder().title(splunkSearch.getTitle()).searchQuery(splunkSearch.getSearch()).build())
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public CVHistogram getHistogram(
+      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query) {
+    Preconditions.checkNotNull(splunkConfig, "splunkConfig can not be null");
+    Preconditions.checkNotNull(query, "query can not be null");
+    Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
+    CVHistogramBuilder cvHistogram =
+        CVHistogram.builder().query(query).intervalMs(Duration.ofHours(BAR_DURATION_IN_HOURS).toMillis());
+
+    try {
+      ResultsReaderJson resultsReaderJson = executeSearch(splunkService, getHistogramQuery(query),
+          Instant.now().minus(7, ChronoUnit.DAYS).toEpochMilli(), Instant.now().toEpochMilli());
+
+      Event event;
+      while ((event = resultsReaderJson.getNextEvent()) != null) {
+        String time = event.get("_time");
+        long timestamp = SPLUNK_DATE_FORMATER.parse(time).getTime();
+        String count = event.get("count");
+        cvHistogram.addBar(CVHistogram.Bar.builder().count(Long.parseLong(count)).timestamp(timestamp).build());
+      }
+    } catch (IOException | ParseException e) {
+      throw new IllegalStateException(e);
+    }
+    return cvHistogram.build();
+  }
+
+  @NotNull
+  private String getHistogramQuery(String query) {
+    return "search " + query + " | timechart count span=" + BAR_DURATION_IN_HOURS + "h | table _time, count";
+  }
+
+  @Override
+  public List<String> getSamples(
+      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query) {
+    Preconditions.checkNotNull(splunkConfig, "splunkConfig can not be null");
+    Preconditions.checkNotNull(query, "query can not be null");
+    Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
+    ResultsReaderJson resultsReaderJson;
+    List<String> results = new ArrayList<>();
+    try {
+      resultsReaderJson = executeSearch(splunkService, "search " + query + " | head 10",
+          Instant.now().minus(7, ChronoUnit.DAYS).toEpochMilli(), Instant.now().toEpochMilli());
+      Event event;
+      while ((event = resultsReaderJson.getNextEvent()) != null) {
+        results.add(event.get("_raw"));
+      }
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+    return results;
+  }
+
+  private ResultsReaderJson executeSearch(Service service, String query, long startTimeMs, long endTimeMs)
+      throws IOException {
+    Job job = createSearchJob(service, query, startTimeMs, endTimeMs);
+    JobResultsArgs resultsArgs = new JobResultsArgs();
+    resultsArgs.setOutputMode(JobResultsArgs.OutputMode.JSON);
+
+    InputStream results = job.getResults(resultsArgs);
+    return new ResultsReaderJson(results);
   }
 
   private void addThirdPartyAPILogRequestFields(
