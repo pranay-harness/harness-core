@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Value;
 import software.wings.graphql.schema.mutation.QLMutationInput;
+import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLK8sCloudProviderInput;
 import software.wings.graphql.schema.type.QLCloudProviderType;
 import software.wings.security.PermissionAttribute;
@@ -24,4 +25,5 @@ public class QLUpdateCloudProviderInput implements QLMutationInput {
   private QLK8sCloudProviderInput k8sCloudProvider;
   private QLPhysicalDataCenterCloudProviderInput physicalDataCenterCloudProvider;
   private QLAzureCloudProviderInput azureCloudProvider;
+  private QLAwsCloudProviderInput awsCloudProvider;
 }

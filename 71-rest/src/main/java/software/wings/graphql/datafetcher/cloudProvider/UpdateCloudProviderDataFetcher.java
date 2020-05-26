@@ -31,6 +31,7 @@ public class UpdateCloudProviderDataFetcher
   @Inject private PcfDataFetcherHelper pcfDataFetcherHelper;
   @Inject private PhysicalDataCenterDataFetcherHelper physicalDataCenterDataFetcherHelper;
   @Inject private AzureDataFetcherHelper azureDataFetcherHelper;
+  @Inject private AwsDataFetcherHelper awsDataFetcherHelper;
 
   public UpdateCloudProviderDataFetcher() {
     super(QLUpdateCloudProviderInput.class, QLUpdateCloudProviderPayload.class);
@@ -92,6 +93,11 @@ public class UpdateCloudProviderDataFetcher
         checkIfInputIsNotPresent(input.getCloudProviderType(), input.getAzureCloudProvider());
         azureDataFetcherHelper.updateSettingAttribute(
             settingAttribute, input.getAzureCloudProvider(), mutationContext.getAccountId());
+        break;
+      case AWS:
+        checkIfInputIsNotPresent(input.getCloudProviderType(), input.getAwsCloudProvider());
+        awsDataFetcherHelper.updateSettingAttribute(
+            settingAttribute, input.getAwsCloudProvider(), mutationContext.getAccountId());
         break;
       default:
         throw new InvalidRequestException("Invalid cloud provider type");
