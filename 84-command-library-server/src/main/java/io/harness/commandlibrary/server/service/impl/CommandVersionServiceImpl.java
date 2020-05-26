@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 @Singleton
 @Slf4j
 public class CommandVersionServiceImpl implements CommandVersionService {
-  public static final Pattern VESRION_REGEX_PATTERN = Pattern.compile("^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)$");
+  public static final Pattern VESRION_REGEX_PATTERN = Pattern.compile("^(\\d+\\.)(\\d+\\.)(\\*|\\d+)$");
   private final WingsPersistence wingsPersistence;
   private final Set<CommandArchiveHandler> commandArchiveHandlers;
   private final CommandService commandService;

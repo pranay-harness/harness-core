@@ -445,10 +445,11 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     int beginIndex = folderPath.lastIndexOf('/');
     List<TemplateFolder> templateFolders =
         getTemplateFolders(accountId, appId, folderPath.substring(beginIndex + 1), galleryId);
+    templateFolders.add(getRootLevelFolder(accountId, galleryId));
     for (TemplateFolder templateFolder : templateFolders) {
       // Verify the length of the parent folder matches the length of the given folder path
       // Otherwise, ignore
-      if (isEmpty(templateFolder.getPathId())) {
+      if (isEmpty(templateFolder.getPathId()) && templateFolder.getName().equals(folderPath)) {
         return templateFolder;
       }
       List<String> parentUuids =

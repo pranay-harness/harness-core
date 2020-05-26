@@ -1,6 +1,7 @@
 package software.wings.resources.commandlibrary;
 
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 
@@ -19,6 +20,7 @@ import software.wings.service.intfc.template.TemplateVersionService;
 
 import java.util.Collections;
 import java.util.List;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -54,9 +56,10 @@ public class CommandLibraryResource {
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<List<ImportedCommand>> listImportedCommandVersions(@QueryParam("accountId") String accountId,
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("commandNames") List<String> commandNames, @PathParam("commandStoreName") String commandStoreName) {
     return new RestResponse<>(
-        templateVersionService.listLatestVersionOfImportedTemplates(commandNames, commandStoreName, accountId));
+        templateVersionService.listLatestVersionOfImportedTemplates(commandNames, commandStoreName, accountId, appId));
   }
 
   @GET
@@ -65,9 +68,10 @@ public class CommandLibraryResource {
   @ExceptionMetered
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<ImportedCommand> listLatestVersionsOfTemplates(@QueryParam("accountId") String accountId,
-      @PathParam("commandName") String commandName, @PathParam("commandStoreName") String commandStoreName) {
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("commandName") String commandName,
+      @PathParam("commandStoreName") String commandStoreName) {
     return new RestResponse<>(
-        templateVersionService.listImportedTemplateVersions(commandName, commandStoreName, accountId));
+        templateVersionService.listImportedTemplateVersions(commandName, commandStoreName, accountId, appId));
   }
 
   @POST
@@ -76,9 +80,9 @@ public class CommandLibraryResource {
   @ExceptionMetered
   @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
   public RestResponse<Template> importTemplate(@QueryParam("accountId") String accountId,
-      @PathParam("commandName") String commandName, @PathParam("commandStoreName") String commandStoreName,
-      @PathParam("version") String version) {
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("commandName") String commandName,
+      @PathParam("commandStoreName") String commandStoreName, @PathParam("version") String version) {
     return new RestResponse<>(
-        importedTemplateService.getAndSaveImportedTemplate(version, commandName, commandStoreName, accountId));
+        importedTemplateService.getAndSaveImportedTemplate(version, commandName, commandStoreName, accountId, appId));
   }
 }

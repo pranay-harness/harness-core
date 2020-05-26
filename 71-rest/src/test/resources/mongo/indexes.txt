@@ -277,7 +277,7 @@ hosts {"name": "createdAt_1", "background": true} {"createdAt": 1}
 hosts {"name": "hostName_1", "background": true} {"hostName": 1}
 hosts {"name": "serviceTemplateId_1", "background": true} {"serviceTemplateId": 1}
 idempotent_locks {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-importedTemplates {"name": "account_command_idx", "unique": true} {"accountId": 1, "commandStoreName": 1, "commandName": 1}
+importedTemplates {"name": "account_app_command_idx", "background": true} {"accountId": 1, "appId": 1, "commandStoreName": 1, "commandName": 1}
 importedTemplates {"name": "appId_1", "background": true} {"appId": 1}
 importedTemplates {"name": "createdAt_1", "background": true} {"createdAt": 1}
 importedTemplates {"name": "template_idx", "unique": true} {"templateId": 1}

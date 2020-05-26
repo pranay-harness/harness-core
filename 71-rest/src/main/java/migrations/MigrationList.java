@@ -54,6 +54,7 @@ import migrations.all.DropExistingIndexForGitFileActivityMigration;
 import migrations.all.DropMongoGcsFileIdMappingCollectionMigration;
 import migrations.all.DropOldCollectionMigration;
 import migrations.all.DropStringCollectionMigration;
+import migrations.all.DropUniqueIndexOnImportedTemplate;
 import migrations.all.DropUniqueIndexOnTemplateGallery;
 import migrations.all.DropYamlGitSyncCollectionMigration;
 import migrations.all.DuplicateGlobalAccountMigration;
@@ -335,6 +336,8 @@ public class MigrationList {
         .add(Pair.of(309, BaseMigration.class))
         .add(Pair.of(310, DropAppIdIndexOnCommandLogs.class))
         .add(Pair.of(311, StackdriverMetricServiceGuardJsonMigration.class))
+        .add(Pair.of(312, DropUniqueIndexOnImportedTemplate.class))
+
         .build();
   }
 }

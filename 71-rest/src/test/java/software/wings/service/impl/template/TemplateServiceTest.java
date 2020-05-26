@@ -1083,8 +1083,8 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     template.setTemplateObject(SshCommandTemplate.builder().build());
     template.setUuid(template_1.getUuid());
     saveImportedTemplate(template, commandId, commandStoreId, "1.3", true);
-    ImportedCommand templateVersions =
-        templateVersionService.listImportedTemplateVersions(commandId, commandStoreId, GLOBAL_ACCOUNT_ID);
+    ImportedCommand templateVersions = templateVersionService.listImportedTemplateVersions(
+        commandId, commandStoreId, GLOBAL_ACCOUNT_ID, GLOBAL_APP_ID);
     List<String> versions = templateVersions.getImportedCommandVersionList()
                                 .stream()
                                 .map(ImportedCommandVersion::getVersion)
@@ -1141,8 +1141,8 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Category(UnitTests.class)
   public void nonImportedTemplateShouldNotBeReturnedByListImportedTemplateVersions() {
     templateService.save(getSshCommandTemplate());
-    ImportedCommand importedCommand =
-        templateVersionService.listImportedTemplateVersions("COMMANDNAME", "COMMANDSTORENAME", GLOBAL_ACCOUNT_ID);
+    ImportedCommand importedCommand = templateVersionService.listImportedTemplateVersions(
+        "COMMANDNAME", "COMMANDSTORENAME", GLOBAL_ACCOUNT_ID, GLOBAL_APP_ID);
     assertThat(importedCommand).isNull();
   }
 
@@ -1169,7 +1169,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     saveImportedTemplate(getSshCommandTemplate("test", GLOBAL_APP_ID), commandName_1, commandStoreName, "2.1", false);
 
     List<ImportedCommand> importedTemplateLatestVersions = templateVersionService.listLatestVersionOfImportedTemplates(
-        asList(commandName, commandName_1), commandStoreName, GLOBAL_ACCOUNT_ID);
+        asList(commandName, commandName_1), commandStoreName, GLOBAL_ACCOUNT_ID, GLOBAL_APP_ID);
     assertThat(importedTemplateLatestVersions.get(0).getHighestVersion()).isEqualTo("3.1");
     assertThat(importedTemplateLatestVersions.get(1).getHighestVersion()).isEqualTo("2.1");
   }

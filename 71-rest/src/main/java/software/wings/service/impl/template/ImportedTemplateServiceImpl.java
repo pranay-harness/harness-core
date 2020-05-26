@@ -1,7 +1,6 @@
 package software.wings.service.impl.template;
 
 import static java.util.Collections.emptyMap;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -83,12 +82,13 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
 
   @Override
   public List<Template> getTemplatesByCommandNames(
-      List<String> commandNames, String commandStoreName, String accountId) {
+      List<String> commandNames, String commandStoreName, String accountId, String appId) {
     List<String> templateIds = wingsPersistence.createQuery(ImportedTemplate.class)
                                    .filter(ImportedTemplateKeys.commandStoreName, commandStoreName)
                                    .field(ImportedTemplateKeys.commandName)
                                    .in(commandNames)
                                    .filter(ImportedTemplateKeys.accountId, accountId)
+                                   .filter(ImportedTemplateKeys.appId, appId)
                                    .project(ImportedTemplateKeys.templateId, true)
                                    .asList()
                                    .stream()
@@ -103,10 +103,12 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
   }
 
   @Override
-  public Template getTemplateByCommandName(String commandName, String commandStoreName, String accountId) {
+  public Template getTemplateByCommandName(
+      String commandName, String commandStoreName, String accountId, String appId) {
     Template template = null;
     try {
-      template = getTemplatesByCommandNames(Collections.singletonList(commandName), commandStoreName, accountId).get(0);
+      template =
+          getTemplatesByCommandNames(Collections.singletonList(commandName), commandStoreName, accountId, appId).get(0);
     } catch (Exception e) {
       logger.info(String.format(
                       "Template with command Id %s and command store id %s not found.", commandName, commandStoreName),
@@ -125,13 +127,13 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
 
   @Override
   public Map<String, Template> getCommandNameTemplateMap(
-      List<String> commandNames, String commandStoreName, String accountId) {
-    List<Template> templates = getTemplatesByCommandNames(commandNames, commandStoreName, accountId);
+      List<String> commandNames, String commandStoreName, String accountId, String appId) {
+    List<Template> templates = getTemplatesByCommandNames(commandNames, commandStoreName, accountId, appId);
     if (templates == null) {
       return null;
     }
     return commandNames.stream().collect(Collectors.toMap(
-        Function.identity(), commandName -> getTemplateByCommandName(commandName, commandStoreName, accountId)));
+        Function.identity(), commandName -> getTemplateByCommandName(commandName, commandStoreName, accountId, appId)));
   }
 
   @Override
@@ -149,12 +151,13 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
           }
           String latestVersion =
               String.valueOf(templateUuidLatestTemplateVersionMap.get(template.getUuid()).getImportedTemplateVersion());
-          ImportedTemplate importedTemplate = get(commandName, commandStoreName, accountId);
+          ImportedTemplate importedTemplate = get(commandName, commandStoreName, accountId, template.getAppId());
           return ImportedCommand.builder()
               .commandName(commandName)
               .commandStoreName(commandStoreName)
               .highestVersion(latestVersion)
               .templateId(template.getUuid())
+              .appId(template.getAppId())
               .description(template.getDescription())
               .name(template.getName())
               .build();
@@ -166,11 +169,12 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
   @Override
   public ImportedCommand makeImportedCommandObject(String commandName, String commandStoreName,
       List<TemplateVersion> templateVersions, String accountId, Template template) {
-    ImportedTemplate importedTemplate = get(commandName, commandStoreName, accountId);
-    List<ImportedCommandVersion> importedCommandVersionList = new ArrayList<>();
     if (template == null) {
       return null;
     }
+    ImportedTemplate importedTemplate = get(commandName, commandStoreName, accountId, template.getAppId());
+    List<ImportedCommandVersion> importedCommandVersionList = new ArrayList<>();
+
     if (templateVersions != null) {
       templateVersions.forEach(templateVersion -> {
         Template templateWithDetails =
@@ -193,6 +197,7 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
       });
     }
     ImportedCommandBuilder importedCommandBuilder = ImportedCommand.builder()
+                                                        .appId(importedTemplate.getAppId())
                                                         .commandName(commandName)
                                                         .importedCommandVersionList(importedCommandVersionList)
                                                         .commandStoreName(commandStoreName)
@@ -207,38 +212,39 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
   }
 
   @Override
-  public ImportedTemplate get(String commandName, String commandStoreName, String accountId) {
+  public ImportedTemplate get(String commandName, String commandStoreName, String accountId, String appId) {
     return wingsPersistence.createQuery(ImportedTemplate.class)
         .filter(ImportedTemplateKeys.commandName, commandName)
         .filter(ImportedTemplateKeys.accountId, accountId)
         .filter(ImportedTemplateKeys.commandStoreName, commandStoreName)
+        .filter(ImportedTemplateKeys.appId, appId)
         .get();
   }
 
   @Override
   public Template getAndSaveImportedTemplate(
-      String version, String commandName, String commandStoreName, String accountId) {
+      String version, String commandName, String commandStoreName, String accountId, String appId) {
     CommandDTO commandDTO = downloadAndGetCommandDTO(commandStoreName, commandName);
-    ImportedTemplate importedTemplate = getImportedTemplate(commandDTO, accountId);
+    ImportedTemplate importedTemplate = getImportedTemplate(commandDTO, accountId, appId);
     if (importedTemplate == null) {
-      return saveNewCommand(version, commandName, commandStoreName, accountId, commandDTO);
+      return saveNewCommand(version, commandName, commandStoreName, accountId, commandDTO, appId);
     } else {
       return downloadAndSaveVersionOfExistingCommand(
-          version, commandName, commandStoreName, accountId, importedTemplate);
+          version, commandName, commandStoreName, accountId, importedTemplate, appId);
     }
   }
 
-  private ImportedTemplate getImportedTemplate(CommandDTO commandDTO, String accountId) {
-    return get(commandDTO.getName(), commandDTO.getCommandStoreName(), accountId);
+  private ImportedTemplate getImportedTemplate(CommandDTO commandDTO, String accountId, String appId) {
+    return get(commandDTO.getName(), commandDTO.getCommandStoreName(), accountId, appId);
   }
 
-  private Template saveNewCommand(
-      String version, String commandName, String commandStoreName, String accountId, CommandDTO commandDTO) {
+  private Template saveNewCommand(String version, String commandName, String commandStoreName, String accountId,
+      CommandDTO commandDTO, String appId) {
     ImportedTemplate importedTemplate = ImportedTemplate.builder()
                                             .commandStoreName(commandDTO.getCommandStoreName())
                                             .commandName(commandDTO.getName())
                                             .accountId(accountId)
-                                            .appId(GLOBAL_APP_ID)
+                                            .appId(appId)
                                             .templateId(null)
                                             .description(commandDTO.getDescription())
                                             .name(commandDTO.getName())
@@ -247,26 +253,26 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
                                             .tags(commandDTO.getTags())
                                             .build();
     Template template =
-        downloadAndSaveNewCommandVersion(version, commandName, commandStoreName, accountId, importedTemplate);
+        downloadAndSaveNewCommandVersion(version, commandName, commandStoreName, accountId, importedTemplate, appId);
     importedTemplate.setTemplateId(template.getUuid());
     wingsPersistence.save(importedTemplate);
     return templateService.get(template.getUuid());
   }
 
   private Template downloadAndSaveNewCommandVersion(String version, String commandName, String commandStoreName,
-      String accountId, ImportedTemplate importedTemplate) {
+      String accountId, ImportedTemplate importedTemplate, String appId) {
     EnrichedCommandVersionDTO commandVersionDTO =
         downloadAndGetCommandVersionDTO(commandStoreName, commandName, version);
-    Template template = createTemplateFromCommandVersionDTO(commandVersionDTO, importedTemplate, accountId);
+    Template template = createTemplateFromCommandVersionDTO(commandVersionDTO, importedTemplate, accountId, appId);
     return templateService.saveReferenceTemplate(template);
   }
 
   private Template downloadAndSaveVersionOfExistingCommand(String version, String commandName, String commandStoreName,
-      String accountId, ImportedTemplate importedTemplate) {
+      String accountId, ImportedTemplate importedTemplate, String appId) {
     throwExceptionIfCommandVersionAlreadyDownloaded(version, importedTemplate);
     EnrichedCommandVersionDTO commandVersionDTO =
         downloadAndGetCommandVersionDTO(commandStoreName, commandName, version);
-    Template template = createTemplateFromCommandVersionDTO(commandVersionDTO, importedTemplate, accountId);
+    Template template = createTemplateFromCommandVersionDTO(commandVersionDTO, importedTemplate, accountId, appId);
     template.setUuid(importedTemplate.getTemplateId());
     return templateService.updateReferenceTemplate(template);
   }
@@ -287,8 +293,9 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
   }
 
   private void throwExceptionIfCommandVersionAlreadyDownloaded(String version, ImportedTemplate importedTemplate) {
-    ImportedCommand importedCommand = templateVersionService.listImportedTemplateVersions(
-        importedTemplate.getCommandName(), importedTemplate.getCommandStoreName(), importedTemplate.getAccountId());
+    ImportedCommand importedCommand =
+        templateVersionService.listImportedTemplateVersions(importedTemplate.getCommandName(),
+            importedTemplate.getCommandStoreName(), importedTemplate.getAccountId(), importedTemplate.getAppId());
     boolean present = importedCommand.getImportedCommandVersionList()
                           .stream()
                           .filter(importedCommandVersion -> importedCommandVersion.getVersion().equals(version))
@@ -302,12 +309,12 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
 
   @VisibleForTesting
   Template createTemplateFromCommandVersionDTO(
-      EnrichedCommandVersionDTO commandVersionDTO, ImportedTemplate importedTemplate, String accountId) {
+      EnrichedCommandVersionDTO commandVersionDTO, ImportedTemplate importedTemplate, String accountId, String appId) {
     Template template = Template.builder()
                             .templateObject(commandVersionDTO.getTemplateObject())
                             .variables(commandVersionDTO.getVariables())
                             .build();
-    template.setAppId(GLOBAL_APP_ID);
+    template.setAppId(appId);
     template.setAccountId(accountId);
     template.setVersionDetails(commandVersionDTO.getDescription());
     // TODO: Assuming only harness command gallery. May have to maintain a mapping for store ID to Gallery.

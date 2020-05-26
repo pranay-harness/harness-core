@@ -5,7 +5,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
-import static software.wings.common.TemplateConstants.APP_PREFIX;
 
 import com.google.inject.Inject;
 
@@ -190,8 +189,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
     String templateUri = yaml.getTemplateUri();
     String templateUuid;
     if (isNotEmpty(templateUri)) {
-      if (templateUri.startsWith(APP_PREFIX)) {
-        templateUri = templateUri.substring(APP_PREFIX.length());
+      if (isNotEmpty(appId)) {
         templateUuid = templateService.fetchTemplateIdFromUri(accountId, appId, templateUri);
       } else {
         templateUuid = templateService.fetchTemplateIdFromUri(accountId, templateUri);

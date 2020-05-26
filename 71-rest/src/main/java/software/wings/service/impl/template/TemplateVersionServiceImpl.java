@@ -38,26 +38,30 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
   }
 
   @Override
-  public ImportedCommand listImportedTemplateVersions(String commandName, String commandStoreName, String accountId) {
-    Template template = importedTemplateService.getTemplateByCommandName(commandName, commandStoreName, accountId);
-    List<TemplateVersion> templateVersions = null;
-    if (template != null) {
-      templateVersions = wingsPersistence.createQuery(TemplateVersion.class)
-                             .filter(TemplateVersionKeys.accountId, accountId)
-                             .filter(TemplateVersionKeys.templateUuid, template.getUuid())
-                             .filter(TemplateVersionKeys.changeType, IMPORTED)
-                             .order(Sort.ascending(TemplateVersionKeys.importedTemplateVersion))
-                             .asList();
+  public ImportedCommand listImportedTemplateVersions(
+      String commandName, String commandStoreName, String accountId, String appId) {
+    Template template =
+        importedTemplateService.getTemplateByCommandName(commandName, commandStoreName, accountId, appId);
+    if (template == null) {
+      return null;
     }
+    List<TemplateVersion> templateVersions = null;
+    templateVersions = wingsPersistence.createQuery(TemplateVersion.class)
+                           .filter(TemplateVersionKeys.accountId, accountId)
+                           .filter(TemplateVersionKeys.templateUuid, template.getUuid())
+                           .filter(TemplateVersionKeys.changeType, IMPORTED)
+                           .order(Sort.ascending(TemplateVersionKeys.importedTemplateVersion))
+                           .asList();
+
     return importedTemplateService.makeImportedCommandObject(
         commandName, commandStoreName, templateVersions, accountId, template);
   }
 
   @Override
   public List<ImportedCommand> listLatestVersionOfImportedTemplates(
-      List<String> commandNames, String commandStoreName, String accountId) {
+      List<String> commandNames, String commandStoreName, String accountId, String appId) {
     Map<String, Template> commandIdTemplateMap =
-        importedTemplateService.getCommandNameTemplateMap(commandNames, commandStoreName, accountId);
+        importedTemplateService.getCommandNameTemplateMap(commandNames, commandStoreName, accountId, appId);
     List<String> templateUuids =
         commandIdTemplateMap.values().stream().map(Template::getUuid).collect(Collectors.toList());
     List<TemplateVersion> templateVersions = wingsPersistence.createQuery(TemplateVersion.class)

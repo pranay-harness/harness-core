@@ -14,6 +14,7 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.template.Template.FOLDER_ID_KEY;
 import static software.wings.beans.template.Template.NAME_KEY;
 import static software.wings.beans.template.Template.TYPE_KEY;
+import static software.wings.common.TemplateConstants.APP_PREFIX;
 import static software.wings.common.TemplateConstants.DEFAULT_TAG;
 import static software.wings.common.TemplateConstants.GALLERY_TOP_LEVEL_PATH_DELIMITER;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
@@ -271,7 +272,19 @@ public class TemplateHelper {
   }
 
   public static String obtainTemplateNameForImportedCommands(String templateUri) {
-    return templateUri.split(String.valueOf(GALLERY_TOP_LEVEL_PATH_DELIMITER))[1];
+    String uri = templateUri.split(String.valueOf(GALLERY_TOP_LEVEL_PATH_DELIMITER))[1];
+    if (uri.startsWith(APP_PREFIX)) {
+      return uri.split(String.valueOf(PATH_DELIMITER))[1];
+    }
+    return uri;
+  }
+
+  public static boolean isAppLevelImportedCommand(String templateUri) {
+    String uri = templateUri.split(String.valueOf(GALLERY_TOP_LEVEL_PATH_DELIMITER))[1];
+    if (uri.startsWith(APP_PREFIX)) {
+      return true;
+    }
+    return false;
   }
 
   public static String obtainTemplateFolderPath(String templateUri) {

@@ -8,7 +8,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.template.TemplateHelper.convertToEntityVariables;
-import static software.wings.common.TemplateConstants.APP_PREFIX;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -115,8 +114,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     ImportedTemplateDetails importedTemplateDetail = null;
     TemplateMetadata templateMetadata = null;
     if (isNotEmpty(templateUri)) {
-      if (templateUri.startsWith(APP_PREFIX)) {
-        templateUri = templateUri.substring(APP_PREFIX.length());
+      if (isNotEmpty(appId)) {
         templateUuid = templateService.fetchTemplateIdFromUri(accountId, appId, templateUri);
       } else {
         templateUuid = templateService.fetchTemplateIdFromUri(accountId, templateUri);
