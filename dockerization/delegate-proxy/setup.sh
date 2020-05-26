@@ -32,6 +32,14 @@ KUBECTL_MAC_DIR="${IMAGES_DIR}/kubectl/darwin/$KUBECTL_VERSION/"
 KUBECTL_LINUX_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/linux/amd64/kubectl
 KUBECTL_MAC_URL=https://app.harness.io/storage/harness-download/kubernetes-release/release/"$KUBECTL_VERSION"/bin/darwin/amd64/kubectl
 
+KUSTOMIZE_VERSION=v3.5.4
+
+KUSTOMIZE_LINUX_DIR="${IMAGES_DIR}/kustomize/linux/$KUSTOMIZE_VERSION/"
+KUSTOMIZE_MAC_DIR="${IMAGES_DIR}/kustomize/darwin/$KUSTOMIZE_VERSION/"
+
+KUSTOMIZE_LINUX_URL=https://app.harness.io/storage/harness-download/harness-kustomize/release/"$KUSTOMIZE_VERSION"/bin/linux/amd64/kustomize
+KUSTOMIZE_MAC_URL=https://app.harness.io/storage/harness-download/harness-kustomize/release/"$KUSTOMIZE_VERSION"/bin/darwin/amd64/kustomize
+
 OC_VERSION=v4.2.16
 OC_LINUX_URL=https://app.harness.io/storage/harness-download/harness-oc/release/"$OC_VERSION"/bin/linux/amd64/oc
 OC_MAC_URL=https://app.harness.io/storage/harness-download/harness-oc/release/"$OC_VERSION"/bin/darwin/amd64/oc
@@ -61,6 +69,13 @@ mkdir -p $KUBECTL_MAC_DIR
 
 curl -L -o "${KUBECTL_MAC_DIR}kubectl" "${KUBECTL_MAC_URL}"
 curl -L -o "${KUBECTL_LINUX_DIR}kubectl" "${KUBECTL_LINUX_URL}"
+
+mkdir -p $KUSTOMIZE_LINUX_DIR
+mkdir -p $KUSTOMIZE_MAC_DIR
+
+curl -L -o "${KUSTOMIZE_MAC_DIR}kustomize" "${KUSTOMIZE_MAC_URL}"
+curl -L -o "${KUSTOMIZE_LINUX_DIR}kustomize" "${KUSTOMIZE_LINUX_URL}"
+
 
 mkdir -p $OC_LINUX_DIR
 mkdir -p $OC_MAC_DIR
@@ -96,7 +111,7 @@ for goversion in v0.2 v0.3; do
     curl -L -o "${GOTEMPLATE_MAC_DIR}go-template" "${GOTEMPLATE_MAC_URL}"
 done
 
-for helmversion in v2.13.1 v3.0.2; do
+for helmversion in v2.13.1 v3.0.2 v3.1.2; do
     echo "Adding helmversion $helmversion"
     HELM_LINUX_DIR="${IMAGES_DIR}/helm/linux/$helmversion/"
     HELM_MAC_DIR="${IMAGES_DIR}/helm/darwin/$helmversion/"
@@ -186,7 +201,7 @@ function setupDelegateJars(){
 function setupClientUtils(){
    echo "################################ Setting up Client Utils ################################"
 
-   echo "Copying kubectl go-template helm chartmuseum tf-config-inspect and oc"
+   echo "Copying kubectl go-template helm chartmuseum tf-config-inspect and oc kustomize"
 
     for platform in linux darwin; do
         for kubectlversion in v1.13.2; do
@@ -194,12 +209,17 @@ function setupClientUtils(){
             cp images/kubectl/${platform}/$kubectlversion/kubectl ${STORAGE_DIR_LOCATION}/harness-download/kubernetes-release/release/$kubectlversion/bin/${platform}/amd64/
         done
 
+        for kustomizeversion in v3.5.4; do
+            mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-kustomize/release/$kustomizeversion/bin/${platform}/amd64/
+            cp images/kustomize/${platform}/$kustomizeversion/kustomize ${STORAGE_DIR_LOCATION}/harness-download/harness-kustomize/release/$kustomizeversion/bin/${platform}/amd64/
+        done
+
         for gotemplateversion in v0.2 v0.3; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/snapshot-go-template/release/$gotemplateversion/bin/${platform}/amd64/
             cp images/go-template/${platform}/$gotemplateversion/go-template ${STORAGE_DIR_LOCATION}/harness-download/snapshot-go-template/release/$gotemplateversion/bin/${platform}/amd64/
         done
 
-        for helmversion in v2.13.1; do
+        for helmversion in v2.13.1 v3.0.2 v3.1.2; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
             cp images/helm/${platform}/$helmversion/helm ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
         done
