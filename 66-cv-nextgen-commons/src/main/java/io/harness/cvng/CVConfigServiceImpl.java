@@ -2,7 +2,7 @@ package io.harness.cvng;
 
 import com.google.inject.Inject;
 
-import io.harness.cvng.models.CVConfig;
+import io.harness.cvng.core.services.entities.CVConfig;
 import io.harness.persistence.HPersistence;
 
 import javax.annotation.Nullable;

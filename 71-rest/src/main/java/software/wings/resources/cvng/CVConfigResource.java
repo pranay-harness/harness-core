@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.cvng.CVConfigService;
-import io.harness.cvng.models.CVConfig;
+import io.harness.cvng.core.services.entities.CVConfig;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import retrofit2.http.Body;

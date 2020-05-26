@@ -57,6 +57,7 @@ import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
+import io.harness.cvng.core.resources.DataSourceResource;
 import io.harness.delay.DelayEventListener;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
@@ -383,6 +384,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerResources(environment, injector);
 
+    registerCVNextGenResources(environment, injector);
+
     registerManagedBeans(configuration, environment, injector);
 
     registerQueueListeners(injector);
@@ -554,6 +557,16 @@ public class WingsApplication extends Application<MainConfiguration> {
     Reflections reflections = new Reflections(AppResource.class.getPackage().getName());
 
     Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
+    for (Class<?> resource : resourceClasses) {
+      if (Resource.isAcceptable(resource)) {
+        environment.jersey().register(injector.getInstance(resource));
+      }
+    }
+  }
+
+  private void registerCVNextGenResources(Environment environment, Injector injector) {
+    Reflections reflections = new Reflections(DataSourceResource.class.getPackage().getName());
+    Set<Class<?>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
     for (Class<?> resource : resourceClasses) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));

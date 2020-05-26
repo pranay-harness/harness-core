@@ -1,0 +1,5 @@
+name: Resources
+metrics:
+  - name: CPU.%Busy
+    path: Application Infrastructure Performance|__tier_name_|Hardware Resources|CPU|%Busy
+    defaultIncluded: true
