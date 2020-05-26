@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -29,6 +30,8 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -59,6 +62,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 
@@ -71,6 +75,7 @@ public class EcsDaemonServiceSetupTest extends WingsBaseTest {
   @Mock private ArtifactCollectionUtils mockArtifactCollectionUtils;
   @Mock private ServiceResourceService mockServiceResourceService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
+  @Mock private SweepingOutputService mockSweepingOutputService;
 
   @InjectMocks private EcsDaemonServiceSetup state = new EcsDaemonServiceSetup("stateName");
 
@@ -169,6 +174,11 @@ public class EcsDaemonServiceSetupTest extends WingsBaseTest {
     doReturn(artifact).when(mockContext).getDefaultArtifactForService(anyString());
     ImageDetails details = ImageDetails.builder().name("imgName").tag("imgTag").build();
     doReturn(details).when(mockArtifactCollectionUtils).fetchContainerImageDetails(any(), anyString());
+    SweepingOutputInstanceBuilder builder1 = SweepingOutputInstance.builder();
+    SweepingOutputInstanceBuilder builder2 = SweepingOutputInstance.builder();
+    doReturn(builder1).doReturn(builder2).when(mockContext).prepareSweepingOutputBuilder(any());
+    doReturn("foo").doReturn("bar").when(mockEcsStateHelper).getSweepingOutputName(any(), anyBoolean(), anyString());
+    doReturn(null).doReturn(null).when(mockSweepingOutputService).save(any());
     ExecutionResponse response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
     verify(mockEcsStateHelper).populateFromDelegateResponse(any(), any(), any());
   }

@@ -3,6 +3,7 @@ package software.wings.api;
 import static io.harness.context.ContextElementType.CONTAINER_SERVICE;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 import lombok.Builder;
 import lombok.Data;
@@ -22,7 +23,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
-public class ContainerServiceElement implements ContextElement {
+public class ContainerServiceElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;
   private String image;

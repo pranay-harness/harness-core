@@ -6,12 +6,14 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.util.Collections.singletonList;
+import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP_ROUTE53;
 
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -43,6 +45,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
@@ -71,14 +74,15 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
   @Getter @Setter private String serviceDiscoveryService1JSON;
   @Getter @Setter private String serviceDiscoveryService2JSON;
 
-  @Inject private transient SecretManager secretManager;
-  @Inject private transient EcsStateHelper ecsStateHelper;
-  @Inject private transient ActivityService activityService;
-  @Inject private transient SettingsService settingsService;
-  @Inject private transient DelegateService delegateService;
-  @Inject private transient ArtifactCollectionUtils artifactCollectionUtils;
-  @Inject private transient ServiceResourceService serviceResourceService;
-  @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private SecretManager secretManager;
+  @Inject private EcsStateHelper ecsStateHelper;
+  @Inject private ActivityService activityService;
+  @Inject private SettingsService settingsService;
+  @Inject private DelegateService delegateService;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   public EcsBlueGreenServiceSetupRoute53DNS(String name) {
     super(name, ECS_BG_SERVICE_SETUP_ROUTE53.name());
@@ -196,13 +200,17 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
 
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(ecsStateHelper.getSweepingOutputName(context, false, ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME))
+            .value(containerServiceElement)
+            .build());
+
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
     return ExecutionResponse.builder()
         .stateExecutionData(context.getStateExecutionData())
         .executionStatus(executionStatus)
-        .contextElement(containerServiceElement)
-        .notifyElement(containerServiceElement)
         .build();
   }
 

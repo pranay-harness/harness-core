@@ -210,7 +210,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     PhaseElement phaseElement = PhaseElement.builder()
                                     .uuid(generateUuid())
                                     .serviceElement(serviceElement)
-                                    .deploymentType(DeploymentType.ECS.name())
+                                    .deploymentType(DeploymentType.KUBERNETES.name())
                                     .build();
 
     ContainerServiceElement containerServiceElement =

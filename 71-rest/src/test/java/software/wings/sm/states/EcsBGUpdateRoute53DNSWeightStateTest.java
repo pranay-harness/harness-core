@@ -3,9 +3,9 @@ package software.wings.sm.states;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -67,6 +67,7 @@ public class EcsBGUpdateRoute53DNSWeightStateTest extends WingsBaseTest {
   @Mock private ActivityService mockActivityService;
   @Mock private DelegateService mockDelegateService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
+  @Mock private EcsStateHelper mockEcsStateHelper;
 
   @InjectMocks private EcsBGUpdateRoute53DNSWeightState state = new EcsBGUpdateRoute53DNSWeightState("stateName");
 
@@ -84,23 +85,23 @@ public class EcsBGUpdateRoute53DNSWeightStateTest extends WingsBaseTest {
                                     .serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build())
                                     .build();
     doReturn(phaseElement).when(mockContext).getContextElement(any(), anyString());
-    doReturn(singletonList(ContainerServiceElement.builder()
-                               .infraMappingId(INFRA_MAPPING_ID)
-                               .deploymentType(ECS)
-                               .clusterName(CLUSTER_NAME)
-                               .newEcsServiceName("EcsSvc__2")
-                               .ecsRegion("us-east-1")
-                               .targetGroupForNewService("TgtNew")
-                               .targetGroupForExistingService("TgtOld")
-                               .ecsBGSetupData(EcsBGSetupData.builder()
-                                                   .parentRecordName("ParentName")
-                                                   .parentRecordHostedZoneId("ParentId")
-                                                   .oldServiceDiscoveryArn("OldSDSArn")
-                                                   .newServiceDiscoveryArn("NewSDSArn")
-                                                   .build())
-                               .build()))
-        .when(mockContext)
-        .getContextElementList(any());
+    doReturn(ContainerServiceElement.builder()
+                 .infraMappingId(INFRA_MAPPING_ID)
+                 .deploymentType(ECS)
+                 .clusterName(CLUSTER_NAME)
+                 .newEcsServiceName("EcsSvc__2")
+                 .ecsRegion("us-east-1")
+                 .targetGroupForNewService("TgtNew")
+                 .targetGroupForExistingService("TgtOld")
+                 .ecsBGSetupData(EcsBGSetupData.builder()
+                                     .parentRecordName("ParentName")
+                                     .parentRecordHostedZoneId("ParentId")
+                                     .oldServiceDiscoveryArn("OldSDSArn")
+                                     .newServiceDiscoveryArn("NewSDSArn")
+                                     .build())
+                 .build())
+        .when(mockEcsStateHelper)
+        .getSetupElementFromSweepingOutput(any(), anyBoolean());
     doReturn(INFRA_MAPPING_ID).when(mockContext).fetchInfraMappingId();
     Environment environment = anEnvironment().uuid(ENV_ID).name(ENV_NAME).build();
     doReturn(environment).when(mockContext).getEnv();

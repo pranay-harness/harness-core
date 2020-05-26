@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -7,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AWS_ECS_SERVICE_DEPLOY;
 import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
+import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
 import com.google.inject.Inject;
 
@@ -76,7 +78,13 @@ public class EcsServiceDeploy extends State {
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
     EcsDeployDataBag deployDataBag = ecsStateHelper.prepareBagForEcsDeploy(
-        context, serviceResourceService, infrastructureMappingService, settingsService, secretManager);
+        context, serviceResourceService, infrastructureMappingService, settingsService, secretManager, false);
+    if (deployDataBag.getContainerElement() == null) {
+      return ExecutionResponse.builder()
+          .executionStatus(SKIPPED)
+          .stateExecutionData(aStateExecutionData().withErrorMsg("No container setup element found. Skipping.").build())
+          .build();
+    }
 
     Activity activity = ecsStateHelper.createActivity(
         context, ECS_SERVICE_DEPLOY, getStateType(), AWS_ECS_SERVICE_DEPLOY, activityService);

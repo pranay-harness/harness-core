@@ -18,4 +18,8 @@ public interface AwsConstants {
 
   // Main Ecs Container Name
   String MAIN_ECS_CONTAINER_NAME_TAG = "HARNESS_DEPLOYED_MAIN_CONTAINER";
+
+  // ECS Sweeping output constants
+  String ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME = "setupSweepingOutputEcs";
+  String ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME = "deploySweepingOutputEcs";
 }

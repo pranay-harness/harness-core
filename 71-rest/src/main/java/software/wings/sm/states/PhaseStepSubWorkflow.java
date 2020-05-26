@@ -575,11 +575,17 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         addNotifyElement = true;
       }
     } else if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
-      ContextElement contextElement =
-          fetchNotifiedContextElement(elementNotifyResponseData, ContainerServiceElement.class);
-      if (contextElement != null) {
-        contextElements.add(contextElement);
-        addNotifyElement = true;
+      /**
+       * Ecs setup has been migrated to Sweeping outputs to use
+       * post prod rollback
+       */
+      if (!DeploymentType.ECS.name().equals(deploymentType)) {
+        ContextElement contextElement =
+            fetchNotifiedContextElement(elementNotifyResponseData, ContainerServiceElement.class);
+        if (contextElement != null) {
+          contextElements.add(contextElement);
+          addNotifyElement = true;
+        }
       }
     } else if (phaseStepType == PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP) {
       ContextElement contextElement =

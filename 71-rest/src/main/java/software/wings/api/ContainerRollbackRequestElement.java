@@ -1,5 +1,6 @@
 package software.wings.api;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +16,7 @@ import java.util.Map;
  */
 @Data
 @Builder
-public class ContainerRollbackRequestElement implements ContextElement {
+public class ContainerRollbackRequestElement implements ContextElement, SweepingOutput {
   public static final String CONTAINER_ROLLBACK_REQUEST_PARAM = "CONTAINER_ROLLBACK_REQUEST_PARAM";
 
   private List<ContainerServiceData> newInstanceData;

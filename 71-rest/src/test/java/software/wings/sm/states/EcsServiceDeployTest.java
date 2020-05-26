@@ -98,7 +98,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
             .encryptedDataDetails(emptyList())
             .containerElement(ContainerServiceElement.builder().serviceSteadyStateTimeout(10).build())
             .build();
-    doReturn(bag).when(mockEcsStateHelper).prepareBagForEcsDeploy(any(), any(), any(), any(), any());
+    doReturn(bag).when(mockEcsStateHelper).prepareBagForEcsDeploy(any(), any(), any(), any(), any(), anyBoolean());
     Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
     doReturn(activity).when(mockEcsStateHelper).createActivity(any(), anyString(), anyString(), any(), any());
     ExecutionResponse response = state.execute(mockContext);

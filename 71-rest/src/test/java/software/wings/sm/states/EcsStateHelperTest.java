@@ -15,6 +15,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -60,6 +61,7 @@ import org.slf4j.Logger;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
+import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElementListParam;
@@ -98,6 +100,8 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
@@ -512,7 +516,16 @@ public class EcsStateHelperTest extends WingsBaseTest {
     ActivityService mockService = mock(ActivityService.class);
     doReturn(null).when(sweepingOutputService).save(any());
     doReturn("").when(mockContext).appendStateExecutionId(anyString());
-    doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(any());
+    doReturn(SweepingOutputInstance.builder())
+        .doReturn(SweepingOutputInstance.builder())
+        .when(mockContext)
+        .prepareSweepingOutputBuilder(any());
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .phaseName("Rollback Phase1")
+                                    .phaseNameForRollback("Phase1")
+                                    .serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build())
+                                    .build();
+    doReturn(phaseElement).when(mockContext).getContextElement(any(), anyString());
     ExecutionResponse response = helper.handleDelegateResponseForEcsDeploy(
         mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse), false, mockService, null, mockHelper);
     assertThat(response).isNotNull();
@@ -600,10 +613,16 @@ public class EcsStateHelperTest extends WingsBaseTest {
     Environment env = anEnvironment().uuid(ENV_ID).name(ENV_NAME).build();
     doReturn(app).when(mockParams).fetchRequiredApp();
     doReturn(env).when(mockParams).getEnv();
-    PhaseElement phaseElement =
-        PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build()).build();
-    ContainerRollbackRequestElement requestElement = ContainerRollbackRequestElement.builder().build();
-    doReturn(phaseElement).doReturn(requestElement).when(mockContext).getContextElement(any(), anyString());
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .phaseName("Rollback Phase1")
+                                    .phaseNameForRollback("Phase1")
+                                    .serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build())
+                                    .build();
+    doReturn(phaseElement)
+        .doReturn(phaseElement)
+        .doReturn(phaseElement)
+        .when(mockContext)
+        .getContextElement(any(), anyString());
     Service service = Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build();
     doReturn(service).when(mockService).getWithDetails(anyString(), anyString());
     EcsInfrastructureMapping mapping = anEcsInfrastructureMapping()
@@ -618,8 +637,15 @@ public class EcsStateHelperTest extends WingsBaseTest {
         aSettingAttribute().withUuid(SETTING_ID).withValue(AwsConfig.builder().build()).build();
     doReturn(settingAttribute).when(mockSettingService).get(anyString());
     doReturn(emptyList()).when(mockSecretManaer).getEncryptionDetails(any(), anyString(), anyString());
+    SweepingOutputInquiryBuilder builder1 = SweepingOutputInquiry.builder();
+    SweepingOutputInquiryBuilder builder2 = SweepingOutputInquiry.builder();
+    doReturn(builder1).doReturn(builder2).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(ContainerServiceElement.builder().build())
+        .doReturn(ContainerRollbackRequestElement.builder().build())
+        .when(sweepingOutputService)
+        .findSweepingOutput(any());
     EcsDeployDataBag bag = helper.prepareBagForEcsDeploy(
-        mockContext, mockService, mockMappingService, mockSettingService, mockSecretManaer);
+        mockContext, mockService, mockMappingService, mockSettingService, mockSecretManaer, true);
     assertThat(bag).isNotNull();
     assertThat(bag.getService()).isNotNull();
     assertThat(bag.getService().getUuid()).isEqualTo(SERVICE_ID);
@@ -627,5 +653,24 @@ public class EcsStateHelperTest extends WingsBaseTest {
     assertThat(bag.getEnv().getUuid()).isEqualTo(ENV_ID);
     assertThat(bag.getApp()).isNotNull();
     assertThat(bag.getApp().getUuid()).isEqualTo(APP_ID);
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testReverse() {
+    EcsStateHelper helper = spy(new EcsStateHelper());
+    List<ContainerServiceData> retVal = helper.reverse(singletonList(ContainerServiceData.builder()
+                                                                         .name("foo")
+                                                                         .desiredCount(1)
+                                                                         .desiredTraffic(10)
+                                                                         .previousCount(4)
+                                                                         .previousTraffic(40)
+                                                                         .build()));
+    assertThat(retVal).isNotNull();
+    assertThat(retVal.size()).isEqualTo(1);
+    assertThat(retVal.get(0).getName()).isEqualTo("foo");
+    assertThat(retVal.get(0).getPreviousCount()).isEqualTo(1);
+    assertThat(retVal.get(0).getDesiredCount()).isEqualTo(4);
   }
 }

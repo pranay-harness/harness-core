@@ -763,6 +763,7 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public DescribeListenersResult describeListenerResult(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String listenerArn, String region) {
+    encryptionService.decrypt(awsConfig, encryptionDetails);
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
     tracker.trackELBCall("Describe Listeners");
     return client.describeListeners(new DescribeListenersRequest().withListenerArns(listenerArn));

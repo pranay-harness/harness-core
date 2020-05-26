@@ -14,14 +14,12 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.CommandStateExecutionData;
-import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.beans.Activity;
 import software.wings.beans.command.EcsResizeParams;
 import software.wings.beans.container.AwsAutoScalarConfig;
@@ -47,15 +45,15 @@ import java.util.Map;
 public class EcsServiceRollback extends State {
   @Getter @Setter @Attributes(title = "Rollback all phases at once") private boolean rollbackAllPhases;
 
-  @Inject private transient SecretManager secretManager;
-  @Inject private transient EcsStateHelper ecsStateHelper;
-  @Inject private transient SettingsService settingsService;
-  @Inject private transient DelegateService delegateService;
-  @Inject private transient ActivityService activityService;
-  @Inject private transient ServiceResourceService serviceResourceService;
-  @Inject private transient ServiceTemplateService serviceTemplateService;
-  @Inject private transient InfrastructureMappingService infrastructureMappingService;
-  @Inject private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
+  @Inject private SecretManager secretManager;
+  @Inject private EcsStateHelper ecsStateHelper;
+  @Inject private SettingsService settingsService;
+  @Inject private DelegateService delegateService;
+  @Inject private ActivityService activityService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private ContainerDeploymentManagerHelper containerDeploymentHelper;
 
   public EcsServiceRollback(String name) {
     super(name, StateType.ECS_SERVICE_ROLLBACK.name());
@@ -76,8 +74,7 @@ public class EcsServiceRollback extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
-    ContextElement rollbackElement = context.getContextElement(
-        ContextElementType.PARAM, ContainerRollbackRequestElement.CONTAINER_ROLLBACK_REQUEST_PARAM);
+    ContextElement rollbackElement = ecsStateHelper.getDeployElementFromSweepingOutput(context);
     if (rollbackElement == null) {
       return ExecutionResponse.builder()
           .executionStatus(SKIPPED)
@@ -86,7 +83,13 @@ public class EcsServiceRollback extends State {
     }
 
     EcsDeployDataBag deployDataBag = ecsStateHelper.prepareBagForEcsDeploy(
-        context, serviceResourceService, infrastructureMappingService, settingsService, secretManager);
+        context, serviceResourceService, infrastructureMappingService, settingsService, secretManager, true);
+    if (deployDataBag.getContainerElement() == null) {
+      return ExecutionResponse.builder()
+          .executionStatus(SKIPPED)
+          .stateExecutionData(aStateExecutionData().withErrorMsg("No container setup element found. Skipping.").build())
+          .build();
+    }
 
     Activity activity = ecsStateHelper.createActivity(
         context, ECS_SERVICE_DEPLOY, getStateType(), AWS_ECS_SERVICE_DEPLOY, activityService);
