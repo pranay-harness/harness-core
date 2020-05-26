@@ -165,20 +165,25 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
   private QLEfficiencyScoreInfo getEfficiencyData(
       QLStatsBreakdownInfo costStats, QLBillingAmountData prevBillingAmountData) {
     int efficiencyScore = calculateEfficiencyScore(costStats);
-    QLStatsBreakdownInfo prevCostStats = QLStatsBreakdownInfo.builder()
-                                             .total(prevBillingAmountData.getCost())
-                                             .idle(prevBillingAmountData.getIdleCost())
-                                             .unallocated(prevBillingAmountData.getUnallocatedCost())
-                                             .build();
-    double prevUtilizedCost = billingDataHelper.getRoundedDoubleValue(prevCostStats.getTotal().doubleValue()
-        - prevCostStats.getIdle().doubleValue() - prevCostStats.getUnallocated().doubleValue());
-    prevCostStats.setUtilized(prevUtilizedCost);
-    int oldEfficiencyScore = calculateEfficiencyScore(prevCostStats);
+    BigDecimal trendPercentage = BigDecimal.ZERO;
+    if (prevBillingAmountData != null && prevBillingAmountData.getCost() != null
+        && prevBillingAmountData.getIdleCost() != null && prevBillingAmountData.getUnallocatedCost() != null) {
+      QLStatsBreakdownInfo prevCostStats = QLStatsBreakdownInfo.builder()
+                                               .total(prevBillingAmountData.getCost())
+                                               .idle(prevBillingAmountData.getIdleCost())
+                                               .unallocated(prevBillingAmountData.getUnallocatedCost())
+                                               .build();
+      double prevUtilizedCost = billingDataHelper.getRoundedDoubleValue(prevCostStats.getTotal().doubleValue()
+          - prevCostStats.getIdle().doubleValue() - prevCostStats.getUnallocated().doubleValue());
+      prevCostStats.setUtilized(prevUtilizedCost);
+      int oldEfficiencyScore = calculateEfficiencyScore(prevCostStats);
 
-    BigDecimal effScoreDiff = BigDecimal.valueOf((long) efficiencyScore - (long) oldEfficiencyScore);
+      BigDecimal effScoreDiff = BigDecimal.valueOf((long) efficiencyScore - (long) oldEfficiencyScore);
 
-    BigDecimal trendPercentage = effScoreDiff.multiply(BigDecimal.valueOf(100))
-                                     .divide(BigDecimal.valueOf(oldEfficiencyScore), 2, RoundingMode.HALF_UP);
+      trendPercentage = effScoreDiff.multiply(BigDecimal.valueOf(100))
+                            .divide(BigDecimal.valueOf(oldEfficiencyScore), 2, RoundingMode.HALF_UP);
+    }
+
     return QLEfficiencyScoreInfo.builder()
         .efficiencyScore(efficiencyScore)
         .trend(billingDataHelper.getRoundedDoubleValue(trendPercentage))

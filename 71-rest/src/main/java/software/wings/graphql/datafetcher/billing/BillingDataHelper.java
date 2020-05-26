@@ -148,7 +148,8 @@ public class BillingDataHelper {
     List<QLBillingDataFilter> trendFilters = getTrendFilter(filters, getStartInstant(filters), getEndInstant(filters));
     Instant filterStartTime = getStartInstant(trendFilters);
     Double trendPercent = 0.0;
-    if (prevBillingAmountData != null && prevBillingAmountData.getCost().compareTo(BigDecimal.ZERO) > 0) {
+    if (prevBillingAmountData != null && prevBillingAmountData.getCost() != null
+        && prevBillingAmountData.getCost().compareTo(BigDecimal.ZERO) > 0) {
       BigDecimal prevTotalBillingAmount = prevBillingAmountData.getCost();
       Instant startInstant = Instant.ofEpochMilli(prevBillingAmountData.getMinStartTime());
       BigDecimal amountDifference = billingAmountData.getCost().subtract(prevTotalBillingAmount);
