@@ -2,6 +2,7 @@ package io.harness.batch.processing.k8s;
 
 import io.harness.batch.processing.ccm.EnrichedEvent;
 import io.harness.batch.processing.k8s.rcd.ResourceClaim;
+import io.harness.batch.processing.k8s.rcd.ResourceClaimDiff;
 import io.harness.batch.processing.k8s.rcd.ResourceClaimDiffCalculator;
 import io.harness.perpetualtask.k8s.watch.K8sWatchEvent;
 import lombok.extern.slf4j.Slf4j;
@@ -27,17 +28,22 @@ public class WatchEventCostEstimator {
         Collectors.toMap(ResourceClaimDiffCalculator::getKind, Function.identity()));
   }
 
-  public BigDecimal estimateCost(EnrichedEvent<K8sWatchEvent> eK8sWatchEvent) {
+  public EstimatedCostDiff estimateCostDiff(EnrichedEvent<K8sWatchEvent> eK8sWatchEvent) {
     K8sWatchEvent k8sWatchEvent = eK8sWatchEvent.getEvent();
     String kind = k8sWatchEvent.getResourceRef().getKind();
     String oldYaml = k8sWatchEvent.getOldResourceYaml();
     String newYaml = k8sWatchEvent.getNewResourceYaml();
-    ResourceClaim resourceClaim = Optional.ofNullable(resourceClaimDiffCalculators.get(kind))
-                                      .map(rcDiffCalc -> rcDiffCalc.computeResourceDiff(oldYaml, newYaml))
-                                      .orElseGet(() -> {
-                                        logger.warn("Unknown kind: {}", kind);
-                                        return ResourceClaim.EMPTY;
-                                      });
+    ResourceClaimDiff resourceClaimDiff = Optional.ofNullable(resourceClaimDiffCalculators.get(kind))
+                                              .map(rcDiffCalc -> rcDiffCalc.computeResourceClaimDiff(oldYaml, newYaml))
+                                              .orElseGet(() -> {
+                                                logger.warn("Unknown kind: {}", kind);
+                                                return new ResourceClaimDiff(ResourceClaim.EMPTY, ResourceClaim.EMPTY);
+                                              });
+    return new EstimatedCostDiff(resourceToCost(resourceClaimDiff.getOldResourceClaim()),
+        resourceToCost(resourceClaimDiff.getNewResourceClaim()));
+  }
+
+  private BigDecimal resourceToCost(ResourceClaim resourceClaim) {
     return BigDecimal.valueOf(resourceClaim.getCpuNano())
         .divide(BigDecimal.valueOf(1_000_000_000L), RoundingMode.FLOOR)
         .multiply(getAvgCpuCostPerCpuCore())

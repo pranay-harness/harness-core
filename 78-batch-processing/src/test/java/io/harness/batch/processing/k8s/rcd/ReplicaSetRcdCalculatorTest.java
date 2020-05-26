@@ -17,7 +17,8 @@ public class ReplicaSetRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleAdd() throws Exception {
-    assertThat(new ReplicaSetRcdCalculator().computeResourceDiff("", replicaSetYaml("100m", "1200Mi", 2)))
+    assertThat(
+        new ReplicaSetRcdCalculator().computeResourceClaimDiff("", replicaSetYaml("100m", "1200Mi", 2)).getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(200000000L).memBytes(2516582400L).build());
   }
 
@@ -25,7 +26,8 @@ public class ReplicaSetRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleDelete() throws Exception {
-    assertThat(new ReplicaSetRcdCalculator().computeResourceDiff(replicaSetYaml("750m", "1300Mi", 3), ""))
+    assertThat(
+        new ReplicaSetRcdCalculator().computeResourceClaimDiff(replicaSetYaml("750m", "1300Mi", 3), "").getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(-2250000000L).memBytes(-4089446400L).build());
   }
 
@@ -33,8 +35,9 @@ public class ReplicaSetRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleUpdate() throws Exception {
-    assertThat(new ReplicaSetRcdCalculator().computeResourceDiff(
-                   replicaSetYaml("100m", "1200Mi", 2), replicaSetYaml("300m", "1.5G", 3)))
+    assertThat(new ReplicaSetRcdCalculator()
+                   .computeResourceClaimDiff(replicaSetYaml("100m", "1200Mi", 2), replicaSetYaml("300m", "1.5G", 3))
+                   .getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(700000000).memBytes(1983417600L).build());
   }
   private String replicaSetYaml(String cpu, String memory, int replicas) {

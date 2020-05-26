@@ -17,6 +17,7 @@ import io.harness.batch.processing.ccm.CostEventType;
 import io.harness.batch.processing.ccm.EnrichedEvent;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
+import io.harness.batch.processing.k8s.EstimatedCostDiff;
 import io.harness.batch.processing.k8s.WatchEventCostEstimator;
 import io.harness.batch.processing.processor.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
@@ -64,6 +65,8 @@ public class K8sWatchEventConfigTest extends CategoryTest {
     k8sLabelServiceInfoFetcher = mock(K8sLabelServiceInfoFetcher.class);
     costEventService = mock(CostEventService.class);
     watchEventCostEstimator = mock(WatchEventCostEstimator.class);
+    when(watchEventCostEstimator.estimateCostDiff(any()))
+        .thenReturn(new EstimatedCostDiff(BigDecimal.valueOf(1000), BigDecimal.valueOf(1300)));
   }
 
   @Test
@@ -207,7 +210,6 @@ public class K8sWatchEventConfigTest extends CategoryTest {
     when(costEventService.create(captor.capture())).thenReturn(true);
     when(k8sYamlDao.ensureYamlSaved(ACCOUNT_ID, CLUSTER_ID, UID, "12345", "added-yaml"))
         .thenReturn("ZS5mUwfQSFO1pTljLKWG-Q");
-    when(watchEventCostEstimator.estimateCost(any())).thenReturn(BigDecimal.valueOf(12.34));
     ItemWriter<EnrichedEvent<K8sWatchEvent>> writer =
         k8sWatchEventConfig.writer(k8sYamlDao, costEventService, watchEventCostEstimator);
     long occurredAt = 1583395677;
@@ -246,10 +248,11 @@ public class K8sWatchEventConfigTest extends CategoryTest {
                          .serviceId("svc-id")
                          .cloudProviderId("cloud-provider-id")
                          .envId("env-id")
-                         .billingAmount(BigDecimal.valueOf(12.34))
                          .namespace("workload-namespace")
                          .workloadName("workload-name")
                          .workloadType("workload-kind")
+                         .billingAmount(BigDecimal.valueOf(300))
+                         .costChangePercent(BigDecimal.valueOf(3000, 2))
                          .build());
     });
   }
@@ -264,7 +267,6 @@ public class K8sWatchEventConfigTest extends CategoryTest {
         .thenReturn("Cb3cDTt3RBegwMzuV9gH3A");
     when(k8sYamlDao.ensureYamlSaved(ACCOUNT_ID, CLUSTER_ID, UID, "12345", "new-yaml"))
         .thenReturn("ZS5mUwfQSFO1pTljLKWG-Q");
-    when(watchEventCostEstimator.estimateCost(any())).thenReturn(BigDecimal.valueOf(12.34));
     ItemWriter<EnrichedEvent<K8sWatchEvent>> writer =
         k8sWatchEventConfig.writer(k8sYamlDao, costEventService, watchEventCostEstimator);
     long occurredAt = 1583395677;
@@ -305,7 +307,8 @@ public class K8sWatchEventConfigTest extends CategoryTest {
                          .appId("app-id")
                          .serviceId("svc-id")
                          .cloudProviderId("cloud-provider-id")
-                         .billingAmount(BigDecimal.valueOf(12.34))
+                         .billingAmount(BigDecimal.valueOf(300))
+                         .costChangePercent(BigDecimal.valueOf(3000, 2))
                          .envId("env-id")
                          .namespace("workload-namespace")
                          .workloadName("workload-name")
@@ -322,7 +325,6 @@ public class K8sWatchEventConfigTest extends CategoryTest {
     when(costEventService.create(captor.capture())).thenReturn(true);
     when(k8sYamlDao.ensureYamlSaved(ACCOUNT_ID, CLUSTER_ID, UID, "12334", "deleted-yaml"))
         .thenReturn("Cb3cDTt3RBegwMzuV9gH3A");
-    when(watchEventCostEstimator.estimateCost(any())).thenReturn(BigDecimal.valueOf(12.34));
     ItemWriter<EnrichedEvent<K8sWatchEvent>> writer =
         k8sWatchEventConfig.writer(k8sYamlDao, costEventService, watchEventCostEstimator);
     long occurredAt = 1583395677;
@@ -361,10 +363,11 @@ public class K8sWatchEventConfigTest extends CategoryTest {
                          .serviceId("svc-id")
                          .cloudProviderId("cloud-provider-id")
                          .envId("env-id")
-                         .billingAmount(BigDecimal.valueOf(12.34))
                          .namespace("workload-namespace")
                          .workloadName("workload-name")
                          .workloadType("workload-kind")
+                         .billingAmount(BigDecimal.valueOf(300))
+                         .costChangePercent(BigDecimal.valueOf(3000, 2))
                          .build());
     });
   }

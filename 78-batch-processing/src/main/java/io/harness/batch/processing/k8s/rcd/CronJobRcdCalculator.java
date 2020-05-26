@@ -19,7 +19,7 @@ public class CronJobRcdCalculator implements ResourceClaimDiffCalculator {
   }
 
   @Override
-  public ResourceClaim computeResourceDiff(String oldYaml, String newYaml) {
+  public ResourceClaimDiff computeResourceClaimDiff(String oldYaml, String newYaml) {
     V1PodSpec oldPodSpec = Optional.ofNullable(Yaml.loadAs(oldYaml, V1beta1CronJob.class))
                                .map(V1beta1CronJob::getSpec)
                                .map(V1beta1CronJobSpec::getJobTemplate)
@@ -34,6 +34,6 @@ public class CronJobRcdCalculator implements ResourceClaimDiffCalculator {
                                .map(V1JobSpec::getTemplate)
                                .map(V1PodTemplateSpec::getSpec)
                                .orElse(null);
-    return ResourceClaimUtils.forPod(oldPodSpec, newPodSpec);
+    return ResourceClaimUtils.resourceClaimDiffForPod(oldPodSpec, newPodSpec);
   }
 }

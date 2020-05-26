@@ -10,6 +10,7 @@ import io.harness.batch.processing.ccm.EnrichedEvent;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.data.CostEventData.CostEventDataBuilder;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
+import io.harness.batch.processing.k8s.EstimatedCostDiff;
 import io.harness.batch.processing.k8s.WatchEventCostEstimator;
 import io.harness.batch.processing.processor.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.reader.EventReaderFactory;
@@ -39,6 +40,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.wings.beans.instance.HarnessServiceInfo;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -156,6 +158,9 @@ public class K8sWatchEventConfig {
                     default:
                       Switch.unhandled(watchEventType);
                   }
+                  EstimatedCostDiff estimatedCostDiff = watchEventCostEstimator.estimateCostDiff(enrichedK8sEvent);
+                  BigDecimal diffAmount = estimatedCostDiff.getDiffAmount();
+                  BigDecimal diffPercent = estimatedCostDiff.getDiffAmountPercent();
                   CostEventDataBuilder costEventDataBuilder =
                       CostEventData.builder()
                           .accountId(enrichedK8sEvent.getAccountId())
@@ -168,9 +173,10 @@ public class K8sWatchEventConfig {
                           .namespace(k8sWatchEvent.getResourceRef().getNamespace())
                           .workloadName(k8sWatchEvent.getResourceRef().getName())
                           .workloadType(k8sWatchEvent.getResourceRef().getKind())
-                          .billingAmount(watchEventCostEstimator.estimateCost(enrichedK8sEvent))
+                          .billingAmount(diffAmount)
                           .oldYamlRef(oldYamlRef)
-                          .newYamlRef(newYamlRef);
+                          .newYamlRef(newYamlRef)
+                          .costChangePercent(diffPercent);
                   if (enrichedK8sEvent.getHarnessServiceInfo() != null) {
                     costEventDataBuilder =
                         costEventDataBuilder.appId(enrichedK8sEvent.getHarnessServiceInfo().getAppId())

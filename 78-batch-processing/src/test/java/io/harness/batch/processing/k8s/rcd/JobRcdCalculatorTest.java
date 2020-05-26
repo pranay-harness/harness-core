@@ -19,7 +19,7 @@ public class JobRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleAdd() throws Exception {
-    assertThat(new JobRcdCalculator().computeResourceDiff("", jobYaml("100m", "1200Mi")))
+    assertThat(new JobRcdCalculator().computeResourceClaimDiff("", jobYaml("100m", "1200Mi")).getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(100000000L).memBytes(1258291200L).build());
   }
 
@@ -27,7 +27,7 @@ public class JobRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleDelete() throws Exception {
-    assertThat(new JobRcdCalculator().computeResourceDiff(jobYaml("750m", "1300Mi"), ""))
+    assertThat(new JobRcdCalculator().computeResourceClaimDiff(jobYaml("750m", "1300Mi"), "").getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(-750000000L).memBytes(-1363148800L).build());
   }
 
@@ -35,7 +35,8 @@ public class JobRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleUpdate() throws Exception {
-    assertThat(new JobRcdCalculator().computeResourceDiff(jobYaml("0.1", "1300Mi"), jobYaml("100m", "1200Mi")))
+    assertThat(
+        new JobRcdCalculator().computeResourceClaimDiff(jobYaml("0.1", "1300Mi"), jobYaml("100m", "1200Mi")).getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(0L).memBytes(-104857600L).build());
   }
   private String jobYaml(String cpu, String memory) {
