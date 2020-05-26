@@ -46,6 +46,7 @@ public class GitSyncServiceTest extends WingsBaseTest {
     assertThat(changeSetDTOList.size()).isEqualTo(6);
 
     // Case 2: With git to harness filter
+    // With git to harness filter
     List<ChangeSetDTO> changeSetDTOList_1 =
         gitSyncService.getCommitsWhichAreBeingProcessed(GLOBAL_ACCOUNT_ID, appId, 10, true);
     assertThat(changeSetDTOList_1).isNotNull();
@@ -55,7 +56,7 @@ public class GitSyncServiceTest extends WingsBaseTest {
     List<ChangeSetDTO> changeSetDTOList_2 =
         gitSyncService.getCommitsWhichAreBeingProcessed(GLOBAL_ACCOUNT_ID, appId, 10, false);
     assertThat(changeSetDTOList_2).isNotNull();
-    assertThat(changeSetDTOList_2.size()).isEqualTo(2);
+    assertThat(changeSetDTOList_2.size()).isEqualTo(0);
   }
 
   private void saveYamlChangeSetCombinations(
