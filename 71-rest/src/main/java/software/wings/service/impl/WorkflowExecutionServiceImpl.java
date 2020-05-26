@@ -55,7 +55,6 @@ import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
-import static software.wings.beans.FeatureName.NODE_AGGREGATION;
 import static software.wings.beans.FeatureName.WE_STATUS_UPDATE;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
@@ -896,9 +895,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                           .max(Long::compare)
                           .orElseGet(() -> Long.valueOf(0));
 
-    String accountId = appService.getAccountIdByAppId(appId);
-    List<String> params = null;
-    params = getParamsForTree(accountId);
+    List<String> params = getParamsForTree();
     Tree tree = mongoStore.get(GraphRenderer.algorithmId, Tree.STRUCTURE_HASH, workflowExecutionId, params);
     if (tree != null && tree.getContextOrder() >= lastUpdate) {
       return tree;
@@ -933,12 +930,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return cacheTree;
   }
 
-  private List<String> getParamsForTree(String accountId) {
-    List<String> params = null;
-    if (featureFlagService.isEnabled(NODE_AGGREGATION, accountId)) {
-      params = Collections.singletonList(String.valueOf(GraphRenderer.AGGREGATION_LIMIT));
-    }
-    return params;
+  private List<String> getParamsForTree() {
+    return Collections.singletonList(String.valueOf(GraphRenderer.AGGREGATION_LIMIT));
   }
 
   @Override
@@ -959,8 +952,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     Tree tree = null;
     List<String> params = null;
-    String accountId = appService.getAccountIdByAppId(workflowExecution.getAppId());
-    params = getParamsForTree(accountId);
+    params = getParamsForTree();
     if (!upToDate) {
       tree = mongoStore.<Tree>get(GraphRenderer.algorithmId, Tree.STRUCTURE_HASH, workflowExecution.getUuid(), params);
     }
