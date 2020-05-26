@@ -1,0 +1,25 @@
+input AwsCloudProviderInput {
+  name: String
+  usageScope: UsageScopeInput
+
+  useEc2IamCredentials: Boolean
+  ec2IamCredentials: Ec2IamCredentials
+  manualCredentials: AwsManualCredentials
+
+  assumeCrossAccountRole: Boolean
+  crossAccountAttributes: AwsCrossAccountAttributes
+}
+
+input Ec2IamCredentials {
+  tag: String
+}
+
+input AwsManualCredentials {
+  accessKey: String
+  secretKeySecretId: String
+}
+
+input AwsCrossAccountAttributes {
+  crossAccountRoleArn: String
+  externalId: String
+}

@@ -20,6 +20,7 @@ input CreateCloudProviderInput {
   k8sCloudProvider: K8sCloudProviderInput
   physicalDataCenterCloudProvider: PhysicalDataCenterCloudProviderInput
   azureCloudProvider: AzureCloudProviderInput
+  awsCloudProvider: AwsCloudProviderInput
 }
 
 input UpdateCloudProviderInput {
@@ -32,6 +33,7 @@ input UpdateCloudProviderInput {
   k8sCloudProvider: K8sCloudProviderInput
   physicalDataCenterCloudProvider: PhysicalDataCenterCloudProviderInput
   azureCloudProvider: AzureCloudProviderInput
+  awsCloudProvider: AwsCloudProviderInput
 }
 
 input DeleteCloudProviderInput {
