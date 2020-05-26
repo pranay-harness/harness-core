@@ -169,6 +169,9 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
 
   private void validateInternal(CustomSecretsManagerConfig secretsManagerConfig, Set<SecretVariable> testVariables) {
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(secretsManagerConfig.getAccountId());
+    if (secretsManagerConfig.isDefault()) {
+      throw new InvalidArgumentsException("Custom secret manager cannot be set as default secret manager", USER);
+    }
     CustomSecretsManagerValidationUtils.validateName(secretsManagerConfig.getName());
     CustomSecretsManagerValidationUtils.validateConnectionAttributes(secretsManagerConfig);
     CustomSecretsManagerValidationUtils.validateVariables(secretsManagerConfig, testVariables);
