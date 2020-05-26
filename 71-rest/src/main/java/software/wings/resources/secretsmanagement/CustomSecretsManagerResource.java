@@ -81,6 +81,7 @@ public class CustomSecretsManagerResource {
       @PathParam("configId") String configId, CustomSecretsManagerConfig customSecretsManagerConfig) {
     checkIfFeatureAvailable(accountId);
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      customSecretsManagerConfig.setUuid(configId);
       return new RestResponse<>(
           customSecretsManagerService.updateSecretsManager(accountId, customSecretsManagerConfig));
     }
