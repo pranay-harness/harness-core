@@ -9,4 +9,5 @@ public interface CECommunicationsService {
   CECommunications get(String accountId, String email, CommunicationType type);
   List<CECommunications> list(String accountId, String email);
   void update(String accountId, String email, CommunicationType type, boolean enable);
+  List<CECommunications> getEnabledEntries(String accountId, CommunicationType type);
 }
