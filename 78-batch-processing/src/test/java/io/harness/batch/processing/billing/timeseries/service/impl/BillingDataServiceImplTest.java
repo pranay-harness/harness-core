@@ -15,6 +15,7 @@ import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
+import jersey.repackaged.com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -71,7 +72,7 @@ public class BillingDataServiceImplTest extends CategoryTest {
   public void testCreateBillingData() throws SQLException {
     when(statement.execute()).thenReturn(true);
     InstanceBillingData instanceBillingData = instanceBillingData();
-    boolean insert = billingDataService.create(instanceBillingData, BatchJobType.INSTANCE_BILLING);
+    boolean insert = billingDataService.create(ImmutableList.of(instanceBillingData), BatchJobType.INSTANCE_BILLING);
     assertThat(insert).isTrue();
   }
 
@@ -115,9 +116,10 @@ public class BillingDataServiceImplTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testNullCreateBillingData() throws SQLException {
-    when(statement.execute()).thenThrow(new SQLException());
+    when(statement.executeBatch()).thenThrow(new SQLException());
     InstanceBillingData instanceBillingData = instanceBillingData();
-    boolean insert = billingDataService.create(instanceBillingData, BatchJobType.INSTANCE_BILLING_HOURLY);
+    boolean insert =
+        billingDataService.create(ImmutableList.of(instanceBillingData), BatchJobType.INSTANCE_BILLING_HOURLY);
     assertThat(insert).isFalse();
   }
 

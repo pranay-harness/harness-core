@@ -27,6 +27,7 @@ import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -58,6 +59,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
     Map<String, ? extends List<? extends InstanceData>> instanceDataGroupedCluster =
         instanceDataLists.stream().collect(Collectors.groupingBy(InstanceData::getClusterId));
 
+    List<InstanceBillingData> instanceBillingDataList = new ArrayList<>();
     instanceDataGroupedCluster.forEach((clusterRecordId, instanceDataList) -> {
       InstanceData firstInstanceData = instanceDataList.get(0);
       Map<String, UtilizationData> utilizationDataForInstances = utilizationDataService.getUtilizationDataForInstances(
@@ -150,9 +152,10 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
                     .cpuUnallocatedCost(BigDecimal.ZERO)
                     .memoryUnallocatedCost(BigDecimal.ZERO)
                     .build();
-            billingDataService.create(instanceBillingData, batchJobType);
+            instanceBillingDataList.add(instanceBillingData);
           });
     });
+    billingDataService.create(instanceBillingDataList, batchJobType);
   }
 
   String getParentInstanceId(InstanceData instanceData) {

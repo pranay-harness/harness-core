@@ -111,7 +111,7 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
     if (!validDB) {
       throw new SQLException("Invalid timescale db.");
     }
-    logger.info("Active connections : [{}],Idle connections : [{}]", ds.getNumActive(), ds.getNumIdle());
+    logger.debug("Active connections : [{}],Idle connections : [{}]", ds.getNumActive(), ds.getNumIdle());
     return ds.getConnection();
   }
 }

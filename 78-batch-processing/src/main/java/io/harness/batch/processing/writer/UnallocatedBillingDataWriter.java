@@ -26,6 +26,7 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,7 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
     BatchJobType batchJobType =
         CCMJobConstants.getBatchJobTypeFromJobParams(parameters, CCMJobConstants.BATCH_JOB_TYPE);
     Map<String, ClusterCostData> unallocatedCostMap = new HashMap<>();
+    List<InstanceBillingData> instanceBillingDataList = new ArrayList<>();
     lists.forEach(list -> {
       list.forEach(dataPoint -> {
         if (unallocatedCostMap.containsKey(dataPoint.getClusterId())) {
@@ -166,9 +168,9 @@ public class UnallocatedBillingDataWriter extends EventWriter implements ItemWri
           default:
             throw new IllegalStateException("Unexpected value: " + commonFields.getCloudProvider());
         }
-
-        billingDataService.create(instanceBillingDataBuilder.build(), batchJobType);
+        instanceBillingDataList.add(instanceBillingDataBuilder.build());
       });
     });
+    billingDataService.create(instanceBillingDataList, batchJobType);
   }
 }

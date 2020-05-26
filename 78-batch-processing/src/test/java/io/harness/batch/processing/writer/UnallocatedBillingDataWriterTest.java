@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -47,6 +48,8 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
   @Mock private BillingDataServiceImpl billingDataService;
   @Mock private UnallocatedBillingDataServiceImpl unallocatedBillingDataService;
   @Mock private JobParameters parameters;
+
+  @Captor private ArgumentCaptor<List<InstanceBillingData>> instanceBillingDataArgumentCaptor;
 
   private final Instant NOW = Instant.now();
   private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
@@ -141,39 +144,38 @@ public class UnallocatedBillingDataWriterTest extends CategoryTest {
   public void shouldWriteUnallocatedData() {
     // Calling Writer
     unallocatedBillingDataWriter.write(Collections.singletonList(unallocatedCostDataList));
-    ArgumentCaptor<InstanceBillingData> instanceBillingDataArgumentCaptor =
-        ArgumentCaptor.forClass(InstanceBillingData.class);
     verify(billingDataService, atMost(4)).create(instanceBillingDataArgumentCaptor.capture(), any());
-    List<InstanceBillingData> instanceUtilizationData = instanceBillingDataArgumentCaptor.getAllValues();
-    assertThat(instanceUtilizationData.get(0).getClusterId()).isEqualTo(CLUSTER_ID_1);
-    assertThat(instanceUtilizationData.get(0).getClusterType()).isEqualTo(K8S_CLUSTER_TYPE);
-    assertThat(instanceUtilizationData.get(0).getBillingAmount())
+    List<List<InstanceBillingData>> instanceUtilizationData = instanceBillingDataArgumentCaptor.getAllValues();
+
+    assertThat(instanceUtilizationData.get(0).get(0).getClusterId()).isEqualTo(CLUSTER_ID_1);
+    assertThat(instanceUtilizationData.get(0).get(0).getClusterType()).isEqualTo(K8S_CLUSTER_TYPE);
+    assertThat(instanceUtilizationData.get(0).get(0).getBillingAmount())
         .isEqualTo(BigDecimal.valueOf(COST_NODE - COST_POD - SYSTEM_COST_NODE));
-    assertThat(instanceUtilizationData.get(0).getCpuBillingAmount())
+    assertThat(instanceUtilizationData.get(0).get(0).getCpuBillingAmount())
         .isEqualTo(BigDecimal.valueOf(COST_NODE * .3 - COST_POD * .5 - SYSTEM_COST_NODE * .3));
-    assertThat(instanceUtilizationData.get(0).getMemoryBillingAmount())
+    assertThat(instanceUtilizationData.get(0).get(0).getMemoryBillingAmount())
         .isEqualTo(BigDecimal.valueOf(COST_NODE * .7 - COST_POD * .5 - SYSTEM_COST_NODE * .7));
-    assertThat(instanceUtilizationData.get(1).getClusterId()).isEqualTo(CLUSTER_ID_2);
-    assertThat(instanceUtilizationData.get(1).getClusterType()).isEqualTo(K8S_CLUSTER_TYPE);
-    assertThat(instanceUtilizationData.get(1).getBillingAmount())
+    assertThat(instanceUtilizationData.get(0).get(1).getClusterId()).isEqualTo(CLUSTER_ID_2);
+    assertThat(instanceUtilizationData.get(0).get(1).getClusterType()).isEqualTo(K8S_CLUSTER_TYPE);
+    assertThat(instanceUtilizationData.get(0).get(1).getBillingAmount())
         .isEqualTo(BigDecimal.valueOf(COST_NODE - COST_POD - SYSTEM_COST_NODE));
-    assertThat(instanceUtilizationData.get(1).getCpuBillingAmount())
+    assertThat(instanceUtilizationData.get(0).get(1).getCpuBillingAmount())
         .isEqualTo(BigDecimal.valueOf(COST_NODE * .7 - COST_POD * .5 - SYSTEM_COST_NODE * .7));
-    assertThat(instanceUtilizationData.get(1).getMemoryBillingAmount())
+    assertThat(instanceUtilizationData.get(0).get(1).getMemoryBillingAmount())
         .isEqualTo(BigDecimal.valueOf(COST_NODE * .3 - COST_POD * .5 - SYSTEM_COST_NODE * .3));
-    assertThat(instanceUtilizationData.get(2).getClusterId()).isEqualTo(CLUSTER_ID_3);
-    assertThat(instanceUtilizationData.get(2).getClusterType()).isEqualTo(ECS_CLUSTER_TYPE);
-    assertThat(instanceUtilizationData.get(2).getBillingAmount())
+    assertThat(instanceUtilizationData.get(0).get(2).getClusterId()).isEqualTo(CLUSTER_ID_3);
+    assertThat(instanceUtilizationData.get(0).get(2).getClusterType()).isEqualTo(ECS_CLUSTER_TYPE);
+    assertThat(instanceUtilizationData.get(0).get(2).getBillingAmount())
         .isEqualTo(BigDecimal.valueOf(COST_CONTAINER - COST_TASK - SYSTEM_COST_CONTAINER));
-    assertThat(instanceUtilizationData.get(2).getCpuBillingAmount())
+    assertThat(instanceUtilizationData.get(0).get(2).getCpuBillingAmount())
         .isEqualTo(BigDecimal.valueOf(COST_CONTAINER * .6 - COST_TASK * .5 - SYSTEM_COST_CONTAINER * .6));
-    assertThat(instanceUtilizationData.get(2).getMemoryBillingAmount())
+    assertThat(instanceUtilizationData.get(0).get(2).getMemoryBillingAmount())
         .isEqualTo(BigDecimal.valueOf(COST_CONTAINER * .4 - COST_TASK * .5 - SYSTEM_COST_CONTAINER * .4));
-    assertThat(instanceUtilizationData.get(3).getClusterId()).isEqualTo(CLUSTER_ID_4);
-    assertThat(instanceUtilizationData.get(3).getBillingAmount()).isEqualTo(BigDecimal.ZERO);
-    assertThat(instanceUtilizationData.get(3).getCpuBillingAmount()).isEqualTo(BigDecimal.ZERO);
-    assertThat(instanceUtilizationData.get(3).getMemoryBillingAmount()).isEqualTo(BigDecimal.ZERO);
-    assertThat(instanceUtilizationData.get(3).getClusterType()).isEqualTo(ECS_CLUSTER_TYPE);
+    assertThat(instanceUtilizationData.get(0).get(3).getClusterId()).isEqualTo(CLUSTER_ID_4);
+    assertThat(instanceUtilizationData.get(0).get(3).getBillingAmount()).isEqualTo(BigDecimal.ZERO);
+    assertThat(instanceUtilizationData.get(0).get(3).getCpuBillingAmount()).isEqualTo(BigDecimal.ZERO);
+    assertThat(instanceUtilizationData.get(0).get(3).getMemoryBillingAmount()).isEqualTo(BigDecimal.ZERO);
+    assertThat(instanceUtilizationData.get(0).get(3).getClusterType()).isEqualTo(ECS_CLUSTER_TYPE);
   }
 
   UnallocatedCostData getMockUnallocatedCostData(String clusterId, String instanceType, double cost, double systemCost,
