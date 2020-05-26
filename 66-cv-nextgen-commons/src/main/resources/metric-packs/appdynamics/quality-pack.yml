@@ -1,0 +1,8 @@
+name: Quality
+metrics:
+  - name: Errors per Minute
+    path: Errors|__tier_name__|/__group_name__|Errors per Minute
+    deaultIncluded: true
+  - name: Number of Errors
+    path: Errors|__tier_name__|/__group_name__|Number of Errors
+    deaultIncluded: true

@@ -1,0 +1,36 @@
+name: Performance And Availability
+metrics:
+  - name: Average Response Time (ms)
+    path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Average Response Time (ms)
+    defaultIncluded: true
+  - name: Calls per Minute
+    path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Calls per Minute
+    defaultIncluded: true
+  - name: Stall Count
+    path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Stall Count
+    defaultIncluded: true
+  - name: Errors per Minute
+    path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Errors per Minute
+    defaultIncluded: true
+  - name: 95th Percentile Response Time (ms)
+    path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|95th Percentile Response Time (ms)
+    defaultIncluded: false
+  - name: Average Block Time (ms)
+    path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Average Block Time (ms)
+    defaultIncluded: false
+  - name: Average CPU Used (ms)
+    path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Average CPU Used (ms)
+    defaultIncluded: false
+  - name: Average Wait Time (ms)
+    path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Average Wait Time (ms)
+    defaultIncluded: false
+  - name: Normal Average Response Time (ms)
+    path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Normal Average Response Time (ms)
+    defaultIncluded: false
+  - name: Number of Slow Calls
+    path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Number of Slow Calls
+    defaultIncluded: false
+  - name: Number of Very Slow Calls
+    path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Number of Very Slow Calls
+
+

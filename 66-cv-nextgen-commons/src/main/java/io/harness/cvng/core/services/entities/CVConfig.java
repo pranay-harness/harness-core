@@ -1,7 +1,8 @@
-package io.harness.cvng.models;
+package io.harness.cvng.core.services.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.cvng.models.VerificationDefinition;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -21,7 +22,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity("cvConfigs")
+@Entity(value = "cvConfigs", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class CVConfig implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;

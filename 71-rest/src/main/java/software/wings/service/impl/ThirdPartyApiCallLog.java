@@ -70,7 +70,7 @@ import java.util.List;
     @Field("stateExecutionId"), @Field(value = CreatedAtAware.CREATED_AT_KEY, type = IndexType.DESC)
   }, options = @IndexOptions(name = "queryIdx"))
 })
-@Entity(value = "thirdPartyApiCallLog")
+@Entity(value = "thirdPartyApiCallLog", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAware, UuidAware, AccountAccess {
   public static final String NO_STATE_EXECUTION_ID = "NO_STATE_EXECUTION";

@@ -1,6 +1,6 @@
 package io.harness.cvng;
 
-import io.harness.cvng.models.CVConfig;
+import io.harness.cvng.core.services.entities.CVConfig;
 
 import javax.annotation.Nullable;
 
