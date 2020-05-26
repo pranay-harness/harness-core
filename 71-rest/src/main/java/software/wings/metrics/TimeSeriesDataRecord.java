@@ -79,7 +79,9 @@ import java.util.Set;
         , @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
       }, options = @IndexOptions(name = "workflowExIdx")), @Index(fields = {
         @Field(value = "dataCollectionMinute", type = IndexType.DESC), @Field("cvConfigId")
-      }, options = @IndexOptions(name = "serviceGuardIdx"))
+      }, options = @IndexOptions(name = "serviceGuardIdx")), @Index(fields = {
+        @Field("cvConfigId"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
+      }, options = @IndexOptions(name = "service_guard_idx"))
 })
 @Data
 @Builder
