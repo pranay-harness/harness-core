@@ -86,6 +86,7 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
+import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.deployment.DeploymentMetadata;
@@ -137,7 +138,7 @@ public class PipelineServiceImpl implements PipelineService {
       Sets.newHashSet(Lists.charactersOf("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_ ()"));
 
   private static final String PIPELINE_ENV_STATE_VALIDATION_MESSAGE =
-      "Some workflows %s are found to be invalid/incomplete.";
+      "Some steps %s are found to be invalid/incomplete.";
 
   @Inject private AppService appService;
   @Inject private ExecutorService executorService;
@@ -234,6 +235,8 @@ public class PipelineServiceImpl implements PipelineService {
         ops);
 
     Pipeline updatedPipeline = wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
+
+    setSinglePipelineDetails(updatedPipeline, true);
 
     String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
     boolean isRename = !savedPipeline.getName().equals(pipeline.getName());
@@ -568,7 +571,7 @@ public class PipelineServiceImpl implements PipelineService {
     List<String> workflowIds = new ArrayList<>();
     List<String> infraMappingIds = new ArrayList<>();
     List<String> infraDefinitionIds = new ArrayList<>();
-    Set<String> invalidWorkflows = new HashSet<>();
+    Set<String> invalidStages = new HashSet<>();
 
     if (workflowCache == null) {
       workflowCache = new HashMap<>();
@@ -583,7 +586,11 @@ public class PipelineServiceImpl implements PipelineService {
         String workflowId = (String) pipelineStageElement.getProperties().get("workflowId");
         Workflow workflow = getWorkflowWithServices(pipeline, workflowCache, workflowId);
         if (!workflow.getOrchestrationWorkflow().isValid()) {
-          invalidWorkflows.add(workflow.getName());
+          invalidStages.add(pipelineStageElement.getName());
+          pipelineStageElement.setValid(false);
+          pipelineStageElement.setValidationMessage(workflow.getOrchestrationWorkflow().getValidationMessage());
+          pipelineStage.setValid(false);
+          pipelineStage.setValidationMessage(workflow.getOrchestrationWorkflow().getValidationMessage());
         }
 
         if (preExecutionChecks) {
@@ -615,9 +622,9 @@ public class PipelineServiceImpl implements PipelineService {
       }
     }
 
-    if (!invalidWorkflows.isEmpty()) {
+    if (!invalidStages.isEmpty()) {
       pipeline.setValid(false);
-      pipeline.setValidationMessage(format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidWorkflows.toString()));
+      pipeline.setValidationMessage(format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidStages.toString()));
 
       if (preExecutionChecks) {
         throw new InvalidRequestException(pipeline.getValidationMessage());
@@ -708,7 +715,7 @@ public class PipelineServiceImpl implements PipelineService {
     boolean templatized = false;
     boolean pipelineParameterized = false;
     boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
-    Set<String> invalidWorkflows = new HashSet<>();
+    Set<String> invalidStages = new HashSet<>();
     List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
     List<Variable> pipelineVariables = new ArrayList<>();
     List<DeploymentType> deploymentTypes = new ArrayList<>();
@@ -733,10 +740,14 @@ public class PipelineServiceImpl implements PipelineService {
           }
 
           if (!workflow.getOrchestrationWorkflow().isValid()) {
-            invalidWorkflows.add(workflow.getName());
+            invalidStages.add(pse.getName());
+            pse.setValid(false);
+            pse.setValidationMessage(workflow.getOrchestrationWorkflow().getValidationMessage());
+            pipelineStage.setValid(false);
+            pipelineStage.setValidationMessage(workflow.getOrchestrationWorkflow().getValidationMessage());
           }
 
-          validateWorkflowVariables(workflow, pse, invalidWorkflows, pse.getWorkflowVariables());
+          validateWorkflowVariables(workflow, pse, pipelineStage, invalidStages);
           setPipelineVariables(workflow, pse, pipelineVariables, withFinalValuesOnly, infraRefactor);
           if (!pipelineParameterized) {
             pipelineParameterized = checkPipelineEntityParameterized(pse.getWorkflowVariables(), workflow);
@@ -748,9 +759,9 @@ public class PipelineServiceImpl implements PipelineService {
         }
       }
     }
-    if (!invalidWorkflows.isEmpty()) {
+    if (!invalidStages.isEmpty()) {
       pipeline.setValid(false);
-      pipeline.setValidationMessage(format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidWorkflows.toString()));
+      pipeline.setValidationMessage(format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidStages.toString()));
     }
 
     pipeline.setPipelineVariables(reorderPipelineVariables(pipelineVariables));
@@ -817,7 +828,8 @@ public class PipelineServiceImpl implements PipelineService {
     return false;
   }
 
-  private void setServicesAndPipelineVariables(Pipeline pipeline) {
+  @VisibleForTesting
+  void setServicesAndPipelineVariables(Pipeline pipeline) {
     List<String> serviceIds = new ArrayList<>();
     List<String> envIds = new ArrayList<>();
     List<Variable> pipelineVariables = new ArrayList<>();
@@ -826,7 +838,7 @@ public class PipelineServiceImpl implements PipelineService {
     boolean hasBuildWorkflow = false;
     boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
     List<DeploymentType> deploymentTypes = new ArrayList<>();
-    Set<String> invalidWorkflows = new HashSet<>();
+    Set<String> invalidStages = new HashSet<>();
     Map<String, Workflow> workflowCache = new HashMap<>();
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
@@ -839,7 +851,11 @@ public class PipelineServiceImpl implements PipelineService {
           Workflow workflow = getWorkflow(pipeline, infraRefactor, workflowCache, workflowId);
 
           if (!workflow.getOrchestrationWorkflow().isValid()) {
-            invalidWorkflows.add(workflow.getName());
+            invalidStages.add(pse.getName());
+            pse.setValid(false);
+            pse.setValidationMessage(workflow.getOrchestrationWorkflow().getValidationMessage());
+            pipelineStage.setValid(false);
+            pipelineStage.setValidationMessage(workflow.getOrchestrationWorkflow().getValidationMessage());
           }
 
           if (!hasBuildWorkflow) {
@@ -848,7 +864,7 @@ public class PipelineServiceImpl implements PipelineService {
           resolveArtifactNeededServicesOfWorkflowAndEnvIds(
               serviceIds, envIds, deploymentTypes, pse.getWorkflowVariables(), workflow);
 
-          validateWorkflowVariables(workflow, pse, invalidWorkflows, pse.getWorkflowVariables());
+          validateWorkflowVariables(workflow, pse, pipelineStage, invalidStages);
 
           setPipelineVariables(workflow, pse, pipelineVariables, false, infraRefactor);
           if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
@@ -860,9 +876,9 @@ public class PipelineServiceImpl implements PipelineService {
         }
       }
     }
-    if (!invalidWorkflows.isEmpty()) {
+    if (!invalidStages.isEmpty()) {
       pipeline.setValid(false);
-      pipeline.setValidationMessage(format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidWorkflows.toString()));
+      pipeline.setValidationMessage(format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidStages.toString()));
     }
 
     pipeline.setServices(serviceResourceService.fetchServicesByUuids(pipeline.getAppId(), serviceIds));
@@ -1398,22 +1414,59 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
-  private void validateWorkflowVariables(Workflow workflow, PipelineStageElement pse, Set<String> invalidWorkflows,
-      Map<String, String> pseWorkflowVariables) {
-    if (isEmpty(pseWorkflowVariables)) {
-      return;
-    }
-    Set<String> pseWorkflowVariableNames = pseWorkflowVariables.keySet();
+  @VisibleForTesting
+  void validateWorkflowVariables(
+      Workflow workflow, PipelineStageElement pse, PipelineStage pipelineStage, Set<String> invalidStages) {
+    Map<String, String> pseWorkflowVariables = pse.getWorkflowVariables();
+    Set<String> pseWorkflowVariableNames =
+        isEmpty(pseWorkflowVariables) ? new HashSet<>() : pseWorkflowVariables.keySet();
     Set<String> workflowVariableNames = (workflow.getOrchestrationWorkflow().getUserVariables() == null)
         ? new HashSet<>()
         : (workflow.getOrchestrationWorkflow().getUserVariables().stream().map(Variable::getName).collect(toSet()));
+    Set<String> missingVariables = new HashSet<>();
     for (String pseWorkflowVariable : pseWorkflowVariableNames) {
       if (!workflowVariableNames.contains(pseWorkflowVariable)) {
         pse.setValid(false);
-        pse.setValidationMessage("Workflow variables updated or deleted");
-        invalidWorkflows.add(workflow.getName());
-        break;
+        missingVariables.add(pseWorkflowVariable);
       }
+    }
+
+    if (!isEmpty(missingVariables)) {
+      String errorMsg = String.format("Workflow Variable(s) \"%s\" updated or deleted after adding to the Pipeline",
+          String.join("\", \"", missingVariables));
+      pse.setValidationMessage(errorMsg);
+      pipelineStage.setValid(false);
+      pipelineStage.setValidationMessage(errorMsg);
+      invalidStages.add(pse.getName());
+      return;
+    }
+
+    if (isEmpty(workflowVariableNames)) {
+      return;
+    }
+
+    Set<String> requiredWorkflowVariableNames =
+        workflow.getOrchestrationWorkflow()
+            .getUserVariables()
+            .stream()
+            .filter(variable -> (variable.isMandatory()) && (variable.getType() != VariableType.TEXT))
+            .map(Variable::getName)
+            .collect(toSet());
+
+    for (String workflowVariable : requiredWorkflowVariableNames) {
+      if (!pseWorkflowVariableNames.contains(workflowVariable)) {
+        pse.setValid(false);
+        missingVariables.add(workflowVariable);
+      }
+    }
+
+    if (!isEmpty(missingVariables)) {
+      String errorMsg = String.format("Workflow Variable(s) \"%s\" added or updated after adding to the Pipeline",
+          String.join("\", \"", missingVariables));
+      pse.setValidationMessage(errorMsg);
+      pipelineStage.setValid(false);
+      pipelineStage.setValidationMessage(errorMsg);
+      invalidStages.add(pse.getName());
     }
   }
 
