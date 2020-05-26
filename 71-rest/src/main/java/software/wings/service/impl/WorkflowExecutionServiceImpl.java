@@ -4035,7 +4035,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private boolean rollbackEnabledForDeploymentType(InfrastructureDefinition infrastructureDefinition) {
     return DeploymentType.PCF == infrastructureDefinition.getDeploymentType()
         || DeploymentType.SSH == infrastructureDefinition.getDeploymentType()
-        || DeploymentType.WINRM == infrastructureDefinition.getDeploymentType();
+        || DeploymentType.WINRM == infrastructureDefinition.getDeploymentType()
+        || DeploymentType.ECS == infrastructureDefinition.getDeploymentType();
   }
 
   @Override

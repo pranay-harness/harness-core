@@ -20,8 +20,11 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
 import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
+import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME;
+import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.states.ContainerServiceSetup.DEFAULT_MAX;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -97,6 +100,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
@@ -623,6 +627,11 @@ public class EcsStateHelper {
       executionData.setOldInstanceData(deployResponse.getOldInstanceData());
       executionData.setNewInstanceData(deployResponse.getNewInstanceData());
       executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
+
+      if (!rollback) {
+        saveDeploySweepingOutputForRollback(
+            context, deployResponse.getOldInstanceData(), deployResponse.getNewInstanceData());
+      }
     }
 
     if (!rollback && SUCCESS == executionStatus) {
@@ -732,7 +741,7 @@ public class EcsStateHelper {
 
   public EcsDeployDataBag prepareBagForEcsDeploy(ExecutionContext context,
       ServiceResourceService serviceResourceService, InfrastructureMappingService infrastructureMappingService,
-      SettingsService settingsService, SecretManager secretManager) {
+      SettingsService settingsService, SecretManager secretManager, boolean rollback) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = workflowStandardParams.fetchRequiredApp();
     Environment env = workflowStandardParams.getEnv();
@@ -755,15 +764,12 @@ public class EcsStateHelper {
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId());
     String region = ecsInfrastructureMapping.getRegion();
-    ContainerServiceElement containerElement =
-        context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
-            .stream()
-            .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
-            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
-            .findFirst()
-            .orElse(ContainerServiceElement.builder().build());
-    ContainerRollbackRequestElement rollbackElement = context.getContextElement(
-        ContextElementType.PARAM, ContainerRollbackRequestElement.CONTAINER_ROLLBACK_REQUEST_PARAM);
+    ContainerServiceElement containerElement = getSetupElementFromSweepingOutput(context, rollback);
+
+    ContainerRollbackRequestElement rollbackElement = null;
+    if (rollback) {
+      rollbackElement = getDeployElementFromSweepingOutput(context);
+    }
 
     return EcsDeployDataBag.builder()
         .app(app)
@@ -776,5 +782,63 @@ public class EcsStateHelper {
         .encryptedDataDetails(encryptionDetails)
         .ecsInfrastructureMapping(ecsInfrastructureMapping)
         .build();
+  }
+
+  ContainerRollbackRequestElement getDeployElementFromSweepingOutput(ExecutionContext context) {
+    String sweepingOutputName = getSweepingOutputName(context, true, ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME);
+    SweepingOutputInquiry inquiry = context.prepareSweepingOutputInquiryBuilder().name(sweepingOutputName).build();
+    return sweepingOutputService.findSweepingOutput(inquiry);
+  }
+
+  ContainerServiceElement getSetupElementFromSweepingOutput(ExecutionContext context, boolean rollback) {
+    String sweepingOutputName = getSweepingOutputName(context, rollback, ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
+    SweepingOutputInquiry inquiry = context.prepareSweepingOutputInquiryBuilder().name(sweepingOutputName).build();
+    return sweepingOutputService.findSweepingOutput(inquiry);
+  }
+
+  private void saveDeploySweepingOutputForRollback(ExecutionContext context, List<ContainerServiceData> oldInstanceData,
+      List<ContainerServiceData> newInstanceData) {
+    ContainerRollbackRequestElement element = ContainerRollbackRequestElement.builder()
+                                                  .oldInstanceData(reverse(newInstanceData))
+                                                  .newInstanceData(reverse(oldInstanceData))
+                                                  .build();
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                   .name(getSweepingOutputName(context, false, ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME))
+                                   .value(element)
+                                   .build());
+  }
+
+  @VisibleForTesting
+  List<ContainerServiceData> reverse(List<ContainerServiceData> serviceData) {
+    if (isEmpty(serviceData)) {
+      return emptyList();
+    }
+    return serviceData.stream()
+        .map(sc
+            -> ContainerServiceData.builder()
+                   .name(sc.getName())
+                   .image(sc.getImage())
+                   .previousCount(sc.getDesiredCount())
+                   .desiredCount(sc.getPreviousCount())
+                   .previousTraffic(sc.getDesiredTraffic())
+                   .desiredTraffic(sc.getPreviousTraffic())
+                   .build())
+        .collect(toList());
+  }
+
+  @NotNull
+  String getSweepingOutputName(ExecutionContext context, boolean rollback, String prefix) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    String suffix = "";
+    if (ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME.equals(prefix)) {
+      suffix = phaseElement.getServiceElement().getUuid().trim();
+    } else if (ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME.equals(prefix)) {
+      if (rollback) {
+        suffix = phaseElement.getPhaseNameForRollback().trim();
+      } else {
+        suffix = phaseElement.getPhaseName().trim();
+      }
+    }
+    return prefix + suffix;
   }
 }

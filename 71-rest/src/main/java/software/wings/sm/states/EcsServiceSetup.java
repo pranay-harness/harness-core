@@ -4,12 +4,14 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.util.Collections.singletonList;
+import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -41,6 +43,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
@@ -67,14 +70,15 @@ public class EcsServiceSetup extends State {
   @Getter @Setter private ResizeStrategy resizeStrategy;
   @Getter @Setter private List<AwsAutoScalarConfig> awsAutoScalarConfigs;
 
-  @Inject private transient SecretManager secretManager;
-  @Inject private transient EcsStateHelper ecsStateHelper;
-  @Inject private transient ActivityService activityService;
-  @Inject private transient SettingsService settingsService;
-  @Inject private transient DelegateService delegateService;
-  @Inject private transient ArtifactCollectionUtils artifactCollectionUtils;
-  @Inject private transient ServiceResourceService serviceResourceService;
-  @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private SecretManager secretManager;
+  @Inject private EcsStateHelper ecsStateHelper;
+  @Inject private ActivityService activityService;
+  @Inject private SettingsService settingsService;
+  @Inject private DelegateService delegateService;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   public EcsServiceSetup(String name) {
     super(name, ECS_SERVICE_SETUP.name());
@@ -184,19 +188,17 @@ public class EcsServiceSetup extends State {
 
     ImageDetails imageDetails =
         artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId());
-
     ContainerServiceElement containerServiceElement = ecsStateHelper.buildContainerServiceElement(context,
         setupExecutionData, executionStatus, imageDetails, getMaxInstances(), getFixedInstances(),
         getDesiredInstanceCount(), getResizeStrategy(), getServiceSteadyStateTimeout(), logger);
-
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
-    executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(ecsStateHelper.getSweepingOutputName(context, false, ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME))
+            .value(containerServiceElement)
+            .build());
 
-    return ExecutionResponse.builder()
-        .stateExecutionData(executionData)
-        .executionStatus(executionStatus)
-        .contextElement(containerServiceElement)
-        .notifyElement(containerServiceElement)
-        .build();
+    executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
+    return ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus).build();
   }
 }

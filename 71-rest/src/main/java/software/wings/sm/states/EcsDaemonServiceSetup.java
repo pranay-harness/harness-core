@@ -5,12 +5,15 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.util.Collections.singletonList;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
+import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME;
+import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -20,6 +23,7 @@ import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
 import software.wings.api.DeploymentType;
@@ -42,6 +46,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
@@ -65,14 +70,15 @@ public class EcsDaemonServiceSetup extends State {
   @Getter @Setter private int serviceSteadyStateTimeout;
   @Getter @Setter private ResizeStrategy resizeStrategy;
 
-  @Inject private transient SecretManager secretManager;
-  @Inject private transient EcsStateHelper ecsStateHelper;
-  @Inject private transient ActivityService activityService;
-  @Inject private transient SettingsService settingsService;
-  @Inject private transient DelegateService delegateService;
-  @Inject private transient ArtifactCollectionUtils artifactCollectionUtils;
-  @Inject private transient ServiceResourceService serviceResourceService;
-  @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private SecretManager secretManager;
+  @Inject private EcsStateHelper ecsStateHelper;
+  @Inject private ActivityService activityService;
+  @Inject private SettingsService settingsService;
+  @Inject private DelegateService delegateService;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   public EcsDaemonServiceSetup(String name) {
     super(name, ECS_DAEMON_SERVICE_SETUP.name());
@@ -204,14 +210,23 @@ public class EcsDaemonServiceSetup extends State {
 
     ContainerServiceElement containerServiceElement =
         buildContainerServiceElement(context, setupExecutionData, imageDetails);
-
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(ecsStateHelper.getSweepingOutputName(context, false, ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME))
+            .value(containerServiceElement)
+            .build());
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(ecsStateHelper.getSweepingOutputName(context, false, ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME))
+            .value(ContainerRollbackRequestElement.builder()
+                       .previousEcsServiceSnapshotJson(executionData.getPreviousEcsServiceSnapshotJson())
+                       .ecsServiceArn(executionData.getEcsServiceArn())
+                       .previousAwsAutoScalarConfigs(executionData.getPreviousAwsAutoScalarConfigs())
+                       .build())
+            .build());
+
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-    return ExecutionResponse.builder()
-        .stateExecutionData(executionData)
-        .executionStatus(executionStatus)
-        .contextElement(containerServiceElement)
-        .notifyElement(containerServiceElement)
-        .build();
+    return ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus).build();
   }
 }

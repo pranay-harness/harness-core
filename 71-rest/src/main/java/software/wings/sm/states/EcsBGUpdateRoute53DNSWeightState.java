@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
@@ -11,6 +12,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import static software.wings.beans.Activity.Type.Command;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AWS_ECS_UPDATE_ROUTE_53_DNS_WEIGHT;
+import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.sm.StateType.ECS_ROUTE53_DNS_WEIGHT_UPDATE;
 
 import com.google.inject.Inject;
@@ -18,7 +20,6 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -29,7 +30,6 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.ContainerServiceElement;
-import software.wings.api.PhaseElement;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -53,7 +53,6 @@ import software.wings.sm.State;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class EcsBGUpdateRoute53DNSWeightState extends State {
   public static final String UPDATE_ROUTE_53_DNS_WEIGHTS = "Update Route 53 DNS Weights";
@@ -64,12 +63,13 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
   @Getter @Setter @Attributes(title = "New Service DNS Weight [0, 100]") private int newServiceDNSWeight;
   @Getter @Setter @Attributes(title = "Downsize old service") private boolean downsizeOldService;
 
-  @Inject private transient AppService appService;
-  @Inject private transient SecretManager secretManager;
-  @Inject private transient SettingsService settingsService;
-  @Inject private transient ActivityService activityService;
-  @Inject private transient DelegateService delegateService;
-  @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private AppService appService;
+  @Inject private SecretManager secretManager;
+  @Inject private SettingsService settingsService;
+  @Inject private ActivityService activityService;
+  @Inject private DelegateService delegateService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private EcsStateHelper ecsStateHelper;
 
   public EcsBGUpdateRoute53DNSWeightState(String name) {
     super(name, ECS_ROUTE53_DNS_WEIGHT_UPDATE.name());
@@ -119,18 +119,15 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context, boolean rollback) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
-    Optional<ContainerServiceElement> containerServiceElementOptional =
-        context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
-            .stream()
-            .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
-            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
-            .findFirst();
-    if (!containerServiceElementOptional.isPresent()) {
-      throw new InvalidRequestException("No container service element found while swap route 53 END weights state");
+    ContainerServiceElement containerServiceElement =
+        ecsStateHelper.getSetupElementFromSweepingOutput(context, rollback);
+    if (containerServiceElement == null) {
+      return ExecutionResponse.builder()
+          .executionStatus(SKIPPED)
+          .stateExecutionData(aStateExecutionData().withErrorMsg("No container setup element found. Skipping.").build())
+          .build();
     }
 
-    ContainerServiceElement containerServiceElement = containerServiceElementOptional.get();
     Activity activity = createActivity(context);
     Application application = appService.get(context.getAppId());
     EcsInfrastructureMapping infrastructureMapping = (EcsInfrastructureMapping) infrastructureMappingService.get(

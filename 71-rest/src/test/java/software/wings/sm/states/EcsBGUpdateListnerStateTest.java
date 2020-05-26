@@ -3,9 +3,9 @@ package software.wings.sm.states;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -102,22 +102,23 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
                                            .build();
     doReturn(mapping).when(mockInfrastructureMappingService).get(anyString(), anyString());
     doReturn(INFRA_MAPPING_ID).when(mockContext).fetchInfraMappingId();
-    doReturn(singletonList(ContainerServiceElement.builder()
-                               .infraMappingId(INFRA_MAPPING_ID)
-                               .deploymentType(ECS)
-                               .clusterName(CLUSTER_NAME)
-                               .newEcsServiceName("EcsSvc__2")
-                               .ecsRegion("us-east-1")
-                               .targetGroupForNewService("TgtNew")
-                               .targetGroupForExistingService("TgtOld")
-                               .ecsBGSetupData(EcsBGSetupData.builder()
-                                                   .prodEcsListener("ProdLArn")
-                                                   .stageEcsListener("StageLArn")
-                                                   .downsizedServiceName("EcsSvc__1")
-                                                   .build())
-                               .build()))
-        .when(mockContext)
-        .getContextElementList(any());
+    doReturn(ContainerServiceElement.builder()
+                 .infraMappingId(INFRA_MAPPING_ID)
+                 .deploymentType(ECS)
+                 .clusterName(CLUSTER_NAME)
+                 .newEcsServiceName("EcsSvc__2")
+                 .ecsRegion("us-east-1")
+                 .targetGroupForNewService("TgtNew")
+                 .targetGroupForExistingService("TgtOld")
+                 .ecsBGSetupData(EcsBGSetupData.builder()
+                                     .prodEcsListener("ProdLArn")
+                                     .stageEcsListener("StageLArn")
+                                     .downsizedServiceName("EcsSvc__1")
+                                     .build())
+                 .build())
+        .doReturn(null)
+        .when(mockEcsStateHelper)
+        .getSetupElementFromSweepingOutput(any(), anyBoolean());
     Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
     doReturn(activity).when(mockEcsStateHelper).createActivity(any(), anyString(), anyString(), any(), any());
     SettingAttribute cloudProvider = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
@@ -141,13 +142,9 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
     assertThat(config.getTargetGroupForNewService()).isEqualTo("TgtNew");
     assertThat(config.getTargetGroupForExistingService()).isEqualTo("TgtOld");
 
-    doReturn(singletonList(
-                 ContainerServiceElement.builder().deploymentType(ECS).infraMappingId(INFRA_MAPPING_ID + "1").build()))
-        .when(mockContext)
-        .getContextElementList(any());
     response = rollbackState.execute(mockContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
-    assertThat(response.getStateExecutionData().getErrorMsg()).isEqualTo("No context found for rollback. Skipping.");
+    assertThat(response.getStateExecutionData().getErrorMsg()).isEqualTo("No container setup element found. Skipping.");
   }
 
   @Test

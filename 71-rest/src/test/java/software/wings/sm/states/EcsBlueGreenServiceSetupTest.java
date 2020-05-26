@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -29,6 +30,8 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -60,6 +63,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 
@@ -72,6 +76,7 @@ public class EcsBlueGreenServiceSetupTest extends WingsBaseTest {
   @Mock private ArtifactCollectionUtils mockArtifactCollectionUtils;
   @Mock private ServiceResourceService mockServiceResourceService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
+  @Mock private SweepingOutputService mockSweepingOutputService;
 
   @InjectMocks private EcsBlueGreenServiceSetup state = new EcsBlueGreenServiceSetup("stateName");
 
@@ -180,6 +185,10 @@ public class EcsBlueGreenServiceSetupTest extends WingsBaseTest {
         .when(mockEcsStateHelper)
         .buildContainerServiceElement(
             any(), any(), any(), any(), anyString(), anyString(), anyString(), any(), anyInt(), any());
+    SweepingOutputInstanceBuilder builder = SweepingOutputInstance.builder();
+    doReturn(builder).when(mockContext).prepareSweepingOutputBuilder(any());
+    doReturn("foo").when(mockEcsStateHelper).getSweepingOutputName(any(), anyBoolean(), anyString());
+    doReturn(null).when(mockSweepingOutputService).save(any());
     ExecutionResponse response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
     verify(mockEcsStateHelper)
         .buildContainerServiceElement(

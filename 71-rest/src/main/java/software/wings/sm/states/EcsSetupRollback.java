@@ -54,14 +54,14 @@ public class EcsSetupRollback extends State {
 
   @Getter @Setter private int serviceSteadyStateTimeout;
 
-  @Inject private transient SecretManager secretManager;
-  @Inject private transient EcsStateHelper ecsStateHelper;
-  @Inject private transient ActivityService activityService;
-  @Inject private transient SettingsService settingsService;
-  @Inject private transient DelegateService delegateService;
-  @Inject private transient ArtifactCollectionUtils artifactCollectionUtils;
-  @Inject private transient ServiceResourceService serviceResourceService;
-  @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private SecretManager secretManager;
+  @Inject private EcsStateHelper ecsStateHelper;
+  @Inject private ActivityService activityService;
+  @Inject private SettingsService settingsService;
+  @Inject private DelegateService delegateService;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
 
   public EcsSetupRollback(String name) {
     super(name, StateType.ECS_SERVICE_SETUP_ROLLBACK.name());
@@ -88,8 +88,7 @@ public class EcsSetupRollback extends State {
     Activity activity = ecsStateHelper.createActivity(context, ECS_DAEMON_SERVICE_ROLLBACK_COMMAND, getStateType(),
         CommandUnitType.AWS_ECS_SERVICE_ROLLBACK_DAEMON, activityService);
 
-    ContainerRollbackRequestElement rollbackElement = context.getContextElement(
-        ContextElementType.PARAM, ContainerRollbackRequestElement.CONTAINER_ROLLBACK_REQUEST_PARAM);
+    ContainerRollbackRequestElement rollbackElement = ecsStateHelper.getDeployElementFromSweepingOutput(context);
 
     EcsSetupParams ecsSetupParams = (EcsSetupParams) ecsStateHelper.buildContainerSetupParams(context,
         EcsSetupStateConfig.builder()

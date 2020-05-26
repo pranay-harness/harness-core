@@ -16,7 +16,6 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ContainerServiceElement;
-import software.wings.api.PhaseElement;
 import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.beans.Activity;
@@ -45,14 +44,14 @@ import java.util.List;
 import java.util.Map;
 
 public class EcsBGUpdateListnerState extends State {
-  @Inject private transient AppService appService;
-  @Inject private transient InfrastructureMappingService infrastructureMappingService;
-  @Inject private transient DelegateService delegateService;
-  @Inject private transient SecretManager secretManager;
-  @Inject private transient SettingsService settingsService;
-  @Inject private transient ActivityService activityService;
-  @Inject private transient EcsStateHelper ecsStateHelper;
-  @Inject protected transient LogService logService;
+  @Inject private AppService appService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private DelegateService delegateService;
+  @Inject private SecretManager secretManager;
+  @Inject private SettingsService settingsService;
+  @Inject private ActivityService activityService;
+  @Inject private EcsStateHelper ecsStateHelper;
+  @Inject protected LogService logService;
 
   public static final String ECS_UPDATE_LISTENER_COMMAND = "ECS Update Listener Command";
 
@@ -81,7 +80,6 @@ public class EcsBGUpdateListnerState extends State {
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application application = appService.get(context.getAppId());
     Environment environment = workflowStandardParams.getEnv();
@@ -89,21 +87,13 @@ public class EcsBGUpdateListnerState extends State {
     EcsInfrastructureMapping infrastructureMapping = (EcsInfrastructureMapping) infrastructureMappingService.get(
         application.getUuid(), context.fetchInfraMappingId());
 
-    ContainerServiceElement containerElement =
-        context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
-            .stream()
-            .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
-            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
-            .findFirst()
-            .orElse(ContainerServiceElement.builder().build());
-
-    if (StateType.ECS_LISTENER_UPDATE_ROLLBACK.name().equals(this.getStateType())) {
-      if (containerElement == null || containerElement.getEcsBGSetupData() == null) {
-        return ExecutionResponse.builder()
-            .executionStatus(SKIPPED)
-            .stateExecutionData(aStateExecutionData().withErrorMsg("No context found for rollback. Skipping.").build())
-            .build();
-      }
+    ContainerServiceElement containerElement = ecsStateHelper.getSetupElementFromSweepingOutput(
+        context, StateType.ECS_LISTENER_UPDATE_ROLLBACK.name().equals(this.getStateType()));
+    if (containerElement == null || containerElement.getEcsBGSetupData() == null) {
+      return ExecutionResponse.builder()
+          .executionStatus(SKIPPED)
+          .stateExecutionData(aStateExecutionData().withErrorMsg("No container setup element found. Skipping.").build())
+          .build();
     }
 
     Activity activity = createActivity(context);
