@@ -15,6 +15,7 @@ public class ImportedCommand {
   private String commandName;
   private String templateId;
   private String name;
+  private String appId;
   private String description;
   private String createdAt;
   private String createdBy;

@@ -21,6 +21,7 @@ import static software.wings.beans.template.Template.REFERENCED_TEMPLATE_ID_KEY;
 import static software.wings.beans.template.Template.VERSION_KEY;
 import static software.wings.beans.template.TemplateGallery.GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY;
 import static software.wings.beans.template.TemplateHelper.addUserKeyWords;
+import static software.wings.beans.template.TemplateHelper.isAppLevelImportedCommand;
 import static software.wings.beans.template.TemplateHelper.mappedEntity;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateFolderPath;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
@@ -221,7 +222,7 @@ public class TemplateServiceImpl implements TemplateService {
     processTemplate(template);
 
     Template oldTemplate = getOldTemplate(template.getImportedTemplateDetails(), template.getAccountId(),
-        template.getVersion() == 0 ? null : String.valueOf(template.getVersion()));
+        template.getVersion() == 0 ? null : String.valueOf(template.getVersion()), template.getAppId());
     notNullCheck("Template " + template.getName() + " does not exist", oldTemplate);
     if (!oldTemplate.getName().equals(template.getName())) {
       throw new InvalidRequestException("Name of imported template cannot be changed.", USER);
@@ -604,8 +605,9 @@ public class TemplateServiceImpl implements TemplateService {
     return template;
   }
 
-  private Template getReferencedTemplate(String commandId, String commandStoreId, String accountId, String version) {
-    Template template = importedTemplateService.getTemplateByCommandName(commandId, commandStoreId, accountId);
+  private Template getReferencedTemplate(
+      String commandId, String commandStoreId, String accountId, String version, String appId) {
+    Template template = importedTemplateService.getTemplateByCommandName(commandId, commandStoreId, accountId, appId);
     notNullCheck(String.format("No Template not found for command %s.", commandId), template);
     return get(template.getUuid(), version);
   }
@@ -844,12 +846,13 @@ public class TemplateServiceImpl implements TemplateService {
     return null;
   }
 
-  private Template getOldTemplate(ImportedTemplateDetails importedTemplateDetails, String accountId, String version) {
+  private Template getOldTemplate(
+      ImportedTemplateDetails importedTemplateDetails, String accountId, String version, String appId) {
     // TODO: Refactor implementation.
     if (HarnessImportedTemplateDetails.class.equals(getImportedCommandDetailClass(importedTemplateDetails))) {
       HarnessImportedTemplateDetails templateDetails = (HarnessImportedTemplateDetails) importedTemplateDetails;
       return getReferencedTemplate(
-          templateDetails.getCommandName(), templateDetails.getCommandStoreName(), accountId, version);
+          templateDetails.getCommandName(), templateDetails.getCommandStoreName(), accountId, version, appId);
     }
     return null;
   }
@@ -920,12 +923,11 @@ public class TemplateServiceImpl implements TemplateService {
     }
     Template template = get(templateUuid);
     String galleryKeyName = templateGalleryHelper.getGalleryKeyNameByGalleryId(template.getGalleryId());
+    if (!template.getAppId().equals(GLOBAL_APP_ID)) {
+      templateUri = APP_PREFIX + templateUri;
+    }
     if (HARNESS_COMMAND_LIBRARY_GALLERY.name().equals(galleryKeyName)) {
       templateUri = IMPORTED_TEMPLATE_PREFIX + templateUri;
-    } else {
-      if (!template.getAppId().equals(GLOBAL_APP_ID)) {
-        templateUri = APP_PREFIX + templateUri;
-      }
     }
     return templateUri;
   }
@@ -953,14 +955,16 @@ public class TemplateServiceImpl implements TemplateService {
     String galleryId =
         templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()).getUuid();
     TemplateFolder templateFolder;
+    String templateAppId = appId;
     if (templateUri.startsWith(APP_PREFIX)) { // app level folder
-      String folderPath = obtainTemplateFolderPath(templateUri);
+      String folderPath = obtainTemplateFolderPath(templateUri.substring(APP_PREFIX.length()));
       templateFolder = templateFolderService.getByFolderPath(accountId, appId, folderPath, galleryId);
     } else if (templateUri.startsWith(IMPORTED_TEMPLATE_PREFIX)) {
       return getImportedTemplate(accountId, templateUri, appId).getUuid();
     } else { // root level folder
       String folderPath = obtainTemplateFolderPath(templateUri);
       templateFolder = templateFolderService.getByFolderPath(accountId, folderPath, galleryId);
+      templateAppId = GLOBAL_APP_ID;
     }
     if (templateFolder == null) {
       throw new WingsException("No template folder found with the uri  [" + templateUri + "]");
@@ -973,7 +977,7 @@ public class TemplateServiceImpl implements TemplateService {
                             .filter(Template.ACCOUNT_ID_KEY, accountId)
                             .filter(NAME_KEY, templateName)
                             .filter(Template.FOLDER_ID_KEY, templateFolder.getUuid())
-                            .filter(TemplateKeys.appId, appId)
+                            .filter(TemplateKeys.appId, templateAppId)
                             .filter(TemplateKeys.galleryId, galleryId)
                             .get();
     if (template == null) {
@@ -984,19 +988,23 @@ public class TemplateServiceImpl implements TemplateService {
 
   @Override
   public Template fetchTemplateFromUri(String templateUri, String accountId, String appId) {
-    String folderPath = obtainTemplateFolderPath(templateUri);
+    String folderPath;
     TemplateFolder templateFolder;
     String galleryId;
+    String templateAppId = appId;
     if (templateUri.startsWith(APP_PREFIX)) { // app level folder
       galleryId =
           templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()).getUuid();
+      folderPath = obtainTemplateFolderPath(templateUri.substring(APP_PREFIX.length()));
       templateFolder = templateFolderService.getByFolderPath(accountId, appId, folderPath, galleryId);
     } else if (templateUri.startsWith(IMPORTED_TEMPLATE_PREFIX)) {
       return getImportedTemplate(accountId, templateUri, appId);
     } else { // account level folder
+      folderPath = obtainTemplateFolderPath(templateUri);
       galleryId =
           templateGalleryService.getByAccount(accountId, templateGalleryService.getAccountGalleryKey()).getUuid();
       templateFolder = templateFolderService.getByFolderPath(accountId, folderPath, galleryId);
+      templateAppId = GLOBAL_APP_ID;
     }
 
     if (templateFolder == null) {
@@ -1008,7 +1016,7 @@ public class TemplateServiceImpl implements TemplateService {
                             .filter(Template.ACCOUNT_ID_KEY, accountId)
                             .filter(NAME_KEY, templateName)
                             .filter(Template.FOLDER_ID_KEY, templateFolder.getUuid())
-                            .filter(TemplateKeys.appId, appId)
+                            .filter(TemplateKeys.appId, templateAppId)
                             .filter(TemplateKeys.galleryId, galleryId)
                             .get();
     if (template == null) {
@@ -1048,10 +1056,14 @@ public class TemplateServiceImpl implements TemplateService {
     TemplateGallery gallery =
         templateGalleryHelper.getGalleryByGalleryKey(HARNESS_COMMAND_LIBRARY_GALLERY.name(), accountId);
     String templateName = obtainTemplateNameForImportedCommands(templateUri);
+    String templateAppId = GLOBAL_APP_ID;
+    if (isAppLevelImportedCommand(templateUri)) {
+      templateAppId = appId;
+    }
     return wingsPersistence.createQuery(Template.class)
         .filter(Template.ACCOUNT_ID_KEY, accountId)
         .filter(NAME_KEY, templateName)
-        .filter(TemplateKeys.appId, appId)
+        .filter(TemplateKeys.appId, templateAppId)
         .filter(TemplateKeys.galleryId, gallery.getUuid())
         .get();
   }

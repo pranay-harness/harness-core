@@ -15,13 +15,15 @@ public interface ImportedTemplateService {
 
   String getTemplateVersionFromImportedTemplateVersion(String templateId, String importedVersion, String accountId);
 
-  List<Template> getTemplatesByCommandNames(List<String> commandNames, String commandStoreName, String accountId);
+  List<Template> getTemplatesByCommandNames(
+      List<String> commandNames, String commandStoreName, String accountId, String appId);
 
-  Template getTemplateByCommandName(String commandName, String commandStoreName, String accountId);
+  Template getTemplateByCommandName(String commandName, String commandStoreName, String accountId, String appId);
 
   ImportedTemplate getCommandByTemplateId(String templateId, String accountId);
 
-  Map<String, Template> getCommandNameTemplateMap(List<String> commandNames, String commandStoreName, String accountId);
+  Map<String, Template> getCommandNameTemplateMap(
+      List<String> commandNames, String commandStoreName, String accountId, String appId);
 
   List<ImportedCommand> makeImportedCommandObjectWithLatestVersion(
       Map<String, TemplateVersion> templateUuidLatestVersionMap, List<String> commandNames, String commandStoreName,
@@ -30,7 +32,8 @@ public interface ImportedTemplateService {
   ImportedCommand makeImportedCommandObject(String commandId, String commandStoreId,
       List<TemplateVersion> templateVersions, String accountId, Template template);
 
-  ImportedTemplate get(String commandId, String commandStoreId, String accountId);
+  ImportedTemplate get(String commandId, String commandStoreId, String accountId, String appId);
 
-  Template getAndSaveImportedTemplate(String version, String commandName, String commandStoreName, String accountId);
+  Template getAndSaveImportedTemplate(
+      String version, String commandName, String commandStoreName, String accountId, String appId);
 }

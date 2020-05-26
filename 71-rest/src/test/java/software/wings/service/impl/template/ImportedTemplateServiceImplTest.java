@@ -52,11 +52,11 @@ public class ImportedTemplateServiceImplTest extends TemplateBaseTestHelper {
         .when(importedTemplateService)
         .downloadAndGetCommandVersionDTO(anyString(), anyString(), anyString());
 
-    saveImportedTemplate(COMMAND_NAME, "1.2");
+    saveImportedTemplate(COMMAND_NAME, version);
 
     assertThatThrownBy(()
                            -> importedTemplateService.getAndSaveImportedTemplate(
-                               version, COMMAND_NAME, COMMAND_STORE_NAME, GLOBAL_ACCOUNT_ID));
+                               version, COMMAND_NAME, COMMAND_STORE_NAME, GLOBAL_ACCOUNT_ID, GLOBAL_APP_ID));
   }
 
   @Test
@@ -72,7 +72,7 @@ public class ImportedTemplateServiceImplTest extends TemplateBaseTestHelper {
         .downloadAndGetCommandVersionDTO(anyString(), anyString(), anyString());
 
     Template updatedTemplate = importedTemplateService.getAndSaveImportedTemplate(
-        version, COMMAND_NAME, COMMAND_STORE_NAME, GLOBAL_ACCOUNT_ID);
+        version, COMMAND_NAME, COMMAND_STORE_NAME, GLOBAL_ACCOUNT_ID, GLOBAL_APP_ID);
 
     assertThat(updatedTemplate).isNotNull();
     assertThat(updatedTemplate.getUuid()).isEqualTo(savedTemplate.getUuid());
@@ -80,7 +80,33 @@ public class ImportedTemplateServiceImplTest extends TemplateBaseTestHelper {
     assertThat(((HarnessImportedTemplateDetails) updatedTemplate.getImportedTemplateDetails()).getCommandName())
         .isEqualTo(COMMAND_NAME);
     assertThat(((HarnessImportedTemplateDetails) updatedTemplate.getImportedTemplateDetails()).getCommandVersion())
-        .isEqualTo("2.2");
+        .isEqualTo(version);
+    assertThat(((HarnessImportedTemplateDetails) updatedTemplate.getImportedTemplateDetails()).getCommandStoreName())
+        .isEqualTo(COMMAND_STORE_NAME);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testSaveWhenCommandExistsAtAccountLevel() {
+    mockItems();
+    // Different version saved.
+    Template savedTemplate = saveImportedTemplate(COMMAND_NAME, "1.1");
+    String version = "1.1";
+    doReturn(makeCommandVersionDTO(version))
+        .when(importedTemplateService)
+        .downloadAndGetCommandVersionDTO(anyString(), anyString(), anyString());
+
+    Template updatedTemplate = importedTemplateService.getAndSaveImportedTemplate(
+        version, COMMAND_NAME, COMMAND_STORE_NAME, GLOBAL_ACCOUNT_ID, "random");
+
+    assertThat(updatedTemplate).isNotNull();
+    assertThat(updatedTemplate.getUuid()).isNotEqualTo(savedTemplate.getUuid());
+    assertThat(updatedTemplate.getImportedTemplateDetails()).isInstanceOf(HarnessImportedTemplateDetails.class);
+    assertThat(((HarnessImportedTemplateDetails) updatedTemplate.getImportedTemplateDetails()).getCommandName())
+        .isEqualTo(COMMAND_NAME);
+    assertThat(((HarnessImportedTemplateDetails) updatedTemplate.getImportedTemplateDetails()).getCommandVersion())
+        .isEqualTo(version);
     assertThat(((HarnessImportedTemplateDetails) updatedTemplate.getImportedTemplateDetails()).getCommandStoreName())
         .isEqualTo(COMMAND_STORE_NAME);
   }
@@ -96,7 +122,7 @@ public class ImportedTemplateServiceImplTest extends TemplateBaseTestHelper {
         .downloadAndGetCommandVersionDTO(anyString(), anyString(), anyString());
 
     assertThat(importedTemplateService.getAndSaveImportedTemplate(
-                   version, COMMAND_NAME, COMMAND_STORE_NAME, GLOBAL_ACCOUNT_ID))
+                   version, COMMAND_NAME, COMMAND_STORE_NAME, GLOBAL_ACCOUNT_ID, GLOBAL_APP_ID))
         .isNotNull();
   }
 

@@ -5,7 +5,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
-import static software.wings.common.TemplateConstants.APP_PREFIX;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -143,7 +142,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
       if (isNotEmpty(templateUri)) {
         String templateUuid;
         String templateVersion;
-        if (templateUri.startsWith(APP_PREFIX)) {
+        if (isNotEmpty(appId)) {
           templateUuid = templateService.fetchTemplateIdFromUri(accountId, appId, templateUri);
         } else {
           templateUuid = templateService.fetchTemplateIdFromUri(accountId, templateUri);

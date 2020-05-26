@@ -36,9 +36,9 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ImportedTemplateKeys")
 @Indexes({
-  @Index(options = @IndexOptions(name = "account_command_idx", unique = true),
+  @Index(options = @IndexOptions(name = "account_app_command_idx"),
       fields = { @Field("accountId")
-                 , @Field("commandStoreName"), @Field("commandName") })
+                 , @Field("appId"), @Field("commandStoreName"), @Field("commandName") })
   ,
       @Index(options = @IndexOptions(name = "template_idx", unique = true), fields = { @Field("templateId") })
 })
