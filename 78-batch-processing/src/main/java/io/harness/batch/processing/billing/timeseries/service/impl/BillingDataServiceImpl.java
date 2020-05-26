@@ -17,6 +17,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.List;
 
 @Service
 @Singleton
@@ -25,35 +26,44 @@ public class BillingDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
   @Autowired private DataFetcherUtils utils;
 
+  private static final int BATCH_SIZE = 500;
   private static final int MAX_RETRY_COUNT = 2;
   static final String INSERT_STATEMENT =
-      "INSERT INTO %s (STARTTIME, ENDTIME, ACCOUNTID, INSTANCETYPE, BILLINGACCOUNTID, BILLINGAMOUNT, CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, USAGEDURATIONSECONDS, INSTANCEID, CLUSTERNAME, CLUSTERID, SETTINGID,  SERVICEID, APPID, CLOUDPROVIDERID, ENVID, CPUUNITSECONDS, MEMORYMBSECONDS, PARENTINSTANCEID, REGION, LAUNCHTYPE, CLUSTERTYPE, CLOUDPROVIDER, WORKLOADNAME, WORKLOADTYPE, NAMESPACE, CLOUDSERVICENAME, TASKID, IDLECOST, CPUIDLECOST, MEMORYIDLECOST, MAXCPUUTILIZATION, MAXMEMORYUTILIZATION, AVGCPUUTILIZATION, AVGMEMORYUTILIZATION, SYSTEMCOST, CPUSYSTEMCOST, MEMORYSYSTEMCOST, ACTUALIDLECOST, CPUACTUALIDLECOST, MEMORYACTUALIDLECOST, UNALLOCATEDCOST, CPUUNALLOCATEDCOST, MEMORYUNALLOCATEDCOST, INSTANCENAME, CPUREQUEST, MEMORYREQUEST, CPULIMIT, MEMORYLIMIT, MAXCPUUTILIZATIONVALUE, MAXMEMORYUTILIZATIONVALUE, AVGCPUUTILIZATIONVALUE, AVGMEMORYUTILIZATIONVALUE ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO %s (STARTTIME, ENDTIME, ACCOUNTID, INSTANCETYPE, BILLINGACCOUNTID, BILLINGAMOUNT, CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, USAGEDURATIONSECONDS, INSTANCEID, CLUSTERNAME, CLUSTERID, SETTINGID,  SERVICEID, APPID, CLOUDPROVIDERID, ENVID, CPUUNITSECONDS, MEMORYMBSECONDS, PARENTINSTANCEID, REGION, LAUNCHTYPE, CLUSTERTYPE, CLOUDPROVIDER, WORKLOADNAME, WORKLOADTYPE, NAMESPACE, CLOUDSERVICENAME, TASKID, IDLECOST, CPUIDLECOST, MEMORYIDLECOST, MAXCPUUTILIZATION, MAXMEMORYUTILIZATION, AVGCPUUTILIZATION, AVGMEMORYUTILIZATION, SYSTEMCOST, CPUSYSTEMCOST, MEMORYSYSTEMCOST, ACTUALIDLECOST, CPUACTUALIDLECOST, MEMORYACTUALIDLECOST, UNALLOCATEDCOST, CPUUNALLOCATEDCOST, MEMORYUNALLOCATEDCOST, INSTANCENAME, CPUREQUEST, MEMORYREQUEST, CPULIMIT, MEMORYLIMIT, MAXCPUUTILIZATIONVALUE, MAXMEMORYUTILIZATIONVALUE, AVGCPUUTILIZATIONVALUE, AVGMEMORYUTILIZATIONVALUE ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
 
   static final String UPDATE_STATEMENT =
       "UPDATE %s SET ACTUALIDLECOST = ?, CPUACTUALIDLECOST = ?, MEMORYACTUALIDLECOST = ?, UNALLOCATEDCOST = ?, CPUUNALLOCATEDCOST = ?, MEMORYUNALLOCATEDCOST = ? WHERE ACCOUNTID = ? AND CLUSTERID = ? AND INSTANCEID = ? AND STARTTIME = ?";
 
   static final String PURGE_DATA_QUERY = "SELECT drop_chunks(interval '16 days', 'billing_data_hourly')";
 
-  public boolean create(InstanceBillingData instanceBillingData, BatchJobType batchJobType) {
+  public boolean create(List<InstanceBillingData> instanceBillingDataList, BatchJobType batchJobType) {
     boolean successfulInsert = false;
-    if (timeScaleDBService.isValid()) {
+    if (timeScaleDBService.isValid() && !instanceBillingDataList.isEmpty()) {
       String insertStatement = BillingDataTableNameProvider.replaceTableName(INSERT_STATEMENT, batchJobType);
       int retryCount = 0;
       while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
              PreparedStatement statement = dbConnection.prepareStatement(insertStatement)) {
-          updateInsertStatement(statement, instanceBillingData);
-          statement.execute();
-          logger.debug("Prepared Statement in BillingDataServiceImpl: {} ", statement);
+          int index = 0;
+          for (InstanceBillingData instanceBillingData : instanceBillingDataList) {
+            updateInsertStatement(statement, instanceBillingData);
+            statement.addBatch();
+            index++;
+
+            if (index % BATCH_SIZE == 0 || index == instanceBillingDataList.size()) {
+              logger.debug("Prepared Statement in BillingDataServiceImpl: {} ", statement);
+              statement.executeBatch();
+            }
+          }
           successfulInsert = true;
         } catch (SQLException e) {
-          logger.error(
-              "Failed to save instance data,[{}],retryCount=[{}], Exception: ", instanceBillingData, retryCount, e);
+          logger.error("Failed to save instance data,[{}],retryCount=[{}], Exception: ", instanceBillingDataList.size(),
+              retryCount, e);
           retryCount++;
         }
       }
     } else {
-      logger.warn("Not processing instance billing data:[{}]", instanceBillingData);
+      logger.warn("Not processing instance billing data:[{}]", instanceBillingDataList.size());
     }
     return successfulInsert;
   }

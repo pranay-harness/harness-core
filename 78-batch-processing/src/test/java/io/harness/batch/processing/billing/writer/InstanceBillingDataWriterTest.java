@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -46,6 +47,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @ActiveProfiles("test")
@@ -86,6 +88,8 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   @Mock private UtilizationDataServiceImpl utilizationDataService;
   @Mock private BillingDataGenerationValidator billingDataGenerationValidator;
   @Mock private InstanceDataService instanceDataService;
+
+  @Captor private ArgumentCaptor<List<InstanceBillingData>> instanceBillingDataArgumentCaptor;
 
   @Before
   public void setup() {
@@ -254,12 +258,10 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
              ACCOUNT_ID, CLUSTER_ID, Instant.ofEpochMilli(START_TIME_MILLIS)))
         .thenReturn(true);
     instanceBillingDataWriter.write(Arrays.asList(instanceData));
-    ArgumentCaptor<InstanceBillingData> instanceBillingDataArgumentCaptor =
-        ArgumentCaptor.forClass(InstanceBillingData.class);
     ArgumentCaptor<BatchJobType> batchJobTypeArgumentCaptor = ArgumentCaptor.forClass(BatchJobType.class);
     verify(billingDataService)
         .create(instanceBillingDataArgumentCaptor.capture(), batchJobTypeArgumentCaptor.capture());
-    InstanceBillingData instanceBillingData = instanceBillingDataArgumentCaptor.getValue();
+    InstanceBillingData instanceBillingData = (InstanceBillingData) instanceBillingDataArgumentCaptor.getValue().get(0);
     assertThat(instanceBillingData.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(instanceBillingData.getClusterId()).isEqualTo(null);
     assertThat(instanceBillingData.getClusterName()).isEqualTo(CLUSTER_NAME);

@@ -42,13 +42,14 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
     }
 
     // in case of hourly billing jobs getting max date as 16 days before current date
-    if (ImmutableSet.of(INSTANCE_BILLING_HOURLY, ACTUAL_IDLE_COST_BILLING_HOURLY, UNALLOCATED_BILLING_HOURLY)
-            .contains(batchJobType)) {
+    if (null != instant
+        && ImmutableSet.of(INSTANCE_BILLING_HOURLY, ACTUAL_IDLE_COST_BILLING_HOURLY, UNALLOCATED_BILLING_HOURLY)
+               .contains(batchJobType)) {
       Instant startInstant = Instant.now().minus(MAX_HOURLY_DATA, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
 
-    if (ImmutableSet.of(K8S_WATCH_EVENT, DEPLOYMENT_EVENT).contains(batchJobType)) {
+    if (null != instant && ImmutableSet.of(K8S_WATCH_EVENT, DEPLOYMENT_EVENT).contains(batchJobType)) {
       Instant startInstant = Instant.now().minus(MAX_EVENTS_DATA, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }

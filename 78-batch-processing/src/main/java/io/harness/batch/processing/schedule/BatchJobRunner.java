@@ -53,7 +53,7 @@ public class BatchJobRunner {
       logger.warn("Event not received for account {} ", accountId);
       return;
     }
-    Instant endAt = Instant.now().minus(4, ChronoUnit.HOURS);
+    Instant endAt = Instant.now().minus(1, ChronoUnit.HOURS);
     BatchJobScheduleTimeProvider batchJobScheduleTimeProvider =
         new BatchJobScheduleTimeProvider(startAt, endAt, duration, chronoUnit);
     Instant startInstant = startAt;
