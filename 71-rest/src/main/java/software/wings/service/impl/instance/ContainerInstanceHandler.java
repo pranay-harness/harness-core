@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
@@ -11,6 +12,7 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_CONTAINER_DEPLOYMENTS;
 import static software.wings.beans.container.Label.Builder.aLabel;
@@ -93,6 +95,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 02/03/18
@@ -269,6 +272,20 @@ public class ContainerInstanceHandler extends InstanceHandler {
     });
   }
 
+  private String getImageInStringFormat(Instance instance) {
+    if (instance.getInstanceInfo() instanceof K8sPodInfo) {
+      return emptyIfNull(((K8sPodInfo) instance.getInstanceInfo()).getContainers())
+          .stream()
+          .map(K8sContainerInfo::getImage)
+          .collect(Collectors.joining());
+    }
+    return EMPTY;
+  }
+
+  private String getImageInStringFormat(K8sPod pod) {
+    return emptyIfNull(pod.getContainerList()).stream().map(K8sContainer::getImage).collect(Collectors.joining());
+  }
+
   private void syncK8sInstances(ContainerInfrastructureMapping containerInfraMapping,
       ContainerMetadata containerMetadata, Collection<Instance> instancesInDB, DeploymentSummary deploymentSummary) {
     List<K8sPod> currentPods = null;
@@ -284,9 +301,11 @@ public class ContainerInstanceHandler extends InstanceHandler {
     Map<String, K8sPod> currentPodsMap = new HashMap<>();
     Map<String, Instance> dbPodMap = new HashMap<>();
 
-    currentPods.forEach(podInfo -> currentPodsMap.put(podInfo.getName() + podInfo.getNamespace(), podInfo));
+    currentPods.forEach(podInfo
+        -> currentPodsMap.put(podInfo.getName() + podInfo.getNamespace() + getImageInStringFormat(podInfo), podInfo));
     instancesInDB.forEach(podInstance
-        -> dbPodMap.put(podInstance.getPodInstanceKey().getPodName() + podInstance.getPodInstanceKey().getNamespace(),
+        -> dbPodMap.put(podInstance.getPodInstanceKey().getPodName() + podInstance.getPodInstanceKey().getNamespace()
+                + getImageInStringFormat(podInstance),
             podInstance));
 
     SetView<String> instancesToBeAdded = Sets.difference(currentPodsMap.keySet(), dbPodMap.keySet());
