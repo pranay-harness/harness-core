@@ -23,6 +23,15 @@ public class ValidSkipAssertValidator implements ConstraintValidator<ValidSkipAs
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext context) {
+    if (!isValid(value)) {
+      context.disableDefaultConstraintViolation();
+      context.buildConstraintViolationWithTemplate(" is Invalid").addPropertyNode(value).addConstraintViolation();
+      return false;
+    }
+    return true;
+  }
+
+  private boolean isValid(String value) {
     if (value == null) {
       return true;
     }
