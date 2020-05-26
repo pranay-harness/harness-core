@@ -7,7 +7,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.kubernetes.client.custom.Quantity;
-import io.kubernetes.client.openapi.models.V1ReplicaSetBuilder;
+import io.kubernetes.client.openapi.models.V1StatefulSetBuilder;
 import io.kubernetes.client.util.Yaml;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -17,7 +17,8 @@ public class StatefulSetRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleAdd() throws Exception {
-    assertThat(new StatefulSetRcdCalculator().computeResourceDiff("", statefulSetYaml("100m", "1200Mi", 2)))
+    assertThat(
+        new StatefulSetRcdCalculator().computeResourceClaimDiff("", statefulSetYaml("100m", "1200Mi", 2)).getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(200000000L).memBytes(2516582400L).build());
   }
 
@@ -25,7 +26,8 @@ public class StatefulSetRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleDelete() throws Exception {
-    assertThat(new StatefulSetRcdCalculator().computeResourceDiff(statefulSetYaml("750m", "1300Mi", 3), ""))
+    assertThat(
+        new StatefulSetRcdCalculator().computeResourceClaimDiff(statefulSetYaml("750m", "1300Mi", 3), "").getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(-2250000000L).memBytes(-4089446400L).build());
   }
 
@@ -33,12 +35,13 @@ public class StatefulSetRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleUpdate() throws Exception {
-    assertThat(new StatefulSetRcdCalculator().computeResourceDiff(
-                   statefulSetYaml("100m", "1200Mi", 2), statefulSetYaml("300m", "1.5G", 3)))
+    assertThat(new StatefulSetRcdCalculator()
+                   .computeResourceClaimDiff(statefulSetYaml("100m", "1200Mi", 2), statefulSetYaml("300m", "1.5G", 3))
+                   .getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(700000000).memBytes(1983417600L).build());
   }
   private String statefulSetYaml(String cpu, String memory, int replicas) {
-    return Yaml.dump(new V1ReplicaSetBuilder()
+    return Yaml.dump(new V1StatefulSetBuilder()
                          .withNewSpec()
                          .withReplicas(replicas)
                          .withNewTemplate()

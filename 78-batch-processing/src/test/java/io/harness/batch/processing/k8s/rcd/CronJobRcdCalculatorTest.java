@@ -19,7 +19,7 @@ public class CronJobRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleAdd() throws Exception {
-    assertThat(new CronJobRcdCalculator().computeResourceDiff("", cronJobYaml("100m", "1200Mi")))
+    assertThat(new CronJobRcdCalculator().computeResourceClaimDiff("", cronJobYaml("100m", "1200Mi")).getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(100000000L).memBytes(1258291200L).build());
   }
 
@@ -27,7 +27,7 @@ public class CronJobRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleDelete() throws Exception {
-    assertThat(new CronJobRcdCalculator().computeResourceDiff(cronJobYaml("750m", "1300Mi"), ""))
+    assertThat(new CronJobRcdCalculator().computeResourceClaimDiff(cronJobYaml("750m", "1300Mi"), "").getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(-750000000L).memBytes(-1363148800L).build());
   }
 
@@ -35,8 +35,9 @@ public class CronJobRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleUpdate() throws Exception {
-    assertThat(
-        new CronJobRcdCalculator().computeResourceDiff(cronJobYaml("0.1", "1200M"), cronJobYaml("150m", "1200Mi")))
+    assertThat(new CronJobRcdCalculator()
+                   .computeResourceClaimDiff(cronJobYaml("0.1", "1200M"), cronJobYaml("150m", "1200Mi"))
+                   .getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(50000000).memBytes(58291200).build());
   }
 

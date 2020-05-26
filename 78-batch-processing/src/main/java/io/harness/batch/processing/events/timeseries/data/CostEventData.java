@@ -36,4 +36,6 @@ public class CostEventData {
 
   String oldYamlRef;
   String newYamlRef;
+
+  BigDecimal costChangePercent;
 }

@@ -17,7 +17,7 @@ public class StatefulSetRcdCalculator implements ResourceClaimDiffCalculator {
   }
 
   @Override
-  public ResourceClaim computeResourceDiff(String oldYaml, String newYaml) {
+  public ResourceClaimDiff computeResourceClaimDiff(String oldYaml, String newYaml) {
     Optional<V1StatefulSetSpec> oldStsSpecMaybe =
         Optional.ofNullable(Yaml.loadAs(oldYaml, V1StatefulSet.class)).map(V1StatefulSet::getSpec);
     Optional<V1StatefulSetSpec> newStsSpecMaybe =
@@ -28,6 +28,6 @@ public class StatefulSetRcdCalculator implements ResourceClaimDiffCalculator {
         newStsSpecMaybe.map(V1StatefulSetSpec::getTemplate).map(V1PodTemplateSpec::getSpec).orElse(null);
     int oldReplicas = oldStsSpecMaybe.map(V1StatefulSetSpec::getReplicas).orElse(0);
     int newReplicas = newStsSpecMaybe.map(V1StatefulSetSpec::getReplicas).orElse(0);
-    return ResourceClaimUtils.forPodWithScale(oldPodSpec, oldReplicas, newPodSpec, newReplicas);
+    return ResourceClaimUtils.resourceClaimDiffForPodWithScale(oldPodSpec, oldReplicas, newPodSpec, newReplicas);
   }
 }

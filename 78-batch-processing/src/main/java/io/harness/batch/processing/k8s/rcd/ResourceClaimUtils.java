@@ -24,16 +24,17 @@ class ResourceClaimUtils {
   Using these Optional.map(xxx)... chains because everything is Nullable in the k8s client models.
    */
 
-  ResourceClaim forPod(V1PodSpec oldPodSpec, V1PodSpec newPodSpec) {
+  ResourceClaimDiff resourceClaimDiffForPod(V1PodSpec oldPodSpec, V1PodSpec newPodSpec) {
     ResourceClaim oldClaim = getResourceClaim(oldPodSpec);
     ResourceClaim newClaim = getResourceClaim(newPodSpec);
-    return newClaim.minus(oldClaim);
+    return new ResourceClaimDiff(oldClaim, newClaim);
   }
 
-  ResourceClaim forPodWithScale(V1PodSpec oldPodSpec, int oldScale, V1PodSpec newPodSpec, int newScale) {
+  ResourceClaimDiff resourceClaimDiffForPodWithScale(
+      V1PodSpec oldPodSpec, int oldScale, V1PodSpec newPodSpec, int newScale) {
     ResourceClaim oldClaim = getResourceClaim(oldPodSpec).scale(oldScale);
     ResourceClaim newClaim = getResourceClaim(newPodSpec).scale(newScale);
-    return newClaim.minus(oldClaim);
+    return new ResourceClaimDiff(oldClaim, newClaim);
   }
 
   private static ResourceClaim getResourceClaim(V1PodSpec oldPodSpec) {

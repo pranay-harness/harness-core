@@ -17,7 +17,7 @@ public class JobRcdCalculator implements ResourceClaimDiffCalculator {
   }
 
   @Override
-  public ResourceClaim computeResourceDiff(String oldYaml, String newYaml) {
+  public ResourceClaimDiff computeResourceClaimDiff(String oldYaml, String newYaml) {
     V1PodSpec oldPodSpec = Optional.ofNullable(Yaml.loadAs(oldYaml, V1Job.class))
                                .map(V1Job::getSpec)
                                .map(V1JobSpec::getTemplate)
@@ -28,6 +28,6 @@ public class JobRcdCalculator implements ResourceClaimDiffCalculator {
                                .map(V1JobSpec::getTemplate)
                                .map(V1PodTemplateSpec::getSpec)
                                .orElse(null);
-    return ResourceClaimUtils.forPod(oldPodSpec, newPodSpec);
+    return ResourceClaimUtils.resourceClaimDiffForPod(oldPodSpec, newPodSpec);
   }
 }

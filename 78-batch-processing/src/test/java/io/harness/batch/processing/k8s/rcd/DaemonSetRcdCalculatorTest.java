@@ -19,7 +19,7 @@ public class DaemonSetRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleAdd() throws Exception {
-    assertThat(new DaemonSetRcdCalculator().computeResourceDiff("", daemonSetYaml("100m", "1200Mi")))
+    assertThat(new DaemonSetRcdCalculator().computeResourceClaimDiff("", daemonSetYaml("100m", "1200Mi")).getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(100000000L).memBytes(1258291200L).build());
   }
 
@@ -27,7 +27,7 @@ public class DaemonSetRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleDelete() throws Exception {
-    assertThat(new DaemonSetRcdCalculator().computeResourceDiff(daemonSetYaml("750m", "1300Mi"), ""))
+    assertThat(new DaemonSetRcdCalculator().computeResourceClaimDiff(daemonSetYaml("750m", "1300Mi"), "").getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(-750000000L).memBytes(-1363148800L).build());
   }
 
@@ -35,8 +35,9 @@ public class DaemonSetRcdCalculatorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleUpdate() throws Exception {
-    assertThat(new DaemonSetRcdCalculator().computeResourceDiff(
-                   daemonSetYaml("120m", "1200Mi"), daemonSetYaml("100m", "1210Mi")))
+    assertThat(new DaemonSetRcdCalculator()
+                   .computeResourceClaimDiff(daemonSetYaml("120m", "1200Mi"), daemonSetYaml("100m", "1210Mi"))
+                   .getDiff())
         .isEqualTo(ResourceClaim.builder().cpuNano(-20000000L).memBytes(10485760L).build());
   }
   private String daemonSetYaml(String cpu, String memory) {

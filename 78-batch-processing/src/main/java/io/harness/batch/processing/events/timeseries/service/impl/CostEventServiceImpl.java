@@ -27,8 +27,8 @@ public class CostEventServiceImpl implements CostEventService {
       "INSERT INTO COST_EVENT_DATA (STARTTIME, ACCOUNTID, SETTINGID, CLUSTERID, CLUSTERTYPE, INSTANCEID, INSTANCETYPE, "
       + "APPID, SERVICEID, ENVID, CLOUDPROVIDERID, DEPLOYMENTID, CLOUDPROVIDER, EVENTDESCRIPTION, COSTEVENTTYPE, "
       + "COSTEVENTSOURCE, NAMESPACE, WORKLOADNAME, WORKLOADTYPE, CLOUDSERVICENAME, TASKID, LAUNCHTYPE, BILLINGAMOUNT, "
-      + "OLDYAMLREF, NEWYAMLREF) "
-      + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING ";
+      + "OLDYAMLREF, NEWYAMLREF, COST_CHANGE_PERCENT) "
+      + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?) ON CONFLICT DO NOTHING ";
 
   static final String UPDATE_DEPLOYMENT_STATEMENT =
       "UPDATE COST_EVENT_DATA SET SETTINGID=?, CLUSTERID=?, CLUSTERTYPE=?, CLOUDPROVIDER=?, NAMESPACE=?, WORKLOADNAME=?,"
@@ -124,5 +124,6 @@ public class CostEventServiceImpl implements CostEventService {
     statement.setBigDecimal(23, costEventData.getBillingAmount());
     statement.setString(24, costEventData.getOldYamlRef());
     statement.setString(25, costEventData.getNewYamlRef());
+    statement.setBigDecimal(26, costEventData.getCostChangePercent());
   }
 }

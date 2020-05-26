@@ -17,7 +17,7 @@ public class ReplicaSetRcdCalculator implements ResourceClaimDiffCalculator {
   }
 
   @Override
-  public ResourceClaim computeResourceDiff(String oldYaml, String newYaml) {
+  public ResourceClaimDiff computeResourceClaimDiff(String oldYaml, String newYaml) {
     Optional<V1ReplicaSetSpec> oldRsSpecMaybe =
         Optional.ofNullable(Yaml.loadAs(oldYaml, V1ReplicaSet.class)).map(V1ReplicaSet::getSpec);
     Optional<V1ReplicaSetSpec> newRsSpecMaybe =
@@ -28,6 +28,6 @@ public class ReplicaSetRcdCalculator implements ResourceClaimDiffCalculator {
         newRsSpecMaybe.map(V1ReplicaSetSpec::getTemplate).map(V1PodTemplateSpec::getSpec).orElse(null);
     int oldReplicas = oldRsSpecMaybe.map(V1ReplicaSetSpec::getReplicas).orElse(0);
     int newReplicas = newRsSpecMaybe.map(V1ReplicaSetSpec::getReplicas).orElse(0);
-    return ResourceClaimUtils.forPodWithScale(oldPodSpec, oldReplicas, newPodSpec, newReplicas);
+    return ResourceClaimUtils.resourceClaimDiffForPodWithScale(oldPodSpec, oldReplicas, newPodSpec, newReplicas);
   }
 }

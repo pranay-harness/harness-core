@@ -5,5 +5,6 @@ package io.harness.batch.processing.k8s.rcd;
  */
 public interface ResourceClaimDiffCalculator {
   String getKind();
-  ResourceClaim computeResourceDiff(String oldYaml, String newYaml);
+
+  ResourceClaimDiff computeResourceClaimDiff(String oldYaml, String newYaml);
 }
