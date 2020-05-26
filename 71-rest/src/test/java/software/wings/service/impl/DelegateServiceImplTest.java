@@ -90,7 +90,9 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     Delegate delegate = createDelegateBuilder().build();
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = getDelegateTask();
-    when(assignDelegateService.canAssign(any(BatchDelegateSelectionLog.class), anyString(), any())).thenReturn(true);
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().build();
+    when(delegateSelectionLogsService.createBatch(delegateTask)).thenReturn(batch);
+    when(assignDelegateService.canAssign(eq(batch), anyString(), any())).thenReturn(true);
     when(assignDelegateService.retrieveActiveDelegates(
              eq(delegateTask.getAccountId()), any(BatchDelegateSelectionLog.class)))
         .thenReturn(List.of(delegate.getUuid()));

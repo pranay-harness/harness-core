@@ -1851,23 +1851,37 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     return (T) responseData;
   }
 
-  public String obtainDelegateName(String accountId, String delegateId, boolean forceRefresh) {
-    if (accountId == null || delegateId == null) {
+  @Override
+  public String obtainDelegateName(Delegate delegate) {
+    if (delegate == null) {
       return "";
     }
+
+    String delegateName = delegate.getDelegateName();
+    if (!isBlank(delegateName)) {
+      return delegateName;
+    }
+
+    String hostName = delegate.getHostName();
+    if (!isBlank(hostName)) {
+      return hostName;
+    }
+
+    return delegate.getUuid();
+  }
+
+  @Override
+  public String obtainDelegateName(String accountId, String delegateId, boolean forceRefresh) {
+    if (isBlank(accountId) || isBlank(delegateId)) {
+      return "";
+    }
+
     Delegate delegate = get(accountId, delegateId, forceRefresh);
     if (delegate == null) {
       return delegateId;
     }
-    String delegateName = delegate.getDelegateName();
-    if (delegateName != null) {
-      return delegateName;
-    }
-    String hostName = delegate.getHostName();
-    if (hostName != null) {
-      return hostName;
-    }
-    return delegateId;
+
+    return obtainDelegateName(delegate);
   }
 
   @VisibleForTesting

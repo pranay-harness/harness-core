@@ -97,6 +97,10 @@ public interface DelegateService extends OwnedByAccount, TaskExecutor {
 
   <T extends ResponseData> T executeTask(DelegateTask task) throws InterruptedException;
 
+  String obtainDelegateName(Delegate delegate);
+
+  String obtainDelegateName(String accountId, String delegateId, boolean forceRefresh);
+
   void saveDelegateTask(DelegateTask task);
 
   DelegateTaskPackage acquireDelegateTask(String accountId, String delegateId, String taskId);
