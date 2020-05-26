@@ -22,6 +22,7 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import software.wings.exception.ConstraintViolationExceptionMapper;
+import software.wings.jersey.KryoFeature;
 import software.wings.jersey.KryoMessageBodyProvider;
 
 import java.util.HashMap;
@@ -278,6 +279,7 @@ public class ResourceTestRule implements TestRule {
 
     private void configure(ResourceTestRule resourceTestRule) {
       register(new ConstraintViolationExceptionMapper());
+      register(new KryoFeature());
       for (Class<?> provider : resourceTestRule.providers) {
         register(provider);
       }
