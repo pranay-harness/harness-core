@@ -23,6 +23,8 @@ import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.EntityType.ACCOUNT;
 import static software.wings.beans.EntityType.APPLICATION;
+import static software.wings.beans.GitCommit.GIT_COMMIT_ALL_STATUS_LIST;
+import static software.wings.beans.GitCommit.GIT_COMMIT_PROCESSED_STATUS;
 import static software.wings.beans.yaml.GitCommandRequest.gitRequestTimeout;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.APPLICATION_FOLDER_PATH;
@@ -46,7 +48,6 @@ import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -156,14 +157,7 @@ public class YamlGitServiceImpl implements YamlGitService {
    * The constant SETUP_ENTITY_ID.
    */
   public static final String SETUP_ENTITY_ID = "setup";
-  public static final List<GitCommit.Status> GIT_COMMIT_PROCESSED_STATUS =
-      ImmutableList.of(GitCommit.Status.COMPLETED, GitCommit.Status.COMPLETED_WITH_ERRORS);
 
-  public static final List<GitCommit.Status> GIT_COMMIT_ALL_STATUS_LIST = ImmutableList.<GitCommit.Status>builder()
-                                                                              .addAll(GIT_COMMIT_PROCESSED_STATUS)
-                                                                              .add(GitCommit.Status.FAILED)
-                                                                              .add(GitCommit.Status.SKIPPED)
-                                                                              .build();
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private YamlDirectoryService yamlDirectoryService;

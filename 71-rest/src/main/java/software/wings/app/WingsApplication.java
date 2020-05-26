@@ -194,6 +194,7 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.utils.CacheManager;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
+import software.wings.yaml.gitSync.GitSyncEntitiesExpiryHandler;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -732,6 +733,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(EncryptedDataMigrationHandler.class).registerIterators();
     injector.getInstance(EncryptedDataAwsToGcpKmsMigrationHandler.class).registerIterators();
     injector.getInstance(SettingAttributesSecretsMigrationHandler.class).registerIterators();
+    injector.getInstance(GitSyncEntitiesExpiryHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

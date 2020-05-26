@@ -34,6 +34,8 @@ public interface GitSyncErrorService {
 
   long getGitSyncErrorCount(String accountId, boolean followRBAC);
 
+  boolean deleteGitSyncErrors(List<String> errorIds, String accountId);
+
   PageResponse<GitProcessingError> fetchGitConnectivityIssues(PageRequest<GitProcessingError> req, String accountId);
 
   long getTotalGitErrorsCount(String accountId);

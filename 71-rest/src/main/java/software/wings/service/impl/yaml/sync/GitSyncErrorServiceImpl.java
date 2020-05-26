@@ -784,12 +784,14 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     }
   }
 
-  private void deleteGitSyncErrors(List<String> errorIds, String accountId) {
+  @Override
+  public boolean deleteGitSyncErrors(List<String> errorIds, String accountId) {
     Query query = wingsPersistence.createQuery(GitSyncError.class);
     query.filter(ACCOUNT_ID_KEY, accountId);
     query.field(ID_KEY).in(errorIds);
-    wingsPersistence.delete(query);
+    boolean deleted = wingsPersistence.delete(query);
     alertsUtils.closeAlertIfApplicable(accountId);
+    return deleted;
   }
 
   private GitProcessingError getGitProcessingError(Alert alert) {

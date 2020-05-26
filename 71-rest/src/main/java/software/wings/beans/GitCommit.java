@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.google.common.collect.ImmutableList;
+
 import io.harness.annotation.HarnessEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -69,6 +71,15 @@ public class GitCommit extends Base {
     GIT_PULL_FAILED,
     COMMIT_PARSING_FAILED
   }
+
+  public static final List<Status> GIT_COMMIT_PROCESSED_STATUS =
+      ImmutableList.of(Status.COMPLETED, Status.COMPLETED_WITH_ERRORS);
+
+  public static final List<Status> GIT_COMMIT_ALL_STATUS_LIST = ImmutableList.<GitCommit.Status>builder()
+                                                                    .addAll(GIT_COMMIT_PROCESSED_STATUS)
+                                                                    .add(Status.FAILED)
+                                                                    .add(Status.SKIPPED)
+                                                                    .build();
 
   @UtilityClass
   public static final class GitCommitKeys {
