@@ -46,6 +46,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLCEEnvironmentTypeFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
 import software.wings.service.impl.EnvironmentServiceImpl;
 
 import java.time.Instant;
@@ -64,6 +65,7 @@ public class BillingDataQueryBuilder {
   private BillingDataTableSchema schema = new BillingDataTableSchema();
   private static final String STANDARD_TIME_ZONE = "GMT";
   private static final String DEFAULT_ENVIRONMENT_TYPE = "ALL";
+  public static final String BILLING_DATA_HOURLY_TABLE = "billing_data_hourly t0";
   @Inject TagHelper tagHelper;
   @Inject K8sLabelHelper k8sLabelHelper;
   @Inject EnvironmentServiceImpl environmentService;
@@ -114,7 +116,11 @@ public class BillingDataQueryBuilder {
       decorateQueryWithMinMaxStartTime(selectQuery, fieldNames);
     }
 
-    selectQuery.addCustomFromTable(schema.getBillingDataTable());
+    if (!isGroupByHour(groupByTime)) {
+      selectQuery.addCustomFromTable(schema.getBillingDataTable());
+    } else {
+      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+    }
 
     if (isValidGroupByTime(groupByTime)) {
       decorateQueryWithGroupByTime(fieldNames, selectQuery, groupByTime, groupByFields);
@@ -974,5 +980,10 @@ public class BillingDataQueryBuilder {
       }
     }
     return "";
+  }
+
+  private boolean isGroupByHour(QLCCMTimeSeriesAggregation groupByTime) {
+    return groupByTime != null && groupByTime.getTimeGroupType() != null
+        && groupByTime.getTimeGroupType() == QLTimeGroupType.HOUR;
   }
 }
