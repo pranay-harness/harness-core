@@ -33,6 +33,7 @@ import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
+import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -48,8 +49,10 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.ArgumentCaptor;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
+import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
@@ -67,6 +70,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @RunWith(Parameterized.class)
 @Slf4j
@@ -380,5 +384,67 @@ public class DelegateAgentResourceTest {
             .post(entity(apiCallLogs, MediaType.APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
 
     verify(wingsPersistence, atLeastOnce()).save(apiCallLogs);
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldFailIfAllDelegatesFailed() {
+    String taskId = generateUuid();
+    RestResponse<String> response =
+        RESOURCES.client()
+            .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/fail?accountId=" + ACCOUNT_ID)
+            .request()
+            .get(new GenericType<RestResponse<String>>() {});
+    verify(delegateService, atLeastOnce()).failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, taskId);
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldReportConnectionResults() {
+    String taskId = generateUuid();
+    List<DelegateConnectionResult> connectionResults = singletonList(DelegateConnectionResult.builder()
+                                                                         .accountId(ACCOUNT_ID)
+                                                                         .delegateId(DELEGATE_ID)
+                                                                         .duration(100L)
+                                                                         .criteria("aaa")
+                                                                         .validated(true)
+                                                                         .build());
+    RestResponse<DelegateTaskPackage> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/report?accountId=" + ACCOUNT_ID)
+            .request()
+            .post(entity(connectionResults, "application/x-kryo"),
+                new GenericType<RestResponse<DelegateTaskPackage>>() {});
+    verify(delegateService, atLeastOnce()).reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, taskId, connectionResults);
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldUpdateTaskResponse() {
+    String taskId = generateUuid();
+    DelegateTaskResponse taskResponse = DelegateTaskResponse.builder().build();
+    RestResponse<String> response =
+        RESOURCES.client()
+            .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "?accountId=" + ACCOUNT_ID)
+            .request()
+            .post(entity(taskResponse, "application/x-kryo"), new GenericType<RestResponse<String>>() {});
+    verify(delegateService, atLeastOnce()).processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, taskId, taskResponse);
+  }
+
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldAcquireDelegateTask() {
+    String taskId = generateUuid();
+    DelegateTaskResponse taskResponse = DelegateTaskResponse.builder().build();
+    Response response =
+        RESOURCES.client()
+            .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/acquire?accountId=" + ACCOUNT_ID)
+            .request()
+            .put(entity(taskResponse, "application/x-kryo"), Response.class);
+    verify(delegateService, atLeastOnce()).acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, taskId);
   }
 }
