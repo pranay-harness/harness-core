@@ -108,10 +108,16 @@ public class SpotinstTrafficShiftAlbDeployState extends State {
               stateExecutionData.getAppId(), stateExecutionData.getInfraMappingId());
       List<InstanceElement> newInstanceElements = awsStateHelper.generateInstanceElements(
           taskResponse.getEc2InstancesAdded(), awsAmiInfrastructureMapping, context);
+      List<InstanceElement> oldInstanceElements = awsStateHelper.generateInstanceElements(
+          taskResponse.getEc2InstancesExisting(), awsAmiInfrastructureMapping, context);
       if (isNotEmpty(newInstanceElements)) {
         // These are newly launched instances, set NewInstance = true for verification service
         newInstanceElements.forEach(instanceElement -> instanceElement.setNewInstance(true));
         instanceElements.addAll(newInstanceElements);
+      }
+
+      if (isNotEmpty(oldInstanceElements)) {
+        instanceElements.addAll(oldInstanceElements);
       }
     }
     InstanceElementListParam instanceElementListParam =
