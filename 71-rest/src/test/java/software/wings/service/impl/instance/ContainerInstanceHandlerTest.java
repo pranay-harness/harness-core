@@ -11,6 +11,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -70,9 +71,12 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder;
+import software.wings.beans.infrastructure.instance.info.K8sContainerInfo;
+import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
+import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.impl.instance.sync.ContainerSync;
@@ -92,6 +96,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService infraMappingService;
@@ -680,6 +685,10 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertThat(idTobeDeleted.contains(instanceId)).isTrue();
   }
 
+  private void assertionsForNoDelete() {
+    verify(instanceService, never()).delete(anySet());
+  }
+
   private void assertions_rollback(String containerId, InstanceType instanceType, boolean checkSaveOrUpdate)
       throws Exception {
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
@@ -707,6 +716,27 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     List<Instance> capturedInstances = captorInstance.getAllValues();
     assertThat(capturedInstances.get(0).getContainerInstanceKey().getContainerId()).isEqualTo(containerId);
     assertThat(capturedInstances.get(0).getInstanceType()).isEqualTo(instanceType);
+  }
+
+  private void assertionsForSaveK8sInstance(String podName, String... imageNames) throws Exception {
+    ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService, times(1)).saveOrUpdate(captorInstance.capture());
+
+    List<Instance> capturedInstances = captorInstance.getAllValues();
+    assertThat(capturedInstances.get(0).getPodInstanceKey().getPodName()).isEqualTo(podName);
+    assertThat(((K8sPodInfo) capturedInstances.get(0).getInstanceInfo())
+                   .getContainers()
+                   .stream()
+                   .map(K8sContainerInfo::getImage)
+                   .collect(Collectors.toList()))
+        .contains(imageNames);
+    assertThat(capturedInstances.get(0).getInstanceType()).isEqualTo(KUBERNETES_CONTAINER_INSTANCE);
+  }
+
+  private void assertionsForNoSaveInstance() throws Exception {
+    verify(instanceService, never()).saveOrUpdate(anyList());
+    verify(instanceService, never()).saveOrUpdate(any(Instance.class));
+    verify(instanceService, never()).save(any(Instance.class));
   }
 
   @Test
@@ -878,5 +908,211 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertThat(deploymentInfo.getNamespace()).isEqualTo("default");
     assertThat(deploymentInfo.getNewVersion()).isEqualTo("1");
     assertThat(deploymentInfo.getLabels()).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void test_AddNewK8sPod() throws Exception {
+    doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
+    final String statefulSetPodName = "harness-statefulset-0";
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+    final List<Instance> instances = Collections.emptyList();
+
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(asList(K8sPod.builder()
+                        .name(statefulSetPodName)
+                        .podIP("ip-1")
+                        .namespace("default")
+                        .containerList(asList(K8sContainer.builder().image("nginx:1.1").build()))
+                        .build()))
+        .when(k8sStateHelper)
+        .getPodList(any(), anyString(), anyString());
+
+    containerInstanceHandler.handleNewDeployment(
+        Arrays.asList(
+            DeploymentSummary.builder()
+                .deploymentInfo(K8sDeploymentInfo.builder().namespace("default").releaseName("release-123").build())
+                .accountId(ACCOUNT_ID)
+                .infraMappingId(INFRA_MAPPING_ID)
+                .workflowExecutionId("workfloeExecution_1")
+                .stateExecutionInstanceId("stateExecutionInstanceId")
+                .build()),
+        false, OnDemandRollbackInfo.builder().onDemandRollback(false).build());
+
+    assertionsForSaveK8sInstance(statefulSetPodName, "nginx:1.1");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void test_DeleteAndAddStatefulIfImageChanges() throws Exception {
+    doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
+    final String statefulSetPodName = "harness-statefulset-0";
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+    final List<Instance> instances = buildK8sInstance(statefulSetPodName);
+
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(asList(K8sPod.builder()
+                        .name(statefulSetPodName)
+                        .podIP("ip-1")
+                        .namespace("default")
+                        .containerList(asList(K8sContainer.builder().image("nginx:1.1").build()))
+                        .build()))
+        .when(k8sStateHelper)
+        .getPodList(any(), anyString(), anyString());
+
+    containerInstanceHandler.handleNewDeployment(
+        Arrays.asList(
+            DeploymentSummary.builder()
+                .deploymentInfo(K8sDeploymentInfo.builder().namespace("default").releaseName("release-123").build())
+                .accountId(ACCOUNT_ID)
+                .infraMappingId(INFRA_MAPPING_ID)
+                .workflowExecutionId("workfloeExecution_1")
+                .stateExecutionInstanceId("stateExecutionInstanceId")
+                .build()),
+        false, OnDemandRollbackInfo.builder().onDemandRollback(false).build());
+
+    assertionsForDelete(INSTANCE_1_ID);
+    assertionsForSaveK8sInstance(statefulSetPodName, "nginx:1.1");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void test_DeleteAndAddStatefulIfSideCarImageAdded() throws Exception {
+    doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
+    final String statefulSetPodName = "harness-statefulset-0";
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+    final List<Instance> instances = buildK8sInstance(statefulSetPodName);
+
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(asList(K8sPod.builder()
+                        .name(statefulSetPodName)
+                        .podIP("ip-1")
+                        .namespace("default")
+                        .containerList(asList(K8sContainer.builder().image("nginx:0.1").build(),
+                            K8sContainer.builder().image("sidecar").build()))
+                        .build()))
+        .when(k8sStateHelper)
+        .getPodList(any(), anyString(), anyString());
+
+    containerInstanceHandler.handleNewDeployment(
+        Arrays.asList(
+            DeploymentSummary.builder()
+                .deploymentInfo(K8sDeploymentInfo.builder().namespace("default").releaseName("release-123").build())
+                .accountId(ACCOUNT_ID)
+                .infraMappingId(INFRA_MAPPING_ID)
+                .workflowExecutionId("workfloeExecution_1")
+                .stateExecutionInstanceId("stateExecutionInstanceId")
+                .build()),
+        false, OnDemandRollbackInfo.builder().onDemandRollback(false).build());
+
+    assertionsForDelete(INSTANCE_1_ID);
+    assertionsForSaveK8sInstance(statefulSetPodName, "nginx:0.1", "sidecar");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void test_k8sDeployment_newImage() throws Exception {
+    doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
+    final List<Instance> instances = buildK8sInstance("harness-pod-4n42hbh");
+
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(asList(K8sPod.builder()
+                        .name("harness-pod-n523nk")
+                        .podIP("ip-1")
+                        .namespace("default")
+                        .containerList(asList(K8sContainer.builder().image("nginx:1.1").build()))
+                        .build()))
+        .when(k8sStateHelper)
+        .getPodList(any(), anyString(), anyString());
+
+    containerInstanceHandler.handleNewDeployment(
+        Arrays.asList(
+            DeploymentSummary.builder()
+                .deploymentInfo(K8sDeploymentInfo.builder().namespace("default").releaseName("release-123").build())
+                .accountId(ACCOUNT_ID)
+                .infraMappingId(INFRA_MAPPING_ID)
+                .workflowExecutionId("workfloeExecution_1")
+                .stateExecutionInstanceId("stateExecutionInstanceId")
+                .build()),
+        false, OnDemandRollbackInfo.builder().onDemandRollback(false).build());
+
+    assertionsForDelete(INSTANCE_1_ID);
+    assertionsForSaveK8sInstance("harness-pod-n523nk", "nginx:1.1");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void test_k8sDeployment_sameImage() throws Exception {
+    doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
+    final List<Instance> instances = buildK8sInstance("harness-pod-n523nk");
+
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(asList(K8sPod.builder()
+                        .name("harness-pod-n523nk")
+                        .podIP("ip-1")
+                        .namespace("default")
+                        .containerList(asList(K8sContainer.builder().image("nginx:0.1").build()))
+                        .build()))
+        .when(k8sStateHelper)
+        .getPodList(any(), anyString(), anyString());
+
+    containerInstanceHandler.handleNewDeployment(
+        Arrays.asList(
+            DeploymentSummary.builder()
+                .deploymentInfo(K8sDeploymentInfo.builder().namespace("default").releaseName("release-123").build())
+                .accountId(ACCOUNT_ID)
+                .infraMappingId(INFRA_MAPPING_ID)
+                .workflowExecutionId("workfloeExecution_1")
+                .stateExecutionInstanceId("stateExecutionInstanceId")
+                .build()),
+        false, OnDemandRollbackInfo.builder().onDemandRollback(false).build());
+
+    assertionsForNoDelete();
+    assertionsForNoSaveInstance();
+  }
+
+  private List<Instance> buildK8sInstance(String podName) {
+    return asList(Instance.builder()
+                      .uuid(INSTANCE_1_ID)
+                      .accountId(ACCOUNT_ID)
+                      .appId(APP_ID)
+                      .computeProviderId(COMPUTE_PROVIDER_NAME)
+                      .appName(APP_NAME)
+                      .envId(ENV_ID)
+                      .envName(ENV_NAME)
+                      .envType(EnvironmentType.PROD)
+                      .infraMappingId(INFRA_MAPPING_ID)
+                      .infraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
+                      .instanceType(KUBERNETES_CONTAINER_INSTANCE)
+                      .podInstanceKey(PodInstanceKey.builder().namespace("default").podName(podName).build())
+                      .instanceInfo(K8sPodInfo.builder()
+                                        .clusterName(KUBE_CLUSTER)
+                                        .ip("ip-1")
+                                        .podName(podName)
+                                        .namespace("default")
+                                        .releaseName("release-123")
+                                        .containers(asList(K8sContainerInfo.builder().image("nginx:0.1").build()))
+                                        .build())
+                      .build());
   }
 }
