@@ -48,7 +48,6 @@ import software.wings.api.ExecutionDataValue;
 import software.wings.api.HostElement;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
-import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -174,31 +173,6 @@ public class GraphRendererTest extends WingsBaseTest {
     assertThat(repeatChildElements.get(1).getNext().getName()).isEqualTo(host2.getDisplayName());
   }
 
-  private GraphNode getInfrastructureNode() {
-    final StateExecutionInstance infrastructure = aStateExecutionInstance()
-                                                      .displayName(WorkflowServiceHelper.INFRASTRUCTURE_NODE_NAME)
-                                                      .uuid("infrastructure")
-                                                      .stateType(PHASE_STEP.name())
-                                                      .contextTransition(true)
-                                                      .status(SUCCESS)
-                                                      .build();
-
-    final StateExecutionInstance element = aStateExecutionInstance()
-                                               .displayName("first")
-                                               .uuid("first")
-                                               .stateType(COMMAND.name())
-                                               .contextTransition(true)
-                                               .status(SUCCESS)
-                                               .parentInstanceId(infrastructure.getUuid())
-                                               .build();
-
-    List<StateExecutionInstance> stateExecutionInstances = asList(infrastructure, element);
-    Map<String, StateExecutionInstance> stateExecutionInstanceMap =
-        stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
-
-    return graphRenderer.generateHierarchyNode(stateExecutionInstanceMap);
-  }
-
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
@@ -266,21 +240,6 @@ public class GraphRendererTest extends WingsBaseTest {
     assertThat(GraphRenderer.aggregateStatus(asList(SUCCESS, FAILED, ERROR))).isEqualTo(ERROR);
     assertThat(GraphRenderer.aggregateStatus(asList(SUCCESS, FAILED))).isEqualTo(FAILED);
     assertThat(GraphRenderer.aggregateStatus(asList(SUCCESS))).isEqualTo(SUCCESS);
-  }
-
-  @Test
-  @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
-  public void testAggregateNodeName() {
-    assertThat(GraphRenderer.aggregateNodeName(true, 0, true)).isEqualTo("instances");
-    assertThat(GraphRenderer.aggregateNodeName(false, 0, true)).isEqualTo("instances");
-    assertThat(GraphRenderer.aggregateNodeName(true, 0, false)).isEqualTo("instances");
-    assertThat(GraphRenderer.aggregateNodeName(false, 0, false)).isEqualTo("instances");
-
-    assertThat(GraphRenderer.aggregateNodeName(true, 5, true)).isEqualTo("5 instances");
-    assertThat(GraphRenderer.aggregateNodeName(false, 5, true)).isEqualTo("5 more instances");
-    assertThat(GraphRenderer.aggregateNodeName(true, 5, false)).isEqualTo("5 instances");
-    assertThat(GraphRenderer.aggregateNodeName(false, 5, false)).isEqualTo("5 instances");
   }
 
   @Test

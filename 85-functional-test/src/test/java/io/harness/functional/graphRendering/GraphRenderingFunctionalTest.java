@@ -40,7 +40,6 @@ import org.junit.experimental.categories.Category;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
@@ -86,8 +85,6 @@ public class GraphRenderingFunctionalTest extends AbstractFunctionalTest {
 
     application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
     assertThat(application).isNotNull();
-
-    featureFlagService.enableAccount(FeatureName.NODE_AGGREGATION, application.getAccountId());
 
     service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
     assertThat(service).isNotNull();

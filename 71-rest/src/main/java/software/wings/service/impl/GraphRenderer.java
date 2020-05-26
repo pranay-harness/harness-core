@@ -15,10 +15,7 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -40,13 +37,10 @@ import io.harness.exception.UnexpectedException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.ExecutionStrategy;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.beans.GraphNode.GraphNodeBuilder;
 import software.wings.common.Constants;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.StateExecutionData;
@@ -78,9 +72,6 @@ public class GraphRenderer {
   @Inject private Injector injector;
 
   @Inject private WorkflowExecutionService workflowExecutionService;
-
-  @Inject private FeatureFlagService featureFlagService;
-  @Inject private AppService appService;
 
   static boolean isSubWorkflow(StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance == null) {
@@ -193,14 +184,12 @@ public class GraphRenderer {
   }
 
   class Session {
-    private boolean provideAggregatedNodes;
     private Map<String, StateExecutionInstance> instanceIdMap;
 
     private Map<String, StateExecutionInstance> prevInstanceIdMap = new HashMap<>();
     private Map<String, Map<String, StateExecutionInstance>> parentIdElementsMap = new HashMap<>();
 
-    Session(boolean provideAggregatedNodes, Map<String, StateExecutionInstance> instanceIdMap) {
-      this.provideAggregatedNodes = provideAggregatedNodes;
+    Session(Map<String, StateExecutionInstance> instanceIdMap) {
       this.instanceIdMap = instanceIdMap;
     }
 
@@ -223,16 +212,13 @@ public class GraphRenderer {
       }
     }
 
-    GraphNode generateNodeTree(List<StateExecutionInstance> instances, StateExecutionData elementStateExecutionData) {
-      StateExecutionInstance instance = instances.get(0);
-      GraphNode node = instances.size() == 1 ? convertToNode(instance) : aggregateToNode(instances);
+    GraphNode generateNodeTree(StateExecutionInstance instance, StateExecutionData elementStateExecutionData) {
+      GraphNode node = convertToNode(instance);
 
       if (elementStateExecutionData != null) {
-        final List<StateExecutionData> executionDataList = instances.stream()
-                                                               .map(StateExecutionInstance::fetchStateExecutionData)
-                                                               .filter(Objects::nonNull)
-                                                               .collect(toList());
-
+        final StateExecutionData executionData = instance.fetchStateExecutionData();
+        final List<StateExecutionData> executionDataList =
+            executionData == null ? new ArrayList<>() : asList(executionData);
         elementStateExecutionData.setStatus(
             aggregateDataStatus(elementStateExecutionData.getStatus(), executionDataList));
         elementStateExecutionData.setStartTs(
@@ -243,10 +229,6 @@ public class GraphRenderer {
       }
 
       if (parentIdElementsMap.get(instance.getUuid()) != null) {
-        if (instances.size() > 1) {
-          throw new InvalidRequestException("You need to start supporting aggregation of aggregations");
-        }
-
         GraphGroup group = new GraphGroup();
         group.setId(node.getId() + "-group");
         logger.debug("generateNodeTree group attached - group: {}, node: {}", group, node);
@@ -258,8 +240,6 @@ public class GraphRenderer {
         if (sed instanceof ForkStateExecutionData) {
           elements = ((ForkStateExecutionData) sed).getElements();
         } else if (sed instanceof RepeatStateExecutionData) {
-          String accountId = appService.getAccountIdByAppId(instance.getAppId());
-          boolean aggregationEnabled = featureFlagService.isEnabled(FeatureName.NODE_AGGREGATION, accountId);
           group.setExecutionStrategy(((RepeatStateExecutionData) sed).getExecutionStrategy());
 
           Collection<String> repeatedElements = ((RepeatStateExecutionData) sed)
@@ -268,17 +248,12 @@ public class GraphRenderer {
                                                     .map(ContextElement::getName)
                                                     .collect(toList());
 
-          if (!aggregationEnabled) {
+          if (repeatedElements.size() < AGGREGATION_LIMIT) {
             elements = repeatedElements;
             aggregateElements = null;
           } else {
-            if (repeatedElements.size() < AGGREGATION_LIMIT) {
-              elements = repeatedElements;
-              aggregateElements = null;
-            } else {
-              elements = Collections.emptyList();
-              aggregateElements = repeatedElements;
-            }
+            elements = Collections.emptyList();
+            aggregateElements = repeatedElements;
           }
         }
 
@@ -291,21 +266,14 @@ public class GraphRenderer {
         }
 
         if (aggregateElements != null) {
-          generateAggregateElement(
-              instance, group, aggregateElements, !elements.isEmpty(), aggregateElements.size() + elements.size());
+          generateAggregateElement(instance, group, aggregateElements, aggregateElements.size() + elements.size());
         }
       }
 
-      final List<StateExecutionInstance> nextInstances = instances.stream()
-                                                             .map(item -> prevInstanceIdMap.get(item.getUuid()))
-                                                             .filter(Objects::nonNull)
-                                                             .collect(toList());
+      final StateExecutionInstance nextInstance = prevInstanceIdMap.get(instance.getUuid());
 
-      if (!nextInstances.isEmpty()) {
-        if (nextInstances.size() != instances.size()) {
-          throw new UnexpectedException();
-        }
-        GraphNode nextNode = generateNodeTree(nextInstances, elementStateExecutionData);
+      if (nextInstance != null) {
+        GraphNode nextNode = generateNodeTree(nextInstance, elementStateExecutionData);
         node.setNext(nextNode);
       }
 
@@ -316,7 +284,7 @@ public class GraphRenderer {
       if (element.equals(Constants.SUB_WORKFLOW)) {
         StateExecutionInstance elementRepeatInstance = parentIdElementsMap.get(instance.getUuid()).get(element);
         if (elementRepeatInstance != null) {
-          final GraphNode elementRepeatNode = generateNodeTree(asList(elementRepeatInstance), null);
+          final GraphNode elementRepeatNode = generateNodeTree(elementRepeatInstance, null);
           group.getElements().add(elementRepeatNode);
         }
         return;
@@ -330,7 +298,7 @@ public class GraphRenderer {
       StateExecutionInstance elementRepeatInstance = parentIdElementsMap.get(instance.getUuid()).get(element);
       StateExecutionData executionData = new StateExecutionData();
       if (elementRepeatInstance != null) {
-        final GraphNode elementRepeatNode = generateNodeTree(asList(elementRepeatInstance), executionData);
+        final GraphNode elementRepeatNode = generateNodeTree(elementRepeatInstance, executionData);
         elementNode.setNext(elementRepeatNode);
       }
       if (executionData.getStatus() == null) {
@@ -341,10 +309,9 @@ public class GraphRenderer {
       elementNode.setExecutionDetails(executionData.getExecutionDetails());
     }
 
-    void generateAggregateElement(StateExecutionInstance instance, GraphGroup group, Collection<String> elements,
-        boolean hasExpanded, int total) {
-      String name = provideAggregatedNodes ? aggregateNodeName(provideAggregatedNodes, elements.size(), hasExpanded)
-                                           : "" + total + " instances";
+    void generateAggregateElement(
+        StateExecutionInstance instance, GraphGroup group, Collection<String> elements, int total) {
+      String name = total + " instances";
 
       GraphNode elementNode = GraphNode.builder()
                                   .id(instance.getUuid() + "-aggregate")
@@ -444,7 +411,7 @@ public class GraphRenderer {
       }
     }
 
-    GraphNode generateHierarchyNode(boolean subGraph) {
+    GraphNode generateHierarchyNode() {
       if (isEmpty(instanceIdMap)) {
         return null;
       }
@@ -456,14 +423,8 @@ public class GraphRenderer {
       }
 
       for (StateExecutionInstance instance : instanceIdMap.values()) {
-        if (subGraph) {
-          if (instance.getPrevInstanceId() == null) {
-            origin = instance;
-          }
-        } else {
-          if (instance.getPrevInstanceId() == null && instance.getParentInstanceId() == null) {
-            origin = instance;
-          }
+        if (instance.getPrevInstanceId() == null && instance.getParentInstanceId() == null) {
+          origin = instance;
         }
         populateParentAndPrevious(instance);
       }
@@ -473,7 +434,7 @@ public class GraphRenderer {
             instanceIdMap, prevInstanceIdMap, parentIdElementsMap);
       }
 
-      return generateNodeTree(asList(origin), null);
+      return generateNodeTree(origin, null);
     }
 
     private void populateParentAndPrevious(StateExecutionInstance instance) {
@@ -497,29 +458,6 @@ public class GraphRenderer {
         prevInstanceIdMap.put(instance.getPrevInstanceId(), instance);
       }
     }
-
-    public GraphNode generateElementNode(StateExecutionInstance repeatInstance, String element) {
-      GraphNode elementNode =
-          GraphNode.builder().id(repeatInstance.getUuid() + "-" + element).name(element).type("ELEMENT").build();
-
-      StateExecutionData executionData = repeatInstance.fetchStateExecutionData();
-      if (executionData.getStatus() == null) {
-        executionData.setStatus(QUEUED);
-      }
-
-      Map<String, ExecutionDataValue> executionDetails = executionData.getExecutionDetails();
-      if (isNotEmpty(executionDetails)) {
-        Map<String, ExecutionDataValue> elementExecutionData = new HashMap<>();
-        elementExecutionData.put("startTs", executionDetails.get("startTs"));
-        elementExecutionData.put("endTs", executionDetails.get("endTs"));
-        elementNode.setExecutionDetails(elementExecutionData);
-      }
-
-      elementNode.setExecutionSummary(executionData.getExecutionSummary());
-      elementNode.setStatus(executionData.getStatus().name());
-
-      return elementNode;
-    }
   }
 
   /**
@@ -529,9 +467,9 @@ public class GraphRenderer {
    * @return the node
    */
   public GraphNode generateHierarchyNode(Map<String, StateExecutionInstance> instanceIdMap) {
-    final Session session = new Session(false, instanceIdMap);
+    final Session session = new Session(instanceIdMap);
 
-    return session.generateHierarchyNode(false);
+    return session.generateHierarchyNode();
   }
 
   public GraphGroup generateNodeSubGraph(
@@ -559,7 +497,7 @@ public class GraphRenderer {
         throw new InvalidRequestException("Couldnt find element for host: " + hostElement.getKey(), USER);
       }
 
-      Session session = new Session(false, instanceMap);
+      Session session = new Session(instanceMap);
       session.populateParentAndPreviousForSubGraph();
       session.generateElement(repeatInstance, group, element.getName());
     }
@@ -618,106 +556,5 @@ public class GraphRenderer {
       builder.properties(instance.getStateParams());
     }
     return builder.build();
-  }
-
-  GraphNode aggregateToNode(List<StateExecutionInstance> instances) {
-    if (instances.size() <= 1) {
-      throw new UnexpectedException();
-    }
-
-    StateExecutionInstance instance = instances.get(0);
-    if (instances.stream().noneMatch(item -> instance.getDisplayName().equals(item.getDisplayName()))) {
-      throw new UnexpectedException();
-    }
-    if (instances.stream().noneMatch(item -> instance.getStateType().equals(item.getStateType()))) {
-      throw new UnexpectedException();
-    }
-    if (instances.stream().noneMatch(item -> instance.isRollback() == item.isRollback())) {
-      throw new UnexpectedException();
-    }
-
-    ExecutionStatus status =
-        aggregateStatus(instances.stream().map(StateExecutionInstance::getStatus).collect(toList()));
-
-    final Multiset<ExecutionStatus> multiset = HashMultiset.create();
-    instances.stream().map(StateExecutionInstance::getStatus).forEach(multiset::add);
-
-    Map<String, ExecutionDataValue> executionDetails = new LinkedHashMap<>();
-
-    executionDetails.put(
-        "Total instances", ExecutionDataValue.builder().displayName("Total instances").value(instances.size()).build());
-
-    for (ExecutionStatus st : ExecutionStatus.values()) {
-      int count = multiset.count(st);
-      if (count > 0) {
-        String displayName = executionStateDisplayName(st);
-
-        executionDetails.put(displayName, ExecutionDataValue.builder().displayName(displayName).value(count).build());
-      }
-    }
-
-    GraphNodeBuilder builder = GraphNode.builder()
-                                   .id(generateUuid())
-                                   .name(instance.getDisplayName())
-                                   .type(instance.getStateType())
-                                   .rollback(instance.isRollback())
-                                   .status(String.valueOf(status).toUpperCase())
-                                   .executionDetails(executionDetails);
-
-    return builder.build();
-  }
-
-  static String executionStateDisplayName(ExecutionStatus status) {
-    switch (status) {
-      case NEW:
-        return "New";
-      case STARTING:
-        return "About to start";
-      case RUNNING:
-        return "Still running";
-      case SUCCESS:
-        return "Succeeded";
-      case DISCONTINUING:
-        return "About to discontinue";
-      case ABORTED:
-        return "Aborted";
-      case FAILED:
-      case ERROR:
-        return "Failed";
-      case QUEUED:
-        return "In the queue";
-      case SCHEDULED:
-        return "Scheduled";
-      case WAITING:
-        return "Waiting";
-      case PAUSING:
-        return "About to pause";
-      case PAUSED:
-        return "Paused";
-      case RESUMED:
-        return "Resumed";
-      case REJECTED:
-        return "Rejected";
-      case EXPIRED:
-        return "Expired";
-      default:
-        unhandled(status);
-    }
-    return "Other";
-  }
-
-  static String aggregateNodeName(boolean provideAggregatedNodes, int instanceCount, boolean hasExpanded) {
-    if (instanceCount == 0) {
-      return "instances";
-    }
-    if (provideAggregatedNodes) {
-      return instanceCount + " instances";
-    }
-
-    if (hasExpanded) {
-      return instanceCount + " more instances";
-    }
-
-    return instanceCount + " instances";
   }
 }
