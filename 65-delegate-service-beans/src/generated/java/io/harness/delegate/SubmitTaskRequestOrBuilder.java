@@ -8,41 +8,54 @@ public interface SubmitTaskRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.SubmitTaskRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 1;</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   */
+  boolean hasAccountId();
+  /**
+   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   */
+  io.harness.delegate.AccountId getAccountId();
+  /**
+   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   */
+  io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder();
+
+  /**
+   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 2;</code>
    */
   boolean hasSetupAbstractions();
   /**
-   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 1;</code>
+   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 2;</code>
    */
   io.harness.delegate.TaskSetupAbstractions getSetupAbstractions();
   /**
-   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 1;</code>
+   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 2;</code>
    */
   io.harness.delegate.TaskSetupAbstractionsOrBuilder getSetupAbstractionsOrBuilder();
 
   /**
-   * <code>.io.harness.delegate.TaskDetails details = 2;</code>
+   * <code>.io.harness.delegate.TaskDetails details = 3;</code>
    */
   boolean hasDetails();
   /**
-   * <code>.io.harness.delegate.TaskDetails details = 2;</code>
+   * <code>.io.harness.delegate.TaskDetails details = 3;</code>
    */
   io.harness.delegate.TaskDetails getDetails();
   /**
-   * <code>.io.harness.delegate.TaskDetails details = 2;</code>
+   * <code>.io.harness.delegate.TaskDetails details = 3;</code>
    */
   io.harness.delegate.TaskDetailsOrBuilder getDetailsOrBuilder();
 
   /**
-   * <code>.io.harness.delegate.TaskCapabilities capabilities = 3;</code>
+   * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
    */
   boolean hasCapabilities();
   /**
-   * <code>.io.harness.delegate.TaskCapabilities capabilities = 3;</code>
+   * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
    */
   io.harness.delegate.TaskCapabilities getCapabilities();
   /**
-   * <code>.io.harness.delegate.TaskCapabilities capabilities = 3;</code>
+   * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
    */
   io.harness.delegate.TaskCapabilitiesOrBuilder getCapabilitiesOrBuilder();
 }

@@ -1,6 +1,8 @@
 build:
   roots:
     - 19-delegate-tasks-beans/src/main/proto
+    - 64-delegate-beans/src/main/proto
+    - 65-delegate-agent-beans/src/main/proto
     - 65-delegate-service-beans/src/main/proto
 lint:
   use:
