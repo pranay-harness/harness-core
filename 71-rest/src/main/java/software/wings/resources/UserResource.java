@@ -179,12 +179,8 @@ public class UserResource {
       @QueryParam("details") @DefaultValue("true") boolean loadUserGroups) {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
-    List<User> userList;
-    if (!StringUtils.isEmpty(searchTerm)) {
-      userList = userService.searchUsers(accountId, loadUserGroups, pageSize, offset, searchTerm);
-    } else {
-      userList = userService.listUsers(accountId, loadUserGroups, pageSize, offset, true);
-    }
+
+    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true);
 
     PageResponse<PublicUser> pageResponse = aPageResponse()
                                                 .withOffset(offset.toString())

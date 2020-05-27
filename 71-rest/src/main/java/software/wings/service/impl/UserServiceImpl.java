@@ -2940,26 +2940,33 @@ public class UserServiceImpl implements UserService {
     return wingsPersistence.save(userInvite);
   }
 
-  @Override
-  public List<User> listUsers(
-      String accountId, boolean loadUserGroups, Integer pageSize, Integer offset, boolean listPendingUsers) {
-    Query<User> query = getListUserQuery(accountId, listPendingUsers);
-
-    List<User> userList = query.asList(new FindOptions().skip(offset).limit(pageSize));
-    loadUserGroupsForUsers(userList, accountId);
-    return userList;
-  }
-
-  @Override
-  public List<User> searchUsers(
-      String accountId, boolean loadUserGroups, Integer pageSize, Integer offset, String searchTerm) {
-    Query<User> query = getSearchUserQuery(accountId, searchTerm);
+  public List<User> listUsers(PageRequest pageRequest, String accountId, String searchTerm, Integer offset,
+      Integer pageSize, boolean loadUserGroups) {
+    Query<User> query;
+    if (isNotEmpty(searchTerm)) {
+      query = getSearchUserQuery(accountId, searchTerm);
+    } else {
+      query = getListUserQuery(accountId, true);
+    }
+    applySortFilter(pageRequest, query);
     FindOptions findOptions = new FindOptions().skip(offset).limit(pageSize);
     List<User> userList = query.asList(findOptions);
     if (loadUserGroups) {
       loadUserGroupsForUsers(userList, accountId);
     }
     return userList;
+  }
+
+  private void applySortFilter(PageRequest pageRequest, Query<User> query) {
+    List<String> fieldToSort = pageRequest.getUriInfo().getQueryParameters(true).get("sort[0][field]");
+    if (fieldToSort == null) {
+      return;
+    }
+    if (pageRequest.getUriInfo().getQueryParameters(true).get("sort[0][direction]").get(0).equals("ASC")) {
+      query.order(Sort.ascending(fieldToSort.get(0)));
+    } else {
+      query.order(Sort.descending(fieldToSort.get(0)));
+    }
   }
 
   public long getTotalUserCount(String accountId, boolean listPendingUsers) {
@@ -2980,7 +2987,8 @@ public class UserServiceImpl implements UserService {
     return query;
   }
 
-  private Query<User> getSearchUserQuery(String accountId, String searchTerm) {
+  @VisibleForTesting
+  Query<User> getSearchUserQuery(String accountId, String searchTerm) {
     Query<User> searchUsersQuery = wingsPersistence.createQuery(User.class, HQuery.excludeAuthority);
     searchUsersQuery.criteria(UserKeys.accounts).hasThisOne(accountId);
     searchUsersQuery.or(searchUsersQuery.criteria(UserKeys.name).startsWithIgnoreCase(searchTerm),

@@ -523,10 +523,8 @@ public interface UserService extends OwnedByAccount {
 
   String saveUserInvite(UserInvite userInvite);
 
-  List<User> listUsers(
-      String accountId, boolean loadUserGroups, Integer pageSize, Integer offset, boolean listPendingUsers);
-
-  List<User> searchUsers(String accountId, boolean loadUserGroups, Integer pageSize, Integer offset, String searchTerm);
+  List<User> listUsers(PageRequest pageRequest, String accountId, String searchTerm, Integer offset, Integer pageSize,
+      boolean loadUserGroups);
 
   long getTotalUserCount(String accountId, boolean listPendingUsers);
 
