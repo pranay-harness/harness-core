@@ -8,6 +8,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -348,7 +349,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     }
   }
 
-  private String findRollbackArtifactId(Service service, WorkflowExecution workflowExecution) {
+  @VisibleForTesting
+  String findRollbackArtifactId(Service service, WorkflowExecution workflowExecution) {
     String rollbackArtifactId = null;
     if (workflowExecution.getExecutionArgs() != null && workflowExecution.getExecutionArgs().getArtifacts() != null) {
       if (service != null) {
@@ -359,8 +361,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
             break;
           }
         }
-      }
-      if (rollbackArtifactId == null) {
+      } else {
         // This can happen in case of build workflow
         rollbackArtifactId = workflowExecution.getExecutionArgs().getArtifacts().get(0).getUuid();
       }
