@@ -17,6 +17,7 @@ import io.harness.perpetualtask.ecs.EcsPerpetualTaskParams;
 import io.harness.perpetualtask.example.SamplePerpetualTaskExecutor;
 import io.harness.perpetualtask.example.SamplePerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskParams;
+import io.harness.perpetualtask.instancesync.AwsCodeDeployInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskParams;
@@ -46,6 +47,8 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
         .to(AwsSshInstanceSyncExecutor.class);
     mapBinder.addBinding(SpotinstAmiInstanceSyncPerpetualTaskParams.class.getSimpleName())
         .to(SpotinstAmiInstanceSyncDelegateExecutor.class);
+    mapBinder.addBinding(AwsCodeDeployInstanceSyncPerpetualTaskParams.class.getSimpleName())
+        .to(AwsCodeDeployInstanceSyncExecutor.class);
 
     install(new FactoryModuleBuilder()
                 .implement(PodWatcher.class, PodWatcher.class)

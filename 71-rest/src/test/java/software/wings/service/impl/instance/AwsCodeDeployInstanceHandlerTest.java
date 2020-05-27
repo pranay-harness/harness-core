@@ -1,7 +1,9 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -44,6 +46,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Reservation;
+import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -61,6 +64,7 @@ import software.wings.api.DeploymentSummary;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -75,8 +79,10 @@ import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.AwsUtils;
+import software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentInstancesResponse;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -106,6 +112,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   @Mock private AwsUtils mockAwsUtils;
   @Mock private AwsEc2HelperServiceManager mockAwsEc2HelperServiceManager;
   @Mock private AwsCodeDeployHelperServiceManager mockAwsCodeDeployHelperServiceManager;
+  @Mock private FeatureFlagService mockFeatureFlagService;
   @Mock EnvironmentService environmentService;
   @Mock ServiceResourceService serviceResourceService;
   @InjectMocks @Inject AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
@@ -402,5 +409,102 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     assertThat(capturedInstances.get(0).getLastArtifactBuildNum()).isEqualTo("1");
     assertThat(capturedInstances.get(0).getLastArtifactName()).isEqualTo("old");
     assertThat(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName())).isTrue();
+  }
+
+  // 2 existing instances
+  // expected 1 deleted
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testSyncInstances_ProcessPerpetualTaskResponse() {
+    doReturn(true)
+        .when(mockFeatureFlagService)
+        .isEnabled(awsCodeDeployInstanceHandler.getFeatureFlagToEnablePerpetualTaskForInstanceSync(), ACCOUNT_ID);
+    doReturn(getInstances()).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    AwsCodeDeployListDeploymentInstancesResponse perpetualTaskResponse =
+        AwsCodeDeployListDeploymentInstancesResponse.builder()
+            .instances(singletonList(instance1))
+            .executionStatus(ExecutionStatus.SUCCESS)
+            .build();
+
+    CodeDeployInfrastructureMapping infrastructureMapping = getInfrastructureMapping();
+
+    awsCodeDeployInstanceHandler.processInstanceSyncResponseFromPerpetualTask(
+        infrastructureMapping, perpetualTaskResponse);
+    ArgumentCaptor<Set> deletedIdsCaptor = ArgumentCaptor.forClass(Set.class);
+    verify(instanceService, times(1)).delete(deletedIdsCaptor.capture());
+    verify(instanceService, never()).save(any(Instance.class));
+
+    Set<String> deletedIds = deletedIdsCaptor.getValue();
+    assertThat(deletedIds).containsExactlyInAnyOrder(instance2.getInstanceId());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetSuccessPerpetualTaskResponseStatus() {
+    CodeDeployInfrastructureMapping infrastructureMapping = getInfrastructureMapping();
+
+    AwsCodeDeployListDeploymentInstancesResponse perpetualTaskResponse =
+        AwsCodeDeployListDeploymentInstancesResponse.builder()
+            .instances(singletonList(instance1))
+            .executionStatus(ExecutionStatus.SUCCESS)
+            .build();
+
+    Status status = awsCodeDeployInstanceHandler.getStatus(infrastructureMapping, perpetualTaskResponse);
+
+    assertThat(status.isSuccess()).isTrue();
+    assertThat(status.isRetryable()).isTrue();
+    assertThat(status.getErrorMessage()).isNull();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetFailedPerpetualTaskResponseStatus() {
+    CodeDeployInfrastructureMapping infrastructureMapping = getInfrastructureMapping();
+
+    AwsCodeDeployListDeploymentInstancesResponse perpetualTaskResponse =
+        AwsCodeDeployListDeploymentInstancesResponse.builder()
+            .executionStatus(ExecutionStatus.FAILED)
+            .errorMessage("Failed to update instances")
+            .build();
+
+    Status status = awsCodeDeployInstanceHandler.getStatus(infrastructureMapping, perpetualTaskResponse);
+
+    assertThat(status.isSuccess()).isFalse();
+    assertThat(status.isRetryable()).isTrue();
+    assertThat(status.getErrorMessage()).isEqualTo("Failed to update instances");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetNonRetryablePerpetualTaskResponseStatus() {
+    CodeDeployInfrastructureMapping infrastructureMapping = getInfrastructureMapping();
+
+    AwsCodeDeployListDeploymentInstancesResponse perpetualTaskResponse =
+        AwsCodeDeployListDeploymentInstancesResponse.builder()
+            .executionStatus(ExecutionStatus.SUCCESS)
+            .instances(emptyList())
+            .build();
+
+    Status status = awsCodeDeployInstanceHandler.getStatus(infrastructureMapping, perpetualTaskResponse);
+
+    assertThat(status.isSuccess()).isTrue();
+    assertThat(status.isRetryable()).isFalse();
+    assertThat(status.getErrorMessage()).isNull();
+  }
+
+  private CodeDeployInfrastructureMapping getInfrastructureMapping() {
+    return CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping()
+        .withUuid(INFRA_MAPPING_ID)
+        .withAccountId(ACCOUNT_ID)
+        .withAppId(APP_ID)
+        .withInfraMappingType(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.getName())
+        .withComputeProviderSettingId(COMPUTE_PROVIDER_SETTING_ID)
+        .withRegion(US_EAST)
+        .withServiceId(SERVICE_ID)
+        .build();
   }
 }

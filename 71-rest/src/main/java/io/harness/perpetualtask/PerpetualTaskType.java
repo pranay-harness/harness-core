@@ -16,6 +16,7 @@ public enum PerpetualTaskType {
   PCF_INSTANCE_SYNC(PcfInstanceSyncPerpetualTaskClient.class),
   AWS_SSH_INSTANCE_SYNC(AwsSshPerpetualTaskServiceClient.class),
   AWS_AMI_INSTANCE_SYNC(AwsAmiInstanceSyncPerpetualTaskClient.class),
+  AWS_CODE_DEPLOY_INSTANCE_SYNC(AwsCodeDeployInstanceSyncPerpetualTaskClient.class),
   SPOT_INST_AMI_INSTANCE_SYNC(SpotinstAmiInstanceSyncPerpetualTaskClient.class);
 
   private final Class<? extends PerpetualTaskServiceClient> perpetualTaskServiceClientClass;
