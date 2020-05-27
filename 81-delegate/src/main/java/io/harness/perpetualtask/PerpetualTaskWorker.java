@@ -2,6 +2,7 @@ package io.harness.perpetualtask;
 
 import static io.harness.delegate.service.DelegateAgentServiceImpl.getDelegateId;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static java.lang.System.currentTimeMillis;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.AbstractScheduledService;
@@ -16,6 +17,7 @@ import io.harness.flow.BackoffScheduler;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.LoggingListener;
 import io.harness.manage.ManagedScheduledExecutorService;
+import io.harness.mongo.DelayLogContext;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +43,7 @@ public class PerpetualTaskWorker {
 
   private ScheduledExecutorService scheduledService;
 
+  private final AtomicBoolean firstFillUp = new AtomicBoolean(true);
   private final BackoffScheduler backoffScheduler;
   private final TimeLimiter timeLimiter;
   private final PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient;
@@ -80,8 +83,9 @@ public class PerpetualTaskWorker {
       List<PerpetualTaskAssignDetails> assignedTasks = fetchAssignedTask();
       Set<PerpetualTaskId> stopTasks = new HashSet<>();
       List<PerpetualTaskAssignDetails> startTasks = new ArrayList();
+      List<PerpetualTaskAssignDetails> updatedTasks = new ArrayList();
       synchronized (runningTaskMap) {
-        splitTasks(runningTaskMap.keySet(), assignedTasks, stopTasks, startTasks);
+        splitTasks(runningTaskMap, assignedTasks, stopTasks, startTasks, updatedTasks);
       }
 
       for (PerpetualTaskId taskId : stopTasks) {
@@ -90,6 +94,16 @@ public class PerpetualTaskWorker {
       }
 
       for (PerpetualTaskAssignDetails task : startTasks) {
+        if (firstFillUp.get()) {
+          logPullDelay(task, "first poll from this delegate for task");
+        }
+        startTask(task);
+      }
+      firstFillUp.set(false);
+
+      for (PerpetualTaskAssignDetails task : updatedTasks) {
+        logPullDelay(task, "update for task");
+        stopTask(task.getTaskId());
         startTask(task);
       }
 
@@ -102,13 +116,30 @@ public class PerpetualTaskWorker {
     }
   }
 
-  protected static void splitTasks(Set<PerpetualTaskId> runningTaskSet, List<PerpetualTaskAssignDetails> assignedTasks,
-      Set<PerpetualTaskId> stopTasks, List<PerpetualTaskAssignDetails> startTasks) {
-    stopTasks.addAll(runningTaskSet);
+  private void logPullDelay(PerpetualTaskAssignDetails task, String message) {
+    long seconds = task.getLastContextUpdated().getSeconds();
+    long startTime = currentTimeMillis();
+    long delay = startTime - Duration.ofSeconds(seconds).toMillis();
+
+    try (DelayLogContext ignore = new DelayLogContext(delay, OVERRIDE_ERROR)) {
+      logger.info(message);
+    }
+  }
+
+  protected void splitTasks(Map<PerpetualTaskId, PerpetualTaskAssignRecord> runningTaskMap,
+      List<PerpetualTaskAssignDetails> assignedTasks, Set<PerpetualTaskId> stopTasks,
+      List<PerpetualTaskAssignDetails> startTasks, List<PerpetualTaskAssignDetails> updatedTasks) {
+    stopTasks.addAll(runningTaskMap.keySet());
 
     for (PerpetualTaskAssignDetails assignDetails : assignedTasks) {
       if (!stopTasks.remove(assignDetails.getTaskId())) {
         startTasks.add(assignDetails);
+      } else {
+        PerpetualTaskAssignRecord runningTask = runningTaskMap.get(assignDetails.getTaskId());
+        if (runningTask.getPerpetualTaskAssignDetails().getLastContextUpdated().getSeconds()
+            < assignDetails.getLastContextUpdated().getSeconds()) {
+          updatedTasks.add(assignDetails);
+        }
       }
     }
   }
@@ -166,6 +197,10 @@ public class PerpetualTaskWorker {
       perpetualTaskAssignRecord.getPerpetualTaskHandle().getTaskLifecycleManager().stopTask();
       perpetualTaskAssignRecord.getPerpetualTaskHandle().getTaskHandle().cancel(true);
     }
+  }
+
+  public void updateTasks() {
+    handleTasks();
   }
 
   public void start() {

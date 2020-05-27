@@ -1,13 +1,17 @@
 package io.harness.perpetualtask;
 
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Durations;
 
 import io.harness.CategoryTest;
@@ -33,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class PerpetualTaskWorkerTest extends CategoryTest {
@@ -41,7 +46,9 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
 
   String taskIdString1 = "TASK_ID_1";
   PerpetualTaskId taskId1 = PerpetualTaskId.newBuilder().setId(taskIdString1).build();
-  PerpetualTaskAssignDetails task1 = PerpetualTaskAssignDetails.newBuilder().setTaskId(taskId1).build();
+  Timestamp lastContextUpdate = Timestamp.newBuilder().setSeconds(1111).build();
+  PerpetualTaskAssignDetails task1 =
+      PerpetualTaskAssignDetails.newBuilder().setTaskId(taskId1).setLastContextUpdated(lastContextUpdate).build();
 
   String taskIdString2 = "TASK_ID_2";
   PerpetualTaskId taskId2 = PerpetualTaskId.newBuilder().setId(taskIdString2).build();
@@ -97,32 +104,61 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testFetchAssignedTask() {
+    worker.fetchAssignedTask();
+    verify(perpetualTaskServiceGrpcClient).perpetualTaskList(anyString());
+  }
+
+  @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSplitTasks() {
-    Set<PerpetualTaskId> runningTaskSet = new HashSet<>();
+    Map<PerpetualTaskId, PerpetualTaskAssignRecord> runningTaskMap = new ConcurrentHashMap<>();
     List<PerpetualTaskAssignDetails> assignedTasks = new ArrayList<>();
     Set<PerpetualTaskId> stopTasks = new HashSet<>();
     List<PerpetualTaskAssignDetails> startTasks = new ArrayList<>();
+    List<PerpetualTaskAssignDetails> updatedTasks = new ArrayList<>();
 
-    PerpetualTaskWorker.splitTasks(runningTaskSet, assignedTasks, stopTasks, startTasks);
+    worker.splitTasks(runningTaskMap, assignedTasks, stopTasks, startTasks, updatedTasks);
     assertThat(stopTasks).isEmpty();
     assertThat(startTasks).isEmpty();
+    assertThat(updatedTasks).isEmpty();
 
-    runningTaskSet.add(task1.getTaskId());
-    PerpetualTaskWorker.splitTasks(runningTaskSet, assignedTasks, stopTasks, startTasks);
+    runningTaskMap.put(
+        task1.getTaskId(), PerpetualTaskAssignRecord.builder().perpetualTaskAssignDetails(task1).build());
+    worker.splitTasks(runningTaskMap, assignedTasks, stopTasks, startTasks, updatedTasks);
     assertThat(stopTasks).containsExactly(task1.getTaskId());
     assertThat(startTasks).isEmpty();
+    assertThat(updatedTasks).isEmpty();
     stopTasks.clear();
 
     assignedTasks.add(PerpetualTaskAssignDetails.newBuilder().setTaskId(task1.getTaskId()).build());
-    PerpetualTaskWorker.splitTasks(runningTaskSet, assignedTasks, stopTasks, startTasks);
+    worker.splitTasks(runningTaskMap, assignedTasks, stopTasks, startTasks, updatedTasks);
     assertThat(stopTasks).isEmpty();
     assertThat(startTasks).isEmpty();
+    assertThat(updatedTasks).isEmpty();
+    assignedTasks.clear();
 
-    assignedTasks.add(PerpetualTaskAssignDetails.newBuilder().setTaskId(task2.getTaskId()).build());
-    PerpetualTaskWorker.splitTasks(runningTaskSet, assignedTasks, stopTasks, startTasks);
+    Timestamp newLastContextUpdate = Timestamp.newBuilder().setSeconds(2222).build();
+
+    PerpetualTaskAssignDetails updatedTask = PerpetualTaskAssignDetails.newBuilder()
+                                                 .setTaskId(task1.getTaskId())
+                                                 .setLastContextUpdated(newLastContextUpdate)
+                                                 .build();
+    assignedTasks.add(updatedTask);
+    worker.splitTasks(runningTaskMap, assignedTasks, stopTasks, startTasks, updatedTasks);
     assertThat(stopTasks).isEmpty();
-    assertThat(startTasks).containsExactly(assignedTasks.get(1));
+    assertThat(startTasks).isEmpty();
+    assertThat(updatedTasks).containsExactly(updatedTask);
+
+    stopTasks.clear();
+    runningTaskMap.clear();
+
+    worker.splitTasks(runningTaskMap, assignedTasks, stopTasks, startTasks, updatedTasks);
+    assertThat(stopTasks).isEmpty();
+    assertThat(startTasks).containsExactly(updatedTask);
+    assertThat(updatedTasks).isNotEmpty();
   }
 }
