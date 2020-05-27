@@ -18,7 +18,7 @@ import java.util.Date;
 @Slf4j
 @Singleton
 public class InstanceDataMongoEventReader implements InstanceDataEventReader {
-  private static final int READER_BATCH_SIZE = 100;
+  private static final int READER_BATCH_SIZE = 500;
   @Autowired private MongoTemplate mongoTemplate;
 
   @Override

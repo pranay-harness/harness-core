@@ -115,7 +115,7 @@ public class UtilizationDataServiceImpl {
     ResultSet resultSet = null;
     Map<String, UtilizationData> utilizationDataForInstances = new HashMap<>();
     populateDefaultUtilizationData(utilizationDataForInstances, serviceArnToInstanceIds);
-    logger.info("Utilization data query : {}", query);
+    logger.debug("Utilization data query : {}", query);
 
     try (Connection connection = timeScaleDBService.getDBConnection();
          Statement statement = connection.createStatement()) {

@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Slf4j
 public class BillingBatchConfiguration {
-  private static final int BATCH_SIZE = 100;
+  private static final int BATCH_SIZE = 500;
 
   @Bean
   public ItemWriter<InstanceData> instanceBillingDataWriter() {

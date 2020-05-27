@@ -39,6 +39,8 @@ import java.util.stream.Collectors;
   ,
       @Index(options = @IndexOptions(name = "accountId_clusterId_labels", background = true), fields = {
         @Field(K8sWorkloadKeys.accountId), @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.labels)
+      }), @Index(options = @IndexOptions(name = "accountId_clusterId_uid", background = true), fields = {
+        @Field(K8sWorkloadKeys.accountId), @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.uid)
       }), @Index(options = @IndexOptions(name = "accountId_name_clusterId_namespace", background = true), fields = {
         @Field(K8sWorkloadKeys.accountId)
         , @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.namespace)
