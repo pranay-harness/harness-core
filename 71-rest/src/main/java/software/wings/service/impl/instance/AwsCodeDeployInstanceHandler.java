@@ -1,15 +1,19 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.singletonList;
 import static java.util.function.Function.identity;
+import static software.wings.beans.FeatureName.MOVE_AWS_CODE_DEPLOY_INSTANCE_SYNC_TO_PERPETUAL_TASK;
 import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_CODE_DEPLOY_DEPLOYMENTS;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +40,9 @@ import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
+import software.wings.service.AwsCodeDeployInstanceSyncPerpetualTaskCreator;
+import software.wings.service.InstanceSyncPerpetualTaskCreator;
+import software.wings.service.impl.aws.model.AwsCodeDeployListDeploymentInstancesResponse;
 import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManager;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
@@ -51,8 +58,9 @@ import java.util.stream.Collectors;
  * @author rktummala on 01/30/18
  */
 @Slf4j
-public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
+public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler implements InstanceSyncByPerpetualTaskHandler {
   @Inject private AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
+  @Inject private AwsCodeDeployInstanceSyncPerpetualTaskCreator taskCreator;
 
   @Override
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
@@ -97,16 +105,26 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
 
   @Override
   public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
-    syncInstancesInternal(appId, infraMappingId, null, false);
-  }
-
-  private void syncInstancesInternal(
-      String appId, String infraMappingId, List<DeploymentSummary> newDeploymentSummaries, boolean rollback) {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
-    if (!(infrastructureMapping instanceof CodeDeployInfrastructureMapping)) {
-      String msg = "Incompatible infra mapping type. Expecting code deploy type. Found:"
-          + infrastructureMapping.getInfraMappingType();
+    syncInstancesInternal(infrastructureMapping, null, false, Optional.empty(), instanceSyncFlow);
+  }
+
+  @Override
+  public void processInstanceSyncResponseFromPerpetualTask(
+      InfrastructureMapping infrastructureMapping, ResponseData response) {
+    AwsCodeDeployListDeploymentInstancesResponse listInstancesResponse =
+        (AwsCodeDeployListDeploymentInstancesResponse) response;
+    syncInstancesInternal(infrastructureMapping, null, false, Optional.of(listInstancesResponse.getInstances()),
+        InstanceSyncFlow.PERPETUAL_TASK);
+  }
+
+  private void syncInstancesInternal(InfrastructureMapping infraMapping, List<DeploymentSummary> newDeploymentSummaries,
+      boolean rollback, Optional<List<com.amazonaws.services.ec2.model.Instance>> instances,
+      InstanceSyncFlow instanceSyncFlow) {
+    if (!(infraMapping instanceof CodeDeployInfrastructureMapping)) {
+      String msg =
+          "Incompatible infra mapping type. Expecting code deploy type. Found:" + infraMapping.getInfraMappingType();
       logger.error(msg);
       throw WingsException.builder().message(msg).build();
     }
@@ -114,7 +132,8 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
     // key - ec2 instance id, value - instance
     Map<String, Instance> ec2InstanceIdInstanceMap = new HashMap<>();
 
-    List<Instance> instancesInDB = getInstances(appId, infraMappingId);
+    List<Instance> instancesInDB = getInstances(infraMapping.getAppId(), infraMapping.getUuid());
+    boolean canUpdateDb = canUpdateInstancesInDb(instanceSyncFlow, infraMapping.getAccountId());
 
     instancesInDB.forEach(instance -> {
       InstanceInfo instanceInfo = instance.getInstanceInfo();
@@ -126,13 +145,13 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
       }
     });
 
-    SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    SettingAttribute cloudProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
 
     List<EncryptedDataDetail> encryptedDataDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) cloudProviderSetting.getValue(), null, null);
 
-    CodeDeployInfrastructureMapping codeDeployInfraMapping = (CodeDeployInfrastructureMapping) infrastructureMapping;
+    CodeDeployInfrastructureMapping codeDeployInfraMapping = (CodeDeployInfrastructureMapping) infraMapping;
     String region = codeDeployInfraMapping.getRegion();
 
     if (isNotEmpty(newDeploymentSummaries)) {
@@ -160,8 +179,8 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
           // change to codeDeployInstance builder
           Instance oldInstance = instancesInDBMap.get(ec2InstanceId);
           com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
-          Instance instance = buildInstanceUsingEc2Instance(null, ec2Instance, infrastructureMapping,
-              getDeploymentSummaryForInstanceCreation(newDeploymentSummary, rollback));
+          Instance instance = buildInstanceUsingEc2Instance(
+              null, ec2Instance, infraMapping, getDeploymentSummaryForInstanceCreation(newDeploymentSummary, rollback));
           if (oldInstance != null) {
             instanceService.update(instance, oldInstance.getUuid());
           } else {
@@ -181,8 +200,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
           instancesToBeAdded.forEach(ec2InstanceId -> {
             com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
             // change to codeDeployInstance builder
-            Instance instance =
-                buildInstanceUsingEc2Instance(null, ec2Instance, infrastructureMapping, deploymentSummary);
+            Instance instance = buildInstanceUsingEc2Instance(null, ec2Instance, infraMapping, deploymentSummary);
             instanceService.save(instance);
           });
 
@@ -191,7 +209,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
       });
     }
 
-    handleEc2InstanceSync(ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region, Optional.empty(), true);
+    handleEc2InstanceSync(ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region, instances, canUpdateDb);
   }
 
   private Instance buildInstanceUsingEc2Instance(String instanceUuid,
@@ -218,13 +236,38 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
   @Override
   public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
       OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {
-    syncInstancesInternal(deploymentSummaries.iterator().next().getAppId(),
-        deploymentSummaries.iterator().next().getInfraMappingId(), deploymentSummaries, rollback);
+    String appId = deploymentSummaries.iterator().next().getAppId();
+    String infraMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
+    InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
+    notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
+    syncInstancesInternal(
+        infrastructureMapping, deploymentSummaries, rollback, Optional.empty(), InstanceSyncFlow.NEW_DEPLOYMENT);
+  }
+
+  @Override
+  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+    AwsCodeDeployListDeploymentInstancesResponse listInstancesResponse =
+        (AwsCodeDeployListDeploymentInstancesResponse) response;
+    boolean success = listInstancesResponse.getExecutionStatus() == ExecutionStatus.SUCCESS;
+    boolean deleteTask = success && isEmpty(listInstancesResponse.getInstances());
+    String errorMessage = success ? null : listInstancesResponse.getErrorMessage();
+
+    return Status.builder().retryable(!deleteTask).errorMessage(errorMessage).success(success).build();
   }
 
   @Override
   public FeatureName getFeatureFlagToStopIteratorBasedInstanceSync() {
     return STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_CODE_DEPLOY_DEPLOYMENTS;
+  }
+
+  @Override
+  public FeatureName getFeatureFlagToEnablePerpetualTaskForInstanceSync() {
+    return MOVE_AWS_CODE_DEPLOY_INSTANCE_SYNC_TO_PERPETUAL_TASK;
+  }
+
+  @Override
+  public InstanceSyncPerpetualTaskCreator getInstanceSyncPerpetualTaskCreator() {
+    return taskCreator;
   }
 
   @Override
