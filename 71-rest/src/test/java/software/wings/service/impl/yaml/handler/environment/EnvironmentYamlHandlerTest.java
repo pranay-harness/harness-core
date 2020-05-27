@@ -7,6 +7,7 @@ import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -254,7 +255,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
     ChangeContext<Yaml> changeContext = getChangeContext(yaml);
 
     when(mockEnvironmentService.save(env)).thenReturn(env);
-    when(yamlHelper.extractEncryptedRecordId(newVariableOverride_3.getValue()))
+    when(yamlHelper.extractEncryptedRecordId(eq(newVariableOverride_3.getValue()), anyString()))
         .thenReturn(expected_value_for_encrypted_var);
     yamlHandler.upsertFromYaml(changeContext, null);
     verify(mockServiceVariableService, times(3)).save(captor.capture(), anyBoolean());
@@ -304,7 +305,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
     ServiceTemplate serviceTemplate_1 = aServiceTemplate().withServiceId(SERVICE_ID).withEnvId(ENV_ID).build();
     environment.setServiceTemplates(Arrays.asList(serviceTemplate_1));
 
-    when(yamlHelper.extractEncryptedRecordId(existing_1_override.getValue()))
+    when(yamlHelper.extractEncryptedRecordId(eq(existing_1_override.getValue()), anyString()))
         .thenReturn(expected_value_for_encrypted_var);
     when(mockServiceVariableService.getServiceVariablesByTemplate(
              anyString(), anyString(), any(ServiceTemplate.class), any()))

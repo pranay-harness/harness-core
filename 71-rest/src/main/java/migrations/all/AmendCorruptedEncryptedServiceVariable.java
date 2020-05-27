@@ -41,7 +41,7 @@ public class AmendCorruptedEncryptedServiceVariable implements Migration {
         if (serviceVariable.getEncryptedValue() != null && serviceVariable.getEncryptedValue().contains(":")
             && !serviceVariable.getEncryptedValue().startsWith("hashicorpvault:")) {
           String corruptedValue = serviceVariable.getEncryptedValue();
-          String correctValue = yamlHelper.extractEncryptedRecordId(corruptedValue);
+          String correctValue = yamlHelper.extractEncryptedRecordId(corruptedValue, serviceVariable.getAccountId());
           logger.info(HarnessStringUtils.join(StringUtils.SPACE, DEBUG_LINE,
               format("Updating Service Variable from %s-> %s", corruptedValue, correctValue)));
           serviceVariable.setEncryptedValue(correctValue);
