@@ -1,6 +1,8 @@
 package software.wings.sm.states;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -216,7 +218,7 @@ public class AwsAmiServiceDeployState extends State {
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     Activity activity = crateActivity(context);
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
-    boolean blueGreen = serviceSetupElement.isBlueGreen();
+    boolean blueGreen = BLUE_GREEN == context.getOrchestrationWorkflowType();
 
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData;
     AwsAmiInfrastructureMapping infrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMappingService.get(
@@ -442,19 +444,6 @@ public class AwsAmiServiceDeployState extends State {
     return awsAmiDeployStateExecutionData;
   }
 
-  protected AwsAmiDeployStateExecutionData prepareStateExecutionDataRollback(
-      String activityId, AmiServiceSetupElement serviceSetupElement) {
-    AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData =
-        AwsAmiDeployStateExecutionData.builder().activityId(activityId).commandName(getCommandName()).build();
-    awsAmiDeployStateExecutionData.setAutoScalingSteadyStateTimeout(
-        serviceSetupElement.getAutoScalingSteadyStateTimeout());
-    awsAmiDeployStateExecutionData.setNewAutoScalingGroupName(serviceSetupElement.getNewAutoScalingGroupName());
-    awsAmiDeployStateExecutionData.setOldAutoScalingGroupName(serviceSetupElement.getOldAutoScalingGroupName());
-    awsAmiDeployStateExecutionData.setMaxInstances(serviceSetupElement.getMaxInstances());
-    awsAmiDeployStateExecutionData.setResizeStrategy(serviceSetupElement.getResizeStrategy());
-    return awsAmiDeployStateExecutionData;
-  }
-
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData =
@@ -501,8 +490,10 @@ public class AwsAmiServiceDeployState extends State {
       instanceElementListParamBuilder.instanceElements(instanceElements);
     } catch (Exception ex) {
       logger.error("Ami deploy step failed with error ", ex);
-      executionStatus = ExecutionStatus.FAILED;
+      executionStatus = FAILED;
       errorMessage = ExceptionUtils.getMessage(ex);
+      awsAmiDeployStateExecutionData.setStatus(FAILED);
+      awsAmiDeployStateExecutionData.setErrorMsg(errorMessage);
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
     }
 

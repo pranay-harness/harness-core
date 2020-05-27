@@ -168,7 +168,7 @@ public class AwsAmiServiceSetup extends State {
 
     Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceId);
     if (artifact == null) {
-      throw new WingsException(format("Unable to find artifact for service id: %s", serviceId));
+      throw new InvalidRequestException(format("Unable to find artifact for service id: %s", serviceId));
     }
 
     Application app = workflowStandardParams.getApp();

@@ -1,6 +1,10 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
+import static io.harness.beans.OrchestrationWorkflowType.CANARY;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -8,12 +12,15 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static jersey.repackaged.com.google.common.collect.Maps.newHashMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -51,6 +58,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.deployment.InstanceDetails;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -151,6 +159,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
         return (String) args[0];
       }
     });
+    doReturn(CANARY).doReturn(BLUE_GREEN).when(mockContext).getOrchestrationWorkflowType();
     PhaseElement phaseElement =
         PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build()).build();
     String asg1 = "foo__1";
@@ -220,12 +229,17 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     String classicLb = "classicLb";
     String targetGroup = "targetGp";
     String baseAsg = "baseAsg";
+
+    List<String> stageLbs = Arrays.asList("Stage_LB1", "Stage_LB2");
+    List<String> stageTgs = Arrays.asList("Stage_TG1", "Stage_TG2");
     AwsAmiInfrastructureMapping infrastructureMapping = anAwsAmiInfrastructureMapping()
                                                             .withUuid(INFRA_MAPPING_ID)
                                                             .withEnvId(ENV_ID)
                                                             .withRegion("us-east-1")
                                                             .withClassicLoadBalancers(singletonList(classicLb))
                                                             .withTargetGroupArns(singletonList(targetGroup))
+                                                            .withStageClassicLoadBalancers(stageLbs)
+                                                            .withStageTargetGroupArns(stageTgs)
                                                             .withAutoScalingGroupName(baseAsg)
                                                             .build();
     doReturn(infrastructureMapping).when(mockInfrastructureMappingService).get(anyString(), anyString());
@@ -238,7 +252,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     doReturn(0).when(mockAwsStateHelper).fetchRequiredAsgCapacity(anyMap(), anyString());
     ExecutionResponse response = state.execute(mockContext);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
-    verify(mockDelegateService).queueTask(captor.capture());
+    verify(mockDelegateService, times(1)).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     assertThat(delegateTask).isNotNull();
     assertThat(delegateTask.getData().getParameters()).isNotNull();
@@ -258,6 +272,38 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     assertThat(params.getInfraMappingTargetGroupArns().size()).isEqualTo(1);
     assertThat(params.getInfraMappingTargetGroupArns().get(0)).isEqualTo(targetGroup);
     assertThat(params.getExistingInstanceIds()).containsOnly("instanceId1", "instanceId2");
+
+    // BG
+    doReturn(mockParams).doReturn(serviceSetupElement).when(mockContext).getContextElement(any());
+    response = state.execute(mockContext);
+    captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(mockDelegateService, times(2)).queueTask(captor.capture());
+    delegateTask = captor.getValue();
+    assertThat(delegateTask).isNotNull();
+    assertThat(delegateTask.getData().getParameters()).isNotNull();
+    assertThat(1).isEqualTo(delegateTask.getData().getParameters().length);
+    assertThat(delegateTask.getData().getParameters()[0] instanceof AwsAmiServiceDeployRequest).isTrue();
+    params = (AwsAmiServiceDeployRequest) delegateTask.getData().getParameters()[0];
+    assertThat(params.getInfraMappingTargetGroupArns().size()).isEqualTo(2);
+    assertThat(params.getInfraMappingTargetGroupArns()).containsAll(stageTgs);
+
+    assertThat(params.getInfraMappingClassisLbs().size()).isEqualTo(2);
+    assertThat(params.getInfraMappingClassisLbs()).containsAll(stageLbs);
+
+    ArgumentCaptor<List> gpNamesCaptor = ArgumentCaptor.forClass(List.class);
+    verify(mockAwsAsgHelperServiceManager, times(2))
+        .getDesiredCapacitiesOfAsgs(any(), any(), anyString(), gpNamesCaptor.capture(), anyString());
+    List gpNames = gpNamesCaptor.getValue();
+    assertThat(gpNames).isNotEmpty();
+    assertThat(gpNames.size()).isEqualTo(1);
+    assertThat(gpNames).containsExactly(asg3);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testExecuteException() {
+    assertThatThrownBy(() -> state.execute(null)).isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
@@ -329,6 +375,15 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     assertThat(instanceElements.get(0).getUuid()).isEqualTo("i-1234");
     assertThat(instanceElements.get(0).getDisplayName()).isEqualTo("public.dns");
     assertThat(instanceElements.get(0).getHostName()).isEqualTo("hostName");
+
+    // Exception Scenario
+    doThrow(new InvalidRequestException("Failed")).when(mockInfrastructureMappingService).get(anyString(), anyString());
+    doReturn(serviceSetupElement).doReturn(mockParams).when(mockContext).getContextElement(any());
+    response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
+    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThat(response.getStateExecutionData().getStatus()).isEqualTo(FAILED);
+    assertThat(response.getErrorMessage()).isEqualTo("Invalid request: Failed");
+    assertThat(response.getStateExecutionData().getErrorMsg()).isEqualTo("Invalid request: Failed");
   }
 
   @Test
