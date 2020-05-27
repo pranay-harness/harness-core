@@ -47,7 +47,7 @@ public class PipelineExecutionMetadata implements ExecutionMetadata {
     return PipelineExecutionMetadata.builder()
         .id(workflowExecution.getUuid())
         .appId(workflowExecution.getAppId())
-        .executionType("PIPELINE")
+        .executionType("Pipeline")
         .application(workflowExecution.getAppName())
         .entityName(workflowExecution.getPipelineSummary() == null
                 ? workflowExecution.getName()

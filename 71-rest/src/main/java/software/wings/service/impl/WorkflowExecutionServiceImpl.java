@@ -390,6 +390,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return listExecutions(pageRequest, includeGraph, false, true, true);
   }
 
+  @Override
+  public List<WorkflowExecution> listExecutionsUsingQuery(
+      Query<WorkflowExecution> query, FindOptions findOptions, boolean includeGraph) {
+    List<WorkflowExecution> res = query.asList(findOptions);
+    return processExecutions(res, includeGraph, false, true, true);
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -397,9 +404,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest,
       boolean includeGraph, boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus) {
     PageResponse<WorkflowExecution> res = wingsPersistence.query(WorkflowExecution.class, pageRequest);
+    return (PageResponse<WorkflowExecution>) processExecutions(
+        res, includeGraph, runningOnly, withBreakdownAndSummary, includeStatus);
+  }
+
+  private List<WorkflowExecution> processExecutions(List<WorkflowExecution> res, boolean includeGraph,
+      boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus) {
     if (isEmpty(res)) {
       return res;
     }
+
     for (int i = 0; i < res.size(); i++) {
       WorkflowExecution workflowExecution = res.get(i);
       refreshBreakdown(workflowExecution);

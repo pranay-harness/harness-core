@@ -65,6 +65,8 @@ import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
 import io.harness.event.reconciliation.service.DeploymentReconTask;
 import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.exception.WingsException;
+import io.harness.execution.export.background.ExportExecutionsRequestCleanupHandler;
+import io.harness.execution.export.background.ExportExecutionsRequestHandler;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.GrpcServerConfig;
 import io.harness.grpc.GrpcServiceConfigurationModule;
@@ -734,6 +736,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(EncryptedDataAwsToGcpKmsMigrationHandler.class).registerIterators();
     injector.getInstance(SettingAttributesSecretsMigrationHandler.class).registerIterators();
     injector.getInstance(GitSyncEntitiesExpiryHandler.class).registerIterators();
+    injector.getInstance(ExportExecutionsRequestHandler.class).registerIterators();
+    injector.getInstance(ExportExecutionsRequestCleanupHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

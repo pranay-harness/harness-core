@@ -3,6 +3,7 @@ package software.wings.dl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UNKNOWN;
@@ -365,6 +366,32 @@ public class WingsPersistenceTest extends WingsBaseTest {
     res = wingsPersistence.query(TestEntityC.class, req, excludeAuthority);
 
     assertThat(res).isNotNull().hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldConvertToQuery() {
+    TestEntity entity = new TestEntity();
+    entity.setFieldList(Lists.newArrayList("f11", "f12"));
+    wingsPersistence.save(entity);
+
+    entity = new TestEntity();
+    entity.setFieldList(Lists.newArrayList("f21"));
+    wingsPersistence.save(entity);
+
+    entity = new TestEntity();
+    entity.setFieldList(Lists.newArrayList("f31"));
+    wingsPersistence.save(entity);
+
+    PageRequest<TestEntity> req = new PageRequest<>();
+    req.addFilter("fieldList", Operator.IN, "f11", "f12", "f21");
+    Query<TestEntity> query = wingsPersistence.convertToQuery(TestEntity.class, req, excludeAuthority);
+    assertThat(query).isNotNull();
+
+    List<TestEntity> testEntities = query.asList();
+    assertThat(testEntities).isNotNull();
+    assertThat(testEntities.size()).isEqualTo(2);
   }
 
   /**

@@ -190,7 +190,7 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
     PageRequest<Log> pageRequest =
         aPageRequest()
             .addFilter(LogKeys.activityId, Operator.IN, activityIdToExecutionDetailsMap.keySet().toArray())
-            .addOrder(CreatedAtAware.CREATED_AT_KEY, OrderType.DESC)
+            .addOrder(CreatedAtAware.CREATED_AT_KEY, OrderType.ASC)
             .build();
 
     // We don't want the count as it will increase the number of queries.

@@ -234,3 +234,15 @@ BUDGET_NOTIFICATION:
     subject: ${THRESHOLD_PERCENTAGE}% of the budget ${BUDGET_NAME} has been spent so far.
     body: "Dear Harness customer, <p>You requested that we alert you when the cost associated with your \"${BUDGET_NAME}\" budget exceeds ${THRESHOLD_PERCENTAGE}% for the current month. As of now, the cost associated with this budget is ${CURRENT_COST}. </p>"
   slack: ${THRESHOLD_PERCENTAGE}% of the budget ${BUDGET_NAME} has been spent so far.
+
+EXPORT_EXECUTIONS_READY_NOTIFICATION:
+  slack: "Deployment logs download is ready for request id [${REQUEST_ID}]||*Download link:* <${DOWNLOAD_LINK}|${DOWNLOAD_LINK}>\nThis link will expire on *<!date^${EXPIRES_AT_SECS}^{date_short_pretty} at {time}|${EXPIRES_AT}>*\n\nExport triggered by *${USER_NAME}* on *<!date^${TRIGGERED_AT_SECS}^{date_short_pretty} at {time}|${TRIGGERED_AT}>*||||completed"
+  email:
+    subject: Deployment logs download is ready for request id [${REQUEST_ID}]
+    body: "<<top-div>><p>Deployment logs download is ready for request id [${REQUEST_ID}]</p><p><b>Download link:</b> <<a>>href=\"${DOWNLOAD_LINK}\" target=\"_blank\">${DOWNLOAD_LINK}</a></p><p>This link will expire on <b>${EXPIRES_AT}</b></p><p></p><p>Export triggered by <b>${USER_NAME}</b> on <b>${TRIGGERED_AT}</b></p></div>"
+
+EXPORT_EXECUTIONS_FAILED_NOTIFICATION:
+  slack: "Request for deployment logs failed for request id [${REQUEST_ID}]||*Error Message:* ${ERROR_MESSAGE}\n\nExport triggered by *${USER_NAME}* on *<!date^${TRIGGERED_AT_SECS}^{date_short_pretty} at {time}|${TRIGGERED_AT}>*||||failed"
+  email:
+    subject: Request for deployment logs failed for request id [${REQUEST_ID}]
+    body: "<<top-div>><p>Request for deployment logs failed for request id [${REQUEST_ID}]</p><p><b>Error message:</b> ${ERROR_MESSAGE}</p><p></p><p>Export triggered by <b>${USER_NAME}</b> on <b>${TRIGGERED_AT}</b></p></div>"

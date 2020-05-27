@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.execution;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
@@ -10,10 +13,12 @@ import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagFilter;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @ToString
 public class QLExecutionFilter implements EntityFilter {
+  private QLIdFilter execution;
   private QLIdFilter application;
   private QLIdFilter service;
   private QLIdFilter cloudProvider;
