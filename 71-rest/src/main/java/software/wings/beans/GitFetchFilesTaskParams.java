@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +17,7 @@ import java.util.Map;
 
 @Data
 @Builder
-public class GitFetchFilesTaskParams implements TaskParameters, ExecutionCapabilityDemander {
+public class GitFetchFilesTaskParams implements ActivityAccess, TaskParameters, ExecutionCapabilityDemander {
   private String accountId;
   private String appId;
   private String activityId;

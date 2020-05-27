@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm.request;
 
+import io.harness.expression.Expression;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
@@ -26,7 +27,7 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
   private String namespace;
   private long timeoutInMillis;
   private Map<String, String> valueOverrides;
-  private List<String> variableOverridesYamlFiles;
+  @Expression private List<String> variableOverridesYamlFiles;
   private GitFileConfig gitFileConfig;
   private String workingDir;
 
