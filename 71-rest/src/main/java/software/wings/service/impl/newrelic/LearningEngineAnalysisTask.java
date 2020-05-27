@@ -119,6 +119,7 @@ public class LearningEngineAnalysisTask extends Base implements AccountAccess {
   private int service_guard_backoff_count;
   private Double alertThreshold;
   @Indexed private String accountId;
+  @JsonProperty("new_node_traffic_split_percentage") private Integer newInstanceTrafficSplitPercentage;
 
   @Builder.Default private int priority = 1;
 

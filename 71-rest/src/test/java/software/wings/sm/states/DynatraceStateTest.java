@@ -144,6 +144,9 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     wingsPersistence.save(settingAttribute);
     dynatraceState.setAnalysisServerConfigId(settingAttribute.getUuid());
     DynatraceState spyState = spy(dynatraceState);
+    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+        .when(spyState)
+        .getControlAndTestNodes(any());
     doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
     doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
         .when(spyState)
@@ -274,6 +277,9 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     wingsPersistence.save(settingAttribute);
     dynatraceState.setAnalysisServerConfigId(settingAttribute.getUuid());
     DynatraceState spyState = spy(dynatraceState);
+    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+        .when(spyState)
+        .getControlAndTestNodes(any());
     doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
     doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
         .when(spyState)

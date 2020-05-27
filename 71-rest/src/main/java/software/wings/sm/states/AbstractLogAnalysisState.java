@@ -181,6 +181,15 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
               "It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run");
         }
 
+        if (analysisContext.getNewNodesTrafficShiftPercent() != null
+            && (analysisContext.getNewNodesTrafficShiftPercent() == 0
+                   || analysisContext.getNewNodesTrafficShiftPercent() > 50)) {
+          getLogger().info(
+              "New nodes cannot be analyzed against old nodes if new traffic percentage is greater than 50 or equal to 0");
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
+              "Analysis cannot be performed with this traffic split. Please run verify steps with new traffic percentage greater than 0 and less than 50");
+        }
+
         String responseMessage = "Log Verification running.";
         String baselineWorkflowExecutionId = null;
         if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
@@ -409,6 +418,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     testNodes.keySet().forEach(controlNodes::remove);
     campareAndLogNodesUsingNewInstanceAPI(context, testNodes, controlNodes);
 
+    NodePair nodePair = getControlAndTestNodes(context);
+
     renderedQuery = context.renderExpression(query);
 
     String accountId = this.appService.get(context.getAppId()).getAccountId();
@@ -442,6 +453,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
             .inspectHostsInLogs(shouldInspectHostsForLogAnalysis())
             .isHistoricalDataCollection(isHistoricalAnalysis(context.getAccountId()))
+            .newNodesTrafficShiftPercent(nodePair.getNewNodesTrafficShiftPercent().isPresent()
+                    ? nodePair.getNewNodesTrafficShiftPercent().get()
+                    : null)
             .build();
 
     // Saving data collection info as part of context.

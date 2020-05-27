@@ -220,8 +220,8 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
       return analysisRecord;
     }
 
-    private boolean timeSeriesML(int analysisMinute, String groupName, TimeSeriesMlAnalysisType mlAnalysisType)
-        throws IOException, TimeoutException {
+    private boolean timeSeriesML(int analysisMinute, String groupName, TimeSeriesMlAnalysisType mlAnalysisType,
+        Integer newNodeTrafficSplitPercentage) throws IOException, TimeoutException {
       logger.info("Running timeSeriesML with analysisMinute : {} groupName: {} mlAnalysisType : {}", analysisMinute,
           groupName, mlAnalysisType);
       if (learningEngineService.hasAnalysisTimedOut(
@@ -276,6 +276,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
               .group_name(groupName)
               .time_series_ml_analysis_type(mlAnalysisType)
               .priority(0)
+              .newInstanceTrafficSplitPercentage(newNodeTrafficSplitPercentage)
               .build();
       learningEngineAnalysisTask.setAppId(context.getAppId());
       learningEngineAnalysisTask.setUuid(uuid);
@@ -415,14 +416,16 @@ public class WorkflowTimeSeriesAnalysisJob implements Handler<AnalysisContext> {
                       context.getWorkflowExecutionId(), groupName, analysisMinute, context.getAccountId());
                   break;
                 }
-                taskQueued = timeSeriesML(analysisMinute, groupName, timeSeriesMlAnalysisType);
+                taskQueued = timeSeriesML(
+                    analysisMinute, groupName, timeSeriesMlAnalysisType, context.getNewNodesTrafficShiftPercent());
                 break;
               // Note that control flows through to COMPARE_WITH_CURRENT where the ml analysis is run.
               case PREDICTIVE:
               case COMPARE_WITH_CURRENT:
                 logger.info("For {} running time series ml analysis for minute {} for type {}",
                     context.getStateExecutionId(), analysisMinute, context.getComparisonStrategy());
-                taskQueued = timeSeriesML(analysisMinute, groupName, timeSeriesMlAnalysisType);
+                taskQueued = timeSeriesML(
+                    analysisMinute, groupName, timeSeriesMlAnalysisType, context.getNewNodesTrafficShiftPercent());
                 break;
               default:
                 throw new IllegalStateException("Invalid type " + context.getComparisonStrategy());

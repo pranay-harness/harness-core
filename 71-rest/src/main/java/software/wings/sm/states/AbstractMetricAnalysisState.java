@@ -207,6 +207,15 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
               + "Metric data will be collected to be analyzed for next deployment run");
         }
 
+        if (analysisContext.getNewNodesTrafficShiftPercent() != null
+            && (analysisContext.getNewNodesTrafficShiftPercent() == 0
+                   || analysisContext.getNewNodesTrafficShiftPercent() > 50)) {
+          getLogger().info(
+              "New nodes cannot be analyzed against old nodes if new traffic percentage is greater than 50");
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
+              "Analysis cannot be performed with this traffic split. Please run verify steps with new traffic percentage greater than 0 and less than 50");
+        }
+
         if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
             && lastExecutionNodes.equals(canaryNewHostNames)) {
           getLogger().warn("Control and test nodes are same. Will not be running Log analysis");
@@ -437,6 +446,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     testNodes.keySet().forEach(controlNodes::remove);
     campareAndLogNodesUsingNewInstanceAPI(context, testNodes, controlNodes);
 
+    NodePair nodePair = getControlAndTestNodes(context);
+
     int timeDurationInt = Integer.parseInt(getTimeDuration());
     String accountId = appService.get(context.getAppId()).getAccountId();
     boolean isHistoricalDataCollection = isHistoricalAnalysis(context.getAccountId());
@@ -469,6 +480,9 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .isHistoricalDataCollection(isHistoricalDataCollection)
             .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
             .dataCollectionIntervalMins(getDataCollectionRate())
+            .newNodesTrafficShiftPercent(nodePair.getNewNodesTrafficShiftPercent().isPresent()
+                    ? nodePair.getNewNodesTrafficShiftPercent().get()
+                    : null)
             .build();
     if (getCVTaskFeatureName().isPresent()) {
       analysisContext.setFeatureFlag(

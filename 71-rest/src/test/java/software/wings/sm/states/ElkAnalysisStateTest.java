@@ -126,6 +126,9 @@ public class ElkAnalysisStateTest extends APMStateVerificationTestBase {
     doReturn(Collections.emptyMap()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
+    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+        .when(spyState)
+        .getControlAndTestNodes(any());
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
@@ -157,6 +160,9 @@ public class ElkAnalysisStateTest extends APMStateVerificationTestBase {
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     String analysisResponseMsg =
         "As no previous version instances exist for comparison, analysis will be skipped. Check your setup if this is the first deployment or if the previous instances have been deleted or replaced.";
+    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+        .when(spyState)
+        .getControlAndTestNodes(any());
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(response.getErrorMessage()).isEqualTo(analysisResponseMsg);
@@ -185,6 +191,9 @@ public class ElkAnalysisStateTest extends APMStateVerificationTestBase {
         .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
+    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+        .when(spyState)
+        .getControlAndTestNodes(any());
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
