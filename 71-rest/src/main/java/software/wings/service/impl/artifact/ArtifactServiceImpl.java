@@ -697,9 +697,13 @@ public class ArtifactServiceImpl implements ArtifactService {
     if (artifactStream.isMetadataOnly() || autoDownloaded.contains(artifactStream.getArtifactStreamType())) {
       return;
     }
-    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
+
+    boolean artifactPerpetualTask =
+        featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, artifactStream.getAccountId());
+    if (!artifactPerpetualTask && ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
       retentionSize *= 4;
     }
+
     // If it is Nexus Non Docker
     // TODO: ASR: update with accountId
     List<Artifact> toBeDeletedArtifacts = wingsPersistence.createQuery(Artifact.class, excludeAuthority)
@@ -719,7 +723,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       return;
     }
 
-    if (NEXUS.name().equals(artifactStream.getArtifactStreamType())) {
+    if (artifactPerpetualTask || NEXUS.name().equals(artifactStream.getArtifactStreamType())) {
       // NOTE: Do not delete artifacts from NEXUS artifact streams as we don't limit the count to
       // ARTIFACT_RETENTION_SIZE while fetching builds from NEXUS. So artifacts can get collected and then deleted and
       // collected again. This leads to duplicate collections for the same artifact and more importantly we can possibly
@@ -729,7 +733,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       // NOTE: The repository format here is not docker as we have already filtered by artifactStream.isMetadataOnly and
       // checked that the artifact has files.
       List<String> toBeDeletedArtifactIds = toBeDeletedArtifacts.stream().map(Artifact::getUuid).collect(toList());
-      updateNexusStatusAfterDeletion(toBeDeletedArtifactIds);
+      markArtifactsNotDownloaded(toBeDeletedArtifactIds);
       deleteArtifactFiles(artifactStream.getUuid(), toBeDeletedArtifacts);
       return;
     }
@@ -739,7 +743,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     deleteArtifacts(artifactStream.getUuid(), toBeDeletedArtifacts);
   }
 
-  private void updateNexusStatusAfterDeletion(List<String> toBeDeletedArtifactIds) {
+  private void markArtifactsNotDownloaded(List<String> toBeDeletedArtifactIds) {
     Query<Artifact> query =
         wingsPersistence.createQuery(Artifact.class, excludeAuthority).field(ID_KEY).in(toBeDeletedArtifactIds);
     UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class);
