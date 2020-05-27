@@ -17,6 +17,7 @@ import io.harness.testframework.restutils.SettingsUtils;
 import io.restassured.path.json.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
@@ -112,6 +113,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   @Test
   @Owner(developers = MEENAKSHI, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("Enable it once jfrog admin credentials are available ")
   public void runArtifactoryConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC13_createArtifactoryConnector, booleanMatcher, true);
     logger.info("Created Artifactory Connector with id {}", ArtifactoryConnectorId);

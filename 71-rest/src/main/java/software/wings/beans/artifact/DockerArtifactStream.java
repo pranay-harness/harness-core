@@ -49,7 +49,11 @@ public class DockerArtifactStream extends ArtifactStream {
 
   @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
-    return ArtifactStreamAttributes.builder().artifactStreamType(getArtifactStreamType()).imageName(imageName).build();
+    return ArtifactStreamAttributes.builder()
+        .artifactStreamType(getArtifactStreamType())
+        .imageName(imageName)
+        .dockerBasedDeployment(true)
+        .build();
   }
 
   @Override

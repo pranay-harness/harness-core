@@ -82,10 +82,13 @@ import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.pcf.InvalidPcfStateException;
@@ -661,6 +664,15 @@ public class PcfCommandTaskHelper {
     } else if (serverSetting.getValue() instanceof AwsConfig) {
       AwsConfig awsConfig = (AwsConfig) serverSetting.getValue();
       username = isEmpty(awsConfig.getSecretKey()) ? EMPTY : awsConfig.getAccessKey();
+    } else if (serverSetting.getValue() instanceof ArtifactoryConfig) {
+      ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) serverSetting.getValue();
+      username = isEmpty(artifactoryConfig.getPassword()) ? EMPTY : artifactoryConfig.getUsername();
+    } else if (serverSetting.getValue() instanceof GcpConfig) {
+      GcpConfig gcpConfig = (GcpConfig) serverSetting.getValue();
+      username = isEmpty(gcpConfig.getServiceAccountKeyFileContent()) ? EMPTY : "_json_key";
+    } else if (serverSetting.getValue() instanceof NexusConfig) {
+      NexusConfig nexusConfig = (NexusConfig) serverSetting.getValue();
+      username = isEmpty(nexusConfig.getPassword()) ? EMPTY : nexusConfig.getUsername();
     }
     return username;
   }

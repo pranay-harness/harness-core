@@ -57,6 +57,7 @@ public class GcrArtifactStream extends ArtifactStream {
     return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())
         .imageName(dockerImageName)
+        .dockerBasedDeployment(true)
         .registryHostName(registryHostName)
         .build();
   }
