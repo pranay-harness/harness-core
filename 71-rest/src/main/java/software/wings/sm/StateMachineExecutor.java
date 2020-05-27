@@ -1015,12 +1015,15 @@ public class StateMachineExecutor implements StateInspectionListener {
           sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       notNullCheck("currentState", currentState);
       injector.injectMembers(currentState);
+
+      String errorMsg = null;
       if (isNotBlank(stateExecutionInstance.getDelegateTaskId())) {
         notNullCheck("context.getApp()", context.getApp());
         if (finalStatus == ABORTED) {
           delegateService.abortTask(context.getApp().getAccountId(), stateExecutionInstance.getDelegateTaskId());
         } else {
-          delegateService.expireTask(context.getApp().getAccountId(), stateExecutionInstance.getDelegateTaskId());
+          errorMsg =
+              delegateService.expireTask(context.getApp().getAccountId(), stateExecutionInstance.getDelegateTaskId());
         }
       }
       if (stateExecutionInstance.getStateParams() != null) {
@@ -1028,8 +1031,9 @@ public class StateMachineExecutor implements StateInspectionListener {
       }
       currentState.handleAbortEvent(context);
       stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + ABORT_EXPIRY_BUFFER_MILLIS);
+
       updated = updateStateExecutionData(
-          stateExecutionInstance, null, finalStatus, null, singletonList(DISCONTINUING), null, null, null);
+          stateExecutionInstance, null, finalStatus, errorMsg, singletonList(DISCONTINUING), null, null, null);
 
       invokeAdvisors(ExecutionEvent.builder()
                          .failureTypes(EnumSet.<FailureType>of(FailureType.EXPIRED))
