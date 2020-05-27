@@ -16,7 +16,6 @@ import com.google.inject.Inject;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskPackage;
@@ -66,13 +65,12 @@ public class HelmValuesFetchTask extends AbstractDelegateRunnableTask {
           .valuesFileContent(valuesFileContent)
           .build();
     } catch (Exception e) {
-      String exceptionMessage = ExceptionUtils.getMessage(e);
-      logger.error("HelmValuesFetchTask execution failed with exception " + exceptionMessage);
-      executionLogCallback.saveExecutionLog(exceptionMessage, ERROR, CommandExecutionStatus.FAILURE);
+      logger.error("HelmValuesFetchTask execution failed with exception ", e);
+      executionLogCallback.saveExecutionLog(e.getMessage(), ERROR, CommandExecutionStatus.FAILURE);
 
       return HelmValuesFetchTaskResponse.builder()
           .commandExecutionStatus(FAILURE)
-          .errorMessage(exceptionMessage)
+          .errorMessage("Execution failed with Exception: " + e.getMessage())
           .build();
     }
   }
