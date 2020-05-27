@@ -1,9 +1,9 @@
-package software.wings.cdng.infra.beans;
+package io.harness.cdng.infra.beans;
 
+import io.harness.cdng.common.beans.Tag;
 import lombok.Builder;
 import lombok.Data;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.cdng.common.beans.Tag;
 
 import java.util.List;
 

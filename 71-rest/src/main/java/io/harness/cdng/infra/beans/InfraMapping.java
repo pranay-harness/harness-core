@@ -1,4 +1,4 @@
-package software.wings.cdng.infra.beans;
+package io.harness.cdng.infra.beans;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -9,9 +9,9 @@ import org.mongodb.morphia.annotations.Entity;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({ @JsonSubTypes.Type(value = K8sDirectInfraDefinition.class, name = "kubernetes-direct") })
-@Entity(value = "infrastructure")
-public interface InfraDefinition extends PersistentEntity, UuidAware, Outcome {
+@Entity(value = "infrastructureMapping")
+public interface InfraMapping extends PersistentEntity, UuidAware, Outcome {
   void setUuid(String uuid);
   void setAccountId(String accountId);
-  InfraMapping getInfraMapping();
+  void setServiceIdentifier(String serviceIdentifier);
 }

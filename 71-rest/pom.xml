@@ -728,6 +728,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>35-yaml-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>57-command-library-common</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
