@@ -597,10 +597,6 @@ public class CustomExecutionUtils {
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
                                              .build())
                   .build())
-        .setupAbstractions(ImmutableMap.<String, String>builder()
-                               .put("accountId", ACCOUNT_ID)
-                               .put("appId", "xjtzcoT0Q2q3tRfafiTxXQ")
-                               .build())
         .build();
   }
 }
