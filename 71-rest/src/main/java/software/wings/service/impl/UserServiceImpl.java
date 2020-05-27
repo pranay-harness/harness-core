@@ -326,6 +326,7 @@ public class UserServiceImpl implements UserService {
   public boolean trialSignup(UserInvite userInvite) {
     final String emailAddress = userInvite.getEmail().toLowerCase();
     validateTrialSignup(emailAddress);
+    signupService.validateName(userInvite.getName());
     signupService.validatePassword(userInvite.getPassword());
 
     UserInvite userInviteInDB = signupService.getUserInviteByEmail(emailAddress);
@@ -375,6 +376,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public boolean accountJoinRequest(AccountJoinRequest accountJoinRequest) {
     final String emailAddress = accountJoinRequest.getEmail().toLowerCase();
+    signupService.validateName(accountJoinRequest.getName());
     signupService.validateEmail(emailAddress);
     Map<String, String> params = new HashMap<>();
     params.put("email", emailAddress);
@@ -1255,7 +1257,8 @@ public class UserServiceImpl implements UserService {
     if (existingInvite.isCompleted()) {
       return InviteOperationResponse.FAIL;
     }
-    if (userInvite.getName() == null || userInvite.getPassword() == null) {
+    signupService.validateName(userInvite.getName());
+    if (userInvite.getPassword() == null) {
       throw new InvalidRequestException("User name/password is not provided", USER);
     }
     loginSettingsService.verifyPasswordStrength(

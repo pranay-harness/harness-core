@@ -17,6 +17,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import io.harness.eraro.Level;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -268,6 +269,13 @@ public class SignupServiceImpl implements SignupService {
             "The password you entered has been flagged as vulnerable. To ensure security of your account, please enter a different password.",
             null, PASSWORD_STRENGTH_CHECK_FAILED, Level.ERROR, USER, null);
       }
+    }
+  }
+
+  @Override
+  public void validateName(String name) {
+    if (isBlank(name)) {
+      throw new InvalidArgumentsException("Name cannot be empty", USER);
     }
   }
 

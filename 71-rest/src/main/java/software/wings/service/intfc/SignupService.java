@@ -14,6 +14,8 @@ public interface SignupService {
 
   void validateEmail(String email);
 
+  void validateName(String name);
+
   void validateCluster();
 
   void checkIfEmailIsValid(String email);

@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -103,6 +104,15 @@ public class SignupServiceTest extends WingsBaseTest {
     final String blankPassword = "    ";
     assertThatThrownBy(() -> signupService.validatePassword(blankPassword.toCharArray()))
         .isInstanceOf(WeakPasswordException.class);
+  }
+
+  @Test
+  @Owner(developers = MEHUL)
+  @Category(UnitTests.class)
+  public void testValidateNameThrowsInvalidArgumentsException() {
+    final String blankName = "  ";
+    assertThatThrownBy(() -> signupService.validateName(blankName)).isInstanceOf(InvalidArgumentsException.class);
+    assertThatThrownBy(() -> signupService.validateName(null)).isInstanceOf(InvalidArgumentsException.class);
   }
 
   private void fail() {
