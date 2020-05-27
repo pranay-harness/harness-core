@@ -1,25 +1,32 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
 import static io.harness.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -39,7 +46,11 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.AccessDeniedException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -80,6 +91,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.spotinst.SpotInstStateHelper;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class AwsAmiServiceSetupTest extends WingsBaseTest {
@@ -178,6 +190,58 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
     assertThat(params.getMaxInstances()).isEqualTo(2);
     assertThat(params.getDesiredInstances()).isEqualTo(1);
     assertThat(params.getArtifactRevision()).isEqualTo(revision);
+
+    // ASG Name blank, should generate app.name__service.name__env.name
+    state.setAutoScalingGroupName(null);
+    response = state.execute(mockContext);
+    captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(mockDelegateService, times(2)).queueTask(captor.capture());
+    delegateTask = captor.getValue();
+    assertThat(delegateTask).isNotNull();
+    assertThat(delegateTask.getData().getParameters()).isNotNull();
+    assertThat(1).isEqualTo(delegateTask.getData().getParameters().length);
+    assertThat(delegateTask.getData().getParameters()[0] instanceof AwsAmiServiceSetupRequest).isTrue();
+    params = (AwsAmiServiceSetupRequest) delegateTask.getData().getParameters()[0];
+    assertThat(params.getNewAsgNamePrefix())
+        .isEqualTo(new StringBuilder(application.getName())
+                       .append("__")
+                       .append(service.getName())
+                       .append("__")
+                       .append(environment.getName())
+                       .toString());
+    state.setAutoScalingGroupName(asgName);
+
+    // OrchestrationWorkflowType == BG
+    state.setBlueGreen(true);
+    doReturn(OrchestrationWorkflowType.BLUE_GREEN).when(mockContext).getOrchestrationWorkflowType();
+    List<String> classicLBs = Arrays.asList("LB1", "LB2");
+    List<String> stageTargetGroupArns = Arrays.asList("TG1", "TG2");
+    infrastructureMapping.setStageClassicLoadBalancers(classicLBs);
+    infrastructureMapping.setStageTargetGroupArns(stageTargetGroupArns);
+
+    state.execute(mockContext);
+    captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(mockDelegateService, times(3)).queueTask(captor.capture());
+    delegateTask = captor.getValue();
+    assertThat(delegateTask).isNotNull();
+    assertThat(delegateTask.getData().getParameters()).isNotNull();
+    assertThat(1).isEqualTo(delegateTask.getData().getParameters().length);
+    assertThat(delegateTask.getData().getParameters()[0] instanceof AwsAmiServiceSetupRequest).isTrue();
+    params = (AwsAmiServiceSetupRequest) delegateTask.getData().getParameters()[0];
+    assertThat(params.getInfraMappingClassisLbs()).containsAll(classicLBs);
+    assertThat(params.getInfraMappingTargetGroupArns()).containsAll(stageTargetGroupArns);
+
+    // Exception in execute
+    doThrow(new InvalidRequestException("Failed")).when(mockDelegateService).queueTask(any());
+    response = state.execute(mockContext);
+    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThat(response.getStateExecutionData().getStatus()).isEqualTo(FAILED);
+    assertThat(response.getErrorMessage()).isEqualTo("Invalid request: Failed");
+    assertThat(response.getStateExecutionData().getErrorMsg()).isEqualTo("Invalid request: Failed");
+
+    // Artifact is NULL. Should Receive InvalidRequestException
+    doReturn(null).when(mockContext).getDefaultArtifactForService(anyString());
+    assertThatThrownBy(() -> state.execute(mockContext)).isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
@@ -206,6 +270,20 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseException() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+
+    assertThatThrownBy(() -> state.handleAsyncResponse(mockContext, null)).isInstanceOf(InvalidRequestException.class);
+
+    doThrow(new AccessDeniedException("failed", USER))
+        .when(mockActivityService)
+        .updateStatus(anyString(), anyString(), any());
+    assertThatThrownBy(() -> state.handleAsyncResponse(mockContext, emptyMap())).isInstanceOf(WingsException.class);
+  }
+
+  @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testIsBlueGreenWorkflow() {
@@ -223,5 +301,30 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
     assertThat(state.isBlueGreenWorkflow(execContext)).isFalse();
     assertThat(state.isBlueGreenWorkflow(execContext)).isFalse();
     assertThat(state.isBlueGreenWorkflow(execContext)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testGetterSetters() {
+    state.setBlueGreen(true);
+    state.setAutoScalingGroupName("asg");
+    state.setAutoScalingSteadyStateTimeout(1);
+    state.setDesiredInstances("3");
+    state.setMaxInstances("4");
+    state.setMinInstances("0");
+    state.setResizeStrategy(RESIZE_NEW_FIRST);
+    state.setUseCurrentRunningCount(true);
+    state.setCommandName("SETUP");
+
+    assertThat(state.isBlueGreen()).isTrue();
+    assertThat(state.getCommandName()).isEqualTo("SETUP");
+    assertThat(state.getAutoScalingGroupName()).isEqualTo("asg");
+    assertThat(state.getMaxInstances()).isEqualTo("4");
+    assertThat(state.getMinInstances()).isEqualTo("0");
+    assertThat(state.getDesiredInstances()).isEqualTo("3");
+    assertThat(state.getResizeStrategy()).isEqualTo(RESIZE_NEW_FIRST);
+    assertThat(state.isUseCurrentRunningCount()).isEqualTo(true);
+    assertThat(state.getAutoScalingSteadyStateTimeout()).isEqualTo(1);
   }
 }
