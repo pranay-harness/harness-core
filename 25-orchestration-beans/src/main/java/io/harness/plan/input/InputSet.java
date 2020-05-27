@@ -1,7 +1,10 @@
 package io.harness.plan.input;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.lang.String.format;
 
+import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import org.apache.commons.lang3.tuple.Pair;
@@ -10,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@OwnedBy(CDC)
+@Redesign
 public class InputSet extends HashMap<String, Object> {
   @Override
   public synchronized Object get(Object key) {

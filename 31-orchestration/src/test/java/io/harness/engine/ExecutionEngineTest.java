@@ -6,7 +6,6 @@ import static io.harness.utils.steps.TestAsyncStep.ASYNC_STEP_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
@@ -32,6 +31,7 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
+import io.harness.plan.input.InputArgs;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
@@ -87,15 +87,11 @@ public class ExecutionEngineTest extends OrchestrationTest {
                                                  .build())
                       .build())
             .startingNodeId(testNodeId)
-            .setupAbstractions(ImmutableMap.<String, String>builder()
-                                   .put("accountId", "kmpySmUISimoRrJL6NL73w")
-                                   .put("appId", "XEsfW6D_RJm1IaGpDidD3g")
-                                   .build())
             .build();
 
     EmbeddedUser user = new EmbeddedUser(generateUuid(), ALEXEI, ALEXEI);
 
-    PlanExecution response = executionEngine.startExecution(oneNodePlan, user);
+    PlanExecution response = executionEngine.startExecution(oneNodePlan, prepareInputArgs(), user);
 
     engineTestHelper.waitForPlanCompletion(response.getUuid());
     response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
@@ -138,15 +134,11 @@ public class ExecutionEngineTest extends OrchestrationTest {
                                                  .build())
                       .build())
             .startingNodeId(testStartNodeId)
-            .setupAbstractions(ImmutableMap.<String, String>builder()
-                                   .put("accountId", "kmpySmUISimoRrJL6NL73w")
-                                   .put("appId", "XEsfW6D_RJm1IaGpDidD3g")
-                                   .build())
             .build();
 
     EmbeddedUser user = new EmbeddedUser(generateUuid(), ALEXEI, ALEXEI);
 
-    PlanExecution response = executionEngine.startExecution(oneNodePlan, user);
+    PlanExecution response = executionEngine.startExecution(oneNodePlan, prepareInputArgs(), user);
 
     engineTestHelper.waitForPlanCompletion(response.getUuid());
     response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
@@ -193,16 +185,12 @@ public class ExecutionEngineTest extends OrchestrationTest {
                               .build())
                       .build())
             .startingNodeId(testStartNodeId)
-            .setupAbstractions(ImmutableMap.<String, String>builder()
-                                   .put("accountId", "kmpySmUISimoRrJL6NL73w")
-                                   .put("appId", "XEsfW6D_RJm1IaGpDidD3g")
-                                   .build())
             .build();
 
     EmbeddedUser user = new EmbeddedUser(generateUuid(), ALEXEI, ALEXEI);
 
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      PlanExecution response = executionEngine.startExecution(oneNodePlan, user);
+      PlanExecution response = executionEngine.startExecution(oneNodePlan, prepareInputArgs(), user);
 
       engineTestHelper.waitForPlanCompletion(response.getUuid());
       response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
@@ -218,20 +206,20 @@ public class ExecutionEngineTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldThrowInvalidRequestException() {
     final String exceptionStartMessage = "No node found with Id";
-    Plan oneNodePlan = Plan.builder()
-                           .uuid(generateUuid())
-                           .startingNodeId(generateUuid())
-                           .setupAbstractions(ImmutableMap.<String, String>builder()
-                                                  .put("accountId", "kmpySmUISimoRrJL6NL73w")
-                                                  .put("appId", "XEsfW6D_RJm1IaGpDidD3g")
-                                                  .build())
-                           .build();
+    Plan oneNodePlan = Plan.builder().uuid(generateUuid()).startingNodeId(generateUuid()).build();
 
     EmbeddedUser user = new EmbeddedUser(generateUuid(), ALEXEI, ALEXEI);
 
-    assertThatThrownBy(() -> executionEngine.startExecution(oneNodePlan, user))
+    assertThatThrownBy(() -> executionEngine.startExecution(oneNodePlan, prepareInputArgs(), user))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageStartingWith(exceptionStartMessage);
+  }
+
+  private static InputArgs prepareInputArgs() {
+    return InputArgs.builder()
+        .put("accountId", "kmpySmUISimoRrJL6NL73w")
+        .put("appId", "XEsfW6D_RJm1IaGpDidD3g")
+        .build();
   }
 
   private static class TestHttpResponseCodeSwitchAdviser implements Adviser {

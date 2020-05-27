@@ -3,7 +3,6 @@ package io.harness.executionplan;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -24,9 +23,6 @@ import java.util.List;
 @Singleton
 public class BasicExecutionPlanGenerator implements ExecutionPlanGenerator<CIStep> {
   @Inject private BasicStepToExecutionNodeConverter basicStepToExecutionNodeConverter;
-  private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
-  private static final String APP_ID = "XEsfW6D_RJm1IaGpDidD3g";
-  private static final String K8_CLUSTER_NAME = "kubernetes_clusterqqq";
 
   @Override
   public Plan generateExecutionPlan(Graph<CIStep> graph) {
@@ -40,11 +36,6 @@ public class BasicExecutionPlanGenerator implements ExecutionPlanGenerator<CISte
     return Plan.builder()
         .nodes(executionNodeList)
         .startingNodeId(ciStepsGraph.getStartNodeUuid())
-        .setupAbstractions(ImmutableMap.<String, String>builder()
-                               .put("clusterName", K8_CLUSTER_NAME)
-                               .put("accountId", ACCOUNT_ID)
-                               .put("appId", APP_ID)
-                               .build())
         .uuid(generateUuid())
         .build();
   }

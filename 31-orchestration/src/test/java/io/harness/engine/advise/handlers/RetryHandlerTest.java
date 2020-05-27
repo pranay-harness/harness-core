@@ -48,7 +48,8 @@ public class RetryHandlerTest extends OrchestrationTest {
 
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .uuid(NODE_EXECUTION_ID)
-                                      .ambiance(ambiance)
+                                      .planExecutionId(ambiance.getPlanExecutionId())
+                                      .levels(ambiance.getLevels())
                                       .node(ExecutionNode.builder()
                                                 .uuid(NODE_SETUP_ID)
                                                 .name("DUMMY")

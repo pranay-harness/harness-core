@@ -2,8 +2,6 @@ package io.harness.resolver.sweepingoutput;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Ambiance.AmbianceKeys;
 import io.harness.ambiance.Level;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.Redesign;
@@ -20,6 +18,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
@@ -44,7 +43,7 @@ import java.util.stream.Collectors;
 @Builder
 @Indexes({
   @Index(options = @IndexOptions(name = "levelRuntimeIdUniqueIdx", unique = true), fields = {
-    @Field(ExecutionSweepingOutputKeys.ambiance + "." + AmbianceKeys.planExecutionId)
+    @Field(ExecutionSweepingOutputKeys.planExecutionId)
     , @Field(ExecutionSweepingOutputKeys.name), @Field(ExecutionSweepingOutputKeys.levelRuntimeIdIdx)
   })
 })
@@ -54,7 +53,8 @@ import java.util.stream.Collectors;
 @FieldNameConstants(innerTypeName = "ExecutionSweepingOutputKeys")
 public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAccess, CreatedAtAware {
   @Id String uuid;
-  @NonNull Ambiance ambiance;
+  @NonNull String planExecutionId;
+  @Singular List<Level> levels;
   @NonNull @Trimmed String name;
   @NonFinal String levelRuntimeIdIdx;
 
@@ -68,7 +68,7 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
 
   @PrePersist
   void populateLevelRuntimeIdIdx() {
-    levelRuntimeIdIdx = prepareLevelRuntimeIdIdx(ambiance.getLevels());
+    levelRuntimeIdIdx = prepareLevelRuntimeIdIdx(levels);
   }
 
   public static String prepareLevelRuntimeIdIdx(List<Level> levels) {

@@ -209,7 +209,7 @@ executionInterrupts {"name": "executionUuid_1", "background": true} {"executionU
 executionInterrupts {"name": "stateExecutionInstanceId_1", "background": true} {"stateExecutionInstanceId": 1}
 executionQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 executionQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
-executionSweepingOutput {"name": "levelRuntimeIdUniqueIdx", "unique": true} {"ambiance.planExecutionId": 1, "name": 1, "levelRuntimeIdIdx": 1}
+executionSweepingOutput {"name": "levelRuntimeIdUniqueIdx", "unique": true} {"planExecutionId": 1, "name": 1, "levelRuntimeIdIdx": 1}
 executionSweepingOutput {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 experimentalLogAnalysisRecords {"name": "appId_1", "background": true} {"appId": 1}
 experimentalLogAnalysisRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}

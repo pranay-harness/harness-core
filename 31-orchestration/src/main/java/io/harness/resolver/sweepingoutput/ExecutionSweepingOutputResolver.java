@@ -11,7 +11,6 @@ import com.google.inject.name.Named;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Ambiance.AmbianceKeys;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutput;
@@ -51,7 +50,8 @@ public class ExecutionSweepingOutputResolver implements Resolver<SweepingOutput>
     try {
       hPersistence.save(ExecutionSweepingOutputInstance.builder()
                             .uuid(generateUuid())
-                            .ambiance(ambiance)
+                            .planExecutionId(ambiance.getPlanExecutionId())
+                            .levels(ambiance.getLevels())
                             .name(name)
                             .value(value)
                             .build());
@@ -67,8 +67,7 @@ public class ExecutionSweepingOutputResolver implements Resolver<SweepingOutput>
     String name = refObject.getName();
     List<ExecutionSweepingOutputInstance> instances =
         hPersistence.createQuery(ExecutionSweepingOutputInstance.class, excludeAuthority)
-            .filter(ExecutionSweepingOutputKeys.ambiance + "." + AmbianceKeys.planExecutionId,
-                ambiance.getPlanExecutionId())
+            .filter(ExecutionSweepingOutputKeys.planExecutionId, ambiance.getPlanExecutionId())
             .filter(ExecutionSweepingOutputKeys.name, name)
             .field(ExecutionSweepingOutputKeys.levelRuntimeIdIdx)
             .in(prepareLevelRuntimeIdIndices(ambiance))

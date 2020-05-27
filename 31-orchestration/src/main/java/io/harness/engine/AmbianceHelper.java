@@ -2,6 +2,7 @@ package io.harness.engine;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
@@ -29,5 +30,13 @@ public class AmbianceHelper {
   public PlanExecution obtainExecutionInstance(Ambiance ambiance) {
     String executionId = ambiance.getPlanExecutionId();
     return hPersistence.createQuery(PlanExecution.class).filter(PlanExecutionKeys.uuid, executionId).get();
+  }
+
+  public Ambiance fetchAmbiance(NodeExecution nodeExecution) {
+    PlanExecution planExecution = hPersistence.createQuery(PlanExecution.class)
+                                      .filter(PlanExecutionKeys.uuid, nodeExecution.getPlanExecutionId())
+                                      .get();
+    Preconditions.checkNotNull(planExecution);
+    return Ambiance.fromExecutionInstances(planExecution, nodeExecution);
   }
 }

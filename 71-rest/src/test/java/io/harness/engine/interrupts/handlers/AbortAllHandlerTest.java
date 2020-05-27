@@ -16,6 +16,7 @@ import io.harness.execution.PlanExecution;
 import io.harness.execution.status.ExecutionInstanceStatus;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.Interrupt;
+import io.harness.plan.input.InputArgs;
 import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
@@ -45,7 +46,8 @@ public class AbortAllHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterrupt() {
-    PlanExecution execution = executionEngine.startExecution(PlanRepo.planWithBigWait(), EMBEDDED_USER);
+    PlanExecution execution = executionEngine.startExecution(PlanRepo.planWithBigWait(),
+        InputArgs.builder().put("accountId", generateUuid()).put("appId", generateUuid()).build(), EMBEDDED_USER);
     Interrupt abortAllInterrupt = Interrupt.builder()
                                       .uuid(generateUuid())
                                       .planExecutionId(execution.getUuid())
