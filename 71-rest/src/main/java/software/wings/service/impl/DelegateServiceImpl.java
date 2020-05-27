@@ -2492,23 +2492,22 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public void expireTask(String accountId, String delegateTaskId) {
+  public String expireTask(String accountId, String delegateTaskId) {
+    String errorMessage = null;
     try (AutoLogContext ignore1 = new TaskLogContext(delegateTaskId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       if (delegateTaskId == null) {
         logger.warn("Delegate task id was null", new IllegalArgumentException());
-        return;
+        return errorMessage;
       }
       logger.info("Expiring delegate task");
       Query<DelegateTask> delegateTaskQuery = getRunningTaskQuery(accountId, delegateTaskId);
 
       DelegateTask delegateTask = delegateTaskQuery.get();
-
       if (delegateTask != null) {
         try (AutoLogContext ignore3 = new TaskLogContext(delegateTaskId, delegateTask.getData().getTaskType(),
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-          String errorMessage =
-              "Task expired. " + assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
+          errorMessage = "Task expired. " + assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
           logger.info("Marking task as expired: {}", errorMessage);
 
           if (isNotBlank(delegateTask.getWaitId())) {
@@ -2520,6 +2519,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       endTask(accountId, delegateTaskId, delegateTaskQuery, ERROR);
     }
+    return errorMessage;
   }
 
   @Override
