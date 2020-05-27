@@ -273,6 +273,25 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
+  public <T extends PersistentEntity> Query<T> convertToQuery(Class<T> cls, PageRequest<T> req) {
+    return convertToQuery(cls, req, allChecks);
+  }
+
+  @SuppressWarnings("deprecation")
+  @Override
+  public <T extends PersistentEntity> Query<T> convertToQuery(
+      Class<T> cls, PageRequest<T> req, Set<QueryChecks> queryChecks) {
+    AdvancedDatastore advancedDatastore = getDatastore(cls);
+    Query<T> query = advancedDatastore.createQuery(cls);
+    authorizeQuery(cls, query);
+
+    ((HQuery) query).setQueryChecks(queryChecks);
+    Mapper mapper = ((DatastoreImpl) advancedDatastore).getMapper();
+
+    return PageController.applyPageRequest(advancedDatastore, query, req, cls, mapper);
+  }
+
+  @Override
   public void start() throws Exception {
     // Do nothing
   }
@@ -377,6 +396,10 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   @Override
   public <T extends PersistentEntity> Query<T> createAuthorizedQuery(Class<T> collectionClass) {
     Query query = createQuery(collectionClass);
+    return authorizeQuery(collectionClass, query);
+  }
+
+  private <T extends PersistentEntity> Query<T> authorizeQuery(Class<T> collectionClass, Query query) {
     if (authFilters(query, collectionClass)) {
       return query;
     }

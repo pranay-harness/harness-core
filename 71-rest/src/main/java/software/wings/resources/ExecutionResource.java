@@ -81,6 +81,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+
 /**
  * The Class ExecutionResource.
  */
@@ -119,6 +120,7 @@ public class ExecutionResource {
       @QueryParam("workflowType") List<String> workflowTypes,
       @DefaultValue("false") @QueryParam("includeIndirectExecutions") boolean includeIndirectExecutions,
       @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags) {
+    // NOTE: Any new filters added here should also be added in ExportExecutionsResource.
     List<String> authorizedAppIds;
     if (isNotEmpty(appIds)) {
       authorizedAppIds = appIds;

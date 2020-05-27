@@ -1,0 +1,33 @@
+extend type Mutation {
+  # Beta: Start an export of executions/deployments.
+  exportExecutions(input: ExportExecutionsInput!): ExportExecutionsPayload @dataFetcher(name: exportExecutions)
+}
+
+input ExportExecutionsInput {
+  clientMutationId: String
+  #Notify only the triggering user
+  notifyOnlyTriggeringUser: Boolean
+  #User group ids
+  userGroupIds: [String!]
+  #Execution filters
+  filters: [ExecutionFilter!]
+}
+
+type ExportExecutionsPayload {
+  clientMutationId: String
+  requestId: String
+  status: ExportExecutionsStatus
+  totalExecutions: Number
+  triggeredAt: DateTime
+  statusLink: String
+  downloadLink: String
+  expiresAt: DateTime
+  errorMessage: String
+}
+
+enum ExportExecutionsStatus {
+  QUEUED
+  READY
+  FAILED
+  EXPIRED
+}

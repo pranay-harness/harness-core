@@ -12,6 +12,7 @@ extend type Query {
 }
 
 input ExecutionFilter {
+  execution: IdFilter
   application: IdFilter
   service: IdFilter
   cloudProvider: IdFilter

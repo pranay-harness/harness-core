@@ -9,6 +9,8 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.persistence.HIterator;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.ApprovalAuthorization;
@@ -63,6 +65,9 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   HIterator<WorkflowExecution> executions(String appId, long startedFrom, long statedTo, Set<String> includeOnlyFields);
 
   PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph);
+
+  List<WorkflowExecution> listExecutionsUsingQuery(
+      Query<WorkflowExecution> query, FindOptions findOptions, boolean includeGraph);
 
   PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph,
       boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus);

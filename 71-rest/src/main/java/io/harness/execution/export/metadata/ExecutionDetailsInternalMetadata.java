@@ -25,7 +25,8 @@ import java.util.Set;
 @Builder
 class ExecutionDetailsInternalMetadata {
   private static final String ACTIVITY_ID_KEY = "activityId";
-  private static final Set<String> IGNORED_KEYS = ImmutableSet.<String>builder().add("Unit", "Harness Owned").build();
+  private static final Set<String> IGNORED_KEYS =
+      ImmutableSet.<String>builder().add("duration", "Unit", "Harness Owned").build();
 
   InstanceCountMetadata instanceCount;
   Map<String, Object> executionDetails;

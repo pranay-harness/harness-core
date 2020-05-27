@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import lombok.experimental.UtilityClass;
 
 import java.time.Instant;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 @OwnedBy(CDC)
@@ -17,6 +17,6 @@ public class ExportExecutionsUtils {
       return null;
     }
 
-    return ZonedDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneOffset.UTC);
+    return ZonedDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.of("UTC"));
   }
 }

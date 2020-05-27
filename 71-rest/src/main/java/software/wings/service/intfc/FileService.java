@@ -50,7 +50,8 @@ public interface FileService {
     PLATFORMS,
     TERRAFORM_STATE,
     PROFILE_RESULTS,
-    TERRAFORM_PLAN;
+    TERRAFORM_PLAN,
+    EXPORT_EXECUTIONS;
 
     private int chunkSize;
 

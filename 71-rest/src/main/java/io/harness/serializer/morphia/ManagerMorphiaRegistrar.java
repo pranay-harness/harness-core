@@ -22,6 +22,7 @@ import io.harness.ccm.config.GcpServiceAccount;
 import io.harness.ccm.health.CeExceptionRecord;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
+import io.harness.execution.export.request.ExportExecutionsRequest;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.notifications.NotificationReceiverInfo;
@@ -197,6 +198,7 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersionCollection;
 import software.wings.beans.EntityYamlRecord;
 import software.wings.beans.Environment;
+import software.wings.beans.ExportExecutionsNotification;
 import software.wings.beans.ExternalServiceAuthToken;
 import software.wings.beans.FailureNotification;
 import software.wings.beans.FeatureFlag;
@@ -1044,6 +1046,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(InstanceSyncPerpetualTaskInfo.class);
     set.add(YamlSuccessfulChange.class);
     set.add(CustomSecretsManagerConfig.class);
+    set.add(ExportExecutionsRequest.class);
+    set.add(ExportExecutionsNotification.class);
   }
 
   @Override

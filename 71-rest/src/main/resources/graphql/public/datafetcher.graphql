@@ -108,4 +108,5 @@ enum DataFetcherEnum {
   pipelineVariableConnection
   serviceArtifactSourceConnection
   artifactSource
+  exportExecutions
 }

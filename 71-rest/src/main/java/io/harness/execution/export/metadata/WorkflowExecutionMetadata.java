@@ -47,11 +47,16 @@ public class WorkflowExecutionMetadata implements ExecutionMetadata {
   static List<WorkflowExecutionMetadata> fromWorkflowExecutions(
       List<WorkflowExecution> workflowExecutions, boolean infraRefactor) {
     return MetadataUtils.map(
-        workflowExecutions, workflowExecution -> fromWorkflowExecution(workflowExecution, infraRefactor));
+        workflowExecutions, workflowExecution -> fromWorkflowExecution(workflowExecution, infraRefactor, false));
   }
 
   public static WorkflowExecutionMetadata fromWorkflowExecution(
       WorkflowExecution workflowExecution, boolean infraRefactor) {
+    return fromWorkflowExecution(workflowExecution, infraRefactor, true);
+  }
+
+  private static WorkflowExecutionMetadata fromWorkflowExecution(
+      WorkflowExecution workflowExecution, boolean infraRefactor, boolean withTriggeredBy) {
     if (workflowExecution == null || workflowExecution.getWorkflowType() != WorkflowType.ORCHESTRATION) {
       return null;
     }
@@ -59,7 +64,7 @@ public class WorkflowExecutionMetadata implements ExecutionMetadata {
     return WorkflowExecutionMetadata.builder()
         .id(workflowExecution.getUuid())
         .appId(workflowExecution.getAppId())
-        .executionType("WORKFLOW")
+        .executionType("Workflow")
         .application(workflowExecution.getAppName())
         .entityName(workflowExecution.getName())
         .environment(EnvMetadata.fromFirstEnvSummary(workflowExecution.getEnvironments()))
@@ -76,7 +81,7 @@ public class WorkflowExecutionMetadata implements ExecutionMetadata {
         .onDemandRollback(workflowExecution.isOnDemandRollback())
         .tags(workflowExecution.getTags())
         .timing(TimingMetadata.fromStartAndEndTimeObjects(workflowExecution.getStartTs(), workflowExecution.getEndTs()))
-        .triggeredBy(TriggeredByMetadata.fromWorkflowExecution(workflowExecution))
+        .triggeredBy(withTriggeredBy ? TriggeredByMetadata.fromWorkflowExecution(workflowExecution) : null)
         .build();
   }
 }

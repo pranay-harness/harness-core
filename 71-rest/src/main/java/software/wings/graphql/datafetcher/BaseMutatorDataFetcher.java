@@ -109,6 +109,7 @@ public abstract class BaseMutatorDataFetcher<P, R> extends BaseDataFetcher {
     }
     return false;
   }
+
   private static boolean anyClassFieldWithType(Class<?> clazz, Class<?> type) {
     final Map<String, Field> fieldMap = getFieldMap(clazz);
     if (fieldMap != null) {

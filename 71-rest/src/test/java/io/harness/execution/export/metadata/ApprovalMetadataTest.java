@@ -31,7 +31,7 @@ public class ApprovalMetadataTest extends CategoryTest {
             .timeoutMillis(1000)
             .approvalStateType(ApprovalStateType.USER_GROUP)
             .userGroups(asList(null, "ug1"))
-            .variables(asList(MetadataTestHelper.prepareNameValuePair(1), MetadataTestHelper.prepareNameValuePair(2)))
+            .variables(asList(MetadataTestUtils.prepareNameValuePair(1), MetadataTestUtils.prepareNameValuePair(2)))
             .approvedBy(EmbeddedUser.builder().name("n").email("e").build())
             .approvedOn(now.toEpochMilli())
             .comments("c")

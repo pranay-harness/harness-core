@@ -50,7 +50,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @UtilityClass
-public class MetadataTestHelper {
+public class MetadataTestUtils {
   public WorkflowExecution preparePipelineWorkflowExecution(Instant now) {
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setArtifacts(asList(prepareArtifact(1), prepareArtifact(2)));
@@ -100,7 +100,7 @@ public class MetadataTestHelper {
       PipelineExecutionMetadata pipelineExecutionMetadata, Instant now) {
     assertThat(pipelineExecutionMetadata.getId()).isEqualTo(PIPELINE_WORKFLOW_EXECUTION_ID);
     assertThat(pipelineExecutionMetadata.getAppId()).isEqualTo(APP_ID);
-    assertThat(pipelineExecutionMetadata.getExecutionType()).isEqualTo("PIPELINE");
+    assertThat(pipelineExecutionMetadata.getExecutionType()).isEqualTo("Pipeline");
     assertThat(pipelineExecutionMetadata.getApplication()).isEqualTo(APP_NAME);
     assertThat(pipelineExecutionMetadata.getEntityName()).isEqualTo(PIPELINE_NAME);
     assertThat(pipelineExecutionMetadata.getInputArtifacts()).isNotNull();
@@ -150,40 +150,6 @@ public class MetadataTestHelper {
         .createdByType(CreatedByType.USER)
         .triggeredBy(EmbeddedUser.builder().uuid(USER_ID).name(USER_NAME).email(USER_EMAIL).build())
         .build();
-  }
-
-  public void validateWorkflowExecutionMetadata(WorkflowExecutionMetadata workflowExecutionMetadata, Instant now) {
-    assertThat(workflowExecutionMetadata.getId()).isEqualTo(WORKFLOW_EXECUTION_ID);
-    assertThat(workflowExecutionMetadata.getAppId()).isEqualTo(APP_ID);
-    assertThat(workflowExecutionMetadata.getExecutionType()).isEqualTo("WORKFLOW");
-    assertThat(workflowExecutionMetadata.getApplication()).isEqualTo(APP_NAME);
-    assertThat(workflowExecutionMetadata.getEntityName()).isEqualTo(WORKFLOW_NAME);
-    assertThat(workflowExecutionMetadata.getEnvironment()).isNotNull();
-    assertThat(workflowExecutionMetadata.getEnvironment().getName()).isEqualTo(ENV_NAME);
-    assertThat(workflowExecutionMetadata.getServiceInfrastructures()).isNotNull();
-    assertThat(workflowExecutionMetadata.getServiceInfrastructures().size()).isEqualTo(1);
-    assertThat(workflowExecutionMetadata.getServiceInfrastructures().get(0).getService()).isEqualTo("s");
-    assertThat(workflowExecutionMetadata.getInputArtifacts()).isNotNull();
-    assertThat(workflowExecutionMetadata.getInputArtifacts().size()).isEqualTo(1);
-    assertThat(workflowExecutionMetadata.getInputArtifacts().get(0).getBuildNo()).isEqualTo("dn1");
-    assertThat(workflowExecutionMetadata.getCollectedArtifacts()).isNull();
-    assertThat(workflowExecutionMetadata.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertThat(workflowExecutionMetadata.getExecutionGraph()).isNotNull();
-    assertThat(workflowExecutionMetadata.getExecutionGraph().size()).isEqualTo(1);
-    assertThat(workflowExecutionMetadata.getExecutionGraph().get(0).getId()).isEqualTo("id");
-    assertThat(workflowExecutionMetadata.isOnDemandRollback()).isFalse();
-    assertThat(workflowExecutionMetadata.getTags()).isNotNull();
-    assertThat(workflowExecutionMetadata.getTags().stream().map(NameValuePair::getName).collect(Collectors.toList()))
-        .containsExactly("n1", "n2");
-    assertThat(workflowExecutionMetadata.getTiming()).isNotNull();
-    assertThat(workflowExecutionMetadata.getTiming().getStartTime().toInstant())
-        .isEqualTo(now.minus(1, ChronoUnit.MINUTES));
-    assertThat(workflowExecutionMetadata.getTiming().getEndTime().toInstant()).isEqualTo(now);
-    assertThat(workflowExecutionMetadata.getTiming().getDuration().toMinutes()).isEqualTo(1);
-    assertThat(workflowExecutionMetadata.getTriggeredBy()).isNotNull();
-    assertThat(workflowExecutionMetadata.getTriggeredBy().getType()).isEqualTo(CreatedByType.USER);
-    assertThat(workflowExecutionMetadata.getTriggeredBy().getName()).isEqualTo(USER_NAME);
-    assertThat(workflowExecutionMetadata.getTriggeredBy().getEmail()).isEqualTo(USER_EMAIL);
   }
 
   public Artifact prepareArtifact(int idx) {

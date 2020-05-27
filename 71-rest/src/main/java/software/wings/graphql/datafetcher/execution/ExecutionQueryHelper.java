@@ -43,6 +43,12 @@ public class ExecutionQueryHelper {
     filters.forEach(filter -> {
       FieldEnd<? extends Query<WorkflowExecution>> field;
 
+      if (filter.getExecution() != null) {
+        field = query.field(WorkflowExecutionKeys.uuid);
+        QLIdFilter idFilter = filter.getExecution();
+        utils.setIdFilter(field, idFilter);
+      }
+
       if (filter.getApplication() != null) {
         field = query.field(WorkflowExecutionKeys.appId);
         QLIdFilter idFilter = filter.getApplication();

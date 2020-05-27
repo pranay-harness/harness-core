@@ -18,7 +18,7 @@ public class ArtifactMetadataTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testFromArtifacts() {
     List<ArtifactMetadata> artifactMetadataList =
-        ArtifactMetadata.fromArtifacts(Collections.singletonList(MetadataTestHelper.prepareArtifact(1)));
+        ArtifactMetadata.fromArtifacts(Collections.singletonList(MetadataTestUtils.prepareArtifact(1)));
     assertThat(artifactMetadataList).isNotNull();
     assertThat(artifactMetadataList.size()).isEqualTo(1);
     assertThat(artifactMetadataList.get(0).getArtifactSource()).isEqualTo("asn1");
@@ -29,7 +29,7 @@ public class ArtifactMetadataTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testFromBuildExecutionSummaries() {
     List<ArtifactMetadata> artifactMetadataList = ArtifactMetadata.fromBuildExecutionSummaries(
-        Collections.singletonList(MetadataTestHelper.prepareBuildExecutionSummary(1)));
+        Collections.singletonList(MetadataTestUtils.prepareBuildExecutionSummary(1)));
     assertThat(artifactMetadataList).isNotNull();
     assertThat(artifactMetadataList.size()).isEqualTo(1);
     assertThat(artifactMetadataList.get(0).getArtifactSource()).isEqualTo("asn1");

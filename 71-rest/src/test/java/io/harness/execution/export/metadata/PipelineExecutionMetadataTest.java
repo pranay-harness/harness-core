@@ -20,7 +20,7 @@ public class PipelineExecutionMetadataTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testAccept() {
-    MetadataTestHelper.SimpleVisitor simpleVisitor = new MetadataTestHelper.SimpleVisitor();
+    MetadataTestUtils.SimpleVisitor simpleVisitor = new MetadataTestUtils.SimpleVisitor();
     PipelineExecutionMetadata.builder()
         .stages(asList(PipelineStageExecutionMetadata.builder()
                            .workflowExecution(WorkflowExecutionMetadata.builder()
@@ -50,7 +50,7 @@ public class PipelineExecutionMetadataTest extends CategoryTest {
 
     Instant now = Instant.now();
     PipelineExecutionMetadata pipelineExecutionMetadata =
-        PipelineExecutionMetadata.fromWorkflowExecution(MetadataTestHelper.preparePipelineWorkflowExecution(now), true);
-    MetadataTestHelper.validatePipelineWorkflowExecutionMetadata(pipelineExecutionMetadata, now);
+        PipelineExecutionMetadata.fromWorkflowExecution(MetadataTestUtils.preparePipelineWorkflowExecution(now), true);
+    MetadataTestUtils.validatePipelineWorkflowExecutionMetadata(pipelineExecutionMetadata, now);
   }
 }
