@@ -331,12 +331,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     } else if (provisioner instanceof CloudFormationInfrastructureProvisioner) {
       CloudFormationInfrastructureProvisioner cloudFormationInfrastructureProvisioner =
           (CloudFormationInfrastructureProvisioner) provisioner;
-      String sourceType = "UNKNOWN";
-      if (cloudFormationInfrastructureProvisioner.provisionByBody()) {
-        sourceType = "Template Body";
-      } else if (cloudFormationInfrastructureProvisioner.provisionByUrl()) {
-        sourceType = "Amazon S3";
-      }
+      String sourceType =
+          CloudFormationSourceType.getSourceType(cloudFormationInfrastructureProvisioner.getSourceType());
       detailsBuilder.cloudFormationSourceType(sourceType);
     }
 

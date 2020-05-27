@@ -461,6 +461,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     // Set metadata-only field for nexus and azure artifacts.
     setMetadataOnly(artifactStream);
+    handleArtifactoryDockerSupportForPcf(artifactStream);
     // Add keywords.
     artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
     // Set collection status initially to UNSTABLE.
@@ -479,6 +480,16 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     ArtifactStream newArtifactStream = get(id);
     createPerpetualTask(newArtifactStream);
     return newArtifactStream;
+  }
+
+  private void handleArtifactoryDockerSupportForPcf(ArtifactStream artifactStream) {
+    if (artifactStream instanceof ArtifactoryArtifactStream) {
+      ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
+      if (artifactoryArtifactStream.isUseDockerFormat()) {
+        artifactoryArtifactStream.setRepositoryType(RepositoryType.docker.name());
+        artifactoryArtifactStream.setMetadataOnly(true);
+      }
+    }
   }
 
   private void validateIfNexus2AndParameterized(ArtifactStream artifactStream, String accountId) {
@@ -1118,6 +1129,22 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                          .put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name())
                                                          .put(SMB.name(), SMB.name())
                                                          .put(SFTP.name(), SFTP.name())
+                                                         .put(CUSTOM.name(), CUSTOM.name());
+      return builder.build();
+    } else if (service.getArtifactType() == ArtifactType.PCF) {
+      ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
+                                                         .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+                                                         .put(NEXUS.name(), NEXUS.name())
+                                                         .put(JENKINS.name(), JENKINS.name())
+                                                         .put(BAMBOO.name(), BAMBOO.name())
+                                                         .put(GCS.name(), GCS.name())
+                                                         .put(AMAZON_S3.name(), AMAZON_S3.name())
+                                                         .put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name())
+                                                         .put(SMB.name(), SMB.name())
+                                                         .put(SFTP.name(), SFTP.name())
+                                                         .put(DOCKER.name(), DOCKER.name())
+                                                         .put(ECR.name(), ECR.name())
+                                                         .put(GCR.name(), GCR.name())
                                                          .put(CUSTOM.name(), CUSTOM.name());
       return builder.build();
     }

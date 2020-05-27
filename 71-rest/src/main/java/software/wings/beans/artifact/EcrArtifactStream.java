@@ -52,6 +52,7 @@ public class EcrArtifactStream extends ArtifactStream {
         .artifactStreamType(getArtifactStreamType())
         .region(region)
         .imageName(imageName)
+        .dockerBasedDeployment(true)
         .build();
   }
 

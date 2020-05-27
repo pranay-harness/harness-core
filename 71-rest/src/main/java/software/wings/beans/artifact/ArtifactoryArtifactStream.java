@@ -37,6 +37,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   private List<String> artifactPaths;
   private String artifactPattern;
   private String dockerRepositoryServer;
+  private boolean useDockerFormat;
 
   public ArtifactoryArtifactStream() {
     super(ARTIFACTORY.name());
@@ -47,7 +48,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String repositoryType, String jobname,
       String imageName, List<String> artifactPaths, String artifactPattern, String dockerRepositoryServer,
-      String accountId, Set<String> keywords, boolean sample) {
+      boolean useDockerFormat, String accountId, Set<String> keywords, boolean sample) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, ARTIFACTORY.name(),
         sourceName, settingId, name, autoPopulate, serviceId, metadataOnly, accountId, keywords, sample);
     this.repositoryType = repositoryType;
@@ -56,6 +57,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     this.artifactPaths = artifactPaths;
     this.artifactPattern = artifactPattern;
     this.dockerRepositoryServer = dockerRepositoryServer;
+    this.useDockerFormat = useDockerFormat;
   }
 
   @Override
@@ -126,6 +128,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         .repositoryType(getRepositoryType())
         .metadataOnly(isMetadataOnly())
         .artifactoryDockerRepositoryServer(dockerRepositoryServer)
+        .dockerBasedDeployment(useDockerFormat)
         .build();
   }
 
@@ -163,10 +166,12 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     private String repositoryType;
     private String dockerRepositoryServer;
     private boolean metadataOnly;
+    private boolean useDockerFormat;
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String repositoryName,
-        String imageName, List<String> artifactPaths, String artifactPattern, String repositoryType) {
+        String imageName, List<String> artifactPaths, String artifactPattern, String repositoryType,
+        boolean useDockerFormat) {
       super(ARTIFACTORY.name(), harnessApiVersion, serverName);
       this.repositoryName = repositoryName;
       this.imageName = imageName;
@@ -174,6 +179,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
       this.artifactPattern = artifactPattern;
       this.repositoryType = repositoryType;
       this.metadataOnly = metadataOnly;
+      this.useDockerFormat = useDockerFormat;
     }
   }
 }

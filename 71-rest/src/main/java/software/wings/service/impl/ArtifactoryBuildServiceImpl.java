@@ -64,7 +64,8 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
     if (!appId.equals(GLOBAL_APP_ID)) {
-      if (artifactStreamAttributes.getArtifactType() == DOCKER) {
+      if (artifactStreamAttributes.getArtifactType() == DOCKER
+          || RepositoryType.docker.name().equalsIgnoreCase(artifactStreamAttributes.getRepositoryType())) {
         return artifactoryService.getBuilds(
             artifactoryConfig, encryptionDetails, artifactStreamAttributes, limit == -1 ? 1000 : limit);
       } else {
@@ -116,8 +117,8 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Override
   public Map<String, String> getPlans(ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactType artifactType, String repositoryType) {
-    if (artifactType == DOCKER) {
-      return artifactoryService.getRepositories(config, encryptionDetails, artifactType);
+    if (RepositoryType.docker.name().equalsIgnoreCase(repositoryType) || artifactType == DOCKER) {
+      return artifactoryService.getRepositories(config, encryptionDetails, DOCKER);
     }
     return artifactoryService.getRepositories(config, encryptionDetails, repositoryType);
   }

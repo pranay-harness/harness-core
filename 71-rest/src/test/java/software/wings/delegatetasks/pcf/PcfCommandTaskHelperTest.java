@@ -1,9 +1,11 @@
 package software.wings.delegatetasks.pcf;
 
 import static io.harness.pcf.model.PcfConstants.HOST_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.IMAGE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.RANDOM_ROUTE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -23,6 +25,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filesystem.FileIo;
 import io.harness.rule.Owner;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.cxf.helpers.FileUtils;
@@ -38,8 +42,14 @@ import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
+import software.wings.beans.Account;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.GcpConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.pcf.InvalidPcfStateException;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
@@ -52,6 +62,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.settings.SettingValue;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -79,6 +90,12 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
       + "    path: ${FILE_LOCATION}\n"
       + "    routes:\n"
       + "      - route: ${ROUTE_MAP}\n";
+
+  private static final String MANIFEST_YAML_DOCKER = "applications:\n"
+      + "- name: ${APPLICATION_NAME}\n"
+      + "  memory: 500M\n"
+      + "  instances : ${INSTANCE_COUNT}\n"
+      + "  random-route: true";
 
   public static final String MANIFEST_YAML_LOCAL_EXTENDED = "---\n"
       + "applications:\n"
@@ -164,12 +181,56 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
       + "  path: /root/app\n"
       + "  random-route: true\n";
 
+  private static final String MANIFEST_YAML_DOCKER_RESOLVED = "---\n"
+      + "applications:\n"
+      + "- name: app1__1\n"
+      + "  memory: 500M\n"
+      + "  instances: 0\n"
+      + "  docker:\n"
+      + "    image: registry.hub.docker.com/harness/todolist-sample\n"
+      + "    username: admin\n"
+      + "  random-route: true\n";
+
+  private static final String MANIFEST_YAML_ECR_RESOLVED = "---\n"
+      + "applications:\n"
+      + "- name: app1__1\n"
+      + "  memory: 500M\n"
+      + "  instances: 0\n"
+      + "  docker:\n"
+      + "    image: 448640225317.dkr.ecr.us-east-1.amazonaws.com/todolist:latest\n"
+      + "    username: AKIAWQ5IKSASRV2RUSNP\n"
+      + "  random-route: true\n";
+
+  private static final String MANIFEST_YAML_GCR_RESOLVED = "---\n"
+      + "applications:\n"
+      + "- name: app1__1\n"
+      + "  memory: 500M\n"
+      + "  instances: 0\n"
+      + "  docker:\n"
+      + "    image: gcr.io/playground-243019/hello-app:v1\n"
+      + "    username: _json_key\n"
+      + "  random-route: true\n";
+
+  private static final String MANIFEST_YAML_ARTIFACTORY_RESOLVED = "---\n"
+      + "applications:\n"
+      + "- name: app1__1\n"
+      + "  memory: 500M\n"
+      + "  instances: 0\n"
+      + "  docker:\n"
+      + "    image: harness-pcf.jfrog.io/hello-world\n"
+      + "    username: admin\n"
+      + "  random-route: true\n";
+
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
   public static final String RUNNING = "RUNNING";
   public static final String APP_ID = "APP_ID";
   public static final String ACTIVITY_ID = "ACTIVITY_ID";
   public static final String REGISTRY_HOST_NAME = "REGISTRY_HOST_NAME";
   public static final String TEST_PATH_NAME = "./test";
+  private static final String DOCKER_URL = "registry.hub.docker.com/harness/todolist-sample";
+  private static final String ECR_URL = "448640225317.dkr.ecr.us-east-1.amazonaws.com/todolist:latest";
+  private static final String GCR_URL = "gcr.io/playground-243019/hello-app:v1";
+  private static final String ARIIFACTORY_URL = "harness-pcf.jfrog.io/hello-world";
   public static final String MANIFEST_YAML_EXTENDED_SUPPORT_REMOTE = "  applications:\n"
       + "  - name : anyName\n"
       + "    memory: 350M\n"
@@ -592,6 +653,86 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
         .setupRequest(pcfCommandSetupRequest)
         .newReleaseName("app1__1")
         .artifactPath("/root/app")
+        .pcfRequestConfig(PcfRequestConfig.builder().spaceName("space").build())
+        .build();
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testGenerateManifestYamlForDockerHubPush() throws Exception {
+    PcfCommandSetupRequest pcfCommandSetupRequest =
+        PcfCommandSetupRequest.builder().manifestYaml(MANIFEST_YAML_DOCKER).build();
+    DockerConfig dockerConfig = DockerConfig.builder()
+                                    .dockerRegistryUrl(DOCKER_URL)
+                                    .username("admin")
+                                    .password(new ScmSecret().decryptToCharArray(new SecretName("harness_docker_v2")))
+                                    .accountId(Account.GLOBAL_ACCOUNT_ID)
+                                    .build();
+    populateDockerInfo(pcfCommandSetupRequest, DOCKER_URL, dockerConfig);
+    PcfCreateApplicationRequestData requestData = generatePcfCreateApplicationRequestDataDocker(pcfCommandSetupRequest);
+    String finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData);
+    assertThat(finalManifest).isEqualTo(MANIFEST_YAML_DOCKER_RESOLVED);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testGenerateManifestYamlForECRPush() throws Exception {
+    PcfCommandSetupRequest pcfCommandSetupRequest =
+        PcfCommandSetupRequest.builder().manifestYaml(MANIFEST_YAML_DOCKER).build();
+    AwsConfig awsConfig =
+        AwsConfig.builder().accessKey("AKIAWQ5IKSASRV2RUSNP").secretKey("secretKey".toCharArray()).build();
+    populateDockerInfo(pcfCommandSetupRequest, ECR_URL, awsConfig);
+    PcfCreateApplicationRequestData requestData = generatePcfCreateApplicationRequestDataDocker(pcfCommandSetupRequest);
+    String finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData);
+    assertThat(finalManifest).isEqualTo(MANIFEST_YAML_ECR_RESOLVED);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testGenerateManifestYamlForArtifactoryPush() throws Exception {
+    PcfCommandSetupRequest pcfCommandSetupRequest =
+        PcfCommandSetupRequest.builder().manifestYaml(MANIFEST_YAML_DOCKER).build();
+    ArtifactoryConfig config = ArtifactoryConfig.builder().username("admin").password("key".toCharArray()).build();
+    populateDockerInfo(pcfCommandSetupRequest, ARIIFACTORY_URL, config);
+    PcfCreateApplicationRequestData requestData = generatePcfCreateApplicationRequestDataDocker(pcfCommandSetupRequest);
+    String finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData);
+    assertThat(finalManifest).isEqualTo(MANIFEST_YAML_ARTIFACTORY_RESOLVED);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testGenerateManifestYamlForGCRPush() throws Exception {
+    PcfCommandSetupRequest pcfCommandSetupRequest =
+        PcfCommandSetupRequest.builder().manifestYaml(MANIFEST_YAML_DOCKER).build();
+    GcpConfig gcpConfig = GcpConfig.builder().serviceAccountKeyFileContent("privateKey".toCharArray()).build();
+    populateDockerInfo(pcfCommandSetupRequest, GCR_URL, gcpConfig);
+    PcfCreateApplicationRequestData requestData = generatePcfCreateApplicationRequestDataDocker(pcfCommandSetupRequest);
+    String finalManifest = pcfCommandTaskHelper.generateManifestYamlForPush(pcfCommandSetupRequest, requestData);
+    assertThat(finalManifest).isEqualTo(MANIFEST_YAML_GCR_RESOLVED);
+  }
+
+  private void populateDockerInfo(PcfCommandSetupRequest pcfCommandSetupRequest, String url, SettingValue value) {
+    Map<String, String> metadata = new HashMap<>();
+    metadata.put(IMAGE_MANIFEST_YML_ELEMENT, url);
+
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().build();
+    artifactStreamAttributes.setDockerBasedDeployment(true);
+    artifactStreamAttributes.setMetadata(metadata);
+
+    SettingAttribute serverSetting = SettingAttribute.Builder.aSettingAttribute().withValue(value).build();
+    artifactStreamAttributes.setServerSetting(serverSetting);
+    pcfCommandSetupRequest.setArtifactStreamAttributes(artifactStreamAttributes);
+  }
+
+  private PcfCreateApplicationRequestData generatePcfCreateApplicationRequestDataDocker(
+      PcfCommandSetupRequest pcfCommandSetupRequest) {
+    return PcfCreateApplicationRequestData.builder()
+        .setupRequest(pcfCommandSetupRequest)
+        .newReleaseName("app1__1")
         .pcfRequestConfig(PcfRequestConfig.builder().spaceName("space").build())
         .build();
   }

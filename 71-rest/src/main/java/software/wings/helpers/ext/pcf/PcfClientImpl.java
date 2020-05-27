@@ -92,9 +92,12 @@ import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
@@ -781,6 +784,16 @@ public class PcfClientImpl implements PcfClient {
     } else if (serverSetting.getValue() instanceof AwsConfig) {
       AwsConfig awsConfig = (AwsConfig) serverSetting.getValue();
       password = awsConfig.getSecretKey();
+    } else if (serverSetting.getValue() instanceof ArtifactoryConfig) {
+      ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) serverSetting.getValue();
+      password = artifactoryConfig.getPassword();
+    } else if (serverSetting.getValue() instanceof GcpConfig) {
+      GcpConfig gcpConfig = (GcpConfig) serverSetting.getValue();
+      String serviceAccountKeyFileContent = new String(gcpConfig.getServiceAccountKeyFileContent());
+      password = serviceAccountKeyFileContent.replaceAll("\n", "").toCharArray();
+    } else if (serverSetting.getValue() instanceof NexusConfig) {
+      NexusConfig nexusConfig = (NexusConfig) serverSetting.getValue();
+      password = nexusConfig.getPassword();
     }
     return password;
   }

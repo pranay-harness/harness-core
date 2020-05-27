@@ -30,6 +30,7 @@ public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHand
     }
     yaml.setRepositoryName(bean.getJobname());
     yaml.setRepositoryType(bean.getRepositoryType());
+    yaml.setUseDockerFormat(bean.isUseDockerFormat());
     if (!bean.getRepositoryType().equals(RepositoryType.docker.name())) {
       yaml.setMetadataOnly(bean.isMetadataOnly());
     } else {
@@ -51,6 +52,7 @@ public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHand
     }
     artifactStream.setJobname(yaml.getRepositoryName());
     artifactStream.setRepositoryType(yaml.getRepositoryType());
+    artifactStream.setUseDockerFormat(yaml.isUseDockerFormat());
     if (!yaml.getRepositoryType().equals(RepositoryType.docker.name())) {
       artifactStream.setMetadataOnly(yaml.isMetadataOnly());
     } else {
