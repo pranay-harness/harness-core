@@ -49,6 +49,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -64,6 +65,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -102,6 +104,7 @@ public class YamlHelper {
   @Inject TriggerService triggerService;
   @Inject TemplateService templateService;
   @Inject TemplateFolderService templateFolderService;
+  @Inject SecretManager secretManager;
 
   public SettingAttribute getCloudProvider(String accountId, String yamlFilePath) {
     return getSettingAttribute(accountId, YamlType.CLOUD_PROVIDER, yamlFilePath);
@@ -783,7 +786,7 @@ public class YamlHelper {
     return entityUpdateService.getEntityRootFilePath(entity);
   }
 
-  public String extractEncryptedRecordId(String encryptedValue) {
+  public String extractEncryptedRecordId(String encryptedValue, String accountId) {
     if (isBlank(encryptedValue)) {
       return encryptedValue;
     }
@@ -792,6 +795,10 @@ public class YamlHelper {
     if (pos == -1) {
       return encryptedValue;
     } else {
+      EncryptedData encryptedData = secretManager.getEncryptedDataFromYamlRef(encryptedValue, accountId);
+      if (encryptedData != null) {
+        return encryptedData.getUuid();
+      }
       return encryptedValue.substring(pos + 1);
     }
   }

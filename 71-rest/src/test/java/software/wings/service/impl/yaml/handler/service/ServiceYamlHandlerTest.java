@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -94,8 +96,8 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, ServiceVariable.class));
     when(appService.get(APP_ID)).thenReturn(application);
     when(yamlHelper.getApplicationIfPresent(ACCOUNT_ID, validYamlFilePath)).thenReturn(Optional.of(application));
-    when(yamlHelper.extractEncryptedRecordId("safeharness:some-secret")).thenReturn("some-secret");
-    when(yamlHelper.extractEncryptedRecordId("amazonkms:other-secret")).thenReturn("other-secret");
+    when(yamlHelper.extractEncryptedRecordId(eq("safeharness:some-secret"), anyString())).thenReturn("some-secret");
+    when(yamlHelper.extractEncryptedRecordId(eq("amazonkms:other-secret"), anyString())).thenReturn("other-secret");
     when(serviceVariableService.update(any(), anyBoolean()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, ServiceVariable.class));
   }
@@ -222,7 +224,7 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
                                            .valueType(Type.ENCRYPTED_TEXT.name())
                                            .build();
     yaml.getConfigVariables().add(newServiceVar);
-    when(yamlHelper.extractEncryptedRecordId("safeharness:new-secret")).thenReturn("new-secret");
+    when(yamlHelper.extractEncryptedRecordId(eq("safeharness:new-secret"), anyString())).thenReturn("new-secret");
     Service fromYaml = serviceYamlHandler.upsertFromYaml(changeContext, null);
     assertThat(fromYaml).isNotNull();
     verify(serviceVariableService, times(1)).save(captor.capture(), anyBoolean());

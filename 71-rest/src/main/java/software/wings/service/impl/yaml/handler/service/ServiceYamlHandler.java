@@ -345,7 +345,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
           break;
 
         case ENCRYPTED_TEXT:
-          String encryptedRecordId = yamlHelper.extractEncryptedRecordId(value);
+          String encryptedRecordId = yamlHelper.extractEncryptedRecordId(value, accountId);
           serviceVariable.setEncryptedValue(encryptedRecordId);
           serviceVariable.setValue(isBlank(encryptedRecordId) ? null : encryptedRecordId.toCharArray());
           break;
@@ -393,7 +393,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       // it will be persisted as such which we do not want, therefore we need to extract out the
       // encrypted record id.
       serviceVariableBuilder.value(
-          cv.getValue() != null ? yamlHelper.extractEncryptedRecordId(cv.getValue()).toCharArray() : null);
+          cv.getValue() != null ? yamlHelper.extractEncryptedRecordId(cv.getValue(), accountId).toCharArray() : null);
     } else if ("ARTIFACT".equals(cv.getValueType())) {
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
         serviceVariableBuilder.type(Type.ARTIFACT);

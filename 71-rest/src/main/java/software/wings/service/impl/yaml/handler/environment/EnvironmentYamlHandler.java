@@ -483,7 +483,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
       switch (serviceVariable.getType()) {
         case ENCRYPTED_TEXT:
-          String encryptedRecordId = yamlHelper.extractEncryptedRecordId(value);
+          String encryptedRecordId = yamlHelper.extractEncryptedRecordId(value, accountId);
           serviceVariable.setEncryptedValue(encryptedRecordId);
           serviceVariable.setValue(isBlank(encryptedRecordId) ? null : encryptedRecordId.toCharArray());
           break;
@@ -565,7 +565,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       variableBuilder.value(overrideYaml.getValue() != null ? overrideYaml.getValue().toCharArray() : null);
     } else if ("ENCRYPTED_TEXT".equals(overrideYaml.getValueType())) {
       variableBuilder.type(Type.ENCRYPTED_TEXT);
-      String encryptedRecordId = yamlHelper.extractEncryptedRecordId(overrideYaml.getValue());
+      String encryptedRecordId = yamlHelper.extractEncryptedRecordId(overrideYaml.getValue(), accountId);
       variableBuilder.encryptedValue(encryptedRecordId);
       variableBuilder.value(isBlank(encryptedRecordId) ? null : encryptedRecordId.toCharArray());
     } else if ("ARTIFACT".equals(overrideYaml.getValueType())) {
