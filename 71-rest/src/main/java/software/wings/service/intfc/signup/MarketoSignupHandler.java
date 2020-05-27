@@ -27,6 +27,7 @@ public class MarketoSignupHandler implements SignupHandler {
   public boolean handle(UserInvite userInvite) {
     final String emailAddress = userInvite.getEmail().toLowerCase();
     signupService.validateCluster();
+    signupService.validateName(userInvite.getName());
     signupService.validateEmail(emailAddress);
 
     UserInvite userInviteInDB = signupService.getUserInviteByEmail(emailAddress);
@@ -67,6 +68,7 @@ public class MarketoSignupHandler implements SignupHandler {
 
   private User setPasswordAndCompleteSignup(UpdatePasswordRequest passwordRequest, UserInvite userInvite) {
     char[] password = passwordRequest.getPassword().toCharArray();
+    signupService.validateName(userInvite.getName());
     signupService.validatePassword(password);
     userInvite.setPassword(password);
     userInvite.setPasswordHash(hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
