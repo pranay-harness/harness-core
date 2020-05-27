@@ -1685,40 +1685,42 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private Consumer<List<DelegateConnectionResult>> getPostValidationFunction(
       DelegateTaskEvent delegateTaskEvent, String taskId) {
     return delegateConnectionResults -> {
-      currentlyValidatingTasks.remove(taskId);
-      currentlyValidatingFutures.remove(taskId);
-      logger.info("Removed from validating futures on post validation");
-      List<DelegateConnectionResult> results = Optional.ofNullable(delegateConnectionResults).orElse(emptyList());
-      boolean validated = results.stream().anyMatch(DelegateConnectionResult::isValidated);
-      logger.info("Validation {} for task", validated ? "succeeded" : "failed");
-      try {
-        DelegateTaskPackage delegateTaskPackage = execute(managerClient.reportConnectionResults(
-            delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, results));
+      try (AutoLogContext logContext = new TaskLogContext(taskId, OVERRIDE_ERROR)) {
+        currentlyValidatingTasks.remove(taskId);
+        currentlyValidatingFutures.remove(taskId);
+        logger.info("Removed from validating futures on post validation");
+        List<DelegateConnectionResult> results = Optional.ofNullable(delegateConnectionResults).orElse(emptyList());
+        boolean validated = results.stream().anyMatch(DelegateConnectionResult::isValidated);
+        logger.info("Validation {} for task", validated ? "succeeded" : "failed");
+        try {
+          DelegateTaskPackage delegateTaskPackage = execute(managerClient.reportConnectionResults(
+              delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, results));
 
-        if (delegateTaskPackage != null && delegateTaskPackage.getDelegateTask() != null
-            && delegateId.equals(delegateTaskPackage.getDelegateId())) {
-          logger.info("Got the go-ahead to proceed for task.");
-          applyDelegateSecretFunctor(delegateTaskPackage);
-          executeTask(delegateTaskPackage);
-        } else {
-          logger.info("Did not get the go-ahead to proceed for task");
-          if (validated) {
-            logger.info("Task validated but was not assigned");
+          if (delegateTaskPackage != null && delegateTaskPackage.getDelegateTask() != null
+              && delegateId.equals(delegateTaskPackage.getDelegateId())) {
+            logger.info("Got the go-ahead to proceed for task.");
+            applyDelegateSecretFunctor(delegateTaskPackage);
+            executeTask(delegateTaskPackage);
           } else {
-            int delay = POLL_INTERVAL_SECONDS + 3;
-            logger.info("Waiting {} seconds to give other delegates a chance to validate task", delay);
-            sleep(ofSeconds(delay));
-            try {
-              logger.info("Manager check whether to fail task");
-              execute(
-                  managerClient.failIfAllDelegatesFailed(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
-            } catch (IOException e) {
-              logger.error("Unable to tell manager to check whether to fail for task", e);
+            logger.info("Did not get the go-ahead to proceed for task");
+            if (validated) {
+              logger.info("Task validated but was not assigned");
+            } else {
+              int delay = POLL_INTERVAL_SECONDS + 3;
+              logger.info("Waiting {} seconds to give other delegates a chance to validate task", delay);
+              sleep(ofSeconds(delay));
+              try {
+                logger.info("Manager check whether to fail task");
+                execute(managerClient.failIfAllDelegatesFailed(
+                    delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
+              } catch (IOException e) {
+                logger.error("Unable to tell manager to check whether to fail for task", e);
+              }
             }
           }
+        } catch (IOException e) {
+          logger.error("Unable to report validation results for task", e);
         }
-      } catch (IOException e) {
-        logger.error("Unable to report validation results for task", e);
       }
     };
   }
