@@ -41,18 +41,17 @@ public class GcpBillingDataPipelineWriter implements ItemWriter<SettingAttribute
   @Autowired private BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   @Autowired private BillingDataPipelineService billingDataPipelineService;
   private JobParameters parameters;
-  private String gcpProjectId;
-  private static final String COPY_TRANSFER_JOB_NAME_TEMPLATE = "BigQueryCopyTransferJob_%s";
+  private static final String COPY_TRANSFER_JOB_NAME_TEMPLATE = "BigQueryCopyTransferJob_%s_%s";
   private static final String GCP_PRE_AGG_QUERY_TEMPLATE = "gcpPreAggQuery_%s_%s";
 
   @BeforeStep
   public void beforeStep(final StepExecution stepExecution) {
     parameters = stepExecution.getJobExecution().getJobParameters();
-    gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
   }
 
   @Override
   public void write(List<? extends SettingAttribute> gcpBillingAccountList) throws Exception {
+    String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
     Account account = cloudToHarnessMappingService.getAccountInfoFromId(accountId);
     String accountName = account.getAccountName();
@@ -71,14 +70,13 @@ public class GcpBillingDataPipelineWriter implements ItemWriter<SettingAttribute
         })
         .forEach(gcpBillingAccount -> {
           String dstDataSetId = billingDataPipelineService.createDataSet(account);
+          String gcpBqProjectId = gcpBillingAccount.getBqProjectId();
+          String gcpBqDatasetId = gcpBillingAccount.getBqDatasetId();
 
-          String transferJobName =
-              String.format(COPY_TRANSFER_JOB_NAME_TEMPLATE, getUniqueSuffixFromAccountId(accountId, accountName));
+          String transferJobName = String.format(COPY_TRANSFER_JOB_NAME_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
           GcpOrganization gcpOrganization = gcpOrganizationDao.get(gcpBillingAccount.getOrganizationSettingId());
           String dstProjectId = gcpProjectId;
 
-          String gcpBqProjectId = gcpBillingAccount.getBqProjectId();
-          String gcpBqDatasetId = gcpBillingAccount.getBqDatasetId();
           try {
             billingDataPipelineService.createDataTransferJobFromBQ(transferJobName, gcpBqProjectId, gcpBqDatasetId,
                 dstProjectId, dstDataSetId, gcpOrganization.getServiceAccountEmail());
@@ -106,10 +104,5 @@ public class GcpBillingDataPipelineWriter implements ItemWriter<SettingAttribute
                   .preAggregatedScheduledQueryName(scheduledQueriesMap.get(preAggQueryKey))
                   .build());
         });
-  }
-
-  private String getUniqueSuffixFromAccountId(String harnessAccountId, String accountName) {
-    return billingDataPipelineService.modifyStringToComplyRegex(accountName) + "_"
-        + billingDataPipelineService.modifyStringToComplyRegex(harnessAccountId);
   }
 }

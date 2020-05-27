@@ -229,6 +229,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
             .setParams(Struct.newBuilder()
                            .putFields("source_project_id", Value.newBuilder().setStringValue(srcProjectId).build())
                            .putFields("source_dataset_id", Value.newBuilder().setStringValue(srcDatasetId).build())
+                           .putFields("overwrite_destination_table", Value.newBuilder().setBoolValue(true).build())
                            .build())
             .setScheduleOptions(ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(6, 0)).build())
             .build();

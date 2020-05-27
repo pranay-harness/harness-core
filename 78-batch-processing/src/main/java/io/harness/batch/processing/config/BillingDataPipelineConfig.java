@@ -9,7 +9,6 @@ import lombok.Data;
 @Builder
 @Singleton
 public class BillingDataPipelineConfig {
-  private String gcpServiceAccount;
   private String gcpProjectId;
   private String gcsBasePath;
 }

@@ -59,10 +59,6 @@ if [[ "" != "$S3_SYNC_CONFIG_REGION" ]]; then
   yq write -i $CONFIG_FILE awsS3SyncConfig.region "$S3_SYNC_CONFIG_REGION"
 fi
 
-if [[ "" != "$DATA_PIPELINE_CONFIG_GCP_SERVICE_ACCOUNT" ]]; then
-  yq write -i $CONFIG_FILE billingDataPipelineConfig.gcpServiceAccount "$DATA_PIPELINE_CONFIG_GCP_SERVICE_ACCOUNT"
-fi
-
 if [[ "" != "$DATA_PIPELINE_CONFIG_GCP_PROJECT_ID" ]]; then
   yq write -i $CONFIG_FILE billingDataPipelineConfig.gcpProjectId "$DATA_PIPELINE_CONFIG_GCP_PROJECT_ID"
 fi
