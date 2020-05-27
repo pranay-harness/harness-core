@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HarnessException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
@@ -79,14 +78,13 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
           throw new HarnessException("Operation not supported");
       }
     } catch (Exception ex) {
-      String errorMsg = ExceptionUtils.getMessage(ex);
+      String errorMsg = ex.getMessage();
       helmCommandRequest.getExecutionLogCallback().saveExecutionLog(
           errorMsg + "\nFailed", LogLevel.ERROR, CommandExecutionStatus.FAILURE);
-      logger.error(
-          format("Exception in processing helm task [%s] and error is %s", helmCommandRequest.toString(), errorMsg));
+      logger.error(format("Exception in processing helm task [%s]", helmCommandRequest.toString()), ex);
       return HelmCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(errorMsg)
+          .errorMessage("Exception in processing helm task: " + errorMsg)
           .build();
     }
 

@@ -80,7 +80,7 @@ public class HelmCommandHelper {
         }
       }
     } catch (Exception e) {
-      logger.error("Failed while parsing yamlString:" + yamlString);
+      logger.error("Failed while parsing yamlString:" + yamlString, e);
       throw new WingsException(
           ErrorCode.GENERAL_ERROR, "Invalid Yaml, Failed while parsing yamlString", WingsException.SRE);
     }
