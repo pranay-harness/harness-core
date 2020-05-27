@@ -4,7 +4,6 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.MOHIT;
-import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
@@ -56,7 +55,6 @@ import software.wings.signup.BugsnagErrorReporter;
 import software.wings.utils.AccountPermissionUtils;
 import software.wings.utils.CacheManager;
 import software.wings.utils.ResourceTestRule;
-import wiremock.com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.util.Base64;
@@ -114,23 +112,10 @@ public class UserResourceTest extends WingsBaseTest {
     PageRequest pageRequest = mock(PageRequest.class);
     when(pageRequest.getOffset()).thenReturn("0");
     when(pageRequest.getPageSize()).thenReturn(30);
-    when(USER_SERVICE.listUsers(any(), anyBoolean(), anyInt(), anyInt(), anyBoolean()))
+    when(USER_SERVICE.listUsers(any(), any(), any(), anyInt(), anyInt(), anyBoolean()))
         .thenReturn(aPageResponse().withResponse(asList(anUser().build())).build());
     userResource.list(pageRequest, UUIDGenerator.generateUuid(), null, false);
     verify(USER_SERVICE).getTotalUserCount(any(), anyBoolean());
-  }
-
-  @Test
-  @Owner(developers = PHOENIKX)
-  @Category(UnitTests.class)
-  public void shouldSearchUsers() {
-    PageRequest pageRequest = mock(PageRequest.class);
-    when(pageRequest.getOffset()).thenReturn("0");
-    when(pageRequest.getPageSize()).thenReturn(30);
-    when(USER_SERVICE.searchUsers(anyString(), anyBoolean(), anyInt(), anyInt(), anyString()))
-        .thenReturn(Lists.newArrayList());
-    userResource.list(pageRequest, UUIDGenerator.generateUuid(), "xyz", false);
-    verify(USER_SERVICE).searchUsers(any(), anyBoolean(), anyInt(), any(), anyString());
   }
 
   @Test(expected = BadRequestException.class)
