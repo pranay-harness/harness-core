@@ -23,7 +23,6 @@ import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG
 import static software.wings.utils.AsgConvention.getRevisionFromTag;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -69,6 +68,7 @@ import software.wings.utils.AsgConvention;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -333,8 +333,11 @@ public class AwsAmiHelperServiceDelegateImpl
       logCallback.saveExecutionLog("Starting AWS AMI Deploy", INFO);
 
       logCallback.saveExecutionLog("Getting existing instance Ids");
-      Set<String> existingInstanceIds = Sets.newHashSet(awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
-          awsConfig, encryptionDetails, request.getRegion(), request.getNewAutoScalingGroupName()));
+
+      Set<String> existingInstanceIds = new HashSet<>();
+      if (isNotEmpty(request.getExistingInstanceIds())) {
+        existingInstanceIds.addAll(request.getExistingInstanceIds());
+      }
 
       logCallback.saveExecutionLog("Resizing Asgs", INFO);
       resizeAsgs(request.getRegion(), awsConfig, encryptionDetails, request.getNewAutoScalingGroupName(),

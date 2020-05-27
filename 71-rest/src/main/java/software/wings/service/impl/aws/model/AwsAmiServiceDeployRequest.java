@@ -32,6 +32,7 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
   private List<String> infraMappingTargetGroupArns;
   private boolean rollback;
   private List<String> baseScalingPolicyJSONs;
+  private List<String> existingInstanceIds;
 
   @Builder
   public AwsAmiServiceDeployRequest(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
@@ -40,7 +41,7 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
       Integer oldAsgFinalDesiredCount, Integer autoScalingSteadyStateTimeout, int minInstances,
       List<AwsAmiResizeData> asgDesiredCounts, int maxInstances, AwsAmiPreDeploymentData preDeploymentData,
       List<String> infraMappingClassisLbs, List<String> infraMappingTargetGroupArns, boolean rollback,
-      List<String> baseScalingPolicyJSONs, int desiredInstances) {
+      List<String> baseScalingPolicyJSONs, int desiredInstances, List<String> existingInstanceIds) {
     super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_DEPLOY, region);
     this.accountId = accountId;
     this.appId = appId;
@@ -61,5 +62,6 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
     this.rollback = rollback;
     this.baseScalingPolicyJSONs = baseScalingPolicyJSONs;
     this.desiredInstances = desiredInstances;
+    this.existingInstanceIds = existingInstanceIds;
   }
 }

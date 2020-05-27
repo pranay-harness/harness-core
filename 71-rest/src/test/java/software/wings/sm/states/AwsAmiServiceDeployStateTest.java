@@ -50,6 +50,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.deployment.InstanceDetails;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -67,6 +68,7 @@ import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -102,6 +104,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
@@ -167,6 +170,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
             .maxInstances(2)
             .build();
     doReturn(phaseElement).when(mockContext).getContextElement(any(), anyString());
+    doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
     doReturn(EmbeddedUser.builder().email("user@harness.io").name("user").build()).when(mockParams).getCurrentUser();
     doReturn(mockParams).doReturn(serviceSetupElement).when(mockContext).getContextElement(any());
@@ -176,6 +180,24 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     doReturn(application).when(mockParams).getApp();
     Service service = Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build();
     doReturn(service).when(mockServiceResourceService).getWithDetails(anyString(), anyString());
+    doReturn(
+        Arrays.asList(
+            InstanceInfoVariables.builder()
+                .instanceDetails(Arrays.asList(InstanceDetails.builder()
+                                                   .hostName("h1")
+                                                   .aws(InstanceDetails.AWS.builder().instanceId("instanceId1").build())
+                                                   .newInstance(true)
+                                                   .build()))
+                .build(),
+            InstanceInfoVariables.builder()
+                .instanceDetails(Arrays.asList(InstanceDetails.builder()
+                                                   .hostName("h2")
+                                                   .aws(InstanceDetails.AWS.builder().instanceId("instanceId2").build())
+                                                   .newInstance(true)
+                                                   .build()))
+                .build()))
+        .when(sweepingOutputService)
+        .findSweepingOutputsWithNamePrefix(any(), any());
     String revision = "ami-1234";
     Artifact artifact = anArtifact().withRevision(revision).build();
     doReturn(artifact).when(mockContext).getDefaultArtifactForService(anyString());
@@ -235,6 +257,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     assertThat(params.getInfraMappingClassisLbs().get(0)).isEqualTo(classicLb);
     assertThat(params.getInfraMappingTargetGroupArns().size()).isEqualTo(1);
     assertThat(params.getInfraMappingTargetGroupArns().get(0)).isEqualTo(targetGroup);
+    assertThat(params.getExistingInstanceIds()).containsOnly("instanceId1", "instanceId2");
   }
 
   @Test
