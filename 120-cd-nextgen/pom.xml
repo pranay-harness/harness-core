@@ -48,6 +48,11 @@
             <artifactId>25-orchestration-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>35-yaml-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <finalName>cd-nextgen</finalName>

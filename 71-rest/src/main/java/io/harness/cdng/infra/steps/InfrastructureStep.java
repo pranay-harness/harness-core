@@ -1,25 +1,28 @@
-package software.wings.cdng.infra.states;
+package io.harness.cdng.infra.steps;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.cdng.infra.beans.InfraDefinition;
+import io.harness.cdng.infra.beans.InfraMapping;
+import io.harness.cdng.service.Service;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
+import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
 import io.harness.utils.Utils;
 import io.harness.validation.Validator;
-import software.wings.cdng.infra.beans.InfraDefinition;
-import software.wings.cdng.infra.beans.InfraMapping;
-import software.wings.cdng.service.Service;
 
 import java.util.List;
 
-public class InfrastructureState implements io.harness.state.Step, SyncExecutable {
-  InfraMapping createInfraMappingObject(String serviceName, InfraDefinition infraDefinition) {
+public class InfrastructureStep implements Step, SyncExecutable {
+  public static final StepType STEP_TYPE = StepType.builder().type("INFRASTRUCTURE").build();
+
+  InfraMapping createInfraMappingObject(String serviceIdentifier, InfraDefinition infraDefinition) {
     InfraMapping infraMapping = infraDefinition.getInfraMapping();
-    infraMapping.setServiceName(serviceName);
+    infraMapping.setServiceIdentifier(serviceIdentifier);
     return infraMapping;
   }
 
@@ -42,6 +45,6 @@ public class InfrastructureState implements io.harness.state.Step, SyncExecutabl
 
   @Override
   public StepType getType() {
-    return StepType.builder().type("INFRASTRUCTURE").build();
+    return STEP_TYPE;
   }
 }

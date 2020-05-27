@@ -72,4 +72,11 @@ public class CustomExecutionResource {
       @QueryParam("accountId") String accountId, @QueryParam("planExecutionId") String planExecutionId) {
     return new RestResponse<>(customExecutionService.registerInterrupt(planExecutionId));
   }
+
+  @GET
+  @Path("/test-infra-state")
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<PlanExecution> testInfraState() {
+    return new RestResponse<>(customExecutionService.testInfraState());
+  }
 }

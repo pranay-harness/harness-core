@@ -22,6 +22,8 @@ public interface CustomExecutionService {
 
   PlanExecution executeSimpleShellScriptPlan();
 
+  PlanExecution testInfraState();
+
   // Interrupts
 
   Interrupt registerInterrupt(String planExecutionId);

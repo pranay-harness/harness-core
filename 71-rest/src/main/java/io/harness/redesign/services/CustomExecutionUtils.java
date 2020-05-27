@@ -11,6 +11,15 @@ import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.infra.beans.K8sDirectInfraDefinition;
+import io.harness.cdng.infra.steps.InfrastructureSectionStep;
+import io.harness.cdng.infra.steps.InfrastructureStep;
+import io.harness.cdng.pipeline.CDPipeline;
+import io.harness.cdng.pipeline.CDStage;
+import io.harness.cdng.pipeline.PipelineInfrastructure;
+import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
+import io.harness.cdng.pipeline.steps.PipelineSetupStep;
+import io.harness.cdng.service.Service;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
@@ -20,6 +29,7 @@ import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
 import io.harness.redesign.states.email.EmailStep;
 import io.harness.redesign.states.email.EmailStepParameters;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
+import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.redesign.states.wait.WaitStep;
 import io.harness.redesign.states.wait.WaitStepParameters;
@@ -488,6 +498,109 @@ public class CustomExecutionUtils {
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
                                              .build())
                   .build())
+        .build();
+  }
+
+  /*
+  pipelineSetup
+  infra section
+    infra state
+    shell script
+   */
+
+  public static Plan provideInfraStateTestPlan() {
+    String pipelineSetupNodeId = generateUuid();
+    String infraSectionNodeId = generateUuid();
+    String infraStateNodeId = generateUuid();
+    String scriptNodeId = generateUuid();
+
+    Service service = Service.builder().identifier("my service").build();
+
+    K8sDirectInfraDefinition k8sDirectInfraDefinition =
+        K8sDirectInfraDefinition.builder()
+            .name("k8s direct")
+            .spec(K8sDirectInfraDefinition.Spec.builder().namespace("namespace").build())
+            .build();
+
+    PipelineInfrastructure pipelineInfrastructure =
+        PipelineInfrastructure.builder().infraDefinition(k8sDirectInfraDefinition).build();
+
+    CDPipeline cdPipeline =
+        CDPipeline.builder()
+            .stage(CDStage.builder().service(service).infrastructure(pipelineInfrastructure).build())
+            .build();
+
+    ShellScriptStepParameters shellScriptStepParameters =
+        ShellScriptStepParameters.builder()
+            .executeOnDelegate(true)
+            .connectionType(ShellScriptState.ConnectionType.SSH)
+            .scriptType(ScriptType.BASH)
+            .scriptString("echo 'hey' ${infrastructureMapping.namespace} ")
+            .build();
+
+    String PIPELINE_SETUP = "PIPELINE SETUP";
+    String INFRASTRUCTURE_SECTION = "INFRASTRUCTURE SECTION";
+    String INFRASTRUCTURE = "INFRASTRUCTURE";
+    String SHELL_SCRIPT = "SHELL SCRIPT";
+
+    return Plan.builder()
+        .uuid(generateUuid())
+        .startingNodeId(pipelineSetupNodeId)
+        .node(ExecutionNode.builder()
+                  .uuid(pipelineSetupNodeId)
+                  .name(PIPELINE_SETUP)
+                  .identifier(PIPELINE_SETUP)
+                  .stepType(PipelineSetupStep.STEP_TYPE)
+                  .stepParameters(CDPipelineSetupParameters.builder().cdPipeline(cdPipeline).build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(infraSectionNodeId).build())
+                          .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .node(ExecutionNode.builder()
+                  .uuid(infraSectionNodeId)
+                  .name(INFRASTRUCTURE_SECTION)
+                  .identifier(INFRASTRUCTURE_SECTION)
+                  .stepParameters(SectionStepParameters.builder().childNodeId(infraStateNodeId).build())
+                  .stepType(InfrastructureSectionStep.STEP_TYPE)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                             .build())
+                  .build())
+        .node(ExecutionNode.builder()
+                  .uuid(infraStateNodeId)
+                  .name(INFRASTRUCTURE)
+                  .identifier(INFRASTRUCTURE)
+                  .stepType(InfrastructureStep.STEP_TYPE)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .refObject(OutcomeRefObject.builder().name("service").producerId(pipelineSetupNodeId).build())
+                  .refObject(OutcomeRefObject.builder().name("infraDefinition").producerId(pipelineSetupNodeId).build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(scriptNodeId).build())
+                          .build())
+                  .build())
+        .node(ExecutionNode.builder()
+                  .uuid(scriptNodeId)
+                  .name(SHELL_SCRIPT)
+                  .identifier(SHELL_SCRIPT)
+                  .stepType(ShellScriptStep.STEP_TYPE)
+                  .stepParameters(shellScriptStepParameters)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
+                                             .build())
+                  .build())
+        .setupAbstractions(ImmutableMap.<String, String>builder()
+                               .put("accountId", ACCOUNT_ID)
+                               .put("appId", "xjtzcoT0Q2q3tRfafiTxXQ")
+                               .build())
         .build();
   }
 }
