@@ -1,5 +1,6 @@
 package software.wings.service.impl.ldap;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -94,7 +95,8 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     return helper.authenticate(settings.getUserSettingsList(), username, password);
   }
 
-  private LdapGroupResponse buildLdapGroupResponse(LdapEntry group, LdapGroupConfig settings) {
+  @VisibleForTesting
+  LdapGroupResponse buildLdapGroupResponse(LdapEntry group, LdapGroupConfig settings) {
     Set<String> availableAttrs = Sets.newHashSet(group.getAttributeNames());
     String name = group.getAttribute(settings.getNameAttr()).getStringValue();
     String description = StringUtils.EMPTY;

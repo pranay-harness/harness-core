@@ -1,7 +1,5 @@
 package software.wings.service.impl.ldap;
 
-import static java.lang.Math.min;
-
 import com.google.common.collect.Lists;
 
 import de.danielbechler.util.Collections;
@@ -18,7 +16,6 @@ import java.util.List;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -31,11 +28,9 @@ import javax.validation.constraints.NotNull;
  */
 @Slf4j
 public class LdapParallelSearchExecutor {
-  static final int MAX_THREAD_COUNT = 4;
+  int LDAP_SEARCH_MAX_WAIT_TIME_IN_SECONDS = 30;
 
-  static int LDAP_SEARCH_MAX_WAIT_TIME_IN_SECONDS = 30;
-
-  private static void updateLdapRequestTimeout(LdapSearch ldapSearch) {
+  private void updateLdapRequestTimeout(LdapSearch ldapSearch) {
     try {
       Connection connection = ldapSearch.getConnectionFactory().getConnection();
       LDAP_SEARCH_MAX_WAIT_TIME_IN_SECONDS = (int) connection.getConnectionConfig().getResponseTimeout().getSeconds();
@@ -63,17 +58,18 @@ public class LdapParallelSearchExecutor {
       @NotNull List<LdapUserExistsRequest> ldapUserExistsRequest,
       Function<LdapUserExistsRequest, LdapUserExistsResponse> executeLdapUserExistsRequest) {
     LdapUserExistsResponse ldapUserExistsReturn = null;
-    CompletionService<LdapUserExistsResponse> taskCompletionService = new ExecutorCompletionService<>(
-        Executors.newWorkStealingPool(min(ldapUserExistsRequest.size(), MAX_THREAD_COUNT)));
+
+    if (ldapUserExistsRequest.size() != 0) {
+      updateLdapRequestTimeout(ldapUserExistsRequest.get(0).getLdapSearch());
+    }
+
+    CompletionService<LdapUserExistsResponse> taskCompletionService =
+        new ExecutorCompletionService<>(LdapExecutorService.getInstance().getExecutorService());
 
     List<Future<? extends AbstractLdapResponse>> ldapUserExistsResponseFutures =
         ldapUserExistsRequest.stream()
             .map(request -> taskCompletionService.submit(() -> executeLdapUserExistsRequest.apply(request)))
             .collect(Collectors.toList());
-
-    if (ldapUserExistsRequest.size() != 0) {
-      updateLdapRequestTimeout(ldapUserExistsRequest.get(0).getLdapSearch());
-    }
 
     LdapUserExistsResponse ldapUserExistsCallResponseTemp = null;
     for (int i = 0; i < ldapUserExistsRequest.size(); i++) {
@@ -115,18 +111,18 @@ public class LdapParallelSearchExecutor {
 
   private List<LdapGetUsersResponse> executeLdapGetUsersRequest(@NotNull List<LdapGetUsersRequest> ldapGetUsersRequests,
       Function<LdapGetUsersRequest, LdapGetUsersResponse> executeLdapGetUsersRequest) {
-    CompletionService<LdapGetUsersResponse> taskCompletionService = new ExecutorCompletionService<>(
-        Executors.newWorkStealingPool(min(ldapGetUsersRequests.size(), MAX_THREAD_COUNT)));
+    if (ldapGetUsersRequests.size() != 0) {
+      updateLdapRequestTimeout(ldapGetUsersRequests.get(0).getLdapSearch());
+    }
+
+    CompletionService<LdapGetUsersResponse> taskCompletionService =
+        new ExecutorCompletionService<>(LdapExecutorService.getInstance().getExecutorService());
 
     ldapGetUsersRequests.stream()
         .map(request -> taskCompletionService.submit(() -> executeLdapGetUsersRequest.apply(request)))
         .collect(Collectors.toList());
 
     List<LdapGetUsersResponse> ldapGetUsersResponse = new ArrayList<>();
-
-    if (ldapGetUsersRequests.size() != 0) {
-      updateLdapRequestTimeout(ldapGetUsersRequests.get(0).getLdapSearch());
-    }
 
     for (int i = 0; i < ldapGetUsersRequests.size(); i++) {
       LdapGetUsersResponse currentLdapGetUsersResponse = null;
@@ -169,16 +165,18 @@ public class LdapParallelSearchExecutor {
   public List<LdapListGroupsResponse> executeListGroupsSearchResult(
       @NotNull List<LdapListGroupsRequest> ldapListGroupsRequests,
       Function<LdapListGroupsRequest, LdapListGroupsResponse> executeLdapGroupsSearchRequest) {
-    CompletionService<LdapListGroupsResponse> taskCompletionService = new ExecutorCompletionService<>(
-        Executors.newWorkStealingPool(min(ldapListGroupsRequests.size(), MAX_THREAD_COUNT)));
+    if (ldapListGroupsRequests.size() != 0) {
+      updateLdapRequestTimeout(ldapListGroupsRequests.get(0).getLdapSearch());
+    }
+
+    CompletionService<LdapListGroupsResponse> taskCompletionService =
+        new ExecutorCompletionService<>(LdapExecutorService.getInstance().getExecutorService());
 
     ldapListGroupsRequests.forEach(
         request -> taskCompletionService.submit(() -> executeLdapGroupsSearchRequest.apply(request)));
 
     List<LdapListGroupsResponse> ldapListGroupsResponses = new ArrayList<>();
-    if (ldapListGroupsRequests.size() != 0) {
-      updateLdapRequestTimeout(ldapListGroupsRequests.get(0).getLdapSearch());
-    }
+
     for (int i = 0; i < ldapListGroupsRequests.size(); i++) {
       LdapListGroupsResponse currentLdapGroupResponse = null;
       try {

@@ -30,7 +30,7 @@ public class LdapConstants {
   public static final String AUTHENTICATION_SUCCESS = "Authentication successful";
   public static final String MASKED_STRING = "*****";
   public static final String GROUP_SIZE_ATTR = "groupSize";
-  public static final int MAX_GROUP_MEMBERS_LIMIT = 500;
+  public static final int MAX_GROUP_MEMBERS_LIMIT = 1500;
   public static final String GROUP_MEMBERS_EXCEEDED =
       String.format("Group has more than %s members.", MAX_GROUP_MEMBERS_LIMIT);
   public static final String USER_GROUP_SYNC_FAILED = "User group syncing failed for SSO Provider: %s";
