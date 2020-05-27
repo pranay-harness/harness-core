@@ -66,7 +66,7 @@ public class ApplicationReadyListener {
 
     IndexManager.Mode indexManagerMode = applicationReadyEvent.getApplicationContext()
                                              .getBean(BatchMainConfig.class)
-                                             .getHarnessMongo()
+                                             .getEventsMongo()
                                              .getIndexManagerMode();
     IndexManager.ensureIndexes(indexManagerMode, datastore, locMorphia);
   }
