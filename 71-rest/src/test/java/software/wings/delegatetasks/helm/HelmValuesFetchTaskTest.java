@@ -80,7 +80,7 @@ public class HelmValuesFetchTaskTest extends WingsBaseTest {
     HelmValuesFetchTaskResponse response = task.run(parameters);
     verify(helmTaskHelper, times(1)).getValuesYamlFromChart(any(HelmChartConfigParams.class));
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
-    assertThat(response.getErrorMessage()).isEqualTo("RuntimeException: Unable to fetch Values.yaml");
+    assertThat(response.getErrorMessage()).isEqualTo("Execution failed with Exception: Unable to fetch Values.yaml");
   }
 
   @Test(expected = NotImplementedException.class)
