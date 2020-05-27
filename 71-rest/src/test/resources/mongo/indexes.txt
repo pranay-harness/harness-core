@@ -316,9 +316,11 @@ instanceStats {"name": "timestamp_1", "background": true} {"timestamp": 1}
 instanceSyncPerpetualTasksInfo {"name": "accountId_1", "background": true} {"accountId": 1}
 instanceSyncPerpetualTasksInfo {"name": "infrastructureMappingId_1", "background": true} {"infrastructureMappingId": 1}
 k8sWorkload {"name": "accountId_clusterId_labels", "background": true} {"accountId": 1, "clusterId": 1, "labels": 1}
+k8sWorkload {"name": "accountId_clusterId_uid", "background": true} {"accountId": 1, "clusterId": 1, "uid": 1}
 k8sWorkload {"name": "accountId_name_clusterId_namespace", "background": true} {"accountId": 1, "name": 1, "clusterId": 1, "namespace": 1}
 k8sWorkload {"name": "accountId_name_labels", "background": true} {"accountId": 1, "name": 1, "labels": 1}
 k8sWorkload {"name": "no_dup_cluster", "unique": true} {"clusterId": 1, "uid": 1}
+k8sYaml {"name": "accountId_clusterId_uid_resourceVersion", "background": true} {"accountId": 1, "clusterId": 1, "uuid": 1, "resourceVersion": -1}
 k8sYaml {"name": "accountId_uuid_resourceVersion", "background": true} {"accountId": 1, "uuid": 1, "resourceVersion": -1}
 kmsConfig {"name": "appId_1", "background": true} {"appId": 1}
 kmsConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}

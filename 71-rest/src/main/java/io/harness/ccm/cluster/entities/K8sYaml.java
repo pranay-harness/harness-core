@@ -25,10 +25,18 @@ import org.mongodb.morphia.utils.IndexType;
 @StoreIn("events")
 @Entity(value = "k8sYaml", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "accountId_uuid_resourceVersion", background = true), fields = {
-    @Field(K8sYamlKeys.accountId)
-    , @Field(K8sYamlKeys.uuid), @Field(value = K8sYamlKeys.resourceVersion, type = IndexType.DESC)
-  })
+  @Index(options = @IndexOptions(name = "accountId_uuid_resourceVersion", background = true),
+      fields =
+      {
+        @Field(K8sYamlKeys.accountId)
+        , @Field(K8sYamlKeys.uuid), @Field(value = K8sYamlKeys.resourceVersion, type = IndexType.DESC)
+      })
+  ,
+      @Index(options = @IndexOptions(name = "accountId_clusterId_uid_resourceVersion", background = true), fields = {
+        @Field(K8sYamlKeys.accountId)
+        , @Field(K8sYamlKeys.clusterId), @Field(K8sYamlKeys.uuid),
+            @Field(value = K8sYamlKeys.resourceVersion, type = IndexType.DESC)
+      })
 })
 @FieldNameConstants(innerTypeName = "K8sYamlKeys")
 public class K8sYaml implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
