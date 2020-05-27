@@ -13,7 +13,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.delegate.task.TaskParameters;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
@@ -75,7 +74,7 @@ public class HelmCommandTaskTest extends WingsBaseTest {
     doReturn(kubeConfigLocation)
         .when(containerDeploymentDelegateHelper)
         .createAndGetKubeConfigLocation(any(ContainerServiceParams.class));
-    helmCommandTask.run(new Object[] {dummyCommandRequest});
+    helmCommandTask.run(dummyCommandRequest);
 
     verify(helmDeployService, times(1)).ensureHelmInstalled(dummyCommandRequest);
 
@@ -94,7 +93,7 @@ public class HelmCommandTaskTest extends WingsBaseTest {
         HelmInstallCommandResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
 
     doReturn(deployResponse).when(helmDeployService).deploy(request);
-    HelmCommandExecutionResponse response = helmCommandTask.run(new Object[] {request});
+    HelmCommandExecutionResponse response = helmCommandTask.run(request);
 
     verify(helmDeployService, times(1)).deploy(request);
 
@@ -111,7 +110,7 @@ public class HelmCommandTaskTest extends WingsBaseTest {
         HelmInstallCommandResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
 
     doReturn(rollbackResponse).when(helmDeployService).rollback(request);
-    HelmCommandExecutionResponse response = helmCommandTask.run(new Object[] {request});
+    HelmCommandExecutionResponse response = helmCommandTask.run(request);
 
     verify(helmDeployService, times(1)).rollback(request);
 
@@ -129,7 +128,7 @@ public class HelmCommandTaskTest extends WingsBaseTest {
         HelmReleaseHistoryCommandResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
 
     doReturn(releaseHistoryResponse).when(helmDeployService).releaseHistory(request);
-    HelmCommandExecutionResponse response = helmCommandTask.run(new Object[] {request});
+    HelmCommandExecutionResponse response = helmCommandTask.run(request);
 
     verify(helmDeployService, times(1)).releaseHistory(request);
 
@@ -144,10 +143,10 @@ public class HelmCommandTaskTest extends WingsBaseTest {
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().accountId("accountId").build();
 
     doThrow(new IOException("Unable to deploy")).when(helmDeployService).deploy(request);
-    HelmCommandExecutionResponse response = helmCommandTask.run(new Object[] {request});
+    HelmCommandExecutionResponse response = helmCommandTask.run(request);
 
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
-    assertThat(response.getErrorMessage()).isEqualTo("IOException: Unable to deploy");
+    assertThat(response.getErrorMessage()).isEqualTo("Exception in processing helm task: Unable to deploy");
   }
 
   @Test
@@ -161,7 +160,7 @@ public class HelmCommandTaskTest extends WingsBaseTest {
                                                     .build();
 
     doReturn(deployResponse).when(helmDeployService).deploy(request);
-    HelmCommandExecutionResponse response = helmCommandTask.run(new Object[] {request});
+    HelmCommandExecutionResponse response = helmCommandTask.run(request);
 
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     assertThat(response.getErrorMessage()).isEqualTo("Error while deploying");
@@ -176,11 +175,11 @@ public class HelmCommandTaskTest extends WingsBaseTest {
     ArgumentCaptor<LogCallback> logCallbackCaptor = ArgumentCaptor.forClass(LogCallback.class);
 
     doReturn(mock(LogCallback.class)).when(dummyCommandRequest).getExecutionLogCallback();
-    helmCommandTask.run(new Object[] {dummyCommandRequest});
+    helmCommandTask.run(dummyCommandRequest);
     verify(dummyCommandRequest, times(1)).setExecutionLogCallback(logCallbackCaptor.capture());
     assertThat(logCallbackCaptor.getValue()).isInstanceOf(NoopExecutionCallback.class);
 
-    asyncHelmCommandTask.run(new Object[] {dummyCommandRequest});
+    asyncHelmCommandTask.run(dummyCommandRequest);
     verify(dummyCommandRequest, times(2)).setExecutionLogCallback(logCallbackCaptor.capture());
     assertThat(logCallbackCaptor.getValue()).isInstanceOf(ExecutionLogCallback.class);
   }
@@ -188,8 +187,8 @@ public class HelmCommandTaskTest extends WingsBaseTest {
   @Test(expected = NotImplementedException.class)
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testRunWithTaskParameters() {
-    helmCommandTask.run(new TaskParameters() {});
+  public void testRunWithObjectList() {
+    helmCommandTask.run(new Object[] {});
   }
 
   private static HelmCommandTask getTask(boolean async) {
