@@ -466,7 +466,6 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
             .order(MetricAnalysisRecordKeys.analysisMinute)
             .project(MetricAnalysisRecordKeys.transactions, false)
             .project(MetricAnalysisRecordKeys.transactionsCompressedJson, false)
-            .project(MetricAnalysisRecordKeys.metricAnalysisValuesCompressed, false)
             .asList()
             .stream()
             .collect(Collectors.toSet());
