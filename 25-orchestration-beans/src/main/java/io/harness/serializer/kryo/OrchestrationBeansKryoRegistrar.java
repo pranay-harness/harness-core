@@ -18,6 +18,7 @@ import io.harness.facilitator.FacilitatorType;
 import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.plan.ExecutionNode;
+import io.harness.plan.input.InputArgs;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.state.StepType;
 import io.harness.state.io.StatusNotifyResponseData;
@@ -45,6 +46,7 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DefaultFacilitatorParams.class, 2515);
     kryo.register(Duration.class, 2516);
     kryo.register(OutcomeInstance.class, 2517);
+    kryo.register(InputArgs.class, 2518);
 
     // Add moved/old classes here
     // Keeping the same id for moved classes

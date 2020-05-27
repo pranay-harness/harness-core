@@ -6,17 +6,17 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import io.harness.ambiance.Level.LevelKeys;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.execution.NodeExecution;
+import io.harness.execution.PlanExecution;
 import io.harness.logging.AutoLogContext;
+import io.harness.plan.input.InputArgs;
 import io.harness.serializer.KryoUtils;
 import lombok.Builder;
-import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
-import lombok.experimental.UtilityClass;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,16 +31,16 @@ import javax.validation.constraints.NotNull;
 @Builder
 @FieldNameConstants(innerTypeName = "AmbianceKeys")
 public class Ambiance {
-  // Setup details accountId, appId
-  @Singular Map<String, String> setupAbstractions;
+  // Setup details including accountId, projectId and other input objects
+  @NotNull InputArgs inputArgs;
 
-  // These is a combination of setup/execution Id for a particular level
+  // This is a combination of setup/execution Id for a particular level
   @Builder.Default @NonFinal List<Level> levels = new ArrayList<>();
 
   @NotNull String planExecutionId;
 
   public AutoLogContext autoLogContext() {
-    Map<String, String> logContext = new HashMap<>(setupAbstractions);
+    Map<String, String> logContext = new HashMap<>(inputArgs.strMap());
     logContext.put(AmbianceKeys.planExecutionId, planExecutionId);
     levels.forEach(level -> {
       logContext.put("identifier", level.getIdentifier());
@@ -89,10 +89,12 @@ public class Ambiance {
     return KryoUtils.clone(this);
   }
 
-  @UtilityClass
-  public static final class AmbianceKeys {
-    public static final String levelRuntimeId = AmbianceKeys.levels + "." + LevelKeys.runtimeId;
-    public static final String levelSetupId = AmbianceKeys.levels + "." + LevelKeys.setupId;
-    public static final String levelIdentifier = AmbianceKeys.levels + "." + LevelKeys.identifier;
+  public static Ambiance fromExecutionInstances(
+      @NotNull PlanExecution planExecution, @NotNull NodeExecution nodeExecution) {
+    return Ambiance.builder()
+        .inputArgs(planExecution.getInputArgs())
+        .planExecutionId(nodeExecution.getPlanExecutionId())
+        .levels(nodeExecution.getLevels())
+        .build();
   }
 }

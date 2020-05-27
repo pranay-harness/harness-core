@@ -3,8 +3,6 @@ package io.harness.redesign.services;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import com.google.common.collect.ImmutableMap;
-
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.impl.fail.OnFailAdviserParameters;
@@ -44,9 +42,6 @@ public class CustomExecutionUtils {
   private static final String BASIC_HTTP_STATE_URL_200 = "http://httpstat.us/200";
   private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
   private static final StepType BASIC_HTTP_STEP_TYPE = StepType.builder().type("BASIC_HTTP").build();
-
-  private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
-  private static final String APP_ID = "XEsfW6D_RJm1IaGpDidD3g";
 
   public static Plan provideHttpSwitchPlan() {
     String planId = generateUuid();
@@ -131,8 +126,6 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(httpNodeId)
-        .setupAbstractions(
-            ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
         .uuid(planId)
         .build();
   }
@@ -216,8 +209,6 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(forkNodeId)
-        .setupAbstractions(
-            ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
         .uuid(planId)
         .build();
   }
@@ -301,8 +292,6 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(sectionNodeId)
-        .setupAbstractions(
-            ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
         .uuid(planId)
         .build();
   }
@@ -331,8 +320,6 @@ public class CustomExecutionUtils {
                                                          .build())
                                          .build())
                   .build())
-        .setupAbstractions(
-            ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
         .build();
   }
 
@@ -426,8 +413,6 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(sectionNodeId)
-        .setupAbstractions(
-            ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
         .uuid(planId)
         .build();
   }
@@ -503,8 +488,6 @@ public class CustomExecutionUtils {
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
                                              .build())
                   .build())
-        .setupAbstractions(
-            ImmutableMap.<String, String>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
         .build();
   }
 }

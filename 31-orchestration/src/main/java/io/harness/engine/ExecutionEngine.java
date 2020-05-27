@@ -44,7 +44,7 @@ import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
-import io.harness.plan.input.InputSet;
+import io.harness.plan.input.InputArgs;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.resolver.ResolverRegistry;
@@ -92,11 +92,11 @@ public class ExecutionEngine implements Engine {
     return startExecution(plan, null, createdBy);
   }
 
-  public PlanExecution startExecution(@Valid Plan plan, InputSet inputSet, EmbeddedUser createdBy) {
+  public PlanExecution startExecution(@Valid Plan plan, InputArgs inputArgs, EmbeddedUser createdBy) {
     PlanExecution instance = PlanExecution.builder()
                                  .uuid(generateUuid())
                                  .plan(plan)
-                                 .inputSet(inputSet)
+                                 .inputArgs(inputArgs == null ? new InputArgs() : inputArgs)
                                  .status(ExecutionInstanceStatus.RUNNING)
                                  .createdBy(createdBy)
                                  .startTs(System.currentTimeMillis())
@@ -107,8 +107,7 @@ public class ExecutionEngine implements Engine {
       logger.warn("Cannot Start Execution for empty plan");
       return null;
     }
-    Ambiance ambiance =
-        Ambiance.builder().setupAbstractions(plan.getSetupAbstractions()).planExecutionId(instance.getUuid()).build();
+    Ambiance ambiance = Ambiance.builder().inputArgs(inputArgs).planExecutionId(instance.getUuid()).build();
     triggerExecution(ambiance, plan.fetchStartingNode());
     return instance;
   }
@@ -140,8 +139,9 @@ public class ExecutionEngine implements Engine {
     NodeExecution nodeExecution =
         NodeExecution.builder()
             .uuid(uuid)
-            .ambiance(cloned)
             .node(node)
+            .planExecutionId(cloned.getPlanExecutionId())
+            .levels(cloned.getLevels())
             .startTs(System.currentTimeMillis())
             .status(NodeExecutionStatus.QUEUED)
             .notifyId(previousNodeExecution == null ? null : previousNodeExecution.getNotifyId())
@@ -217,7 +217,8 @@ public class ExecutionEngine implements Engine {
         -> ops.set(NodeExecutionKeys.status, stepResponse.getStatus())
                .set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
     // TODO => handle before node execution update
-    handleOutcomes(nodeExecution.getAmbiance(), stepResponse.getOutcomes());
+    Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
+    handleOutcomes(ambiance, stepResponse.getOutcomes());
 
     // TODO handle Failure
     ExecutionNode node = nodeExecution.getNode();
@@ -230,7 +231,7 @@ public class ExecutionEngine implements Engine {
       Adviser adviser = adviserRegistry.obtain(obtainment.getType());
       injector.injectMembers(adviser);
       advise = adviser.onAdviseEvent(AdvisingEvent.builder()
-                                         .ambiance(nodeExecution.getAmbiance())
+                                         .ambiance(ambiance)
                                          .stepResponse(stepResponse)
                                          .adviserParameters(obtainment.getParameters())
                                          .build());
@@ -242,7 +243,7 @@ public class ExecutionEngine implements Engine {
       endTransition(nodeExecution);
       return;
     }
-    handleAdvise(nodeExecution, advise);
+    handleAdvise(ambiance, advise);
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -263,14 +264,13 @@ public class ExecutionEngine implements Engine {
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
       logger.info("Ending Execution");
-      engineStatusHelper.updateExecutionInstanceStatus(nodeExecution.getAmbiance().getPlanExecutionId(),
+      engineStatusHelper.updateExecutionInstanceStatus(nodeExecution.getPlanExecutionId(),
           ExecutionInstanceStatus.obtainForNodeExecutionStatus(nodeExecution.getStatus()));
     }
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private void handleAdvise(@NotNull NodeExecution nodeExecution, @NotNull Advise advise) {
-    Ambiance ambiance = nodeExecution.getAmbiance();
+  private void handleAdvise(@NotNull Ambiance ambiance, @NotNull Advise advise) {
     AdviseHandler adviseHandler = adviseHandlerFactory.obtainHandler(advise.getType());
     adviseHandler.handleAdvise(ambiance, advise);
   }
@@ -285,8 +285,10 @@ public class ExecutionEngine implements Engine {
     }
     NodeExecution updatedNodeExecution = Preconditions.checkNotNull(engineStatusHelper.updateNodeInstance(
         nodeInstanceId, ops -> ops.set(NodeExecutionKeys.status, NodeExecutionStatus.RUNNING)));
+    Ambiance ambiance = ambianceHelper.fetchAmbiance(updatedNodeExecution);
     executorService.execute(EngineResumeExecutor.builder()
                                 .nodeExecution(updatedNodeExecution)
+                                .ambiance(ambiance)
                                 .response(response)
                                 .asyncError(asyncError)
                                 .executionEngine(this)

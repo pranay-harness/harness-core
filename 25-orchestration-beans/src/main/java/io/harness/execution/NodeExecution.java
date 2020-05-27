@@ -3,8 +3,7 @@ package io.harness.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.ambiance.Ambiance;
-import io.harness.ambiance.Ambiance.AmbianceKeys;
+import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.status.NodeExecutionStatus;
@@ -23,7 +22,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
-import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -43,7 +41,8 @@ import javax.validation.constraints.NotNull;
 public final class NodeExecution implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   // Immutable
   @Id String uuid;
-  @NotNull Ambiance ambiance;
+  @NotNull String planExecutionId;
+  @Singular List<Level> levels;
   @NotNull ExecutionNode node;
   @NotNull ExecutionMode mode;
   @Indexed long createdAt;
@@ -90,13 +89,5 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
 
   public NodeExecution deepCopy() {
     return KryoUtils.clone(this);
-  }
-
-  @UtilityClass
-  public static final class NodeExecutionKeys {
-    public static final String planExecutionId = NodeExecutionKeys.ambiance + "." + AmbianceKeys.planExecutionId;
-    public static final String levelRuntimeId = NodeExecutionKeys.ambiance + "." + AmbianceKeys.levelRuntimeId;
-    public static final String levelSetupId = NodeExecutionKeys.ambiance + "." + AmbianceKeys.levelSetupId;
-    public static final String levelIdentifier = NodeExecutionKeys.ambiance + "." + AmbianceKeys.levelIdentifier;
   }
 }

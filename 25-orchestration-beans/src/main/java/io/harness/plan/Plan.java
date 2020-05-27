@@ -17,7 +17,6 @@ import org.mongodb.morphia.annotations.Id;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -44,8 +43,6 @@ public class Plan implements PersistentEntity {
   @Singular List<ExecutionNode> nodes;
 
   @NotNull String startingNodeId;
-
-  @Singular Map<String, String> setupAbstractions;
 
   public boolean isEmpty() {
     return EmptyPredicate.isEmpty(nodes);

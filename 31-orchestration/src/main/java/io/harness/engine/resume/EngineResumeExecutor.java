@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import com.google.inject.Injector;
 
+import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -35,6 +36,7 @@ public class EngineResumeExecutor implements Runnable {
   boolean asyncError;
   Map<String, ResponseData> response;
   NodeExecution nodeExecution;
+  Ambiance ambiance;
   ExecutionEngine executionEngine;
   Injector injector;
   StepRegistry stepRegistry;
@@ -60,23 +62,23 @@ public class EngineResumeExecutor implements Runnable {
       switch (nodeExecution.getMode()) {
         case CHILDREN:
           ChildrenExecutable childrenExecutable = (ChildrenExecutable) stepRegistry.obtain(node.getStepType());
-          stepResponse = childrenExecutable.handleChildrenResponse(
-              nodeExecution.getAmbiance(), nodeExecution.getResolvedStepParameters(), response);
+          stepResponse =
+              childrenExecutable.handleChildrenResponse(ambiance, nodeExecution.getResolvedStepParameters(), response);
           break;
         case ASYNC:
           AsyncExecutable asyncExecutable = (AsyncExecutable) stepRegistry.obtain(node.getStepType());
-          stepResponse = asyncExecutable.handleAsyncResponse(
-              nodeExecution.getAmbiance(), nodeExecution.getResolvedStepParameters(), response);
+          stepResponse =
+              asyncExecutable.handleAsyncResponse(ambiance, nodeExecution.getResolvedStepParameters(), response);
           break;
         case CHILD:
           ChildExecutable childExecutable = (ChildExecutable) stepRegistry.obtain(node.getStepType());
-          stepResponse = childExecutable.handleChildResponse(
-              nodeExecution.getAmbiance(), nodeExecution.getResolvedStepParameters(), response);
+          stepResponse =
+              childExecutable.handleChildResponse(ambiance, nodeExecution.getResolvedStepParameters(), response);
           break;
         case ASYNC_TASK:
           AsyncTaskExecutable asyncTaskExecutable = (AsyncTaskExecutable) stepRegistry.obtain(node.getStepType());
-          stepResponse = asyncTaskExecutable.handleTaskResult(
-              nodeExecution.getAmbiance(), nodeExecution.getResolvedStepParameters(), response);
+          stepResponse =
+              asyncTaskExecutable.handleTaskResult(ambiance, nodeExecution.getResolvedStepParameters(), response);
           break;
         default:
           throw new InvalidRequestException("Resume not handled for execution Mode : " + nodeExecution.getMode());

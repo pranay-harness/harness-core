@@ -14,6 +14,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.ambiance.Ambiance;
+import io.harness.engine.AmbianceHelper;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
@@ -54,6 +56,7 @@ public class AbortAllHandler implements InterruptHandler {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private StepRegistry stepRegistry;
   @Inject private ExecutionEngine executionEngine;
+  @Inject private AmbianceHelper ambianceHelper;
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
 
   @Override
@@ -105,17 +108,17 @@ public class AbortAllHandler implements InterruptHandler {
   private void discontinueMarkedInstance(NodeExecution nodeExecution) {
     boolean updated = false;
     try {
+      Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
       ExecutionNode node = nodeExecution.getNode();
       Step currentState = Preconditions.checkNotNull(stepRegistry.obtain(node.getStepType()));
       ExecutableResponse executableResponse = nodeExecution.getExecutableResponse();
       if (executableResponse instanceof AsyncTaskExecutableResponse) {
         AsyncTaskExecutableResponse asyncTaskExecutableResponse = (AsyncTaskExecutableResponse) executableResponse;
         TaskExecutor executor = taskExecutorMap.get(asyncTaskExecutableResponse.getTaskIdentifier());
-        executor.abortTask(nodeExecution.getAmbiance(), asyncTaskExecutableResponse.getTaskId());
+        executor.abortTask(ambiance, asyncTaskExecutableResponse.getTaskId());
       }
       if (currentState instanceof Abortable) {
-        ((Abortable) currentState)
-            .handleAbort(nodeExecution.getAmbiance(), node.getStepParameters(), executableResponse);
+        ((Abortable) currentState).handleAbort(ambiance, nodeExecution.getResolvedStepParameters(), executableResponse);
       }
 
       UpdateOperations<NodeExecution> ops = hPersistence.createUpdateOperations(NodeExecution.class);
@@ -133,8 +136,7 @@ public class AbortAllHandler implements InterruptHandler {
       logger.error("Error in discontinuing", e);
     }
     if (!updated) {
-      throw new InvalidRequestException(
-          "Abort failed for execution Plan :" + nodeExecution.getAmbiance().getPlanExecutionId());
+      throw new InvalidRequestException("Abort failed for execution Plan :" + nodeExecution.getPlanExecutionId());
     }
   }
 

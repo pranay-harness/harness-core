@@ -16,7 +16,7 @@ import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAccess;
 import io.harness.plan.Plan;
-import io.harness.plan.input.InputSet;
+import io.harness.plan.input.InputArgs;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -43,7 +43,7 @@ public final class PlanExecution implements PersistentRegularIterable, CreatedAt
   private EmbeddedUser createdBy;
   private long createdAt;
   private Plan plan;
-  private InputSet inputSet;
+  private InputArgs inputArgs;
   private Long nextIteration;
   @Builder.Default private Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 

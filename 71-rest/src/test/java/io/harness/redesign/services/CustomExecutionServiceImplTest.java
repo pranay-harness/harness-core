@@ -43,7 +43,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteHttpSwitch() {
     UserThreadLocal.set(user);
     Plan expectedSwitchHttpPlan = CustomExecutionUtils.provideHttpSwitchPlan();
-    when(executionEngine.startExecution(any(), any()))
+    when(executionEngine.startExecution(any(), any(), any()))
         .thenReturn(
             PlanExecution.builder().status(ExecutionInstanceStatus.RUNNING).plan(expectedSwitchHttpPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeHttpSwitch();
@@ -58,7 +58,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteHttpFork() {
     UserThreadLocal.set(user);
     Plan expectedForkPlan = CustomExecutionUtils.provideHttpForkPlan();
-    when(executionEngine.startExecution(any(), any()))
+    when(executionEngine.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(ExecutionInstanceStatus.RUNNING).plan(expectedForkPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeHttpFork();
 
@@ -72,7 +72,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteSectionPlan() {
     UserThreadLocal.set(user);
     Plan expectedSelectionPlan = CustomExecutionUtils.provideHttpSectionPlan();
-    when(executionEngine.startExecution(any(), any()))
+    when(executionEngine.startExecution(any(), any(), any()))
         .thenReturn(
             PlanExecution.builder().status(ExecutionInstanceStatus.RUNNING).plan(expectedSelectionPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeSectionPlan();
@@ -87,7 +87,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteRetryPlan() {
     UserThreadLocal.set(user);
     Plan expectedRetryPlan = CustomExecutionUtils.provideHttpRetryPlan();
-    when(executionEngine.startExecution(any(), any()))
+    when(executionEngine.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(ExecutionInstanceStatus.RUNNING).plan(expectedRetryPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeRetryPlan();
 

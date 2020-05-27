@@ -2,8 +2,6 @@ package io.harness.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import com.google.common.collect.ImmutableMap;
-
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
@@ -90,10 +88,6 @@ public class PlanRepo {
                                              .build())
                   .build())
         .startingNodeId(sectionNodeId)
-        .setupAbstractions(ImmutableMap.<String, String>builder()
-                               .put("accountId", generateUuid())
-                               .put("appId", generateUuid())
-                               .build())
         .uuid(planId)
         .build();
   }

@@ -316,15 +316,15 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
   }
 
   private String getAccountId(Ambiance ambiance) {
-    return ambiance.getSetupAbstractions().get("accountId");
+    return (String) ambiance.getInputArgs().get("accountId");
   }
 
   private String getAppId(Ambiance ambiance) {
-    return ambiance.getSetupAbstractions().get("appId");
+    return (String) ambiance.getInputArgs().get("appId");
   }
 
   private String createActivity(Ambiance ambiance) {
-    String appId = ambiance.getSetupAbstractions().get("appId");
+    String appId = (String) ambiance.getInputArgs().get("appId");
     return activityService
         .save(Activity.builder()
                   .appId(appId)

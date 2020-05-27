@@ -52,9 +52,9 @@ public class BasicHttpStep implements Step, AsyncTaskExecutable {
 
     String waitId = generateUuid();
     return DelegateTask.builder()
-        .accountId(ambiance.getSetupAbstractions().get("accountId"))
+        .accountId((String) ambiance.getInputArgs().get("accountId"))
         .waitId(waitId)
-        .appId(ambiance.getSetupAbstractions().get("appId"))
+        .appId((String) ambiance.getInputArgs().get("appId"))
         .data(TaskData.builder()
                   .taskType(TaskType.HTTP.name())
                   .parameters(new Object[] {httpTaskParameters})

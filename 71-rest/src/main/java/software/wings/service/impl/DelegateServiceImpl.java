@@ -777,13 +777,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public void expireTask(@NonNull Ambiance ambiance, @NonNull String taskId) {
-    String accountId = ambiance.getSetupAbstractions().get("accountId");
+    String accountId = (String) ambiance.getInputArgs().get("accountId");
     expireTask(accountId, taskId);
   }
 
   @Override
   public void abortTask(@NonNull Ambiance ambiance, @NonNull String taskId) {
-    String accountId = ambiance.getSetupAbstractions().get("accountId");
+    String accountId = (String) ambiance.getInputArgs().get("accountId");
     abortTask(accountId, taskId);
   }
 

@@ -52,7 +52,7 @@ public class EmailStep implements Step, SyncExecutable {
                                         .cc(getEmailAddressList(stepParameters.getCcAddress()))
                                         .subject(stepParameters.getSubject())
                                         .body(stepParameters.getBody())
-                                        .accountId(ambiance.getSetupAbstractions().get(ACCOUNT_ID))
+                                        .accountId((String) ambiance.getInputArgs().get(ACCOUNT_ID))
                                         .build());
       stepResponseBuilder.status(NodeExecutionStatus.SUCCEEDED);
     } catch (Exception e) {
