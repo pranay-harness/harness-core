@@ -66,11 +66,8 @@ public class BillingDataPipelineServiceImplTest {
 
   @Before
   public void setup() throws IOException {
-    BillingDataPipelineConfig billingDataPipelineConfig = BillingDataPipelineConfig.builder()
-                                                              .gcpProjectId(gcpProjectId)
-                                                              .gcpServiceAccount(gcpServiceAccount)
-                                                              .gcsBasePath(gcsBasePath)
-                                                              .build();
+    BillingDataPipelineConfig billingDataPipelineConfig =
+        BillingDataPipelineConfig.builder().gcpProjectId(gcpProjectId).gcsBasePath(gcsBasePath).build();
     when(mainConfig.getBillingDataPipelineConfig()).thenReturn(billingDataPipelineConfig);
     when(billingDataPipelineRecordDao.getByAccountId(accountId)).thenReturn(null);
     mockCredential = mock(ServiceAccountCredentials.class);
