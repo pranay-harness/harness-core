@@ -9,6 +9,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -25,12 +26,14 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -68,7 +71,6 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsUtils;
-import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAmiResizeData;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
@@ -100,6 +102,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -290,13 +293,27 @@ public class AwsAmiServiceDeployState extends State {
         instanceCountLocal, getInstanceUnitType(), newInstanceData, oldInstanceData);
     boolean resizeNewFirst = serviceSetupElement.getResizeStrategy() == ResizeStrategy.RESIZE_NEW_FIRST;
 
-    createAndQueueResizeTask(awsConfig, encryptionDetails, region, infrastructureMapping.getAccountId(),
-        infrastructureMapping.getAppId(), activity.getUuid(), getCommandName(), resizeNewFirst, newAutoScalingGroupName,
-        newAsgFinalDesiredCount, newDesiredCapacities, serviceSetupElement.getAutoScalingSteadyStateTimeout(),
-        infrastructureMapping.getEnvId(), serviceSetupElement.getMinInstances(), serviceSetupElement.getMaxInstances(),
-        serviceSetupElement.getPreDeploymentData(), classicLbs, targetGroupArns, false,
-        serviceSetupElement.getBaseScalingPolicyJSONs(), serviceSetupElement.getDesiredInstances(),
-        serviceSetupElement.getOldAutoScalingGroupName());
+    AmiResizeTaskRequestData amiResizeTaskRequestData = AmiResizeTaskRequestData.builder()
+                                                            .accountId(infrastructureMapping.getAccountId())
+                                                            .activityId(activity.getUuid())
+                                                            .appId(infrastructureMapping.getAppId())
+                                                            .envId(infrastructureMapping.getEnvId())
+                                                            .awsConfig(awsConfig)
+                                                            .encryptionDetails(encryptionDetails)
+                                                            .region(region)
+                                                            .commandName(getCommandName())
+                                                            .resizeNewFirst(resizeNewFirst)
+                                                            .newAutoScalingGroupName(newAutoScalingGroupName)
+                                                            .newAsgFinalDesiredCount(newAsgFinalDesiredCount)
+                                                            .resizeData(newDesiredCapacities)
+                                                            .serviceSetupElement(serviceSetupElement)
+                                                            .classicLBs(classicLbs)
+                                                            .targetGroupArns(targetGroupArns)
+                                                            .rollback(false)
+                                                            .context(context)
+                                                            .build();
+
+    createAndQueueResizeTask(amiResizeTaskRequestData);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -304,6 +321,84 @@ public class AwsAmiServiceDeployState extends State {
         .executionStatus(ExecutionStatus.SUCCESS)
         .correlationId(activity.getUuid())
         .build();
+  }
+
+  protected void createAndQueueResizeTask(AmiResizeTaskRequestData amiResizeTaskRequestData) {
+    String accountId = amiResizeTaskRequestData.getAccountId();
+    String appId = amiResizeTaskRequestData.getAppId();
+    String envId = amiResizeTaskRequestData.getEnvId();
+    String activityId = amiResizeTaskRequestData.getActivityId();
+
+    AmiServiceSetupElement serviceSetupElement = amiResizeTaskRequestData.getServiceSetupElement();
+    AwsAmiServiceDeployRequest request =
+        AwsAmiServiceDeployRequest.builder()
+            .awsConfig(amiResizeTaskRequestData.getAwsConfig())
+            .encryptionDetails(amiResizeTaskRequestData.getEncryptionDetails())
+            .region(amiResizeTaskRequestData.getRegion())
+            .accountId(amiResizeTaskRequestData.getAccountId())
+            .appId(amiResizeTaskRequestData.getAppId())
+            .activityId(amiResizeTaskRequestData.getActivityId())
+            .commandName(commandName)
+            .resizeNewFirst(amiResizeTaskRequestData.isResizeNewFirst())
+            .newAutoScalingGroupName(amiResizeTaskRequestData.getNewAutoScalingGroupName())
+            .newAsgFinalDesiredCount(amiResizeTaskRequestData.getNewAsgFinalDesiredCount())
+            .oldAutoScalingGroupName(serviceSetupElement.getOldAutoScalingGroupName())
+            .autoScalingSteadyStateTimeout(serviceSetupElement.getAutoScalingSteadyStateTimeout())
+            .minInstances(serviceSetupElement.getMinInstances())
+            .maxInstances(serviceSetupElement.getMaxInstances())
+            .desiredInstances(serviceSetupElement.getDesiredInstances())
+            .preDeploymentData(serviceSetupElement.getPreDeploymentData())
+            .rollback(amiResizeTaskRequestData.isRollback())
+            .baseScalingPolicyJSONs(serviceSetupElement.getBaseScalingPolicyJSONs())
+            .asgDesiredCounts(amiResizeTaskRequestData.getResizeData())
+            .infraMappingClassisLbs(amiResizeTaskRequestData.getClassicLBs())
+            .infraMappingTargetGroupArns(amiResizeTaskRequestData.getTargetGroupArns())
+            .build();
+
+    addExistingInstanceIds(amiResizeTaskRequestData, request);
+
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(accountId)
+            .appId(appId)
+            .waitId(activityId)
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(AWS_AMI_ASYNC_TASK.name())
+                      .parameters(new Object[] {request})
+                      .timeout(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()))
+                      .build())
+            .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+            .envId(envId)
+            .build();
+    delegateService.queueTask(delegateTask);
+  }
+
+  @VisibleForTesting
+  void addExistingInstanceIds(AmiResizeTaskRequestData amiResizeTaskRequestData, AwsAmiServiceDeployRequest request) {
+    ExecutionContext context = amiResizeTaskRequestData.getContext();
+    List<SweepingOutput> sweepingOutputs = sweepingOutputService.findSweepingOutputsWithNamePrefix(
+        context.prepareSweepingOutputInquiryBuilder().name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME).build(),
+        SweepingOutputInstance.Scope.WORKFLOW);
+
+    if (isNotEmpty(sweepingOutputs)) {
+      List<InstanceInfoVariables> instanceInfoVariableDeployed = sweepingOutputs.stream()
+                                                                     .map(InstanceInfoVariables.class ::cast)
+                                                                     .filter(InstanceInfoVariables::isDeployStateInfo)
+                                                                     .collect(toList());
+
+      List<InstanceDetails> listInstanceDetails =
+          instanceInfoVariableDeployed.stream()
+              .flatMap(instanceInfoVars -> instanceInfoVars.getInstanceDetails().stream())
+              .collect(toList());
+
+      if (isNotEmpty(listInstanceDetails)) {
+        Set<String> instanceIds = listInstanceDetails.stream()
+                                      .map(instanceDetail -> instanceDetail.getAws().getInstanceId())
+                                      .collect(toSet());
+        request.setExistingInstanceIds(new ArrayList<>(instanceIds));
+      }
+    }
   }
 
   @VisibleForTesting
@@ -324,52 +419,6 @@ public class AwsAmiServiceDeployState extends State {
     }
 
     return null;
-  }
-
-  protected void createAndQueueResizeTask(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      String region, String accountId, String appId, String activityId, String commandName, boolean resizeNewFirst,
-      String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, List<AwsAmiResizeData> resizeData,
-      Integer autoScalingSteadyStateTimeout, String envId, int minInstaces, int maxInstances,
-      AwsAmiPreDeploymentData preDeploymentData, List<String> classicLBs, List<String> targetGroupArns,
-      boolean rollback, List<String> baseScalingPolicyJSONs, int desiredInstances, String oldAsgName) {
-    AwsAmiServiceDeployRequest request = AwsAmiServiceDeployRequest.builder()
-                                             .awsConfig(awsConfig)
-                                             .encryptionDetails(encryptionDetails)
-                                             .region(region)
-                                             .accountId(accountId)
-                                             .appId(appId)
-                                             .activityId(activityId)
-                                             .commandName(commandName)
-                                             .resizeNewFirst(resizeNewFirst)
-                                             .newAutoScalingGroupName(newAutoScalingGroupName)
-                                             .newAsgFinalDesiredCount(newAsgFinalDesiredCount)
-                                             .oldAutoScalingGroupName(oldAsgName)
-                                             .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
-                                             .minInstances(minInstaces)
-                                             .maxInstances(maxInstances)
-                                             .desiredInstances(desiredInstances)
-                                             .preDeploymentData(preDeploymentData)
-                                             .rollback(rollback)
-                                             .baseScalingPolicyJSONs(baseScalingPolicyJSONs)
-                                             .asgDesiredCounts(resizeData)
-                                             .infraMappingClassisLbs(classicLBs)
-                                             .infraMappingTargetGroupArns(targetGroupArns)
-                                             .build();
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .accountId(accountId)
-            .appId(appId)
-            .waitId(activityId)
-            .data(TaskData.builder()
-                      .async(true)
-                      .taskType(AWS_AMI_ASYNC_TASK.name())
-                      .parameters(new Object[] {request})
-                      .timeout(TimeUnit.MINUTES.toMillis(autoScalingSteadyStateTimeout))
-                      .build())
-            .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-            .envId(envId)
-            .build();
-    delegateService.queueTask(delegateTask);
   }
 
   protected AwsAmiDeployStateExecutionData prepareStateExecutionData(String activityId,
