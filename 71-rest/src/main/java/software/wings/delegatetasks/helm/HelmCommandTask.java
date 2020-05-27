@@ -46,13 +46,13 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public HelmCommandExecutionResponse run(TaskParameters parameters) {
+  public HelmCommandExecutionResponse run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
   }
 
   @Override
-  public HelmCommandExecutionResponse run(Object[] parameters) {
-    HelmCommandRequest helmCommandRequest = (HelmCommandRequest) parameters[0];
+  public HelmCommandExecutionResponse run(TaskParameters parameters) {
+    HelmCommandRequest helmCommandRequest = (HelmCommandRequest) parameters;
     HelmCommandResponse commandResponse;
 
     try {

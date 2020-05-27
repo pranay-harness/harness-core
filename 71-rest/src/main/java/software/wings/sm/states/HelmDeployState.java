@@ -31,6 +31,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -46,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
+import software.wings.api.HelmDeployStateExecutionData.HelmDeployStateExecutionDataBuilder;
 import software.wings.api.InfraMappingElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -85,6 +87,7 @@ import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
+import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
@@ -131,6 +134,8 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionContext;
+import software.wings.sm.StateExecutionContext.StateExecutionContextBuilder;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.k8s.K8sStateHelper;
@@ -141,6 +146,7 @@ import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -265,15 +271,15 @@ public class HelmDeployState extends State {
   }
 
   protected void setNewAndPrevReleaseVersion(ExecutionContext context, Application app, String releaseName,
-      ContainerServiceParams containerServiceParams, HelmDeployStateExecutionData stateExecutionData,
-      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, HelmVersion helmVersion)
-      throws InterruptedException {
+      ContainerServiceParams containerServiceParams, HelmDeployStateExecutionDataBuilder stateExecutionDataBuilder,
+      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, HelmVersion helmVersion,
+      int expressionFunctorToken) throws InterruptedException {
     logger.info("Setting new and previous helm release version");
-    int prevVersion = getPreviousReleaseVersion(
-        app, releaseName, containerServiceParams, gitConfig, encryptedDataDetails, commandFlags, helmVersion);
+    int prevVersion = getPreviousReleaseVersion(context, app, releaseName, containerServiceParams, gitConfig,
+        encryptedDataDetails, commandFlags, helmVersion, expressionFunctorToken, stateExecutionDataBuilder);
 
-    stateExecutionData.setReleaseOldVersion(prevVersion);
-    stateExecutionData.setReleaseNewVersion(prevVersion + 1);
+    stateExecutionDataBuilder.releaseOldVersion(prevVersion);
+    stateExecutionDataBuilder.releaseNewVersion(prevVersion + 1);
   }
 
   private void validateChartSpecification(HelmChartSpecification chartSpec) {
@@ -341,9 +347,10 @@ public class HelmDeployState extends State {
     return imageNameTag;
   }
 
-  protected int getPreviousReleaseVersion(Application app, String releaseName,
+  protected int getPreviousReleaseVersion(ExecutionContext context, Application app, String releaseName,
       ContainerServiceParams containerServiceParams, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, HelmVersion helmVersion)
+      List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, HelmVersion helmVersion,
+      int expressionFunctorToken, HelmDeployStateExecutionDataBuilder stateExecutionDataBuilder)
       throws InterruptedException {
     int prevVersion = 0;
     HelmReleaseHistoryCommandRequest helmReleaseHistoryCommandRequest =
@@ -358,18 +365,30 @@ public class HelmDeployState extends State {
 
     List<String> tags = new ArrayList<>();
     tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams));
+    StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
+                                                      .stateExecutionData(stateExecutionDataBuilder.build())
+                                                      .adoptDelegateDecryption(true)
+                                                      .expressionFunctorToken(expressionFunctorToken)
+                                                      .build();
 
     DelegateTask delegateTask = DelegateTask.builder()
                                     .data(TaskData.builder()
                                               .async(false)
                                               .taskType(HELM_COMMAND_TASK.name())
                                               .parameters(new Object[] {helmReleaseHistoryCommandRequest})
+                                              .expressionFunctorToken(expressionFunctorToken)
                                               .timeout(DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS * 2)
                                               .build())
                                     .accountId(app.getAccountId())
                                     .appId(app.getUuid())
                                     .tags(tags)
                                     .build();
+
+    renderDelegateTask(context, delegateTask, stateExecutionContext);
+    ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
+
+    stateExecutionDataBuilder.commandFlags(
+        expressionEvaluator.substitute(helmReleaseHistoryCommandRequest.getCommandFlags(), Collections.emptyMap()));
 
     HelmCommandExecutionResponse helmCommandExecutionResponse;
     ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
@@ -588,13 +607,7 @@ public class HelmDeployState extends State {
 
   private String obtainCommandFlags(ExecutionContext context) {
     if (getStateType().equals(HELM_DEPLOY.name())) {
-      String cmdFlags = getCommandFlags();
-
-      if (isNotBlank(cmdFlags)) {
-        cmdFlags = context.renderExpression(cmdFlags);
-      }
-
-      return cmdFlags;
+      return getCommandFlags();
     } else {
       HelmDeployContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
       if (contextElement == null) {
@@ -764,20 +777,20 @@ public class HelmDeployState extends State {
       evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
     }
 
-    HelmDeployStateExecutionData stateExecutionData = HelmDeployStateExecutionData.builder()
-                                                          .activityId(activityId)
-                                                          .releaseName(releaseName)
-                                                          .namespace(containerServiceParams.getNamespace())
-                                                          .commandFlags(cmdFlags)
-                                                          .currentTaskType(HELM_COMMAND_TASK)
-                                                          .build();
+    HelmDeployStateExecutionDataBuilder stateExecutionDataBuilder =
+        HelmDeployStateExecutionData.builder()
+            .activityId(activityId)
+            .releaseName(releaseName)
+            .namespace(containerServiceParams.getNamespace())
+            .commandFlags(cmdFlags)
+            .currentTaskType(HELM_COMMAND_TASK);
 
     setHelmExecutionSummary(context, releaseName, helmChartSpecification, repoConfig);
 
     if (helmChartSpecification != null) {
-      stateExecutionData.setChartName(helmChartSpecification.getChartName());
-      stateExecutionData.setChartRepositoryUrl(helmChartSpecification.getChartUrl());
-      stateExecutionData.setChartVersion(helmChartSpecification.getChartVersion());
+      stateExecutionDataBuilder.chartName(helmChartSpecification.getChartName());
+      stateExecutionDataBuilder.chartRepositoryUrl(helmChartSpecification.getChartUrl());
+      stateExecutionDataBuilder.chartVersion(helmChartSpecification.getChartVersion());
     }
 
     ImageDetails imageDetails = null;
@@ -809,8 +822,9 @@ public class HelmDeployState extends State {
       encryptedDataDetails = fetchEncryptedDataDetail(context, gitConfig);
     }
 
-    setNewAndPrevReleaseVersion(context, app, releaseName, containerServiceParams, stateExecutionData, gitConfig,
-        encryptedDataDetails, cmdFlags, helmVersion);
+    final int expressionFunctorToken = HashGenerator.generateIntegerHash();
+    setNewAndPrevReleaseVersion(context, app, releaseName, containerServiceParams, stateExecutionDataBuilder, gitConfig,
+        encryptedDataDetails, cmdFlags, helmVersion, expressionFunctorToken);
     HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
         releaseName, app.getAccountId(), app.getUuid(), activityId, imageDetails, repoName, gitConfig,
         encryptedDataDetails, cmdFlags, repoConfig, appManifestMap, helmVersion);
@@ -818,25 +832,48 @@ public class HelmDeployState extends State {
     List<String> tags = new ArrayList<>();
     tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams));
 
-    delegateService.queueTask(DelegateTask.builder()
-                                  .accountId(app.getAccountId())
-                                  .appId(app.getUuid())
-                                  .waitId(activityId)
-                                  .tags(tags)
-                                  .data(TaskData.builder()
-                                            .async(true)
-                                            .taskType(HELM_COMMAND_TASK.name())
-                                            .parameters(new Object[] {commandRequest})
-                                            .timeout(TimeUnit.HOURS.toMillis(1))
-                                            .build())
-                                  .envId(env.getUuid())
-                                  .infrastructureMappingId(containerInfraMapping.getUuid())
-                                  .build());
+    StateExecutionContext stateExecutionContext =
+        buildStateExecutionContext(stateExecutionDataBuilder, expressionFunctorToken);
+
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(app.getAccountId())
+                                    .appId(app.getUuid())
+                                    .waitId(activityId)
+                                    .tags(tags)
+                                    .data(TaskData.builder()
+                                              .async(true)
+                                              .taskType(HELM_COMMAND_TASK.name())
+                                              .parameters(new Object[] {commandRequest})
+                                              .timeout(TimeUnit.HOURS.toMillis(1))
+                                              .expressionFunctorToken(expressionFunctorToken)
+                                              .build())
+                                    .envId(env.getUuid())
+                                    .infrastructureMappingId(containerInfraMapping.getUuid())
+                                    .build();
+
+    renderDelegateTask(context, delegateTask, stateExecutionContext);
+    ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
+
+    stateExecutionDataBuilder.commandFlags(
+        expressionEvaluator.substitute(commandRequest.getCommandFlags(), Collections.emptyMap()));
+
+    delegateService.queueTask(delegateTask);
+
     return ExecutionResponse.builder()
         .correlationIds(singletonList(activityId))
-        .stateExecutionData(stateExecutionData)
+        .stateExecutionData(stateExecutionDataBuilder.build())
         .async(true)
         .build();
+  }
+
+  private StateExecutionContext buildStateExecutionContext(
+      HelmDeployStateExecutionDataBuilder stateExecutionDataBuilder, final int expressionFunctorToken) {
+    StateExecutionContextBuilder stateExecutionContextBuilder =
+        StateExecutionContext.builder().adoptDelegateDecryption(true).expressionFunctorToken(expressionFunctorToken);
+    if (stateExecutionDataBuilder != null) {
+      stateExecutionContextBuilder.stateExecutionData(stateExecutionDataBuilder.build());
+    }
+    return stateExecutionContextBuilder.build();
   }
 
   @VisibleForTesting
@@ -887,6 +924,16 @@ public class HelmDeployState extends State {
     if (fetchFilesTaskParams.isBindTaskFeatureSet()) {
       tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(fetchFilesTaskParams.getContainerServiceParams()));
     }
+    final int expressionFunctorToken = HashGenerator.generateIntegerHash();
+
+    HelmDeployStateExecutionDataBuilder helmDeployStateExecutionDataBuilder = HelmDeployStateExecutionData.builder()
+                                                                                  .activityId(activityId)
+                                                                                  .commandName(HELM_COMMAND_NAME)
+                                                                                  .currentTaskType(TaskType.GIT_COMMAND)
+                                                                                  .appManifestMap(appManifestMap);
+
+    StateExecutionContext stateExecutionContext =
+        buildStateExecutionContext(helmDeployStateExecutionDataBuilder, expressionFunctorToken);
 
     String waitId = generateUuid();
     DelegateTask delegateTask =
@@ -902,8 +949,11 @@ public class HelmDeployState extends State {
                       .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
                       .parameters(new Object[] {fetchFilesTaskParams})
                       .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
+                      .expressionFunctorToken(expressionFunctorToken)
                       .build())
             .build();
+
+    renderDelegateTask(context, delegateTask, stateExecutionContext);
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
@@ -912,17 +962,12 @@ public class HelmDeployState extends State {
     if (stateExecutionData != null) {
       valuesFiles.putAll(stateExecutionData.getValuesFiles());
     }
+    helmDeployStateExecutionDataBuilder.valuesFiles(valuesFiles);
 
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Arrays.asList(waitId))
-        .stateExecutionData(HelmDeployStateExecutionData.builder()
-                                .activityId(activityId)
-                                .commandName(HELM_COMMAND_NAME)
-                                .currentTaskType(TaskType.GIT_COMMAND)
-                                .appManifestMap(appManifestMap)
-                                .valuesFiles(valuesFiles)
-                                .build())
+        .stateExecutionData(helmDeployStateExecutionDataBuilder.build())
         .delegateTaskId(delegateTaskId)
         .build();
   }
@@ -1058,7 +1103,6 @@ public class HelmDeployState extends State {
                     yamlFileContent.replaceAll(HELM_NAMESPACE_PLACEHOLDER_REGEX, containerServiceParams.getNamespace());
                 return yamlFileContent;
               })
-              .map(context::renderExpression)
               .collect(Collectors.toList());
     }
 
@@ -1100,6 +1144,17 @@ public class HelmDeployState extends State {
     }
 
     String waitId = generateUuid();
+    final int expressionFunctorToken = HashGenerator.generateIntegerHash();
+
+    HelmDeployStateExecutionDataBuilder helmDeployStateExecutionDataBuilder =
+        HelmDeployStateExecutionData.builder()
+            .activityId(activityId)
+            .commandName(HELM_COMMAND_NAME)
+            .currentTaskType(TaskType.HELM_VALUES_FETCH);
+
+    StateExecutionContext stateExecutionContext =
+        buildStateExecutionContext(helmDeployStateExecutionDataBuilder, expressionFunctorToken);
+
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
@@ -1112,20 +1167,23 @@ public class HelmDeployState extends State {
                       .async(true)
                       .taskType(TaskType.HELM_VALUES_FETCH.name())
                       .parameters(new Object[] {helmValuesFetchTaskParameters})
+                      .expressionFunctorToken(expressionFunctorToken)
                       .timeout(TimeUnit.MINUTES.toMillis(10))
                       .build())
             .build();
+
+    renderDelegateTask(context, delegateTask, stateExecutionContext);
+    ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
+
+    helmDeployStateExecutionDataBuilder.commandFlags(
+        expressionEvaluator.substitute(helmValuesFetchTaskParameters.getHelmCommandFlags(), Collections.emptyMap()));
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Arrays.asList(waitId))
-        .stateExecutionData(HelmDeployStateExecutionData.builder()
-                                .activityId(activityId)
-                                .commandName(HELM_COMMAND_NAME)
-                                .currentTaskType(TaskType.HELM_VALUES_FETCH)
-                                .build())
+        .stateExecutionData(helmDeployStateExecutionDataBuilder.build())
         .delegateTaskId(delegateTaskId)
         .build();
   }

@@ -5,6 +5,9 @@ import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V2;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.ActivityAccess;
+import io.harness.delegate.task.TaskParameters;
+import io.harness.expression.Expression;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +29,7 @@ import java.util.List;
  */
 @Data
 @AllArgsConstructor
-public class HelmCommandRequest implements ExecutionCapabilityDemander {
+public class HelmCommandRequest implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   @NotEmpty private HelmCommandType helmCommandType;
   private String accountId;
   private String appId;
@@ -40,7 +43,7 @@ public class HelmCommandRequest implements ExecutionCapabilityDemander {
   private GitConfig gitConfig;
   private List<EncryptedDataDetail> encryptedDataDetails;
   @JsonIgnore private transient LogCallback executionLogCallback;
-  private String commandFlags;
+  @Expression private String commandFlags;
   private K8sDelegateManifestConfig repoConfig;
   @Builder.Default private HelmVersion helmVersion = V2;
 

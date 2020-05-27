@@ -7,7 +7,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.context.ContextElementType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.api.HelmDeployContextElement;
-import software.wings.api.HelmDeployStateExecutionData;
+import software.wings.api.HelmDeployStateExecutionData.HelmDeployStateExecutionDataBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
@@ -86,14 +86,14 @@ public class HelmRollbackState extends HelmDeployState {
 
   @Override
   protected void setNewAndPrevReleaseVersion(ExecutionContext context, Application app, String releaseName,
-      ContainerServiceParams containerServiceParams, HelmDeployStateExecutionData stateExecutionData,
-      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails, String commandFlags,
-      HelmVersion helmVersion) {
+      ContainerServiceParams containerServiceParams, HelmDeployStateExecutionDataBuilder stateExecutionDataBuilder,
+      GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, HelmVersion helmVersion,
+      int expressionFunctorToken) {
     HelmDeployContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
     if (contextElement != null) {
-      stateExecutionData.setReleaseOldVersion(contextElement.getNewReleaseRevision());
-      stateExecutionData.setReleaseNewVersion(contextElement.getNewReleaseRevision() + 1);
-      stateExecutionData.setRollbackVersion(contextElement.getPreviousReleaseRevision());
+      stateExecutionDataBuilder.releaseOldVersion(contextElement.getNewReleaseRevision());
+      stateExecutionDataBuilder.releaseNewVersion(contextElement.getNewReleaseRevision() + 1);
+      stateExecutionDataBuilder.rollbackVersion(contextElement.getPreviousReleaseRevision());
     }
   }
 
