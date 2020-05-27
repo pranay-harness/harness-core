@@ -163,6 +163,114 @@ public final class DelegateServiceGrpc {
     return getTaskProgressUpdatesMethod;
   }
 
+  private static volatile io.grpc.MethodDescriptor<io.harness.delegate.CreatePerpetualTaskRequest,
+      io.harness.delegate.CreatePerpetualTaskResponse> getCreatePerpetualTaskMethod;
+
+  @io.grpc.stub.annotations
+      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "CreatePerpetualTask",
+          requestType = io.harness.delegate.CreatePerpetualTaskRequest.class,
+          responseType = io.harness.delegate.CreatePerpetualTaskResponse.class,
+          methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+      public static io.grpc
+      .MethodDescriptor<io.harness.delegate.CreatePerpetualTaskRequest, io.harness.delegate.CreatePerpetualTaskResponse>
+      getCreatePerpetualTaskMethod() {
+    io.grpc.MethodDescriptor<io.harness.delegate.CreatePerpetualTaskRequest,
+        io.harness.delegate.CreatePerpetualTaskResponse> getCreatePerpetualTaskMethod;
+    if ((getCreatePerpetualTaskMethod = DelegateServiceGrpc.getCreatePerpetualTaskMethod) == null) {
+      synchronized (DelegateServiceGrpc.class) {
+        if ((getCreatePerpetualTaskMethod = DelegateServiceGrpc.getCreatePerpetualTaskMethod) == null) {
+          DelegateServiceGrpc.getCreatePerpetualTaskMethod = getCreatePerpetualTaskMethod =
+              io.grpc.MethodDescriptor
+                  .<io.harness.delegate.CreatePerpetualTaskRequest,
+                      io.harness.delegate.CreatePerpetualTaskResponse>newBuilder()
+                  .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+                  .setFullMethodName(
+                      generateFullMethodName("io.harness.delegate.DelegateService", "CreatePerpetualTask"))
+                  .setSampledToLocalTracing(true)
+                  .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.delegate.CreatePerpetualTaskRequest.getDefaultInstance()))
+                  .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.delegate.CreatePerpetualTaskResponse.getDefaultInstance()))
+                  .setSchemaDescriptor(new DelegateServiceMethodDescriptorSupplier("CreatePerpetualTask"))
+                  .build();
+        }
+      }
+    }
+    return getCreatePerpetualTaskMethod;
+  }
+
+  private static volatile io.grpc.MethodDescriptor<io.harness.delegate.DeletePerpetualTaskRequest,
+      io.harness.delegate.DeletePerpetualTaskResponse> getDeletePerpetualTaskMethod;
+
+  @io.grpc.stub.annotations
+      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "DeletePerpetualTask",
+          requestType = io.harness.delegate.DeletePerpetualTaskRequest.class,
+          responseType = io.harness.delegate.DeletePerpetualTaskResponse.class,
+          methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+      public static io.grpc
+      .MethodDescriptor<io.harness.delegate.DeletePerpetualTaskRequest, io.harness.delegate.DeletePerpetualTaskResponse>
+      getDeletePerpetualTaskMethod() {
+    io.grpc.MethodDescriptor<io.harness.delegate.DeletePerpetualTaskRequest,
+        io.harness.delegate.DeletePerpetualTaskResponse> getDeletePerpetualTaskMethod;
+    if ((getDeletePerpetualTaskMethod = DelegateServiceGrpc.getDeletePerpetualTaskMethod) == null) {
+      synchronized (DelegateServiceGrpc.class) {
+        if ((getDeletePerpetualTaskMethod = DelegateServiceGrpc.getDeletePerpetualTaskMethod) == null) {
+          DelegateServiceGrpc.getDeletePerpetualTaskMethod = getDeletePerpetualTaskMethod =
+              io.grpc.MethodDescriptor
+                  .<io.harness.delegate.DeletePerpetualTaskRequest,
+                      io.harness.delegate.DeletePerpetualTaskResponse>newBuilder()
+                  .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+                  .setFullMethodName(
+                      generateFullMethodName("io.harness.delegate.DelegateService", "DeletePerpetualTask"))
+                  .setSampledToLocalTracing(true)
+                  .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.delegate.DeletePerpetualTaskRequest.getDefaultInstance()))
+                  .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.delegate.DeletePerpetualTaskResponse.getDefaultInstance()))
+                  .setSchemaDescriptor(new DelegateServiceMethodDescriptorSupplier("DeletePerpetualTask"))
+                  .build();
+        }
+      }
+    }
+    return getDeletePerpetualTaskMethod;
+  }
+
+  private static volatile io.grpc.MethodDescriptor<io.harness.delegate.ResetPerpetualTaskRequest,
+      io.harness.delegate.ResetPerpetualTaskResponse> getResetPerpetualTaskMethod;
+
+  @io.grpc.stub.annotations
+      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "ResetPerpetualTask",
+          requestType = io.harness.delegate.ResetPerpetualTaskRequest.class,
+          responseType = io.harness.delegate.ResetPerpetualTaskResponse.class,
+          methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+      public static io.grpc
+      .MethodDescriptor<io.harness.delegate.ResetPerpetualTaskRequest, io.harness.delegate.ResetPerpetualTaskResponse>
+      getResetPerpetualTaskMethod() {
+    io.grpc.MethodDescriptor<io.harness.delegate.ResetPerpetualTaskRequest,
+        io.harness.delegate.ResetPerpetualTaskResponse> getResetPerpetualTaskMethod;
+    if ((getResetPerpetualTaskMethod = DelegateServiceGrpc.getResetPerpetualTaskMethod) == null) {
+      synchronized (DelegateServiceGrpc.class) {
+        if ((getResetPerpetualTaskMethod = DelegateServiceGrpc.getResetPerpetualTaskMethod) == null) {
+          DelegateServiceGrpc.getResetPerpetualTaskMethod = getResetPerpetualTaskMethod =
+              io.grpc.MethodDescriptor
+                  .<io.harness.delegate.ResetPerpetualTaskRequest,
+                      io.harness.delegate.ResetPerpetualTaskResponse>newBuilder()
+                  .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+                  .setFullMethodName(
+                      generateFullMethodName("io.harness.delegate.DelegateService", "ResetPerpetualTask"))
+                  .setSampledToLocalTracing(true)
+                  .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.delegate.ResetPerpetualTaskRequest.getDefaultInstance()))
+                  .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.delegate.ResetPerpetualTaskResponse.getDefaultInstance()))
+                  .setSchemaDescriptor(new DelegateServiceMethodDescriptorSupplier("ResetPerpetualTask"))
+                  .build();
+        }
+      }
+    }
+    return getResetPerpetualTaskMethod;
+  }
+
   /**
    * Creates a new async stub that supports all call types for the service
    */
@@ -215,6 +323,27 @@ public final class DelegateServiceGrpc {
       asyncUnimplementedUnaryCall(getTaskProgressUpdatesMethod(), responseObserver);
     }
 
+    /**
+     */
+    public void createPerpetualTask(io.harness.delegate.CreatePerpetualTaskRequest request,
+        io.grpc.stub.StreamObserver<io.harness.delegate.CreatePerpetualTaskResponse> responseObserver) {
+      asyncUnimplementedUnaryCall(getCreatePerpetualTaskMethod(), responseObserver);
+    }
+
+    /**
+     */
+    public void deletePerpetualTask(io.harness.delegate.DeletePerpetualTaskRequest request,
+        io.grpc.stub.StreamObserver<io.harness.delegate.DeletePerpetualTaskResponse> responseObserver) {
+      asyncUnimplementedUnaryCall(getDeletePerpetualTaskMethod(), responseObserver);
+    }
+
+    /**
+     */
+    public void resetPerpetualTask(io.harness.delegate.ResetPerpetualTaskRequest request,
+        io.grpc.stub.StreamObserver<io.harness.delegate.ResetPerpetualTaskResponse> responseObserver) {
+      asyncUnimplementedUnaryCall(getResetPerpetualTaskMethod(), responseObserver);
+    }
+
     @java.
     lang.Override
     public final io.grpc.ServerServiceDefinition bindService() {
@@ -234,6 +363,15 @@ public final class DelegateServiceGrpc {
           .addMethod(getTaskProgressUpdatesMethod(),
               asyncServerStreamingCall(new MethodHandlers<io.harness.delegate.TaskProgressUpdatesRequest,
                   io.harness.delegate.TaskProgressUpdatesResponse>(this, METHODID_TASK_PROGRESS_UPDATES)))
+          .addMethod(getCreatePerpetualTaskMethod(),
+              asyncUnaryCall(new MethodHandlers<io.harness.delegate.CreatePerpetualTaskRequest,
+                  io.harness.delegate.CreatePerpetualTaskResponse>(this, METHODID_CREATE_PERPETUAL_TASK)))
+          .addMethod(getDeletePerpetualTaskMethod(),
+              asyncUnaryCall(new MethodHandlers<io.harness.delegate.DeletePerpetualTaskRequest,
+                  io.harness.delegate.DeletePerpetualTaskResponse>(this, METHODID_DELETE_PERPETUAL_TASK)))
+          .addMethod(getResetPerpetualTaskMethod(),
+              asyncUnaryCall(new MethodHandlers<io.harness.delegate.ResetPerpetualTaskRequest,
+                  io.harness.delegate.ResetPerpetualTaskResponse>(this, METHODID_RESET_PERPETUAL_TASK)))
           .build();
     }
   }
@@ -282,6 +420,27 @@ public final class DelegateServiceGrpc {
       asyncServerStreamingCall(
           getChannel().newCall(getTaskProgressUpdatesMethod(), getCallOptions()), request, responseObserver);
     }
+
+    /**
+     */
+    public void createPerpetualTask(io.harness.delegate.CreatePerpetualTaskRequest request,
+        io.grpc.stub.StreamObserver<io.harness.delegate.CreatePerpetualTaskResponse> responseObserver) {
+      asyncUnaryCall(getChannel().newCall(getCreatePerpetualTaskMethod(), getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
+    public void deletePerpetualTask(io.harness.delegate.DeletePerpetualTaskRequest request,
+        io.grpc.stub.StreamObserver<io.harness.delegate.DeletePerpetualTaskResponse> responseObserver) {
+      asyncUnaryCall(getChannel().newCall(getDeletePerpetualTaskMethod(), getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
+    public void resetPerpetualTask(io.harness.delegate.ResetPerpetualTaskRequest request,
+        io.grpc.stub.StreamObserver<io.harness.delegate.ResetPerpetualTaskResponse> responseObserver) {
+      asyncUnaryCall(getChannel().newCall(getResetPerpetualTaskMethod(), getCallOptions()), request, responseObserver);
+    }
   }
 
   /**
@@ -324,6 +483,27 @@ public final class DelegateServiceGrpc {
         io.harness.delegate.TaskProgressUpdatesRequest request) {
       return blockingServerStreamingCall(getChannel(), getTaskProgressUpdatesMethod(), getCallOptions(), request);
     }
+
+    /**
+     */
+    public io.harness.delegate.CreatePerpetualTaskResponse createPerpetualTask(
+        io.harness.delegate.CreatePerpetualTaskRequest request) {
+      return blockingUnaryCall(getChannel(), getCreatePerpetualTaskMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public io.harness.delegate.DeletePerpetualTaskResponse deletePerpetualTask(
+        io.harness.delegate.DeletePerpetualTaskRequest request) {
+      return blockingUnaryCall(getChannel(), getDeletePerpetualTaskMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public io.harness.delegate.ResetPerpetualTaskResponse resetPerpetualTask(
+        io.harness.delegate.ResetPerpetualTaskRequest request) {
+      return blockingUnaryCall(getChannel(), getResetPerpetualTaskMethod(), getCallOptions(), request);
+    }
   }
 
   /**
@@ -362,12 +542,36 @@ public final class DelegateServiceGrpc {
         io.harness.delegate.TaskProgressRequest request) {
       return futureUnaryCall(getChannel().newCall(getTaskProgressMethod(), getCallOptions()), request);
     }
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<io.harness.delegate.CreatePerpetualTaskResponse>
+    createPerpetualTask(io.harness.delegate.CreatePerpetualTaskRequest request) {
+      return futureUnaryCall(getChannel().newCall(getCreatePerpetualTaskMethod(), getCallOptions()), request);
+    }
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<io.harness.delegate.DeletePerpetualTaskResponse>
+    deletePerpetualTask(io.harness.delegate.DeletePerpetualTaskRequest request) {
+      return futureUnaryCall(getChannel().newCall(getDeletePerpetualTaskMethod(), getCallOptions()), request);
+    }
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<io.harness.delegate.ResetPerpetualTaskResponse>
+    resetPerpetualTask(io.harness.delegate.ResetPerpetualTaskRequest request) {
+      return futureUnaryCall(getChannel().newCall(getResetPerpetualTaskMethod(), getCallOptions()), request);
+    }
   }
 
   private static final int METHODID_SUBMIT_TASK = 0;
   private static final int METHODID_CANCEL_TASK = 1;
   private static final int METHODID_TASK_PROGRESS = 2;
   private static final int METHODID_TASK_PROGRESS_UPDATES = 3;
+  private static final int METHODID_CREATE_PERPETUAL_TASK = 4;
+  private static final int METHODID_DELETE_PERPETUAL_TASK = 5;
+  private static final int METHODID_RESET_PERPETUAL_TASK = 6;
 
   private static final class MethodHandlers<Req, Resp>
       implements io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -402,6 +606,18 @@ public final class DelegateServiceGrpc {
         case METHODID_TASK_PROGRESS_UPDATES:
           serviceImpl.taskProgressUpdates((io.harness.delegate.TaskProgressUpdatesRequest) request,
               (io.grpc.stub.StreamObserver<io.harness.delegate.TaskProgressUpdatesResponse>) responseObserver);
+          break;
+        case METHODID_CREATE_PERPETUAL_TASK:
+          serviceImpl.createPerpetualTask((io.harness.delegate.CreatePerpetualTaskRequest) request,
+              (io.grpc.stub.StreamObserver<io.harness.delegate.CreatePerpetualTaskResponse>) responseObserver);
+          break;
+        case METHODID_DELETE_PERPETUAL_TASK:
+          serviceImpl.deletePerpetualTask((io.harness.delegate.DeletePerpetualTaskRequest) request,
+              (io.grpc.stub.StreamObserver<io.harness.delegate.DeletePerpetualTaskResponse>) responseObserver);
+          break;
+        case METHODID_RESET_PERPETUAL_TASK:
+          serviceImpl.resetPerpetualTask((io.harness.delegate.ResetPerpetualTaskRequest) request,
+              (io.grpc.stub.StreamObserver<io.harness.delegate.ResetPerpetualTaskResponse>) responseObserver);
           break;
         default:
           throw new AssertionError();
@@ -470,6 +686,9 @@ public final class DelegateServiceGrpc {
                                            .addMethod(getCancelTaskMethod())
                                            .addMethod(getTaskProgressMethod())
                                            .addMethod(getTaskProgressUpdatesMethod())
+                                           .addMethod(getCreatePerpetualTaskMethod())
+                                           .addMethod(getDeletePerpetualTaskMethod())
+                                           .addMethod(getResetPerpetualTaskMethod())
                                            .build();
         }
       }

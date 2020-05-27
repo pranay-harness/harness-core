@@ -4,20 +4,28 @@ package io.harness.delegate;
 
 option java_multiple_files = true;
 
+import "io/harness/delegate/account.proto";
 import "io/harness/delegate/task.proto";
 import "io/harness/delegate/progress.proto";
+
+import "io/harness/perpetualtask/perpetual_task.proto";
 
 service DelegateService {
   rpc SubmitTask(SubmitTaskRequest) returns (SubmitTaskResponse);
   rpc CancelTask(CancelTaskRequest) returns (CancelTaskResponse);
   rpc TaskProgress(TaskProgressRequest) returns (TaskProgressResponse);
   rpc TaskProgressUpdates(TaskProgressUpdatesRequest) returns (stream TaskProgressUpdatesResponse);
+
+  rpc CreatePerpetualTask(CreatePerpetualTaskRequest) returns (CreatePerpetualTaskResponse);
+  rpc DeletePerpetualTask(DeletePerpetualTaskRequest) returns (DeletePerpetualTaskResponse);
+  rpc ResetPerpetualTask(ResetPerpetualTaskRequest) returns (ResetPerpetualTaskResponse);
 }
 
 message SubmitTaskRequest {
-  TaskSetupAbstractions setup_abstractions = 1;
-  TaskDetails details = 2;
-  TaskCapabilities capabilities = 3;
+  AccountId account_id = 1;
+  TaskSetupAbstractions setup_abstractions = 2;
+  TaskDetails details = 3;
+  TaskCapabilities capabilities = 4;
 }
 
 message SubmitTaskResponse {
@@ -46,4 +54,30 @@ message TaskProgressUpdatesRequest {
 
 message TaskProgressUpdatesResponse {
   TaskExecutionStage currently_at_stage = 1;
+}
+
+message CreatePerpetualTaskRequest {
+  AccountId account_id = 1;
+  string type = 2;
+  perpetualtask.PerpetualTaskSchedule schedule = 3;
+  perpetualtask.PerpetualTaskContext context = 4;
+  bool allow_duplicate = 5;
+}
+
+message CreatePerpetualTaskResponse {
+  perpetualtask.PerpetualTaskId perpetual_task_id = 1;
+}
+
+message DeletePerpetualTaskRequest {
+  perpetualtask.PerpetualTaskId perpetual_task_id = 1;
+}
+
+message DeletePerpetualTaskResponse {
+}
+
+message ResetPerpetualTaskRequest {
+  perpetualtask.PerpetualTaskId perpetual_task_id = 1;
+}
+
+message ResetPerpetualTaskResponse {
 }

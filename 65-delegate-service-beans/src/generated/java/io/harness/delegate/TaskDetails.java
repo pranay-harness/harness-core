@@ -20,9 +20,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
   private TaskDetails(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private TaskDetails() {
-    type_ = "";
-  }
+  private TaskDetails() {}
 
   @java.
   lang.Override
@@ -46,18 +44,25 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
           case 0:
             done = true;
             break;
-          case 10: {
-            java.lang.String s = input.readStringRequireUtf8();
-
-            type_ = s;
-            break;
-          }
           case 18: {
-            parametersCase_ = 2;
-            parameters_ = input.readBytes();
+            io.harness.delegate.TaskType.Builder subBuilder = null;
+            if (type_ != null) {
+              subBuilder = type_.toBuilder();
+            }
+            type_ = input.readMessage(io.harness.delegate.TaskType.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(type_);
+              type_ = subBuilder.buildPartial();
+            }
+
             break;
           }
           case 26: {
+            parametersCase_ = 3;
+            parameters_ = input.readBytes();
+            break;
+          }
+          case 34: {
             com.google.protobuf.Duration.Builder subBuilder = null;
             if (executionTimeout_ != null) {
               subBuilder = executionTimeout_.toBuilder();
@@ -70,7 +75,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
 
             break;
           }
-          case 34: {
+          case 42: {
             if (!((mutable_bitField0_ & 0x00000008) != 0)) {
               expressions_ = com.google.protobuf.MapField.newMapField(ExpressionsDefaultEntryHolder.defaultEntry);
               mutable_bitField0_ |= 0x00000008;
@@ -80,7 +85,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
             expressions_.getMutableMap().put(expressions__.getKey(), expressions__.getValue());
             break;
           }
-          case 40: {
+          case 48: {
             expressionFunctorToken_ = input.readInt64();
             break;
           }
@@ -110,7 +115,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
   lang.Override
   protected com.google.protobuf.MapField internalGetMapField(int number) {
     switch (number) {
-      case 4:
+      case 5:
         return internalGetExpressions();
       default:
         throw new RuntimeException("Invalid map field number: " + number);
@@ -129,7 +134,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
   private java.lang.Object parameters_;
   public enum ParametersCase implements com
   .google.protobuf.Internal.EnumLite {
-    KRYO_PARAMETERS(2), PARAMETERS_NOT_SET(0);
+    KRYO_PARAMETERS(3), PARAMETERS_NOT_SET(0);
     private final int value;
     private ParametersCase(int value) {
       this.value = value;
@@ -144,7 +149,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
 
     public static ParametersCase forNumber(int value) {
       switch (value) {
-        case 2:
+        case 3:
           return KRYO_PARAMETERS;
         case 0:
           return PARAMETERS_NOT_SET;
@@ -161,26 +166,18 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     return ParametersCase.forNumber(parametersCase_);
   }
 
-  public static final int TYPE_FIELD_NUMBER = 1;
-  private volatile java.lang.Object type_;
+  public static final int TYPE_FIELD_NUMBER = 2;
+  private io.harness.delegate.TaskType type_;
   /**
    * <pre>
    * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
    * actual task executor. TODO: more details
    * </pre>
    *
-   * <code>string type = 1;</code>
+   * <code>.io.harness.delegate.TaskType type = 2;</code>
    */
-  public java.lang.String getType() {
-    java.lang.Object ref = type_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      type_ = s;
-      return s;
-    }
+  public boolean hasType() {
+    return type_ != null;
   }
   /**
    * <pre>
@@ -188,36 +185,40 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
    * actual task executor. TODO: more details
    * </pre>
    *
-   * <code>string type = 1;</code>
+   * <code>.io.harness.delegate.TaskType type = 2;</code>
    */
-  public com.google.protobuf.ByteString getTypeBytes() {
-    java.lang.Object ref = type_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-      type_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
+  public io.harness.delegate.TaskType getType() {
+    return type_ == null ? io.harness.delegate.TaskType.getDefaultInstance() : type_;
+  }
+  /**
+   * <pre>
+   * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+   * actual task executor. TODO: more details
+   * </pre>
+   *
+   * <code>.io.harness.delegate.TaskType type = 2;</code>
+   */
+  public io.harness.delegate.TaskTypeOrBuilder getTypeOrBuilder() {
+    return getType();
   }
 
-  public static final int KRYO_PARAMETERS_FIELD_NUMBER = 2;
+  public static final int KRYO_PARAMETERS_FIELD_NUMBER = 3;
   /**
    * <pre>
    * Using kryo java serialization, useful for java based task where java annotation play important role of
    * determining encrypted fields and expressions.
    * </pre>
    *
-   * <code>bytes kryo_parameters = 2;</code>
+   * <code>bytes kryo_parameters = 3;</code>
    */
   public com.google.protobuf.ByteString getKryoParameters() {
-    if (parametersCase_ == 2) {
+    if (parametersCase_ == 3) {
       return (com.google.protobuf.ByteString) parameters_;
     }
     return com.google.protobuf.ByteString.EMPTY;
   }
 
-  public static final int EXECUTION_TIMEOUT_FIELD_NUMBER = 3;
+  public static final int EXECUTION_TIMEOUT_FIELD_NUMBER = 4;
   private com.google.protobuf.Duration executionTimeout_;
   /**
    * <pre>
@@ -225,7 +226,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
    * NOTE: this time does not include the time the task was in the queue. This is determined independently.
    * </pre>
    *
-   * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+   * <code>.google.protobuf.Duration execution_timeout = 4;</code>
    */
   public boolean hasExecutionTimeout() {
     return executionTimeout_ != null;
@@ -236,7 +237,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
    * NOTE: this time does not include the time the task was in the queue. This is determined independently.
    * </pre>
    *
-   * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+   * <code>.google.protobuf.Duration execution_timeout = 4;</code>
    */
   public com.google.protobuf.Duration getExecutionTimeout() {
     return executionTimeout_ == null ? com.google.protobuf.Duration.getDefaultInstance() : executionTimeout_;
@@ -247,13 +248,13 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
    * NOTE: this time does not include the time the task was in the queue. This is determined independently.
    * </pre>
    *
-   * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+   * <code>.google.protobuf.Duration execution_timeout = 4;</code>
    */
   public com.google.protobuf.DurationOrBuilder getExecutionTimeoutOrBuilder() {
     return getExecutionTimeout();
   }
 
-  public static final int EXPRESSIONS_FIELD_NUMBER = 4;
+  public static final int EXPRESSIONS_FIELD_NUMBER = 5;
   private static final class ExpressionsDefaultEntryHolder {
     static final com.google.protobuf.MapEntry<java.lang.String, java.lang.String> defaultEntry =
         com.google.protobuf.MapEntry.<java.lang.String, java.lang.String>newDefaultInstance(
@@ -278,7 +279,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
    * task execution.
    * </pre>
    *
-   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   * <code>map&lt;string, string&gt; expressions = 5;</code>
    */
 
   public boolean containsExpressions(java.lang.String key) {
@@ -302,7 +303,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
    * task execution.
    * </pre>
    *
-   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   * <code>map&lt;string, string&gt; expressions = 5;</code>
    */
 
   public java.util.Map<java.lang.String, java.lang.String> getExpressionsMap() {
@@ -315,7 +316,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
    * task execution.
    * </pre>
    *
-   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   * <code>map&lt;string, string&gt; expressions = 5;</code>
    */
 
   public java.lang.String getExpressionsOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -332,7 +333,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
    * task execution.
    * </pre>
    *
-   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   * <code>map&lt;string, string&gt; expressions = 5;</code>
    */
 
   public java.lang.String getExpressionsOrThrow(java.lang.String key) {
@@ -346,7 +347,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     return map.get(key);
   }
 
-  public static final int EXPRESSION_FUNCTOR_TOKEN_FIELD_NUMBER = 5;
+  public static final int EXPRESSION_FUNCTOR_TOKEN_FIELD_NUMBER = 6;
   private long expressionFunctorToken_;
   /**
    * <pre>
@@ -354,7 +355,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
    * obtaining secrets are system generated, and not a hack from customers input.
    * </pre>
    *
-   * <code>int64 expression_functor_token = 5;</code>
+   * <code>int64 expression_functor_token = 6;</code>
    */
   public long getExpressionFunctorToken() {
     return expressionFunctorToken_;
@@ -375,19 +376,19 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (!getTypeBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, type_);
+    if (type_ != null) {
+      output.writeMessage(2, getType());
     }
-    if (parametersCase_ == 2) {
-      output.writeBytes(2, (com.google.protobuf.ByteString) parameters_);
+    if (parametersCase_ == 3) {
+      output.writeBytes(3, (com.google.protobuf.ByteString) parameters_);
     }
     if (executionTimeout_ != null) {
-      output.writeMessage(3, getExecutionTimeout());
+      output.writeMessage(4, getExecutionTimeout());
     }
     com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
-        output, internalGetExpressions(), ExpressionsDefaultEntryHolder.defaultEntry, 4);
+        output, internalGetExpressions(), ExpressionsDefaultEntryHolder.defaultEntry, 5);
     if (expressionFunctorToken_ != 0L) {
-      output.writeInt64(5, expressionFunctorToken_);
+      output.writeInt64(6, expressionFunctorToken_);
     }
     unknownFields.writeTo(output);
   }
@@ -399,14 +400,14 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
       return size;
 
     size = 0;
-    if (!getTypeBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, type_);
+    if (type_ != null) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getType());
     }
-    if (parametersCase_ == 2) {
-      size += com.google.protobuf.CodedOutputStream.computeBytesSize(2, (com.google.protobuf.ByteString) parameters_);
+    if (parametersCase_ == 3) {
+      size += com.google.protobuf.CodedOutputStream.computeBytesSize(3, (com.google.protobuf.ByteString) parameters_);
     }
     if (executionTimeout_ != null) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, getExecutionTimeout());
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(4, getExecutionTimeout());
     }
     for (java.util.Map.Entry<java.lang.String, java.lang.String> entry : internalGetExpressions().getMap().entrySet()) {
       com.google.protobuf.MapEntry<java.lang.String, java.lang.String> expressions__ =
@@ -414,10 +415,10 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
               .setKey(entry.getKey())
               .setValue(entry.getValue())
               .build();
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(4, expressions__);
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(5, expressions__);
     }
     if (expressionFunctorToken_ != 0L) {
-      size += com.google.protobuf.CodedOutputStream.computeInt64Size(5, expressionFunctorToken_);
+      size += com.google.protobuf.CodedOutputStream.computeInt64Size(6, expressionFunctorToken_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -434,8 +435,12 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     }
     io.harness.delegate.TaskDetails other = (io.harness.delegate.TaskDetails) obj;
 
-    if (!getType().equals(other.getType()))
+    if (hasType() != other.hasType())
       return false;
+    if (hasType()) {
+      if (!getType().equals(other.getType()))
+        return false;
+    }
     if (hasExecutionTimeout() != other.hasExecutionTimeout())
       return false;
     if (hasExecutionTimeout()) {
@@ -449,7 +454,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     if (!getParametersCase().equals(other.getParametersCase()))
       return false;
     switch (parametersCase_) {
-      case 2:
+      case 3:
         if (!getKryoParameters().equals(other.getKryoParameters()))
           return false;
         break;
@@ -468,8 +473,10 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + TYPE_FIELD_NUMBER;
-    hash = (53 * hash) + getType().hashCode();
+    if (hasType()) {
+      hash = (37 * hash) + TYPE_FIELD_NUMBER;
+      hash = (53 * hash) + getType().hashCode();
+    }
     if (hasExecutionTimeout()) {
       hash = (37 * hash) + EXECUTION_TIMEOUT_FIELD_NUMBER;
       hash = (53 * hash) + getExecutionTimeout().hashCode();
@@ -481,7 +488,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     hash = (37 * hash) + EXPRESSION_FUNCTOR_TOKEN_FIELD_NUMBER;
     hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getExpressionFunctorToken());
     switch (parametersCase_) {
-      case 2:
+      case 3:
         hash = (37 * hash) + KRYO_PARAMETERS_FIELD_NUMBER;
         hash = (53 * hash) + getKryoParameters().hashCode();
         break;
@@ -582,7 +589,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     @SuppressWarnings({"rawtypes"})
     protected com.google.protobuf.MapField internalGetMapField(int number) {
       switch (number) {
-        case 4:
+        case 5:
           return internalGetExpressions();
         default:
           throw new RuntimeException("Invalid map field number: " + number);
@@ -591,7 +598,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     @SuppressWarnings({"rawtypes"})
     protected com.google.protobuf.MapField internalGetMutableMapField(int number) {
       switch (number) {
-        case 4:
+        case 5:
           return internalGetMutableExpressions();
         default:
           throw new RuntimeException("Invalid map field number: " + number);
@@ -621,8 +628,12 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      type_ = "";
-
+      if (typeBuilder_ == null) {
+        type_ = null;
+      } else {
+        type_ = null;
+        typeBuilder_ = null;
+      }
       if (executionTimeoutBuilder_ == null) {
         executionTimeout_ = null;
       } else {
@@ -665,8 +676,12 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
       io.harness.delegate.TaskDetails result = new io.harness.delegate.TaskDetails(this);
       int from_bitField0_ = bitField0_;
       int to_bitField0_ = 0;
-      result.type_ = type_;
-      if (parametersCase_ == 2) {
+      if (typeBuilder_ == null) {
+        result.type_ = type_;
+      } else {
+        result.type_ = typeBuilder_.build();
+      }
+      if (parametersCase_ == 3) {
         result.parameters_ = parameters_;
       }
       if (executionTimeoutBuilder_ == null) {
@@ -721,9 +736,8 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     public Builder mergeFrom(io.harness.delegate.TaskDetails other) {
       if (other == io.harness.delegate.TaskDetails.getDefaultInstance())
         return this;
-      if (!other.getType().isEmpty()) {
-        type_ = other.type_;
-        onChanged();
+      if (other.hasType()) {
+        mergeType(other.getType());
       }
       if (other.hasExecutionTimeout()) {
         mergeExecutionTimeout(other.getExecutionTimeout());
@@ -782,24 +796,33 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
 
     private int bitField0_;
 
-    private java.lang.Object type_ = "";
+    private io.harness.delegate.TaskType type_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskType, io.harness.delegate.TaskType.Builder,
+        io.harness.delegate.TaskTypeOrBuilder> typeBuilder_;
     /**
      * <pre>
      * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
      * actual task executor. TODO: more details
      * </pre>
      *
-     * <code>string type = 1;</code>
+     * <code>.io.harness.delegate.TaskType type = 2;</code>
      */
-    public java.lang.String getType() {
-      java.lang.Object ref = type_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        type_ = s;
-        return s;
+    public boolean hasType() {
+      return typeBuilder_ != null || type_ != null;
+    }
+    /**
+     * <pre>
+     * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+     * actual task executor. TODO: more details
+     * </pre>
+     *
+     * <code>.io.harness.delegate.TaskType type = 2;</code>
+     */
+    public io.harness.delegate.TaskType getType() {
+      if (typeBuilder_ == null) {
+        return type_ == null ? io.harness.delegate.TaskType.getDefaultInstance() : type_;
       } else {
-        return (java.lang.String) ref;
+        return typeBuilder_.getMessage();
       }
     }
     /**
@@ -808,33 +831,19 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * actual task executor. TODO: more details
      * </pre>
      *
-     * <code>string type = 1;</code>
+     * <code>.io.harness.delegate.TaskType type = 2;</code>
      */
-    public com.google.protobuf.ByteString getTypeBytes() {
-      java.lang.Object ref = type_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-        type_ = b;
-        return b;
+    public Builder setType(io.harness.delegate.TaskType value) {
+      if (typeBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        type_ = value;
+        onChanged();
       } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <pre>
-     * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
-     * actual task executor. TODO: more details
-     * </pre>
-     *
-     * <code>string type = 1;</code>
-     */
-    public Builder setType(java.lang.String value) {
-      if (value == null) {
-        throw new NullPointerException();
+        typeBuilder_.setMessage(value);
       }
 
-      type_ = value;
-      onChanged();
       return this;
     }
     /**
@@ -843,11 +852,57 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * actual task executor. TODO: more details
      * </pre>
      *
-     * <code>string type = 1;</code>
+     * <code>.io.harness.delegate.TaskType type = 2;</code>
+     */
+    public Builder setType(io.harness.delegate.TaskType.Builder builderForValue) {
+      if (typeBuilder_ == null) {
+        type_ = builderForValue.build();
+        onChanged();
+      } else {
+        typeBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+     * actual task executor. TODO: more details
+     * </pre>
+     *
+     * <code>.io.harness.delegate.TaskType type = 2;</code>
+     */
+    public Builder mergeType(io.harness.delegate.TaskType value) {
+      if (typeBuilder_ == null) {
+        if (type_ != null) {
+          type_ = io.harness.delegate.TaskType.newBuilder(type_).mergeFrom(value).buildPartial();
+        } else {
+          type_ = value;
+        }
+        onChanged();
+      } else {
+        typeBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+     * actual task executor. TODO: more details
+     * </pre>
+     *
+     * <code>.io.harness.delegate.TaskType type = 2;</code>
      */
     public Builder clearType() {
-      type_ = getDefaultInstance().getType();
-      onChanged();
+      if (typeBuilder_ == null) {
+        type_ = null;
+        onChanged();
+      } else {
+        type_ = null;
+        typeBuilder_ = null;
+      }
+
       return this;
     }
     /**
@@ -856,17 +911,45 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * actual task executor. TODO: more details
      * </pre>
      *
-     * <code>string type = 1;</code>
+     * <code>.io.harness.delegate.TaskType type = 2;</code>
      */
-    public Builder setTypeBytes(com.google.protobuf.ByteString value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-      checkByteStringIsUtf8(value);
-
-      type_ = value;
+    public io.harness.delegate.TaskType.Builder getTypeBuilder() {
       onChanged();
-      return this;
+      return getTypeFieldBuilder().getBuilder();
+    }
+    /**
+     * <pre>
+     * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+     * actual task executor. TODO: more details
+     * </pre>
+     *
+     * <code>.io.harness.delegate.TaskType type = 2;</code>
+     */
+    public io.harness.delegate.TaskTypeOrBuilder getTypeOrBuilder() {
+      if (typeBuilder_ != null) {
+        return typeBuilder_.getMessageOrBuilder();
+      } else {
+        return type_ == null ? io.harness.delegate.TaskType.getDefaultInstance() : type_;
+      }
+    }
+    /**
+     * <pre>
+     * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+     * actual task executor. TODO: more details
+     * </pre>
+     *
+     * <code>.io.harness.delegate.TaskType type = 2;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskType, io.harness.delegate.TaskType.Builder,
+        io.harness.delegate.TaskTypeOrBuilder>
+    getTypeFieldBuilder() {
+      if (typeBuilder_ == null) {
+        typeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskType,
+            io.harness.delegate.TaskType.Builder, io.harness.delegate.TaskTypeOrBuilder>(
+            getType(), getParentForChildren(), isClean());
+        type_ = null;
+      }
+      return typeBuilder_;
     }
 
     /**
@@ -875,10 +958,10 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * determining encrypted fields and expressions.
      * </pre>
      *
-     * <code>bytes kryo_parameters = 2;</code>
+     * <code>bytes kryo_parameters = 3;</code>
      */
     public com.google.protobuf.ByteString getKryoParameters() {
-      if (parametersCase_ == 2) {
+      if (parametersCase_ == 3) {
         return (com.google.protobuf.ByteString) parameters_;
       }
       return com.google.protobuf.ByteString.EMPTY;
@@ -889,13 +972,13 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * determining encrypted fields and expressions.
      * </pre>
      *
-     * <code>bytes kryo_parameters = 2;</code>
+     * <code>bytes kryo_parameters = 3;</code>
      */
     public Builder setKryoParameters(com.google.protobuf.ByteString value) {
       if (value == null) {
         throw new NullPointerException();
       }
-      parametersCase_ = 2;
+      parametersCase_ = 3;
       parameters_ = value;
       onChanged();
       return this;
@@ -906,10 +989,10 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * determining encrypted fields and expressions.
      * </pre>
      *
-     * <code>bytes kryo_parameters = 2;</code>
+     * <code>bytes kryo_parameters = 3;</code>
      */
     public Builder clearKryoParameters() {
-      if (parametersCase_ == 2) {
+      if (parametersCase_ == 3) {
         parametersCase_ = 0;
         parameters_ = null;
         onChanged();
@@ -926,7 +1009,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * NOTE: this time does not include the time the task was in the queue. This is determined independently.
      * </pre>
      *
-     * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+     * <code>.google.protobuf.Duration execution_timeout = 4;</code>
      */
     public boolean hasExecutionTimeout() {
       return executionTimeoutBuilder_ != null || executionTimeout_ != null;
@@ -937,7 +1020,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * NOTE: this time does not include the time the task was in the queue. This is determined independently.
      * </pre>
      *
-     * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+     * <code>.google.protobuf.Duration execution_timeout = 4;</code>
      */
     public com.google.protobuf.Duration getExecutionTimeout() {
       if (executionTimeoutBuilder_ == null) {
@@ -952,7 +1035,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * NOTE: this time does not include the time the task was in the queue. This is determined independently.
      * </pre>
      *
-     * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+     * <code>.google.protobuf.Duration execution_timeout = 4;</code>
      */
     public Builder setExecutionTimeout(com.google.protobuf.Duration value) {
       if (executionTimeoutBuilder_ == null) {
@@ -973,7 +1056,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * NOTE: this time does not include the time the task was in the queue. This is determined independently.
      * </pre>
      *
-     * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+     * <code>.google.protobuf.Duration execution_timeout = 4;</code>
      */
     public Builder setExecutionTimeout(com.google.protobuf.Duration.Builder builderForValue) {
       if (executionTimeoutBuilder_ == null) {
@@ -991,7 +1074,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * NOTE: this time does not include the time the task was in the queue. This is determined independently.
      * </pre>
      *
-     * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+     * <code>.google.protobuf.Duration execution_timeout = 4;</code>
      */
     public Builder mergeExecutionTimeout(com.google.protobuf.Duration value) {
       if (executionTimeoutBuilder_ == null) {
@@ -1014,7 +1097,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * NOTE: this time does not include the time the task was in the queue. This is determined independently.
      * </pre>
      *
-     * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+     * <code>.google.protobuf.Duration execution_timeout = 4;</code>
      */
     public Builder clearExecutionTimeout() {
       if (executionTimeoutBuilder_ == null) {
@@ -1033,7 +1116,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * NOTE: this time does not include the time the task was in the queue. This is determined independently.
      * </pre>
      *
-     * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+     * <code>.google.protobuf.Duration execution_timeout = 4;</code>
      */
     public com.google.protobuf.Duration.Builder getExecutionTimeoutBuilder() {
       onChanged();
@@ -1045,7 +1128,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * NOTE: this time does not include the time the task was in the queue. This is determined independently.
      * </pre>
      *
-     * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+     * <code>.google.protobuf.Duration execution_timeout = 4;</code>
      */
     public com.google.protobuf.DurationOrBuilder getExecutionTimeoutOrBuilder() {
       if (executionTimeoutBuilder_ != null) {
@@ -1060,7 +1143,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * NOTE: this time does not include the time the task was in the queue. This is determined independently.
      * </pre>
      *
-     * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+     * <code>.google.protobuf.Duration execution_timeout = 4;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Duration, com.google.protobuf.Duration.Builder,
         com.google.protobuf.DurationOrBuilder>
@@ -1103,7 +1186,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * task execution.
      * </pre>
      *
-     * <code>map&lt;string, string&gt; expressions = 4;</code>
+     * <code>map&lt;string, string&gt; expressions = 5;</code>
      */
 
     public boolean containsExpressions(java.lang.String key) {
@@ -1127,7 +1210,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * task execution.
      * </pre>
      *
-     * <code>map&lt;string, string&gt; expressions = 4;</code>
+     * <code>map&lt;string, string&gt; expressions = 5;</code>
      */
 
     public java.util.Map<java.lang.String, java.lang.String> getExpressionsMap() {
@@ -1140,7 +1223,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * task execution.
      * </pre>
      *
-     * <code>map&lt;string, string&gt; expressions = 4;</code>
+     * <code>map&lt;string, string&gt; expressions = 5;</code>
      */
 
     public java.lang.String getExpressionsOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -1157,7 +1240,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * task execution.
      * </pre>
      *
-     * <code>map&lt;string, string&gt; expressions = 4;</code>
+     * <code>map&lt;string, string&gt; expressions = 5;</code>
      */
 
     public java.lang.String getExpressionsOrThrow(java.lang.String key) {
@@ -1182,7 +1265,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * task execution.
      * </pre>
      *
-     * <code>map&lt;string, string&gt; expressions = 4;</code>
+     * <code>map&lt;string, string&gt; expressions = 5;</code>
      */
 
     public Builder removeExpressions(java.lang.String key) {
@@ -1207,7 +1290,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * task execution.
      * </pre>
      *
-     * <code>map&lt;string, string&gt; expressions = 4;</code>
+     * <code>map&lt;string, string&gt; expressions = 5;</code>
      */
     public Builder putExpressions(java.lang.String key, java.lang.String value) {
       if (key == null) {
@@ -1226,7 +1309,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * task execution.
      * </pre>
      *
-     * <code>map&lt;string, string&gt; expressions = 4;</code>
+     * <code>map&lt;string, string&gt; expressions = 5;</code>
      */
 
     public Builder putAllExpressions(java.util.Map<java.lang.String, java.lang.String> values) {
@@ -1241,7 +1324,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * obtaining secrets are system generated, and not a hack from customers input.
      * </pre>
      *
-     * <code>int64 expression_functor_token = 5;</code>
+     * <code>int64 expression_functor_token = 6;</code>
      */
     public long getExpressionFunctorToken() {
       return expressionFunctorToken_;
@@ -1252,7 +1335,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * obtaining secrets are system generated, and not a hack from customers input.
      * </pre>
      *
-     * <code>int64 expression_functor_token = 5;</code>
+     * <code>int64 expression_functor_token = 6;</code>
      */
     public Builder setExpressionFunctorToken(long value) {
       expressionFunctorToken_ = value;
@@ -1265,7 +1348,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
      * obtaining secrets are system generated, and not a hack from customers input.
      * </pre>
      *
-     * <code>int64 expression_functor_token = 5;</code>
+     * <code>int64 expression_functor_token = 6;</code>
      */
     public Builder clearExpressionFunctorToken() {
       expressionFunctorToken_ = 0L;

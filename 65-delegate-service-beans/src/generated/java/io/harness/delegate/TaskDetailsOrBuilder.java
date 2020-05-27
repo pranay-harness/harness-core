@@ -13,18 +13,27 @@ public interface TaskDetailsOrBuilder extends
    * actual task executor. TODO: more details
    * </pre>
    *
-   * <code>string type = 1;</code>
+   * <code>.io.harness.delegate.TaskType type = 2;</code>
    */
-  java.lang.String getType();
+  boolean hasType();
   /**
    * <pre>
    * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
    * actual task executor. TODO: more details
    * </pre>
    *
-   * <code>string type = 1;</code>
+   * <code>.io.harness.delegate.TaskType type = 2;</code>
    */
-  com.google.protobuf.ByteString getTypeBytes();
+  io.harness.delegate.TaskType getType();
+  /**
+   * <pre>
+   * Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
+   * actual task executor. TODO: more details
+   * </pre>
+   *
+   * <code>.io.harness.delegate.TaskType type = 2;</code>
+   */
+  io.harness.delegate.TaskTypeOrBuilder getTypeOrBuilder();
 
   /**
    * <pre>
@@ -32,7 +41,7 @@ public interface TaskDetailsOrBuilder extends
    * determining encrypted fields and expressions.
    * </pre>
    *
-   * <code>bytes kryo_parameters = 2;</code>
+   * <code>bytes kryo_parameters = 3;</code>
    */
   com.google.protobuf.ByteString getKryoParameters();
 
@@ -42,7 +51,7 @@ public interface TaskDetailsOrBuilder extends
    * NOTE: this time does not include the time the task was in the queue. This is determined independently.
    * </pre>
    *
-   * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+   * <code>.google.protobuf.Duration execution_timeout = 4;</code>
    */
   boolean hasExecutionTimeout();
   /**
@@ -51,7 +60,7 @@ public interface TaskDetailsOrBuilder extends
    * NOTE: this time does not include the time the task was in the queue. This is determined independently.
    * </pre>
    *
-   * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+   * <code>.google.protobuf.Duration execution_timeout = 4;</code>
    */
   com.google.protobuf.Duration getExecutionTimeout();
   /**
@@ -60,7 +69,7 @@ public interface TaskDetailsOrBuilder extends
    * NOTE: this time does not include the time the task was in the queue. This is determined independently.
    * </pre>
    *
-   * <code>.google.protobuf.Duration execution_timeout = 3;</code>
+   * <code>.google.protobuf.Duration execution_timeout = 4;</code>
    */
   com.google.protobuf.DurationOrBuilder getExecutionTimeoutOrBuilder();
 
@@ -71,7 +80,7 @@ public interface TaskDetailsOrBuilder extends
    * task execution.
    * </pre>
    *
-   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   * <code>map&lt;string, string&gt; expressions = 5;</code>
    */
   int getExpressionsCount();
   /**
@@ -81,7 +90,7 @@ public interface TaskDetailsOrBuilder extends
    * task execution.
    * </pre>
    *
-   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   * <code>map&lt;string, string&gt; expressions = 5;</code>
    */
   boolean containsExpressions(java.lang.String key);
   /**
@@ -95,7 +104,7 @@ public interface TaskDetailsOrBuilder extends
    * task execution.
    * </pre>
    *
-   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   * <code>map&lt;string, string&gt; expressions = 5;</code>
    */
   java.util.Map<java.lang.String, java.lang.String> getExpressionsMap();
   /**
@@ -105,7 +114,7 @@ public interface TaskDetailsOrBuilder extends
    * task execution.
    * </pre>
    *
-   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   * <code>map&lt;string, string&gt; expressions = 5;</code>
    */
 
   java.lang.String getExpressionsOrDefault(java.lang.String key, java.lang.String defaultValue);
@@ -116,7 +125,7 @@ public interface TaskDetailsOrBuilder extends
    * task execution.
    * </pre>
    *
-   * <code>map&lt;string, string&gt; expressions = 4;</code>
+   * <code>map&lt;string, string&gt; expressions = 5;</code>
    */
 
   java.lang.String getExpressionsOrThrow(java.lang.String key);
@@ -127,7 +136,7 @@ public interface TaskDetailsOrBuilder extends
    * obtaining secrets are system generated, and not a hack from customers input.
    * </pre>
    *
-   * <code>int64 expression_functor_token = 5;</code>
+   * <code>int64 expression_functor_token = 6;</code>
    */
   long getExpressionFunctorToken();
 

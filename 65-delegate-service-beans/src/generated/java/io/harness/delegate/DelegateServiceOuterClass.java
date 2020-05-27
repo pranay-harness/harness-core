@@ -43,6 +43,30 @@ public final class DelegateServiceOuterClass {
       .Descriptor internal_static_io_harness_delegate_TaskProgressUpdatesResponse_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_delegate_TaskProgressUpdatesResponse_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_delegate_CreatePerpetualTaskRequest_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_delegate_CreatePerpetualTaskRequest_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_delegate_CreatePerpetualTaskResponse_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_delegate_CreatePerpetualTaskResponse_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_delegate_DeletePerpetualTaskRequest_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_delegate_DeletePerpetualTaskRequest_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_delegate_DeletePerpetualTaskResponse_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_delegate_DeletePerpetualTaskResponse_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_delegate_ResetPerpetualTaskRequest_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_delegate_ResetPerpetualTaskRequest_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_delegate_ResetPerpetualTaskResponse_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_delegate_ResetPerpetualTaskResponse_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -50,39 +74,67 @@ public final class DelegateServiceOuterClass {
   private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
   static {
     java.lang.String[] descriptorData = {"\n*io/harness/delegate/delegate_service.p"
-        + "roto\022\023io.harness.delegate\032\036io/harness/de"
-        + "legate/task.proto\032\"io/harness/delegate/p"
-        + "rogress.proto\"\313\001\n\021SubmitTaskRequest\022F\n\022s"
-        + "etup_abstractions\030\001 \001(\0132*.io.harness.del"
-        + "egate.TaskSetupAbstractions\0221\n\007details\030\002"
-        + " \001(\0132 .io.harness.delegate.TaskDetails\022;"
-        + "\n\014capabilities\030\003 \001(\0132%.io.harness.delega"
-        + "te.TaskCapabilities\"B\n\022SubmitTaskRespons"
-        + "e\022,\n\007task_id\030\001 \001(\0132\033.io.harness.delegate"
-        + ".TaskId\"A\n\021CancelTaskRequest\022,\n\007task_id\030"
-        + "\001 \001(\0132\033.io.harness.delegate.TaskId\"X\n\022Ca"
-        + "ncelTaskResponse\022B\n\021canceled_at_stage\030\001 "
-        + "\001(\0162\'.io.harness.delegate.TaskExecutionS"
-        + "tage\"C\n\023TaskProgressRequest\022,\n\007task_id\030\001"
-        + " \001(\0132\033.io.harness.delegate.TaskId\"[\n\024Tas"
-        + "kProgressResponse\022C\n\022currently_at_stage\030"
-        + "\001 \001(\0162\'.io.harness.delegate.TaskExecutio"
-        + "nStage\"J\n\032TaskProgressUpdatesRequest\022,\n\007"
-        + "task_id\030\001 \001(\0132\033.io.harness.delegate.Task"
-        + "Id\"b\n\033TaskProgressUpdatesResponse\022C\n\022cur"
-        + "rently_at_stage\030\001 \001(\0162\'.io.harness.deleg"
-        + "ate.TaskExecutionStage2\260\003\n\017DelegateServi"
-        + "ce\022]\n\nSubmitTask\022&.io.harness.delegate.S"
-        + "ubmitTaskRequest\032\'.io.harness.delegate.S"
-        + "ubmitTaskResponse\022]\n\nCancelTask\022&.io.har"
-        + "ness.delegate.CancelTaskRequest\032\'.io.har"
-        + "ness.delegate.CancelTaskResponse\022c\n\014Task"
-        + "Progress\022(.io.harness.delegate.TaskProgr"
-        + "essRequest\032).io.harness.delegate.TaskPro"
-        + "gressResponse\022z\n\023TaskProgressUpdates\022/.i"
-        + "o.harness.delegate.TaskProgressUpdatesRe"
-        + "quest\0320.io.harness.delegate.TaskProgress"
-        + "UpdatesResponse0\001B\002P\001b\006proto3"};
+        + "roto\022\023io.harness.delegate\032!io/harness/de"
+        + "legate/account.proto\032\036io/harness/delegat"
+        + "e/task.proto\032\"io/harness/delegate/progre"
+        + "ss.proto\032-io/harness/perpetualtask/perpe"
+        + "tual_task.proto\"\377\001\n\021SubmitTaskRequest\0222\n"
+        + "\naccount_id\030\001 \001(\0132\036.io.harness.delegate."
+        + "AccountId\022F\n\022setup_abstractions\030\002 \001(\0132*."
+        + "io.harness.delegate.TaskSetupAbstraction"
+        + "s\0221\n\007details\030\003 \001(\0132 .io.harness.delegate"
+        + ".TaskDetails\022;\n\014capabilities\030\004 \001(\0132%.io."
+        + "harness.delegate.TaskCapabilities\"B\n\022Sub"
+        + "mitTaskResponse\022,\n\007task_id\030\001 \001(\0132\033.io.ha"
+        + "rness.delegate.TaskId\"A\n\021CancelTaskReque"
+        + "st\022,\n\007task_id\030\001 \001(\0132\033.io.harness.delegat"
+        + "e.TaskId\"X\n\022CancelTaskResponse\022B\n\021cancel"
+        + "ed_at_stage\030\001 \001(\0162\'.io.harness.delegate."
+        + "TaskExecutionStage\"C\n\023TaskProgressReques"
+        + "t\022,\n\007task_id\030\001 \001(\0132\033.io.harness.delegate"
+        + ".TaskId\"[\n\024TaskProgressResponse\022C\n\022curre"
+        + "ntly_at_stage\030\001 \001(\0162\'.io.harness.delegat"
+        + "e.TaskExecutionStage\"J\n\032TaskProgressUpda"
+        + "tesRequest\022,\n\007task_id\030\001 \001(\0132\033.io.harness"
+        + ".delegate.TaskId\"b\n\033TaskProgressUpdatesR"
+        + "esponse\022C\n\022currently_at_stage\030\001 \001(\0162\'.io"
+        + ".harness.delegate.TaskExecutionStage\"\373\001\n"
+        + "\032CreatePerpetualTaskRequest\0222\n\naccount_i"
+        + "d\030\001 \001(\0132\036.io.harness.delegate.AccountId\022"
+        + "\014\n\004type\030\002 \001(\t\022A\n\010schedule\030\003 \001(\0132/.io.har"
+        + "ness.perpetualtask.PerpetualTaskSchedule"
+        + "\022?\n\007context\030\004 \001(\0132..io.harness.perpetual"
+        + "task.PerpetualTaskContext\022\027\n\017allow_dupli"
+        + "cate\030\005 \001(\010\"c\n\033CreatePerpetualTaskRespons"
+        + "e\022D\n\021perpetual_task_id\030\001 \001(\0132).io.harnes"
+        + "s.perpetualtask.PerpetualTaskId\"b\n\032Delet"
+        + "ePerpetualTaskRequest\022D\n\021perpetual_task_"
+        + "id\030\001 \001(\0132).io.harness.perpetualtask.Perp"
+        + "etualTaskId\"\035\n\033DeletePerpetualTaskRespon"
+        + "se\"a\n\031ResetPerpetualTaskRequest\022D\n\021perpe"
+        + "tual_task_id\030\001 \001(\0132).io.harness.perpetua"
+        + "ltask.PerpetualTaskId\"\034\n\032ResetPerpetualT"
+        + "askResponse2\233\006\n\017DelegateService\022]\n\nSubmi"
+        + "tTask\022&.io.harness.delegate.SubmitTaskRe"
+        + "quest\032\'.io.harness.delegate.SubmitTaskRe"
+        + "sponse\022]\n\nCancelTask\022&.io.harness.delega"
+        + "te.CancelTaskRequest\032\'.io.harness.delega"
+        + "te.CancelTaskResponse\022c\n\014TaskProgress\022(."
+        + "io.harness.delegate.TaskProgressRequest\032"
+        + ").io.harness.delegate.TaskProgressRespon"
+        + "se\022z\n\023TaskProgressUpdates\022/.io.harness.d"
+        + "elegate.TaskProgressUpdatesRequest\0320.io."
+        + "harness.delegate.TaskProgressUpdatesResp"
+        + "onse0\001\022x\n\023CreatePerpetualTask\022/.io.harne"
+        + "ss.delegate.CreatePerpetualTaskRequest\0320"
+        + ".io.harness.delegate.CreatePerpetualTask"
+        + "Response\022x\n\023DeletePerpetualTask\022/.io.har"
+        + "ness.delegate.DeletePerpetualTaskRequest"
+        + "\0320.io.harness.delegate.DeletePerpetualTa"
+        + "skResponse\022u\n\022ResetPerpetualTask\022..io.ha"
+        + "rness.delegate.ResetPerpetualTaskRequest"
+        + "\032/.io.harness.delegate.ResetPerpetualTas"
+        + "kResponseB\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -93,8 +145,10 @@ public final class DelegateServiceOuterClass {
         };
     com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
+            io.harness.delegate.Account.getDescriptor(),
             io.harness.delegate.Task.getDescriptor(),
             io.harness.delegate.Progress.getDescriptor(),
+            io.harness.perpetualtask.PerpetualTask.getDescriptor(),
         },
         assigner);
     internal_static_io_harness_delegate_SubmitTaskRequest_descriptor = getDescriptor().getMessageTypes().get(0);
@@ -102,6 +156,7 @@ public final class DelegateServiceOuterClass {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_delegate_SubmitTaskRequest_descriptor,
             new java.lang.String[] {
+                "AccountId",
                 "SetupAbstractions",
                 "Details",
                 "Capabilities",
@@ -157,8 +212,56 @@ public final class DelegateServiceOuterClass {
             new java.lang.String[] {
                 "CurrentlyAtStage",
             });
+    internal_static_io_harness_delegate_CreatePerpetualTaskRequest_descriptor =
+        getDescriptor().getMessageTypes().get(8);
+    internal_static_io_harness_delegate_CreatePerpetualTaskRequest_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_delegate_CreatePerpetualTaskRequest_descriptor,
+            new java.lang.String[] {
+                "AccountId",
+                "Type",
+                "Schedule",
+                "Context",
+                "AllowDuplicate",
+            });
+    internal_static_io_harness_delegate_CreatePerpetualTaskResponse_descriptor =
+        getDescriptor().getMessageTypes().get(9);
+    internal_static_io_harness_delegate_CreatePerpetualTaskResponse_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_delegate_CreatePerpetualTaskResponse_descriptor,
+            new java.lang.String[] {
+                "PerpetualTaskId",
+            });
+    internal_static_io_harness_delegate_DeletePerpetualTaskRequest_descriptor =
+        getDescriptor().getMessageTypes().get(10);
+    internal_static_io_harness_delegate_DeletePerpetualTaskRequest_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_delegate_DeletePerpetualTaskRequest_descriptor,
+            new java.lang.String[] {
+                "PerpetualTaskId",
+            });
+    internal_static_io_harness_delegate_DeletePerpetualTaskResponse_descriptor =
+        getDescriptor().getMessageTypes().get(11);
+    internal_static_io_harness_delegate_DeletePerpetualTaskResponse_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_delegate_DeletePerpetualTaskResponse_descriptor, new java.lang.String[] {});
+    internal_static_io_harness_delegate_ResetPerpetualTaskRequest_descriptor =
+        getDescriptor().getMessageTypes().get(12);
+    internal_static_io_harness_delegate_ResetPerpetualTaskRequest_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_delegate_ResetPerpetualTaskRequest_descriptor,
+            new java.lang.String[] {
+                "PerpetualTaskId",
+            });
+    internal_static_io_harness_delegate_ResetPerpetualTaskResponse_descriptor =
+        getDescriptor().getMessageTypes().get(13);
+    internal_static_io_harness_delegate_ResetPerpetualTaskResponse_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_delegate_ResetPerpetualTaskResponse_descriptor, new java.lang.String[] {});
+    io.harness.delegate.Account.getDescriptor();
     io.harness.delegate.Task.getDescriptor();
     io.harness.delegate.Progress.getDescriptor();
+    io.harness.perpetualtask.PerpetualTask.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

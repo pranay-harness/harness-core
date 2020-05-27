@@ -14,6 +14,9 @@ public final class Task {
   static final com.google.protobuf.Descriptors.Descriptor internal_static_io_harness_delegate_TaskId_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_delegate_TaskId_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor internal_static_io_harness_delegate_TaskType_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_delegate_TaskType_fieldAccessorTable;
   static final com.google.protobuf.Descriptors
       .Descriptor internal_static_io_harness_delegate_TaskSetupAbstractions_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
@@ -42,20 +45,21 @@ public final class Task {
     java.lang.String[] descriptorData = {"\n\036io/harness/delegate/task.proto\022\023io.har"
         + "ness.delegate\032\036google/protobuf/duration."
         + "proto\032$io/harness/delegate/capability.pr"
-        + "oto\"\024\n\006TaskId\022\n\n\002id\030\001 \001(\t\"\216\001\n\025TaskSetupA"
-        + "bstractions\022F\n\006values\030\001 \003(\01326.io.harness"
-        + ".delegate.TaskSetupAbstractions.ValuesEn"
-        + "try\032-\n\013ValuesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value"
-        + "\030\002 \001(\t:\0028\001\"\230\002\n\013TaskDetails\022\014\n\004type\030\001 \001(\t"
-        + "\022\031\n\017kryo_parameters\030\002 \001(\014H\000\0224\n\021execution"
-        + "_timeout\030\003 \001(\0132\031.google.protobuf.Duratio"
-        + "n\022F\n\013expressions\030\004 \003(\01321.io.harness.dele"
-        + "gate.TaskDetails.ExpressionsEntry\022 \n\030exp"
-        + "ression_functor_token\030\005 \001(\003\0322\n\020Expressio"
-        + "nsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001B"
-        + "\014\n\nparameters\"A\n\020TaskCapabilities\022-\n\004lis"
-        + "t\030\001 \003(\0132\037.io.harness.delegate.Capability"
-        + "B\002P\001b\006proto3"};
+        + "oto\"\024\n\006TaskId\022\n\n\002id\030\001 \001(\t\"\030\n\010TaskType\022\014\n"
+        + "\004type\030\001 \001(\t\"\216\001\n\025TaskSetupAbstractions\022F\n"
+        + "\006values\030\001 \003(\01326.io.harness.delegate.Task"
+        + "SetupAbstractions.ValuesEntry\032-\n\013ValuesE"
+        + "ntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\267\002\n"
+        + "\013TaskDetails\022+\n\004type\030\002 \001(\0132\035.io.harness."
+        + "delegate.TaskType\022\031\n\017kryo_parameters\030\003 \001"
+        + "(\014H\000\0224\n\021execution_timeout\030\004 \001(\0132\031.google"
+        + ".protobuf.Duration\022F\n\013expressions\030\005 \003(\0132"
+        + "1.io.harness.delegate.TaskDetails.Expres"
+        + "sionsEntry\022 \n\030expression_functor_token\030\006"
+        + " \001(\003\0322\n\020ExpressionsEntry\022\013\n\003key\030\001 \001(\t\022\r\n"
+        + "\005value\030\002 \001(\t:\0028\001B\014\n\nparameters\"A\n\020TaskCa"
+        + "pabilities\022-\n\004list\030\001 \003(\0132\037.io.harness.de"
+        + "legate.CapabilityB\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -77,7 +81,14 @@ public final class Task {
             new java.lang.String[] {
                 "Id",
             });
-    internal_static_io_harness_delegate_TaskSetupAbstractions_descriptor = getDescriptor().getMessageTypes().get(1);
+    internal_static_io_harness_delegate_TaskType_descriptor = getDescriptor().getMessageTypes().get(1);
+    internal_static_io_harness_delegate_TaskType_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_delegate_TaskType_descriptor,
+            new java.lang.String[] {
+                "Type",
+            });
+    internal_static_io_harness_delegate_TaskSetupAbstractions_descriptor = getDescriptor().getMessageTypes().get(2);
     internal_static_io_harness_delegate_TaskSetupAbstractions_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_delegate_TaskSetupAbstractions_descriptor,
@@ -93,7 +104,7 @@ public final class Task {
                 "Key",
                 "Value",
             });
-    internal_static_io_harness_delegate_TaskDetails_descriptor = getDescriptor().getMessageTypes().get(2);
+    internal_static_io_harness_delegate_TaskDetails_descriptor = getDescriptor().getMessageTypes().get(3);
     internal_static_io_harness_delegate_TaskDetails_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_delegate_TaskDetails_descriptor,
@@ -114,7 +125,7 @@ public final class Task {
                 "Key",
                 "Value",
             });
-    internal_static_io_harness_delegate_TaskCapabilities_descriptor = getDescriptor().getMessageTypes().get(3);
+    internal_static_io_harness_delegate_TaskCapabilities_descriptor = getDescriptor().getMessageTypes().get(4);
     internal_static_io_harness_delegate_TaskCapabilities_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_delegate_TaskCapabilities_descriptor,

@@ -8,24 +8,24 @@ public interface PerpetualTaskListResponseOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.PerpetualTaskListResponse)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
+   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetual_task_assign_details = 1;</code>
    */
   java.util.List<io.harness.perpetualtask.PerpetualTaskAssignDetails> getPerpetualTaskAssignDetailsList();
   /**
-   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
+   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetual_task_assign_details = 1;</code>
    */
   io.harness.perpetualtask.PerpetualTaskAssignDetails getPerpetualTaskAssignDetails(int index);
   /**
-   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
+   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetual_task_assign_details = 1;</code>
    */
   int getPerpetualTaskAssignDetailsCount();
   /**
-   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
+   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetual_task_assign_details = 1;</code>
    */
   java.util.List<? extends io.harness.perpetualtask.PerpetualTaskAssignDetailsOrBuilder>
   getPerpetualTaskAssignDetailsOrBuilderList();
   /**
-   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;</code>
+   * <code>repeated .io.harness.perpetualtask.PerpetualTaskAssignDetails perpetual_task_assign_details = 1;</code>
    */
   io.harness.perpetualtask.PerpetualTaskAssignDetailsOrBuilder getPerpetualTaskAssignDetailsOrBuilder(int index);
 }

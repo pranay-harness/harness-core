@@ -20,7 +20,7 @@ message PerpetualTaskListRequest {
 }
 
 message PerpetualTaskListResponse {
-  repeated PerpetualTaskAssignDetails perpetualTaskAssignDetails = 1;
+  repeated PerpetualTaskAssignDetails perpetual_task_assign_details = 1;
 }
 
 message PerpetualTaskContextRequest {
