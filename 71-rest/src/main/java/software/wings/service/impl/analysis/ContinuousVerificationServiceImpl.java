@@ -929,7 +929,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                  .order(MetricAnalysisRecordKeys.analysisMinute)
                  .project(MetricAnalysisRecordKeys.transactions, false)
                  .project(MetricAnalysisRecordKeys.transactionsCompressedJson, false)
-                 .project(MetricAnalysisRecordKeys.metricAnalysisValuesCompressed, false)
                  .fetch())) {
       while (analysisRecords.hasNext()) {
         timeSeriesMLAnalysisRecords.add(analysisRecords.next());
