@@ -60,7 +60,7 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
 
   @Override
   public PlanExecution testInfraState() {
-    return engine.startExecution(CustomExecutionUtils.provideInfraStateTestPlan(), getEmbeddedUser());
+    return engine.startExecution(CustomExecutionUtils.provideInfraStateTestPlan(), getInputArgs(), getEmbeddedUser());
   }
 
   @Override
