@@ -1038,10 +1038,10 @@ public abstract class AbstractAnalysisState extends State {
             .stateExecutionInstanceId(context.getStateExecutionId())
             .serverConfigId(context.getAnalysisServerConfigId())
             .baselineExecutionId(context.getPrevWorkflowExecutionId())
-            .canaryNewHostNames(
-                isEmpty(context.getTestNodes()) ? Collections.emptySet() : context.getTestNodes().keySet())
-            .lastExecutionNodes(
-                isEmpty(context.getControlNodes()) ? Collections.emptySet() : context.getControlNodes().keySet())
+            .canaryNewHostNames(isEmpty(context.getTestNodes()) ? Collections.emptySet()
+                                                                : new HashSet<>(context.getTestNodes().keySet()))
+            .lastExecutionNodes(isEmpty(context.getControlNodes()) ? Collections.emptySet()
+                                                                   : new HashSet<>(context.getControlNodes().keySet()))
             .correlationId(context.getCorrelationId())
             .query(context.getQuery())
             .customThresholdRefId(context.getCustomThresholdRefId())

@@ -79,6 +79,7 @@ import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
+import software.wings.sm.states.AbstractAnalysisState.NodePair;
 import software.wings.sm.states.AppDynamicsState.AppDynamicsStateKeys;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
@@ -168,6 +169,9 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void shouldTestNonTemplatized() {
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
+    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+        .when(spyAppDynamicsState)
+        .getControlAndTestNodes(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
   }
@@ -181,6 +185,9 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     String applicationIdExpression = "${workflow.variables.applicationId}";
     appDynamicsState.setApplicationId(applicationIdExpression);
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
+    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+        .when(spyAppDynamicsState)
+        .getControlAndTestNodes(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
     assertThat(executionResponse.getErrorMessage())
@@ -199,6 +206,9 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn(applicationName);
     when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName))).thenReturn(applicationId);
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
+    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+        .when(spyAppDynamicsState)
+        .getControlAndTestNodes(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
     assertThat(executionResponse.getErrorMessage())
@@ -217,6 +227,9 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName))).thenReturn(applicationId);
     when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn("tierName");
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
+    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+        .when(spyAppDynamicsState)
+        .getControlAndTestNodes(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
     assertThat(executionResponse.getErrorMessage())
@@ -238,6 +251,9 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn(applicationName);
     when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName))).thenReturn(applicationId);
     when(appdynamicsService.getTierByName(any(), any(), eq(tierName), any())).thenReturn(tierId);
+    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+        .when(spyAppDynamicsState)
+        .getControlAndTestNodes(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(RUNNING);
   }
@@ -283,7 +299,11 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldTestNonTemplatizedBadTier() {
-    ExecutionResponse executionResponse = setupNonTemplatized(true).execute(executionContext);
+    AppDynamicsState spyAppDynamicsState = setupNonTemplatized(true);
+    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+        .when(spyAppDynamicsState)
+        .getControlAndTestNodes(any());
+    ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
     assertThat(executionResponse.getErrorMessage())
         .isEqualTo(
@@ -325,6 +345,9 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
             .build()));
 
     AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
+    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+        .when(spyAppDynamicsState)
+        .getControlAndTestNodes(any());
     doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
         .when(spyAppDynamicsState)
         .getCanaryNewHostNames(executionContext);
@@ -635,6 +658,10 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .when(workflowStandardParams)
         .getEnv();
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+
+    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+        .when(spyAppDynamicsState)
+        .getControlAndTestNodes(any());
 
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);

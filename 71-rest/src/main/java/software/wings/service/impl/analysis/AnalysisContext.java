@@ -6,6 +6,7 @@ import static software.wings.utils.Misc.replaceDotWithUnicode;
 import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.Nullable;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
@@ -110,6 +111,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
   private int dataCollectionIntervalMins;
   private boolean isHistoricalDataCollection;
   private boolean inspectHostsInLogs;
+  @Nullable private Integer newNodesTrafficShiftPercent;
 
   @JsonIgnore
   @SchemaIgnore
@@ -130,7 +132,8 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
       MLAnalysisType analysisType, ExecutionStatus executionStatus, String managerVersion, String envId,
       String hostNameField, int collectionInterval, long startDataCollectionMinute,
       DataCollectionInfo dataCollectionInfo, int initialDelaySeconds, int dataCollectionIntervalMins,
-      boolean isHistoricalDataCollection, String customThresholdRefId, boolean inspectHostsInLogs) {
+      boolean isHistoricalDataCollection, String customThresholdRefId, boolean inspectHostsInLogs,
+      Integer newNodesTrafficShiftPercent) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, syncFromGit);
     this.accountId = accountId;
     this.workflowId = workflowId;
@@ -174,6 +177,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
     this.isHistoricalDataCollection = isHistoricalDataCollection;
     this.customThresholdRefId = customThresholdRefId;
     this.inspectHostsInLogs = inspectHostsInLogs;
+    this.newNodesTrafficShiftPercent = newNodesTrafficShiftPercent;
   }
 
   public LogClusterContext getClusterContext() {

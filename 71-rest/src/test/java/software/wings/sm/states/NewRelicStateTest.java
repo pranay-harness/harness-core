@@ -260,6 +260,9 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     NewRelicState spyNewRelicState = spy(newRelicState);
     doReturn(false).when(spyNewRelicState).isEligibleForPerMinuteTask(accountId);
     doReturn(false).when(spyNewRelicState).isDemoPath(any(AnalysisContext.class));
+    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+        .when(spyNewRelicState)
+        .getControlAndTestNodes(any());
 
     doReturn(asList(TemplateExpression.builder()
                         .fieldName("analysisServerConfigId")
