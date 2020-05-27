@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -14,6 +15,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
@@ -106,6 +108,7 @@ import software.wings.features.api.FeatureService;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.HelmHelper;
+import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
@@ -118,6 +121,7 @@ import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.GitFileConfigHelperService;
+import software.wings.service.impl.HelmChartConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
@@ -184,6 +188,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
+  @Mock private HelmChartConfigHelperService helmChartConfigHelperService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ServiceTemplateHelper serviceTemplateHelper;
   @Mock private SweepingOutputService sweepingOutputService;
@@ -340,6 +345,63 @@ public class HelmDeployStateTest extends WingsBaseTest {
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(1, GitFileConfig.class));
     when(settingsService.fetchGitConfigFromConnectorId(GIT_CONNECTOR_ID)).thenReturn(GitConfig.builder().build());
     ExecutionResponse executionResponse = helmDeployState.execute(context);
+    assertStateExecutionResponse(executionResponse);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    assertExecutedDelegateTask(delegateTask);
+
+    verify(delegateService).executeTask(any());
+    verify(gitConfigHelperService, times(1)).renderGitConfig(any(), any());
+    verify(gitFileConfigHelperService, times(1)).renderGitFileConfig(any(), any());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteWithHelmChartRepo() throws InterruptedException {
+    HelmChartConfig chartConfigWithConnectorId = HelmChartConfig.builder().connectorId("connectorId").build();
+    HelmChartConfig chartConfigWithoutConnectorId =
+        HelmChartConfig.builder().chartVersion("1.0.0").chartUrl(CHART_URL).chartName(CHART_NAME).build();
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .storeType(StoreType.HelmChartRepo)
+                                                  .helmChartConfig(chartConfigWithConnectorId)
+                                                  .build();
+
+    when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
+        .thenReturn(HelmChartSpecification.builder()
+                        .chartName(CHART_NAME)
+                        .chartUrl(CHART_URL)
+                        .chartVersion(CHART_VERSION)
+                        .build());
+    when(applicationManifestService.getAppManifest(APP_ID, null, SERVICE_ID, AppManifestKind.K8S_MANIFEST))
+        .thenReturn(applicationManifest);
+    when(helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest))
+        .thenReturn(HelmChartConfigParams.builder().repoName("repoName").build());
+    // Case when connectorId is not blank
+    ExecutionResponse executionResponse = helmDeployState.execute(context);
+    assertStateExecutionResponse(executionResponse);
+
+    // Case when connectorId is blank
+    applicationManifest.setHelmChartConfig(chartConfigWithoutConnectorId);
+    when(applicationManifestService.getAppManifest(APP_ID, null, SERVICE_ID, AppManifestKind.K8S_MANIFEST))
+        .thenReturn(applicationManifest);
+    executionResponse = helmDeployState.execute(context);
+    assertStateExecutionResponse(executionResponse);
+
+    verify(applicationManifestUtils, times(2)).applyEnvGlobalHelmChartOverride(eq(applicationManifest), any(Map.class));
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(2)).queueTask(captor.capture());
+    List<DelegateTask> delegateTasks = captor.getAllValues();
+
+    assertExecutedDelegateTask(delegateTasks.get(0));
+    assertExecutedDelegateTask(delegateTasks.get(1));
+
+    verify(delegateService, times(2)).executeTask(any());
+  }
+
+  private void assertStateExecutionResponse(ExecutionResponse executionResponse) {
     assertThat(executionResponse.isAsync()).isEqualTo(true);
     assertThat(executionResponse.getCorrelationIds()).contains(ACTIVITY_ID);
     HelmDeployStateExecutionData helmDeployStateExecutionData =
@@ -351,21 +413,15 @@ public class HelmDeployStateTest extends WingsBaseTest {
     assertThat(helmDeployStateExecutionData.getReleaseOldVersion()).isEqualTo(0);
     assertThat(helmDeployStateExecutionData.getReleaseNewVersion()).isEqualTo(1);
     assertThat(helmDeployStateExecutionData.getCommandFlags()).isNull();
+  }
 
-    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
-    verify(delegateService).queueTask(captor.capture());
-    DelegateTask delegateTask = captor.getValue();
-
+  private void assertExecutedDelegateTask(DelegateTask delegateTask) {
     HelmInstallCommandRequest helmInstallCommandRequest =
         (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
     assertThat(helmInstallCommandRequest.getHelmCommandType()).isEqualTo(HelmCommandType.INSTALL);
     assertThat(helmInstallCommandRequest.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX);
     assertThat(helmInstallCommandRequest.getRepoName()).isEqualTo("app-name-service-name");
     assertThat(helmInstallCommandRequest.getCommandFlags()).isNull();
-
-    verify(delegateService).executeTask(any());
-    verify(gitConfigHelperService, times(1)).renderGitConfig(any(), any());
-    verify(gitFileConfigHelperService, times(1)).renderGitFileConfig(any(), any());
   }
 
   @Test(expected = InvalidRequestException.class)
