@@ -54,12 +54,14 @@ public class EventsDataQueryBuilder {
     selectQuery.addColumns(schema.getCostEventType());
     selectQuery.addColumns(schema.getOldYamlRef());
     selectQuery.addColumns(schema.getNewYamlRef());
+    selectQuery.addColumns(schema.getCost_change_percent());
     fieldNames.add(CEEventsMetaDataFields.valueOf(schema.getStartTime().getName().toUpperCase()));
     fieldNames.add(CEEventsMetaDataFields.valueOf(schema.getEventDescription().getName().toUpperCase()));
     fieldNames.add(CEEventsMetaDataFields.valueOf(schema.getCostEventSource().getName().toUpperCase()));
     fieldNames.add(CEEventsMetaDataFields.valueOf(schema.getCostEventType().getName().toUpperCase()));
     fieldNames.add(CEEventsMetaDataFields.valueOf(schema.getOldYamlRef().getName().toUpperCase()));
     fieldNames.add(CEEventsMetaDataFields.valueOf(schema.getNewYamlRef().getName().toUpperCase()));
+    fieldNames.add(CEEventsMetaDataFields.valueOf(schema.getCost_change_percent().getName().toUpperCase()));
 
     selectQuery.getWhereClause().setDisableParens(true);
     queryMetaDataBuilder.fieldNames(fieldNames);

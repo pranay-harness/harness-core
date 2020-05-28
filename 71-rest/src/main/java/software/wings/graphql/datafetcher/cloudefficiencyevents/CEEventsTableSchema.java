@@ -67,6 +67,7 @@ public class CEEventsTableSchema {
   DbColumn costEventSource;
   DbColumn oldYamlRef;
   DbColumn newYamlRef;
+  DbColumn cost_change_percent;
 
   private static String doubleType = "double";
 
@@ -99,5 +100,6 @@ public class CEEventsTableSchema {
     costEventType = ceEventsTable.addColumn("costeventtype", "text", null);
     oldYamlRef = ceEventsTable.addColumn("oldyamlref", "text", null);
     newYamlRef = ceEventsTable.addColumn("newyamlref", "text", null);
+    cost_change_percent = ceEventsTable.addColumn("cost_change_percent", doubleType, null);
   }
 }

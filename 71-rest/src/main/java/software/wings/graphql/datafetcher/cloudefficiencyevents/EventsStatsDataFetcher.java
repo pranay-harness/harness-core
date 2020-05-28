@@ -93,6 +93,9 @@ public class EventsStatsDataFetcher
           case NEWYAMLREF:
             eventDataBuilder.newYamlRef(resultSet.getString(field.getFieldName()));
             break;
+          case COST_CHANGE_PERCENT:
+            eventDataBuilder.costChangePercentage(resultSet.getDouble(field.getFieldName()));
+            break;
           default:
             break;
         }

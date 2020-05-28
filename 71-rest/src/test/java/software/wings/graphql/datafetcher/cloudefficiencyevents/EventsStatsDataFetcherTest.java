@@ -55,6 +55,7 @@ public class EventsStatsDataFetcherTest extends AbstractDataFetcherTest {
   private static String EVENTDESCRIPTION = "EVENTDESCRIPTION";
   private static String COSTEVENTTYPE = "COSTEVENTTYPE";
   private static String COSTEVENTSOURCE = "COSTEVENTSOURCE";
+  private static Double PERCENTAGE_CHANGE = 2.0;
 
   @Before
   public void setup() throws SQLException {
@@ -116,6 +117,7 @@ public class EventsStatsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(dataPoints.get(0).getDetails()).isEqualTo(EVENTDESCRIPTION);
     assertThat(dataPoints.get(0).getSource()).isEqualTo(COSTEVENTSOURCE);
     assertThat(dataPoints.get(0).getType()).isEqualTo(COSTEVENTTYPE);
+    assertThat(dataPoints.get(0).getCostChangePercentage()).isEqualTo(PERCENTAGE_CHANGE);
   }
 
   @Test
@@ -138,6 +140,7 @@ public class EventsStatsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(dataPoints.get(0).getDetails()).isEqualTo(EVENTDESCRIPTION);
     assertThat(dataPoints.get(0).getSource()).isEqualTo(COSTEVENTSOURCE);
     assertThat(dataPoints.get(0).getType()).isEqualTo(COSTEVENTTYPE);
+    assertThat(dataPoints.get(0).getCostChangePercentage()).isEqualTo(PERCENTAGE_CHANGE);
   }
 
   private QLEventsDataFilter makeTimeFilter(Long filterTime) {
@@ -168,6 +171,7 @@ public class EventsStatsDataFetcherTest extends AbstractDataFetcherTest {
     when(statement.executeQuery(anyString())).thenReturn(resultSet);
 
     when(resultSet.getString("CLUSTERID")).thenAnswer((Answer<String>) invocation -> CLUSTER1_ID);
+    when(resultSet.getDouble("COST_CHANGE_PERCENT")).thenAnswer((Answer<Double>) invocation -> PERCENTAGE_CHANGE);
     when(resultSet.getString("EVENTDESCRIPTION")).thenAnswer((Answer<String>) invocation -> EVENTDESCRIPTION);
     when(resultSet.getString("COSTEVENTTYPE")).thenAnswer((Answer<String>) invocation -> COSTEVENTTYPE);
     when(resultSet.getString("COSTEVENTSOURCE")).thenAnswer((Answer<String>) invocation -> COSTEVENTSOURCE);

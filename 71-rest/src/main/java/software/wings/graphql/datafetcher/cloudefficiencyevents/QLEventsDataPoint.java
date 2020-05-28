@@ -12,4 +12,5 @@ public class QLEventsDataPoint {
   long time;
   String oldYamlRef;
   String newYamlRef;
+  Double costChangePercentage;
 }
