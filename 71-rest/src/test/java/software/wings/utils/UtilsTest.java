@@ -1,5 +1,6 @@
 package software.wings.utils;
 
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.BRETT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -97,5 +98,14 @@ public class UtilsTest extends CategoryTest {
         .isEqualTo("https://example.com/q=abc&abc=%20abc");
     assertThat(Utils.appendPathToBaseUrl("https://example.com", "./hello")).isEqualTo("https://example.com/hello");
     assertThat(Utils.appendPathToBaseUrl("http://example.com", "./hello")).isEqualTo("http://example.com/hello");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testEmptyIfNull() {
+    assertThat(Utils.emptyIfNull(null)).isEqualTo("");
+    assertThat(Utils.emptyIfNull("")).isEqualTo("");
+    assertThat(Utils.emptyIfNull("value")).isEqualTo("value");
   }
 }

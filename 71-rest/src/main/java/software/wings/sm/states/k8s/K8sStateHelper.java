@@ -975,7 +975,7 @@ public class K8sStateHelper {
     return getDelegateNameAsTagFromK8sCloudProvider(settingAttribute.getAccountId(), settingAttribute.getValue());
   }
 
-  private List<String> fetchTagsFromK8sTaskParams(K8sTaskParameters request) {
+  public List<String> fetchTagsFromK8sTaskParams(K8sTaskParameters request) {
     if (request == null || request.getK8sClusterConfig() == null) {
       return emptyList();
     }
