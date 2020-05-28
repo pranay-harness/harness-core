@@ -28,13 +28,7 @@ public enum ExecutionInstanceStatus {
   public static ExecutionInstanceStatus obtainForNodeExecutionStatus(NodeExecutionStatus nodeExecutionStatus) {
     switch (nodeExecutionStatus) {
       case RUNNING:
-      case ASYNC_WAITING:
-      case TASK_WAITING:
-      case CHILD_WAITING:
-      case CHILDREN_WAITING:
         return RUNNING;
-      case TIMED_WAITING:
-        return WAITING;
       case DISCONTINUING:
         return DISCONTINUING;
       case PAUSING:

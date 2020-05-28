@@ -40,7 +40,7 @@ public class Ambiance {
   @NotNull String planExecutionId;
 
   public AutoLogContext autoLogContext() {
-    Map<String, String> logContext = new HashMap<>(inputArgs.strMap());
+    Map<String, String> logContext = inputArgs == null ? new HashMap<>() : new HashMap<>(inputArgs.strMap());
     logContext.put(AmbianceKeys.planExecutionId, planExecutionId);
     levels.forEach(level -> {
       logContext.put("identifier", level.getIdentifier());

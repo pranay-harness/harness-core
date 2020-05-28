@@ -29,12 +29,16 @@ import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.ExecutableInvokerFactory;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.expressions.EngineExpressionService;
+import io.harness.engine.interrupts.InterruptCheck;
+import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.resume.EngineResumeExecutor;
 import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.services.NodeExecutionService;
+import io.harness.engine.services.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
+import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.execution.status.ExecutionInstanceStatus;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.Facilitator;
@@ -81,12 +85,13 @@ public class ExecutionEngine implements Engine {
   @Inject private ResolverRegistry resolverRegistry;
   @Inject private AmbianceHelper ambianceHelper;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
-  @Inject private EngineStatusHelper engineStatusHelper;
   @Inject private ExecutableInvokerFactory executableInvokerFactory;
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
   @Inject private DelayEventHelper delayEventHelper;
   @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private PlanExecutionService planExecutionService;
   @Inject private EngineExpressionService engineExpressionService;
+  @Inject private InterruptService interruptService;
 
   public PlanExecution startExecution(@Valid Plan plan, EmbeddedUser createdBy) {
     return startExecution(plan, null, createdBy);
@@ -113,7 +118,15 @@ public class ExecutionEngine implements Engine {
   }
 
   public void startNodeExecution(Ambiance ambiance, List<StepTransput> additionalInputs) {
-    // Update to Running Status
+    // Check Plan level Interrupts
+    logger.info("Checking Interrupts before Node Start");
+    InterruptCheck check = interruptService.checkAndHandleInterruptsBeforeNodeStart(ambiance, additionalInputs);
+    if (!check.isProceed()) {
+      logger.info("Suspending Execution. Reason : {}", check.getReason());
+      return;
+    }
+    logger.info("Proceeding with  Execution. Reason : {}", check.getReason());
+
     NodeExecution nodeExecution = hPersistence.createQuery(NodeExecution.class)
                                       .filter(NodeExecutionKeys.uuid, ambiance.obtainCurrentRuntimeId())
                                       .get();
@@ -130,7 +143,7 @@ public class ExecutionEngine implements Engine {
     String uuid = generateUuid();
     NodeExecution previousNodeExecution = null;
     if (ambiance.obtainCurrentRuntimeId() != null) {
-      previousNodeExecution = engineStatusHelper.updateNodeInstance(
+      previousNodeExecution = nodeExecutionService.update(
           ambiance.obtainCurrentRuntimeId(), ops -> ops.set(NodeExecutionKeys.nextId, uuid));
     }
 
@@ -177,9 +190,9 @@ public class ExecutionEngine implements Engine {
     Consumer<UpdateOperations<NodeExecution>> ops = op -> op.set(NodeExecutionKeys.mode, mode);
     if (facilitatorResponse.getInitialWait() != null && facilitatorResponse.getInitialWait().getSeconds() != 0) {
       FacilitatorResponse finalFacilitatorResponse = facilitatorResponse;
-      Preconditions.checkNotNull(engineStatusHelper.updateNodeInstance(ambiance.obtainCurrentRuntimeId(),
+      Preconditions.checkNotNull(nodeExecutionService.update(ambiance.obtainCurrentRuntimeId(),
           ops.andThen(op
-              -> op.set(NodeExecutionKeys.status, NodeExecutionStatus.TIMED_WAITING)
+              -> op.set(NodeExecutionKeys.status, NodeExecutionStatus.WAITING)
                      .set(NodeExecutionKeys.initialWaitDuration, finalFacilitatorResponse.getInitialWait()))));
       String resumeId =
           delayEventHelper.delay(finalFacilitatorResponse.getInitialWait().getSeconds(), Collections.emptyMap());
@@ -191,7 +204,7 @@ public class ExecutionEngine implements Engine {
               .build(),
           resumeId);
     } else {
-      Preconditions.checkNotNull(engineStatusHelper.updateNodeInstance(ambiance.obtainCurrentRuntimeId(),
+      Preconditions.checkNotNull(nodeExecutionService.update(ambiance.obtainCurrentRuntimeId(),
           ops.andThen(op -> op.set(NodeExecutionKeys.status, NodeExecutionStatus.RUNNING))));
       invokeState(ambiance, facilitatorResponse, inputs);
     }
@@ -212,7 +225,7 @@ public class ExecutionEngine implements Engine {
   }
 
   public void handleStepResponse(@NotNull String nodeExecutionId, StepResponse stepResponse) {
-    NodeExecution nodeExecution = engineStatusHelper.updateNodeInstance(nodeExecutionId,
+    NodeExecution nodeExecution = nodeExecutionService.update(nodeExecutionId,
         ops
         -> ops.set(NodeExecutionKeys.status, stepResponse.getStatus())
                .set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
@@ -264,8 +277,10 @@ public class ExecutionEngine implements Engine {
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
       logger.info("Ending Execution");
-      engineStatusHelper.updateExecutionInstanceStatus(nodeExecution.getPlanExecutionId(),
-          ExecutionInstanceStatus.obtainForNodeExecutionStatus(nodeExecution.getStatus()));
+      planExecutionService.update(nodeExecution.getPlanExecutionId(),
+          ops
+          -> ops.set(PlanExecutionKeys.status,
+              ExecutionInstanceStatus.obtainForNodeExecutionStatus(nodeExecution.getStatus())));
     }
   }
 
@@ -283,7 +298,7 @@ public class ExecutionEngine implements Engine {
           nodeExecution.getStatus());
       return;
     }
-    NodeExecution updatedNodeExecution = Preconditions.checkNotNull(engineStatusHelper.updateNodeInstance(
+    NodeExecution updatedNodeExecution = Preconditions.checkNotNull(nodeExecutionService.update(
         nodeInstanceId, ops -> ops.set(NodeExecutionKeys.status, NodeExecutionStatus.RUNNING)));
     Ambiance ambiance = ambianceHelper.fetchAmbiance(updatedNodeExecution);
     executorService.execute(EngineResumeExecutor.builder()

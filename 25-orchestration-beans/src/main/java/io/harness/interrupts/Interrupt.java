@@ -12,8 +12,10 @@ import io.harness.persistence.UpdatedAtAccess;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.NonFinal;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -29,7 +31,7 @@ public class Interrupt implements PersistentEntity, UuidAccess, CreatedAtAccess,
   @Id @NotNull String uuid;
   @NonNull ExecutionInterruptType type;
   @NonNull String planExecutionId;
-  String nodeExecutionId;
+  @NonFinal @Setter String nodeExecutionId;
   @NonNull EmbeddedUser createdBy;
   long lastUpdatedAt;
   long createdAt;

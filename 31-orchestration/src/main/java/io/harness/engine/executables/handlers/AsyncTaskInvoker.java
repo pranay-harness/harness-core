@@ -1,6 +1,5 @@
 package io.harness.engine.executables.handlers;
 
-import static io.harness.execution.status.NodeExecutionStatus.TASK_WAITING;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.common.base.Preconditions;
@@ -8,10 +7,10 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.engine.AmbianceHelper;
-import io.harness.engine.EngineStatusHelper;
 import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.resume.EngineResumeCallback;
+import io.harness.engine.services.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.facilitator.modes.task.AsyncTaskExecutable;
@@ -28,7 +27,7 @@ public class AsyncTaskInvoker implements ExecutableInvoker {
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
   @Inject private AmbianceHelper ambianceHelper;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private EngineStatusHelper engineStatusHelper;
+  @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
   public void invokeExecutable(InvokerPackage invokerPackage) {
@@ -46,13 +45,9 @@ public class AsyncTaskInvoker implements ExecutableInvoker {
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, task.getWaitId());
 
     // Update Execution Node Instance state to TASK_WAITING
-    engineStatusHelper.updateNodeInstance(nodeExecution.getUuid(),
+    nodeExecutionService.update(nodeExecution.getUuid(),
         ops
-        -> ops.set(NodeExecutionKeys.status, TASK_WAITING)
-               .set(NodeExecutionKeys.executableResponse,
-                   AsyncTaskExecutableResponse.builder()
-                       .taskId(taskId)
-                       .taskIdentifier(task.getTaskIdentifier())
-                       .build()));
+        -> ops.set(NodeExecutionKeys.executableResponse,
+            AsyncTaskExecutableResponse.builder().taskId(taskId).taskIdentifier(task.getTaskIdentifier()).build()));
   }
 }
