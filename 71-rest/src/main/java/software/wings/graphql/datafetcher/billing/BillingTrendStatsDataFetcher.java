@@ -139,7 +139,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     if (idleCostData != null) {
       idleCostValue = String.format(
           COST_VALUE, billingDataHelper.formatNumber(billingDataHelper.getRoundedDoubleValue(idleCostData.getCost())));
-      if (totalCostData != null) {
+      if (totalCostData != null && totalCostData.getCost().doubleValue() != 0) {
         double percentageOfTotalCost = billingDataHelper.getRoundedDoublePercentageValue(
             BigDecimal.valueOf(idleCostData.getCost().doubleValue() / totalCostData.getCost().doubleValue()));
         idleCostDescription = String.format(IDLE_COST_DESCRIPTION, percentageOfTotalCost + "%",
@@ -159,7 +159,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     if (unallocatedCost != null) {
       unallocatedCostValue = String.format(
           COST_VALUE, billingDataHelper.formatNumber(billingDataHelper.getRoundedDoubleValue(unallocatedCost)));
-      if (totalCostData != null) {
+      if (totalCostData != null && totalCostData.getCost().doubleValue() != 0) {
         double percentageOfTotalCost = billingDataHelper.getRoundedDoublePercentageValue(
             BigDecimal.valueOf(unallocatedCost.doubleValue() / totalCostData.getCost().doubleValue()));
         unallocatedCostDescription = String.format(UNALLOCATED_COST_DESCRIPTION, percentageOfTotalCost + "%",
@@ -184,10 +184,12 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
       }
       utilizedCostValue = String.format(
           COST_VALUE, billingDataHelper.formatNumber(billingDataHelper.getRoundedDoubleValue(utilizedCost)));
-      double percentageOfTotalCost = billingDataHelper.getRoundedDoublePercentageValue(
-          BigDecimal.valueOf(utilizedCost / totalCostData.getCost().doubleValue()));
-      utilizedCostDescription = String.format(UTILIZED_COST_DESCRIPTION, percentageOfTotalCost + "%",
-          billingDataHelper.getRoundedDoubleValue(totalCostData.getCost()));
+      if (totalCostData.getCost().doubleValue() != 0) {
+        double percentageOfTotalCost = billingDataHelper.getRoundedDoublePercentageValue(
+            BigDecimal.valueOf(utilizedCost / totalCostData.getCost().doubleValue()));
+        utilizedCostDescription = String.format(UTILIZED_COST_DESCRIPTION, percentageOfTotalCost + "%",
+            billingDataHelper.getRoundedDoubleValue(totalCostData.getCost()));
+      }
     }
     return QLBillingStatsInfo.builder()
         .statsLabel(UTILIZED_COST_LABEL)
