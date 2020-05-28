@@ -1,4 +1,4 @@
-package io.harness.functional.graphQLAPIs;
+package io.harness.functional.graphQLAPIs.executions;
 
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static io.harness.rule.OwnerRule.POOJA;
@@ -75,7 +75,7 @@ public class GetWorkflowExecutionsFunctionalTest extends AbstractFunctionalTest 
   @Test
   @Owner(developers = POOJA)
   @Category(FunctionalTests.class)
-  public void shouldTriggerTemplatisedWorkflow() {
+  public void shouldGetWorkflowExecutionwithArtifactsAndWorkflow() {
     Workflow workflow = workflowUtils.getRollingK8sWorkflow("GraphQLAPI-test-", service, infrastructureDefinition);
     Workflow savedWorkflow =
         WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
@@ -100,6 +100,8 @@ public class GetWorkflowExecutionsFunctionalTest extends AbstractFunctionalTest 
     List<Map<String, Object>> artifacts = (List<Map<String, Object>>) executionData.get("artifacts");
     assertThat(artifacts.get(0).get("id")).isEqualTo(artifact.getUuid());
     assertThat(artifacts.get(0).get("buildNo")).isEqualTo(artifact.getBuildNo());
+    Map<String, Object> workflowFromExecution = (Map<String, Object>) executionData.get("workflow");
+    assertThat(workflowFromExecution.get("id")).isEqualTo(savedWorkflow.getUuid());
   }
 
   private ExecutionArgs prepareExecutionArgs(Workflow workflow, List<Artifact> artifacts) {
@@ -126,6 +128,11 @@ id
     id
     buildNo
   }
+  workflow {
+     id
+     name
+  }
+
 }
 }
 }*/ executionId);

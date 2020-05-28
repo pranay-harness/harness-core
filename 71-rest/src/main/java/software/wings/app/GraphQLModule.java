@@ -110,6 +110,8 @@ import software.wings.graphql.datafetcher.pipeline.PipelineConnectionDataFetcher
 import software.wings.graphql.datafetcher.pipeline.PipelineDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineStatsDataFetcher;
 import software.wings.graphql.datafetcher.pipeline.PipelineVariableConnectionDataFetcher;
+import software.wings.graphql.datafetcher.pipeline.batch.PipelineBatchDataFetcher;
+import software.wings.graphql.datafetcher.pipeline.batch.PipelineBatchDataLoader;
 import software.wings.graphql.datafetcher.secretManager.SecretManagerDataFetcher;
 import software.wings.graphql.datafetcher.secretManager.SecretManagersDataFetcher;
 import software.wings.graphql.datafetcher.secrets.CreateSecretDataFetcher;
@@ -147,6 +149,8 @@ import software.wings.graphql.datafetcher.workflow.WorkflowConnectionDataFetcher
 import software.wings.graphql.datafetcher.workflow.WorkflowDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowStatsDataFetcher;
 import software.wings.graphql.datafetcher.workflow.WorkflowVariableConnectionDataFetcher;
+import software.wings.graphql.datafetcher.workflow.batch.WorkflowBatchDataFetcher;
+import software.wings.graphql.datafetcher.workflow.batch.WorkflowBatchDataLoader;
 import software.wings.graphql.directive.DataFetcherDirective;
 import software.wings.graphql.instrumentation.QLAuditInstrumentation;
 import software.wings.graphql.provider.GraphQLProvider;
@@ -195,6 +199,8 @@ public class GraphQLModule extends AbstractModule {
     bindBatchedDataLoaderWithAnnotation(ServiceBatchDataLoader.class);
     bindBatchedDataLoaderWithAnnotation(EnvironmentBatchDataLoader.class);
     bindBatchedDataLoaderWithAnnotation(ArtifactSourceBatchDataLoader.class);
+    bindBatchedDataLoaderWithAnnotation(WorkflowBatchDataLoader.class);
+    bindBatchedDataLoaderWithAnnotation(PipelineBatchDataLoader.class);
   }
 
   private void bindInstanceInfoControllers() {
@@ -270,6 +276,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(OutcomeConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineDataFetcher.class);
+    bindDataFetcherWithAnnotation(PipelineBatchDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineVariableConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ServiceConnectionDataFetcher.class);
@@ -287,6 +294,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(TriggerDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
+    bindDataFetcherWithAnnotation(WorkflowBatchDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowVariableConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ChangeSetConnectionDataFetcher.class);
