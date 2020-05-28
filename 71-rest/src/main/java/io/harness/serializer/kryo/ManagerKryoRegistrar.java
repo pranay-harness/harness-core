@@ -683,6 +683,7 @@ import software.wings.service.impl.instana.InstanaMetricItem;
 import software.wings.service.impl.instana.InstanaMetricValues;
 import software.wings.service.impl.instana.InstanaTagFilter;
 import software.wings.service.impl.instana.InstanaTimeFrame;
+import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
@@ -1612,5 +1613,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CustomSecretsManagerShellScript.class, 7379);
     kryo.register(StackDriverMetricDefinition.Aggregation.class, 7380);
     kryo.register(SplunkSavedSearch.class, 7381);
+    kryo.register(ContainerSyncResponse.class, 7384);
   }
 }

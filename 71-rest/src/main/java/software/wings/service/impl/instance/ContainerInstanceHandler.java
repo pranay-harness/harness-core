@@ -3,6 +3,7 @@ package software.wings.service.impl.instance;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -16,6 +17,8 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_CONTAINER_DEPLOYMENTS;
 import static software.wings.beans.container.Label.Builder.aLabel;
+import static software.wings.service.impl.instance.InstanceSyncFlow.NEW_DEPLOYMENT;
+import static software.wings.service.impl.instance.InstanceSyncFlow.PERPETUAL_TASK;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -27,8 +30,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.ResponseData;
+import io.harness.exception.GeneralException;
 import io.harness.exception.K8sPodSyncException;
-import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
@@ -70,6 +74,10 @@ import software.wings.beans.infrastructure.instance.key.deployment.ContainerDepl
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
+import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
+import software.wings.service.ContainerInstanceSyncPerpetualTaskCreator;
+import software.wings.service.InstanceSyncPerpetualTaskCreator;
 import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.ContainerMetadataType;
 import software.wings.service.impl.instance.sync.ContainerSync;
@@ -87,6 +95,7 @@ import software.wings.sm.states.k8s.K8sStateHelper;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -102,14 +111,16 @@ import java.util.stream.Collectors;
  */
 @Singleton
 @Slf4j
-public class ContainerInstanceHandler extends InstanceHandler {
+public class ContainerInstanceHandler extends InstanceHandler implements InstanceSyncByPerpetualTaskHandler {
   @Inject private ContainerSync containerSync;
   @Inject private transient K8sStateHelper k8sStateHelper;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private ContainerInstanceSyncPerpetualTaskCreator taskCreator;
   @Override
   public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
     // Key - containerSvcName, Value - Instances
-    syncInstancesInternal(appId, infraMappingId, ArrayListMultimap.create(), null, false);
+    ContainerInfrastructureMapping containerInfraMapping = getContainerInfraMapping(appId, infraMappingId);
+    syncInstancesInternal(containerInfraMapping, ArrayListMultimap.create(), null, false, null, instanceSyncFlow);
   }
 
   private ContainerInfrastructureMapping getContainerInfraMapping(String appId, String inframappingId) {
@@ -117,24 +128,23 @@ public class ContainerInstanceHandler extends InstanceHandler {
     notNullCheck("Infra mapping is null for id:" + inframappingId, infrastructureMapping);
 
     if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)) {
-      String msg = "Incompatible infra mapping type. Expecting container type. Found:"
-          + infrastructureMapping.getInfraMappingType();
+      String msg = "Incompatible infrastructure mapping type found:" + infrastructureMapping.getInfraMappingType();
       logger.error(msg);
-      throw WingsException.builder().message(msg).build();
+      throw new GeneralException(msg);
     }
 
     return (ContainerInfrastructureMapping) infrastructureMapping;
   }
 
-  private void syncInstancesInternal(String appId, String infraMappingId,
+  private void syncInstancesInternal(ContainerInfrastructureMapping containerInfraMapping,
       Multimap<ContainerMetadata, Instance> containerMetadataInstanceMap,
-      List<DeploymentSummary> newDeploymentSummaries, boolean rollback) {
-    ContainerInfrastructureMapping containerInfraMapping = getContainerInfraMapping(appId, infraMappingId);
-
+      List<DeploymentSummary> newDeploymentSummaries, boolean rollback, ResponseData responseData,
+      InstanceSyncFlow instanceSyncFlow) {
+    String appId = containerInfraMapping.getAppId();
     Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap =
         getDeploymentSummaryMap(newDeploymentSummaries, containerMetadataInstanceMap, containerInfraMapping);
 
-    loadContainerSvcNameInstanceMap(appId, infraMappingId, containerMetadataInstanceMap);
+    loadContainerSvcNameInstanceMap(containerInfraMapping, containerMetadataInstanceMap);
 
     logger.info("Found {} containerSvcNames for app {} and infraMapping",
         containerMetadataInstanceMap != null ? containerMetadataInstanceMap.size() : 0, appId);
@@ -156,110 +166,149 @@ public class ContainerInstanceHandler extends InstanceHandler {
           logger.info("Found {} instances in DB for app {} and releaseName {}", instancesInDB.size(), appId,
               containerMetadata.getReleaseName());
 
-          syncK8sInstances(
-              containerInfraMapping, containerMetadata, instancesInDB, deploymentSummaryMap.get(containerMetadata));
+          handleK8sInstances(responseData, instanceSyncFlow, containerInfraMapping, deploymentSummaryMap,
+              containerMetadata, instancesInDB);
         } else {
           logger.info("Found {} instances in DB for app {} and containerServiceName {}", instancesInDB.size(), appId,
               containerMetadata.getContainerServiceName());
 
-          // Get all the instances for the given containerSvcName (In kubernetes, this is replication Controller and in
-          // ECS it is taskDefinition)
-          ContainerSyncResponse instanceSyncResponse =
-              containerSync.getInstances(containerInfraMapping, singletonList(containerMetadata));
-          notNullCheck(
-              "InstanceSyncResponse is null for containerSvcName: " + containerMetadata.getContainerServiceName(),
-              instanceSyncResponse);
-
-          List<ContainerInfo> latestContainerInfoList =
-              Optional.ofNullable(instanceSyncResponse.getContainerInfoList()).orElse(emptyList());
-          logger.info("Found {} instances from remote server for app {} and containerSvcName {}",
-              latestContainerInfoList.size(), appId, containerMetadata.getContainerServiceName());
-
-          // Key - containerId(taskId in ECS / podId+namespace in Kubernetes), Value - ContainerInfo
-          Map<String, ContainerInfo> latestContainerInfoMap = new HashMap<>();
-          for (ContainerInfo info : latestContainerInfoList) {
-            if (info instanceof KubernetesContainerInfo) {
-              KubernetesContainerInfo k8sInfo = (KubernetesContainerInfo) info;
-              String namespace = isNotBlank(k8sInfo.getNamespace()) ? k8sInfo.getNamespace() : "";
-              latestContainerInfoMap.put(k8sInfo.getPodName() + namespace, info);
-              setHelmChartInfoToContainerInfo(deploymentSummaryMap.get(containerMetadata), k8sInfo);
-            } else {
-              latestContainerInfoMap.put(((EcsContainerInfo) info).getTaskArn(), info);
-            }
-          }
-
-          // Key - containerId (taskId in ECS / podId in Kubernetes), Value - Instance
-          Map<String, Instance> instancesInDBMap = new HashMap<>();
-
-          // If there are prior instances in db already
-          for (Instance instance : instancesInDB) {
-            ContainerInstanceKey key = instance.getContainerInstanceKey();
-            String namespace = isNotBlank(key.getNamespace()) ? key.getNamespace() : "";
-            instancesInDBMap.put(key.getContainerId() + namespace, instance);
-          }
-
-          // Find the instances that were yet to be added to db
-          SetView<String> instancesToBeAdded =
-              Sets.difference(latestContainerInfoMap.keySet(), instancesInDBMap.keySet());
-
-          SetView<String> instancesToBeDeleted =
-              Sets.difference(instancesInDBMap.keySet(), latestContainerInfoMap.keySet());
-
-          Set<String> instanceIdsToBeDeleted = new HashSet<>();
-          for (String containerId : instancesToBeDeleted) {
-            Instance instance = instancesInDBMap.get(containerId);
-            if (instance != null) {
-              instanceIdsToBeDeleted.add(instance.getUuid());
-            }
-          }
-
-          logger.info("Instances to be added {}", instancesToBeAdded.size());
-          logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
-
-          logger.info(
-              "Total number of Container instances found in DB for ContainerSvcName: {}, Namespace {} and AppId: {}, "
-                  + "No of instances in DB: {}, No of Running instances: {}, "
-                  + "No of instances to be Added: {}, No of instances to be deleted: {}",
-              containerMetadata.getContainerServiceName(), containerMetadata.getNamespace(), appId,
-              instancesInDB.size(), latestContainerInfoMap.keySet().size(), instancesToBeAdded.size(),
-              instanceIdsToBeDeleted.size());
-          if (isNotEmpty(instanceIdsToBeDeleted)) {
-            instanceService.delete(instanceIdsToBeDeleted);
-          }
-
-          DeploymentSummary deploymentSummary;
-          if (isNotEmpty(instancesToBeAdded)) {
-            // newDeploymentInfo would be null in case of sync job.
-            if (!deploymentSummaryMap.containsKey(containerMetadata) && isNotEmpty(instancesInDB)) {
-              Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
-              if (!instanceWithExecutionInfoOptional.isPresent()) {
-                logger.warn("Couldn't find an instance from a previous deployment");
-                continue;
-              }
-
-              DeploymentSummary deploymentSummaryFromPrevious =
-                  DeploymentSummary.builder()
-                      .deploymentInfo(ContainerDeploymentInfoWithNames.builder().build())
-                      .build();
-              // We pick one of the existing instances from db for the same controller / task definition
-              generateDeploymentSummaryFromInstance(
-                  instanceWithExecutionInfoOptional.get(), deploymentSummaryFromPrevious);
-              deploymentSummary = deploymentSummaryFromPrevious;
-            } else {
-              deploymentSummary =
-                  getDeploymentSummaryForInstanceCreation(deploymentSummaryMap.get(containerMetadata), rollback);
-            }
-
-            for (String containerId : instancesToBeAdded) {
-              ContainerInfo containerInfo = latestContainerInfoMap.get(containerId);
-              Instance instance =
-                  buildInstanceFromContainerInfo(containerInfraMapping, containerInfo, deploymentSummary);
-              instanceService.save(instance);
-            }
-          }
+          handleContainerServiceInstances(rollback, responseData, instanceSyncFlow, containerInfraMapping,
+              deploymentSummaryMap, containerMetadata, instancesInDB);
         }
       }
     }
+  }
+
+  private void handleContainerServiceInstances(boolean rollback, ResponseData responseData,
+      InstanceSyncFlow instanceSyncFlow, ContainerInfrastructureMapping containerInfraMapping,
+      Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap, ContainerMetadata containerMetadata,
+      Collection<Instance> instancesInDB) {
+    // Get all the instances for the given containerSvcName (In kubernetes, this is replication Controller and in
+    // ECS it is taskDefinition)
+    List<ContainerInfo> latestContainerInfoList =
+        getContainerInfos(responseData, instanceSyncFlow, containerInfraMapping, containerMetadata);
+    logger.info("Found {} instances from remote server for app {} and containerSvcName {}",
+        latestContainerInfoList.size(), containerInfraMapping.getAppId(), containerMetadata.getContainerServiceName());
+    processContainerServiceInstances(rollback, containerInfraMapping, deploymentSummaryMap, containerMetadata,
+        instancesInDB, latestContainerInfoList);
+  }
+
+  private void processContainerServiceInstances(boolean rollback, ContainerInfrastructureMapping containerInfraMapping,
+      Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap, ContainerMetadata containerMetadata,
+      Collection<Instance> instancesInDB, List<ContainerInfo> latestContainerInfoList) {
+    // Key - containerId(taskId in ECS / podId+namespace in Kubernetes), Value - ContainerInfo
+    Map<String, ContainerInfo> latestContainerInfoMap = new HashMap<>();
+    for (ContainerInfo info : latestContainerInfoList) {
+      if (info instanceof KubernetesContainerInfo) {
+        KubernetesContainerInfo k8sInfo = (KubernetesContainerInfo) info;
+        String namespace = isNotBlank(k8sInfo.getNamespace()) ? k8sInfo.getNamespace() : "";
+        latestContainerInfoMap.put(k8sInfo.getPodName() + namespace, info);
+        setHelmChartInfoToContainerInfo(deploymentSummaryMap.get(containerMetadata), k8sInfo);
+      } else {
+        latestContainerInfoMap.put(((EcsContainerInfo) info).getTaskArn(), info);
+      }
+    }
+
+    // Key - containerId (taskId in ECS / podId in Kubernetes), Value - Instance
+    Map<String, Instance> instancesInDBMap = new HashMap<>();
+
+    // If there are prior instances in db already
+    for (Instance instance : instancesInDB) {
+      ContainerInstanceKey key = instance.getContainerInstanceKey();
+      String namespace = isNotBlank(key.getNamespace()) ? key.getNamespace() : "";
+      instancesInDBMap.put(key.getContainerId() + namespace, instance);
+    }
+
+    // Find the instances that were yet to be added to db
+    SetView<String> instancesToBeAdded = Sets.difference(latestContainerInfoMap.keySet(), instancesInDBMap.keySet());
+
+    SetView<String> instancesToBeDeleted = Sets.difference(instancesInDBMap.keySet(), latestContainerInfoMap.keySet());
+
+    Set<String> instanceIdsToBeDeleted = new HashSet<>();
+    for (String containerId : instancesToBeDeleted) {
+      Instance instance = instancesInDBMap.get(containerId);
+      if (instance != null) {
+        instanceIdsToBeDeleted.add(instance.getUuid());
+      }
+    }
+
+    logger.info("Instances to be added {}", instancesToBeAdded.size());
+    logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
+
+    logger.info("Total number of Container instances found in DB for ContainerSvcName: {}, Namespace {} and AppId: {}, "
+            + "No of instances in DB: {}, No of Running instances: {}, "
+            + "No of instances to be Added: {}, No of instances to be deleted: {}",
+        containerMetadata.getContainerServiceName(), containerMetadata.getNamespace(), containerInfraMapping.getAppId(),
+        instancesInDB.size(), latestContainerInfoMap.keySet().size(), instancesToBeAdded.size(),
+        instanceIdsToBeDeleted.size());
+    if (isNotEmpty(instanceIdsToBeDeleted)) {
+      instanceService.delete(instanceIdsToBeDeleted);
+    }
+
+    DeploymentSummary deploymentSummary;
+    if (isNotEmpty(instancesToBeAdded)) {
+      // newDeploymentInfo would be null in case of sync job.
+      if (!deploymentSummaryMap.containsKey(containerMetadata) && isNotEmpty(instancesInDB)) {
+        Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
+        if (!instanceWithExecutionInfoOptional.isPresent()) {
+          logger.warn("Couldn't find an instance from a previous deployment");
+          return;
+        }
+
+        DeploymentSummary deploymentSummaryFromPrevious =
+            DeploymentSummary.builder().deploymentInfo(ContainerDeploymentInfoWithNames.builder().build()).build();
+        // We pick one of the existing instances from db for the same controller / task definition
+        generateDeploymentSummaryFromInstance(instanceWithExecutionInfoOptional.get(), deploymentSummaryFromPrevious);
+        deploymentSummary = deploymentSummaryFromPrevious;
+      } else {
+        deploymentSummary =
+            getDeploymentSummaryForInstanceCreation(deploymentSummaryMap.get(containerMetadata), rollback);
+      }
+
+      for (String containerId : instancesToBeAdded) {
+        ContainerInfo containerInfo = latestContainerInfoMap.get(containerId);
+        Instance instance = buildInstanceFromContainerInfo(containerInfraMapping, containerInfo, deploymentSummary);
+        instanceService.save(instance);
+      }
+    }
+  }
+
+  private List<ContainerInfo> getContainerInfos(ResponseData responseData, InstanceSyncFlow instanceSyncFlow,
+      ContainerInfrastructureMapping containerInfraMapping, ContainerMetadata containerMetadata) {
+    ContainerSyncResponse instanceSyncResponse = null;
+    if (PERPETUAL_TASK != instanceSyncFlow) {
+      instanceSyncResponse = containerSync.getInstances(containerInfraMapping, singletonList(containerMetadata));
+    } else if (responseData instanceof ContainerSyncResponse) {
+      instanceSyncResponse = (ContainerSyncResponse) responseData;
+    }
+
+    if (instanceSyncResponse == null) {
+      throw new GeneralException(
+          "InstanceSyncResponse is null for containerSvcName: " + containerMetadata.getContainerServiceName());
+    }
+
+    return Optional.ofNullable(instanceSyncResponse.getContainerInfoList()).orElse(emptyList());
+  }
+
+  private void handleK8sInstances(ResponseData responseData, InstanceSyncFlow instanceSyncFlow,
+      ContainerInfrastructureMapping containerInfraMapping,
+      Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap, ContainerMetadata containerMetadata,
+      Collection<Instance> instancesInDB) {
+    List<K8sPod> k8sPods = getK8sPods(responseData, instanceSyncFlow, containerInfraMapping, containerMetadata);
+    processK8sPodsInstances(containerInfraMapping, containerMetadata, instancesInDB, deploymentSummaryMap, k8sPods);
+  }
+
+  private List<K8sPod> getK8sPods(ResponseData responseData, InstanceSyncFlow instanceSyncFlow,
+      ContainerInfrastructureMapping containerInfraMapping, ContainerMetadata containerMetadata) {
+    if (PERPETUAL_TASK != instanceSyncFlow) {
+      return getK8sPodsFromDelegate(containerInfraMapping, containerMetadata);
+    } else if (responseData instanceof K8sTaskExecutionResponse) {
+      K8sTaskExecutionResponse k8sTaskExecutionResponse = (K8sTaskExecutionResponse) responseData;
+      K8sInstanceSyncResponse k8sInstanceSyncResponse =
+          (K8sInstanceSyncResponse) k8sTaskExecutionResponse.getK8sTaskResponse();
+      return k8sInstanceSyncResponse.getK8sPodInfoList();
+    }
+    return Collections.emptyList();
   }
 
   @VisibleForTesting
@@ -272,6 +321,17 @@ public class ContainerInstanceHandler extends InstanceHandler {
     });
   }
 
+  private List<K8sPod> getK8sPodsFromDelegate(
+      ContainerInfrastructureMapping containerInfraMapping, ContainerMetadata containerMetadata) {
+    try {
+      return k8sStateHelper.getPodList(
+          containerInfraMapping, containerMetadata.getNamespace(), containerMetadata.getReleaseName());
+    } catch (Exception e) {
+      throw new K8sPodSyncException(format("Exception in fetching podList for release %s, namespace %s",
+                                        containerMetadata.getReleaseName(), containerMetadata.getNamespace()),
+          e);
+    }
+  }
   private String getImageInStringFormat(Instance instance) {
     if (instance.getInstanceInfo() instanceof K8sPodInfo) {
       return emptyIfNull(((K8sPodInfo) instance.getInstanceInfo()).getContainers())
@@ -286,18 +346,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
     return emptyIfNull(pod.getContainerList()).stream().map(K8sContainer::getImage).collect(Collectors.joining());
   }
 
-  private void syncK8sInstances(ContainerInfrastructureMapping containerInfraMapping,
-      ContainerMetadata containerMetadata, Collection<Instance> instancesInDB, DeploymentSummary deploymentSummary) {
-    List<K8sPod> currentPods = null;
-    try {
-      currentPods = k8sStateHelper.getPodList(
-          containerInfraMapping, containerMetadata.getNamespace(), containerMetadata.getReleaseName());
-    } catch (Exception e) {
-      throw new K8sPodSyncException(format("Exception in fetching podList for release %s, namespace %s",
-                                        containerMetadata.getReleaseName(), containerMetadata.getNamespace()),
-          e);
-    }
-
+  private void processK8sPodsInstances(ContainerInfrastructureMapping containerInfraMapping,
+      ContainerMetadata containerMetadata, Collection<Instance> instancesInDB,
+      Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap, List<K8sPod> currentPods) {
     Map<String, K8sPod> currentPodsMap = new HashMap<>();
     Map<String, Instance> dbPodMap = new HashMap<>();
 
@@ -324,11 +375,11 @@ public class ContainerInstanceHandler extends InstanceHandler {
       logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
     }
 
+    DeploymentSummary deploymentSummary = deploymentSummaryMap.get(containerMetadata);
     for (String podName : instancesToBeAdded) {
       if (deploymentSummary == null && !instancesInDB.isEmpty()) {
         deploymentSummary =
             DeploymentSummary.builder().deploymentInfo(ContainerDeploymentInfoWithNames.builder().build()).build();
-
         generateDeploymentSummaryFromInstance(instancesInDB.stream().findFirst().get(), deploymentSummary);
       }
       Instance instance =
@@ -412,8 +463,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
     return deploymentSummaryMap;
   }
   private void loadContainerSvcNameInstanceMap(
-      String appId, String infraMappingId, Multimap<ContainerMetadata, Instance> instanceMap) {
-    List<Instance> instanceListInDBForInfraMapping = getInstances(appId, infraMappingId);
+      ContainerInfrastructureMapping containerInfraMapping, Multimap<ContainerMetadata, Instance> instanceMap) {
+    String appId = containerInfraMapping.getAppId();
+    List<Instance> instanceListInDBForInfraMapping = getInstances(appId, containerInfraMapping.getUuid());
     logger.info("Found {} instances for app {}", instanceListInDBForInfraMapping.size(), appId);
     for (Instance instance : instanceListInDBForInfraMapping) {
       InstanceInfo instanceInfo = instance.getInstanceInfo();
@@ -436,9 +488,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
                             .build(),
             instance);
       } else {
-        throw WingsException.builder()
-            .message("UnSupported instance deploymentInfo type" + instance.getInstanceType().name())
-            .build();
+        throw new GeneralException("UnSupported instance deploymentInfo type" + instance.getInstanceType().name());
       }
     }
   }
@@ -492,7 +542,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
       });
     }
 
-    syncInstancesInternal(appId, infraMappingId, containerSvcNameInstanceMap, deploymentSummaries, rollback);
+    ContainerInfrastructureMapping containerInfraMapping = getContainerInfraMapping(appId, infraMappingId);
+    syncInstancesInternal(
+        containerInfraMapping, containerSvcNameInstanceMap, deploymentSummaries, rollback, null, NEW_DEPLOYMENT);
   }
 
   @Override
@@ -506,7 +558,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
       if (!(deploymentInfo instanceof ContainerDeploymentInfoWithNames)
           && !(deploymentInfo instanceof ContainerDeploymentInfoWithLabels)
           && !(deploymentInfo instanceof K8sDeploymentInfo)) {
-        throw WingsException.builder().message("Incompatible deployment info type: " + deploymentInfo).build();
+        throw new GeneralException("Incompatible deployment info type: " + deploymentInfo);
       }
     }
   }
@@ -774,7 +826,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     } else {
       String msg = "Unsupported container instance type:" + containerInfo;
       logger.error(msg);
-      throw WingsException.builder().message(msg).build();
+      throw new GeneralException(msg);
     }
 
     return containerInstanceKey;
@@ -789,9 +841,8 @@ public class ContainerInstanceHandler extends InstanceHandler {
     if (containerInfo instanceof K8sPodInfo) {
       return null;
     } else {
-      throw WingsException.builder()
-          .message("Unsupported container deploymentInfo type:" + containerInfo.getClass().getCanonicalName())
-          .build();
+      throw new GeneralException(
+          "Unsupported container deploymentInfo type:" + containerInfo.getClass().getCanonicalName());
     }
   }
 
@@ -809,7 +860,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     } else {
       String msg = "Unsupported container instance type:" + instanceType;
       logger.error(msg);
-      throw WingsException.builder().message(msg).build();
+      throw new GeneralException(msg);
     }
   }
 
@@ -920,7 +971,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
     } else {
       String msg = "Unsupported container instance type:" + instanceType;
       logger.error(msg);
-      throw WingsException.builder().message(msg).build();
+      throw new GeneralException(msg);
     }
 
     if (containerSvcName == null) {
@@ -959,9 +1010,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
           .releaseNumber(k8sDeploymentInfo.getReleaseNumber())
           .build();
     } else {
-      throw WingsException.builder()
-          .message("Unsupported DeploymentInfo type for Container: " + deploymentInfo)
-          .build();
+      throw new GeneralException("Unsupported DeploymentInfo type for Container: " + deploymentInfo);
     }
   }
 
@@ -972,9 +1021,60 @@ public class ContainerInstanceHandler extends InstanceHandler {
     } else if (deploymentKey instanceof K8sDeploymentKey) {
       deploymentSummary.setK8sDeploymentKey((K8sDeploymentKey) deploymentKey);
     } else {
-      throw WingsException.builder()
-          .message("Invalid deploymentKey passed for ContainerDeploymentKey" + deploymentKey)
-          .build();
+      throw new GeneralException("Invalid deploymentKey passed for ContainerDeploymentKey" + deploymentKey);
     }
+  }
+
+  @Override
+  public FeatureName getFeatureFlagToEnablePerpetualTaskForInstanceSync() {
+    return FeatureName.MOVE_CONTAINER_INSTANCE_SYNC_TO_PERPETUAL_TASK;
+  }
+
+  @Override
+  public InstanceSyncPerpetualTaskCreator getInstanceSyncPerpetualTaskCreator() {
+    return taskCreator;
+  }
+
+  @Override
+  public void processInstanceSyncResponseFromPerpetualTask(
+      InfrastructureMapping infrastructureMapping, ResponseData response) {
+    if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)) {
+      String msg = "Incompatible infrastructure mapping type found:" + infrastructureMapping.getInfraMappingType();
+      logger.error(msg);
+      throw new GeneralException(msg);
+    }
+
+    ContainerInfrastructureMapping containerInfrastructureMapping =
+        (ContainerInfrastructureMapping) infrastructureMapping;
+    syncInstancesInternal(
+        containerInfrastructureMapping, ArrayListMultimap.create(), null, false, response, PERPETUAL_TASK);
+  }
+
+  @Override
+  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+    if (!(response instanceof ContainerSyncResponse) && !(response instanceof K8sTaskExecutionResponse)) {
+      throw new GeneralException("Incompatible response data received from perpetual task execution");
+    }
+
+    return response instanceof K8sTaskExecutionResponse
+        ? getK8sPerpetualTaskStatus((K8sTaskExecutionResponse) response)
+        : getContainerSyncPerpetualTaskStatus((ContainerSyncResponse) response);
+  }
+
+  private Status getK8sPerpetualTaskStatus(K8sTaskExecutionResponse response) {
+    boolean success = response.getCommandExecutionStatus() == SUCCESS;
+    K8sInstanceSyncResponse k8sInstanceSyncResponse = (K8sInstanceSyncResponse) response.getK8sTaskResponse();
+    boolean deleteTask = success && isEmpty(k8sInstanceSyncResponse.getK8sPodInfoList());
+    String errorMessage = success ? null : response.getErrorMessage();
+
+    return Status.builder().retryable(!deleteTask).errorMessage(errorMessage).success(success).build();
+  }
+
+  private Status getContainerSyncPerpetualTaskStatus(ContainerSyncResponse response) {
+    boolean success = response.getCommandExecutionStatus() == SUCCESS;
+    boolean deleteTask = success && isEmpty(response.getContainerInfoList());
+    String errorMessage = success ? null : response.getErrorMessage();
+
+    return Status.builder().retryable(!deleteTask).errorMessage(errorMessage).success(success).build();
   }
 }

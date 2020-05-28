@@ -198,4 +198,8 @@ public class Utils {
   public static <T> List<T> safe(List<T> list) {
     return list == null ? Collections.emptyList() : list;
   }
+
+  public static String emptyIfNull(String value) {
+    return value == null ? "" : value;
+  }
 }
