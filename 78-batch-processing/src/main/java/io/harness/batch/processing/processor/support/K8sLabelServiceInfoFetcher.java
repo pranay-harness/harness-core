@@ -50,7 +50,7 @@ public class K8sLabelServiceInfoFetcher {
       DeploymentSummary deploymentSummary = deploymentSummaryBuilder.build();
       return cloudToHarnessMappingService.getHarnessServiceInfo(deploymentSummary);
     } else {
-      return Optional.ofNullable(null);
+      return Optional.empty();
     }
   }
 }
