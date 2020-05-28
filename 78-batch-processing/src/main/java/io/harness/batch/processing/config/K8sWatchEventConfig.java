@@ -24,6 +24,7 @@ import io.harness.govern.Switch;
 import io.harness.perpetualtask.k8s.watch.K8sWatchEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.SkipListener;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
@@ -109,9 +110,6 @@ public class K8sWatchEventConfig {
                                        .map(K8sWorkload::decodeDotsInKey)
                                        .orElse(Collections.emptyMap());
       Optional<HarnessServiceInfo> serviceInfo = k8sLabelServiceInfoFetcher.fetchHarnessServiceInfo(accountId, labels);
-      if (!serviceInfo.isPresent()) {
-        logger.warn("Harness svc info not found for accountId={}, clusterId={}, uid={}", accountId, clusterId, uid);
-      }
       return new EnrichedEvent<>(accountId, k8sWatchEventMsg.getOccurredAt(), k8sWatchEvent, serviceInfo.orElse(null));
     };
   }
@@ -192,9 +190,16 @@ public class K8sWatchEventConfig {
   @Bean
   public Step k8sWatchEventsStep(ItemReader<? extends PublishedMessage> reader,
       ItemProcessor<? super PublishedMessage, ? extends EnrichedEvent<K8sWatchEvent>> processor,
-      ItemWriter<? super EnrichedEvent<K8sWatchEvent>> writer) {
+      ItemWriter<? super EnrichedEvent<K8sWatchEvent>> writer,
+      SkipListener<PublishedMessage, PublishedMessage> skipListener) {
     return stepBuilderFactory.get("k8sWatchEventsStep")
         .<PublishedMessage, EnrichedEvent<K8sWatchEvent>>chunk(BATCH_SIZE)
+        .faultTolerant()
+        .retry(Exception.class)
+        .retryLimit(1)
+        .skip(Exception.class)
+        .skipLimit(50)
+        .listener(skipListener)
         .reader(reader)
         .processor(processor)
         .writer(writer)

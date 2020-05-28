@@ -160,13 +160,13 @@ public class UtilizationDataServiceImpl {
     instanceDataList.forEach(instanceData -> {
       String instanceId = instanceData.getInstanceId();
       String utilInstanceId = instanceId;
-      if (instanceData.getInstanceType() == InstanceType.ECS_TASK_EC2) {
+      if (instanceData.getInstanceType() == InstanceType.ECS_TASK_EC2
+          || instanceData.getInstanceType() == InstanceType.ECS_TASK_FARGATE) {
         utilInstanceId = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ECS_SERVICE_ARN, instanceData);
       } else if (instanceData.getInstanceType() == InstanceType.ECS_CONTAINER_INSTANCE) {
         utilInstanceId = instanceData.getClusterName();
       }
-      instanceIds.computeIfAbsent(utilInstanceId, k -> new ArrayList<>());
-      instanceIds.get(utilInstanceId).add(instanceId);
+      instanceIds.computeIfAbsent(utilInstanceId, k -> new ArrayList<>()).add(instanceId);
     });
     return instanceIds;
   }
