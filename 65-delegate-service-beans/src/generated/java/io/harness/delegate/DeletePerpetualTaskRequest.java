@@ -40,6 +40,19 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
             done = true;
             break;
           case 10: {
+            io.harness.delegate.AccountId.Builder subBuilder = null;
+            if (accountId_ != null) {
+              subBuilder = accountId_.toBuilder();
+            }
+            accountId_ = input.readMessage(io.harness.delegate.AccountId.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(accountId_);
+              accountId_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
+          case 18: {
             io.harness.perpetualtask.PerpetualTaskId.Builder subBuilder = null;
             if (perpetualTaskId_ != null) {
               subBuilder = perpetualTaskId_.toBuilder();
@@ -83,22 +96,43 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
             io.harness.delegate.DeletePerpetualTaskRequest.Builder.class);
   }
 
-  public static final int PERPETUAL_TASK_ID_FIELD_NUMBER = 1;
+  public static final int ACCOUNT_ID_FIELD_NUMBER = 1;
+  private io.harness.delegate.AccountId accountId_;
+  /**
+   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   */
+  public boolean hasAccountId() {
+    return accountId_ != null;
+  }
+  /**
+   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   */
+  public io.harness.delegate.AccountId getAccountId() {
+    return accountId_ == null ? io.harness.delegate.AccountId.getDefaultInstance() : accountId_;
+  }
+  /**
+   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   */
+  public io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder() {
+    return getAccountId();
+  }
+
+  public static final int PERPETUAL_TASK_ID_FIELD_NUMBER = 2;
   private io.harness.perpetualtask.PerpetualTaskId perpetualTaskId_;
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
    */
   public boolean hasPerpetualTaskId() {
     return perpetualTaskId_ != null;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
    */
   public io.harness.perpetualtask.PerpetualTaskId getPerpetualTaskId() {
     return perpetualTaskId_ == null ? io.harness.perpetualtask.PerpetualTaskId.getDefaultInstance() : perpetualTaskId_;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
    */
   public io.harness.perpetualtask.PerpetualTaskIdOrBuilder getPerpetualTaskIdOrBuilder() {
     return getPerpetualTaskId();
@@ -119,8 +153,11 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+    if (accountId_ != null) {
+      output.writeMessage(1, getAccountId());
+    }
     if (perpetualTaskId_ != null) {
-      output.writeMessage(1, getPerpetualTaskId());
+      output.writeMessage(2, getPerpetualTaskId());
     }
     unknownFields.writeTo(output);
   }
@@ -132,8 +169,11 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
       return size;
 
     size = 0;
+    if (accountId_ != null) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, getAccountId());
+    }
     if (perpetualTaskId_ != null) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, getPerpetualTaskId());
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getPerpetualTaskId());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -150,6 +190,12 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
     }
     io.harness.delegate.DeletePerpetualTaskRequest other = (io.harness.delegate.DeletePerpetualTaskRequest) obj;
 
+    if (hasAccountId() != other.hasAccountId())
+      return false;
+    if (hasAccountId()) {
+      if (!getAccountId().equals(other.getAccountId()))
+        return false;
+    }
     if (hasPerpetualTaskId() != other.hasPerpetualTaskId())
       return false;
     if (hasPerpetualTaskId()) {
@@ -168,6 +214,10 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
+    if (hasAccountId()) {
+      hash = (37 * hash) + ACCOUNT_ID_FIELD_NUMBER;
+      hash = (53 * hash) + getAccountId().hashCode();
+    }
     if (hasPerpetualTaskId()) {
       hash = (37 * hash) + PERPETUAL_TASK_ID_FIELD_NUMBER;
       hash = (53 * hash) + getPerpetualTaskId().hashCode();
@@ -285,6 +335,12 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
     @java.lang.Override
     public Builder clear() {
       super.clear();
+      if (accountIdBuilder_ == null) {
+        accountId_ = null;
+      } else {
+        accountId_ = null;
+        accountIdBuilder_ = null;
+      }
       if (perpetualTaskIdBuilder_ == null) {
         perpetualTaskId_ = null;
       } else {
@@ -321,6 +377,11 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
     lang.Override
     public io.harness.delegate.DeletePerpetualTaskRequest buildPartial() {
       io.harness.delegate.DeletePerpetualTaskRequest result = new io.harness.delegate.DeletePerpetualTaskRequest(this);
+      if (accountIdBuilder_ == null) {
+        result.accountId_ = accountId_;
+      } else {
+        result.accountId_ = accountIdBuilder_.build();
+      }
       if (perpetualTaskIdBuilder_ == null) {
         result.perpetualTaskId_ = perpetualTaskId_;
       } else {
@@ -368,6 +429,9 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
     public Builder mergeFrom(io.harness.delegate.DeletePerpetualTaskRequest other) {
       if (other == io.harness.delegate.DeletePerpetualTaskRequest.getDefaultInstance())
         return this;
+      if (other.hasAccountId()) {
+        mergeAccountId(other.getAccountId());
+      }
       if (other.hasPerpetualTaskId()) {
         mergePerpetualTaskId(other.getPerpetualTaskId());
       }
@@ -398,18 +462,129 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
 
+    private io.harness.delegate.AccountId accountId_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.AccountId,
+        io.harness.delegate.AccountId.Builder, io.harness.delegate.AccountIdOrBuilder> accountIdBuilder_;
+    /**
+     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     */
+    public boolean hasAccountId() {
+      return accountIdBuilder_ != null || accountId_ != null;
+    }
+    /**
+     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     */
+    public io.harness.delegate.AccountId getAccountId() {
+      if (accountIdBuilder_ == null) {
+        return accountId_ == null ? io.harness.delegate.AccountId.getDefaultInstance() : accountId_;
+      } else {
+        return accountIdBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     */
+    public Builder setAccountId(io.harness.delegate.AccountId value) {
+      if (accountIdBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        accountId_ = value;
+        onChanged();
+      } else {
+        accountIdBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     */
+    public Builder setAccountId(io.harness.delegate.AccountId.Builder builderForValue) {
+      if (accountIdBuilder_ == null) {
+        accountId_ = builderForValue.build();
+        onChanged();
+      } else {
+        accountIdBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     */
+    public Builder mergeAccountId(io.harness.delegate.AccountId value) {
+      if (accountIdBuilder_ == null) {
+        if (accountId_ != null) {
+          accountId_ = io.harness.delegate.AccountId.newBuilder(accountId_).mergeFrom(value).buildPartial();
+        } else {
+          accountId_ = value;
+        }
+        onChanged();
+      } else {
+        accountIdBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     */
+    public Builder clearAccountId() {
+      if (accountIdBuilder_ == null) {
+        accountId_ = null;
+        onChanged();
+      } else {
+        accountId_ = null;
+        accountIdBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     */
+    public io.harness.delegate.AccountId.Builder getAccountIdBuilder() {
+      onChanged();
+      return getAccountIdFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     */
+    public io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder() {
+      if (accountIdBuilder_ != null) {
+        return accountIdBuilder_.getMessageOrBuilder();
+      } else {
+        return accountId_ == null ? io.harness.delegate.AccountId.getDefaultInstance() : accountId_;
+      }
+    }
+    /**
+     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.AccountId,
+        io.harness.delegate.AccountId.Builder, io.harness.delegate.AccountIdOrBuilder>
+    getAccountIdFieldBuilder() {
+      if (accountIdBuilder_ == null) {
+        accountIdBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.AccountId,
+            io.harness.delegate.AccountId.Builder, io.harness.delegate.AccountIdOrBuilder>(
+            getAccountId(), getParentForChildren(), isClean());
+        accountId_ = null;
+      }
+      return accountIdBuilder_;
+    }
+
     private io.harness.perpetualtask.PerpetualTaskId perpetualTaskId_;
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskId,
         io.harness.perpetualtask.PerpetualTaskId.Builder, io.harness.perpetualtask.PerpetualTaskIdOrBuilder>
         perpetualTaskIdBuilder_;
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
      */
     public boolean hasPerpetualTaskId() {
       return perpetualTaskIdBuilder_ != null || perpetualTaskId_ != null;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
      */
     public io.harness.perpetualtask.PerpetualTaskId getPerpetualTaskId() {
       if (perpetualTaskIdBuilder_ == null) {
@@ -420,7 +595,7 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
      */
     public Builder setPerpetualTaskId(io.harness.perpetualtask.PerpetualTaskId value) {
       if (perpetualTaskIdBuilder_ == null) {
@@ -436,7 +611,7 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
      */
     public Builder setPerpetualTaskId(io.harness.perpetualtask.PerpetualTaskId.Builder builderForValue) {
       if (perpetualTaskIdBuilder_ == null) {
@@ -449,7 +624,7 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
      */
     public Builder mergePerpetualTaskId(io.harness.perpetualtask.PerpetualTaskId value) {
       if (perpetualTaskIdBuilder_ == null) {
@@ -467,7 +642,7 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
      */
     public Builder clearPerpetualTaskId() {
       if (perpetualTaskIdBuilder_ == null) {
@@ -481,14 +656,14 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
      */
     public io.harness.perpetualtask.PerpetualTaskId.Builder getPerpetualTaskIdBuilder() {
       onChanged();
       return getPerpetualTaskIdFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
      */
     public io.harness.perpetualtask.PerpetualTaskIdOrBuilder getPerpetualTaskIdOrBuilder() {
       if (perpetualTaskIdBuilder_ != null) {
@@ -499,7 +674,7 @@ public final class DeletePerpetualTaskRequest extends com.google.protobuf.Genera
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskId,
         io.harness.perpetualtask.PerpetualTaskId.Builder, io.harness.perpetualtask.PerpetualTaskIdOrBuilder>

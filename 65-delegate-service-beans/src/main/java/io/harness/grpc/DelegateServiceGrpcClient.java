@@ -3,9 +3,14 @@ package io.harness.grpc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.AccountId;
 import io.harness.delegate.CancelTaskRequest;
 import io.harness.delegate.CancelTaskResponse;
+import io.harness.delegate.CreatePerpetualTaskRequest;
+import io.harness.delegate.CreatePerpetualTaskResponse;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
+import io.harness.delegate.DeletePerpetualTaskRequest;
+import io.harness.delegate.ResetPerpetualTaskRequest;
 import io.harness.delegate.SubmitTaskRequest;
 import io.harness.delegate.SubmitTaskResponse;
 import io.harness.delegate.TaskCapabilities;
@@ -17,6 +22,9 @@ import io.harness.delegate.TaskProgressResponse;
 import io.harness.delegate.TaskProgressUpdatesRequest;
 import io.harness.delegate.TaskProgressUpdatesResponse;
 import io.harness.delegate.TaskSetupAbstractions;
+import io.harness.perpetualtask.PerpetualTaskContext;
+import io.harness.perpetualtask.PerpetualTaskId;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Iterator;
@@ -70,5 +78,33 @@ public class DelegateServiceGrpcClient {
     return StreamSupport.stream(iterable.spliterator(), false)
         .map(TaskProgressUpdatesResponse::getCurrentlyAtStage)
         .collect(Collectors.toList());
+  }
+
+  public PerpetualTaskId createPerpetualTask(AccountId accountId, String type, PerpetualTaskSchedule schedule,
+      PerpetualTaskContext context, boolean allowDuplicate) {
+    CreatePerpetualTaskResponse response = delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+                                               .createPerpetualTask(CreatePerpetualTaskRequest.newBuilder()
+                                                                        .setAccountId(accountId)
+                                                                        .setType(type)
+                                                                        .setSchedule(schedule)
+                                                                        .setContext(context)
+                                                                        .setAllowDuplicate(allowDuplicate)
+                                                                        .build());
+
+    return response.getPerpetualTaskId();
+  }
+
+  public void deletePerpetualTask(AccountId accountId, PerpetualTaskId perpetualTaskId) {
+    delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+        .deletePerpetualTask(DeletePerpetualTaskRequest.newBuilder()
+                                 .setAccountId(accountId)
+                                 .setPerpetualTaskId(perpetualTaskId)
+                                 .build());
+  }
+
+  public void resetPerpetualTask(AccountId accountId, PerpetualTaskId perpetualTaskId) {
+    delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+        .resetPerpetualTask(
+            ResetPerpetualTaskRequest.newBuilder().setAccountId(accountId).setPerpetualTaskId(perpetualTaskId).build());
   }
 }
