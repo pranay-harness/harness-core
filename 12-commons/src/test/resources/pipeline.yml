@@ -1,0 +1,3 @@
+ infrastructure:
+      inner1: kubernetes-direct
+      inner2: ${abc}
