@@ -459,12 +459,13 @@ public class AwsLambdaHelperServiceDelegateImpl
     String functionArn = functionResult.getConfiguration().getFunctionArn();
     Map<String, String> existingTags = functionResult.getTags();
     if (isNotEmpty(existingTags)) {
-      logCallback.saveExecutionLog(format("Untagging existing tags from the function: [%s]", functionArn));
-      tracker.trackLambdaCall("Untag Function");
-      lambdaClient.untagResource(
-          new UntagResourceRequest()
-              .withResource(functionArn)
-              .withTagKeys(existingTags.entrySet().stream().map(Entry::getKey).collect(toList())));
+      List<String> keysToRemove =
+          existingTags.entrySet().stream().map(Entry::getKey).filter(key -> !key.startsWith("aws:")).collect(toList());
+      if (isNotEmpty(keysToRemove)) {
+        logCallback.saveExecutionLog(format("Untagging existing tags from the function: [%s]", functionArn));
+        tracker.trackLambdaCall("Untag Function");
+        lambdaClient.untagResource(new UntagResourceRequest().withResource(functionArn).withTagKeys(keysToRemove));
+      }
     }
     if (isEmpty(functionTags)) {
       logCallback.saveExecutionLog("No new tags to be put.");
