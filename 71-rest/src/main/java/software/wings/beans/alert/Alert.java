@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -24,22 +25,29 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertSeverity;
 import software.wings.alerts.AlertStatus;
+import software.wings.beans.alert.Alert.AlertKeys;
+import software.wings.beans.alert.AlertReconciliation.AlertReconciliationKeys;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
 import javax.validation.constraints.NotNull;
 
-/**
- * Created by brett on 10/18/17
- */
 @FieldNameConstants(innerTypeName = "AlertKeys")
 @Indexes({
-  @Index(fields = { @Field("accountId")
-                    , @Field("appId"), @Field("type"), @Field("status") },
+  @Index(fields =
+      { @Field(AlertKeys.accountId)
+        , @Field(AlertKeys.appId), @Field(AlertKeys.type), @Field(AlertKeys.status) },
       options = @IndexOptions(name = "accountAppTypeStatusIdx"))
   ,
-      @Index(fields = { @Field("type")
-                        , @Field("createdAt") }, options = @IndexOptions(name = "createdAtTypeIndex"))
+      @Index(fields = {
+        @Field(AlertKeys.accountId), @Field(AlertKeys.type), @Field(AlertKeys.status)
+      }, options = @IndexOptions(name = "accountTypeStatusIdx")), @Index(fields = {
+        @Field(AlertKeys.type), @Field(AlertKeys.createdAt)
+      }, options = @IndexOptions(name = "createdAtTypeIndex")), @Index(fields = {
+        @Field(AlertKeys.status)
+        , @Field(AlertKeys.alertReconciliation + "." + AlertReconciliationKeys.needed),
+            @Field(AlertKeys.alertReconciliation + "." + AlertReconciliationKeys.nextIteration)
+      }, options = @IndexOptions(name = "reconciliationIterator")),
 })
 @Data
 @Builder
@@ -51,7 +59,7 @@ public class Alert
   @Indexed @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private long createdAt;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
-  @Indexed private String accountId;
+  private String accountId;
   private AlertType type;
   private AlertStatus status;
   private String title;
@@ -59,6 +67,7 @@ public class Alert
   private AlertCategory category;
   private AlertSeverity severity;
   private AlertData alertData;
+  private AlertReconciliation alertReconciliation;
   private long closedAt;
   private int triggerCount;
 
@@ -76,6 +85,10 @@ public class Alert
       this.cvCleanUpIteration = nextIteration;
       return;
     }
+    if (AlertKeys.alertReconciliation_nextIteration.equals(fieldName)) {
+      this.alertReconciliation.setNextIteration(nextIteration);
+      return;
+    }
   }
 
   @Override
@@ -83,6 +96,17 @@ public class Alert
     if (AlertKeys.cvCleanUpIteration.equals(fieldName)) {
       return this.cvCleanUpIteration;
     }
+    if (AlertKeys.alertReconciliation_nextIteration.equals(fieldName)) {
+      return this.alertReconciliation.getNextIteration();
+    }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  @UtilityClass
+  public static final class AlertKeys {
+    public static final String alertReconciliation_needed =
+        AlertKeys.alertReconciliation + "." + AlertReconciliationKeys.needed;
+    public static final String alertReconciliation_nextIteration =
+        alertReconciliation + "." + AlertReconciliationKeys.nextIteration;
   }
 }

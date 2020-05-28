@@ -40,6 +40,11 @@ public class NoOpAlertService implements AlertService {
   }
 
   @Override
+  public void close(Alert alert) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public void closeAllAlerts(String accountId, String appId, AlertType alertType, AlertData alertData) {
     throw new UnsupportedOperationException();
   }
@@ -50,7 +55,12 @@ public class NoOpAlertService implements AlertService {
   }
 
   @Override
-  public void activeDelegateUpdated(String accountId, String delegateId) {
+  public void delegateAvailabilityUpdated(String accountId) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void delegateEligibilityUpdated(String accountId, String delegateId) {
     throw new UnsupportedOperationException();
   }
 

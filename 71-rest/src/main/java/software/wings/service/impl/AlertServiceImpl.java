@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.alerts.AlertStatus.Closed;
@@ -48,6 +49,7 @@ import org.mongodb.morphia.query.UpdateResults;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.Alert.AlertBuilder;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
@@ -55,7 +57,7 @@ import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
-import software.wings.beans.alert.NoEligibleDelegatesAlert;
+import software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation.NoEligibleDelegatesAlertReconciliationKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.logcontext.AlertLogContext;
@@ -141,8 +143,28 @@ public class AlertServiceImpl implements AlertService {
   }
 
   @Override
-  public void activeDelegateUpdated(String accountId, String delegateId) {
-    // Do nothing until the performance of the reconciliation is fixed
+  public void delegateAvailabilityUpdated(String accountId) {
+    findExistingAlert(
+        accountId, GLOBAL_APP_ID, NoActiveDelegates, NoActiveDelegatesAlert.builder().accountId(accountId).build())
+        .ifPresent(this ::close);
+  }
+
+  @Override
+  public void delegateEligibilityUpdated(String accountId, String delegateId) {
+    Query<Alert> query = wingsPersistence.createQuery(Alert.class)
+                             .filter(AlertKeys.accountId, accountId)
+                             .filter(AlertKeys.type, NoEligibleDelegates)
+                             .field(AlertKeys.status)
+                             .in(STATUS_ACTIVE);
+
+    UpdateOperations<Alert> updateOperations =
+        wingsPersistence.createUpdateOperations(Alert.class)
+            .disableValidation()
+            .set(AlertKeys.alertReconciliation_needed, Boolean.TRUE)
+            .addToSet(
+                AlertKeys.alertReconciliation + "." + NoEligibleDelegatesAlertReconciliationKeys.delegates, delegateId);
+
+    wingsPersistence.update(query, updateOperations);
   }
 
   @Override
@@ -152,22 +174,22 @@ public class AlertServiceImpl implements AlertService {
 
   private Alert createAlertObject(
       String accountId, String appId, AlertType alertType, AlertData alertData, Date validUntil) {
-    Alert alert = Alert.builder()
-                      .appId(appId)
-                      .accountId(accountId)
-                      .type(alertType)
-                      .status(Pending)
-                      .alertData(alertData)
-                      .title(alertData.buildTitle())
-                      .resolutionTitle(alertData.buildResolutionTitle())
-                      .category(alertType.getCategory())
-                      .severity(alertType.getSeverity())
-                      .triggerCount(0)
-                      .build();
+    AlertBuilder alertBuilder = Alert.builder()
+                                    .appId(appId)
+                                    .accountId(accountId)
+                                    .type(alertType)
+                                    .status(Pending)
+                                    .alertData(alertData)
+                                    .title(alertData.buildTitle())
+                                    .resolutionTitle(alertData.buildResolutionTitle())
+                                    .category(alertType.getCategory())
+                                    .severity(alertType.getSeverity())
+                                    .triggerCount(0)
+                                    .alertReconciliation(alertType.getAlertReconciliation());
     if (validUntil != null) {
-      alert.setValidUntil(validUntil);
+      alertBuilder.validUntil(validUntil);
     }
-    return alert;
+    return alertBuilder.build();
   }
 
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData, Date validUntil) {
@@ -250,26 +272,6 @@ public class AlertServiceImpl implements AlertService {
 
   private static EventData alertEventData(Alert alert) {
     return EventData.builder().eventInfo(new AlertEvent(alert)).build();
-  }
-
-  private void activeDelegateUpdatedInternal(String accountId, String delegateId) {
-    findExistingAlert(
-        accountId, GLOBAL_APP_ID, NoActiveDelegates, NoActiveDelegatesAlert.builder().accountId(accountId).build())
-        .ifPresent(this ::close);
-    Query<Alert> query = wingsPersistence.createQuery(Alert.class)
-                             .filter(AlertKeys.accountId, accountId)
-                             .filter(AlertKeys.type, NoEligibleDelegates)
-                             .field(AlertKeys.status)
-                             .in(STATUS_ACTIVE);
-    try (HIterator<Alert> alerts = new HIterator<>(query.fetch())) {
-      for (Alert alert : alerts) {
-        NoEligibleDelegatesAlert data = (NoEligibleDelegatesAlert) alert.getAlertData();
-        if (assignDelegateService.canAssign(null, delegateId, accountId, data.getAppId(), data.getEnvId(),
-                data.getInfraMappingId(), data.getTaskGroup(), data.getTags())) {
-          close(alert);
-        }
-      }
-    }
   }
 
   private void deploymentCompletedInternal(String appId, String executionId) {
@@ -356,8 +358,9 @@ public class AlertServiceImpl implements AlertService {
     return new HIterator<>(alertQuery.fetch());
   }
 
-  private void close(Alert alert) {
-    long now = System.currentTimeMillis();
+  @Override
+  public void close(Alert alert) {
+    long now = currentTimeMillis();
     Date expiration = Date.from(OffsetDateTime.now().plusDays(5).toInstant());
 
     final UpdateResults updateResults = wingsPersistence.update(wingsPersistence.createQuery(Alert.class)

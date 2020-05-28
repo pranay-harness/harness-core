@@ -3,9 +3,8 @@ package software.wings.service.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,7 +33,6 @@ import io.harness.event.model.Event;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.rule.Owner;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -221,22 +219,34 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  @Ignore("The test is ignored until the reconcillation performance is fixed.")
-  public void shouldCloseAlertsWhenDelegateUpdated() {
+  public void shouldScheduleNoActiveReconcileWhenUpdated() {
     alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoActiveDelegates, noActiveDelegatesAlert);
-    alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, noEligibleDelegatesAlert);
-    when(assignDelegateService.canAssign(eq(null), eq(DELEGATE_ID), any(), any(), any(), any(), any(), any()))
-        .thenReturn(true);
 
-    alertService.activeDelegateUpdated(ACCOUNT_ID, DELEGATE_ID);
+    alertService.delegateAvailabilityUpdated(ACCOUNT_ID);
 
     PageResponse<Alert> alerts =
         alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
-    assertThat(alerts).hasSize(2);
+    assertThat(alerts).hasSize(1);
     for (Alert alert : alerts) {
       assertThat(alert.getStatus()).isEqualTo(Closed);
+    }
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void shouldScheduleNoEligibleReconcileWhenUpdated() {
+    alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, noEligibleDelegatesAlert);
+
+    alertService.delegateEligibilityUpdated(ACCOUNT_ID, DELEGATE_ID);
+
+    PageResponse<Alert> alerts =
+        alertService.list(aPageRequest().addFilter(AlertKeys.accountId, Operator.EQ, ACCOUNT_ID).build());
+    assertThat(alerts).hasSize(1);
+    for (Alert alert : alerts) {
+      assertThat(alert.getAlertReconciliation().isNeeded()).isTrue();
     }
   }
 

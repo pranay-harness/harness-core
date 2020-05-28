@@ -622,7 +622,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     } else {
       Delegate updatedDelegate = updateDelegate(delegate, updateOperations);
       if (currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
-        alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
+        alertService.delegateEligibilityUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
       }
 
       return updatedDelegate;
@@ -647,7 +647,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     } else {
       Delegate updatedDelegate = updateDelegate(delegate, updateOperations);
       if (currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
-        alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
+        alertService.delegateEligibilityUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
       }
       return updatedDelegate;
     }
@@ -1600,7 +1600,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       updateBroadcastMessageIfEcsDelegate(message, delegate, registeredDelegate);
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(message.toString());
 
-      alertService.activeDelegateUpdated(registeredDelegate.getAccountId(), registeredDelegate.getUuid());
+      // TODO: revisit this call, it seems overkill
+      alertService.delegateAvailabilityUpdated(registeredDelegate.getAccountId());
+      alertService.delegateEligibilityUpdated(registeredDelegate.getAccountId(), registeredDelegate.getUuid());
     }
     return registeredDelegate;
   }
@@ -3023,6 +3025,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return null;
     }
 
+    alertService.delegateAvailabilityUpdated(delegate.getAccountId());
+
     for (Delegate delegateToBeUpdated : delegates) {
       try (AutoLogContext ignore = new DelegateLogContext(delegateToBeUpdated.getUuid(), OVERRIDE_NESTS)) {
         if ("SCOPES".equals(fieldBeingUpdate)) {
@@ -3039,7 +3043,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           retVal.add(updatedDelegate);
         }
         if (currentTimeMillis() - updatedDelegate.getLastHeartBeat() < Duration.ofMinutes(2).toMillis()) {
-          alertService.activeDelegateUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
+          alertService.delegateEligibilityUpdated(updatedDelegate.getAccountId(), updatedDelegate.getUuid());
         }
       }
     }
