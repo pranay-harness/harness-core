@@ -86,7 +86,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
         .error("activity log from test");
     CVActivityLog cvActivityLog =
         wingsPersistence.createQuery(CVActivityLog.class).filter(CVActivityLogKeys.cvConfigId, cvConfigId).get();
-    assertThat(cvActivityLog.getAnsiLog()).isEqualTo("\u001B[31mactivity log from test\u001B[0m");
+    assertThat(cvActivityLog.getAnsiLog()).isEqualTo("\u001B[1;91m\u001B[40mactivity log from test\u001B[0m");
 
     cvConfigId = generateUuid();
     cvActivityLogService.getLoggerByCVConfigId(accountId, cvConfigId, TimeUnit.MILLISECONDS.toMinutes(now))
