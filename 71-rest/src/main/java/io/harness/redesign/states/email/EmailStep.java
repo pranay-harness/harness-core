@@ -68,7 +68,6 @@ public class EmailStep implements Step, SyncExecutable {
     return stepResponseBuilder.build();
   }
 
-  @Override
   public StepType getType() {
     return STEP_TYPE;
   }

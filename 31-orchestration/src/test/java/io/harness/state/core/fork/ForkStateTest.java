@@ -37,13 +37,6 @@ public class ForkStateTest extends OrchestrationTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
-  public void shouldTestGetStateType() {
-    assertThat(forkState.getType()).isEqualTo(STATE_TYPE);
-  }
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
   public void shouldTestObtainChildren() {
     Ambiance ambiance = Ambiance.builder().build();
     List<StepTransput> stepTransputList = new ArrayList<>();

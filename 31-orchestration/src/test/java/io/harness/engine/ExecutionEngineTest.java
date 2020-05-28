@@ -224,11 +224,6 @@ public class ExecutionEngineTest extends OrchestrationTest {
 
   private static class TestHttpResponseCodeSwitchAdviser implements Adviser {
     @Override
-    public AdviserType getType() {
-      return TEST_ADVISER_TYPE;
-    }
-
-    @Override
     public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
       return null;
     }
@@ -239,11 +234,6 @@ public class ExecutionEngineTest extends OrchestrationTest {
     public StepResponse executeSync(
         Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
       return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
-    }
-
-    @Override
-    public StepType getType() {
-      return TEST_STEP_TYPE;
     }
   }
 }

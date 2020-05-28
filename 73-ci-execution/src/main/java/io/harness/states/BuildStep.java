@@ -17,7 +17,6 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.network.SafeHttpCall;
 import io.harness.state.Step;
-import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
@@ -76,10 +75,5 @@ public class BuildStep implements Step, SyncExecutable {
     }
 
     return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
-  }
-
-  @Override
-  public StepType getType() {
-    return BuildStepInfo.stateType;
   }
 }

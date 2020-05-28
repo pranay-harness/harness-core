@@ -17,7 +17,6 @@ import io.harness.engine.services.OutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.references.RefObject;
-import io.harness.references.RefType;
 
 @OwnedBy(CDC)
 public class OutcomeServiceImpl implements OutcomeService {
@@ -73,10 +72,5 @@ public class OutcomeServiceImpl implements OutcomeService {
       throw new InvalidRequestException(
           format("Outcome with name %s, already saved", outcomeInstance.getName()), exception);
     }
-  }
-
-  @Override
-  public RefType getType() {
-    return RefType.builder().type("OUTCOME").build();
   }
 }

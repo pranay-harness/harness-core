@@ -100,9 +100,4 @@ public class BasicHttpStep implements Step, AsyncTaskExecutable {
     }
     return responseBuilder.build();
   }
-
-  @Override
-  public StepType getType() {
-    return STEP_TYPE;
-  }
 }

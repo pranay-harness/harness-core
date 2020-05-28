@@ -31,9 +31,4 @@ public class OnFailAdviser implements Adviser {
         (OnFailAdviserParameters) Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
     return NextStepAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
   }
-
-  @Override
-  public AdviserType getType() {
-    return ADVISER_TYPE;
-  }
 }

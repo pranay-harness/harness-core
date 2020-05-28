@@ -23,11 +23,6 @@ public class ChildFacilitator implements Facilitator {
   public static final FacilitatorType FACILITATOR_TYPE = FacilitatorType.builder().type(FacilitatorType.CHILD).build();
 
   @Override
-  public FacilitatorType getType() {
-    return FACILITATOR_TYPE;
-  }
-
-  @Override
   public FacilitatorResponse facilitate(
       Ambiance ambiance, StepParameters stepParameters, FacilitatorParameters parameters, List<StepTransput> inputs) {
     return FacilitatorResponse.builder()

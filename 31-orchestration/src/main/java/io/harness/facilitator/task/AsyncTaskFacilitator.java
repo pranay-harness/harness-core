@@ -24,11 +24,6 @@ public class AsyncTaskFacilitator implements Facilitator {
       FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build();
 
   @Override
-  public FacilitatorType getType() {
-    return FACILITATOR_TYPE;
-  }
-
-  @Override
   public FacilitatorResponse facilitate(
       Ambiance ambiance, StepParameters stepParameters, FacilitatorParameters parameters, List<StepTransput> inputs) {
     return FacilitatorResponse.builder()

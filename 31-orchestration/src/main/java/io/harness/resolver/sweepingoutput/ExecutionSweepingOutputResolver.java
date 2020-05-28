@@ -100,9 +100,4 @@ public class ExecutionSweepingOutputResolver implements Resolver<SweepingOutput>
     }
     return levelRuntimeIdIndices;
   }
-
-  @Override
-  public RefType getType() {
-    return RefType.builder().type(RESOLVER_TYPE).build();
-  }
 }
