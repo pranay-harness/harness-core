@@ -33,7 +33,8 @@ public class ExportExecutionsRequestLimitChecks {
     }
 
     if (executionCount.getValue() == 0) {
-      throw new InvalidRequestException("No executions found matching the given filters");
+      throw new InvalidRequestException(
+          "No executions found matching request filters. Note that executions that were not finished when request was made are ignored");
     } else if (executionCount.hasViolation()) {
       throw new InvalidRequestException(format(
           "Number of executions for the given filters is: %d which is greater than the limit for a single export operation: %d",
