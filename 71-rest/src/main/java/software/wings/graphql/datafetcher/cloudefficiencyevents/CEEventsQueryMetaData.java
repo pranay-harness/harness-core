@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class CEEventsQueryMetaData {
   private static final CEEventsTableSchema schema = new CEEventsTableSchema();
-  enum DataType { STRING, TIMESTAMP }
+  enum DataType { STRING, TIMESTAMP, DOUBLE }
   public enum CEEventsMetaDataFields {
     STARTTIME("STARTTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
     CLUSTERID("CLUSTERID", DataType.STRING, QLFilterKind.SIMPLE),
@@ -33,7 +33,9 @@ public class CEEventsQueryMetaData {
     COSTEVENTTYPE("COSTEVENTTYPE", DataType.STRING, QLFilterKind.SIMPLE),
     COSTEVENTSOURCE("COSTEVENTSOURCE", DataType.STRING, QLFilterKind.SIMPLE),
     OLDYAMLREF("OLDYAMLREF", DataType.STRING, QLFilterKind.SIMPLE),
-    NEWYAMLREF("NEWYAMLREF", DataType.STRING, QLFilterKind.SIMPLE);
+    NEWYAMLREF("NEWYAMLREF", DataType.STRING, QLFilterKind.SIMPLE),
+    COST_CHANGE_PERCENT("COST_CHANGE_PERCENT", DataType.DOUBLE, QLFilterKind.SIMPLE);
+
     private DataType dataType;
     private String fieldName;
     private QLFilterKind filterKind;

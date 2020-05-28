@@ -30,6 +30,7 @@ type EventsDataPoint {
   details: String
   oldYamlRef: String
   newYamlRef: String
+  costChangePercentage: Number
 }
 
 input EventsFilter {
