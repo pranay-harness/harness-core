@@ -81,15 +81,13 @@ public class EventServiceTestRule implements MethodRule, InjectorRuleMixin, Mong
 
   @Override
   public void initialize(Injector injector, List<Module> modules) {
-    injector.getInstance(ServiceManager.class).startAsync().awaitHealthy();
+    ServiceManager serviceManager = injector.getInstance(ServiceManager.class);
+    serviceManager.startAsync().awaitHealthy();
+    closingFactory.addServer(() -> serviceManager.stopAsync().awaitStopped());
     injector.getInstance(HPersistence.class).registerUserProvider(new ThreadLocalUserProvider());
-    injector.getInstance(ChronicleEventTailer.class).startAsync().awaitRunning();
-  }
-
-  @Override
-  public void destroy(Injector injector, List<Module> modules) throws Exception {
-    injector.getInstance(ChronicleEventTailer.class).stopAsync().awaitTerminated();
-    injector.getInstance(EventPublisher.class).shutdown();
-    injector.getInstance(ServiceManager.class).stopAsync().awaitStopped();
+    ChronicleEventTailer chronicleEventTailer = injector.getInstance(ChronicleEventTailer.class);
+    chronicleEventTailer.startAsync().awaitRunning();
+    closingFactory.addServer(() -> chronicleEventTailer.stopAsync().awaitTerminated());
+    closingFactory.addServer(() -> injector.getInstance(EventPublisher.class).shutdown());
   }
 }
