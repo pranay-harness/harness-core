@@ -47,6 +47,7 @@ type CloudProviderConnection {
 
 type CEHealthStatus {
   isHealthy: Boolean
+  messages: [String]
   clusterHealthStatusList: [CEClusterHealth]
 }
 

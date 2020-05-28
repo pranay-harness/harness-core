@@ -3,7 +3,7 @@ package io.harness.ccm.health;
 import lombok.Getter;
 
 public enum CEError {
-  NO_CLUSTERS_TRACKED_BY_HARNESS_CE("No clusters are tracked by Harness CE."),
+  NO_CLUSTERS_TRACKED_BY_HARNESS_CE("No ECS cluster tracked by Harness for this AWS cloud provider %s"),
 
   PERPETUAL_TASK_CREATION_FAILURE("Perpetual tasks fail to be created for the cluster %s."),
 

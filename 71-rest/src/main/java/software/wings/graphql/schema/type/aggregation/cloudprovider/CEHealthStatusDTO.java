@@ -8,5 +8,6 @@ import java.util.List;
 @Builder
 public class CEHealthStatusDTO {
   boolean isHealthy;
+  List<String> messages;
   List<CEClusterHealth> clusterHealthStatusList;
 }
