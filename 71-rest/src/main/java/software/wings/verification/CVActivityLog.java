@@ -1,5 +1,10 @@
 package software.wings.verification;
 
+import static software.wings.beans.Log.LogColor.Red;
+import static software.wings.beans.Log.LogColor.Yellow;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
+import static software.wings.beans.Log.doneColoring;
 import static software.wings.common.VerificationConstants.ACTIVITY_LOG_TTL_WEEKS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -75,23 +80,17 @@ public class CVActivityLog implements PersistentEntity, UuidAware, CreatedAtAwar
   }
 
   public String getAnsiLog() {
-    return logLevel.toAnsi(log);
-  }
-  public enum LogLevel {
-    INFO(),
-    WARN(Ansi.Yellow),
-    ERROR(Ansi.Red);
-
-    private Ansi ansi;
-
-    LogLevel(Ansi ansi) {
-      this.ansi = ansi;
+    String ansiLog;
+    if (logLevel == LogLevel.ERROR) {
+      ansiLog = color(log, Red, Bold);
+    } else if (logLevel == LogLevel.WARN) {
+      ansiLog = color(log, Yellow, Bold);
+    } else {
+      ansiLog = log;
     }
 
-    LogLevel() {}
-
-    public String toAnsi(String log) {
-      return ansi == null ? log : ansi.colorize(log);
-    }
+    return doneColoring(ansiLog);
   }
+
+  public enum LogLevel { INFO, WARN, ERROR }
 }
