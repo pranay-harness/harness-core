@@ -2766,4 +2766,10 @@ public class WorkflowServiceHelper {
       cleanupPhaseStepSkipStrategies(workflowPhase);
     }
   }
+
+  public void validateService(WorkflowPhase phase, String serviceName) {
+    if (!phase.checkServiceTemplatized() && phase.getServiceId() == null) {
+      throw new InvalidRequestException("Service Cannot be Empty for name :" + serviceName);
+    }
+  }
 }

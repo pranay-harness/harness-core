@@ -31,6 +31,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
@@ -59,6 +60,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
   @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AppService appService;
+  @Inject private WorkflowServiceHelper workflowServiceHelper;
 
   private WorkflowPhase toBean(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext) {
     Yaml yaml = context.getYaml();
@@ -141,23 +143,24 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     Boolean isRollback = (Boolean) context.getProperties().get(YamlConstants.IS_ROLLBACK);
     WorkflowPhaseBuilder phase = WorkflowPhaseBuilder.aWorkflowPhase();
     DeploymentType deploymentType = Utils.getEnumFromString(DeploymentType.class, deploymentTypeString);
-    phase.computeProviderId(computeProviderId)
-        .deploymentType(deploymentType)
-        .infraMappingId(infraMappingId)
-        .infraMappingName(infraMappingName)
-        .infraDefinitionName(infraDefName)
-        .infraDefinitionId(infraDefId)
-        .name(yaml.getName())
-        .phaseNameForRollback(yaml.getPhaseNameForRollback())
-        .phaseSteps(phaseSteps)
-        .serviceId(serviceId)
-        .rollback(isRollback)
-        .templateExpressions(templateExpressions)
-        .daemonSet(yaml.isDaemonSet())
-        .statefulSet(yaml.isStatefulSet())
-        .variableOverrides(yaml.getServiceVariableOverrides())
-        .build();
-    return phase.build();
+    WorkflowPhase workflowPhase = phase.computeProviderId(computeProviderId)
+                                      .deploymentType(deploymentType)
+                                      .infraMappingId(infraMappingId)
+                                      .infraMappingName(infraMappingName)
+                                      .infraDefinitionName(infraDefName)
+                                      .infraDefinitionId(infraDefId)
+                                      .name(yaml.getName())
+                                      .phaseNameForRollback(yaml.getPhaseNameForRollback())
+                                      .phaseSteps(phaseSteps)
+                                      .serviceId(serviceId)
+                                      .rollback(isRollback)
+                                      .templateExpressions(templateExpressions)
+                                      .daemonSet(yaml.isDaemonSet())
+                                      .statefulSet(yaml.isStatefulSet())
+                                      .variableOverrides(yaml.getServiceVariableOverrides())
+                                      .build();
+    workflowServiceHelper.validateService(workflowPhase, yaml.getServiceName());
+    return workflowPhase;
   }
 
   @Override
