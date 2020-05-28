@@ -1,6 +1,10 @@
 package io.harness.ccm.health;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
+import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
+import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
+import static io.harness.ccm.cluster.entities.ClusterType.GCP_KUBERNETES;
 import static io.harness.ccm.health.CEError.DELEGATE_NOT_AVAILABLE;
 import static io.harness.ccm.health.CEError.METRICS_SERVER_NOT_FOUND;
 import static io.harness.ccm.health.CEError.NO_CLUSTERS_TRACKED_BY_HARNESS_CE;
@@ -46,7 +50,12 @@ public class HealthStatusServiceImpl implements HealthStatusService {
   @Inject CeExceptionRecordDao ceExceptionRecordDao;
 
   private static final String LAST_EVENT_TIMESTAMP_MESSAGE = "Last event collected at %s";
-  public static final Long EVENT_TIMESTAMP_RECENCY_THRESHOLD = TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES);
+  private static final Long EVENT_TIMESTAMP_RECENCY_THRESHOLD_DEFAULT =
+      TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES);
+  private static final Long EVENT_TIMESTAMP_RECENCY_THRESHOLD_FOR_K8S =
+      TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES);
+  private static final Long EVENT_TIMESTAMP_RECENCY_THRESHOLD_FOR_AWS =
+      TimeUnit.MILLISECONDS.convert(80, TimeUnit.MINUTES);
 
   @Override
   public CEHealthStatus getHealthStatus(String cloudProviderId) {
@@ -117,7 +126,8 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       }
 
       long lastEventTimestamp = getLastEventTimestamp(clusterRecord.getAccountId(), clusterRecord.getUuid());
-      if (lastEventTimestamp != 0 && !hasRecentEvents(lastEventTimestamp)) {
+      String clusterType = clusterRecord.getCluster().getClusterType();
+      if (lastEventTimestamp != 0 && !hasRecentEvents(lastEventTimestamp, clusterType)) {
         errors.add(NO_RECENT_EVENTS_PUBLISHED);
       }
 
@@ -198,7 +208,14 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     return lastReceivedPublishedMessage.getLastReceivedAt();
   }
 
-  private boolean hasRecentEvents(long eventTimestamp) {
-    return (Instant.now().toEpochMilli() - eventTimestamp) < EVENT_TIMESTAMP_RECENCY_THRESHOLD;
+  private boolean hasRecentEvents(long eventTimestamp, String clusterType) {
+    if (clusterType.equals(DIRECT_KUBERNETES) || clusterType.equals(GCP_KUBERNETES)
+        || clusterType.equals(AZURE_KUBERNETES)) {
+      return (Instant.now().toEpochMilli() - eventTimestamp) < EVENT_TIMESTAMP_RECENCY_THRESHOLD_FOR_K8S;
+    } else if (clusterType.equals(AWS_ECS)) {
+      return (Instant.now().toEpochMilli() - eventTimestamp) < EVENT_TIMESTAMP_RECENCY_THRESHOLD_FOR_AWS;
+    } else {
+      return (Instant.now().toEpochMilli() - eventTimestamp) < EVENT_TIMESTAMP_RECENCY_THRESHOLD_DEFAULT;
+    }
   }
 }
