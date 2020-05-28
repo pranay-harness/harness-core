@@ -142,6 +142,7 @@ public class WorkflowExecutionController {
     }
 
     builder.id(workflowExecution.getUuid())
+        .workflowId(workflowExecution.getWorkflowId())
         .appId(workflowExecution.getAppId())
         .createdAt(workflowExecution.getCreatedAt())
         .startedAt(workflowExecution.getStartTs())

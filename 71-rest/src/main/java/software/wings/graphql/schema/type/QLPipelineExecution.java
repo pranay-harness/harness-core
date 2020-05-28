@@ -19,6 +19,7 @@ import java.util.List;
 @Scope(ResourceType.APPLICATION)
 public class QLPipelineExecution implements QLExecution, QLCause {
   private String id;
+  private String pipelineId;
   private Long createdAt;
   private Long startedAt;
   private Long endedAt;

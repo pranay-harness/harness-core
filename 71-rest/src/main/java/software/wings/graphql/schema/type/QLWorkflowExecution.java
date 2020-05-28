@@ -20,6 +20,7 @@ import java.util.List;
 @Scope(ResourceType.APPLICATION)
 public class QLWorkflowExecution implements QLExecution {
   private String id;
+  private String workflowId;
   private Long createdAt;
   private Long startedAt;
   private Long endedAt;

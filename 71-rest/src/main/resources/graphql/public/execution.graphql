@@ -127,7 +127,8 @@ type WorkflowExecution implements Execution {
 
   outcomes: OutcomeConnection @dataFetcher(name: outcomeConnection, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
 
-  workflow: Workflow @dataFetcher(name: workflow, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
+  workflow: Workflow
+    @dataFetcher(name: workflow, useBatch: true, contextFieldArgsMap: "{ \"workflowId\": \"workflowId\"}")
 
   cause: Cause
 
@@ -156,7 +157,8 @@ type PipelineExecution implements Execution {
   # Status of the workflow
   status: ExecutionStatus
 
-  pipeline: Pipeline @dataFetcher(name: pipeline, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
+  pipeline: Pipeline
+    @dataFetcher(name: pipeline, useBatch: true, contextFieldArgsMap: "{ \"pipelineId\": \"pipelineId\"}")
 
   cause: Cause
 
