@@ -3,6 +3,7 @@ package io.harness.ccm.health;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static io.harness.ccm.health.CEError.DELEGATE_NOT_AVAILABLE;
 import static io.harness.ccm.health.CEError.METRICS_SERVER_NOT_FOUND;
+import static io.harness.ccm.health.CEError.NO_CLUSTERS_TRACKED_BY_HARNESS_CE;
 import static io.harness.ccm.health.CEError.NO_ELIGIBLE_DELEGATE;
 import static io.harness.ccm.health.CEError.NO_RECENT_EVENTS_PUBLISHED;
 import static io.harness.ccm.health.CEError.PERPETUAL_TASK_CREATION_FAILURE;
@@ -30,6 +31,7 @@ import software.wings.settings.SettingValue;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -63,6 +65,13 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     List<ClusterRecord> clusterRecords = clusterRecordService.list(cloudProvider.getAccountId(), null, cloudProviderId);
 
     if (clusterRecords.isEmpty()) {
+      if (cloudProvider.getValue().getType().equals("AWS")) {
+        return CEHealthStatus.builder()
+            .isHealthy(true)
+            .messages(Collections.singletonList(
+                format(NO_CLUSTERS_TRACKED_BY_HARNESS_CE.getMessage(), cloudProvider.getName())))
+            .build();
+      }
       return CEHealthStatus.builder().isHealthy(true).build();
     }
 
