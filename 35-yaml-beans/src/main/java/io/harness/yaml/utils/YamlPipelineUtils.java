@@ -11,6 +11,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.harness.serializer.JsonSubtypeResolver;
+import io.harness.serializer.jackson.HarnessJacksonModule;
 
 import java.io.IOException;
 import java.net.URL;
@@ -35,6 +36,7 @@ public class YamlPipelineUtils {
     mapper.registerModule(new Jdk8Module());
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new JavaTimeModule());
+    mapper.registerModule(new HarnessJacksonModule());
   }
 
   /**

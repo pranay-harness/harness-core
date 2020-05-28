@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.deser.Deserializers;
 import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
 import com.fasterxml.jackson.databind.type.ReferenceType;
+import io.harness.utils.ParameterField;
 import io.harness.utils.RequestField;
 
 public class HarnessDeserializers extends Deserializers.Base {
@@ -18,6 +19,10 @@ public class HarnessDeserializers extends Deserializers.Base {
     if (refType.hasRawClass(RequestField.class)) {
       JavaType valueType = refType.getReferencedType();
       return new RequestFieldDeserializer(refType, valueType, contentTypeDeserializer, contentDeserializer);
+    }
+    if (refType.hasRawClass(ParameterField.class)) {
+      JavaType valueType = refType.getReferencedType();
+      return new ParameterFieldDeserializer(refType, valueType, contentTypeDeserializer, contentDeserializer);
     }
     return null;
   }
