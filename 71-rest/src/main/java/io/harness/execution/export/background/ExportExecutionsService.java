@@ -120,7 +120,7 @@ public class ExportExecutionsService {
       if (isEmpty(executionMetadataList)) {
         if (currPageOffset == 0) {
           throw new ExportExecutionsException(
-              "No executions found for export executions request. In progress executions are not part of export");
+              "No executions found matching request filters. Note that executions that were not finished when request was made are ignored");
         }
         break;
       }
@@ -156,7 +156,7 @@ public class ExportExecutionsService {
     }
 
     runProcessors(currExecutionMetadataList, new UserGroupsProcessor(), new StateInspectionProcessor(),
-        new SubCommandsProcessor(), new StateExecutionInstanceProcessor());
+        new StateExecutionInstanceProcessor(), new SubCommandsProcessor());
     return currExecutionMetadataList;
   }
 
