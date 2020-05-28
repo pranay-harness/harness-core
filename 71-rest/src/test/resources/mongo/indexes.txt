@@ -22,10 +22,11 @@ alertNotificationRules {"name": "alertCategory_1", "background": true} {"alertCa
 alertNotificationRules {"name": "appId_1", "background": true} {"appId": 1}
 alertNotificationRules {"name": "createdAt_1", "background": true} {"createdAt": 1}
 alerts {"name": "accountAppTypeStatusIdx", "background": true} {"accountId": 1, "appId": 1, "type": 1, "status": 1}
-alerts {"name": "accountId_1", "background": true} {"accountId": 1}
+alerts {"name": "accountTypeStatusIdx", "background": true} {"accountId": 1, "type": 1, "status": 1}
 alerts {"name": "appId_1", "background": true} {"appId": 1}
 alerts {"name": "createdAtTypeIndex", "background": true} {"type": 1, "createdAt": 1}
 alerts {"name": "cvCleanUpIteration_1", "background": true} {"cvCleanUpIteration": 1}
+alerts {"name": "reconciliationIterator", "background": true} {"status": 1, "alertReconciliation.needed": 1, "alertReconciliation.nextIteration": 1}
 alerts {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 allowedLimits {"name": "key_idx", "unique": true} {"key": 1, "accountId": 1}
 apiKeys {"name": "accountId_1", "background": true} {"accountId": 1}
