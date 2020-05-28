@@ -9,6 +9,7 @@ import static io.harness.beans.SortOrder.OrderType.DESC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.CreatedAtAware.CREATED_AT_KEY;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
@@ -665,6 +666,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     if (!userHasAtleastOneGitConfigPerm) {
       return aPageResponse().withTotal(0).build();
     }
+    query.order(Sort.descending(CREATED_AT_KEY));
     addHarnessToGitErrorFilter(query);
     List<GitSyncError> allGitSyncErrors = emptyIfNull(query.asList(new FindOptions().skip(offset).limit(limit)));
     List<GitSyncError> filteredErrors =
