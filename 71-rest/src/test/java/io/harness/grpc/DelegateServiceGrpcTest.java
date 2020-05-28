@@ -2,6 +2,7 @@ package io.harness.grpc;
 
 import static io.harness.rule.OwnerRule.MARKO;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 
 import io.grpc.Channel;
@@ -12,12 +13,16 @@ import io.grpc.testing.GrpcCleanupRule;
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.AccountId;
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.delegate.TaskCapabilities;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
 import io.harness.delegate.TaskSetupAbstractions;
+import io.harness.perpetualtask.PerpetualTaskContext;
+import io.harness.perpetualtask.PerpetualTaskId;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -96,5 +101,40 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
     assertThat(taskExecutionStages).isNotNull();
     assertThat(taskExecutionStages.size()).isEqualTo(1);
     assertThat(taskExecutionStages.get(0)).isEqualTo(TaskExecutionStage.TYPE_UNSPECIFIED);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testCreatePerpetualTask() {
+    PerpetualTaskId perpetualTaskId = delegateServiceGrpcClient.createPerpetualTask(AccountId.newBuilder().build(), "",
+        PerpetualTaskSchedule.newBuilder().build(), PerpetualTaskContext.newBuilder().build(), false);
+
+    assertThat(perpetualTaskId).isNotNull();
+    assertThat(perpetualTaskId.getId()).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testDeletePerpetualTask() {
+    try {
+      delegateServiceGrpcClient.deletePerpetualTask(
+          AccountId.newBuilder().build(), PerpetualTaskId.newBuilder().build());
+    } catch (Exception e) {
+      fail("Should not have thrown any exception");
+    }
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testResetPerpetualTask() {
+    try {
+      delegateServiceGrpcClient.resetPerpetualTask(
+          AccountId.newBuilder().build(), PerpetualTaskId.newBuilder().build());
+    } catch (Exception e) {
+      fail("Should not have thrown any exception");
+    }
   }
 }

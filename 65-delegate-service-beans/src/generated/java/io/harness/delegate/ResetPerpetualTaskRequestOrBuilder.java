@@ -8,15 +8,28 @@ public interface ResetPerpetualTaskRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.ResetPerpetualTaskRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   */
+  boolean hasAccountId();
+  /**
+   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   */
+  io.harness.delegate.AccountId getAccountId();
+  /**
+   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   */
+  io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder();
+
+  /**
+   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
    */
   boolean hasPerpetualTaskId();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
    */
   io.harness.perpetualtask.PerpetualTaskId getPerpetualTaskId();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
    */
   io.harness.perpetualtask.PerpetualTaskIdOrBuilder getPerpetualTaskIdOrBuilder();
 }

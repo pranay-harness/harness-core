@@ -69,14 +69,16 @@ message CreatePerpetualTaskResponse {
 }
 
 message DeletePerpetualTaskRequest {
-  perpetualtask.PerpetualTaskId perpetual_task_id = 1;
+  AccountId account_id = 1;
+  perpetualtask.PerpetualTaskId perpetual_task_id = 2;
 }
 
 message DeletePerpetualTaskResponse {
 }
 
 message ResetPerpetualTaskRequest {
-  perpetualtask.PerpetualTaskId perpetual_task_id = 1;
+  AccountId account_id = 1;
+  perpetualtask.PerpetualTaskId perpetual_task_id = 2;
 }
 
 message ResetPerpetualTaskResponse {
