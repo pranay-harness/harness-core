@@ -221,6 +221,7 @@ public class WorkflowExecution
 
   private Long nextIteration;
   private List<NameValuePair> tags;
+  private String message;
 
   @Default
   @JsonIgnore
@@ -264,5 +265,6 @@ public class WorkflowExecution
   public static final class WorkflowExecutionKeys {
     public static final String executionArgs_pipelinePhaseElementId =
         executionArgs + "." + ExecutionArgsKeys.pipelinePhaseElementId;
+    public static final String executionArgs_artifacts = executionArgs + "." + ExecutionArgsKeys.artifacts;
   }
 }

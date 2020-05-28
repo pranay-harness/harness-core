@@ -2074,6 +2074,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (isNotEmpty(artifactVariables)) {
         deploymentMetadataBuilder.artifactVariables(artifactVariables);
         updateArtifactVariables(appId, workflow, artifactVariables, withDefaultArtifact, workflowExecution);
+        resolveArtifactStreamMetadata(appId, artifactVariables, workflowExecution);
       }
 
       deploymentMetadataBuilder.artifactRequiredServiceIds(artifactRequiredServiceIds);
@@ -2143,6 +2144,33 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                         return artifactStreamSummaryBuilder.build();
                                                       })
                                                       .collect(Collectors.toList()));
+    }
+  }
+
+  @Override
+  public void resolveArtifactStreamMetadata(
+      String appId, List<ArtifactVariable> artifactVariables, WorkflowExecution workflowExecution) {
+    String accountId = appService.getAccountIdByAppId(appId);
+    if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, accountId)) {
+      if (workflowExecution != null) {
+        List<ArtifactVariable> previousArtifactVariables = workflowExecution.getExecutionArgs().getArtifactVariables();
+        for (ArtifactVariable artifactVariable : artifactVariables) {
+          for (ArtifactVariable previousArtifactVariable : previousArtifactVariables) {
+            if (artifactVariable.getName().equals(previousArtifactVariable.getName())
+                && artifactVariable.getEntityType() == previousArtifactVariable.getEntityType()
+                && artifactVariable.getEntityId().equals(previousArtifactVariable.getEntityId())
+                && previousArtifactVariable.getArtifactStreamMetadata() != null
+                && isNotEmpty(artifactVariable.getAllowedList())
+                && artifactVariable.getAllowedList().contains(
+                       previousArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId())) {
+              artifactVariable.setArtifactStreamMetadata(previousArtifactVariable.getArtifactStreamMetadata());
+              artifactVariable.setUiDisplayName(previousArtifactVariable.getUiDisplayName());
+
+              break;
+            }
+          }
+        }
+      }
     }
   }
 

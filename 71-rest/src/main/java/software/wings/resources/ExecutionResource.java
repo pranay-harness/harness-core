@@ -218,7 +218,7 @@ public class ExecutionResource {
     if (executionArgs != null) {
       if (isNotEmpty(executionArgs.getArtifactVariables())) {
         for (ArtifactVariable artifactVariable : executionArgs.getArtifactVariables()) {
-          if (isEmpty(artifactVariable.getValue())) {
+          if (isEmpty(artifactVariable.getValue()) && artifactVariable.getArtifactStreamMetadata() == null) {
             throw new InvalidRequestException(
                 format("No value provided for artifact variable: [%s] ", artifactVariable.getName()), USER);
           }

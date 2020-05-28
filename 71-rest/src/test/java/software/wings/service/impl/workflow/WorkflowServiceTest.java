@@ -24,6 +24,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.groups.Tuple.tuple;
 import static org.assertj.core.util.Lists.newArrayList;
@@ -283,6 +284,7 @@ import software.wings.api.DeploymentType;
 import software.wings.app.GeneralNotifyEventListener;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.ArtifactStreamMetadata;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping;
@@ -378,6 +380,7 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.stencils.WorkflowStepType;
 import software.wings.utils.WingsTestConstants.MockChecker;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -4828,5 +4831,44 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(phaseSteps.get(0).getSteps().get(0).getType()).isEqualTo(K8S_BLUE_GREEN_DEPLOY.name());
     assertThat(phaseSteps.get(0).getSteps().get(0).isRollback()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldUpdateArtifactVariablesWithArtifactStreamMetadata() {
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    List<ArtifactVariable> artifactVariables = new ArrayList<>();
+    artifactVariables.add(ArtifactVariable.builder().entityType(SERVICE).entityId(SERVICE_ID).name("art_srv").build());
+    artifactVariables.add(ArtifactVariable.builder()
+                              .entityType(SERVICE)
+                              .entityId("SERVICE_ID_1")
+                              .name("art_parameterized")
+                              .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID))
+                              .build());
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    Map<String, Object> map1 = new HashMap<>();
+    map1.put("repo", "myrepo");
+    map1.put("buildNo", "1.0");
+    executionArgs.setArtifactVariables(asList(
+        ArtifactVariable.builder().entityType(SERVICE).entityId(SERVICE_ID).name("art_srv").value("art1").build(),
+        ArtifactVariable.builder().entityType(ENVIRONMENT).entityId(ENV_ID).name("art_env").value("art2").build(),
+        ArtifactVariable.builder().entityType(WORKFLOW).entityId(WORKFLOW_ID).name("art_wrk").value("art3").build(),
+        ArtifactVariable.builder()
+            .entityType(SERVICE)
+            .entityId("SERVICE_ID_1")
+            .name("art_parameterized")
+            .uiDisplayName("art_parameterized (requires values)")
+            .artifactStreamMetadata(
+                ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).runtimeValues(map1).build())
+            .build()));
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().executionArgs(executionArgs).build();
+    workflowService.resolveArtifactStreamMetadata(APP_ID, artifactVariables, workflowExecution);
+    assertThat(artifactVariables.get(0).getArtifactStreamMetadata()).isNull();
+    assertThat(artifactVariables.get(1).getArtifactStreamMetadata()).isNotNull();
+    assertThat(artifactVariables.get(1).getUiDisplayName()).isEqualTo("art_parameterized (requires values)");
+    assertThat(artifactVariables.get(1).getArtifactStreamMetadata().getRuntimeValues())
+        .isNotEmpty()
+        .contains(entry("repo", "myrepo"), entry("buildNo", "1.0"));
   }
 }

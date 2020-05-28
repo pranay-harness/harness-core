@@ -36,6 +36,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -1356,5 +1357,29 @@ public class ArtifactServiceTest extends WingsBaseTest {
         .isNotNull()
         .extracting(Artifact::getArtifactSourceName)
         .isEqualTo(savedArtifact.getArtifactSourceName());
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldCreateArtifactUsingResolvedArtifactStream() {
+    NexusArtifactStream concreteNexusArtifactStream = NexusArtifactStream.builder()
+                                                          .accountId(ACCOUNT_ID)
+                                                          .appId(APP_ID)
+                                                          .settingId(SETTING_ID)
+                                                          .jobname("releases")
+                                                          .groupId("mygroup")
+                                                          .artifactPaths(asList("myartifact"))
+                                                          .autoPopulate(false)
+                                                          .serviceId(SERVICE_ID)
+                                                          .name("testNexus")
+                                                          .build();
+    concreteNexusArtifactStream.setSourceName(concreteNexusArtifactStream.generateSourceName());
+    when(artifactCollectionUtils.getArtifactStreamAttributes(eq(concreteNexusArtifactStream), anyBoolean()))
+        .thenReturn(ArtifactStreamAttributes.builder().build());
+    Artifact artifact = artifactService.create(artifactBuilder.but().build(), concreteNexusArtifactStream, false);
+    assertThat(artifact.getUuid()).isNotNull();
+    assertThat(artifact.getBuildIdentity()).contains("200");
+    assertThat(artifact.getArtifactSourceName()).isEqualTo("releases/mygroup/myartifact");
   }
 }

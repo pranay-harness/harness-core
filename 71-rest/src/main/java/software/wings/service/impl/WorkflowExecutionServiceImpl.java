@@ -8,6 +8,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.NEW;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.PAUSING;
+import static io.harness.beans.ExecutionStatus.PREPARING;
 import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.STARTING;
@@ -37,9 +38,11 @@ import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
 import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.time.Duration.ofDays;
+import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
@@ -189,6 +192,7 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DeploymentRateApproachingLimitAlert;
 import software.wings.beans.alert.UsageLimitExceededAlert;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.baseline.WorkflowExecutionBaseline.WorkflowExecutionBaselineKeys;
 import software.wings.beans.concurrency.ConcurrentExecutionResponse;
@@ -204,11 +208,13 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.common.cache.MongoStore;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidBaselineConfigurationException;
+import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.ArtifactStreamHelper;
 import software.wings.service.impl.WorkflowExecutionServiceImpl.Tree.TreeBuilder;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.deployment.checks.DeploymentCtx;
@@ -226,6 +232,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
+import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -293,9 +300,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -354,6 +365,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private ResourceLookupFilterHelper resourceLookupFilterHelper;
   @Inject private PipelineResumeUtils pipelineResumeUtils;
   @Inject private ApiKeyService apiKeyService;
+  @Inject private BuildSourceService buildSourceService;
+  @Inject private ArtifactStreamHelper artifactStreamHelper;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -1291,8 +1304,32 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setReleaseNo(String.valueOf(entityVersion.getVersion()));
     workflowExecution.setAccountId(app.getAccountId());
     wingsPersistence.save(workflowExecution);
-
     logger.info("Created workflow execution {}", workflowExecution.getUuid());
+
+    // Resolve artifact source parameters and collect artifacts before starting execution
+    if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, app.getAccountId())) {
+      // for pipeline avoid duplicate artifact collection since same code called via EnvState
+      if (!executionArgs.isTriggeredFromPipeline() || executionArgs.getWorkflowType() != ORCHESTRATION) {
+        workflowExecution.setStatus(PREPARING);
+        updateStatus(
+            workflowExecution.getAppId(), workflowExecution.getUuid(), PREPARING, "Starting artifact collection");
+        List<Artifact> artifacts =
+            collectArtifactsAsync(workflowExecution, executionArgs.getArtifactVariables(), app.getUuid());
+        if (isNotEmpty(artifacts)) {
+          addArtifactsToWorkflowExecution(workflowExecution, stdParams, executionArgs, artifacts);
+          updateWorkflowExecutionArtifacts(workflowExecution.getAppId(), workflowExecution.getUuid(),
+              workflowExecution.getArtifacts(), executionArgs.getArtifacts());
+        }
+        WorkflowExecution savedWorkflowExecution = wingsPersistence.getWithAppId(
+            WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+        if (savedWorkflowExecution.getStatus() != FAILED) {
+          // artifact collection succeeded - unset the WorkflowExecution#message
+          unsetWorkflowExecutionMessage(workflowExecution.getAppId(), workflowExecution.getUuid());
+        } else {
+          return savedWorkflowExecution;
+        }
+      }
+    }
 
     updateWorkflowElement(workflowExecution, stdParams, workflow, app.getAccountId());
 
@@ -1351,6 +1388,97 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return savedWorkflowExecution;
+  }
+
+  private void addArtifactsToWorkflowExecution(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
+      ExecutionArgs executionArgs, List<Artifact> artifacts) {
+    if (isNotEmpty(artifacts)) {
+      if (isNotEmpty(workflowExecution.getArtifacts())) {
+        List<Artifact> workflowExecutionArtifacts = workflowExecution.getArtifacts();
+        workflowExecutionArtifacts.addAll(artifacts);
+        workflowExecution.setArtifacts(workflowExecutionArtifacts);
+      } else {
+        workflowExecution.setArtifacts(artifacts);
+      }
+      if (isNotEmpty(executionArgs.getArtifacts())) {
+        List<Artifact> executionArgsArtifacts = executionArgs.getArtifacts();
+        executionArgsArtifacts.addAll(artifacts);
+        executionArgs.setArtifacts(executionArgsArtifacts);
+      } else {
+        executionArgs.setArtifacts(artifacts);
+      }
+      List<String> artifactIds = new ArrayList<>();
+      if (isNotEmpty(artifacts)) {
+        for (Artifact artifact : artifacts) {
+          artifactIds.add(artifact.getUuid());
+        }
+      }
+      if (isNotEmpty(stdParams.getArtifactIds())) {
+        List<String> stdParamsArtifactIds = stdParams.getArtifactIds();
+        stdParamsArtifactIds.addAll(artifactIds);
+        stdParams.setArtifactIds(stdParamsArtifactIds);
+      } else {
+        stdParams.setArtifactIds(artifactIds);
+      }
+    }
+  }
+
+  public List<Artifact> collectArtifactsAsync(
+      WorkflowExecution workflowExecution, List<ArtifactVariable> artifactVariables, String appId) {
+    List<Artifact> artifacts = new ArrayList<>();
+    Queue<Future<BuildDetails>> futures = new ConcurrentLinkedQueue<>();
+    List<ArtifactStream> artifactStreams = new ArrayList<>();
+    if (isNotEmpty(artifactVariables)) {
+      for (ArtifactVariable artifactVariable : artifactVariables) {
+        if (artifactVariable.getArtifactStreamMetadata() != null) {
+          String artifactStreamId = artifactVariable.getArtifactStreamMetadata().getArtifactStreamId();
+          ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+          String finalSettingId = artifactStream.getSettingId();
+          // fix parameter values in artifact stream
+          artifactStreamHelper.resolveArtifactStreamRuntimeValues(
+              artifactStream, artifactVariable.getArtifactStreamMetadata().getRuntimeValues());
+          // update source name as well with runtime values
+          artifactStream.setSourceName(artifactStream.generateSourceName());
+          artifactStreams.add(artifactStream);
+          futures.add(executorService.submit(()
+                                                 -> buildSourceService.getBuild(appId, artifactStreamId, finalSettingId,
+                                                     artifactVariable.getArtifactStreamMetadata().getRuntimeValues())));
+        }
+      }
+      StringBuilder stringBuilder = new StringBuilder();
+      int i = 0;
+      while (!futures.isEmpty()) {
+        ArtifactStream artifactStream = artifactStreams.get(i);
+        try {
+          BuildDetails buildDetails = futures.poll().get();
+          i++;
+          if (buildDetails == null) {
+            stringBuilder.append(format("Error collecting build for artifact source %s.", artifactStream.getName()));
+            stringBuilder.append('\n');
+          } else {
+            artifacts.add(artifactService.create(
+                artifactCollectionUtils.getArtifact(artifactStream, buildDetails), artifactStream, false));
+          }
+          quietSleep(ofMillis(10));
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          logger.error(format("Error collecting build for artifact source %s.", artifactStream.getName()), e);
+          stringBuilder.append(format("Error collecting build for artifact source %s.", artifactStream.getName()));
+          stringBuilder.append('\n');
+        } catch (ExecutionException e) {
+          logger.error(format("Error collecting build for artifact source %s.", artifactStream.getName()), e);
+          stringBuilder.append(format("Error collecting build for artifact source %s.", artifactStream.getName()));
+          stringBuilder.append('\n');
+        }
+      }
+      String message = stringBuilder.toString();
+      if (isNotEmpty(message)) {
+        workflowExecution.setStatus(FAILED);
+        workflowExecution.setMessage(message);
+        updateStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), FAILED, message);
+      }
+    }
+    return artifacts;
   }
 
   private boolean shouldNotQueueWorkflow(WorkflowExecution workflowExecution, Workflow workflow) {
@@ -1723,11 +1851,53 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                          .filter(WorkflowExecutionKeys.appId, appId)
                                          .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
                                          .field(WorkflowExecutionKeys.status)
-                                         .in(asList(NEW, QUEUED));
+                                         .in(asList(NEW, QUEUED, PREPARING));
 
     UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
                                                         .set(WorkflowExecutionKeys.status, status)
                                                         .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis());
+
+    wingsPersistence.update(query, updateOps);
+  }
+
+  private void updateStatus(String appId, String workflowExecutionId, ExecutionStatus status, String message) {
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .filter(WorkflowExecutionKeys.appId, appId)
+                                         .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
+                                         .field(WorkflowExecutionKeys.status)
+                                         .in(asList(NEW, QUEUED, PREPARING));
+
+    UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                                                        .set(WorkflowExecutionKeys.status, status)
+                                                        .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis())
+                                                        .set(WorkflowExecutionKeys.message, message);
+
+    wingsPersistence.update(query, updateOps);
+  }
+
+  private void updateWorkflowExecutionArtifacts(String appId, String workflowExecutionId,
+      List<Artifact> workflowExecutionArtifacts, List<Artifact> executionArgsArtifacts) {
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .filter(WorkflowExecutionKeys.appId, appId)
+                                         .filter(WorkflowExecutionKeys.uuid, workflowExecutionId);
+
+    UpdateOperations<WorkflowExecution> updateOps =
+        wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+            .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis())
+            .set(WorkflowExecutionKeys.artifacts, workflowExecutionArtifacts)
+            .set(WorkflowExecutionKeys.executionArgs_artifacts, executionArgsArtifacts);
+
+    wingsPersistence.update(query, updateOps);
+  }
+
+  private void unsetWorkflowExecutionMessage(String appId, String workflowExecutionId) {
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .filter(WorkflowExecutionKeys.appId, appId)
+                                         .filter(WorkflowExecutionKeys.uuid, workflowExecutionId);
+
+    UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                                                        .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis())
+                                                        .unset(WorkflowExecutionKeys.message);
 
     wingsPersistence.update(query, updateOps);
   }

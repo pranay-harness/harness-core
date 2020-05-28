@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -33,16 +32,15 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
 import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
 import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
+import software.wings.service.ArtifactStreamHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -91,7 +89,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private CustomBuildSourceService customBuildSourceService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
-  @Inject private ManagerExpressionEvaluator evaluator;
+  @Inject private ArtifactStreamHelper artifactStreamHelper;
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
@@ -197,7 +195,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
-    resolveArtifactStreamRuntimeValues(artifactStream, runtimeValues);
+    artifactStreamHelper.resolveArtifactStreamRuntimeValues(artifactStream, runtimeValues);
     ArtifactStreamAttributes artifactStreamAttributes;
     if (!GLOBAL_APP_ID.equals(appId)) {
       Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
@@ -208,54 +206,6 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     return getBuildService(settingAttribute, appId, artifactStream.getArtifactStreamType())
         .getBuild(appId, artifactStreamAttributes, settingValue, encryptedDataDetails,
             String.valueOf(runtimeValues.get("buildNo")));
-  }
-
-  private void resolveArtifactStreamRuntimeValues(ArtifactStream artifactStream, Map<String, Object> runtimeValues) {
-    if (artifactStream instanceof NexusArtifactStream) {
-      String repositoryFormat = ((NexusArtifactStream) artifactStream).getRepositoryFormat();
-      if (repositoryFormat.equals(RepositoryFormat.maven.name())) {
-        resolveRuntimeValuesForMaven((NexusArtifactStream) artifactStream, runtimeValues);
-      } else if (repositoryFormat.equals(RepositoryFormat.npm.name())
-          || repositoryFormat.equals(RepositoryFormat.nuget.name())) {
-        resolveRuntimeValuesForNpmNuGet((NexusArtifactStream) artifactStream, runtimeValues);
-      }
-    }
-  }
-
-  private void resolveRuntimeValuesForNpmNuGet(NexusArtifactStream artifactStream, Map<String, Object> runtimeValues) {
-    if (isNotEmpty(artifactStream.getJobname()) && artifactStream.getJobname().startsWith("${")) {
-      artifactStream.setJobname((String) evaluator.evaluate(artifactStream.getJobname(), runtimeValues));
-    }
-    if (isNotEmpty(artifactStream.getPackageName()) && artifactStream.getPackageName().startsWith("${")) {
-      artifactStream.setPackageName((String) evaluator.evaluate(artifactStream.getPackageName(), runtimeValues));
-    }
-  }
-
-  private void resolveRuntimeValuesForMaven(NexusArtifactStream artifactStream, Map<String, Object> runtimeValues) {
-    if (isNotEmpty(artifactStream.getJobname()) && artifactStream.getJobname().startsWith("${")) {
-      artifactStream.setJobname((String) evaluator.evaluate(artifactStream.getJobname(), runtimeValues));
-    }
-    if (isNotEmpty(artifactStream.getGroupId()) && artifactStream.getGroupId().startsWith("${")) {
-      artifactStream.setGroupId((String) evaluator.evaluate(artifactStream.getGroupId(), runtimeValues));
-    }
-    if (isNotEmpty(artifactStream.getExtension()) && artifactStream.getExtension().startsWith("${")) {
-      artifactStream.setExtension((String) evaluator.evaluate(artifactStream.getExtension(), runtimeValues));
-    }
-    if (isNotEmpty(artifactStream.getClassifier()) && artifactStream.getClassifier().startsWith("${")) {
-      artifactStream.setClassifier((String) evaluator.evaluate(artifactStream.getClassifier(), runtimeValues));
-    }
-    if (isNotEmpty(artifactStream.getArtifactPaths())) {
-      List<String> artifactPaths = artifactStream.getArtifactPaths();
-      List<String> resolvedPaths = new ArrayList<>();
-      for (String artifactPath : artifactPaths) {
-        if (artifactPath.startsWith("${")) {
-          resolvedPaths.add((String) evaluator.evaluate(artifactPath, runtimeValues));
-        } else {
-          resolvedPaths.add(artifactPath);
-        }
-      }
-      artifactStream.setArtifactPaths(resolvedPaths);
-    }
   }
 
   @Override

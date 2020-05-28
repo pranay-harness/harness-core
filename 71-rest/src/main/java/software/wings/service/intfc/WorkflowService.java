@@ -224,4 +224,7 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   WorkflowCategorySteps calculateCategorySteps(
       Workflow workflow, String userId, String phaseId, String sectionId, int position, boolean rollbackSection);
+
+  void resolveArtifactStreamMetadata(
+      String appId, List<ArtifactVariable> artifactVariables, WorkflowExecution workflowExecution);
 }
