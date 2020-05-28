@@ -26,7 +26,8 @@ public enum ExecutionStatus {
   SKIPPED,
   @Deprecated ABORTING,
   REJECTED,
-  EXPIRED;
+  EXPIRED,
+  PREPARING;
 
   private static Set<ExecutionStatus> finalStatuses =
       EnumSet.<ExecutionStatus>of(ABORTED, ERROR, FAILED, SUCCESS, REJECTED, EXPIRED, SKIPPED);
@@ -34,14 +35,14 @@ public enum ExecutionStatus {
   private static Set<ExecutionStatus> negativeStatuses =
       EnumSet.<ExecutionStatus>of(ABORTED, DISCONTINUING, ERROR, FAILED, REJECTED, EXPIRED);
   private static Set<ExecutionStatus> runningStatuses =
-      EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, RUNNING, STARTING, QUEUED);
+      EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, RUNNING, STARTING, QUEUED, PREPARING);
   private static Set<ExecutionStatus> haltedStatuses = EnumSet.<ExecutionStatus>of(PAUSED, WAITING);
   private static Set<ExecutionStatus> activeStatuses =
-      EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, PAUSED, RUNNING, STARTING, QUEUED, WAITING);
+      EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, PAUSED, RUNNING, STARTING, QUEUED, WAITING, PREPARING);
   private static Set<ExecutionStatus> positiveStatuses = EnumSet.<ExecutionStatus>of(SUCCESS, SKIPPED);
   private static Set<ExecutionStatus> discontinueStatuses = EnumSet.<ExecutionStatus>of(ABORTED, REJECTED, EXPIRED);
   private static Set<ExecutionStatus> flowingStatuses =
-      EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, PAUSED, RUNNING, STARTING, WAITING);
+      EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, PAUSED, RUNNING, STARTING, WAITING, PREPARING);
 
   ExecutionStatus() {}
 

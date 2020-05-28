@@ -35,6 +35,7 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
@@ -113,6 +114,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
+import software.wings.beans.ArtifactStreamMetadata;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -150,6 +152,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.beans.concurrency.ConcurrencyStrategy.UnitType;
 import software.wings.beans.concurrency.ConcurrentExecutionResponse;
@@ -157,13 +160,17 @@ import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.licensing.LicenseService;
 import software.wings.rules.Listeners;
 import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
@@ -218,6 +225,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private MultiArtifactWorkflowExecutionServiceHelper multiArtifactWorkflowExecutionServiceHelper;
   @Mock private PipelineResumeUtils pipelineResumeUtils;
+  @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private BuildSourceService buildSourceService;
+  @Mock private ArtifactCollectionUtils artifactCollectionUtils;
 
   @Inject private ServiceInstanceService serviceInstanceService;
 
@@ -2548,5 +2558,86 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = WorkflowExecution.builder().accountId(ACCOUNT_ID).build();
     workflowExecutionService.getResumeHistory(APP_ID, workflowExecution);
     verify(pipelineResumeUtils).getResumeHistory(eq(APP_ID), eq(workflowExecution));
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testShouldCollectArtifactsAsync() {
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .jobname("releases")
+                                                  .groupId("mygroup")
+                                                  .artifactPaths(asList("${artifactId}"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .build();
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+    when(buildSourceService.getBuild(anyString(), anyString(), anyString(), any()))
+        .thenReturn(BuildDetails.Builder.aBuildDetails().withNumber("1.0").build());
+    Map<String, String> map = new HashMap<>();
+    map.put("buildNo", "1.0");
+    Artifact artifact = Artifact.Builder.anArtifact().withMetadata(map).withUuid(ARTIFACT_ID).build();
+    when(artifactCollectionUtils.getArtifact(any(), any())).thenReturn(artifact);
+    when(artifactService.create(artifact, nexusArtifactStream, false)).thenReturn(artifact);
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().accountId(ACCOUNT_ID).build();
+    Map<String, Object> map1 = new HashMap<>();
+    map1.put("artifactId", "myartifact");
+    map1.put("buildNo", "1.0");
+    List<Artifact> artifacts =
+        ((WorkflowExecutionServiceImpl) workflowExecutionService)
+            .collectArtifactsAsync(workflowExecution,
+                singletonList(ArtifactVariable.builder()
+                                  .entityType(SERVICE)
+                                  .entityId("SERVICE_ID_1")
+                                  .name("art_parameterized")
+                                  .artifactStreamMetadata(ArtifactStreamMetadata.builder()
+                                                              .artifactStreamId(ARTIFACT_STREAM_ID)
+                                                              .runtimeValues(map1)
+                                                              .build())
+                                  .build()),
+                APP_ID);
+    assertThat(artifacts).isNotEmpty();
+    assertThat(artifacts).extracting(Artifact::getUuid).containsExactly(ARTIFACT_ID);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testShouldNotCollectArtifactsAsync() {
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .jobname("releases")
+                                                  .groupId("mygroup")
+                                                  .artifactPaths(asList("${artifactId}"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("art_parameterized")
+                                                  .build();
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+    when(buildSourceService.getBuild(anyString(), anyString(), anyString(), any())).thenReturn(null);
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().accountId(ACCOUNT_ID).build();
+    Map<String, Object> map1 = new HashMap<>();
+    map1.put("artifactId", "myartifact");
+    map1.put("buildNo", "1.0");
+    List<Artifact> artifacts =
+        ((WorkflowExecutionServiceImpl) workflowExecutionService)
+            .collectArtifactsAsync(workflowExecution,
+                singletonList(ArtifactVariable.builder()
+                                  .entityType(SERVICE)
+                                  .entityId("SERVICE_ID_1")
+                                  .name("art_parameterized")
+                                  .artifactStreamMetadata(ArtifactStreamMetadata.builder()
+                                                              .artifactStreamId(ARTIFACT_STREAM_ID)
+                                                              .runtimeValues(map1)
+                                                              .build())
+                                  .build()),
+                APP_ID);
+    assertThat(artifacts).isEmpty();
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(workflowExecution.getMessage()).contains("Error collecting build for artifact source art_parameterized");
   }
 }

@@ -70,6 +70,8 @@ public interface ArtifactService extends OwnedByArtifactStream {
 
   Artifact create(Artifact artifact, boolean skipDuplicateCheck);
 
+  Artifact create(Artifact artifact, ArtifactStream artifactStream, boolean skipDuplicateCheck);
+
   /**
    * Update.
    *

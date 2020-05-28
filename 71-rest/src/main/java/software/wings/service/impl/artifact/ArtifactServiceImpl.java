@@ -193,12 +193,21 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public Artifact create(Artifact artifact, boolean skipDuplicateCheck) {
+    return create(artifact, null, skipDuplicateCheck);
+  }
+
+  @Override
+  public Artifact create(Artifact artifact, ArtifactStream concreteArtifactStream, boolean skipDuplicateCheck) {
     String appId = artifact.fetchAppId();
     if (appId != null && !appId.equals(GLOBAL_APP_ID) && !appService.exist(appId)) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER).addParam("args", "App does not exist: " + appId);
     }
-
-    ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
+    ArtifactStream artifactStream;
+    if (concreteArtifactStream == null) {
+      artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
+    } else {
+      artifactStream = concreteArtifactStream;
+    }
     notNullCheck("Artifact Stream", artifactStream, USER);
     artifact.setArtifactSourceName(artifactStream.getSourceName());
     setAccountId(artifact);
