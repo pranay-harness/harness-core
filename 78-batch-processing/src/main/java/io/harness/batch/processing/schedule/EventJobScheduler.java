@@ -58,7 +58,7 @@ public class EventJobScheduler {
     }
   }
 
-  @Scheduled(cron = "0 0 1 * * ?")
+  @Scheduled(cron = "0 0 14 * * MON")
   public void runWeeklyReportJob() {
     try {
       weeklyReportService.generateAndSendWeeklyReport();

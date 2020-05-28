@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class WeeklyReportEntityData {
   String id;
+  String parent;
   double cost;
   double costChange;
   double costDiff;

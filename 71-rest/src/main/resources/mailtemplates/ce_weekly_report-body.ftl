@@ -6,25 +6,12 @@
     <meta name="format-detection" content="telephone=no">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
     <style>
-    @media all and (max-width: 580px) {
-      a.logo img {
-        margin-left: 15px !important;
-      }
-      .blue{
-        color: #00ade4;
-        size: 15px;
-      }
-      .red{
-        color: red;
-        size: 15px;
-      }
-      .green{
-        color: green;
-        size: 15px;
-      }
-      .vl {
-        border-left: 6px solid green;
-        height: 500px;
+    a{
+      text-decoration: none;
+    }
+    @media only screen and (max-width: 481px) {
+      .clusterCost {
+        font-size: 24px;
       }
     }
     </style>
@@ -43,23 +30,23 @@
                 </table>
                 <table border="0" cellpadding="0" cellspacing="0" align="center" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; display: block; border-spacing: 0; padding: 0; width: inherit; max-width: 580px; border-collapse: collapse;" bgcolor="#222222" class="wrapper">
                     <tr>
-                        <td align="left" valign="middle" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-right: 6.25%; padding-left: 18%; width: 87.5%; padding-top: 32px; padding-bottom: 25px; border-collapse: collapse;" width="87.5%">
+                        <td align="left" valign="middle" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-right: 6.25%; padding-left: 22%; width: 87.5%; padding-top: 32px; padding-bottom: 18px; border-collapse: collapse;" width="87.5%">
                             <a class="logo" target="_blank" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; color: #00ade4; text-decoration: none;" href="https://harness.io">
-                                <img border="0" vspace="0" hspace="0" src="https://s3.amazonaws.com/wings-assets/email-assets/logo.png" width="141" height="30" alt="Harness" title="Logo" style="line-height: 100%; color: #000000; font-size: 10px; margin: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; border: none; display: block;">
+                                <img border="0" vspace="0" hspace="0" src="https://s3.amazonaws.com/wings-assets/email-assets/logo-white.png" width="141" height="35" alt="Harness" title="Logo" style="line-height: 100%; color: #000000; font-size: 10px; margin: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; border: none; display: block;">
                             </a>
                         </td>
                     </tr>
                 </table>
                 <table border="0" cellpadding="0" cellspacing="0" align="center" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; display: block; border-spacing: 0; padding: 0; width: inherit; max-width: 580px; border-collapse: collapse;" bgcolor="#222222" class="wrapper">
                     <tr>
-                        <td align="left" valign="middle" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 7%; width: 87.5%; padding-top: 0px; border-collapse: collapse; font-family: 'Roboto', sans-serif;font-size: 36px;letter-spacing: 1px; color: #00ade4; line-height: 40px; font-weight: Light 300;" width="87.5%">
+                        <td align="left" valign="middle" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 7%; width: 87.5%; padding-top: 0px; border-collapse: collapse; font-family: 'sans-serif', Tahoma, Verdana, Segoe, sans-serif;font-size: 36px;letter-spacing: 1px; color: #00ade4; line-height: 50px; font-weight: Light 300;" width="87.5%">
                                 Your Continuous Efficiency
                                 <br>
                                 Weekly Report
                             </td>
                         </tr>
                         <tr>
-                            <td align="left" valign="middle" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 300%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 7%; padding-right: 6.25%; width: 87.5%; padding-top: 0px; padding-bottom: 25px; border-collapse: collapse; font-family: 'sans-serif', Tahoma, Verdana, Segoe, sans-serif;font-size: 16px; color: #FFFFFF; line-height: 30px; font-weight: lighter;" width="87.5%">
+                            <td align="left" valign="middle" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 300%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 7%; padding-right: 6.25%; width: 87.5%; padding-top: 5px; padding-bottom: 25px; border-collapse: collapse; font-family: 'sans-serif', Tahoma, Verdana, Segoe, sans-serif;font-size: 16px; color: #FFFFFF; line-height: 30px; font-weight: lighter;" width="87.5%">
                                 <dev>${DATE}</dev>
                             </td>
                     </tr>
@@ -74,7 +61,7 @@
                             </h1>
                         </td>
                         <td align="center" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0;font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 25px; padding-bottom: 10px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse; float: left;" class="paragraph" width="1%">
-                            <hr width=0.1px size="120" noshade="" float="left" color="#DBDCDD" align="center">
+                            <hr width=0.1px size="130" noshade="" float="left" color="#DBDCDD" align="center">
                         </td>
                         <td align="center" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 2%; padding-right: 2%;font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 25px; padding-bottom: 10px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;float: left;text-align: center" class="paragraph" width="25.5%">
                             <h1 style="font-size: 19px;font-weight: normal;line-height: 80%;text-align: center">
@@ -84,7 +71,7 @@
                             </h1>
                         </td>
                         <td align="center" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0;font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 25px; padding-bottom: 10px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse; float: left;" class="paragraph" width="1%">
-                            <hr width=1px size="120" noshade="" float="left" color="#DBDCDD" align="center">
+                            <hr width=1px size="130" noshade="" float="left" color="#DBDCDD" align="center">
                         </td>
                         <td align="center" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 2%; padding-right: 2%; font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 25px; padding-bottom: 10px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;float: left;" class="paragraph" width="30%">
                             <h1 style="font-size: 19px;font-weight: normal;line-height: 80%">
@@ -103,7 +90,7 @@
                     ${APPLICATION_RELATED_COSTS}
                     ${CLUSTER_RELATED_COSTS}
                     <tr>
-                        <td align="left" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 8%; padding-right: 6.25%; width: 87.5%; padding-top: 0px; height: 110px; border-collapse: collapse;" height="70" class="button" width="87.5%">
+                        <td align="left" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 7%; padding-right: 6.25%; width: 87.5%; padding-top: 0px; height: 110px; border-collapse: collapse;" height="70" class="button" width="87.5%">
                             <a href="${url!}" target="_blank" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; padding: 12px 24px; text-decoration: none; background-color: #0face4; color: #FFFFFF; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; font-size: 14px; line-height: 120%; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px;">
                                 Explore
                             </a>

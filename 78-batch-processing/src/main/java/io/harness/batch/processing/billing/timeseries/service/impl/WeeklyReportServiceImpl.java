@@ -12,11 +12,15 @@ import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReport
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.COST_TREND;
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.DECREASE;
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.ENVIRONMENT;
+import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.FROM;
+import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.ID;
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.INCREASE;
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.NAME;
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.NAMESPACE;
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.NOT_AVAILABLE;
+import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.PARENT;
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.SERVICE;
+import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.TO;
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.TOTAL_CLUSTER_COST;
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.TOTAL_CLUSTER_IDLE_COST;
 import static io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper.TOTAL_CLUSTER_UNALLOCATED_COST;
@@ -39,6 +43,7 @@ import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.impl.instance.CloudToHarnessMappingServiceImpl;
 
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -71,35 +76,36 @@ public class WeeklyReportServiceImpl {
   private static final String DEFAULT_TIMEZONE = "GMT";
   private static final String DEFAULT_PLACEHOLDER = "-";
   private static final String DATE_PATTERN = "MM/dd";
+  private static final String DATE_PATTERN_FOR_FILTER = "yyyy-MM-dd";
 
   private static final String TOTAL_CLUSTER_COST_PER_ACCOUNT =
-      "SELECT CURRENT_WEEK.accountid AS ACCOUNT_ID, CURRENT_WEEK.accountid AS ENTITY, 100*ABS(CURRENT_WEEK.cost - PREV_WEEK.cost)/ PREV_WEEK.cost as COST_CHANGE, CURRENT_WEEK.cost - PREV_WEEK.cost as COST_DIFF, CURRENT_WEEK.cost as CURRENT_WEEK_COST, PREV_WEEK.cost as PREV_WEEK_COST FROM ((SELECT SUM(t0.billingamount) AS COST, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.billingamount) AS COST, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.accountid) PREV_WEEK ON PREV_WEEK.cost != 0 AND CURRENT_WEEK.accountid = PREV_WEEK.accountid );";
+      "SELECT CURRENT_WEEK.accountid AS ACCOUNT_ID, CURRENT_WEEK.accountid AS ENTITY, CURRENT_WEEK.accountid AS PARENT, 100*(CURRENT_WEEK.cost - PREV_WEEK.cost)/ PREV_WEEK.cost as COST_CHANGE, ABS(CURRENT_WEEK.cost - PREV_WEEK.cost) as COST_DIFF, CURRENT_WEEK.cost as CURRENT_WEEK_COST, PREV_WEEK.cost as PREV_WEEK_COST FROM ((SELECT SUM(t0.billingamount) AS COST, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.billingamount) AS COST, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.accountid) PREV_WEEK ON PREV_WEEK.cost != 0 AND CURRENT_WEEK.accountid = PREV_WEEK.accountid );";
 
   private static final String TOTAL_CLUSTER_IDLE_COST_PER_ACCOUNT =
-      "SELECT CURRENT_WEEK.accountid AS ACCOUNT_ID, CURRENT_WEEK.accountid AS ENTITY, 100*ABS(CURRENT_WEEK.idlecost - PREV_WEEK.idlecost)/ PREV_WEEK.idlecost as COST_CHANGE, CURRENT_WEEK.idlecost - PREV_WEEK.idlecost as COST_DIFF, CURRENT_WEEK.idlecost as CURRENT_WEEK_COST, PREV_WEEK.idlecost as PREV_WEEK_COST FROM ((SELECT SUM(t0.actualidlecost) as IDLECOST, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.actualidlecost) as IDLECOST, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.accountid) PREV_WEEK ON PREV_WEEK.idlecost != 0 AND CURRENT_WEEK.accountid = PREV_WEEK.accountid );";
+      "SELECT CURRENT_WEEK.accountid AS ACCOUNT_ID, CURRENT_WEEK.accountid AS ENTITY, CURRENT_WEEK.accountid AS PARENT, 100*(CURRENT_WEEK.idlecost - PREV_WEEK.idlecost)/ PREV_WEEK.idlecost as COST_CHANGE, ABS(CURRENT_WEEK.idlecost - PREV_WEEK.idlecost) as COST_DIFF, CURRENT_WEEK.idlecost as CURRENT_WEEK_COST, PREV_WEEK.idlecost as PREV_WEEK_COST FROM ((SELECT SUM(t0.actualidlecost) as IDLECOST, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.actualidlecost) as IDLECOST, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.accountid) PREV_WEEK ON PREV_WEEK.idlecost != 0 AND CURRENT_WEEK.accountid = PREV_WEEK.accountid );";
 
   private static final String TOTAL_CLUSTER_UNALLOCATED_COST_PER_ACCOUNT =
-      "SELECT CURRENT_WEEK.accountid AS ACCOUNT_ID, CURRENT_WEEK.accountid AS ENTITY, 100*ABS(CURRENT_WEEK.unallocatedcost - PREV_WEEK.unallocatedcost)/ PREV_WEEK.unallocatedcost as COST_CHANGE, CURRENT_WEEK.unallocatedcost - PREV_WEEK.unallocatedcost as COST_DIFF, CURRENT_WEEK.unallocatedcost as CURRENT_WEEK_COST, PREV_WEEK.unallocatedcost as PREV_WEEK_COST FROM ((SELECT SUM(t0.unallocatedcost) as UNALLOCATEDCOST, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.unallocatedcost) as UNALLOCATEDCOST, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.accountid) PREV_WEEK ON PREV_WEEK.unallocatedcost != 0 AND CURRENT_WEEK.accountid = PREV_WEEK.accountid );";
+      "SELECT CURRENT_WEEK.accountid AS ACCOUNT_ID, CURRENT_WEEK.accountid AS ENTITY, CURRENT_WEEK.accountid AS PARENT, 100*(CURRENT_WEEK.unallocatedcost - PREV_WEEK.unallocatedcost)/ PREV_WEEK.unallocatedcost as COST_CHANGE, ABS(CURRENT_WEEK.unallocatedcost - PREV_WEEK.unallocatedcost) as COST_DIFF, CURRENT_WEEK.unallocatedcost as CURRENT_WEEK_COST, PREV_WEEK.unallocatedcost as PREV_WEEK_COST FROM ((SELECT SUM(t0.unallocatedcost) as UNALLOCATEDCOST, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.unallocatedcost) as UNALLOCATEDCOST, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.accountid) PREV_WEEK ON PREV_WEEK.unallocatedcost != 0 AND CURRENT_WEEK.accountid = PREV_WEEK.accountid );";
 
   /* The queries perform inner join of tables containing prev week and current week cost per entity(for example,
    cluster) per account and then selects the entity with highest cost change for each account */
   private static final String CLUSTER_COST_CHANGE_PER_ACCOUNT =
-      "SELECT COST_CHANGE, COST_DIFF, CURRENT_WEEK_COST, PREV_WEEK_COST, clusterid AS ENTITY, accountid AS ACCOUNT_ID FROM (SELECT ROW_NUMBER() OVER (PARTITION BY accountid ORDER BY COST_CHANGE DESC, COST_DIFF DESC) AS r,t.* FROM (SELECT CURRENT_WEEK.clusterid, CURRENT_WEEK.accountid, 100*ABS(CURRENT_WEEK.cost - PREV_WEEK.cost)/ PREV_WEEK.cost as COST_CHANGE, CURRENT_WEEK.cost - PREV_WEEK.cost as COST_DIFF, CURRENT_WEEK.cost as CURRENT_WEEK_COST, PREV_WEEK.cost as PREV_WEEK_COST FROM (SELECT SUM(t0.billingamount) AS COST, t0.clusterid, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.clusterid, t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.billingamount) AS COST, t0.clusterid, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.clusterid, t0.accountid) PREV_WEEK ON CURRENT_WEEK.clusterid = PREV_WEEK.clusterid AND CURRENT_WEEK.accountid = PREV_WEEK.accountid ) t) x where x.r <=1;";
+      "SELECT COST_CHANGE, COST_DIFF, CURRENT_WEEK_COST, PREV_WEEK_COST, clusterid AS ENTITY, clusterid AS PARENT, accountid AS ACCOUNT_ID FROM (SELECT ROW_NUMBER() OVER (PARTITION BY accountid ORDER BY COST_DIFF DESC, COST_CHANGE DESC) AS r,t.* FROM (SELECT CURRENT_WEEK.clusterid, CURRENT_WEEK.accountid, 100*(CURRENT_WEEK.cost - PREV_WEEK.cost)/ PREV_WEEK.cost as COST_CHANGE, ABS(CURRENT_WEEK.cost - PREV_WEEK.cost) as COST_DIFF, CURRENT_WEEK.cost as CURRENT_WEEK_COST, PREV_WEEK.cost as PREV_WEEK_COST FROM (SELECT SUM(t0.billingamount) AS COST, t0.clusterid, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.clusterid, t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.billingamount) AS COST, t0.clusterid, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.instancetype IN ('ECS_TASK_FARGATE','ECS_CONTAINER_INSTANCE','K8S_NODE') ) AND (t0.accountid IN %s) GROUP BY t0.clusterid, t0.accountid) PREV_WEEK ON PREV_WEEK.cost != 0 AND CURRENT_WEEK.clusterid = PREV_WEEK.clusterid AND CURRENT_WEEK.accountid = PREV_WEEK.accountid ) t) x where x.r <=1;";
 
   private static final String NAMESPACE_COST_CHANGE_PER_ACCOUNT =
-      "SELECT COST_CHANGE, COST_DIFF, CURRENT_WEEK_COST, PREV_WEEK_COST, namespace AS ENTITY, accountid AS ACCOUNT_ID FROM (SELECT ROW_NUMBER() OVER (PARTITION BY accountid ORDER BY COST_CHANGE DESC, COST_DIFF DESC) AS r,t.* FROM (SELECT CURRENT_WEEK.namespace, CURRENT_WEEK.accountid, 100*ABS(CURRENT_WEEK.cost - PREV_WEEK.cost)/ PREV_WEEK.cost as COST_CHANGE, CURRENT_WEEK.cost - PREV_WEEK.cost as COST_DIFF, CURRENT_WEEK.cost as CURRENT_WEEK_COST, PREV_WEEK.cost as PREV_WEEK_COST FROM (SELECT SUM(t0.billingamount) AS COST, t0.namespace, t0.clusterid, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.namespace IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.namespace NOT IN ('Unallocated') ) AND (t0.accountid IN %s) GROUP BY t0.namespace, t0.clusterid, t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.billingamount) AS COST, t0.namespace, t0.clusterid, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.namespace IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.namespace NOT IN ('Unallocated')) AND (t0.accountid IN %s) GROUP BY t0.namespace, t0.clusterid, t0.accountid) PREV_WEEK ON PREV_WEEK.cost != 0 AND CURRENT_WEEK.namespace = PREV_WEEK.namespace AND CURRENT_WEEK.clusterid = PREV_WEEK.clusterid AND CURRENT_WEEK.accountid = PREV_WEEK.accountid ) t) x where x.r <=1;";
+      "SELECT COST_CHANGE, COST_DIFF, CURRENT_WEEK_COST, PREV_WEEK_COST, namespace AS ENTITY, clusterid AS PARENT, accountid AS ACCOUNT_ID FROM (SELECT ROW_NUMBER() OVER (PARTITION BY accountid ORDER BY COST_DIFF DESC, COST_CHANGE DESC) AS r,t.* FROM (SELECT CURRENT_WEEK.namespace, CURRENT_WEEK.clusterid, CURRENT_WEEK.accountid, 100*(CURRENT_WEEK.cost - PREV_WEEK.cost)/ PREV_WEEK.cost as COST_CHANGE, ABS(CURRENT_WEEK.cost - PREV_WEEK.cost) as COST_DIFF, CURRENT_WEEK.cost as CURRENT_WEEK_COST, PREV_WEEK.cost as PREV_WEEK_COST FROM (SELECT SUM(t0.billingamount) AS COST, t0.namespace, t0.clusterid, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.namespace IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.namespace NOT IN ('Unallocated') ) AND (t0.accountid IN %s) GROUP BY t0.namespace, t0.clusterid, t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.billingamount) AS COST, t0.namespace, t0.clusterid, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.namespace IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.namespace NOT IN ('Unallocated')) AND (t0.accountid IN %s) GROUP BY t0.namespace, t0.clusterid, t0.accountid) PREV_WEEK ON PREV_WEEK.cost != 0 AND CURRENT_WEEK.namespace = PREV_WEEK.namespace AND CURRENT_WEEK.clusterid = PREV_WEEK.clusterid AND CURRENT_WEEK.accountid = PREV_WEEK.accountid ) t) x where x.r <=1;";
 
   private static final String WORKLOAD_COST_CHANGE_PER_ACCOUNT =
-      "SELECT COST_CHANGE, COST_DIFF, CURRENT_WEEK_COST, PREV_WEEK_COST, workloadname AS ENTITY, accountid AS ACCOUNT_ID FROM (SELECT ROW_NUMBER() OVER (PARTITION BY accountid ORDER BY COST_CHANGE DESC, COST_DIFF DESC) AS r,t.* FROM (SELECT CURRENT_WEEK.workloadname, CURRENT_WEEK.accountid, 100*ABS(CURRENT_WEEK.cost - PREV_WEEK.cost)/ PREV_WEEK.cost as COST_CHANGE, CURRENT_WEEK.cost - PREV_WEEK.cost as COST_DIFF, CURRENT_WEEK.cost as CURRENT_WEEK_COST, PREV_WEEK.cost as PREV_WEEK_COST FROM (SELECT SUM(t0.billingamount) AS COST, t0.workloadname, t0.namespace, t0.clusterid, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.workloadname IS NOT NULL) AND (t0.namespace IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.namespace NOT IN ('Unallocated') ) AND (t0.accountid IN %s) GROUP BY t0.workloadname, t0.namespace, t0.clusterid, t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.billingamount) AS COST, t0.workloadname, t0.namespace, t0.clusterid, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.workloadname IS NOT NULL) AND (t0.namespace IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.namespace NOT IN ('Unallocated')) AND (t0.accountid IN %s) GROUP BY t0.workloadname, t0.namespace, t0.clusterid, t0.accountid) PREV_WEEK ON PREV_WEEK.cost != 0 AND CURRENT_WEEK.workloadname = PREV_WEEK.workloadname AND CURRENT_WEEK.namespace = PREV_WEEK.namespace AND CURRENT_WEEK.clusterid = PREV_WEEK.clusterid AND CURRENT_WEEK.accountid = PREV_WEEK.accountid ) t) x where x.r <=1;";
+      "SELECT COST_CHANGE, COST_DIFF, CURRENT_WEEK_COST, PREV_WEEK_COST, workloadname AS ENTITY, clusterid AS PARENT, accountid AS ACCOUNT_ID FROM (SELECT ROW_NUMBER() OVER (PARTITION BY accountid ORDER BY COST_DIFF DESC, COST_CHANGE DESC) AS r,t.* FROM (SELECT CURRENT_WEEK.workloadname, CURRENT_WEEK.clusterid, CURRENT_WEEK.accountid, 100*(CURRENT_WEEK.cost - PREV_WEEK.cost)/ PREV_WEEK.cost as COST_CHANGE, ABS(CURRENT_WEEK.cost - PREV_WEEK.cost) as COST_DIFF, CURRENT_WEEK.cost as CURRENT_WEEK_COST, PREV_WEEK.cost as PREV_WEEK_COST FROM (SELECT SUM(t0.billingamount) AS COST, t0.workloadname, t0.namespace, t0.clusterid, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.workloadname IS NOT NULL) AND (t0.namespace IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.namespace NOT IN ('Unallocated') ) AND (t0.accountid IN %s) GROUP BY t0.workloadname, t0.namespace, t0.clusterid, t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.billingamount) AS COST, t0.workloadname, t0.namespace, t0.clusterid, t0.accountid  FROM billing_data t0 WHERE (t0.clusterid IS NOT NULL) AND (t0.workloadname IS NOT NULL) AND (t0.namespace IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.namespace NOT IN ('Unallocated')) AND (t0.accountid IN %s) GROUP BY t0.workloadname, t0.namespace, t0.clusterid, t0.accountid) PREV_WEEK ON PREV_WEEK.cost != 0 AND CURRENT_WEEK.workloadname = PREV_WEEK.workloadname AND CURRENT_WEEK.namespace = PREV_WEEK.namespace AND CURRENT_WEEK.clusterid = PREV_WEEK.clusterid AND CURRENT_WEEK.accountid = PREV_WEEK.accountid ) t) x where x.r <=1;";
 
   private static final String APPLICATION_COST_CHANGE_PER_ACCOUNT =
-      "SELECT COST_CHANGE, COST_DIFF, CURRENT_WEEK_COST, PREV_WEEK_COST, appid AS ENTITY, accountid AS ACCOUNT_ID FROM (SELECT ROW_NUMBER() OVER (PARTITION BY accountid ORDER BY COST_CHANGE DESC, COST_DIFF DESC) AS r,t.* FROM (SELECT CURRENT_WEEK.appid, CURRENT_WEEK.accountid, 100*ABS(CURRENT_WEEK.cost - PREV_WEEK.cost)/ PREV_WEEK.cost as COST_CHANGE, CURRENT_WEEK.cost - PREV_WEEK.cost as COST_DIFF, CURRENT_WEEK.cost as CURRENT_WEEK_COST, PREV_WEEK.cost as PREV_WEEK_COST FROM (SELECT SUM(t0.billingamount) AS COST, t0.appid, t0.accountid  FROM billing_data t0 WHERE (t0.appid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.accountid IN %s) GROUP BY t0.appid, t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.billingamount) AS COST, t0.appid, t0.accountid  FROM billing_data t0 WHERE (t0.appid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.accountid IN %s) GROUP BY t0.appid, t0.accountid) PREV_WEEK ON PREV_WEEK.cost != 0 AND CURRENT_WEEK.appid = PREV_WEEK.appid AND CURRENT_WEEK.accountid = PREV_WEEK.accountid ) t) x where x.r <=1;";
+      "SELECT COST_CHANGE, COST_DIFF, CURRENT_WEEK_COST, PREV_WEEK_COST, appid AS ENTITY, appid AS PARENT, accountid AS ACCOUNT_ID FROM (SELECT ROW_NUMBER() OVER (PARTITION BY accountid ORDER BY COST_DIFF DESC, COST_CHANGE DESC) AS r,t.* FROM (SELECT CURRENT_WEEK.appid, CURRENT_WEEK.accountid, 100*(CURRENT_WEEK.cost - PREV_WEEK.cost)/ PREV_WEEK.cost as COST_CHANGE, ABS(CURRENT_WEEK.cost - PREV_WEEK.cost) as COST_DIFF, CURRENT_WEEK.cost as CURRENT_WEEK_COST, PREV_WEEK.cost as PREV_WEEK_COST FROM (SELECT SUM(t0.billingamount) AS COST, t0.appid, t0.accountid  FROM billing_data t0 WHERE (t0.appid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.accountid IN %s) GROUP BY t0.appid, t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.billingamount) AS COST, t0.appid, t0.accountid  FROM billing_data t0 WHERE (t0.appid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.accountid IN %s) GROUP BY t0.appid, t0.accountid) PREV_WEEK ON PREV_WEEK.cost != 0 AND CURRENT_WEEK.appid = PREV_WEEK.appid AND CURRENT_WEEK.accountid = PREV_WEEK.accountid ) t) x where x.r <=1;";
 
   private static final String SERVICE_COST_CHANGE_PER_ACCOUNT =
-      "SELECT COST_CHANGE, COST_DIFF, CURRENT_WEEK_COST, PREV_WEEK_COST, serviceid AS ENTITY, accountid AS ACCOUNT_ID FROM (SELECT ROW_NUMBER() OVER (PARTITION BY accountid ORDER BY COST_CHANGE DESC, COST_DIFF DESC) AS r,t.* FROM (SELECT CURRENT_WEEK.serviceid, CURRENT_WEEK.accountid, 100*ABS(CURRENT_WEEK.cost - PREV_WEEK.cost)/ PREV_WEEK.cost as COST_CHANGE, CURRENT_WEEK.cost - PREV_WEEK.cost as COST_DIFF, CURRENT_WEEK.cost as CURRENT_WEEK_COST, PREV_WEEK.cost as PREV_WEEK_COST FROM (SELECT SUM(t0.billingamount) AS COST, t0.serviceid, t0.appid, t0.accountid  FROM billing_data t0 WHERE (t0.appid IS NOT NULL) AND (t0.serviceid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.accountid IN %s) GROUP BY t0.serviceid, t0.appid, t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.billingamount) AS COST, t0.serviceid, t0.appid, t0.accountid  FROM billing_data t0 WHERE (t0.appid IS NOT NULL) AND (t0.serviceid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.accountid IN %s) GROUP BY t0.serviceid, t0.appid, t0.accountid) PREV_WEEK ON PREV_WEEK.cost != 0 AND CURRENT_WEEK.serviceid = PREV_WEEK.serviceid AND CURRENT_WEEK.appid = PREV_WEEK.appid AND CURRENT_WEEK.accountid = PREV_WEEK.accountid ) t) x where x.r <=1;";
+      "SELECT COST_CHANGE, COST_DIFF, CURRENT_WEEK_COST, PREV_WEEK_COST, serviceid AS ENTITY, appid as PARENT, accountid AS ACCOUNT_ID FROM (SELECT ROW_NUMBER() OVER (PARTITION BY accountid ORDER BY COST_DIFF DESC, COST_CHANGE DESC) AS r,t.* FROM (SELECT CURRENT_WEEK.serviceid, CURRENT_WEEK.appid, CURRENT_WEEK.accountid, 100*(CURRENT_WEEK.cost - PREV_WEEK.cost)/ PREV_WEEK.cost as COST_CHANGE, ABS(CURRENT_WEEK.cost - PREV_WEEK.cost) as COST_DIFF, CURRENT_WEEK.cost as CURRENT_WEEK_COST, PREV_WEEK.cost as PREV_WEEK_COST FROM (SELECT SUM(t0.billingamount) AS COST, t0.serviceid, t0.appid, t0.accountid  FROM billing_data t0 WHERE (t0.appid IS NOT NULL) AND (t0.serviceid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.accountid IN %s) GROUP BY t0.serviceid, t0.appid, t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.billingamount) AS COST, t0.serviceid, t0.appid, t0.accountid  FROM billing_data t0 WHERE (t0.appid IS NOT NULL) AND (t0.serviceid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.accountid IN %s) GROUP BY t0.serviceid, t0.appid, t0.accountid) PREV_WEEK ON PREV_WEEK.cost != 0 AND CURRENT_WEEK.serviceid = PREV_WEEK.serviceid AND CURRENT_WEEK.appid = PREV_WEEK.appid AND CURRENT_WEEK.accountid = PREV_WEEK.accountid ) t) x where x.r <=1;";
 
   private static final String ENVIRONMENT_COST_CHANGE_PER_ACCOUNT =
-      "SELECT COST_CHANGE, COST_DIFF, CURRENT_WEEK_COST, PREV_WEEK_COST, envid AS ENTITY, accountid AS ACCOUNT_ID FROM (SELECT ROW_NUMBER() OVER (PARTITION BY accountid ORDER BY COST_CHANGE DESC, COST_DIFF DESC) AS r,t.* FROM (SELECT CURRENT_WEEK.envid, CURRENT_WEEK.accountid, 100*ABS(CURRENT_WEEK.cost - PREV_WEEK.cost)/ PREV_WEEK.cost as COST_CHANGE, CURRENT_WEEK.cost - PREV_WEEK.cost as COST_DIFF, CURRENT_WEEK.cost as CURRENT_WEEK_COST, PREV_WEEK.cost as PREV_WEEK_COST FROM (SELECT SUM(t0.billingamount) AS COST, t0.envid, t0.appid, t0.accountid  FROM billing_data t0 WHERE (t0.appid IS NOT NULL) AND (t0.envid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.accountid IN %s) GROUP BY t0.envid, t0.appid, t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.billingamount) AS COST, t0.envid, t0.appid, t0.accountid  FROM billing_data t0 WHERE (t0.appid IS NOT NULL) AND (t0.envid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.accountid IN %s) GROUP BY t0.envid, t0.appid, t0.accountid) PREV_WEEK ON PREV_WEEK.cost != 0 AND CURRENT_WEEK.envid = PREV_WEEK.envid AND CURRENT_WEEK.appid = PREV_WEEK.appid AND CURRENT_WEEK.accountid = PREV_WEEK.accountid ) t) x where x.r <=1;";
+      "SELECT COST_CHANGE, COST_DIFF, CURRENT_WEEK_COST, PREV_WEEK_COST, envid AS ENTITY, appid as PARENT, accountid AS ACCOUNT_ID FROM (SELECT ROW_NUMBER() OVER (PARTITION BY accountid ORDER BY COST_DIFF DESC, COST_CHANGE DESC) AS r,t.* FROM (SELECT CURRENT_WEEK.envid, CURRENT_WEEK.appid, CURRENT_WEEK.accountid, 100*(CURRENT_WEEK.cost - PREV_WEEK.cost)/ PREV_WEEK.cost as COST_CHANGE, ABS(CURRENT_WEEK.cost - PREV_WEEK.cost) as COST_DIFF, CURRENT_WEEK.cost as CURRENT_WEEK_COST, PREV_WEEK.cost as PREV_WEEK_COST FROM (SELECT SUM(t0.billingamount) AS COST, t0.envid, t0.appid, t0.accountid  FROM billing_data t0 WHERE (t0.appid IS NOT NULL) AND (t0.envid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.accountid IN %s) GROUP BY t0.envid, t0.appid, t0.accountid) CURRENT_WEEK INNER JOIN (SELECT SUM(t0.billingamount) AS COST, t0.envid, t0.appid, t0.accountid  FROM billing_data t0 WHERE (t0.appid IS NOT NULL) AND (t0.envid IS NOT NULL) AND (t0.starttime >= '%s') AND (t0.starttime <= '%s') AND (t0.accountid IN %s) GROUP BY t0.envid, t0.appid, t0.accountid) PREV_WEEK ON PREV_WEEK.cost != 0 AND CURRENT_WEEK.envid = PREV_WEEK.envid AND CURRENT_WEEK.appid = PREV_WEEK.appid AND CURRENT_WEEK.accountid = PREV_WEEK.accountid ) t) x where x.r <=1;";
 
   // Result set fields
   private static final String COST_CHANGE = "COST_CHANGE";
@@ -107,6 +113,7 @@ public class WeeklyReportServiceImpl {
   private static final String CURRENT_WEEK_COST = "CURRENT_WEEK_COST";
   private static final String ENTITY = "ENTITY";
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
+  private static final String OVERVIEW_URL = "/account/%s/continuous-efficiency/overview";
 
   public void generateAndSendWeeklyReport() {
     List<Account> ceEnabledAccounts = cloudToHarnessMappingService.getCCMEnabledAccounts();
@@ -117,6 +124,12 @@ public class WeeklyReportServiceImpl {
     String prevWeekStartTime = getStartTime(getStartOfDayTimestamp(WEEK_IN_MILLISECONDS)).toString();
     String prevWeekEndTime = getEndTime(getStartOfDayTimestamp(WEEK_IN_MILLISECONDS)).toString();
     String accountIdFilterValue = getAccountIdFilterValue(accountIds);
+    String from = getStartTime(getStartOfDayTimestamp(0))
+                      .atZone(ZoneId.of(DEFAULT_TIMEZONE))
+                      .format(DateTimeFormatter.ofPattern(DATE_PATTERN_FOR_FILTER));
+    String to = getEndTime(getStartOfDayTimestamp(0))
+                    .atZone(ZoneId.of(DEFAULT_TIMEZONE))
+                    .format(DateTimeFormatter.ofPattern(DATE_PATTERN_FOR_FILTER));
 
     Map<String, WeeklyReportEntityData> totalClusterCostData =
         executeQuery(String.format(TOTAL_CLUSTER_COST_PER_ACCOUNT, currentWeekStartTime, currentWeekEndTime,
@@ -163,6 +176,9 @@ public class WeeklyReportServiceImpl {
       }
       Map<String, String> templateModel = new HashMap<>();
       Map<String, String> costValues = new HashMap<>();
+      costValues.put(ACCOUNT_ID, accountId);
+      costValues.put(FROM, from);
+      costValues.put(TO, to);
       costValues.put(APPLICATION_RELATED_COSTS, NOT_AVAILABLE);
       costValues.put(CLUSTER_RELATED_COSTS, NOT_AVAILABLE);
       // Total Cluster cost
@@ -246,6 +262,11 @@ public class WeeklyReportServiceImpl {
       templateHelper.populateCostDataForTemplate(templateModel, costValues);
 
       templateModel.put("DATE", reportDateRange);
+      try {
+        templateModel.put("url", templateHelper.buildAbsoluteUrl(String.format(OVERVIEW_URL, accountId)));
+      } catch (URISyntaxException e) {
+        logger.error("Error in forming Explorer URL for Weekly Report", e);
+      }
 
       EmailData emailData = EmailData.builder()
                                 .to(emailIds)
@@ -288,17 +309,18 @@ public class WeeklyReportServiceImpl {
     String accountId;
     while (resultSet != null && resultSet.next()) {
       accountId = resultSet.getString(ACCOUNT_ID);
-      Double costDiff = resultSet.getDouble(COST_DIFF);
-      boolean costDecreased = costDiff <= 0;
+      Double costChange = resultSet.getDouble(COST_CHANGE);
+      boolean costDecreased = costChange <= 0;
       if (costDecreased) {
-        costDiff *= -1;
+        costChange *= -1;
       }
       data.put(accountId,
           WeeklyReportEntityData.builder()
               .id(resultSet.getString(ENTITY))
+              .parent(resultSet.getString(PARENT))
               .cost(getRoundedDoubleValue(resultSet.getDouble(CURRENT_WEEK_COST)))
-              .costChange(getRoundedDoubleValue(resultSet.getDouble(COST_CHANGE)))
-              .costDiff(getRoundedDoubleValue(costDiff))
+              .costChange(getRoundedDoubleValue(costChange))
+              .costDiff(getRoundedDoubleValue(resultSet.getDouble(COST_DIFF)))
               .costDecreased(costDecreased)
               .build());
     }
@@ -339,6 +361,8 @@ public class WeeklyReportServiceImpl {
     if (populateName) {
       templateModel.put(entity + NAME, cloudToHarnessMappingService.getEntityName(field, entityData.getId()));
     }
+    templateModel.put(entity + ID, entityData.getId());
+    templateModel.put(entity + PARENT, entityData.getParent());
     templateModel.put(entity + COST, "$" + formatter.format(entityData.getCost()));
     templateModel.put(entity + COST_CHANGE_PERCENT, sign + formatter.format(entityData.getCostChange()) + "%");
     templateModel.put(entity + COST_DIFF_AMOUNT, sign + "$" + formatter.format(entityData.getCostDiff()));
@@ -347,7 +371,9 @@ public class WeeklyReportServiceImpl {
   }
 
   private void populateDefaultPlaceholderValues(Map<String, String> templateModel, String entity) {
+    templateModel.put(entity + ID, DEFAULT_PLACEHOLDER);
     templateModel.put(entity + NAME, DEFAULT_PLACEHOLDER);
+    templateModel.put(entity + PARENT, DEFAULT_PLACEHOLDER);
     templateModel.put(entity + COST, DEFAULT_PLACEHOLDER);
     templateModel.put(entity + COST_CHANGE_PERCENT, DEFAULT_PLACEHOLDER);
     templateModel.put(entity + COST_DIFF_AMOUNT, DEFAULT_PLACEHOLDER);

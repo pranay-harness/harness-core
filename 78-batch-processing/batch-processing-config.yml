@@ -41,3 +41,4 @@ smtp:
   username: smtp_username_placeholder
   password: "smtp_password_placeholder"
 
+baseUrl: https://localhost:8000
