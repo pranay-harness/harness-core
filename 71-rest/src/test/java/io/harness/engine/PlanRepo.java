@@ -44,7 +44,7 @@ public class PlanRepo {
                   .name("Test2 - BigWait")
                   .stepType(SimpleAsyncStep.STEP_TYPE)
                   .identifier("test2")
-                  .stepParameters(SimpleStepAsyncParams.builder().duration(30).build())
+                  .stepParameters(SimpleStepAsyncParams.builder().duration(15).build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
                                              .build())

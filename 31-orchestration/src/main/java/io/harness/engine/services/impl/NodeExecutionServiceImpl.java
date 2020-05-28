@@ -9,22 +9,40 @@ import com.google.inject.name.Named;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.services.NodeExecutionService;
+import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.state.io.StepParameters;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.function.Consumer;
 
 @OwnedBy(CDC)
+@Slf4j
 public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject @Named("enginePersistence") HPersistence hPersistence;
+
+  @Override
+  public NodeExecution update(@NonNull String nodeExecutionId, @NonNull Consumer<UpdateOperations<NodeExecution>> ops) {
+    Query<NodeExecution> findQuery =
+        hPersistence.createQuery(NodeExecution.class).filter(NodeExecutionKeys.uuid, nodeExecutionId);
+    UpdateOperations<NodeExecution> operations = hPersistence.createUpdateOperations(NodeExecution.class);
+    ops.accept(operations);
+    NodeExecution updated = hPersistence.findAndModify(findQuery, operations, HPersistence.upsertReturnNewOptions);
+    if (updated == null) {
+      throw new InvalidRequestException("Node Execution Cannot be updated with provided operations" + nodeExecutionId);
+    }
+    return updated;
+  }
 
   @Override
   public List<NodeExecution> fetchNodeExecutionsByStatus(String planExecutionId, NodeExecutionStatus status) {
@@ -54,6 +72,17 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       }
     }
     return nodeExecutions;
+  }
+
+  @Override
+  public NodeExecution get(String nodeExecutionId) {
+    NodeExecution nodeExecution = hPersistence.createQuery(NodeExecution.class, excludeAuthority)
+                                      .filter(NodeExecutionKeys.uuid, nodeExecutionId)
+                                      .get();
+    if (nodeExecution == null) {
+      throw new InvalidRequestException("Node Execution is null for id: " + nodeExecutionId);
+    }
+    return nodeExecution;
   }
 
   @Override

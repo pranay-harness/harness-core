@@ -2,7 +2,6 @@ package io.harness.engine.executables.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.execution.status.NodeExecutionStatus.ASYNC_WAITING;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.common.base.Preconditions;
@@ -12,10 +11,10 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.AmbianceHelper;
-import io.harness.engine.EngineStatusHelper;
 import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.resume.EngineResumeCallback;
+import io.harness.engine.services.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -31,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Redesign
 public class AsyncExecutableInvoker implements ExecutableInvoker {
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private EngineStatusHelper engineStatusHelper;
+  @Inject private NodeExecutionService nodeExecutionService;
   @Inject private AmbianceHelper ambianceHelper;
 
   @Override
@@ -55,7 +54,7 @@ public class AsyncExecutableInvoker implements ExecutableInvoker {
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, response.getCallbackIds().toArray(new String[0]));
 
     // Update Execution Node Instance state to TASK_WAITING
-    engineStatusHelper.updateNodeInstance(nodeExecution.getUuid(),
-        ops -> ops.set(NodeExecutionKeys.status, ASYNC_WAITING).set(NodeExecutionKeys.executableResponse, response));
+    nodeExecutionService.update(
+        nodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.executableResponse, response));
   }
 }

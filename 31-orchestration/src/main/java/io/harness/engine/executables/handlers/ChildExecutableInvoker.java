@@ -2,7 +2,6 @@ package io.harness.engine.executables.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.execution.status.NodeExecutionStatus.CHILD_WAITING;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.inject.Inject;
@@ -13,12 +12,12 @@ import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.AmbianceHelper;
-import io.harness.engine.EngineStatusHelper;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.resume.EngineResumeCallback;
+import io.harness.engine.services.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
@@ -39,7 +38,7 @@ public class ChildExecutableInvoker implements ExecutableInvoker {
   @Inject private AmbianceHelper ambianceHelper;
   @Inject private HPersistence hPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private EngineStatusHelper engineStatusHelper;
+  @Inject private NodeExecutionService nodeExecutionService;
   @Inject private ExecutionEngine engine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
@@ -78,7 +77,7 @@ public class ChildExecutableInvoker implements ExecutableInvoker {
                                .build());
     NotifyCallback callback = EngineResumeCallback.builder().nodeInstanceId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, childInstanceId);
-    engineStatusHelper.updateNodeInstance(nodeExecution.getUuid(),
-        ops -> ops.set(NodeExecutionKeys.status, CHILD_WAITING).set(NodeExecutionKeys.executableResponse, response));
+    nodeExecutionService.update(
+        nodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.executableResponse, response));
   }
 }

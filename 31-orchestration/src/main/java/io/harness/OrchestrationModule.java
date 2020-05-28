@@ -8,7 +8,6 @@ import com.google.inject.Injector;
 import com.google.inject.name.Names;
 
 import io.harness.engine.EngineObtainmentHelper;
-import io.harness.engine.EngineStatusHelper;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.expressions.EngineExpressionServiceImpl;
@@ -16,8 +15,10 @@ import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.services.OutcomeService;
+import io.harness.engine.services.PlanExecutionService;
 import io.harness.engine.services.impl.NodeExecutionServiceImpl;
 import io.harness.engine.services.impl.OutcomeServiceImpl;
+import io.harness.engine.services.impl.PlanExecutionServiceImpl;
 import io.harness.govern.DependencyModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
@@ -48,13 +49,13 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
   protected void configure() {
     bind(StateInspectionService.class).to(StateInspectionServiceImpl.class);
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class);
+    bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class);
     bind(InterruptService.class).to(InterruptServiceImpl.class);
     bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
     bind(OutcomeService.class).to(OutcomeServiceImpl.class);
     bind(HPersistence.class).annotatedWith(Names.named("enginePersistence")).to(MongoPersistence.class);
     bind(ExecutionEngine.class).toInstance(new ExecutionEngine());
     bind(EngineObtainmentHelper.class).toInstance(new EngineObtainmentHelper());
-    bind(EngineStatusHelper.class).toInstance(new EngineStatusHelper());
     bind(ExecutorService.class)
         .annotatedWith(Names.named("EngineExecutorService"))
         .toInstance(ThreadPool.create(

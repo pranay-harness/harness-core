@@ -34,6 +34,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.plan.ExecutionNode;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.Step;
+import io.harness.state.io.StepTransput;
 import io.harness.tasks.TaskExecutor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +65,7 @@ public class AbortAllHandler implements InterruptHandler {
     String savedInterruptId = validateAndSave(interrupt);
     Interrupt savedInterrupt =
         hPersistence.createQuery(Interrupt.class).filter(InterruptKeys.uuid, savedInterruptId).get();
-    return handleInterrupt(savedInterrupt);
+    return handleInterrupt(savedInterrupt, null, null);
   }
 
   private String validateAndSave(@Valid @NonNull Interrupt interrupt) {
@@ -85,7 +86,8 @@ public class AbortAllHandler implements InterruptHandler {
   }
 
   @Override
-  public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt) {
+  public Interrupt handleInterrupt(
+      @NonNull @Valid Interrupt interrupt, Ambiance ambiance, List<StepTransput> additionalInputs) {
     if (!markAbortingState(interrupt, NodeExecutionStatus.abortableStatuses())) {
       return interrupt;
     }
