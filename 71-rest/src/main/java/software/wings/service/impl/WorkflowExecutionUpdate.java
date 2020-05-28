@@ -14,7 +14,6 @@ import static java.lang.String.format;
 import static software.wings.sm.StateType.PHASE;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.fabric8.utils.Lists;
@@ -63,7 +62,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
-import software.wings.sm.status.handlers.WorkflowStatusPropagatorHelper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -103,7 +101,6 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private UsageMetricsHelper usageMetricsHelper;
   @Inject private SegmentHandler segmentHandler;
   @Inject private HarnessTagService harnessTagService;
-  @Inject private WorkflowStatusPropagatorHelper statusPropagatorHelper;
 
   /**
    * Instantiates a new workflow execution update.
@@ -240,14 +237,6 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     } else {
       if (status == SUCCESS) {
         triggerService.triggerExecutionPostPipelineCompletionAsync(appId, workflowId);
-      }
-
-      try {
-        WorkflowExecution workflowExecution =
-            Preconditions.checkNotNull(workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId));
-        statusPropagatorHelper.shouldPausePipeline(appId, workflowExecution.getPipelineExecutionId());
-      } catch (Exception e) {
-        logger.error("Error in breakdown refresh", e);
       }
     }
     if (ExecutionStatus.isFinalStatus(status)) {
