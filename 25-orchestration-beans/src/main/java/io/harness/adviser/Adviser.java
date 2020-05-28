@@ -9,7 +9,5 @@ import io.harness.registries.RegistrableEntity;
 @OwnedBy(CDC)
 @Redesign
 public interface Adviser extends RegistrableEntity<AdviserType> {
-  AdviserType getType();
-
   Advise onAdviseEvent(AdvisingEvent advisingEvent);
 }

@@ -35,9 +35,4 @@ public class IgnoreAdviser implements Adviser {
     }
     return null;
   }
-
-  @Override
-  public AdviserType getType() {
-    return ADVISER_TYPE;
-  }
 }

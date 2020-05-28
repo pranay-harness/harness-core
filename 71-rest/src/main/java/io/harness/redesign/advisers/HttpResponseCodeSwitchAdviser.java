@@ -27,11 +27,6 @@ public class HttpResponseCodeSwitchAdviser implements Adviser {
   public static final AdviserType ADVISER_TYPE = AdviserType.builder().type("HTTP_RESPONSE_CODE_SWITCH").build();
 
   @Override
-  public AdviserType getType() {
-    return ADVISER_TYPE;
-  }
-
-  @Override
   public Advise onAdviseEvent(AdvisingEvent adviseEvent) {
     HttpResponseCodeSwitchAdviserParameters parameters =
         (HttpResponseCodeSwitchAdviserParameters) Preconditions.checkNotNull(adviseEvent.getAdviserParameters());

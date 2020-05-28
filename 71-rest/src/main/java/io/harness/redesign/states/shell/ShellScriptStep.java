@@ -89,8 +89,7 @@ public class ShellScriptStep implements Step, AsyncTaskExecutable {
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private FeatureFlagService featureFlagService;
 
-  @Override
-  public StepType getType() {
+  private StepType getType() {
     return STEP_TYPE;
   }
 

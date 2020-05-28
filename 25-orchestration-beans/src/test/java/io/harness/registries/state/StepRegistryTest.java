@@ -47,10 +47,5 @@ public class StepRegistryTest extends OrchestrationBeansTest {
 
   @Value
   @Builder
-  private static class DummyStep implements Step {
-    @Override
-    public StepType getType() {
-      return StepType.builder().type("DUMMY_TEST").build();
-    }
-  }
+  private static class DummyStep implements Step {}
 }

@@ -42,9 +42,4 @@ public class InfrastructureStep implements Step, SyncExecutable {
         .outcome("infrastructureMapping", infraMapping)
         .build();
   }
-
-  @Override
-  public StepType getType() {
-    return STEP_TYPE;
-  }
 }

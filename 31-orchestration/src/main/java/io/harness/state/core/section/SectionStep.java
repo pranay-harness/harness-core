@@ -39,9 +39,4 @@ public class SectionStep implements Step, ChildExecutable {
     responseBuilder.status(statusNotifyResponseData.getStatus());
     return responseBuilder.build();
   }
-
-  @Override
-  public StepType getType() {
-    return STATE_TYPE;
-  }
 }

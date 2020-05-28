@@ -12,7 +12,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
-import io.harness.facilitator.FacilitatorType;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -21,15 +20,6 @@ import java.time.Duration;
 
 public class AsyncFacilitatorTest extends OrchestrationTest {
   @Inject private AsyncFacilitator asyncFacilitator;
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
-  public void shouldTestGetType() {
-    FacilitatorType facilitatorType = asyncFacilitator.getType();
-    assertThat(facilitatorType).isNotNull();
-    assertThat(facilitatorType.getType()).isEqualTo(FacilitatorType.ASYNC);
-  }
 
   @Test
   @Owner(developers = PRASHANT)

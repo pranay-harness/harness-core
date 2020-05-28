@@ -37,8 +37,6 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTest {
     facilitatorRegistry.register(facilitatorType, Type1Facilitator.class);
     Facilitator facilitator = facilitatorRegistry.obtain(facilitatorType);
     assertThat(facilitator).isNotNull();
-    assertThat(facilitator.getType()).isEqualTo(facilitatorType);
-    Type1Facilitator type1Adviser = (Type1Facilitator) facilitator;
 
     assertThatThrownBy(() -> facilitatorRegistry.register(facilitatorType, Type1Facilitator.class))
         .isInstanceOf(DuplicateRegistryException.class);
@@ -57,11 +55,6 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTest {
   @Value
   @Builder
   private static class Type1Facilitator implements Facilitator {
-    @Override
-    public FacilitatorType getType() {
-      return FacilitatorType.builder().type("Type1").build();
-    }
-
     @Override
     public FacilitatorResponse facilitate(
         Ambiance ambiance, StepParameters stepParameters, FacilitatorParameters parameters, List<StepTransput> inputs) {

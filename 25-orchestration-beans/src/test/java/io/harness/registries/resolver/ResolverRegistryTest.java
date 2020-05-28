@@ -61,10 +61,5 @@ public class ResolverRegistryTest extends OrchestrationBeansTest {
     public DummyOutcome consume(Ambiance ambiance, String name, DummyOutcome value) {
       return null;
     }
-
-    @Override
-    public RefType getType() {
-      return RefType.builder().type(RefType.SWEEPING_OUTPUT).build();
-    }
   }
 }

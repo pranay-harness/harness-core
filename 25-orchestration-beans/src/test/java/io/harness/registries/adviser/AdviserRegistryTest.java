@@ -33,7 +33,6 @@ public class AdviserRegistryTest extends OrchestrationBeansTest {
     adviserRegistry.register(adviserType, Type1Adviser.class);
     Adviser adviser = adviserRegistry.obtain(adviserType);
     assertThat(adviser).isNotNull();
-    assertThat(adviser.getType()).isEqualTo(adviserType);
 
     assertThatThrownBy(() -> adviserRegistry.register(adviserType, Type1Adviser.class))
         .isInstanceOf(DuplicateRegistryException.class);
@@ -56,11 +55,6 @@ public class AdviserRegistryTest extends OrchestrationBeansTest {
   }
 
   private static class Type1Adviser implements Adviser {
-    @Override
-    public AdviserType getType() {
-      return AdviserType.builder().type("Type1").build();
-    }
-
     @Override
     public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
       return null;

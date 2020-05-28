@@ -18,9 +18,4 @@ public class AbortAdviser implements Adviser {
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
     return null;
   }
-
-  @Override
-  public AdviserType getType() {
-    return ADVISER_TYPE;
-  }
 }

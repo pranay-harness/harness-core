@@ -67,9 +67,4 @@ public class SimpleAsyncStep implements Step, AsyncExecutable {
   @Override
   public void handleAbort(
       Ambiance ambiance, StepParameters stateParameters, AsyncExecutableResponse executableResponse) {}
-
-  @Override
-  public StepType getType() {
-    return STEP_TYPE;
-  }
 }

@@ -35,9 +35,4 @@ public class RetryAdviser implements Adviser {
     // TODO => handle repair action code after retry
     return null;
   }
-
-  @Override
-  public AdviserType getType() {
-    return ADVISER_TYPE;
-  }
 }

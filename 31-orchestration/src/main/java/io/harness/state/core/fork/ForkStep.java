@@ -52,9 +52,4 @@ public class ForkStep implements Step, ChildrenExecutable {
     }
     return responseBuilder.build();
   }
-
-  @Override
-  public StepType getType() {
-    return STATE_TYPE;
-  }
 }

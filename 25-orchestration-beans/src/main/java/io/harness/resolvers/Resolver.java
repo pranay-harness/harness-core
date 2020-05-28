@@ -16,10 +16,4 @@ public interface Resolver<T extends StepTransput> extends RegistrableEntity<RefT
   T resolve(Ambiance ambiance, RefObject refObject);
 
   T consume(Ambiance ambiance, String name, T value);
-
-  RefType getType();
-
-  default RefType getRegistryKey() {
-    return getType();
-  }
 }

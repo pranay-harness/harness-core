@@ -31,9 +31,4 @@ public class DummyStep implements Step, SyncExecutable {
     logger.info("Dummy State getting executed");
     return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
   }
-
-  @Override
-  public StepType getType() {
-    return STATE_TYPE;
-  }
 }

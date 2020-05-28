@@ -17,11 +17,6 @@ public class PipelineSetupStep implements Step, SyncExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("PIPELINE_SETUP").build();
 
   @Override
-  public StepType getType() {
-    return STEP_TYPE;
-  }
-
-  @Override
   public StepResponse executeSync(
       Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
     CDPipelineSetupParameters parameters = (CDPipelineSetupParameters) stepParameters;

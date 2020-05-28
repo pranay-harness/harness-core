@@ -18,11 +18,6 @@ public class InfrastructureSectionStep implements Step, ChildExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("INFRASTRUCTURE_SECTION").build();
 
   @Override
-  public StepType getType() {
-    return STEP_TYPE;
-  }
-
-  @Override
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
     SectionStepParameters sectionStepParameters = (SectionStepParameters) stepParameters;
