@@ -17,4 +17,5 @@ public class BatchMainConfig {
   @JsonProperty("awsS3SyncConfig") private AwsS3SyncConfig awsS3SyncConfig;
   @JsonProperty("billingDataPipelineConfig") private BillingDataPipelineConfig billingDataPipelineConfig;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
+  @JsonProperty("baseUrl") private String baseUrl;
 }
