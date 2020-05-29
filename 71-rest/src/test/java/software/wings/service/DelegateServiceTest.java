@@ -185,7 +185,6 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                                   .ip("127.0.0.1")
                                                                   .hostName("localhost")
                                                                   .version(VERSION)
-                                                                  .status(Status.ENABLED.name())
                                                                   .lastHeartBeat(System.currentTimeMillis());
   private static final JreConfig ORACLE_JRE_CONFIG = JreConfig.builder()
                                                          .version("1.8.0_191")
@@ -616,7 +615,6 @@ public class DelegateServiceTest extends WingsBaseTest {
                                         .ip("127.0.0.1")
                                         .hostName("localhost")
                                         .version(VERSION)
-                                        .status(Status.ENABLED.name())
                                         .lastHeartBeat(System.currentTimeMillis())
                                         .build();
     when(licenseService.isAccountDeleted("DELETED_ACCOUNT")).thenReturn(true);

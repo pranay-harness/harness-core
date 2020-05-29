@@ -19,7 +19,6 @@ public class DelegateParams {
   String delegateGroupName;
   String delegateProfileId;
   String description;
-  String status;
   String version;
   String delegateType;
   String delegateRandomToken;
