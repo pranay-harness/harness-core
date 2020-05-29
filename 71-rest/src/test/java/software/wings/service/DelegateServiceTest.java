@@ -1547,7 +1547,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldDoConnectionHeartbeat() {
     delegateService.doConnectionHeartbeat(
-        ACCOUNT_ID, DELEGATE_ID, DelegateConnectionHeartbeat.builder().version("1.0.1").alive(true).build());
+        ACCOUNT_ID, DELEGATE_ID, DelegateConnectionHeartbeat.builder().version("1.0.1").build());
     DelegateConnection connection = wingsPersistence.createQuery(DelegateConnection.class)
                                         .filter(DelegateConnectionKeys.accountId, ACCOUNT_ID)
                                         .get();

@@ -72,7 +72,6 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
             DelegateConnectionHeartbeat.builder()
                 .delegateConnectionId(delegateConnectionId)
                 .version(delegateVersion)
-                .alive(true)
                 .build());
 
         resource.addEventListener(new AtmosphereResourceEventListenerAdapter() {
@@ -104,7 +103,6 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
           DelegateConnectionHeartbeat.builder()
               .delegateConnectionId(delegateConnectionId)
               .version(delegateVersion)
-              .alive(true)
               .build());
     }
   }

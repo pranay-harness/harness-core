@@ -345,7 +345,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
                                 .version(getVersion())
-                                .alive(true)
                                 .build();
 
       if (watched) {
