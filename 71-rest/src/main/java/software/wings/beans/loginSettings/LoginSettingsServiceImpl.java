@@ -7,6 +7,7 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 @Slf4j
+@Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LoginSettingsServiceImpl implements LoginSettingsService {
   static final int DEFAULT_LOCK_OUT_PERIOD = 24;

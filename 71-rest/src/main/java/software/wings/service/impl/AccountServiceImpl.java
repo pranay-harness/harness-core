@@ -52,7 +52,6 @@ import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
-import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
@@ -119,8 +118,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.features.GovernanceFeature;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.licensing.LicenseService;
-import software.wings.resources.AccountExportImportResource;
-import software.wings.resources.UserResource;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
 import software.wings.scheduler.LdapGroupSyncJob;
@@ -140,7 +137,6 @@ import software.wings.service.intfc.AlertNotificationRuleService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -148,12 +144,9 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
-import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.account.AccountCrudObserver;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
-import software.wings.service.intfc.instance.DashboardStatisticsService;
-import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -161,7 +154,6 @@ import software.wings.utils.CacheManager;
 import software.wings.verification.CVConfiguration;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.net.SocketTimeoutException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -211,14 +203,12 @@ public class AccountServiceImpl implements AccountService {
   private static Set<Class<? extends PersistentEntity>> seperateDeletionEntities =
       new HashSet<>(Arrays.asList(Account.class, User.class, SSOSettings.class));
 
+  @Inject ServiceClassLocator serviceClassLocator;
+
   @Inject protected AuthService authService;
   @Inject protected CacheManager cacheManager;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RoleService roleService;
-  // DO NOT DELETE THIS, PRUNE logic needs it
-  @Inject private UserGroupService userGroupService;
-  // DO NOT DELETE THIS, PRUNE logic needs it
-  @SuppressWarnings("unused") @Inject private InstanceService instanceService;
   @Inject private AuthHandler authHandler;
   @Inject private LicenseService licenseService;
   @Inject private NotificationSetupService notificationSetupService;
@@ -237,17 +227,12 @@ public class AccountServiceImpl implements AccountService {
   @Inject private SSOSettingServiceImpl ssoSettingService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private UserService userService;
-  @Inject private DelegateProfileService profileService;
   @Inject private LoginSettingsService loginSettingsService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private EmailNotificationService emailNotificationService;
-  @Inject private DashboardStatisticsService dashboardStatisticsService;
-  @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private EventPublisher eventPublisher;
   @Inject private SegmentGroupEventJobService segmentGroupEventJobService;
-  @Inject private UserResource userResource;
-  @Inject private AccountExportImportResource accountExportImportResource;
   @Inject private Morphia morphia;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
@@ -473,25 +458,6 @@ public class AccountServiceImpl implements AccountService {
     return account;
   }
 
-  public <T> List<T> descendingServices(Class<T> cls) {
-    List<T> descendings = new ArrayList<>();
-
-    for (Field field : AccountServiceImpl.class.getDeclaredFields()) {
-      Object obj;
-      try {
-        obj = field.get(this);
-        if (cls.isInstance(obj)) {
-          T descending = (T) obj;
-          descendings.add(descending);
-        }
-      } catch (IllegalAccessException e) {
-        logger.error("", e);
-      }
-    }
-
-    return descendings;
-  }
-
   @Override
   public boolean delete(String accountId) {
     logger.info("Started deleting account '{}'", accountId);
@@ -502,7 +468,7 @@ public class AccountServiceImpl implements AccountService {
 
     dbCache.invalidate(Account.class, accountId);
     deleteQuartzJobs(accountId);
-    List<OwnedByAccount> services = descendingServices(OwnedByAccount.class);
+    List<OwnedByAccount> services = serviceClassLocator.descendingServicesForInterface(OwnedByAccount.class);
     services.forEach(service -> service.deleteByAccountId(accountId));
     logger.info("Successfully deleted account {}", accountId);
     return wingsPersistence.delete(account);
