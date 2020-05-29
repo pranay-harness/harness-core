@@ -1550,7 +1550,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                             .delegateProfileId(delegateParams.getDelegateProfileId())
                             .lastHeartBeat(delegateParams.getLastHeartBeat())
                             .version(delegateParams.getVersion())
-                            .status(Delegate.Status.valueOf(delegateParams.getStatus()))
                             .sequenceNum(delegateParams.getSequenceNum())
                             .delegateType(delegateParams.getDelegateType())
                             .delegateRandomToken(delegateParams.getDelegateRandomToken())

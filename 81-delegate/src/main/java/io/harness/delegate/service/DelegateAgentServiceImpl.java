@@ -405,7 +405,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .delegateProfileId(delegateProfile)
                                           .description(description)
                                           .version(getVersion())
-                                          .status(Status.ENABLED.name())
                                           .delegateType(DELEGATE_TYPE)
                                           .sampleDelegate(isSample);
 
@@ -643,8 +642,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     // TODO(brett): Disabling the fallback to poll for tasks as it can cause too much traffic to ingress controller
     // pollingForTasks.set(false);
     try {
-      DelegateParams delegateParams =
-          builder.build().toBuilder().status(Status.ENABLED.name()).lastHeartBeat(clock.millis()).build();
+      DelegateParams delegateParams = builder.build().toBuilder().lastHeartBeat(clock.millis()).build();
       socket.fire(JsonUtils.asJson(delegateParams));
     } catch (IOException e) {
       logger.error("Error connecting", e);
@@ -792,8 +790,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         attempts.incrementAndGet();
         String attemptString = attempts.get() > 1 ? " (Attempt " + attempts.get() + ")" : "";
         logger.info("Registering delegate" + attemptString);
-        DelegateParams delegateParams =
-            builder.build().toBuilder().status(Status.ENABLED.name()).lastHeartBeat(clock.millis()).build();
+        DelegateParams delegateParams = builder.build().toBuilder().lastHeartBeat(clock.millis()).build();
         restResponse = execute(managerClient.registerDelegate(accountId, delegateParams));
       } catch (Exception e) {
         String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
@@ -813,13 +810,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       String responseDelegateId = delegateResponse.getDelegateId();
       handleEcsDelegateRegistrationResponse(delegateResponse);
 
-      if (StringUtils.equals(responseDelegateId, DelegateRegisterResponse.Action.SELF_DESTRUCT.getValue())) {
+      if (StringUtils.equals(responseDelegateId, DelegateRegisterResponse.Action.SELF_DESTRUCT.name())) {
         initiateSelfDestruct();
         sleep(ofMinutes(1));
         continue;
       }
-      if (StringUtils.startsWith(responseDelegateId, DelegateRegisterResponse.Action.MIGRATE.getValue())) {
-        migrate(StringUtils.substringAfter(responseDelegateId, DelegateRegisterResponse.Action.MIGRATE.getValue()));
+      if (StringUtils.startsWith(responseDelegateId, DelegateRegisterResponse.Action.MIGRATE.name())) {
+        migrate(StringUtils.substringAfter(responseDelegateId, DelegateRegisterResponse.Action.MIGRATE.name()));
         continue;
       }
       builder.delegateId(responseDelegateId);
@@ -1375,7 +1372,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                               .delegateProfileId(delegateParams.getDelegateProfileId())
                               .lastHeartBeat(delegateParams.getLastHeartBeat())
                               .version(delegateParams.getVersion())
-                              .status(Delegate.Status.valueOf(delegateParams.getStatus()))
                               .sequenceNum(delegateParams.getSequenceNum())
                               .delegateType(delegateParams.getDelegateType())
                               .delegateRandomToken(delegateParams.getDelegateRandomToken())
