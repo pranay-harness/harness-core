@@ -69,11 +69,15 @@ import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.kubectl.AbstractExecutable;
+import io.harness.k8s.kubectl.ApplyCommand;
+import io.harness.k8s.kubectl.DeleteCommand;
+import io.harness.k8s.kubectl.DescribeCommand;
 import io.harness.k8s.kubectl.GetCommand;
 import io.harness.k8s.kubectl.GetJobCommand;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutHistoryCommand;
 import io.harness.k8s.kubectl.RolloutStatusCommand;
+import io.harness.k8s.kubectl.ScaleCommand;
 import io.harness.k8s.kubectl.Utils;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
@@ -194,8 +198,8 @@ public class K8sTaskHelper {
 
       Kubectl overriddenClient = getOverriddenClient(client, resources, k8sDelegateTaskParams);
 
-      ProcessResult result = executeCommand(overriddenClient.apply().filename("manifests-dry-run.yaml").dryrun(true),
-          k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
+      final ApplyCommand dryrun = overriddenClient.apply().filename("manifests-dry-run.yaml").dryrun(true);
+      ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, dryrun);
       if (result.getExitValue() != 0) {
         executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
         return false;
@@ -231,8 +235,8 @@ public class K8sTaskHelper {
 
     Kubectl overriddenClient = getOverriddenClient(client, resources, k8sDelegateTaskParams);
 
-    ProcessResult result = executeCommand(overriddenClient.apply().filename("manifests.yaml").record(true),
-        k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
+    final ApplyCommand applyCommand = overriddenClient.apply().filename("manifests.yaml").record(true);
+    ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, applyCommand);
     if (result.getExitValue() != 0) {
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
       return false;
@@ -285,8 +289,8 @@ public class K8sTaskHelper {
                  executionLogCallback.saveExecutionLog(format(statusFormat, "Status", line), ERROR);
                }
              }) {
-      eventWatchProcess = getEventsCommand.executeInBackground(
-          k8sDelegateTaskParams.getWorkingDirectory(), watchInfoStream, watchErrorStream);
+      eventWatchProcess =
+          getEventWatchProcess(k8sDelegateTaskParams, getEventsCommand, watchInfoStream, watchErrorStream);
 
       ProcessResult result;
       if (Kind.DeploymentConfig.name().equals(resourceId.getKind())) {
@@ -295,8 +299,8 @@ public class K8sTaskHelper {
         executionLogCallback.saveExecutionLog(
             rolloutStatusCommand.substring(rolloutStatusCommand.indexOf("oc --kubeconfig")) + "\n");
 
-        result = Utils.executeScript(
-            k8sDelegateTaskParams.getWorkingDirectory(), rolloutStatusCommand, statusInfoStream, statusErrorStream);
+        result =
+            executeCommandUsingUtils(k8sDelegateTaskParams, statusInfoStream, statusErrorStream, rolloutStatusCommand);
       } else {
         RolloutStatusCommand rolloutStatusCommand = client.rollout()
                                                         .status()
@@ -332,6 +336,20 @@ public class K8sTaskHelper {
         executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
       }
     }
+  }
+
+  @VisibleForTesting
+  StartedProcess getEventWatchProcess(K8sDelegateTaskParams k8sDelegateTaskParams, GetCommand getEventsCommand,
+      LogOutputStream watchInfoStream, LogOutputStream watchErrorStream) throws Exception {
+    return getEventsCommand.executeInBackground(
+        k8sDelegateTaskParams.getWorkingDirectory(), watchInfoStream, watchErrorStream);
+  }
+
+  @VisibleForTesting
+  ProcessResult executeCommandUsingUtils(K8sDelegateTaskParams k8sDelegateTaskParams, LogOutputStream statusInfoStream,
+      LogOutputStream statusErrorStream, String command) throws Exception {
+    return Utils.executeScript(
+        k8sDelegateTaskParams.getWorkingDirectory(), command, statusInfoStream, statusErrorStream);
   }
 
   public static String getOcCommandPrefix(K8sDelegateTaskParams k8sDelegateTaskParams) {
@@ -473,8 +491,8 @@ public class K8sTaskHelper {
         executionLogCallback.saveExecutionLog(
             rolloutStatusCommand.substring(rolloutStatusCommand.indexOf("oc --kubeconfig")) + "\n");
 
-        result = Utils.executeScript(
-            k8sDelegateTaskParams.getWorkingDirectory(), rolloutStatusCommand, statusInfoStream, statusErrorStream);
+        result =
+            executeCommandUsingUtils(k8sDelegateTaskParams, statusInfoStream, statusErrorStream, rolloutStatusCommand);
       } else {
         RolloutStatusCommand rolloutStatusCommand = client.rollout()
                                                         .status()
@@ -558,8 +576,8 @@ public class K8sTaskHelper {
                }
              }) {
       for (GetCommand getEventsCommand : getEventCommands) {
-        eventWatchProcesses.add(getEventsCommand.executeInBackground(
-            k8sDelegateTaskParams.getWorkingDirectory(), watchInfoStream, watchErrorStream));
+        eventWatchProcesses.add(
+            getEventWatchProcess(k8sDelegateTaskParams, getEventsCommand, watchInfoStream, watchErrorStream));
       }
 
       for (KubernetesResourceId kubernetesResourceId : resourceIds) {
@@ -597,11 +615,11 @@ public class K8sTaskHelper {
       int targetReplicaCount, ExecutionLogCallback executionLogCallback) throws Exception {
     executionLogCallback.saveExecutionLog("\nScaling " + resourceId.kindNameRef());
 
-    ProcessResult result = executeCommand(client.scale()
-                                              .resource(resourceId.kindNameRef())
-                                              .replicas(targetReplicaCount)
-                                              .namespace(resourceId.getNamespace()),
-        k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
+    final ScaleCommand scaleCommand = client.scale()
+                                          .resource(resourceId.kindNameRef())
+                                          .replicas(targetReplicaCount)
+                                          .namespace(resourceId.getNamespace());
+    ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, scaleCommand);
     if (result.getExitValue() == 0) {
       executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
       return true;
@@ -610,6 +628,12 @@ public class K8sTaskHelper {
       logger.warn("Failed to scale workload. Error {}", result.getOutput());
       return false;
     }
+  }
+
+  @VisibleForTesting
+  ProcessResult runK8sExecutable(K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback,
+      AbstractExecutable executable) throws Exception {
+    return executeCommand(executable, k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
   }
 
   public void cleanup(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams, ReleaseHistory releaseHistory,
@@ -631,9 +655,9 @@ public class K8sTaskHelper {
         for (int resourceIndex = release.getResources().size() - 1; resourceIndex >= 0; resourceIndex--) {
           KubernetesResourceId resourceId = release.getResources().get(resourceIndex);
           if (resourceId.isVersioned()) {
-            ProcessResult result =
-                executeCommand(client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace()),
-                    k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
+            DeleteCommand deleteCommand =
+                client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
+            ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, deleteCommand);
             if (result.getExitValue() != 0) {
               logger.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
             }
@@ -648,9 +672,9 @@ public class K8sTaskHelper {
   public void delete(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
       List<KubernetesResourceId> kubernetesResourceIds, ExecutionLogCallback executionLogCallback) throws Exception {
     for (KubernetesResourceId resourceId : kubernetesResourceIds) {
-      ProcessResult result =
-          executeCommand(client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace()),
-              k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
+      DeleteCommand deleteCommand =
+          client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
+      ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, deleteCommand);
       if (result.getExitValue() != 0) {
         logger.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
       }
@@ -693,8 +717,8 @@ public class K8sTaskHelper {
 
   public void describe(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
       ExecutionLogCallback executionLogCallback) throws Exception {
-    executeCommand(client.describe().filename("manifests.yaml"), k8sDelegateTaskParams.getWorkingDirectory(),
-        executionLogCallback);
+    final DescribeCommand describeCommand = client.describe().filename("manifests.yaml");
+    runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, describeCommand);
   }
 
   private String getRolloutHistoryCommandForDeploymentConfig(
@@ -716,8 +740,8 @@ public class K8sTaskHelper {
       String rolloutHistoryCommand = getRolloutHistoryCommandForDeploymentConfig(k8sDelegateTaskParams, resourceId);
 
       try (LogOutputStream emptyLogOutputStream = getEmptyLogOutputStream();) {
-        ProcessResult result = Utils.executeScript(k8sDelegateTaskParams.getWorkingDirectory(), rolloutHistoryCommand,
-            emptyLogOutputStream, emptyLogOutputStream);
+        ProcessResult result = executeCommandUsingUtils(
+            k8sDelegateTaskParams, emptyLogOutputStream, emptyLogOutputStream, rolloutHistoryCommand);
 
         if (result.getExitValue() == 0) {
           String[] lines = result.outputUTF8().split("\\r?\\n");
@@ -728,7 +752,7 @@ public class K8sTaskHelper {
     } else {
       RolloutHistoryCommand rolloutHistoryCommand =
           client.rollout().history().resource(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
-      ProcessResult result = executeCommandSilent(rolloutHistoryCommand, k8sDelegateTaskParams.getWorkingDirectory());
+      ProcessResult result = runK8sExecutableSilent(k8sDelegateTaskParams, rolloutHistoryCommand);
       if (result.getExitValue() == 0) {
         return parseLatestRevisionNumberFromRolloutHistory(result.outputUTF8());
       }
@@ -743,12 +767,18 @@ public class K8sTaskHelper {
                                 .resources(resourceId.kindNameRef())
                                 .namespace(resourceId.getNamespace())
                                 .output("jsonpath={$.spec.replicas}");
-    ProcessResult result = executeCommandSilent(getCommand, k8sDelegateTaskParams.getWorkingDirectory());
+    ProcessResult result = runK8sExecutableSilent(k8sDelegateTaskParams, getCommand);
     if (result.getExitValue() == 0) {
       return Integer.valueOf(result.outputUTF8());
     } else {
       return null;
     }
+  }
+
+  @VisibleForTesting
+  ProcessResult runK8sExecutableSilent(K8sDelegateTaskParams k8sDelegateTaskParams, AbstractExecutable executable)
+      throws Exception {
+    return executeCommandSilent(executable, k8sDelegateTaskParams.getWorkingDirectory());
   }
 
   private String writeValuesToFile(String directoryPath, List<String> valuesFiles) throws Exception {

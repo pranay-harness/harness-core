@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.k8s;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.k8s.model.Kind.ConfigMap;
 import static io.harness.k8s.model.Kind.Deployment;
@@ -30,16 +29,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.spy;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.OC_TEMPLATES;
 import static software.wings.beans.appmanifest.StoreType.Remote;
-import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DAEMON_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.STATEFUL_SET_YAML;
@@ -69,19 +65,15 @@ import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.rule.Owner;
-import org.apache.commons.io.FileUtils;
-import org.apache.sshd.common.file.util.MockPath;
 import org.assertj.core.api.Assertions;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
@@ -107,11 +99,8 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -120,9 +109,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({Utils.class, K8sTaskHelper.class})
-@PowerMockIgnore({"javax.security.*", "javax.net.*"})
+/*
+ * Do not use powermock because jacoco does not support coverage using it. If you are sure that jacoco supports it now,
+ * only then use it. Meanwhile, move powermock based tests to K8sTaskHelperSecondaryTest
+ */
 public class K8sTaskHelperTest extends WingsBaseTest {
   @Mock private ExecutionLogCallback logCallback;
   @Mock private DelegateLogService mockDelegateLogService;
@@ -142,6 +132,12 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   private String configMapYaml = "configMap.yaml";
 
   @Inject @InjectMocks private K8sTaskHelper helper;
+  @Inject private K8sTaskHelper spyHelper;
+
+  @Before
+  public void setUp() throws Exception {
+    spyHelper = Mockito.spy(helper);
+  }
 
   @Test
   @Owner(developers = SATYAM)
@@ -371,17 +367,14 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   }
 
   private void setupForDoStatusCheckForAllResources() throws Exception {
-    PowerMockito.mockStatic(Utils.class);
     ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
-    when(Utils.executeScript(anyString(), anyString(), any(), any())).thenReturn(processResult);
-
-    when(Utils.encloseWithQuotesIfNeeded("kubectl")).thenReturn("kubectl");
-    when(Utils.encloseWithQuotesIfNeeded("oc")).thenReturn("oc");
-    when(Utils.encloseWithQuotesIfNeeded("config-path")).thenReturn("config-path");
-
-    when(process.destroyForcibly()).thenReturn(process);
-    when(Utils.startScript(any(), any(), any(), any())).thenReturn(startedProcess);
-    when(startedProcess.getProcess()).thenReturn(process);
+    doReturn(processResult).when(spyHelper).executeCommandUsingUtils(any(), any(), any(), any());
+    StartedProcess startedProcess = mock(StartedProcess.class);
+    Process process = mock(Process.class);
+    doReturn(startedProcess).when(spyHelper).getEventWatchProcess(any(), any(), any(), any());
+    doReturn(process).when(startedProcess).getProcess();
+    doReturn(process).when(process).destroyForcibly();
+    doReturn(0).when(process).waitFor();
   }
 
   private void doStatusCheck(String manifestFilePath, String expectedOutput, boolean allResources) throws Exception {
@@ -394,132 +387,48 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     Kubectl client = Kubectl.client("kubectl", "config-path");
 
     if (allResources) {
-      helper.doStatusCheckForAllResources(
+      spyHelper.doStatusCheckForAllResources(
           client, asList(resource.getResourceId()), k8sDelegateTaskParams, "default", executionLogCallback);
     } else {
-      helper.doStatusCheck(client, resource.getResourceId(), k8sDelegateTaskParams, executionLogCallback);
+      spyHelper.doStatusCheck(client, resource.getResourceId(), k8sDelegateTaskParams, executionLogCallback);
     }
 
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-    PowerMockito.verifyStatic(Utils.class);
-    Utils.executeScript(any(), captor.capture(), any(), any());
-    assertThat(captor.getValue()).isEqualTo(expectedOutput);
-  }
-
-  @Test
-  @Owner(developers = ANSHUL)
-  @Category(UnitTests.class)
-  public void testDoStatusCheckForAllResourcesForDC() throws Exception {
-    setupForDoStatusCheckForAllResources();
-
-    doStatusCheck("/k8s/deployment-config.yaml",
-        "oc --kubeconfig=config-path rollout status DeploymentConfig/test-dc --namespace=default --watch=true", true);
-  }
-
-  @Test
-  @Owner(developers = ANSHUL)
-  @Category(UnitTests.class)
-  public void testDoStatusCheckForAllResourcesForDeployment() throws Exception {
-    setupForDoStatusCheckForAllResources();
-
-    doStatusCheck("/k8s/deployment.yaml",
-        "kubectl --kubeconfig=config-path rollout status Deployment/nginx-deployment --watch=true", true);
-  }
-
-  @Test
-  @Owner(developers = ANSHUL)
-  @Category(UnitTests.class)
-  public void testDoStatusCheckForDC() throws Exception {
-    setupForDoStatusCheckForAllResources();
-
-    doStatusCheck("/k8s/deployment-config.yaml",
-        "oc --kubeconfig=config-path rollout status DeploymentConfig/test-dc --namespace=default --watch=true", false);
-  }
-
-  @Test
-  @Owner(developers = ANSHUL)
-  @Category(UnitTests.class)
-  public void testDoStatusCheckForDeployment() throws Exception {
-    setupForDoStatusCheckForAllResources();
-
-    doStatusCheck("/k8s/deployment.yaml",
-        "kubectl --kubeconfig=config-path rollout status Deployment/nginx-deployment --watch=true", false);
-  }
-
-  @Test
-  @Owner(developers = YOGESH)
-  @Category(UnitTests.class)
-  public void testGenerateTruncatedFileListForLogging() throws Exception {
-    mockStatic(Files.class);
-    when(Files.isRegularFile(any(Path.class))).thenReturn(true);
-    MockPath basePath = new MockPath("foo");
-    String loggedFiles;
-
-    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(0, "file").stream());
-    assertThat(loggedFiles).isEmpty();
-    assertThat(loggedFiles).doesNotContain("..more");
-
-    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(1, "file").stream());
-    assertThat(loggedFiles).isNotEmpty();
-    assertThat(loggedFiles).doesNotContain("..more");
-
-    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(100, "file").stream());
-    assertThat(loggedFiles).isNotEmpty();
-    assertThat(loggedFiles).doesNotContain("..more");
-
-    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(101, "file").stream());
-    assertThat(loggedFiles).isNotEmpty();
-    assertThat(loggedFiles).contains("..1 more");
-
-    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(199, "file").stream());
-    assertThat(loggedFiles).isNotEmpty();
-    assertThat(loggedFiles).contains("..99 more");
-  }
-
-  private List<Path> getNFilePathsWithSuffix(int n, String suffix) {
-    List<Path> paths = new ArrayList<>();
-    for (int i = 0; i < n; i++) {
-      Path mockPath = mock(Path.class);
-      paths.add(mockPath);
-      when(mockPath.relativize(any(Path.class))).thenAnswer(invocationOnMock -> new MockPath("foo"));
-    }
-    return paths;
+    verify(spyHelper, times(1)).executeCommandUsingUtils(any(), any(), any(), eq(expectedOutput));
   }
 
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testDryRunForOpenshiftResources() throws Exception {
-    mockStatic(K8sTaskHelper.class);
     ProcessResult processResult = new ProcessResult(0, new ProcessOutput("abc".getBytes()));
-    when(K8sTaskHelper.executeCommand(any(AbstractExecutable.class), anyString(), any(ExecutionLogCallback.class)))
-        .thenReturn(processResult);
+    doReturn(processResult).when(spyHelper).runK8sExecutable(any(), any(), any());
 
+    final String workingDirectory = ".";
     K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder()
-                                                      .workingDirectory("/tmp/test")
+                                                      .workingDirectory(workingDirectory)
                                                       .ocPath("oc")
                                                       .kubectlPath("kubectl")
                                                       .kubeconfigPath("config-path")
                                                       .build();
-    createDirectoryIfDoesNotExist(Paths.get("/tmp/test").toString());
     Kubectl client = Kubectl.client("kubectl", "config-path");
 
-    helper.dryRunManifests(client, emptyList(), k8sDelegateTaskParams, executionLogCallback);
+    spyHelper.dryRunManifests(client, emptyList(), k8sDelegateTaskParams, executionLogCallback);
 
     ArgumentCaptor<ApplyCommand> captor = ArgumentCaptor.forClass(ApplyCommand.class);
-    PowerMockito.verifyStatic(K8sTaskHelper.class);
-    K8sTaskHelper.executeCommand(captor.capture(), anyString(), any());
+    verify(spyHelper, times(1)).runK8sExecutable(any(), any(), captor.capture());
     assertThat(captor.getValue().command())
         .isEqualTo("kubectl --kubeconfig=config-path apply --filename=manifests-dry-run.yaml --dry-run");
+    reset(spyHelper);
 
-    helper.dryRunManifests(client,
+    doReturn(processResult).when(spyHelper).runK8sExecutable(any(), any(), any());
+    spyHelper.dryRunManifests(client,
         asList(KubernetesResource.builder()
                    .spec("")
                    .resourceId(KubernetesResourceId.builder().kind("Route").build())
                    .build()),
         k8sDelegateTaskParams, executionLogCallback);
-    PowerMockito.verifyStatic(K8sTaskHelper.class, times(2));
-    K8sTaskHelper.executeCommand(captor.capture(), anyString(), any());
+    verify(spyHelper, times(1)).runK8sExecutable(any(), any(), captor.capture());
     assertThat(captor.getValue().command())
         .isEqualTo("oc --kubeconfig=config-path apply --filename=manifests-dry-run.yaml --dry-run");
   }
@@ -528,36 +437,35 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testApplyForOpenshiftResources() throws Exception {
-    mockStatic(K8sTaskHelper.class);
     ProcessResult processResult = new ProcessResult(0, new ProcessOutput("abc".getBytes()));
-    when(K8sTaskHelper.executeCommand(any(AbstractExecutable.class), anyString(), any(ExecutionLogCallback.class)))
-        .thenReturn(processResult);
+    doReturn(processResult).when(spyHelper).runK8sExecutable(any(), any(), any(AbstractExecutable.class));
 
+    final String workingDirectory = ".";
     K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder()
-                                                      .workingDirectory("/tmp/test")
+                                                      .workingDirectory(workingDirectory)
                                                       .kubectlPath("kubectl")
                                                       .ocPath("oc")
                                                       .kubeconfigPath("config-path")
                                                       .build();
-    createDirectoryIfDoesNotExist(Paths.get("/tmp/test").toString());
+    //    createDirectoryIfDoesNotExist(Paths.get("/tmp/test").toString());
     Kubectl client = Kubectl.client("kubectl", "config-path");
 
-    helper.applyManifests(client, emptyList(), k8sDelegateTaskParams, executionLogCallback);
+    spyHelper.applyManifests(client, emptyList(), k8sDelegateTaskParams, executionLogCallback);
 
     ArgumentCaptor<ApplyCommand> captor = ArgumentCaptor.forClass(ApplyCommand.class);
-    PowerMockito.verifyStatic(K8sTaskHelper.class);
-    K8sTaskHelper.executeCommand(captor.capture(), anyString(), any());
+    verify(spyHelper, times(1)).runK8sExecutable(any(), any(), captor.capture());
     assertThat(captor.getValue().command())
         .isEqualTo("kubectl --kubeconfig=config-path apply --filename=manifests.yaml --record");
+    reset(spyHelper);
 
-    helper.applyManifests(client,
+    doReturn(processResult).when(spyHelper).runK8sExecutable(any(), any(), any(AbstractExecutable.class));
+    spyHelper.applyManifests(client,
         asList(KubernetesResource.builder()
                    .spec("")
                    .resourceId(KubernetesResourceId.builder().kind("Route").build())
                    .build()),
         k8sDelegateTaskParams, executionLogCallback);
-    PowerMockito.verifyStatic(K8sTaskHelper.class, times(2));
-    K8sTaskHelper.executeCommand(captor.capture(), anyString(), any());
+    verify(spyHelper, times(1)).runK8sExecutable(any(), any(), captor.capture());
     assertThat(captor.getValue().command())
         .isEqualTo("oc --kubeconfig=config-path apply --filename=manifests.yaml --record");
   }
@@ -653,33 +561,32 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void scale() throws Exception {
-    scaleSuccess();
-    scaleFailure();
-  }
-
-  private void scaleFailure() throws Exception {
+  public void scaleFailure() throws Exception {
     Kubectl kubectl = Kubectl.client("kubectl", "config-path");
-    PowerMockito.mockStatic(K8sTaskHelper.class);
-    when(K8sTaskHelper.executeCommand(any(), anyString(), any())).thenReturn(buildProcessResult(1));
-    final boolean success = helper.scale(kubectl, K8sDelegateTaskParams.builder().build(),
+    doReturn(new ProcessResult(1, new ProcessOutput("failure".getBytes())))
+        .when(spyHelper)
+        .runK8sExecutable(any(), any(), any());
+    final boolean success = spyHelper.scale(kubectl, K8sDelegateTaskParams.builder().build(),
         KubernetesResourceId.builder().name("nginx").kind("Deployment").namespace("default").build(), 5, logCallback);
     assertThat(success).isFalse();
+    ArgumentCaptor<ScaleCommand> captor = ArgumentCaptor.forClass(ScaleCommand.class);
+    verify(spyHelper, times(1)).runK8sExecutable(any(), any(), captor.capture());
+    assertThat(captor.getValue().command())
+        .isEqualTo("kubectl --kubeconfig=config-path scale Deployment/nginx --namespace=default --replicas=5");
   }
 
-  private void scaleSuccess() throws Exception {
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void scaleSuccess() throws Exception {
     Kubectl kubectl = Kubectl.client("kubectl", "config-path");
-    PowerMockito.mockStatic(K8sTaskHelper.class);
-    when(K8sTaskHelper.executeCommand(any(), anyString(), any())).thenReturn(buildProcessResult(0));
-    final boolean success = helper.scale(kubectl, K8sDelegateTaskParams.builder().build(),
+    doReturn(new ProcessResult(0, null)).when(spyHelper).runK8sExecutable(any(), any(), any());
+    final boolean success = spyHelper.scale(kubectl, K8sDelegateTaskParams.builder().workingDirectory(".").build(),
         KubernetesResourceId.builder().name("nginx").kind("Deployment").namespace("default").build(), 5, logCallback);
 
     assertThat(success).isTrue();
     ArgumentCaptor<ScaleCommand> captor = ArgumentCaptor.forClass(ScaleCommand.class);
-
-    verifyStatic(K8sTaskHelper.class);
-    K8sTaskHelper.executeCommand(captor.capture(), any(), any());
-
+    verify(spyHelper, times(1)).runK8sExecutable(any(), any(), captor.capture());
     assertThat(captor.getValue().command())
         .isEqualTo("kubectl --kubeconfig=config-path scale Deployment/nginx --namespace=default --replicas=5");
   }
@@ -690,13 +597,11 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   public void delete() throws Exception {
     final ReleaseHistory releaseHistory = ReleaseHistory.createNew();
     releaseHistory.getReleases().add(buildRelease(Status.Succeeded, 0));
-    PowerMockito.mockStatic(K8sTaskHelper.class);
-    when(K8sTaskHelper.executeCommand(any(), anyString(), any())).thenReturn(buildProcessResult(0));
-    helper.delete(Kubectl.client("kubectl", "kubeconfig"), K8sDelegateTaskParams.builder().build(),
-        asList(configMap().getResourceId()), logCallback);
-    PowerMockito.verifyStatic(K8sTaskHelper.class, times(1));
+    doReturn(buildProcessResult(0)).when(spyHelper).runK8sExecutable(any(), any(), any());
+    spyHelper.delete(Kubectl.client("kubectl", "kubeconfig"), K8sDelegateTaskParams.builder().build(),
+        asList(K8sTestHelper.configMap().getResourceId()), logCallback);
     ArgumentCaptor<DeleteCommand> captor = ArgumentCaptor.forClass(DeleteCommand.class);
-    K8sTaskHelper.executeCommand(captor.capture(), anyString(), any(ExecutionLogCallback.class));
+    verify(spyHelper, times(1)).runK8sExecutable(any(), any(), captor.capture());
     final List<DeleteCommand> deleteCommands = captor.getAllValues();
     assertThat(deleteCommands).hasSize(1);
     assertThat(deleteCommands.get(0).command())
@@ -718,17 +623,16 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     releaseHistory.getReleases().add(buildRelease(Status.Succeeded, 2));
     releaseHistory.getReleases().add(buildRelease(Status.Succeeded, 1));
     releaseHistory.getReleases().add(buildRelease(Status.Succeeded, 0));
-    PowerMockito.mockStatic(K8sTaskHelper.class);
-    when(K8sTaskHelper.executeCommand(any(), anyString(), any())).thenReturn(buildProcessResult(0));
-    helper.cleanup(
+    doReturn(buildProcessResult(0)).when(spyHelper).runK8sExecutable(any(), any(), any());
+    spyHelper.cleanup(
         Kubectl.client("kubectl", "kubeconfig"), K8sDelegateTaskParams.builder().build(), releaseHistory, logCallback);
-    PowerMockito.verifyStatic(K8sTaskHelper.class, times(3));
     ArgumentCaptor<DeleteCommand> captor = ArgumentCaptor.forClass(DeleteCommand.class);
-    K8sTaskHelper.executeCommand(captor.capture(), anyString(), any(ExecutionLogCallback.class));
+    verify(spyHelper, times(3)).runK8sExecutable(any(), any(), captor.capture());
     final List<DeleteCommand> deleteCommands = captor.getAllValues();
     assertThat(releaseHistory.getReleases()).hasSize(1);
     assertThat(deleteCommands.get(0).command())
         .isEqualTo("kubectl --kubeconfig=kubeconfig delete configMap/config-map --namespace=default");
+    reset(spyHelper);
   }
 
   private void cleanUpIfMultipleFailedReleases() throws Exception {
@@ -737,31 +641,33 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     releaseHistory.getReleases().add(buildRelease(Status.Failed, 2));
     releaseHistory.getReleases().add(buildRelease(Status.Succeeded, 1));
     releaseHistory.getReleases().add(buildRelease(Status.Failed, 0));
-    PowerMockito.mockStatic(K8sTaskHelper.class);
-    when(K8sTaskHelper.executeCommand(any(), anyString(), any())).thenReturn(buildProcessResult(0));
-    helper.cleanup(
+    doReturn(buildProcessResult(0)).when(spyHelper).runK8sExecutable(any(), any(), any());
+    spyHelper.cleanup(
         Kubectl.client("kubectl", "kubeconfig"), K8sDelegateTaskParams.builder().build(), releaseHistory, logCallback);
-    PowerMockito.verifyStatic(K8sTaskHelper.class, times(3));
     ArgumentCaptor<DeleteCommand> captor = ArgumentCaptor.forClass(DeleteCommand.class);
-    K8sTaskHelper.executeCommand(captor.capture(), anyString(), any(ExecutionLogCallback.class));
+    verify(spyHelper, times(3)).runK8sExecutable(any(), any(), captor.capture());
     final List<DeleteCommand> deleteCommands = captor.getAllValues();
     assertThat(releaseHistory.getReleases()).hasSize(1);
     assertThat(deleteCommands.get(0).command())
         .isEqualTo("kubectl --kubeconfig=kubeconfig delete configMap/config-map --namespace=default");
+    reset(spyHelper);
   }
 
   private Release buildRelease(Status status, int number) throws IOException {
     return Release.builder()
         .number(number)
-        .resources(asList(deployment().getResourceId(), configMap().getResourceId()))
+        .resources(asList(K8sTestHelper.deployment().getResourceId(), K8sTestHelper.configMap().getResourceId()))
         .status(status)
         .build();
   }
 
   private void cleanUpIfOnly1FailedRelease() throws Exception {
     final ReleaseHistory releaseHistory = ReleaseHistory.createNew();
-    releaseHistory.getReleases().add(
-        Release.builder().number(0).resources(asList(deployment().getResourceId())).status(Status.Failed).build());
+    releaseHistory.getReleases().add(Release.builder()
+                                         .number(0)
+                                         .resources(asList(K8sTestHelper.deployment().getResourceId()))
+                                         .status(Status.Failed)
+                                         .build());
     helper.cleanup(mock(Kubectl.class), K8sDelegateTaskParams.builder().build(), releaseHistory, logCallback);
     assertThat(releaseHistory.getReleases()).isEmpty();
   }
@@ -774,61 +680,20 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     return new ProcessResult(exitCode, new ProcessOutput(output.getBytes()));
   }
 
-  private KubernetesResource deployment() throws IOException {
-    String yamlString = readFileContent(deploymentYaml);
-    return KubernetesResource.builder()
-        .spec(yamlString)
-        .resourceId(
-            KubernetesResourceId.builder().namespace("default").kind("Deployment").name("nginx-deployment").build())
-        .build();
-  }
-
-  private KubernetesResource deploymentConfig() throws IOException {
-    String yamlString = readFileContent(deploymentConfigYaml);
-    return KubernetesResource.builder()
-        .spec(yamlString)
-        .resourceId(
-            KubernetesResourceId.builder().namespace("default").kind("DeploymentConfig").name("test-dc").build())
-        .build();
-  }
-
-  private KubernetesResource configMap() throws IOException {
-    String yamlString = readFileContent(configMapYaml);
-    return KubernetesResource.builder()
-        .spec(yamlString)
-        .resourceId(KubernetesResourceId.builder()
-                        .namespace("default")
-                        .kind("configMap")
-                        .name("config-map")
-                        .versioned(true)
-                        .build())
-        .build();
-  }
-
-  private String readFileContent(String filePath) throws IOException {
-    File yamlFile = null;
-    try {
-      yamlFile = new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + filePath).toURI());
-    } catch (URISyntaxException e) {
-      Assertions.fail("Unable to find yaml file " + filePath);
-    }
-    return FileUtils.readFileToString(yamlFile, "UTF-8");
-  }
-
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void getCurrentReplicas() throws Exception {
-    PowerMockito.mockStatic(K8sTaskHelper.class);
-    when(K8sTaskHelper.executeCommandSilent(any(), anyString()))
-        .thenReturn(buildProcessResult(0, "3"))
-        .thenReturn(buildProcessResult(1));
-    assertThat(helper.getCurrentReplicas(Kubectl.client("kubectl", "kubeconfig"), deployment().getResourceId(),
-                   K8sDelegateTaskParams.builder().build()))
+    doReturn(buildProcessResult(0, "3"))
+        .doReturn(buildProcessResult(1))
+        .when(spyHelper)
+        .runK8sExecutableSilent(any(), any());
+    assertThat(spyHelper.getCurrentReplicas(Kubectl.client("kubectl", "kubeconfig"),
+                   K8sTestHelper.deployment().getResourceId(), K8sDelegateTaskParams.builder().build()))
         .isEqualTo(3);
 
-    assertThat(helper.getCurrentReplicas(Kubectl.client("kubectl", "kubeconfig"), deployment().getResourceId(),
-                   K8sDelegateTaskParams.builder().build()))
+    assertThat(spyHelper.getCurrentReplicas(Kubectl.client("kubectl", "kubeconfig"),
+                   K8sTestHelper.deployment().getResourceId(), K8sDelegateTaskParams.builder().build()))
         .isNull();
   }
 
@@ -836,28 +701,32 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void getLatestRevisionForDeploymentConfig() throws Exception {
-    PowerMockito.mockStatic(Utils.class);
-    PowerMockito.when(Utils.encloseWithQuotesIfNeeded("oc")).thenReturn("oc");
-    PowerMockito.when(Utils.executeScript(anyString(), anyString(), any(), any()))
-        .thenReturn(buildProcessResult(0,
-            "deploymentconfig.apps.openshift.io/anshul-dc\n"
-                + "REVISION\tSTATUS\t\tCAUSE\n"
-                + "137\t\tComplete\tconfig change\n"
-                + "138\t\tComplete\tconfig change\n"
-                + "139\t\tComplete\tconfig change\n"
-                + "140\t\tComplete\tconfig change\n"));
+    doReturn(buildProcessResult(0,
+                 "deploymentconfig.apps.openshift.io/anshul-dc\n"
+                     + "REVISION\tSTATUS\t\tCAUSE\n"
+                     + "137\t\tComplete\tconfig change\n"
+                     + "138\t\tComplete\tconfig change\n"
+                     + "139\t\tComplete\tconfig change\n"
+                     + "140\t\tComplete\tconfig change\n"))
+        .when(spyHelper)
+        .executeCommandUsingUtils(any(), any(), any(), any());
     String latestRevision;
-    latestRevision =
-        helper.getLatestRevision(Kubectl.client("kubectl", "kubeconfig"), deploymentConfig().getResourceId(),
-            K8sDelegateTaskParams.builder()
-                .ocPath("oc")
-                .kubeconfigPath("kubeconfig")
-                .workingDirectory("./working-dir")
-                .build());
+    latestRevision = spyHelper.getLatestRevision(Kubectl.client("kubectl", "kubeconfig"),
+        K8sTestHelper.deploymentConfig().getResourceId(),
+        K8sDelegateTaskParams.builder()
+            .ocPath("oc")
+            .kubeconfigPath("kubeconfig")
+            .workingDirectory("./working-dir")
+            .build());
 
-    PowerMockito.verifyStatic(Utils.class);
-    Utils.executeScript(eq("./working-dir"),
-        eq("oc --kubeconfig=null rollout history DeploymentConfig/test-dc --namespace=default"), any(), any());
+    verify(spyHelper, times(1))
+        .executeCommandUsingUtils(eq(K8sDelegateTaskParams.builder()
+                                          .ocPath("oc")
+                                          .kubeconfigPath("kubeconfig")
+                                          .workingDirectory("./working-dir")
+                                          .build()),
+            any(), any(),
+            eq("oc --kubeconfig=kubeconfig rollout history DeploymentConfig/test-dc --namespace=default"));
     assertThat(latestRevision).isEqualTo("140");
   }
 
@@ -865,25 +734,32 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void getLatestRevisionForDeployment() throws Exception {
-    PowerMockito.mockStatic(K8sTaskHelper.class);
-    PowerMockito.when(K8sTaskHelper.executeCommandSilent(any(), anyString()))
-        .thenReturn(buildProcessResult(0,
+    doReturn(
+        buildProcessResult(0,
             "deployments \"nginx-deployment\"\n"
                 + "REVISION    CHANGE-CAUSE\n"
                 + "1           kubectl apply --filename=https://k8s.io/examples/controllers/nginx-deployment.yaml --record=true\n"
                 + "2           kubectl set image deployment.v1.apps/nginx-deployment nginx=nginx:1.16.1 --record=true\n"
-                + "3           kubectl set image deployment.v1.apps/nginx-deployment nginx=nginx:1.161 --record=true"));
+                + "3           kubectl set image deployment.v1.apps/nginx-deployment nginx=nginx:1.161 --record=true"))
+        .when(spyHelper)
+        .runK8sExecutableSilent(any(), any());
     String latestRevision;
-    latestRevision = helper.getLatestRevision(Kubectl.client("kubectl", "kubeconfig"), deployment().getResourceId(),
-        K8sDelegateTaskParams.builder()
-            .kubectlPath("kubectl")
-            .kubeconfigPath("kubeconfig")
-            .workingDirectory("./working-dir")
-            .build());
+    latestRevision =
+        spyHelper.getLatestRevision(Kubectl.client("kubectl", "kubeconfig"), K8sTestHelper.deployment().getResourceId(),
+            K8sDelegateTaskParams.builder()
+                .kubectlPath("kubectl")
+                .kubeconfigPath("kubeconfig")
+                .workingDirectory("./working-dir")
+                .build());
 
     ArgumentCaptor<RolloutHistoryCommand> captor = ArgumentCaptor.forClass(RolloutHistoryCommand.class);
-    PowerMockito.verifyStatic(K8sTaskHelper.class);
-    K8sTaskHelper.executeCommandSilent(captor.capture(), eq("./working-dir"));
+    verify(spyHelper, times(1))
+        .runK8sExecutableSilent(eq(K8sDelegateTaskParams.builder()
+                                        .kubectlPath("kubectl")
+                                        .kubeconfigPath("kubeconfig")
+                                        .workingDirectory("./working-dir")
+                                        .build()),
+            captor.capture());
     RolloutHistoryCommand rolloutHistoryCommand = captor.getValue();
     assertThat(rolloutHistoryCommand.command())
         .isEqualTo("kubectl --kubeconfig=kubeconfig rollout history Deployment/nginx-deployment --namespace=default");
@@ -906,13 +782,18 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   }
 
   private List<ManifestFile> prepareSomeCorrectManifestFiles() throws IOException {
-    return Arrays.asList(
-        ManifestFile.builder().fileContent(readFileContent(deploymentYaml)).fileName(deploymentYaml).build(),
+    return Arrays.asList(ManifestFile.builder()
+                             .fileContent(K8sTestHelper.readFileContent(deploymentYaml, resourcePath))
+                             .fileName(deploymentYaml)
+                             .build(),
         ManifestFile.builder()
             .fileName(deploymentConfigYaml)
-            .fileContent(readFileContent(deploymentConfigYaml))
+            .fileContent(K8sTestHelper.readFileContent(deploymentConfigYaml, resourcePath))
             .build(),
-        ManifestFile.builder().fileName(configMapYaml).fileContent(readFileContent(configMapYaml)).build());
+        ManifestFile.builder()
+            .fileName(configMapYaml)
+            .fileContent(K8sTestHelper.readFileContent(configMapYaml, resourcePath))
+            .build());
   }
 
   private ManifestFile prepareValuesYamlFile() {
@@ -930,9 +811,9 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   public void setNameSpaceToKubernetesResources() throws IOException {
     helper.setNamespaceToKubernetesResourcesIfRequired(null, "default");
     helper.setNamespaceToKubernetesResourcesIfRequired(emptyList(), "default");
-    KubernetesResource deployment = deployment();
+    KubernetesResource deployment = K8sTestHelper.deployment();
     deployment.getResourceId().setNamespace(null);
-    KubernetesResource configMap = configMap();
+    KubernetesResource configMap = K8sTestHelper.configMap();
     configMap.getResourceId().setNamespace("default");
     helper.setNamespaceToKubernetesResourcesIfRequired(asList(deployment, configMap), "harness");
     assertThat(deployment.getResourceId().getNamespace()).isEqualTo("harness");
@@ -943,8 +824,8 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void getResourcesInStringFormat() throws IOException {
-    final String resourcesInStringFormat =
-        K8sTaskHelper.getResourcesInStringFormat(asList(deployment().getResourceId(), configMap().getResourceId()));
+    final String resourcesInStringFormat = K8sTaskHelper.getResourcesInStringFormat(
+        asList(K8sTestHelper.deployment().getResourceId(), K8sTestHelper.configMap().getResourceId()));
     assertThat(resourcesInStringFormat)
         .isEqualTo("\n"
             + "- default/Deployment/nginx-deployment\n"
@@ -955,13 +836,13 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void describe() throws Exception {
-    PowerMockito.mockStatic(K8sTaskHelper.class);
-    PowerMockito.when(K8sTaskHelper.executeCommand(any(), anyString(), any())).thenReturn(buildProcessResult(0));
-    helper.describe(Kubectl.client("kubectl", "kubeconfig"),
+    doReturn(buildProcessResult(0)).when(spyHelper).runK8sExecutable(any(), any(), any());
+    spyHelper.describe(Kubectl.client("kubectl", "kubeconfig"),
         K8sDelegateTaskParams.builder().workingDirectory("./working-dir").build(), logCallback);
-    verifyStatic(K8sTaskHelper.class);
     ArgumentCaptor<DescribeCommand> captor = ArgumentCaptor.forClass(DescribeCommand.class);
-    K8sTaskHelper.executeCommand(captor.capture(), eq("./working-dir"), any(ExecutionLogCallback.class));
+    verify(spyHelper, times(1))
+        .runK8sExecutable(
+            eq(K8sDelegateTaskParams.builder().workingDirectory("./working-dir").build()), any(), captor.capture());
     assertThat(captor.getValue().command())
         .isEqualTo("kubectl --kubeconfig=kubeconfig describe --filename=manifests.yaml");
   }

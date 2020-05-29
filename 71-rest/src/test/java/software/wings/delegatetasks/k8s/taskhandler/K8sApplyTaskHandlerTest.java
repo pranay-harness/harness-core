@@ -25,7 +25,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.kubectl.Kubectl;
-import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.rule.Owner;
@@ -33,21 +32,17 @@ import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
+import software.wings.delegatetasks.k8s.K8sTestHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sApplyTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
@@ -55,12 +50,10 @@ import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ManifestHelper.class, K8sApplyTaskHandler.class})
-@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class K8sApplyTaskHandlerTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private K8sTaskHelper k8sTaskHelper;
@@ -68,7 +61,6 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
 
   @Before
   public void setup() {
-    PowerMockito.mockStatic(ManifestHelper.class);
     doReturn(mock(ExecutionLogCallback.class)).when(k8sTaskHelper).getExecutionLogCallback(any(), anyString());
   }
 
@@ -244,11 +236,8 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void prepare() {
-    List<KubernetesResource> resources = asList(KubernetesResource.builder().build());
-    List<KubernetesResource> workloads = asList(KubernetesResource.builder().build());
-    PowerMockito.when(ManifestHelper.getWorkloadsForApplyState(resources)).thenReturn(workloads);
-    PowerMockito.when(ManifestHelper.getWorkloadsForApplyState(EMPTY_LIST)).thenReturn(EMPTY_LIST);
+  public void prepare() throws IOException {
+    List<KubernetesResource> resources = asList(K8sTestHelper.deployment(), K8sTestHelper.configMap());
     Reflect.on(k8sApplyTaskHandler).set("resources", EMPTY_LIST);
 
     assertThat(k8sApplyTaskHandler.prepare(mock(ExecutionLogCallback.class))).isTrue();
@@ -256,14 +245,14 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
 
     Reflect.on(k8sApplyTaskHandler).set("resources", resources);
     assertThat(k8sApplyTaskHandler.prepare(mock(ExecutionLogCallback.class))).isTrue();
-    assertThat(Reflect.on(k8sApplyTaskHandler).<List>get("resources")).hasSize(1);
+    assertThat(Reflect.on(k8sApplyTaskHandler).<List>get("workloads")).hasSize(1);
   }
 
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void prepareFailure() {
-    PowerMockito.when(ManifestHelper.getWorkloadsForApplyState(anyList())).thenThrow(new RuntimeException());
+    //    PowerMockito.when(ManifestHelper.getWorkloadsForApplyState(anyList())).thenThrow(new RuntimeException());
     assertThat(k8sApplyTaskHandler.prepare(mock(ExecutionLogCallback.class))).isFalse();
   }
 
