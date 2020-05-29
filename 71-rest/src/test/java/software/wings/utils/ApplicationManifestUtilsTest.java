@@ -2,6 +2,7 @@ package software.wings.utils;
 
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -90,8 +91,13 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
 
     ExecutionContext context = mock(ExecutionContext.class);
 
-    ApplicationManifest applicationManifestAtService =
-        ApplicationManifest.builder().serviceId("1").kind(K8S_MANIFEST).storeType(Local).envId("2").build();
+    ApplicationManifest applicationManifestAtService = ApplicationManifest.builder()
+                                                           .serviceId("1")
+                                                           .kind(K8S_MANIFEST)
+                                                           .helmChartConfig(HelmChartConfig.builder().build())
+                                                           .storeType(Local)
+                                                           .envId("2")
+                                                           .build();
 
     doReturn(applicationManifestAtService).when(utils).getApplicationManifestForService(context);
     assertThat(utils.getAppManifestByApplyingHelmChartOverride(context)).isNull();
@@ -102,19 +108,35 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     assertThat(utils.getAppManifestByApplyingHelmChartOverride(context)).isEqualTo(applicationManifestAtService);
 
     applicationManifestAtService.setStoreType(HelmSourceRepo);
-    ApplicationManifest applicationManifestAtEnv = ApplicationManifest.builder()
-                                                       .serviceId("1")
-                                                       .kind(HELM_CHART_OVERRIDE)
-                                                       .storeType(HelmSourceRepo)
-                                                       .envId("2")
-                                                       .build();
+    ApplicationManifest applicationManifestAtEnv =
+        ApplicationManifest.builder()
+            .serviceId("1")
+            .kind(HELM_CHART_OVERRIDE)
+            .storeType(HelmSourceRepo)
+            .envId("2")
+            .helmChartConfig(HelmChartConfig.builder().connectorId("env-connector").chartName("env-chart").build())
+            .build();
     manifestMap.put(Environment, applicationManifestAtEnv);
-    assertThat(utils.getAppManifestByApplyingHelmChartOverride(context)).isEqualTo(applicationManifestAtEnv);
+    ApplicationManifest expectedManifest = applicationManifestAtService.cloneInternal();
+    expectedManifest.setHelmChartConfig(HelmChartConfig.builder().build());
+    assertThat(utils.getAppManifestByApplyingHelmChartOverride(context).getHelmChartConfig())
+        .isEqualTo(expectedManifest.getHelmChartConfig());
 
+    applicationManifestAtService.setStoreType(HelmChartRepo);
+    applicationManifestAtService.setHelmChartConfig(
+        HelmChartConfig.builder().connectorId("service-connector").chartName("service-chart").build());
+    expectedManifest = applicationManifestAtService.cloneInternal();
+    expectedManifest.setHelmChartConfig(
+        HelmChartConfig.builder().connectorId("env-connector").chartName("service-chart").build());
+    manifestMap.get(Environment).setStoreType(HelmChartRepo);
+    ApplicationManifest resultManifest = utils.getAppManifestByApplyingHelmChartOverride(context);
+    assertThat(resultManifest.getHelmChartConfig()).isEqualTo(expectedManifest.getHelmChartConfig());
+
+    manifestMap.get(Environment).setStoreType(HelmSourceRepo);
     applicationManifestAtService.setStoreType(HelmChartRepo);
     try {
       utils.getAppManifestByApplyingHelmChartOverride(context);
-      fail("Exception was expected");
+      fail("Invalid Request Exception should occur expected");
     } catch (Exception e) {
       assertThat(e instanceof InvalidRequestException).isTrue();
     }
@@ -172,23 +194,161 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
                                               .helmChartConfig(HelmChartConfig.builder()
                                                                    .connectorId("service-connector")
                                                                    .chartVersion("1.1")
-                                                                   .chartName("etcd")
+                                                                   .chartName("service-chart")
                                                                    .basePath("/base")
                                                                    .build())
                                               .build();
     appManifestMap.put(K8sValuesLocation.Service, serviceManifest);
     appManifestMap.put(K8sValuesLocation.EnvironmentGlobal,
         ApplicationManifest.builder()
-            .storeType(HelmSourceRepo)
+            .storeType(HelmChartRepo)
             .envId("envId")
-            .helmChartConfig(HelmChartConfig.builder().connectorId("env-connector").build())
+            .helmChartConfig(HelmChartConfig.builder().chartName("global-chart").connectorId("env-connector").build())
             .build());
-    applicationManifestUtils.applyEnvGlobalHelmChartOverride(serviceManifest, appManifestMap);
+    if (appManifestMap.containsKey(K8sValuesLocation.EnvironmentGlobal)
+        && HelmChartRepo == serviceManifest.getStoreType()) {
+      applicationManifestUtils.applyK8sValuesLocationBasedHelmChartOverride(
+          serviceManifest, appManifestMap, EnvironmentGlobal);
+    }
 
     assertThat(serviceManifest.getHelmChartConfig().getConnectorId()).isEqualTo("env-connector");
     assertThat(serviceManifest.getHelmChartConfig().getChartVersion()).isEqualTo("1.1");
-    assertThat(serviceManifest.getHelmChartConfig().getChartName()).isEqualTo("etcd");
+    assertThat(serviceManifest.getHelmChartConfig().getChartName()).isEqualTo("service-chart");
     assertThat(serviceManifest.getHelmChartConfig().getBasePath()).isEqualTo("/base");
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testApplyHelmChartOverrideWithManifestEnvPresent() {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new EnumMap<>(K8sValuesLocation.class);
+    ApplicationManifest serviceManifest = ApplicationManifest.builder()
+                                              .storeType(HelmChartRepo)
+                                              .serviceId("serviceId")
+                                              .helmChartConfig(HelmChartConfig.builder()
+                                                                   .connectorId("service-connector")
+                                                                   .chartVersion("1.1")
+                                                                   .chartName("service-chart")
+                                                                   .basePath("/base")
+                                                                   .build())
+                                              .build();
+    appManifestMap.put(K8sValuesLocation.Service, serviceManifest);
+    appManifestMap.put(K8sValuesLocation.EnvironmentGlobal,
+        ApplicationManifest.builder()
+            .storeType(HelmChartRepo)
+            .envId("envId")
+            .helmChartConfig(
+                HelmChartConfig.builder().chartName("global-chart").connectorId("global-connector").build())
+            .build());
+    appManifestMap.put(Environment,
+        ApplicationManifest.builder()
+            .storeType(HelmChartRepo)
+            .envId("envId")
+            .helmChartConfig(HelmChartConfig.builder().chartName("env-chart").connectorId("env-connector").build())
+            .build());
+    applicationManifestUtils.applyHelmChartOverride(serviceManifest, appManifestMap);
+
+    assertThat(serviceManifest.getHelmChartConfig().getConnectorId()).isEqualTo("env-connector");
+    assertThat(serviceManifest.getHelmChartConfig().getChartName()).isEqualTo("service-chart");
+    assertThat(serviceManifest.getHelmChartConfig().getChartVersion()).isEqualTo("1.1");
+    assertThat(serviceManifest.getHelmChartConfig().getBasePath()).isEqualTo("/base");
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testApplyHelmChartOverrideWithAllThreeManifestPresent() {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new EnumMap<>(K8sValuesLocation.class);
+    ApplicationManifest serviceManifest = ApplicationManifest.builder()
+                                              .storeType(HelmChartRepo)
+                                              .serviceId("serviceId")
+                                              .helmChartConfig(HelmChartConfig.builder()
+                                                                   .connectorId("service-connector")
+                                                                   .chartVersion("1.1")
+                                                                   .chartName("service-chart")
+                                                                   .basePath("/base")
+                                                                   .build())
+                                              .build();
+    appManifestMap.put(K8sValuesLocation.Service, serviceManifest);
+    appManifestMap.put(K8sValuesLocation.EnvironmentGlobal,
+        ApplicationManifest.builder()
+            .storeType(HelmChartRepo)
+            .envId("envId")
+            .helmChartConfig(
+                HelmChartConfig.builder().chartName("global-chart").connectorId("global-connector").build())
+            .build());
+    appManifestMap.put(Environment,
+        ApplicationManifest.builder()
+            .storeType(HelmChartRepo)
+            .envId("envId")
+            .helmChartConfig(HelmChartConfig.builder().chartName("env-chart").connectorId("env-connector").build())
+            .build());
+    applicationManifestUtils.applyHelmChartOverride(serviceManifest, appManifestMap);
+
+    assertThat(serviceManifest.getHelmChartConfig().getConnectorId()).isEqualTo("env-connector");
+    assertThat(serviceManifest.getHelmChartConfig().getChartName()).isEqualTo("service-chart");
+    assertThat(serviceManifest.getHelmChartConfig().getChartVersion()).isEqualTo("1.1");
+    assertThat(serviceManifest.getHelmChartConfig().getBasePath()).isEqualTo("/base");
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testApplyHelmChartOverrideWithManifestEnvNotPresentGlobalPresent() {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new EnumMap<>(K8sValuesLocation.class);
+    ApplicationManifest serviceManifest = ApplicationManifest.builder()
+                                              .storeType(HelmChartRepo)
+                                              .serviceId("serviceId")
+                                              .helmChartConfig(HelmChartConfig.builder()
+                                                                   .connectorId("service-connector")
+                                                                   .chartVersion("1.1")
+                                                                   .chartName("service-chart")
+                                                                   .basePath("/base")
+                                                                   .build())
+                                              .build();
+    appManifestMap.put(K8sValuesLocation.Service, serviceManifest);
+    appManifestMap.put(K8sValuesLocation.EnvironmentGlobal,
+        ApplicationManifest.builder()
+            .storeType(HelmChartRepo)
+            .envId("envId")
+            .helmChartConfig(
+                HelmChartConfig.builder().chartName("global-chart").connectorId("global-connector").build())
+            .build());
+    applicationManifestUtils.applyHelmChartOverride(serviceManifest, appManifestMap);
+
+    assertThat(serviceManifest.getHelmChartConfig().getConnectorId()).isEqualTo("global-connector");
+    assertThat(serviceManifest.getHelmChartConfig().getChartName()).isEqualTo("service-chart");
+    assertThat(serviceManifest.getHelmChartConfig().getChartVersion()).isEqualTo("1.1");
+    assertThat(serviceManifest.getHelmChartConfig().getBasePath()).isEqualTo("/base");
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testApplyHelmChartOverrideWithManifestGlobalNotPresentEnvPresent() {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new EnumMap<>(K8sValuesLocation.class);
+    ApplicationManifest serviceManifest = ApplicationManifest.builder()
+                                              .storeType(HelmChartRepo)
+                                              .serviceId("serviceId")
+                                              .helmChartConfig(HelmChartConfig.builder()
+                                                                   .connectorId("service-connector")
+                                                                   .chartVersion("1.1")
+                                                                   .chartName("service-chart")
+                                                                   .build())
+                                              .build();
+    appManifestMap.put(K8sValuesLocation.Service, serviceManifest);
+    appManifestMap.put(Environment,
+        ApplicationManifest.builder()
+            .storeType(HelmChartRepo)
+            .envId("envId")
+            .helmChartConfig(HelmChartConfig.builder().chartName("env-chart").connectorId("env-connector").build())
+            .build());
+    applicationManifestUtils.applyHelmChartOverride(serviceManifest, appManifestMap);
+
+    assertThat(serviceManifest.getHelmChartConfig().getConnectorId()).isEqualTo("env-connector");
+    assertThat(serviceManifest.getHelmChartConfig().getChartName()).isEqualTo("service-chart");
+    assertThat(serviceManifest.getHelmChartConfig().getChartVersion()).isEqualTo("1.1");
+    assertThat(serviceManifest.getHelmChartConfig().getBasePath()).isNullOrEmpty();
   }
 
   @Test
@@ -207,8 +367,11 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
                                                                    .build())
                                               .build();
     appManifestMap.put(K8sValuesLocation.Service, serviceManifest);
-
-    applicationManifestUtils.applyEnvGlobalHelmChartOverride(serviceManifest, appManifestMap);
+    if (appManifestMap.containsKey(K8sValuesLocation.EnvironmentGlobal)
+        && HelmChartRepo == serviceManifest.getStoreType()) {
+      applicationManifestUtils.applyK8sValuesLocationBasedHelmChartOverride(
+          serviceManifest, appManifestMap, EnvironmentGlobal);
+    }
 
     assertThat(serviceManifest.getHelmChartConfig().getConnectorId()).isEqualTo("service-connector");
     assertThat(serviceManifest.getHelmChartConfig().getChartVersion()).isEqualTo("1.1");
@@ -233,8 +396,11 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
                                                                  .build())
                                               .build();
     appManifestMap.put(K8sValuesLocation.Service, serviceManifest);
-
-    applicationManifestUtils.applyEnvGlobalHelmChartOverride(serviceManifest, appManifestMap);
+    if (appManifestMap.containsKey(K8sValuesLocation.EnvironmentGlobal)
+        && HelmChartRepo == serviceManifest.getStoreType()) {
+      applicationManifestUtils.applyK8sValuesLocationBasedHelmChartOverride(
+          serviceManifest, appManifestMap, EnvironmentGlobal);
+    }
 
     assertThat(serviceManifest.getGitFileConfig().getConnectorId()).isEqualTo("connector-id");
     assertThat(serviceManifest.getGitFileConfig().getConnectorName()).isEqualTo("git");

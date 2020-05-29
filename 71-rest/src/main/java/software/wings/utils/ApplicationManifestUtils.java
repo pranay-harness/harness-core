@@ -208,38 +208,49 @@ public class ApplicationManifestUtils {
 
     Map<K8sValuesLocation, ApplicationManifest> manifestsMap =
         getOverrideApplicationManifests(context, HELM_CHART_OVERRIDE);
-    ApplicationManifest applicationManifest = null;
 
     // Priority: service override in env > global override in env > service
-    if (manifestsMap.containsKey(K8sValuesLocation.Environment)) {
-      applicationManifest = manifestsMap.get(K8sValuesLocation.Environment);
-    } else {
-      applyEnvGlobalHelmChartOverride(manifestAtService, manifestsMap);
-      applicationManifest = manifestAtService;
-    }
+    // chart name chart repo should not come from overrides of any kind
+    applyHelmChartOverride(manifestAtService, manifestsMap);
 
-    if (applicationManifest != null && applicationManifest.getStoreType() != manifestAtService.getStoreType()) {
+    return manifestAtService;
+  }
+
+  public void applyHelmChartOverride(
+      ApplicationManifest manifestAtService, Map<K8sValuesLocation, ApplicationManifest> manifestsMap) {
+    final K8sValuesLocation overrideEnvironmentSelected = manifestsMap.containsKey(K8sValuesLocation.Environment)
+        ? K8sValuesLocation.Environment
+        : K8sValuesLocation.EnvironmentGlobal;
+    if (HelmChartRepo == manifestAtService.getStoreType()) {
+      if (overrideEnvironmentSelected == K8sValuesLocation.Environment
+          || overrideEnvironmentSelected == K8sValuesLocation.EnvironmentGlobal) {
+        applyK8sValuesLocationBasedHelmChartOverride(manifestAtService, manifestsMap, overrideEnvironmentSelected);
+      }
+    }
+  }
+
+  public void applyK8sValuesLocationBasedHelmChartOverride(ApplicationManifest manifestAtService,
+      Map<K8sValuesLocation, ApplicationManifest> manifestsMap, K8sValuesLocation k8sValuesLocation) {
+    ApplicationManifest applicationManifestAtK8sLocation = manifestsMap.get(k8sValuesLocation);
+    if (applicationManifestAtK8sLocation != null) {
+      throwExceptionIfStoreTypesDontMatch(applicationManifestAtK8sLocation, manifestAtService);
+      // only override helm connector
+      manifestAtService.getHelmChartConfig().setConnectorId(
+          applicationManifestAtK8sLocation.getHelmChartConfig().getConnectorId());
+    }
+  }
+
+  private void throwExceptionIfStoreTypesDontMatch(
+      ApplicationManifest manifest, ApplicationManifest manifestAtService) {
+    if (manifest.getStoreType() != manifestAtService.getStoreType()) {
       throw new InvalidRequestException(new StringBuilder("Environment Override should not change Manifest Format. ")
                                             .append(getManifestFormatName(manifestAtService.getStoreType()))
                                             .append(" is mentioned at Service, but mentioned as ")
-                                            .append(getManifestFormatName(applicationManifest.getStoreType()))
-                                            .append(" at Environment Override")
+                                            .append(getManifestFormatName(manifest.getStoreType()))
+                                            .append(" at Environment Global Override")
                                             .toString());
     }
-
-    return applicationManifest;
   }
-
-  public void applyEnvGlobalHelmChartOverride(
-      ApplicationManifest manifestAtService, Map<K8sValuesLocation, ApplicationManifest> manifestsMap) {
-    if (manifestsMap.containsKey(K8sValuesLocation.EnvironmentGlobal)
-        && HelmChartRepo == manifestAtService.getStoreType()) {
-      ApplicationManifest appManifestEnvGlobal = manifestsMap.get(K8sValuesLocation.EnvironmentGlobal);
-      // only override helm connector
-      manifestAtService.getHelmChartConfig().setConnectorId(appManifestEnvGlobal.getHelmChartConfig().getConnectorId());
-    }
-  }
-
   private String getManifestFormatName(StoreType storeType) {
     StringBuilder stringBuilder = new StringBuilder(128).append('"');
     if (HelmChartRepo == storeType) {
