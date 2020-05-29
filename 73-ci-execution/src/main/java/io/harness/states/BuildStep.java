@@ -1,16 +1,21 @@
 package io.harness.states;
 
 import static java.util.stream.Collectors.toList;
+import static software.wings.common.CICommonPodConstants.CLUSTER_EXPRESSION;
 import static software.wings.common.CICommonPodConstants.CONTAINER_NAME;
 import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
-import static software.wings.common.CICommonPodConstants.NAMESPACE;
-import static software.wings.common.CICommonPodConstants.POD_NAME;
+import static software.wings.common.CICommonPodConstants.NAMESPACE_EXPRESSION;
+import static software.wings.common.CICommonPodConstants.POD_NAME_EXPRESSION;
+import static software.wings.common.CICommonPodConstants.REL_STDERR_FILE_PATH;
+import static software.wings.common.CICommonPodConstants.REL_STDOUT_FILE_PATH;
 
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
-import io.harness.beans.steps.BuildStepInfo;
+import io.harness.beans.script.ScriptInfo;
+import io.harness.beans.steps.stepinfo.BuildStepInfo;
+import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
@@ -35,7 +40,7 @@ import java.util.List;
 @Slf4j
 public class BuildStep implements Step, SyncExecutable {
   @Inject private ManagerCIResource managerCIResource;
-
+  @Inject EngineExpressionService engineExpressionService;
   // TODO Async can not be supported at this point. We have to build polling framework on CI manager.
   //     Async will be supported once we will have delegate microservice ready.
 
@@ -43,31 +48,31 @@ public class BuildStep implements Step, SyncExecutable {
   public StepResponse executeSync(
       Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
     try {
+      final String clusterName = engineExpressionService.renderExpression(ambiance, CLUSTER_EXPRESSION);
+      final String namespace = engineExpressionService.renderExpression(ambiance, NAMESPACE_EXPRESSION);
+      final String podName = engineExpressionService.renderExpression(ambiance, POD_NAME_EXPRESSION);
+
       BuildStepInfo buildStepInfo = (BuildStepInfo) stepParameters;
 
-      String relStdoutFilePath = "/stdout";
-      String relStderrFilePath = "/stderr";
-      Integer commandTimeoutSecs = 3600;
-      List<String> commandList = buildStepInfo.getScriptInfos()
-                                     .stream()
-                                     .map(scriptInfo -> { return scriptInfo.getScriptString(); })
-                                     .collect(toList());
+      List<String> commandList =
+          buildStepInfo.getScriptInfos().stream().map(ScriptInfo::getScriptString).collect(toList());
 
+      // TODO only k8 cluster is supported
       K8ExecCommandParams k8ExecCommandParams = K8ExecCommandParams.builder()
-                                                    .podName(POD_NAME)
+                                                    .podName(podName)
                                                     .containerName(CONTAINER_NAME)
                                                     .mountPath(MOUNT_PATH)
-                                                    .relStdoutFilePath(relStdoutFilePath)
-                                                    .relStderrFilePath(relStderrFilePath)
-                                                    .commandTimeoutSecs(commandTimeoutSecs)
+                                                    .relStdoutFilePath(REL_STDOUT_FILE_PATH)
+                                                    .relStderrFilePath(REL_STDERR_FILE_PATH)
+                                                    .commandTimeoutSecs(buildStepInfo.getTimeout())
                                                     .scriptType(ShellScriptType.DASH)
                                                     .commands(commandList)
-                                                    .namespace(NAMESPACE)
+                                                    .namespace(namespace)
                                                     .build();
 
       // TODO Use k8 connector from element input and, handle response
 
-      SafeHttpCall.execute(managerCIResource.podCommandExecutionTask("kubernetes_clusterqqq", k8ExecCommandParams));
+      SafeHttpCall.execute(managerCIResource.podCommandExecutionTask(clusterName, k8ExecCommandParams));
 
       return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
     } catch (Exception e) {

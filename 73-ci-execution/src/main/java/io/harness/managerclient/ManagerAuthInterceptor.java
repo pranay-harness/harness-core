@@ -24,9 +24,16 @@ public class ManagerAuthInterceptor implements Interceptor {
   public Response intercept(Chain chain) throws IOException {
     String token = tokenGenerator.getVerificationServiceToken();
     Request request = chain.request();
-    // TODO Write CI authentication and token builder, Temporarily we are using learning engine token
-    // Execution commands can take upto 60 minutes, eventually it will be async
-    return chain.withConnectTimeout(60, TimeUnit.MINUTES)
+    /* TODO
+     Write CI authentication and token builder, Temporarily we are using learning engine token
+     Timeout is high because of sync tasks,
+     Temporary code till we don't have delegate microservice ready
+     **
+     */
+
+    return chain.withWriteTimeout(50, TimeUnit.MINUTES)
+        .withReadTimeout(50, TimeUnit.MINUTES)
+        .withConnectTimeout(50, TimeUnit.MINUTES)
         .proceed(request.newBuilder().header("Authorization", "LearningEngine " + token).build());
   }
 }

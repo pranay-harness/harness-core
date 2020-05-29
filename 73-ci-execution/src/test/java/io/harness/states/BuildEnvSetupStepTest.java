@@ -10,7 +10,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.steps.BuildEnvSetupStepInfo;
+import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
@@ -51,6 +51,20 @@ public class BuildEnvSetupStepTest extends CIExecutionTest {
     when(requestCall.execute())
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(buildSetupUtils.executeCISetupTask(any(), any())).thenReturn(restResponse);
+
+    buildEnvSetupStep.executeSync(null, BuildEnvSetupStepInfo.builder().build(), null, null);
+
+    verify(buildSetupUtils, times(1)).executeCISetupTask(any(), any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldNotExecuteCISetupTask() throws IOException {
+    Call<RestResponse<K8sTaskExecutionResponse>> requestCall = mock(Call.class);
+    when(requestCall.execute())
+        .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
+    when(buildSetupUtils.executeCISetupTask(any(), any())).thenThrow(new RuntimeException());
 
     buildEnvSetupStep.executeSync(null, BuildEnvSetupStepInfo.builder().build(), null, null);
 

@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
-import io.harness.beans.steps.BuildEnvSetupStepInfo;
+import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
@@ -36,10 +36,8 @@ public class BuildEnvSetupStep implements Step, SyncExecutable {
       Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
     try {
       BuildEnvSetupStepInfo envSetupStepInfo = (BuildEnvSetupStepInfo) stepParameters;
-
       // TODO Handle response and fetch cluster from input element
-      buildSetupUtils.executeCISetupTask(envSetupStepInfo, "kubernetes_clusterqqq");
-
+      buildSetupUtils.executeCISetupTask(envSetupStepInfo, ambiance);
       return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
     } catch (Exception e) {
       logger.error("state execution failed", e);

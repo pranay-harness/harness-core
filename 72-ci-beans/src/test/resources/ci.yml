@@ -1,0 +1,85 @@
+identifier: cipipeline
+name: Integration Pipeline
+description: sample pipeline used for testing
+stages:
+  - stage:
+    identifier: master-build-upload
+    type: integration
+    description: This stage is run hourly to build binaries from master and upload
+    run-parallel: false
+    build-host-type: kubernetes
+    build-tags:
+      - key: myTagKey
+        value: myTagValue
+    infrastructure:
+      type: kubernetes-direct
+      spec:
+        k8s-connector: MyKubeCluster1
+        namespace: ShoppingCart
+    connector:
+      type: git
+      identifier: gitRepo
+      spec:
+        auth-scheme:
+          type: ssh
+          ssh-key: git-ssh
+        repo: master
+    artifact:
+      identifier: artifact
+      artifact-stream:
+        type: docker-hub
+        spec:
+          dockerhub-connector: "My docker registry"
+          image-path: "customer/provided/image"
+          tag: 1.1
+    container:
+      identifier: jenkins-slave-image
+      connector: "np-quotecenter"
+      imagePath: "us.gcr.io/platform-205701/jenkins-slave-portal-oracle-8u191:12" #if version
+    execution:
+      steps:
+        - step:
+            identifier: git-clone
+            type: git-clone
+            gitConnector: git-global
+            path: portal
+            branch: master
+        - parallel:
+            - step:
+                identifier: run-lint
+                type: run
+                retryCount: 2
+                timeout: 30
+                command:
+                  - ./run lint
+            - step:
+                identifier: run-unit-tests
+                type: run
+                retryCount: 2
+                timeout: 30
+                command:
+                  - mvn -U clean package -Dbuild.number=${BUILD_NUMBER} -DgitBranch=master -DforkMode=perthread -DthreadCount=3 -DargLine="-Xmx2048m"
+        - step:
+            identifier: generate-report
+            type: run
+            retryCount: 2
+            timeout: 30
+            command:
+              - ./ci/generate_report.sh
+        - step:
+            identifier: build-master
+            type: run
+            retryCount: 2
+            timeout: 75
+            command:
+              - mvn clean install
+        - step:
+            identifier: upload-artifact1
+            type: upload
+            items:
+              - filePattern: ~/.m2/delegate-${BUILD_NUMBER}.jar
+                destination: gs://snapshot-delegate-jars/artifacts/
+                connector: repo_connector
+              - filePattern: ~/.m2/watcher-${BUILD_NUMBER}.jar
+                destination: gs://snapshot-watcher-jars/artifacts/
+                connector: repo_connector

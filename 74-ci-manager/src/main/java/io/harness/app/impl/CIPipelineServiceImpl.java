@@ -7,19 +7,17 @@ import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.intfc.YAMLToObject;
 import io.harness.app.yaml.YAML;
 import io.harness.beans.CIPipeline;
-import io.harness.persistence.HPersistence;
 import software.wings.dl.WingsPersistence;
 
 @Singleton
 public class CIPipelineServiceImpl implements CIPipelineService {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private HPersistence hPersistence;
   @Inject private CIPipelineValidations ciPipelineValidations;
   @Inject private YAMLToObject yamlToObject;
 
   @Override
   public CIPipeline createPipelineFromYAML(YAML yaml) {
-    CIPipeline ciPipeline = (CIPipeline) yamlToObject.convertYAML(yaml.getPipelineYAML());
+    CIPipeline ciPipeline = yamlToObject.convertYAML(yaml.getPipelineYAML());
     String ciPipelineKey = wingsPersistence.save(ciPipeline);
     return readPipeline(ciPipelineKey);
   }

@@ -2,7 +2,6 @@ package io.harness.stateutils.buildstate;
 
 import static java.util.stream.Collectors.toList;
 import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
-import static software.wings.common.CICommonPodConstants.NAMESPACE;
 import static software.wings.common.CICommonPodConstants.STEP_EXEC;
 import static software.wings.common.CICommonPodConstants.STEP_EXEC_WORKING_DIR;
 
@@ -32,7 +31,7 @@ public class K8BuildSetupUtils {
   private List<String> commands = Arrays.asList("/bin/sh", "-c");
   private List<String> args = Arrays.asList("trap : TERM INT; (while true; do sleep 1000; done) & wait");
 
-  public CIK8PodParams<CIK8ContainerParams> getPodParams(PodSetupInfo podSetupInfo) {
+  public CIK8PodParams<CIK8ContainerParams> getPodParams(PodSetupInfo podSetupInfo, String namespace) {
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
 
@@ -55,7 +54,7 @@ public class K8BuildSetupUtils {
 
     return CIK8PodParams.<CIK8ContainerParams>builder()
         .name(podSetupInfo.getName())
-        .namespace(NAMESPACE)
+        .namespace(namespace)
         .stepExecVolumeName(STEP_EXEC)
         .stepExecWorkingDir(STEP_EXEC_WORKING_DIR)
         .containerParamsList(containerParams)

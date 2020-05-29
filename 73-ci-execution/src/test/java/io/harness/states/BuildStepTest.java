@@ -1,5 +1,6 @@
 package io.harness.states;
 
+import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.HARSH;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -10,7 +11,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.steps.BuildStepInfo;
+import io.harness.beans.steps.stepinfo.BuildStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
@@ -46,6 +47,22 @@ public class BuildStepTest extends CIExecutionTest {
     when(requestCall.execute())
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(managerCIResource.podCommandExecutionTask(any(), any())).thenReturn(requestCall);
+
+    buildStep.executeSync(null,
+        BuildStepInfo.builder().scriptInfos(ciExecutionPlanTestHelper.getBuildCommandSteps()).build(), null, null);
+
+    verify(managerCIResource, times(1)).podCommandExecutionTask(any(), any());
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldNotExecuteCIBuildTask() throws IOException {
+    Call<RestResponse<K8sTaskExecutionResponse>> requestCall = mock(Call.class);
+
+    when(requestCall.execute())
+        .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
+    when(managerCIResource.podCommandExecutionTask(any(), any())).thenThrow(new RuntimeException());
 
     buildStep.executeSync(null,
         BuildStepInfo.builder().scriptInfos(ciExecutionPlanTestHelper.getBuildCommandSteps()).build(), null, null);

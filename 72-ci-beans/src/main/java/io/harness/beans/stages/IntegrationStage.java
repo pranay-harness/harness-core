@@ -1,12 +1,14 @@
 package io.harness.beans.stages;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import graph.Graph;
-import io.harness.beans.steps.CIStep;
+import io.harness.beans.yaml.extended.container.Container;
+import io.harness.yaml.core.Artifact;
+import io.harness.yaml.core.Execution;
+import io.harness.yaml.core.intfc.Connector;
+import io.harness.yaml.core.intfc.Infrastructure;
+import io.harness.yaml.core.intfc.Stage;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Value;
-import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
 
@@ -16,18 +18,29 @@ import javax.validation.constraints.NotNull;
  *  Stores identifier for kubernetes cluster.
  */
 
-@JsonTypeName("INTEGRATION")
 @Data
-@Value
 @Builder
-public class IntegrationStage implements StageInfo {
-  @NotNull private StageType type = StageType.INTEGRATION;
-  Graph<CIStep> stepInfos;
+@JsonTypeName("integration")
+public class IntegrationStage implements Stage {
+  // Default properties
+  @NotNull private String identifier;
+  private String name;
+  @NotNull private String type;
+  private boolean runParallel;
+  private String skipCondition;
   private String description;
-  @NotEmpty private String k8ConnectorIdentifier;
-  @NotEmpty private String identifier;
-  @Override
-  public StageType getType() {
-    return type;
-  }
+
+  // CI specific properties
+  private String location;
+  private String project;
+  private String image;
+
+  private Infrastructure infrastructure;
+  private Connector connector;
+  private Artifact artifact;
+  private Container container;
+
+  private String workingDirectory;
+
+  @NotNull private Execution execution;
 }

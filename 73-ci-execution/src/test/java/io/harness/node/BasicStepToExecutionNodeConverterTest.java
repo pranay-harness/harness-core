@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import graph.StepGraph;
+import graph.StepInfoGraph;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
@@ -15,7 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.io.IOException;
+import java.util.Collections;
 
 public class BasicStepToExecutionNodeConverterTest extends CIExecutionTest {
   @Inject private BasicStepToExecutionNodeConverter basicStepToExecutionNodeConverter;
@@ -29,13 +29,13 @@ public class BasicStepToExecutionNodeConverterTest extends CIExecutionTest {
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
-  public void shouldGenerateExecutionPlan() throws IOException {
-    StepGraph ciStepsGraph = ciExecutionPlanTestHelper.getStepsGraph();
+  public void shouldGenerateExecutionPlan() {
+    StepInfoGraph ciStepsGraph = ciExecutionPlanTestHelper.getStepsGraph();
 
-    ExecutionNode executionNode = basicStepToExecutionNodeConverter.convertStep(
-        ciStepsGraph.getCiSteps().get(0), ciStepsGraph.getCiSteps().get(1).getStepMetadata().getUuid());
+    ExecutionNode executionNode = basicStepToExecutionNodeConverter.convertStep(ciStepsGraph.getSteps().get(0),
+        Collections.singletonList(ciStepsGraph.getSteps().get(1).getStepMetadata().getUuid()));
 
-    assertThat(executionNode.getName()).isEqualTo(ENV_SETUP_NAME);
+    assertThat(executionNode.getIdentifier()).isEqualTo(ENV_SETUP_NAME);
     assertThat(executionNode.getFacilitatorObtainments()).isNotEmpty();
     assertThat(executionNode.getAdviserObtainments()).isNotEmpty();
   }
