@@ -1,7 +1,13 @@
 # Refer for a list of all gazelle directives: http://www.lib4dev.in/info/bazelbuild/bazel-gazelle/112655189
+# gazelle:exclude src/vendor
+# gazelle:exclude vendor
+# gazelle:exclude build
+# gazelle:exclude */src
+
 # gazelle:exclude .git/
 # gazelle:exclude pkg/
-# gazelle:proto disable
+## gazelle:proto_strip_import_prefix /proto/harness.io/
+
 load("@bazel_gazelle//:def.bzl", "gazelle")
 
 # gazelle:prefix github.com/wings-software/portal

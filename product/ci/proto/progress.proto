@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package io.harness.product.ci.proto.addon;
+
+option java_multiple_files = true;
+option go_package = "ciaddonpb";
+
+enum TaskStatus {
+  PENDING = 0;
+  RUNNING = 1;
+  SUCCEEDED = 2;
+  FAILED = 3;
+}
