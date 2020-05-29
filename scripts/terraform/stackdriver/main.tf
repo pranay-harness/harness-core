@@ -29,3 +29,8 @@ module "delegate-watcher" {
   source = "./delegate-watcher"
   deployment = var.deployment
 }
+
+module "event-service" {
+  source = "./event-service"
+  deployment = var.deployment
+}
