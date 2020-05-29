@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Before;
@@ -35,6 +36,7 @@ public class ArtifactStreamPTaskManagerTest extends CategoryTest {
 
   @Mock private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private PerpetualTaskService perpetualTaskService;
 
   @Inject @InjectMocks private ArtifactStreamPTaskManager manager;
 
@@ -42,8 +44,6 @@ public class ArtifactStreamPTaskManagerTest extends CategoryTest {
 
   @Before
   public void setUp() {
-    when(artifactStreamPTaskHelper.reset(ACCOUNT_ID, PERPETUAL_TASK_ID)).thenReturn(true);
-    when(artifactStreamPTaskHelper.delete(ACCOUNT_ID, PERPETUAL_TASK_ID)).thenReturn(true);
     enableFeatureFlag();
   }
 
@@ -82,11 +82,11 @@ public class ArtifactStreamPTaskManagerTest extends CategoryTest {
     ArtifactStream artifactStream = prepareArtifactStream();
     artifactStream.setPerpetualTaskId(PERPETUAL_TASK_ID);
     manager.onUpdated(artifactStream);
-    verify(artifactStreamPTaskHelper, times(1)).reset(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, times(1)).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
-    when(artifactStreamPTaskHelper.reset(ACCOUNT_ID, PERPETUAL_TASK_ID)).thenReturn(false);
+    when(perpetualTaskService.resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID)).thenReturn(false);
     manager.onUpdated(artifactStream);
-    verify(artifactStreamPTaskHelper, times(2)).reset(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, times(2)).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
   }
 
   @Test
@@ -95,20 +95,20 @@ public class ArtifactStreamPTaskManagerTest extends CategoryTest {
   public void testOnDeletedDeletePerpetualTask() {
     ArtifactStream artifactStream = prepareArtifactStream();
     manager.onDeleted(artifactStream);
-    verify(artifactStreamPTaskHelper, never()).delete(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, never()).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
     artifactStream.setPerpetualTaskId(PERPETUAL_TASK_ID);
     disableFeatureFlag();
     manager.onDeleted(artifactStream);
-    verify(artifactStreamPTaskHelper, never()).delete(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, never()).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
     enableFeatureFlag();
     manager.onDeleted(artifactStream);
-    verify(artifactStreamPTaskHelper, times(1)).delete(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, times(1)).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
-    when(artifactStreamPTaskHelper.delete(ACCOUNT_ID, PERPETUAL_TASK_ID)).thenReturn(false);
+    when(perpetualTaskService.deleteTask(ACCOUNT_ID, PERPETUAL_TASK_ID)).thenReturn(false);
     manager.onDeleted(artifactStream);
-    verify(artifactStreamPTaskHelper, times(2)).delete(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, times(2)).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
   }
 
   private void enableFeatureFlag() {

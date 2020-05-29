@@ -19,7 +19,6 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACC
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.COMPUTE_PROVIDER_SETTING_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
-import static software.wings.service.impl.instance.InstanceSyncTestConstants.PERPETUAL_TASK_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.US_EAST;
 
@@ -100,22 +99,6 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskClientTest extends WingsBaseT
                 .setTimeout(Durations.fromSeconds(InstanceSyncConstants.TIMEOUT_SECONDS))
                 .build(),
             false);
-  }
-
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
-  public void testResetTask() {
-    client.reset(ACCOUNT_ID, PERPETUAL_TASK_ID);
-    verify(perpetualTaskService, times(1)).resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
-  }
-
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
-  public void testDeleteTask() {
-    client.delete(ACCOUNT_ID, PERPETUAL_TASK_ID);
-    verify(perpetualTaskService, times(1)).deleteTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
   }
 
   @Test

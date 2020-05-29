@@ -44,6 +44,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.network.Http;
+import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -135,6 +136,7 @@ public class ArtifactCollectionUtils {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AwsCommandHelper awsCommandHelper;
   @Inject private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
+  @Inject private PerpetualTaskService perpetualTaskService;
 
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
@@ -882,7 +884,7 @@ public class ArtifactCollectionUtils {
     }
 
     if (isNotEmpty(artifactStream.getPerpetualTaskId())) {
-      if (!artifactStreamPTaskHelper.delete(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId())) {
+      if (!perpetualTaskService.deleteTask(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId())) {
         logger.error(
             format("Unable to delete artifact collection perpetual task: %s", artifactStream.getPerpetualTaskId()));
       }

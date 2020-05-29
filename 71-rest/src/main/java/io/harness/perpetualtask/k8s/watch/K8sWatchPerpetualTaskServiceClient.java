@@ -52,16 +52,6 @@ public class K8sWatchPerpetualTaskServiceClient
   }
 
   @Override
-  public boolean reset(String accountId, String taskId) {
-    return perpetualTaskService.resetTask(accountId, taskId);
-  }
-
-  @Override
-  public boolean delete(String accountId, String taskId) {
-    return perpetualTaskService.deleteTask(accountId, taskId);
-  }
-
-  @Override
   public K8sWatchTaskParams getTaskParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
     String cloudProviderId = clientParams.get(CLOUD_PROVIDER_ID);

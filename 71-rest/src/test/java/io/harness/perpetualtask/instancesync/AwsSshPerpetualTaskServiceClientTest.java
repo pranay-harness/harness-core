@@ -77,24 +77,6 @@ public class AwsSshPerpetualTaskServiceClientTest extends WingsBaseTest {
   @Test
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
-  public void reset() {
-    client.reset(InstanceSyncTestConstants.ACCOUNT_ID, InstanceSyncTestConstants.PERPETUAL_TASK_ID);
-    Mockito.verify(perpetualTaskService, Mockito.times(1))
-        .resetTask(InstanceSyncTestConstants.ACCOUNT_ID, InstanceSyncTestConstants.PERPETUAL_TASK_ID);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.YOGESH)
-  @Category(UnitTests.class)
-  public void delete() {
-    client.delete(InstanceSyncTestConstants.ACCOUNT_ID, InstanceSyncTestConstants.PERPETUAL_TASK_ID);
-    Mockito.verify(perpetualTaskService, Mockito.times(1))
-        .deleteTask(InstanceSyncTestConstants.ACCOUNT_ID, InstanceSyncTestConstants.PERPETUAL_TASK_ID);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.YOGESH)
-  @Category(UnitTests.class)
   public void getTaskParams() {
     AwsConfig awsConfig = AwsConfig.builder().tag("abc").build();
     prepareTaskData(awsConfig);

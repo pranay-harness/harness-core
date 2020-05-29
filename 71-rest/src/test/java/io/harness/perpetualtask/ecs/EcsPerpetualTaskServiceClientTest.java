@@ -102,12 +102,4 @@ public class EcsPerpetualTaskServiceClientTest extends CategoryTest {
     assertThat(delegateTask).isNotNull();
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
   }
-
-  @Test
-  @Owner(developers = ROHIT)
-  @Category(UnitTests.class)
-  public void testDelete() {
-    ecsPerpetualTaskServiceClient.delete(accountId, taskId);
-    verify(perpetualTaskService).deleteTask(accountId, taskId);
-  }
 }

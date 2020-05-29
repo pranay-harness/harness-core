@@ -4,7 +4,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -17,7 +16,6 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACC
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
-import static software.wings.service.impl.instance.InstanceSyncTestConstants.PERPETUAL_TASK_ID;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -129,22 +127,6 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                 .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
                 .build(),
             false);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.ACASIAN)
-  @Category(UnitTests.class)
-  public void reset() {
-    client.reset(ACCOUNT_ID, PERPETUAL_TASK_ID);
-    verify(perpetualTaskService, times(1)).resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.ACASIAN)
-  @Category(UnitTests.class)
-  public void delete() {
-    client.delete(ACCOUNT_ID, PERPETUAL_TASK_ID);
-    verify(perpetualTaskService, times(1)).deleteTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
   }
 
   @Test

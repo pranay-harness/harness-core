@@ -21,6 +21,7 @@ import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
@@ -42,6 +43,7 @@ public class ArtifactStreamPTaskHelperTest extends CategoryTest {
 
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private PerpetualTaskServiceClientRegistry clientRegistry;
+  @Mock private PerpetualTaskService perpetualTaskService;
   @Mock private ArtifactCollectionPTaskServiceClient artifactCollectionPTaskServiceClient;
 
   @Inject @InjectMocks private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
@@ -59,22 +61,6 @@ public class ArtifactStreamPTaskHelperTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.GARVIT)
   @Category(UnitTests.class)
-  public void testReset() {
-    artifactStreamPTaskHelper.reset(ACCOUNT_ID, PERPETUAL_TASK_ID);
-    verify(artifactCollectionPTaskServiceClient, times(1)).reset(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.GARVIT)
-  @Category(UnitTests.class)
-  public void testDelete() {
-    artifactStreamPTaskHelper.delete(ACCOUNT_ID, PERPETUAL_TASK_ID);
-    verify(artifactCollectionPTaskServiceClient, times(1)).delete(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.GARVIT)
-  @Category(UnitTests.class)
   public void testCreatePerpetualTask() {
     ArtifactStream artifactStreamWithoutId = prepareArtifactStreamWithoutId();
     assertThatThrownBy(() -> artifactStreamPTaskHelper.createPerpetualTask(artifactStreamWithoutId))
@@ -85,20 +71,20 @@ public class ArtifactStreamPTaskHelperTest extends CategoryTest {
     artifactStreamPTaskHelper.createPerpetualTask(artifactStream);
     verify(artifactCollectionPTaskServiceClient, times(1))
         .create(eq(ACCOUNT_ID), any(ArtifactCollectionPTaskClientParams.class));
-    verify(artifactCollectionPTaskServiceClient, never()).delete(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, never()).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
     when(artifactStreamService.attachPerpetualTaskId(eq(artifactStream), eq(PERPETUAL_TASK_ID))).thenReturn(false);
     artifactStreamPTaskHelper.createPerpetualTask(artifactStream);
     verify(artifactCollectionPTaskServiceClient, times(2))
         .create(eq(ACCOUNT_ID), any(ArtifactCollectionPTaskClientParams.class));
-    verify(artifactCollectionPTaskServiceClient, times(1)).delete(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, times(1)).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
     when(artifactStreamService.attachPerpetualTaskId(eq(artifactStream), eq(PERPETUAL_TASK_ID)))
         .thenThrow(new RuntimeException());
     artifactStreamPTaskHelper.createPerpetualTask(artifactStream);
     verify(artifactCollectionPTaskServiceClient, times(3))
         .create(eq(ACCOUNT_ID), any(ArtifactCollectionPTaskClientParams.class));
-    verify(artifactCollectionPTaskServiceClient, times(1)).delete(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, times(1)).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
     ArtifactStream artifactStreamWithPerpetualTaskId = prepareArtifactStream();
     artifactStreamWithPerpetualTaskId.setPerpetualTaskId(PERPETUAL_TASK_ID);

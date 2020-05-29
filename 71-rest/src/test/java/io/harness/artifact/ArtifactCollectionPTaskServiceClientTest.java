@@ -84,23 +84,6 @@ public class ArtifactCollectionPTaskServiceClientTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldDelete() {
-    when(perpetualTaskService.deleteTask(accountId, taskId)).thenReturn(true);
-    assertThat(artifactCollectionPTaskServiceClient.delete(accountId, taskId)).isTrue();
-  }
-
-  @Test
-  @Owner(developers = SRINIVAS)
-  @Category(UnitTests.class)
-  public void shouldReset() {
-    when(perpetualTaskService.resetTask(accountId, taskId)).thenReturn(true);
-    assertThat(artifactCollectionPTaskServiceClient.reset(accountId, taskId)).isTrue();
-    verify(perpetualTaskService).resetTask(accountId, taskId);
-  }
-
-  @Test
-  @Owner(developers = SRINIVAS)
-  @Category(UnitTests.class)
   public void shouldGetValidationTask() {
     PerpetualTaskClientContext perpetualTaskClientContext = new PerpetualTaskClientContext(clientParamsMap);
     when(artifactCollectionUtils.prepareValidateTask(artifactStreamId)).thenReturn(DelegateTask.builder().build());
