@@ -1,6 +1,7 @@
 package io.harness.cdng.pipeline;
 
 import io.harness.cdng.service.Service;
+import io.harness.cdng.variables.StageVariables;
 import io.harness.yaml.core.intfc.Stage;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,7 @@ public class CDStage implements Stage {
   private String identifier;
   private PipelineInfrastructure infrastructure;
   private Service service;
+  private StageVariables stageVariables;
 
   @NotNull
   @Override
