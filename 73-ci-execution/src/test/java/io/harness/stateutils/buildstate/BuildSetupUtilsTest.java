@@ -10,7 +10,9 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
@@ -31,6 +33,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
   @Mock private ManagerCIResource managerCIResource;
+  @Mock private EngineExpressionService engineExpressionService;
 
   private static final String CLUSTER_NAME = "K8";
 
@@ -48,10 +51,12 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
 
     when(requestCall.execute())
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
-    when(managerCIResource.createK8PodTask(any(), any(), any())).thenReturn(requestCall);
+    when(managerCIResource.createK8PodTask(any(), any(), any(), any())).thenReturn(requestCall);
+    when(engineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
 
-    buildSetupUtils.executeCISetupTask(ciExecutionPlanTestHelper.getBuildEnvSetupStepInfo(), CLUSTER_NAME);
+    buildSetupUtils.executeCISetupTask(
+        ciExecutionPlanTestHelper.getBuildEnvSetupStepInfo(), Ambiance.builder().build());
 
-    verify(managerCIResource, times(1)).createK8PodTask(any(), any(), any());
+    verify(managerCIResource, times(1)).createK8PodTask(any(), any(), any(), any());
   }
 }

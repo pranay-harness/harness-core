@@ -16,7 +16,6 @@ import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import io.harness.OrchestrationModule;
 import io.harness.app.resources.CIPipelineResource;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
@@ -73,8 +72,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
     modules.addAll(new MongoModule().cumulativeDependencies());
     addGuiceValidationModule(modules);
-    modules.add(new CIManagerServiceModule(configuration, configuration.getManagerUrl()));
-    modules.addAll(new OrchestrationModule().cumulativeDependencies());
+    modules.addAll(new CIManagerServiceModule(configuration, configuration.getManagerUrl()).cumulativeDependencies());
+
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {

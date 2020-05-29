@@ -2,11 +2,11 @@ package io.harness.node;
 
 import com.google.inject.Singleton;
 
-import graph.StepGraph;
+import graph.StepInfoGraph;
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
-import io.harness.beans.steps.CIStep;
+import io.harness.beans.steps.AbstractStepWithMetaInfo;
 import io.harness.beans.steps.StepMetadata;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
@@ -20,17 +20,17 @@ import java.util.List;
  */
 
 @Singleton
-public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeConverter<CIStep> {
+public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeConverter<AbstractStepWithMetaInfo> {
   @Override
-  public ExecutionNode convertStep(CIStep step, String nextStepUuid) {
+  public ExecutionNode convertStep(AbstractStepWithMetaInfo step, List<String> nextStepUuids) {
     return ExecutionNode.builder()
-        .name(step.getStepInfo().getStepIdentifier())
+        .name(step.getStepMetadata().getUuid())
         .uuid(step.getStepMetadata().getUuid())
-        .stepType(step.getStepInfo().getStateType())
-        .identifier(step.getStepInfo().getStepIdentifier())
-        .stepParameters(step.getStepInfo())
+        .stepType(step.getNonYamlInfo().getStepType())
+        .identifier(step.getIdentifier())
+        .stepParameters(step)
         .facilitatorObtainment(getFacilitatorsFromMetaData(step.getStepMetadata()))
-        .adviserObtainments(getAdviserObtainmentFromMetaData(step.getStepMetadata(), nextStepUuid))
+        .adviserObtainments(getAdviserObtainmentFromMetaData(step.getStepMetadata(), nextStepUuids))
         .build();
   }
 
@@ -38,14 +38,17 @@ public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeCon
     return FacilitatorObtainment.builder().type(FacilitatorType.builder().type(FacilitatorType.SYNC).build()).build();
   }
 
-  private List<AdviserObtainment> getAdviserObtainmentFromMetaData(StepMetadata stepMetadata, String nextStepUuid) {
+  private List<AdviserObtainment> getAdviserObtainmentFromMetaData(
+      StepMetadata stepMetadata, List<String> nextStepUuids) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
 
-    if (!StepGraph.isNILStepUuId(nextStepUuid)) {
-      adviserObtainments.add(AdviserObtainment.builder()
-                                 .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
-                                 .parameters(OnSuccessAdviserParameters.builder().nextNodeId(nextStepUuid).build())
-                                 .build());
+    // TODO Handle parallel execution
+    if (!nextStepUuids.isEmpty() && !StepInfoGraph.isNILStepUuId(nextStepUuids.get(0))) {
+      adviserObtainments.add(
+          AdviserObtainment.builder()
+              .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+              .parameters(OnSuccessAdviserParameters.builder().nextNodeId(nextStepUuids.get(0)).build())
+              .build());
     }
 
     return adviserObtainments;

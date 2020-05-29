@@ -20,7 +20,8 @@ public interface ManagerCIResource {
   @POST("ci" + CICommonEndpointConstants.CI_SETUP_ENDPOINT)
   @KryoRequest
   Call<RestResponse<K8sTaskExecutionResponse>> createK8PodTask(@Query("k8ConnectorName") String k8ConnectorName,
-      @Query("gitConnectorName") String gitConnectorName, @Body CIK8PodParams<CIK8ContainerParams> podParams);
+      @Query("gitConnectorName") String gitConnectorName, @Query("branchName") String branchName,
+      @Body CIK8PodParams<CIK8ContainerParams> podParams);
 
   @POST("ci" + CICommonEndpointConstants.CI_COMMAND_EXECUTION_ENDPOINT)
   @KryoRequest
@@ -29,5 +30,6 @@ public interface ManagerCIResource {
 
   @DELETE("ci" + CICommonEndpointConstants.CI_CLEANUP_ENDPOINT)
   @KryoRequest
-  Call<RestResponse<K8sTaskExecutionResponse>> podCleanupTask(@Query("k8ConnectorName") String k8ConnectorName);
+  Call<RestResponse<K8sTaskExecutionResponse>> podCleanupTask(@Query("k8ConnectorName") String k8ConnectorName,
+      @Query("namespace") String namespace, @Query("podName") String podName);
 }

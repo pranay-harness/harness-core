@@ -1,3 +1,5 @@
 package io.harness.app.intfc;
 
-public interface YAMLToObject<T> { T convertYAML(String yaml); }
+import io.harness.beans.CIPipeline;
+
+public interface YAMLToObject { CIPipeline convertYAML(String yaml); }

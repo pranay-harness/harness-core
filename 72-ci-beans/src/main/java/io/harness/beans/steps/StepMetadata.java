@@ -1,16 +1,12 @@
 package io.harness.beans.steps;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-
-import io.harness.beans.repo.RepoConfiguration;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Value;
 
 @Data
-@Value
 @Builder
 public class StepMetadata {
-  private String uuid = generateUuid();
-  private RepoConfiguration repoConfiguration;
+  private String uuid;
+  private int retry;
+  private int timeout;
 }

@@ -36,9 +36,10 @@ public class CIServiceHelperResource {
   @Timed
   @LearningEngineAuth
   public RestResponse<K8sTaskExecutionResponse> setBuildEnv(@QueryParam("k8ConnectorName") String k8ConnectorName,
-      @QueryParam("gitConnectorName") String gitConnectorName, CIK8PodParams<CIK8ContainerParams> podParams) {
-    return new RestResponse<K8sTaskExecutionResponse>(
-        ciDelegateTaskHelperService.setBuildEnv(k8ConnectorName, gitConnectorName, podParams));
+      @QueryParam("gitConnectorName") String gitConnectorName, @QueryParam("branchName") String branchName,
+      CIK8PodParams<CIK8ContainerParams> podParams) {
+    return new RestResponse<>(
+        ciDelegateTaskHelperService.setBuildEnv(k8ConnectorName, gitConnectorName, branchName, podParams));
   }
 
   @POST
@@ -47,15 +48,15 @@ public class CIServiceHelperResource {
   @LearningEngineAuth
   public RestResponse<K8sTaskExecutionResponse> executeBuildCommand(
       @QueryParam("k8ConnectorName") String k8ConnectorName, K8ExecCommandParams params) {
-    return new RestResponse<K8sTaskExecutionResponse>(
-        ciDelegateTaskHelperService.executeBuildCommand(k8ConnectorName, params));
+    return new RestResponse<>(ciDelegateTaskHelperService.executeBuildCommand(k8ConnectorName, params));
   }
 
   @DELETE
   @Path(CICommonEndpointConstants.CI_CLEANUP_ENDPOINT)
   @Timed
   @LearningEngineAuth
-  public RestResponse<K8sTaskExecutionResponse> cleanup(@QueryParam("k8ConnectorName") String k8ConnectorName) {
-    return new RestResponse<K8sTaskExecutionResponse>(ciDelegateTaskHelperService.cleanupEnv(k8ConnectorName));
+  public RestResponse<K8sTaskExecutionResponse> cleanup(@QueryParam("k8ConnectorName") String k8ConnectorName,
+      @QueryParam("namespace") String namespace, @QueryParam("podName") String podName) {
+    return new RestResponse<>(ciDelegateTaskHelperService.cleanupEnv(k8ConnectorName, namespace, podName));
   }
 }

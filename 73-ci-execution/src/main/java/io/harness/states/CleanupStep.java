@@ -1,9 +1,14 @@
 package io.harness.states;
 
+import static software.wings.common.CICommonPodConstants.CLUSTER_EXPRESSION;
+import static software.wings.common.CICommonPodConstants.NAMESPACE_EXPRESSION;
+import static software.wings.common.CICommonPodConstants.POD_NAME_EXPRESSION;
+
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
+import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
@@ -25,7 +30,7 @@ import java.util.List;
 @Slf4j
 public class CleanupStep implements Step, SyncExecutable {
   @Inject private ManagerCIResource managerCIResource;
-
+  @Inject EngineExpressionService engineExpressionService;
   // TODO Async can not be supported at this point. We have to build polling framework on CI manager.
   //     Async will be supported once we will have delegate microservice ready.
 
@@ -34,8 +39,11 @@ public class CleanupStep implements Step, SyncExecutable {
       Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
     try {
       // TODO Use k8 connector from element input, handle response
+      String clusterName = engineExpressionService.renderExpression(ambiance, CLUSTER_EXPRESSION);
+      String namespace = engineExpressionService.renderExpression(ambiance, NAMESPACE_EXPRESSION);
+      String podName = engineExpressionService.renderExpression(ambiance, POD_NAME_EXPRESSION);
 
-      SafeHttpCall.execute(managerCIResource.podCleanupTask("kubernetes_clusterqqq"));
+      SafeHttpCall.execute(managerCIResource.podCleanupTask(clusterName, namespace, podName));
 
       return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
     } catch (Exception e) {

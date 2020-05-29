@@ -4,12 +4,11 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
+import io.harness.app.CIManagerConfiguration;
 import io.harness.app.CIManagerServiceModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ServersModule;
-import io.harness.mongo.MongoPersistence;
-import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -33,18 +32,12 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
   }
 
   @Override
-  public List<Module> modules(List<Annotation> annotations) throws Exception {
+  public List<Module> modules(List<Annotation> annotations) {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
 
-    List<Module> modules = new ArrayList();
+    List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(mongoTypeModule(annotations));
-    modules.add(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(HPersistence.class).to(MongoPersistence.class);
-      }
-    });
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
@@ -62,7 +55,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       }
     });
     modules.addAll(new TestMongoModule().cumulativeDependencies());
-    modules.add(new CIManagerServiceModule(null, null));
+    modules.addAll(new CIManagerServiceModule(CIManagerConfiguration.builder().build(), null).cumulativeDependencies());
     return modules;
   }
 

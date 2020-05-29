@@ -1,10 +1,7 @@
 package software.wings.service.impl.ci;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.common.CICommonPodConstants.NAMESPACE;
-import static software.wings.common.CICommonPodConstants.POD_NAME;
 import static software.wings.common.CICommonPodConstants.STEP_EXEC;
-import static software.wings.common.CICommonPodConstants.STEP_EXEC_WORKING_DIR;
 
 import com.google.inject.Inject;
 
@@ -50,11 +47,10 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
   @Inject private SecretManager secretManager;
   @Inject private DelegateService delegateService;
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
-  private static final String BRANCH = "master";
 
   @Override
-  public K8sTaskExecutionResponse setBuildEnv(
-      String k8ConnectorName, String gitConnectorName, CIK8PodParams<CIK8ContainerParams> podParams) {
+  public K8sTaskExecutionResponse setBuildEnv(String k8ConnectorName, String gitConnectorName, String branchName,
+      CIK8PodParams<CIK8ContainerParams> podParams) {
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(ACCOUNT_ID, gitConnectorName);
     GitFetchFilesConfig gitFetchFilesConfig = null;
     if (cloudProvider != null) {
@@ -62,7 +58,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
       List<EncryptedDataDetail> gitEncryptedDataDetails = secretManager.getEncryptionDetails(gitConfig);
       gitFetchFilesConfig = GitFetchFilesConfig.builder()
                                 .encryptedDataDetails(gitEncryptedDataDetails)
-                                .gitFileConfig(GitFileConfig.builder().branch(BRANCH).build())
+                                .gitFileConfig(GitFileConfig.builder().branch(branchName).build())
                                 .gitConfig(gitConfig)
                                 .build();
     }
@@ -78,10 +74,10 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
 
     CIK8PodParams<CIK8ContainerParams> podParamsWithGitDetails =
         CIK8PodParams.<CIK8ContainerParams>builder()
-            .name(POD_NAME)
-            .namespace(NAMESPACE)
+            .name(podParams.getName())
+            .namespace(podParams.getNamespace())
             .stepExecVolumeName(STEP_EXEC)
-            .stepExecWorkingDir(STEP_EXEC_WORKING_DIR)
+            .stepExecWorkingDir(podParams.getStepExecWorkingDir())
             .gitFetchFilesConfig(gitFetchFilesConfig)
             .containerParamsList(podParams.getContainerParamsList())
             .build();
@@ -154,7 +150,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
   }
 
   @Override
-  public K8sTaskExecutionResponse cleanupEnv(String k8ConnectorName) {
+  public K8sTaskExecutionResponse cleanupEnv(String k8ConnectorName, String namespace, String podName) {
     SettingAttribute googleCloud = settingsService.getSettingAttributeByName(ACCOUNT_ID, k8ConnectorName);
     KubernetesClusterConfig kubernetesClusterConfig = null;
     List<EncryptedDataDetail> encryptedDataDetails = null;
@@ -176,8 +172,8 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
                         .parameters(new Object[] {CIK8CleanupTaskParams.builder()
                                                       .encryptionDetails(encryptedDataDetails)
                                                       .kubernetesConfig(kubernetesConfig)
-                                                      .podName(POD_NAME)
-                                                      .namespace(NAMESPACE)
+                                                      .podName(podName)
+                                                      .namespace(namespace)
                                                       .build()})
                         .timeout(TimeUnit.SECONDS.toMillis(60))
                         .build())
