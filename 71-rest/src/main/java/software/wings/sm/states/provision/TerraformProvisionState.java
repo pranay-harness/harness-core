@@ -117,7 +117,6 @@ public abstract class TerraformProvisionState extends State {
   private static final String WORKSPACE_KEY = "tf_workspace";
   private static final String ENCRYPTED_VARIABLES_KEY = "encrypted_variables";
   private static final String ENCRYPTED_BACKEND_CONFIGS_KEY = "encrypted_backend_configs";
-  private static final int DEFAULT_TERRAFORM_ASYNC_CALL_TIMEOUT = 30 * 60 * 1000; // 10 minutes
 
   @Inject private transient AppService appService;
   @Inject private transient ActivityService activityService;
@@ -165,12 +164,6 @@ public abstract class TerraformProvisionState extends State {
 
   protected abstract TerraformCommandUnit commandUnit();
   protected abstract TerraformCommand command();
-
-  @Attributes(title = "Timeout (ms)")
-  @Override
-  public Integer getTimeoutMillis() {
-    return DEFAULT_TERRAFORM_ASYNC_CALL_TIMEOUT;
-  }
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
