@@ -745,7 +745,10 @@ public class HelmDeployState extends State {
 
           break;
         case HelmChartRepo:
-          applicationManifestUtils.applyEnvGlobalHelmChartOverride(appManifest, helmOverrideManifestMap);
+          if (helmOverrideManifestMap.containsKey(K8sValuesLocation.EnvironmentGlobal)) {
+            applicationManifestUtils.applyK8sValuesLocationBasedHelmChartOverride(
+                appManifest, helmOverrideManifestMap, K8sValuesLocation.EnvironmentGlobal);
+          }
           if (appManifest.getHelmChartConfig() == null) {
             helmChartSpecification = null;
           } else if (isBlank(appManifest.getHelmChartConfig().getConnectorId())) {
@@ -1220,7 +1223,10 @@ public class HelmDeployState extends State {
       return helmValuesFetchTaskParameters;
     }
 
-    applicationManifestUtils.applyEnvGlobalHelmChartOverride(applicationManifest, helmOverrideManifestMap);
+    if (helmOverrideManifestMap.containsKey(K8sValuesLocation.EnvironmentGlobal)) {
+      applicationManifestUtils.applyK8sValuesLocationBasedHelmChartOverride(
+          applicationManifest, helmOverrideManifestMap, K8sValuesLocation.EnvironmentGlobal);
+    }
 
     helmValuesFetchTaskParameters.setHelmChartConfigTaskParams(
         helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest));

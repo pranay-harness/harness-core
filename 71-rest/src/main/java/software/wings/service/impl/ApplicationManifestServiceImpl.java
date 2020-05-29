@@ -635,10 +635,6 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException("Helm repository cannot be empty.", USER);
     }
 
-    if (isBlank(helmChartConfig.getChartName())) {
-      throw new InvalidRequestException("Chart name cannot be empty.", USER);
-    }
-
     if (isNotBlank(helmChartConfig.getChartUrl())) {
       throw new InvalidRequestException("Chart url cannot be used.", USER);
     }
