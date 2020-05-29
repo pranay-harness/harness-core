@@ -33,9 +33,10 @@ import java.net.URL;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -47,6 +48,7 @@ public class SplunkDataCollector implements LogDataCollector<SplunkDataCollectio
   private static final FastDateFormat rfc3339 =
       FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC"));
   private static final int HTTP_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(25);
+  private static final int HOST_BATCH_SIZE = 5;
 
   private SplunkDataCollectionInfoV2 splunkDataCollectionInfo;
   private DataCollectionExecutionContext dataCollectionExecutionContext;
@@ -61,20 +63,20 @@ public class SplunkDataCollector implements LogDataCollector<SplunkDataCollectio
 
   @Override
   public int getHostBatchSize() {
-    return 1;
+    return HOST_BATCH_SIZE;
   }
   @Override
-  public List<LogElement> fetchLogs(List<String> hostBatch) throws DataCollectionException {
-    Preconditions.checkArgument(hostBatch.size() == 1);
-    return fetchLogs(Optional.of(hostBatch.get(0)));
+  public List<LogElement> fetchLogs(List<String> hostBatch) {
+    Preconditions.checkArgument(
+        hostBatch.size() <= getHostBatchSize(), "hostBatch size can not be greater than %s", getHostBatchSize());
+    return fetchLogsForHosts(hostBatch);
   }
 
   @Override
   public List<LogElement> fetchLogs() throws DataCollectionException {
-    return fetchLogs(Optional.empty());
+    return fetchLogsForHosts(Collections.emptyList());
   }
-
-  public List<LogElement> fetchLogs(Optional<String> host) {
+  private List<LogElement> fetchLogsForHosts(List<String> host) {
     Service splunkService = initSplunkService(splunkDataCollectionInfo.getSplunkConfig());
     String splunkQuery = getSplunkQuery(splunkDataCollectionInfo.getQuery(),
         splunkDataCollectionInfo.getHostnameField(), host, splunkDataCollectionInfo.isAdvancedQuery());
@@ -225,15 +227,23 @@ public class SplunkDataCollector implements LogDataCollector<SplunkDataCollectio
     }
   }
 
-  private String getSplunkQuery(String query, String hostNameField, Optional<String> host, boolean isAdvancedQuery) {
-    String searchQuery = isAdvancedQuery ? query + " " : "search " + query + " ";
-    if (host.isPresent()) {
-      searchQuery += hostNameField + " = " + host.get();
+  private String getSplunkQuery(String query, String hostNameField, List<String> hosts, boolean isAdvancedQuery) {
+    StringBuilder searchQuery = new StringBuilder(200);
+    if (isAdvancedQuery) {
+      searchQuery.append(query).append(' ');
+    } else {
+      searchQuery.append("search ").append(query).append(' ');
     }
-    searchQuery += " | bin _time span=1m | cluster t=0.9999 showcount=t labelonly=t"
-        + "| table _time, _raw,cluster_label, " + hostNameField + " | "
-        + "stats latest(_raw) as _raw count as cluster_count by _time,cluster_label," + hostNameField;
-    return searchQuery;
+    StringJoiner stringJoiner = new StringJoiner(" OR ");
+    for (String host : hosts) {
+      stringJoiner.add(hostNameField + "=" + host);
+    }
+    searchQuery.append(stringJoiner.toString())
+        .append("| bin _time span=1m | cluster t=0.9999 showcount=t labelonly=t| table _time, _raw,cluster_label, ")
+        .append(hostNameField)
+        .append(" | stats latest(_raw) as _raw count as cluster_count by _time,cluster_label,")
+        .append(hostNameField);
+    return searchQuery.toString();
   }
 
   private String getDateFormatTime(long time) {

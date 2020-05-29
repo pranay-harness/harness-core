@@ -2,12 +2,17 @@ package software.wings.delegatetasks.cv;
 
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+
+import com.google.common.collect.Lists;
 
 import com.splunk.Job;
 import com.splunk.Service;
@@ -29,7 +34,6 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 
 public class SplunkDataCollectorTest extends CategoryTest {
   private SplunkConfig config;
@@ -72,14 +76,61 @@ public class SplunkDataCollectorTest extends CategoryTest {
     when(job.getResults(any())).thenReturn(getSplunkJsonResponseInputStream());
     ThirdPartyApiCallLog thirdPartyApiCallLog = mock(ThirdPartyApiCallLog.class);
     when(dataCollectionExecutionContext.createApiCallLog()).thenReturn(thirdPartyApiCallLog);
-    List<LogElement> logElements = splunkDataCollector.fetchLogs(Optional.empty());
+    List<LogElement> logElements = splunkDataCollector.fetchLogs();
+    verify(splunkDataCollector)
+        .createSearchJob(any(),
+            eq("search *exception* | bin _time span=1m | cluster t=0.9999 showcount=t labelonly=t| table _time, _raw,cluster_label, host | stats latest(_raw) as _raw count as cluster_count by _time,cluster_label,host"),
+            any(), any());
     assertThat(logElements.size()).isEqualTo(2);
     assertThat(logElements.get(0).getHost()).isEqualTo("todo-app-with-verification-todo-app-qa-3-5b7d99ccf9-2mr9x");
-    assertThat(logElements.get(1).getHost()).isEqualTo("todo-app-with-verification-todo-app-qa-3-5b7d99ccf9-2mr9x");
+    assertThat(logElements.get(1).getHost()).isEqualTo("todo-app-with-verification-todo-app-qa-4-5b7d99ccf9-2mr9x");
     assertThat(logElements.get(0).getClusterLabel()).isEqualTo("1");
     assertThat(logElements.get(1).getClusterLabel()).isEqualTo("2");
     assertThat(logElements.get(0).getLogMessage()).isEqualTo("test log message with exception cluster 1");
     assertThat(logElements.get(1).getLogMessage()).isEqualTo("test log message with exception cluster 2");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testFetchLogs_withHost() {
+    DataCollectionExecutionContext dataCollectionExecutionContext = mock(DataCollectionExecutionContext.class);
+    when(dataCollectionExecutionContext.getActivityLogger()).thenReturn(mock(Logger.class));
+    SplunkDataCollectionInfoV2 splunkDataCollectionInfoV2 = createDataCollectionInfo();
+    splunkDataCollector.init(dataCollectionExecutionContext, splunkDataCollectionInfoV2);
+    Service service = mock(Service.class);
+    doReturn(service).when(splunkDataCollector).initSplunkServiceWithToken(config);
+    Job job = mock(Job.class);
+    doReturn(job).when(splunkDataCollector).createSearchJob(any(), any(), any(), any());
+    when(job.getResults(any())).thenReturn(getSplunkJsonResponseInputStream());
+    ThirdPartyApiCallLog thirdPartyApiCallLog = mock(ThirdPartyApiCallLog.class);
+    when(dataCollectionExecutionContext.createApiCallLog()).thenReturn(thirdPartyApiCallLog);
+    List<LogElement> logElements =
+        splunkDataCollector.fetchLogs(Lists.newArrayList("todo-app-with-verification-todo-app-qa-3-5b7d99ccf9-2mr9x",
+            "todo-app-with-verification-todo-app-qa-4-5b7d99ccf9-2mr9x"));
+    verify(splunkDataCollector)
+        .createSearchJob(any(),
+            eq("search *exception* host=todo-app-with-verification-todo-app-qa-3-5b7d99ccf9-2mr9x OR host=todo-app-with-verification-todo-app-qa-4-5b7d99ccf9-2mr9x| bin _time span=1m | cluster t=0.9999 showcount=t labelonly=t| table _time, _raw,cluster_label, host | stats latest(_raw) as _raw count as cluster_count by _time,cluster_label,host"),
+            any(), any());
+    assertThat(logElements.size()).isEqualTo(2);
+    assertThat(logElements.get(0).getHost()).isEqualTo("todo-app-with-verification-todo-app-qa-3-5b7d99ccf9-2mr9x");
+    assertThat(logElements.get(1).getHost()).isEqualTo("todo-app-with-verification-todo-app-qa-4-5b7d99ccf9-2mr9x");
+    assertThat(logElements.get(0).getClusterLabel()).isEqualTo("1");
+    assertThat(logElements.get(1).getClusterLabel()).isEqualTo("2");
+    assertThat(logElements.get(0).getLogMessage()).isEqualTo("test log message with exception cluster 1");
+    assertThat(logElements.get(1).getLogMessage()).isEqualTo("test log message with exception cluster 2");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testFetchLogs_withHostWhenBatchSizeIdGreaterThen5() {
+    DataCollectionExecutionContext dataCollectionExecutionContext = mock(DataCollectionExecutionContext.class);
+    when(dataCollectionExecutionContext.getActivityLogger()).thenReturn(mock(Logger.class));
+    SplunkDataCollectionInfoV2 splunkDataCollectionInfoV2 = createDataCollectionInfo();
+    splunkDataCollector.init(dataCollectionExecutionContext, splunkDataCollectionInfoV2);
+    assertThatThrownBy(() -> splunkDataCollector.fetchLogs(Lists.newArrayList("1", "2", "3", "4", "5", "6")))
+        .hasMessage("hostBatch size can not be greater than 5");
   }
 
   private InputStream getSplunkJsonResponseInputStream() {
@@ -119,7 +170,7 @@ public class SplunkDataCollectorTest extends CategoryTest {
         + "    {\n"
         + "      \"_time\": \"2019-08-20T10:25:00.000+00:00\",\n"
         + "      \"cluster_label\": \"2\",\n"
-        + "      \"host\": \"todo-app-with-verification-todo-app-qa-3-5b7d99ccf9-2mr9x\",\n"
+        + "      \"host\": \"todo-app-with-verification-todo-app-qa-4-5b7d99ccf9-2mr9x\",\n"
         + "      \"_raw\": \"test log message with exception cluster 2\",\n"
         + "      \"cluster_count\": \"1\"\n"
         + "    }\n"
