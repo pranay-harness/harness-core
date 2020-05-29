@@ -378,10 +378,6 @@ public class AccountServiceTest extends WingsBaseTest {
     String accountId = wingsPersistence.save(anAccount().withCompanyName(HARNESS_NAME).build());
     accountService.delete(accountId);
     assertThat(wingsPersistence.get(Account.class, accountId)).isNull();
-    verify(appService).deleteByAccountId(accountId);
-    verify(settingsService).deleteByAccountId(accountId);
-    verify(profileService).deleteByAccountId(accountId);
-    verify(templateGalleryService).deleteByAccountId(accountId);
   }
 
   @Test

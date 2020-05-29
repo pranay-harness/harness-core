@@ -1,7 +1,12 @@
 package software.wings.service.impl;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
+
 import io.harness.exception.UnknownArtifactStreamTypeException;
 import lombok.extern.slf4j.Slf4j;
+import org.reflections.Reflections;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.service.intfc.AcrBuildService;
 import software.wings.service.intfc.AmazonS3BuildService;
@@ -22,7 +27,11 @@ import software.wings.service.intfc.SmbBuildService;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service class locator for all the artifact streams.
@@ -32,7 +41,11 @@ import java.util.List;
  * @author rktummala on 08/17/17
  */
 @Slf4j
+@Singleton
 public class ServiceClassLocator {
+  @Inject Injector injector;
+  private Map<Class, List> cache = new ConcurrentHashMap<>();
+
   public Class<? extends BuildService> getBuildServiceClass(String artifactStreamTypeStr) {
     ArtifactStreamType artifactStreamType = ArtifactStreamType.valueOf(artifactStreamTypeStr);
     switch (artifactStreamType) {
@@ -97,5 +110,24 @@ public class ServiceClassLocator {
     }
 
     return descendings;
+  }
+
+  public <T> List<T> descendingServicesForInterface(Class<T> intr) {
+    return cache.computeIfAbsent(intr, k -> {
+      Set<Class<? extends T>> services = new HashSet<>();
+      Reflections harnessReflections = new Reflections("io.harness");
+      services.addAll(harnessReflections.getSubTypesOf(intr));
+
+      Reflections wingsReflections = new Reflections("software.wings");
+      services.addAll(wingsReflections.getSubTypesOf(intr));
+
+      List<T> result = new ArrayList<>();
+      for (Class service : services) {
+        if (service.isInterface()) {
+          result.add((T) injector.getInstance(service));
+        }
+      }
+      return result;
+    });
   }
 }

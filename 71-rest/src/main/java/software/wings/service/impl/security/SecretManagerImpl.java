@@ -53,6 +53,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.EmbeddedUser;
@@ -169,6 +170,7 @@ import java.util.stream.Collectors;
  * Created by rsingh on 10/30/17.
  */
 @Slf4j
+@Singleton
 public class SecretManagerImpl implements SecretManager {
   private static final String ILLEGAL_CHARACTERS = "[~!@#$%^&*'\"/?<>,;.]";
   private static final String URL_ROOT_PREFIX = "//";
