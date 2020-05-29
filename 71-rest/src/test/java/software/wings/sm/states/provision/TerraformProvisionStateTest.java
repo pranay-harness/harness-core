@@ -98,4 +98,23 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     final List<NameValuePair> expected_2 = Arrays.asList(wf_var_1, wf_var_2);
     assertThat(filteredVars_2).isEqualTo(expected_2);
   }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testStateTimeout() {
+    testTimeoutInternal(new ApplyTerraformProvisionState("tf"));
+    testTimeoutInternal(new AdjustTerraformProvisionState("tf"));
+    testTimeoutInternal(new DestroyTerraformProvisionState("tf"));
+    testTimeoutInternal(new TerraformRollbackState("tf"));
+    testTimeoutInternal(new ApplyTerraformState("tf"));
+  }
+
+  private void testTimeoutInternal(TerraformProvisionState state) {
+    state.setTimeoutMillis(null);
+    assertThat(state.getTimeoutMillis()).isNull();
+
+    state.setTimeoutMillis(500);
+    assertThat(state.getTimeoutMillis()).isEqualTo(500);
+  }
 }
