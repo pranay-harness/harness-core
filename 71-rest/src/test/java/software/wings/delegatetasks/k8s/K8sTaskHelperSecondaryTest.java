@@ -1,0 +1,174 @@
+package software.wings.delegatetasks.k8s;
+
+import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.YOGESH;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
+
+import com.google.api.client.util.Charsets;
+import com.google.common.io.Resources;
+import com.google.inject.Inject;
+
+import io.harness.category.element.UnitTests;
+import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.kubectl.Utils;
+import io.harness.k8s.manifest.ManifestHelper;
+import io.harness.k8s.model.KubernetesResource;
+import io.harness.rule.Owner;
+import org.apache.sshd.common.file.util.MockPath;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.zeroturnaround.exec.ProcessOutput;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.StartedProcess;
+import software.wings.WingsBaseTest;
+import software.wings.beans.command.ExecutionLogCallback;
+
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+/*
+ * Put All tests that use powermock here
+ */
+
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({Utils.class, K8sTaskHelper.class})
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
+public class K8sTaskHelperSecondaryTest extends WingsBaseTest {
+  @Mock private Process process;
+  @Mock private StartedProcess startedProcess;
+  @Mock private ExecutionLogCallback executionLogCallback;
+  @Inject @InjectMocks private K8sTaskHelper helper;
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGenerateTruncatedFileListForLogging() throws Exception {
+    mockStatic(Files.class);
+    when(Files.isRegularFile(any(Path.class))).thenReturn(true);
+    MockPath basePath = new MockPath("foo");
+    String loggedFiles;
+
+    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(0, "file").stream());
+    assertThat(loggedFiles).isEmpty();
+    assertThat(loggedFiles).doesNotContain("..more");
+
+    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(1, "file").stream());
+    assertThat(loggedFiles).isNotEmpty();
+    assertThat(loggedFiles).doesNotContain("..more");
+
+    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(100, "file").stream());
+    assertThat(loggedFiles).isNotEmpty();
+    assertThat(loggedFiles).doesNotContain("..more");
+
+    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(101, "file").stream());
+    assertThat(loggedFiles).isNotEmpty();
+    assertThat(loggedFiles).contains("..1 more");
+
+    loggedFiles = helper.generateTruncatedFileListForLogging(basePath, getNFilePathsWithSuffix(199, "file").stream());
+    assertThat(loggedFiles).isNotEmpty();
+    assertThat(loggedFiles).contains("..99 more");
+  }
+
+  private List<Path> getNFilePathsWithSuffix(int n, String suffix) {
+    List<Path> paths = new ArrayList<>();
+    for (int i = 0; i < n; i++) {
+      Path mockPath = mock(Path.class);
+      paths.add(mockPath);
+      when(mockPath.relativize(any(Path.class))).thenAnswer(invocationOnMock -> new MockPath("foo"));
+    }
+    return paths;
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForDeployment() throws Exception {
+    setupForDoStatusCheckForAllResources();
+
+    doStatusCheck("/k8s/deployment.yaml",
+        "kubectl --kubeconfig=config-path rollout status Deployment/nginx-deployment --watch=true", false);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForAllResourcesForDeployment() throws Exception {
+    setupForDoStatusCheckForAllResources();
+
+    doStatusCheck("/k8s/deployment.yaml",
+        "kubectl --kubeconfig=config-path rollout status Deployment/nginx-deployment --watch=true", true);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForDC() throws Exception {
+    setupForDoStatusCheckForAllResources();
+
+    doStatusCheck("/k8s/deployment-config.yaml",
+        "oc --kubeconfig=config-path rollout status DeploymentConfig/test-dc --namespace=default --watch=true", false);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testDoStatusCheckForAllResourcesForDC() throws Exception {
+    setupForDoStatusCheckForAllResources();
+
+    doStatusCheck("/k8s/deployment-config.yaml",
+        "oc --kubeconfig=config-path rollout status DeploymentConfig/test-dc --namespace=default --watch=true", true);
+  }
+
+  private void setupForDoStatusCheckForAllResources() throws Exception {
+    PowerMockito.mockStatic(Utils.class);
+    ProcessResult processResult = new ProcessResult(0, new ProcessOutput(" ".getBytes()));
+    when(Utils.executeScript(anyString(), anyString(), any(), any())).thenReturn(processResult);
+
+    when(Utils.encloseWithQuotesIfNeeded("kubectl")).thenReturn("kubectl");
+    when(Utils.encloseWithQuotesIfNeeded("oc")).thenReturn("oc");
+    when(Utils.encloseWithQuotesIfNeeded("config-path")).thenReturn("config-path");
+
+    when(process.destroyForcibly()).thenReturn(process);
+    when(Utils.startScript(any(), any(), any(), any())).thenReturn(startedProcess);
+    when(startedProcess.getProcess()).thenReturn(process);
+  }
+
+  private void doStatusCheck(String manifestFilePath, String expectedOutput, boolean allResources) throws Exception {
+    URL url = this.getClass().getResource(manifestFilePath);
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = ManifestHelper.processYaml(fileContents).get(0);
+
+    K8sDelegateTaskParams k8sDelegateTaskParams =
+        K8sDelegateTaskParams.builder().kubectlPath("kubectl").ocPath("oc").kubeconfigPath("config-path").build();
+    Kubectl client = Kubectl.client("kubectl", "config-path");
+
+    if (allResources) {
+      helper.doStatusCheckForAllResources(
+          client, Arrays.asList(resource.getResourceId()), k8sDelegateTaskParams, "default", executionLogCallback);
+    } else {
+      helper.doStatusCheck(client, resource.getResourceId(), k8sDelegateTaskParams, executionLogCallback);
+    }
+
+    ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+    PowerMockito.verifyStatic(Utils.class);
+    Utils.executeScript(any(), captor.capture(), any(), any());
+    assertThat(captor.getValue()).isEqualTo(expectedOutput);
+  }
+}

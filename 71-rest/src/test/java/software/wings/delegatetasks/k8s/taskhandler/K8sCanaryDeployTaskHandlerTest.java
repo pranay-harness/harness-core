@@ -23,7 +23,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.Log.LogLevel.ERROR;
-import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DAEMON_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_DIRECT_APPLY_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
@@ -41,8 +40,6 @@ import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.rule.Owner;
-import org.apache.commons.io.FileUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -57,6 +54,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
+import software.wings.delegatetasks.k8s.K8sTestHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sCanaryDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
@@ -65,8 +63,6 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
-import java.io.File;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -90,21 +86,8 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
   @Before
   public void setup() throws Exception {
     releaseHistory = ReleaseHistory.createNew();
-    File yamlFile = null;
-    try {
-      yamlFile =
-          new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + deploymentYaml).toURI());
-    } catch (URISyntaxException e) {
-      Assertions.fail("Unable to find yaml file " + deploymentYaml);
-    }
-    assertThat(yamlFile).isNotNull();
-    String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
-    deployment =
-        KubernetesResource.builder()
-            .spec(yamlString)
-            .resourceId(
-                KubernetesResourceId.builder().namespace("default").kind("Deployment").name("nginx-deployment").build())
-            .build();
+    deployment = K8sTestHelper.deployment();
+
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(
