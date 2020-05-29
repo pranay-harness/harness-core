@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.eraro.ErrorCode.JIRA_ERROR;
 import static software.wings.delegatetasks.jira.JiraAction.CHECK_APPROVAL;
 import static software.wings.delegatetasks.jira.JiraAction.FETCH_ISSUE;
 import static software.wings.service.ApprovalUtils.checkApproval;
@@ -11,6 +12,9 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.eraro.Level;
+import io.harness.exception.HarnessJiraException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +28,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.beans.jira.JiraTaskParameters;
+import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
@@ -79,15 +84,35 @@ public class JiraHelperService {
                                               .build())
                                     .build();
 
-    JiraExecutionData jiraExecutionData;
     try {
-      jiraExecutionData = delegateService.executeTask(delegateTask);
-    } catch (Exception e) {
-      throw new WingsException("Unexpected error during authentication to JIRA server", WingsException.USER);
-    }
+      ResponseData responseData = delegateService.executeTask(delegateTask);
+      if (responseData instanceof RemoteMethodReturnValueData) {
+        RemoteMethodReturnValueData remoteMethodReturnValueData = (RemoteMethodReturnValueData) responseData;
+        if (remoteMethodReturnValueData.getException() instanceof InvalidRequestException) {
+          throw(InvalidRequestException)(remoteMethodReturnValueData.getException());
+        } else {
+          throw new HarnessJiraException(
+              "Unexpected error during authentication to JIRA server " + remoteMethodReturnValueData.getReturnValue(),
+              null, JIRA_ERROR, Level.ERROR, WingsException.USER, null);
+        }
+      } else if (responseData instanceof JiraExecutionData) {
+        JiraExecutionData jiraExecutionData = (JiraExecutionData) responseData;
 
-    if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
-      throw new WingsException("Failed to Authenticate with JIRA Server.", WingsException.USER);
+        if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
+          throw new HarnessJiraException(
+              "Failed to Authenticate with JIRA Server. " + jiraExecutionData.getErrorMessage(), null, JIRA_ERROR,
+              Level.ERROR, WingsException.USER, null);
+        }
+      } else {
+        logger.error("Unexpected error during authentication to JIRA server " + responseData);
+        throw new HarnessJiraException("Unexpected error during authentication to JIRA server.", null, JIRA_ERROR,
+            Level.ERROR, WingsException.USER, null);
+      }
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new HarnessJiraException("Unexpected error during authentication to JIRA server " + e.getMessage(), e,
+          JIRA_ERROR, Level.ERROR, WingsException.USER, null);
     }
   }
 
