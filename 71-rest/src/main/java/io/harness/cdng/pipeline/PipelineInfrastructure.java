@@ -16,6 +16,7 @@ public class PipelineInfrastructure implements Infrastructure, Outcome {
   private InfraDefinition infraDefinition;
   private List<Step> steps;
   private List<Step> rollbackSteps;
+  private String previousStageIdentifier;
 
   @NotNull
   @Override
