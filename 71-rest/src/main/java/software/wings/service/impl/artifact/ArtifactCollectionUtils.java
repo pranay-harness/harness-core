@@ -25,6 +25,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
+import static software.wings.expression.SecretFunctor.Mode.CASCADING;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 
@@ -491,6 +492,8 @@ public class ArtifactCollectionUtils {
             .managerDecryptionService(managerDecryptionService)
             .secretManager(secretManager)
             .accountId(customArtifactStream.getAccountId())
+            .appId(customArtifactStream.getAppId())
+            .mode(CASCADING)
             .build());
 
     // Find the FETCH VERSION Script from artifact stream

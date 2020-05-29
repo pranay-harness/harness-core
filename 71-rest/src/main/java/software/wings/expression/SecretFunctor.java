@@ -23,6 +23,11 @@ import java.util.List;
 @OwnedBy(CDC)
 @Builder
 public class SecretFunctor extends LateBindingMap {
+  public enum Mode {
+    ALTERNATING,
+    CASCADING,
+  }
+  private Mode mode;
   private FeatureFlagService featureFlagService;
   private ManagerDecryptionService managerDecryptionService;
   private SecretManager secretManager;
@@ -40,9 +45,17 @@ public class SecretFunctor extends LateBindingMap {
       }
     }
 
-    EncryptedData encryptedData = appId == null || GLOBAL_APP_ID.equals(appId)
-        ? secretManager.getSecretMappedToAccountByName(accountId, secretName)
-        : secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretName);
+    EncryptedData encryptedData = null;
+    if (mode == null || mode == Mode.ALTERNATING) {
+      encryptedData = appId == null || GLOBAL_APP_ID.equals(appId)
+          ? secretManager.getSecretMappedToAccountByName(accountId, secretName)
+          : secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretName);
+    } else if (mode == Mode.CASCADING) {
+      encryptedData = secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretName);
+      if (encryptedData == null) {
+        encryptedData = secretManager.getSecretMappedToAccountByName(accountId, secretName);
+      }
+    }
     if (encryptedData == null) {
       throw new InvalidRequestException("No secret found with name + [" + secretName + "]", USER);
     }
