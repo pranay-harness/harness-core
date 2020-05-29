@@ -7,12 +7,14 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.common.VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -95,6 +97,26 @@ public class LogDataCollectionTaskTest extends WingsBaseTest {
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
     verify(dataCollectionService).executeParrallel(captor.capture());
     assertThat(captor.getValue().size()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testFetchLog_calledForEachHostBatchParallelly() throws DataCollectionException, IOException {
+    LogDataCollectionInfoV2 logDataCollectionInfo = createLogDataCollectionInfo();
+    when(logDataCollector.getHostBatchSize()).thenReturn(2);
+    when(logDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1", "host2", "host3"));
+    Instant now = Instant.now();
+    when(logDataCollectionInfo.getStartTime()).thenReturn(now.minus(10, ChronoUnit.MINUTES));
+    when(logDataCollectionInfo.getEndTime()).thenReturn(now);
+    logDataCollectionTask.collectAndSaveData(logDataCollectionInfo);
+    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+    verify(dataCollectionService).executeParrallel(captor.capture());
+    ArgumentCaptor<List> hostCapture = ArgumentCaptor.forClass(List.class);
+    verify(logDataCollector, times(2)).fetchLogs(hostCapture.capture());
+    assertThat(captor.getValue().size()).isEqualTo(2);
+    assertThat(hostCapture.getAllValues().get(0)).isEqualTo(Lists.newArrayList("host1", "host3"));
+    assertThat(hostCapture.getAllValues().get(1)).isEqualTo(Lists.newArrayList("host2"));
   }
 
   @Test
