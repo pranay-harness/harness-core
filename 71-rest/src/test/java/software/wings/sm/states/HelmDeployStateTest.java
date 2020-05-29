@@ -15,7 +15,6 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
@@ -390,7 +389,8 @@ public class HelmDeployStateTest extends WingsBaseTest {
     executionResponse = helmDeployState.execute(context);
     assertStateExecutionResponse(executionResponse);
 
-    verify(applicationManifestUtils, times(2)).applyEnvGlobalHelmChartOverride(eq(applicationManifest), any(Map.class));
+    verify(applicationManifestUtils, times(0))
+        .applyK8sValuesLocationBasedHelmChartOverride(any(), any(Map.class), any());
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(2)).queueTask(captor.capture());
     List<DelegateTask> delegateTasks = captor.getAllValues();
