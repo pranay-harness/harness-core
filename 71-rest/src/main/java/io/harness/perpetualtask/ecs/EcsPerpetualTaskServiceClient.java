@@ -62,16 +62,6 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
   }
 
   @Override
-  public boolean reset(String accountId, String taskId) {
-    return perpetualTaskService.resetTask(accountId, taskId);
-  }
-
-  @Override
-  public boolean delete(String accountId, String taskId) {
-    return perpetualTaskService.deleteTask(accountId, taskId);
-  }
-
-  @Override
   public EcsPerpetualTaskParams getTaskParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
     logger.info("Inside get task params for ecs perpetual task {} ", clientParams);

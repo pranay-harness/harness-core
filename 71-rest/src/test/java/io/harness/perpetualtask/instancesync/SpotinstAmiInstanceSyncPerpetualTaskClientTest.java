@@ -101,24 +101,6 @@ public class SpotinstAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTes
   @Test
   @Owner(developers = OwnerRule.ABOSII)
   @Category(UnitTests.class)
-  public void resetTask() {
-    client.reset(ACCOUNT_ID, TASK_ID);
-
-    verify(perpetualTaskService, times(1)).resetTask(ACCOUNT_ID, TASK_ID);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.ABOSII)
-  @Category(UnitTests.class)
-  public void deleteTask() {
-    client.delete(ACCOUNT_ID, TASK_ID);
-
-    verify(perpetualTaskService, times(1)).deleteTask(ACCOUNT_ID, TASK_ID);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.ABOSII)
-  @Category(UnitTests.class)
   public void getTaskParams() {
     final SpotinstAmiInstanceSyncPerpetualTaskParams taskParams =
         (SpotinstAmiInstanceSyncPerpetualTaskParams) client.getTaskParams(getPerpetualTaskClientContext());

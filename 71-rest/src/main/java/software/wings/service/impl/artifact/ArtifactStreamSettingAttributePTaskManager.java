@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
+import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.FeatureName;
@@ -29,6 +30,7 @@ public class ArtifactStreamSettingAttributePTaskManager implements SettingAttrib
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private PerpetualTaskService perpetualTaskService;
 
   @Override
   public void onSaved(SettingAttribute settingAttribute) {
@@ -59,7 +61,7 @@ public class ArtifactStreamSettingAttributePTaskManager implements SettingAttrib
 
   private void resetPerpetualTask(ArtifactStream artifactStream) {
     if (artifactStream.getPerpetualTaskId() != null) {
-      if (!artifactStreamPTaskHelper.reset(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId())) {
+      if (!perpetualTaskService.resetTask(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId())) {
         logger.error(
             format("Unable to reset artifact collection perpetual task: %s", artifactStream.getPerpetualTaskId()));
       }

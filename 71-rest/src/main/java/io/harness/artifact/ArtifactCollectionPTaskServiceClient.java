@@ -53,16 +53,6 @@ public class ArtifactCollectionPTaskServiceClient
   }
 
   @Override
-  public boolean reset(String accountId, String taskId) {
-    return perpetualTaskService.resetTask(accountId, taskId);
-  }
-
-  @Override
-  public boolean delete(String accountId, String taskId) {
-    return perpetualTaskService.deleteTask(accountId, taskId);
-  }
-
-  @Override
   public ArtifactCollectionTaskParams getTaskParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
     String artifactStreamId = clientParams.get(ARTIFACT_STREAM_ID);

@@ -11,10 +11,6 @@ import io.harness.beans.DelegateTask;
 public interface PerpetualTaskServiceClient<T extends PerpetualTaskClientParams> {
   String create(String accountId, T clientParams);
 
-  boolean reset(String accountId, String taskId);
-
-  boolean delete(String accountId, String taskId);
-
   Message getTaskParams(PerpetualTaskClientContext clientContext);
 
   void onTaskStateChange(

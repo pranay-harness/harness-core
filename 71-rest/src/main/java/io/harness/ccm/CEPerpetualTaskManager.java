@@ -146,9 +146,7 @@ public class CEPerpetualTaskManager {
     // reset all the existing perpetual tasks
     if (!isNull(taskIds)) {
       for (String taskId : taskIds) {
-        PerpetualTaskType type = perpetualTaskService.getPerpetualTaskType(taskId);
-        PerpetualTaskServiceClient client = clientRegistry.getClient(type);
-        client.reset(clusterRecord.getAccountId(), taskId);
+        perpetualTaskService.resetTask(clusterRecord.getAccountId(), taskId);
       }
     }
     return true;
@@ -160,9 +158,7 @@ public class CEPerpetualTaskManager {
         Arrays.asList(Optional.ofNullable(clusterRecord.getPerpetualTaskIds()).orElse(new String[0]));
     if (!isNull(taskIds)) {
       for (String taskId : taskIds) {
-        PerpetualTaskType type = perpetualTaskService.getPerpetualTaskType(taskId);
-        PerpetualTaskServiceClient client = clientRegistry.getClient(type);
-        client.delete(clusterRecord.getAccountId(), taskId);
+        perpetualTaskService.deleteTask(clusterRecord.getAccountId(), taskId);
         clusterRecordService.removePerpetualTaskId(clusterRecord, taskId);
       }
     }

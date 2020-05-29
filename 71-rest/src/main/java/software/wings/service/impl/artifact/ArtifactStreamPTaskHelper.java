@@ -11,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionPTaskClientParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
+import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
@@ -27,18 +28,11 @@ import software.wings.service.intfc.ArtifactStreamService;
 public class ArtifactStreamPTaskHelper {
   @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private PerpetualTaskService perpetualTaskService;
 
   private PerpetualTaskServiceClient<ArtifactCollectionPTaskClientParams> getClient() {
     return (PerpetualTaskServiceClient<ArtifactCollectionPTaskClientParams>) clientRegistry.getClient(
         PerpetualTaskType.ARTIFACT_COLLECTION);
-  }
-
-  public boolean reset(String accountId, String taskId) {
-    return getClient().reset(accountId, taskId);
-  }
-
-  public boolean delete(String accountId, String taskId) {
-    return getClient().delete(accountId, taskId);
   }
 
   public void createPerpetualTask(ArtifactStream artifactStream) {
@@ -63,7 +57,7 @@ public class ArtifactStreamPTaskHelper {
         // If artifact stream is not updated, it doesn't know about the perpetual task. So the perpetual task becomes a
         // zombie and is never reset or deleted on config change. It might try to do regular collection along with
         // perpetual task which can lead to race conditions.
-        client.delete(artifactStream.getAccountId(), perpetualTaskId);
+        perpetualTaskService.deleteTask(artifactStream.getAccountId(), perpetualTaskId);
       }
     } catch (Exception ex) {
       // This is background-type operation. Artifact stream can be created but perpetual task creation can fail. We

@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Before;
@@ -42,6 +43,7 @@ public class ArtifactStreamSettingAttributePTaskManagerTest extends CategoryTest
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private PerpetualTaskService perpetualTaskService;
 
   @Inject @InjectMocks ArtifactStreamSettingAttributePTaskManager manager;
 
@@ -71,15 +73,15 @@ public class ArtifactStreamSettingAttributePTaskManagerTest extends CategoryTest
 
     disableFeatureFlag();
     manager.onUpdated(settingAttribute, settingAttribute);
-    verify(artifactStreamPTaskHelper, never()).reset(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, never()).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
     enableFeatureFlag();
     manager.onUpdated(settingAttribute, settingAttribute);
-    verify(artifactStreamPTaskHelper, times(1)).reset(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, times(1)).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
     when(artifactStreamService.listAllBySettingId(SETTING_ID)).thenReturn(Collections.emptyList());
     manager.onUpdated(settingAttribute, settingAttribute);
-    verify(artifactStreamPTaskHelper, times(1)).reset(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, times(1)).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
   }
 
   @Test(expected = Test.None.class)

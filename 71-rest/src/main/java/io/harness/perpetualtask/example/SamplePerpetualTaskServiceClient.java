@@ -23,16 +23,6 @@ public class SamplePerpetualTaskServiceClient implements PerpetualTaskServiceCli
   }
 
   @Override
-  public boolean reset(String accountId, String taskId) {
-    return perpetualTaskService.resetTask(accountId, taskId);
-  }
-
-  @Override
-  public boolean delete(String accountId, String taskId) {
-    return perpetualTaskService.deleteTask(accountId, taskId);
-  }
-
-  @Override
   public SamplePerpetualTaskParams getTaskParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
     return SamplePerpetualTaskParams.newBuilder().setCountry(clientParams.get(COUNTRY_NAME)).build();

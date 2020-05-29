@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
+import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.FeatureName;
@@ -23,6 +24,7 @@ import software.wings.service.intfc.artifact.ArtifactStreamServiceObserver;
 public class ArtifactStreamPTaskManager implements ArtifactStreamServiceObserver {
   @Inject private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private PerpetualTaskService perpetualTaskService;
 
   @Override
   public void onSaved(ArtifactStream artifactStream) {
@@ -44,8 +46,7 @@ public class ArtifactStreamPTaskManager implements ArtifactStreamServiceObserver
 
     try (AutoLogContext ignore1 = new AccountLogContext(currArtifactStream.getAccountId(), OVERRIDE_ERROR);
          AutoLogContext ignore2 = new ArtifactStreamLogContext(currArtifactStream.getUuid(), OVERRIDE_ERROR)) {
-      if (!artifactStreamPTaskHelper.reset(
-              currArtifactStream.getAccountId(), currArtifactStream.getPerpetualTaskId())) {
+      if (!perpetualTaskService.resetTask(currArtifactStream.getAccountId(), currArtifactStream.getPerpetualTaskId())) {
         logger.error(
             format("Unable to reset artifact collection perpetual task: %s", currArtifactStream.getPerpetualTaskId()));
       }
@@ -61,7 +62,7 @@ public class ArtifactStreamPTaskManager implements ArtifactStreamServiceObserver
     if (artifactStream.getPerpetualTaskId() != null) {
       try (AutoLogContext ignore1 = new AccountLogContext(artifactStream.getAccountId(), OVERRIDE_ERROR);
            AutoLogContext ignore2 = new ArtifactStreamLogContext(artifactStream.getUuid(), OVERRIDE_ERROR)) {
-        if (!artifactStreamPTaskHelper.delete(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId())) {
+        if (!perpetualTaskService.deleteTask(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId())) {
           logger.error(
               format("Unable to delete artifact collection perpetual task: %s", artifactStream.getPerpetualTaskId()));
         }

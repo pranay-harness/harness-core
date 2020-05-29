@@ -4,7 +4,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
@@ -12,7 +11,6 @@ import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
-import static software.wings.service.impl.instance.InstanceSyncTestConstants.PERPETUAL_TASK_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -73,22 +71,6 @@ public class AwsAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
                 .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
                 .build(),
             false);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.YOGESH)
-  @Category(UnitTests.class)
-  public void reset() {
-    client.reset(ACCOUNT_ID, PERPETUAL_TASK_ID);
-    verify(perpetualTaskService, times(1)).resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.YOGESH)
-  @Category(UnitTests.class)
-  public void delete() {
-    client.delete(ACCOUNT_ID, PERPETUAL_TASK_ID);
-    verify(perpetualTaskService, times(1)).deleteTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
   }
 
   @Test

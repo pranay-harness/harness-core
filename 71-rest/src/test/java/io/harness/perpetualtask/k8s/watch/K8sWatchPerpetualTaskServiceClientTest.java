@@ -94,12 +94,4 @@ public class K8sWatchPerpetualTaskServiceClientTest extends CategoryTest {
     assertThat(delegateTask).isNotNull();
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
   }
-
-  @Test
-  @Owner(developers = HANTANG)
-  @Category(UnitTests.class)
-  public void testDelete() {
-    k8SWatchPerpetualTaskServiceClient.delete(accountId, taskId);
-    verify(perpetualTaskService).deleteTask(accountId, taskId);
-  }
 }

@@ -96,22 +96,6 @@ public class PcfInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
         .build();
   }
 
-  @Test
-  @Owner(developers = AMAN)
-  @Category(UnitTests.class)
-  public void testReset() {
-    pcfInstanceSyncPerpetualTaskClient.reset(ACCOUNT_ID, TASK_ID);
-    Mockito.verify(perpetualTaskService, Mockito.times(1)).resetTask(ACCOUNT_ID, TASK_ID);
-  }
-
-  @Test
-  @Owner(developers = AMAN)
-  @Category(UnitTests.class)
-  public void testDelete() {
-    pcfInstanceSyncPerpetualTaskClient.delete(ACCOUNT_ID, TASK_ID);
-    Mockito.verify(perpetualTaskService, Mockito.times(1)).deleteTask(ACCOUNT_ID, TASK_ID);
-  }
-
   private PerpetualTaskClientContext getPerpetualTaskClientContext() {
     Map<String, String> clientParamMap = new HashMap<>();
     clientParamMap.put(INFRASTRUCTURE_MAPPING_ID, INFRA_ID);

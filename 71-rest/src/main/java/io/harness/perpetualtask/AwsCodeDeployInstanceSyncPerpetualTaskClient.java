@@ -65,16 +65,6 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskClient
   }
 
   @Override
-  public boolean reset(String accountId, String taskId) {
-    return perpetualTaskService.resetTask(accountId, taskId);
-  }
-
-  @Override
-  public boolean delete(String accountId, String taskId) {
-    return perpetualTaskService.deleteTask(accountId, taskId);
-  }
-
-  @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
     PerpetualTaskData taskData = getPerpetualTaskData(clientContext);
     ByteString filterBytes = ByteString.copyFrom(KryoUtils.asBytes(taskData.getFilters()));
