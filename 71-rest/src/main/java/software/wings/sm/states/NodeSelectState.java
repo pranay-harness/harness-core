@@ -6,6 +6,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.atteo.evo.inflector.English.plural;
@@ -85,7 +86,7 @@ import java.util.stream.Collectors;
 public abstract class NodeSelectState extends State {
   private static final int DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT = 10;
 
-  private int instanceCount;
+  private String instanceCount;
   private InstanceUnitType instanceUnitType = COUNT;
   private boolean specificHosts;
   private List<String> hostNames;
@@ -144,7 +145,7 @@ public abstract class NodeSelectState extends State {
       instancesToAdd = hostNames.size();
       logger.info("Selecting specific hosts: {}", hostNames);
     } else {
-      int instanceCountTotal = getCount(totalAvailableInstances);
+      int instanceCountTotal = getCount(context, totalAvailableInstances);
       if (((ExecutionContextImpl) context).getStateExecutionInstance().getOrchestrationWorkflowType()
           == OrchestrationWorkflowType.ROLLING) {
         instancesToAdd = instanceCountTotal;
@@ -332,13 +333,13 @@ public abstract class NodeSelectState extends State {
     return false;
   }
 
-  private int getCount(int maxInstances) {
+  private int getCount(ExecutionContext context, int maxInstances) {
     if (instanceUnitType == PERCENTAGE) {
-      int percent = Math.min(instanceCount, 100);
+      int percent = Math.min(renderInstanceCount(context), 100);
       int percentInstanceCount = (int) Math.round(percent * maxInstances / 100.0);
       return Math.max(percentInstanceCount, 1);
     } else {
-      return instanceCount;
+      return renderInstanceCount(context);
     }
   }
 
@@ -365,8 +366,8 @@ public abstract class NodeSelectState extends State {
           return null;
         } else {
           msg.append("This phase deploys to ")
-              .append(instanceCount)
-              .append(plural(" instance", instanceCount))
+              .append(renderInstanceCount(context))
+              .append(plural(" instance", renderInstanceCount(context)))
               .append(" (cumulative)");
         }
       }
@@ -413,6 +414,26 @@ public abstract class NodeSelectState extends State {
     return errorMessage;
   }
 
+  @VisibleForTesting
+  int renderInstanceCount(ExecutionContext context) {
+    int count = 0;
+    if (isNotEmpty(instanceCount)) {
+      try {
+        count = Integer.parseInt(context.renderExpression(instanceCount));
+        if (count <= 0) {
+          throw new InvalidRequestException("Count or percent must be specified", WingsException.USER);
+        } else if (instanceUnitType == PERCENTAGE && count > 100) {
+          throw new InvalidRequestException("Percent may not be greater than 100", WingsException.USER);
+        }
+      } catch (NumberFormatException e) {
+        throw new InvalidRequestException(
+            format("Unable to render instance count using the expression: [%s]", instanceCount), e,
+            WingsException.USER);
+      }
+    }
+    return count;
+  }
+
   private List<ServiceInstance> excludeHostsWithTheSameArtifactDeployed(ExecutionContext context, String appId,
       String serviceId, String inframappingId, List<ServiceInstance> serviceInstances) {
     if (isEmpty(serviceInstances)) {
@@ -443,16 +464,8 @@ public abstract class NodeSelectState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFieldMessages = new HashMap<>();
-    if (specificHosts) {
-      if (isEmpty(hostNames)) {
-        invalidFieldMessages.put(WorkflowServiceHelper.SELECT_NODE_NAME, "Hostnames must be specified");
-      }
-    } else {
-      if (instanceCount <= 0) {
-        invalidFieldMessages.put(WorkflowServiceHelper.SELECT_NODE_NAME, "Count or percent must be specified");
-      } else if (instanceUnitType == PERCENTAGE && instanceCount > 100) {
-        invalidFieldMessages.put(WorkflowServiceHelper.SELECT_NODE_NAME, "Percent may not be greater than 100");
-      }
+    if (specificHosts && isEmpty(hostNames)) {
+      invalidFieldMessages.put(WorkflowServiceHelper.SELECT_NODE_NAME, "Hostnames must be specified");
     }
     return invalidFieldMessages;
   }
@@ -484,11 +497,11 @@ public abstract class NodeSelectState extends State {
     this.hostNames = hostNames;
   }
 
-  public int getInstanceCount() {
+  public String getInstanceCount() {
     return instanceCount;
   }
 
-  public void setInstanceCount(int instanceCount) {
+  public void setInstanceCount(String instanceCount) {
     this.instanceCount = instanceCount;
   }
 

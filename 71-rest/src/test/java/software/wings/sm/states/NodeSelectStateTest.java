@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -9,6 +10,7 @@ import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -46,6 +48,7 @@ import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.deployment.InstanceDetails;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -112,6 +115,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Mock private HostService hostService;
 
   @InjectMocks private NodeSelectState nodeSelectState = new DcNodeSelectState("DC_NODE_SELECT");
+  private static final String INSTANCE_COUNT_EXPRESSION = "${workflow.variables.count}";
 
   StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
   AwsInfrastructureMapping awsInfrastructureMapping =
@@ -187,7 +191,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestDonotExcludeHostsWithSameArtifact() {
-    nodeSelectState.setInstanceCount(3);
+    nodeSelectState.setInstanceCount("3");
     PhaseElement phaseElement = PhaseElement.builder()
                                     .infraDefinitionId(INFRA_DEFINITION_ID)
                                     .rollback(false)
@@ -198,6 +202,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.renderExpression("3")).thenReturn("3");
     when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
@@ -225,7 +230,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestDonotExcludeHostsWithSameArtifactForRolling() {
-    nodeSelectState.setInstanceCount(3);
+    nodeSelectState.setInstanceCount("3");
     PhaseElement phaseElement = PhaseElement.builder()
                                     .infraDefinitionId(INFRA_DEFINITION_ID)
                                     .rollback(false)
@@ -236,6 +241,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.renderExpression("3")).thenReturn("3");
     when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
@@ -264,7 +270,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestExcludeHostsForPhysicalSshInfra() {
-    nodeSelectState.setInstanceCount(3);
+    nodeSelectState.setInstanceCount("3");
     PhaseElement phaseElement = PhaseElement.builder()
                                     .infraDefinitionId(INFRA_DEFINITION_ID)
                                     .rollback(false)
@@ -275,6 +281,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.renderExpression("3")).thenReturn("3");
     when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
@@ -306,7 +313,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestExcludeHostsWithSameArtifact() {
-    nodeSelectState.setInstanceCount(3);
+    nodeSelectState.setInstanceCount("3");
     PhaseElement phaseElement = PhaseElement.builder()
                                     .infraDefinitionId(INFRA_DEFINITION_ID)
                                     .rollback(false)
@@ -317,6 +324,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.renderExpression("3")).thenReturn("3");
     when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
@@ -339,7 +347,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldSucceedForPartialPercentageInstances() {
-    nodeSelectState.setInstanceCount(1);
+    nodeSelectState.setInstanceCount("1");
     nodeSelectState.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
     PhaseElement phaseElement = PhaseElement.builder()
                                     .infraDefinitionId(INFRA_DEFINITION_ID)
@@ -349,6 +357,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
                                     .serviceElement(ServiceElement.builder().uuid(generateUuid()).build())
                                     .build();
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(context.renderExpression("1")).thenReturn("1");
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
     when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
         .thenReturn(emptyList());
@@ -380,7 +389,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFailForZeroTotalInstances() {
-    nodeSelectState.setInstanceCount(100);
+    nodeSelectState.setInstanceCount("100");
     nodeSelectState.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
     when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
@@ -388,6 +397,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
         .thenReturn(emptyList());
     when(context.getAppId()).thenReturn(APP_ID);
+    when(context.renderExpression("100")).thenReturn("100");
     when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
@@ -668,5 +678,38 @@ public class NodeSelectStateTest extends WingsBaseTest {
             + "The service infrastructure [null] does not have this host.\n"
             + "\n"
             + "Check whether you've selected a unique set of host names for each phase. ");
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testInstanceCountExpressionRendering() {
+    // Test for instance count
+    nodeSelectState.setInstanceCount(null);
+    nodeSelectState.setInstanceUnitType(InstanceUnitType.COUNT);
+    assertThat(nodeSelectState.renderInstanceCount(context)).isEqualTo(0);
+
+    nodeSelectState.setInstanceCount("2");
+    when(context.renderExpression("2")).thenReturn("2");
+    assertThat(nodeSelectState.renderInstanceCount(context)).isEqualTo(2);
+
+    nodeSelectState.setInstanceCount(INSTANCE_COUNT_EXPRESSION);
+    when(context.renderExpression(INSTANCE_COUNT_EXPRESSION)).thenReturn("150");
+    assertThat(nodeSelectState.renderInstanceCount(context)).isEqualTo(150);
+
+    when(context.renderExpression(INSTANCE_COUNT_EXPRESSION)).thenReturn("0");
+    assertThatThrownBy(() -> nodeSelectState.renderInstanceCount(context)).isInstanceOf(InvalidRequestException.class);
+
+    when(context.renderExpression(INSTANCE_COUNT_EXPRESSION)).thenReturn("Count");
+    assertThatThrownBy(() -> nodeSelectState.renderInstanceCount(context)).isInstanceOf(InvalidRequestException.class);
+
+    // Test for instance percentage
+    nodeSelectState.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
+
+    when(context.renderExpression(INSTANCE_COUNT_EXPRESSION)).thenReturn("50");
+    assertThat(nodeSelectState.renderInstanceCount(context)).isEqualTo(50);
+
+    when(context.renderExpression(INSTANCE_COUNT_EXPRESSION)).thenReturn("101");
+    assertThatThrownBy(() -> nodeSelectState.renderInstanceCount(context)).isInstanceOf(InvalidRequestException.class);
   }
 }
