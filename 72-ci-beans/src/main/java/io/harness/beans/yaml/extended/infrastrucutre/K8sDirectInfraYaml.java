@@ -16,6 +16,11 @@ public class K8sDirectInfraYaml implements Infrastructure {
   private String type;
   private Spec spec;
 
+  @Override
+  public String getPreviousStageIdentifier() {
+    return null; // TODO: this is to unblock broken master. implement the right method
+  }
+
   @Data
   @Builder
   @NoArgsConstructor
