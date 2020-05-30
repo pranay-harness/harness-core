@@ -2,6 +2,9 @@ package io.harness.engine.interrupts;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.interrupts.ExecutionInterruptType.planLevelInterrupts;
+import static io.harness.interrupts.Interrupt.State;
+import static io.harness.interrupts.Interrupt.State.PROCESSING;
+import static io.harness.interrupts.Interrupt.State.REGISTERED;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
@@ -21,6 +24,7 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,7 +62,8 @@ public class InterruptServiceImpl implements InterruptService {
     List<Interrupt> interrupts = new ArrayList<>();
     Query<Interrupt> interruptQuery = hPersistence.createQuery(Interrupt.class, excludeAuthority)
                                           .filter(InterruptKeys.planExecutionId, planExecutionId)
-                                          .filter(InterruptKeys.seized, Boolean.FALSE)
+                                          .field(InterruptKeys.state)
+                                          .in(EnumSet.of(REGISTERED, PROCESSING))
                                           .field(InterruptKeys.type)
                                           .in(planLevelInterrupts())
                                           .order(Sort.descending(InterruptKeys.createdAt));
@@ -71,9 +76,21 @@ public class InterruptServiceImpl implements InterruptService {
   }
 
   @Override
-  public Interrupt seize(String interruptId) {
+  public Interrupt markProcessed(String interruptId, State interruptState) {
     UpdateOperations<Interrupt> updateOps =
-        hPersistence.createUpdateOperations(Interrupt.class).set(InterruptKeys.seized, Boolean.TRUE);
+        hPersistence.createUpdateOperations(Interrupt.class).set(InterruptKeys.state, interruptState);
+    Query<Interrupt> interruptQuery = hPersistence.createQuery(Interrupt.class).filter(InterruptKeys.uuid, interruptId);
+    Interrupt seizedInterrupt = hPersistence.findAndModify(interruptQuery, updateOps, HPersistence.returnNewOptions);
+    if (seizedInterrupt == null) {
+      throw new InvalidRequestException("Cannot mark Interrupt PROCESSED with id :" + interruptId);
+    }
+    return seizedInterrupt;
+  }
+
+  @Override
+  public Interrupt markProcessing(String interruptId) {
+    UpdateOperations<Interrupt> updateOps =
+        hPersistence.createUpdateOperations(Interrupt.class).set(InterruptKeys.state, PROCESSING);
     Query<Interrupt> interruptQuery = hPersistence.createQuery(Interrupt.class).filter(InterruptKeys.uuid, interruptId);
     Interrupt seizedInterrupt = hPersistence.findAndModify(interruptQuery, updateOps, HPersistence.returnNewOptions);
     if (seizedInterrupt == null) {
@@ -83,11 +100,26 @@ public class InterruptServiceImpl implements InterruptService {
   }
 
   @Override
+  public List<Interrupt> fetchAllInterrupts(String planExecutionId) {
+    List<Interrupt> interrupts = new ArrayList<>();
+    Query<Interrupt> interruptQuery = hPersistence.createQuery(Interrupt.class, excludeAuthority)
+                                          .filter(InterruptKeys.planExecutionId, planExecutionId)
+                                          .order(Sort.descending(InterruptKeys.createdAt));
+    try (HIterator<Interrupt> interruptIterator = new HIterator<>(interruptQuery.fetch())) {
+      while (interruptIterator.hasNext()) {
+        interrupts.add(interruptIterator.next());
+      }
+    }
+    return interrupts;
+  }
+
+  @Override
   public List<Interrupt> fetchActiveInterrupts(String planExecutionId) {
     List<Interrupt> interrupts = new ArrayList<>();
     Query<Interrupt> interruptQuery = hPersistence.createQuery(Interrupt.class, excludeAuthority)
                                           .filter(InterruptKeys.planExecutionId, planExecutionId)
-                                          .filter(InterruptKeys.seized, Boolean.FALSE)
+                                          .field(InterruptKeys.state)
+                                          .in(EnumSet.of(REGISTERED, PROCESSING))
                                           .order(Sort.descending(InterruptKeys.createdAt));
     try (HIterator<Interrupt> interruptIterator = new HIterator<>(interruptQuery.fetch())) {
       while (interruptIterator.hasNext()) {

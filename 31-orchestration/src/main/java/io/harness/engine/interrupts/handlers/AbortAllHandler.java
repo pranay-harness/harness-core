@@ -7,6 +7,10 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.execution.status.NodeExecutionStatus.ABORTED;
 import static io.harness.execution.status.NodeExecutionStatus.DISCONTINUING;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
+import static io.harness.interrupts.Interrupt.State.DISCARDED;
+import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
+import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
+import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toList;
 
@@ -18,6 +22,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.engine.AmbianceHelper;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.interrupts.InterruptHandler;
+import io.harness.engine.interrupts.InterruptProcessingFailedException;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
@@ -42,7 +47,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
@@ -77,17 +81,16 @@ public class AbortAllHandler implements InterruptHandler {
       return hPersistence.save(interrupt);
     }
 
-    List<Interrupt> seizedInterrupts = new ArrayList<>();
-    interrupts.forEach(savedInterrupt -> seizedInterrupts.add(interruptService.seize(savedInterrupt.getUuid())));
-    if (seizedInterrupts.stream().allMatch(Interrupt::isSeized)) {
-      return hPersistence.save(interrupt);
-    }
-    throw new InvalidRequestException("Cannot Validate and save Interrupt", USER);
+    interrupts.forEach(savedInterrupt
+        -> interruptService.markProcessed(
+            savedInterrupt.getUuid(), savedInterrupt.getState() == PROCESSING ? PROCESSED_SUCCESSFULLY : DISCARDED));
+    return hPersistence.save(interrupt);
   }
 
   @Override
   public Interrupt handleInterrupt(
       @NonNull @Valid Interrupt interrupt, Ambiance ambiance, List<StepTransput> additionalInputs) {
+    interruptService.markProcessing(interrupt.getUuid());
     if (!markAbortingState(interrupt, NodeExecutionStatus.abortableStatuses())) {
       return interrupt;
     }
@@ -98,13 +101,18 @@ public class AbortAllHandler implements InterruptHandler {
     if (isEmpty(discontinuingNodeExecutions)) {
       logger.warn("ABORT_ALL Interrupt being ignored as no running instance found for planExecutionId: {}",
           interrupt.getUuid());
-      return interruptService.seize(interrupt.getUuid());
+      return interruptService.markProcessed(interrupt.getUuid(), PROCESSED_SUCCESSFULLY);
+    }
+    try {
+      for (NodeExecution discontinuingNodeExecution : discontinuingNodeExecutions) {
+        discontinueMarkedInstance(discontinuingNodeExecution);
+      }
+    } catch (InterruptProcessingFailedException ex) {
+      interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);
+      throw ex;
     }
 
-    for (NodeExecution discontinuingNodeExecution : discontinuingNodeExecutions) {
-      discontinueMarkedInstance(discontinuingNodeExecution);
-    }
-    return interruptService.seize(interrupt.getUuid());
+    return interruptService.markProcessed(interrupt.getUuid(), PROCESSED_SUCCESSFULLY);
   }
 
   private void discontinueMarkedInstance(NodeExecution nodeExecution) {
@@ -138,7 +146,9 @@ public class AbortAllHandler implements InterruptHandler {
       logger.error("Error in discontinuing", e);
     }
     if (!updated) {
-      throw new InvalidRequestException("Abort failed for execution Plan :" + nodeExecution.getPlanExecutionId());
+      throw new InterruptProcessingFailedException(ABORT_ALL,
+          "Abort failed for execution Plan :" + nodeExecution.getPlanExecutionId()
+              + "for NodeExecutionId: " + nodeExecution.getUuid());
     }
   }
 

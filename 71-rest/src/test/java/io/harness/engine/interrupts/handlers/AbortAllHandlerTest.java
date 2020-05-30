@@ -1,6 +1,7 @@
 package io.harness.engine.interrupts.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -57,7 +58,7 @@ public class AbortAllHandlerTest extends WingsBaseTest {
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), ExecutionInstanceStatus.RUNNING);
     Interrupt handledInterrupt = abortAllHandler.registerInterrupt(abortAllInterrupt);
     assertThat(handledInterrupt).isNotNull();
-    assertThat(handledInterrupt.isSeized()).isTrue();
+    assertThat(handledInterrupt.getState()).isEqualTo(PROCESSED_SUCCESSFULLY);
 
     interruptTestHelper.waitForPlanCompletion(execution.getUuid());
     PlanExecution abortedExecution = interruptTestHelper.fetchPlanExecutionStatus(execution.getUuid());
