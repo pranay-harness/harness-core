@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
-public interface EngineRegistrar<K extends RegistryKey, T extends RegistrableEntity<K>> {
+public interface EngineRegistrar<K extends RegistryKey, T extends RegistrableEntity> {
   void register(Set<Pair<K, Class<? extends T>>> registrableEntities);
 
   default void testClassesModule() {

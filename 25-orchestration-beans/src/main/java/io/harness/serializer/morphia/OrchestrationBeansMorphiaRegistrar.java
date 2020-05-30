@@ -10,6 +10,12 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorParameters;
+import io.harness.facilitator.modes.ExecutableResponse;
+import io.harness.facilitator.modes.async.AsyncExecutableResponse;
+import io.harness.facilitator.modes.chain.AsyncChainResponse;
+import io.harness.facilitator.modes.child.ChildExecutableResponse;
+import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
+import io.harness.facilitator.modes.task.AsyncTaskExecutableResponse;
 import io.harness.interrupts.Interrupt;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plan.Plan;
@@ -38,6 +44,7 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Outcome.class);
     set.add(RefObject.class);
     set.add(Task.class);
+    set.add(ExecutableResponse.class);
   }
 
   @Override
@@ -47,5 +54,11 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     };
     h.put("facilitator.DefaultFacilitatorParams", DefaultFacilitatorParams.class);
     h.put("references.OutcomeRefObject", OutcomeRefObject.class);
+
+    h.put("facilitator.modes.async.AsyncExecutableResponse", AsyncExecutableResponse.class);
+    h.put("facilitator.modes.chain.AsyncChainResponse", AsyncChainResponse.class);
+    h.put("facilitator.modes.child.ChildExecutableResponse", ChildExecutableResponse.class);
+    h.put("facilitator.modes.children.ChildrenExecutableResponse", ChildrenExecutableResponse.class);
+    h.put("facilitator.modes.task.AsyncTaskExecutableResponse", AsyncTaskExecutableResponse.class);
   }
 }
