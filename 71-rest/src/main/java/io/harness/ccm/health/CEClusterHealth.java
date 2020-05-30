@@ -14,6 +14,7 @@ import java.util.List;
 public class CEClusterHealth {
   boolean isHealthy;
   String clusterId;
+  String clusterName;
   ClusterRecord clusterRecord;
   List<String> messages;
   List<String> errors;

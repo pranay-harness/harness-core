@@ -53,6 +53,7 @@ type CEHealthStatus {
 
 type CEClusterHealth {
   clusterId: String
+  clusterName: String
   errors: [String]
   messages: [String]
   lastEventTimestamp: Number

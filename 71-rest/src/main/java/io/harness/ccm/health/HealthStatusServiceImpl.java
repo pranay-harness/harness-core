@@ -36,7 +36,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -49,6 +48,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
   @Inject LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
   @Inject CeExceptionRecordDao ceExceptionRecordDao;
 
+  private static final String TIMESTAMP_FORMAT_SPECIFIER = "{}";
   private static final String LAST_EVENT_TIMESTAMP_MESSAGE = "Last event collected at %s";
   private static final Long EVENT_TIMESTAMP_RECENCY_THRESHOLD_DEFAULT =
       TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES);
@@ -98,6 +98,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     return CEClusterHealth.builder()
         .isHealthy(isEmpty(errors))
         .clusterId(clusterRecord.getUuid())
+        .clusterName(clusterRecord.getCluster().getClusterName())
         .clusterRecord(clusterRecord)
         .messages(getMessages(clusterRecord, errors))
         .lastEventTimestamp(getLastEventTimestamp(clusterRecord.getAccountId(), clusterRecord.getUuid()))
@@ -164,8 +165,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
           messages.add(format(NO_ELIGIBLE_DELEGATE.getMessage(), clusterName));
           break;
         case NO_RECENT_EVENTS_PUBLISHED:
-          messages.add(
-              String.format(NO_RECENT_EVENTS_PUBLISHED.getMessage(), clusterName, new Date(lastEventTimestamp)));
+          messages.add(String.format(NO_RECENT_EVENTS_PUBLISHED.getMessage(), clusterName, TIMESTAMP_FORMAT_SPECIFIER));
           break;
         case METRICS_SERVER_NOT_FOUND:
           messages.add(String.format(METRICS_SERVER_NOT_FOUND.getMessage(), clusterName));
@@ -180,7 +180,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       if (lastEventTimestamp <= 0) {
         messages.add("No events received. The first event will arrive in 5 minutes.");
       } else {
-        messages.add(String.format(LAST_EVENT_TIMESTAMP_MESSAGE, new Date(lastEventTimestamp)));
+        messages.add(String.format(LAST_EVENT_TIMESTAMP_MESSAGE, TIMESTAMP_FORMAT_SPECIFIER));
       }
     }
     return messages;
