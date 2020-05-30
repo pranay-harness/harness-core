@@ -22,7 +22,7 @@ import ch.qos.logback.classic.spi.LoggingEvent;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.AccessTokenBean;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import okhttp3.Protocol;
@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 public class DelegateStackdriverLogAppenderTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock private ManagerClient managerClient;
+  @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private Call<RestResponse<AccessTokenBean>> callAccessTokenBean;
 
   private DelegateStackdriverLogAppender appender = new DelegateStackdriverLogAppender();
@@ -66,9 +66,9 @@ public class DelegateStackdriverLogAppenderTest extends CategoryTest {
 
   @Before
   public void setUp() throws Exception {
-    when(managerClient.getLoggingToken(anyString())).thenReturn(callAccessTokenBean);
+    when(delegateAgentManagerClient.getLoggingToken(anyString())).thenReturn(callAccessTokenBean);
     when(callAccessTokenBean.execute()).thenReturn(Response.success(accessTokenBeanRestResponse, rawResponse));
-    DelegateStackdriverLogAppender.setManagerClient(managerClient);
+    DelegateStackdriverLogAppender.setManagerClient(delegateAgentManagerClient);
     DelegateStackdriverLogAppender.setTimeLimiter(timeLimiter);
     appender.start();
   }

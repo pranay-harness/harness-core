@@ -111,6 +111,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.AutoLogContext;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.managerclient.ManagerClient;
 import io.harness.managerclient.ManagerClientFactory;
 import io.harness.network.FibonacciBackOff;
@@ -247,6 +248,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static volatile String delegateId;
 
   @Inject private DelegateConfiguration delegateConfiguration;
+
+  @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
   @Inject private ManagerClient managerClient;
 
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
@@ -338,7 +341,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       logger.info("Delegate will start running on JRE {}", System.getProperty(JAVA_VERSION));
       startTime = clock.millis();
       DelegateStackdriverLogAppender.setTimeLimiter(timeLimiter);
-      DelegateStackdriverLogAppender.setManagerClient(managerClient);
+      DelegateStackdriverLogAppender.setManagerClient(delegateAgentManagerClient);
 
       logProxyConfiguration();
 
@@ -791,7 +794,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         String attemptString = attempts.get() > 1 ? " (Attempt " + attempts.get() + ")" : "";
         logger.info("Registering delegate" + attemptString);
         DelegateParams delegateParams = builder.build().toBuilder().lastHeartBeat(clock.millis()).build();
-        restResponse = execute(managerClient.registerDelegate(accountId, delegateParams));
+        restResponse = execute(delegateAgentManagerClient.registerDelegate(accountId, delegateParams));
       } catch (Exception e) {
         String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
         logger.error(msg, e);
@@ -848,7 +851,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         long updated = profileParams == null || !resultExists ? 0L : profileParams.getProfileLastUpdatedAt();
         RestResponse<DelegateProfileParams> response = timeLimiter.callWithTimeout(
             ()
-                -> execute(managerClient.checkForProfile(delegateId, accountId, profileId, updated)),
+                -> execute(delegateAgentManagerClient.checkForProfile(delegateId, accountId, profileId, updated)),
             15L, TimeUnit.SECONDS, true);
         if (response != null) {
           applyProfile(response.getResource());
@@ -1035,7 +1038,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         logger.info("Checking for upgrade");
         try {
           RestResponse<DelegateScripts> restResponse = timeLimiter.callWithTimeout(
-              () -> execute(managerClient.getDelegateScripts(accountId, version)), 1L, TimeUnit.MINUTES, true);
+              ()
+                  -> execute(delegateAgentManagerClient.getDelegateScripts(accountId, version)),
+              1L, TimeUnit.MINUTES, true);
           DelegateScripts delegateScripts = restResponse.getResource();
           if (delegateScripts.isDoUpgrade()) {
             upgradePending.set(true);
@@ -1079,7 +1084,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     if (pollingForTasks.get()) {
       try {
         List<DelegateTaskEvent> taskEvents = timeLimiter.callWithTimeout(
-            () -> execute(managerClient.pollTaskEvents(delegateId, accountId)), 15L, TimeUnit.SECONDS, true);
+            ()
+                -> execute(delegateAgentManagerClient.pollTaskEvents(delegateId, accountId)),
+            15L, TimeUnit.SECONDS, true);
         if (isNotEmpty(taskEvents)) {
           logger.info("Processing DelegateTaskEvents {}", taskEvents);
           for (DelegateTaskEvent taskEvent : taskEvents) {
@@ -1403,7 +1410,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       timeLimiter.callWithTimeout(
           ()
-              -> execute(managerClient.doConnectionHeartbeat(delegateId, accountId, connectionHeartbeat)),
+              -> execute(delegateAgentManagerClient.doConnectionHeartbeat(delegateId, accountId, connectionHeartbeat)),
           15L, TimeUnit.SECONDS, true);
       lastHeartbeatSentAt.set(clock.millis());
 
@@ -1427,7 +1434,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       updateBuilderIfEcsDelegate(builder);
       DelegateParams delegateParams =
           builder.build().toBuilder().keepAlivePacket(true).polllingModeEnabled(true).build();
-      execute(managerClient.registerDelegate(accountId, delegateParams));
+      execute(delegateAgentManagerClient.registerDelegate(accountId, delegateParams));
     } catch (UncheckedTimeoutException ex) {
       logger.warn("Timed out sending Keep Alive Request", ex);
     } catch (Exception e) {
@@ -1852,7 +1859,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           Response<ResponseBody> resp = null;
           int retries = 3;
           while (retries-- > 0) {
-            resp = managerClient.sendTaskStatus(delegateId, taskId, accountId, taskResponse).execute();
+            resp = delegateAgentManagerClient.sendTaskStatus(delegateId, taskId, accountId, taskResponse).execute();
             if (resp != null && resp.code() >= 200 && resp.code() <= 299) {
               logger.info("Task {} response sent to manager", taskId);
               return resp;

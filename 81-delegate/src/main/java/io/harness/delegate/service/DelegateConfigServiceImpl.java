@@ -12,9 +12,6 @@ import software.wings.delegatetasks.DelegateConfigService;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Created by peeyushaggarwal on 1/10/17.
- */
 @Singleton
 public class DelegateConfigServiceImpl implements DelegateConfigService {
   @Inject private ManagerClient managerClient;
