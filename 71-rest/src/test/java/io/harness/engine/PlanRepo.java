@@ -82,7 +82,7 @@ public class PlanRepo {
                   .uuid(dummyNodeId)
                   .name("Dummy Node 1")
                   .identifier("dummy")
-                  .stepType(DummyStep.STATE_TYPE)
+                  .stepType(DummyStep.STEP_TYPE)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                              .build())

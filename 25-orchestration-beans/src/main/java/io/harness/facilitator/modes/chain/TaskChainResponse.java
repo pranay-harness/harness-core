@@ -4,18 +4,15 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.facilitator.modes.ExecutableResponse;
+import io.harness.tasks.Task;
 import lombok.Builder;
-import lombok.Singular;
 import lombok.Value;
-
-import java.util.List;
 
 @OwnedBy(CDC)
 @Value
 @Builder
 @Redesign
-public class AsyncChainResponse implements ExecutableResponse {
-  boolean finalLink;
-  @Singular List<String> callbackIds;
+public class TaskChainResponse {
+  boolean chainEnd;
+  Task task;
 }

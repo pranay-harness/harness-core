@@ -59,6 +59,11 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
+  public PlanExecution executeTaskChainPlan() {
+    return engine.startExecution(CustomExecutionUtils.provideTaskChainPlan(), getInputArgs(), getEmbeddedUser());
+  }
+
+  @Override
   public PlanExecution testInfraState() {
     return engine.startExecution(CustomExecutionUtils.provideInfraStateTestPlan(), getInputArgs(), getEmbeddedUser());
   }

@@ -21,6 +21,7 @@ import com.sumologic.client.SumoException;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
+import io.harness.redesign.states.http.chain.BasicHttpChainStepParameters;
 import io.harness.redesign.states.shell.ShellScriptVariablesSweepingOutput;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.serializer.KryoRegistrar;
@@ -1614,5 +1615,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(StackDriverMetricDefinition.Aggregation.class, 7380);
     kryo.register(SplunkSavedSearch.class, 7381);
     kryo.register(ContainerSyncResponse.class, 7384);
+    kryo.register(BasicHttpChainStepParameters.class, 7385);
   }
 }

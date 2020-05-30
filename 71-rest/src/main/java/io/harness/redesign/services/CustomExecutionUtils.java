@@ -29,6 +29,8 @@ import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
 import io.harness.redesign.states.email.EmailStep;
 import io.harness.redesign.states.email.EmailStepParameters;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
+import io.harness.redesign.states.http.chain.BasicHttpChainStep;
+import io.harness.redesign.states.http.chain.BasicHttpChainStepParameters;
 import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.redesign.states.wait.WaitStep;
@@ -36,6 +38,7 @@ import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.references.OutcomeRefObject;
 import io.harness.state.StepType;
 import io.harness.state.core.fork.ForkStepParameters;
+import io.harness.state.core.section.SectionStep;
 import io.harness.state.core.section.SectionStepParameters;
 import lombok.experimental.UtilityClass;
 import software.wings.sm.StateType;
@@ -498,6 +501,59 @@ public class CustomExecutionUtils {
                                              .type(FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build())
                                              .build())
                   .build())
+        .build();
+  }
+
+  public static Plan provideTaskChainPlan() {
+    String sectionNodeId = generateUuid();
+    String httpChainId = generateUuid();
+    String dummyNodeId = generateUuid();
+
+    BasicHttpStepParameters basicHttpStateParameters1 =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+
+    BasicHttpStepParameters basicHttpStateParameters2 =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
+    return Plan.builder()
+        .node(
+            ExecutionNode.builder()
+                .uuid(sectionNodeId)
+                .name("Section")
+                .stepType(SectionStep.STEP_TYPE)
+                .identifier("section_1")
+                .stepParameters(SectionStepParameters.builder().childNodeId(httpChainId).build())
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
+                                       .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                           .build())
+                .build())
+        .node(ExecutionNode.builder()
+                  .uuid(httpChainId)
+                  .name("HTTP Chain")
+                  .stepType(BasicHttpChainStep.STEP_TYPE)
+                  .identifier("http_chain")
+                  .stepParameters(BasicHttpChainStepParameters.builder()
+                                      .linkParameter(basicHttpStateParameters1)
+                                      .linkParameter(basicHttpStateParameters2)
+                                      .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK_CHAIN).build())
+                                             .build())
+                  .build())
+        .node(ExecutionNode.builder()
+                  .uuid(dummyNodeId)
+                  .name("Dummy Node 1")
+                  .identifier("dummy")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .startingNodeId(sectionNodeId)
+        .uuid(generateUuid())
         .build();
   }
 

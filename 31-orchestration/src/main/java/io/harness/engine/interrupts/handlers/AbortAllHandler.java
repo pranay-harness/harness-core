@@ -26,7 +26,7 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.Abortable;
 import io.harness.facilitator.modes.ExecutableResponse;
-import io.harness.facilitator.modes.task.AsyncTaskExecutableResponse;
+import io.harness.facilitator.modes.TaskExecutableResponse;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.interrupts.InterruptEffect;
@@ -114,10 +114,10 @@ public class AbortAllHandler implements InterruptHandler {
       ExecutionNode node = nodeExecution.getNode();
       Step currentState = Preconditions.checkNotNull(stepRegistry.obtain(node.getStepType()));
       ExecutableResponse executableResponse = nodeExecution.getExecutableResponse();
-      if (executableResponse instanceof AsyncTaskExecutableResponse) {
-        AsyncTaskExecutableResponse asyncTaskExecutableResponse = (AsyncTaskExecutableResponse) executableResponse;
-        TaskExecutor executor = taskExecutorMap.get(asyncTaskExecutableResponse.getTaskIdentifier());
-        executor.abortTask(ambiance, asyncTaskExecutableResponse.getTaskId());
+      if (nodeExecution.isTaskSpawningMode()) {
+        TaskExecutableResponse taskExecutableResponse = (TaskExecutableResponse) executableResponse;
+        TaskExecutor executor = taskExecutorMap.get(taskExecutableResponse.getTaskIdentifier());
+        executor.abortTask(ambiance, taskExecutableResponse.getTaskId());
       }
       if (currentState instanceof Abortable) {
         ((Abortable) currentState).handleAbort(ambiance, nodeExecution.getResolvedStepParameters(), executableResponse);

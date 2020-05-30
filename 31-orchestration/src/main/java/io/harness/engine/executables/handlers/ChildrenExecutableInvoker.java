@@ -81,8 +81,11 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
                                              .parentId(nodeExecution.getUuid())
                                              .build();
       hPersistence.save(childNodeExecution);
-      executorService.submit(
-          ExecutionEngineDispatcher.builder().ambiance(clonedAmbiance).executionEngine(engine).build());
+      executorService.submit(ExecutionEngineDispatcher.builder()
+                                 .ambiance(clonedAmbiance)
+                                 .executionEngine(engine)
+                                 .additionalInputs(child.getAdditionalInputs())
+                                 .build());
     }
     NotifyCallback callback = EngineResumeCallback.builder().nodeInstanceId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, callbackIds.toArray(new String[0]));

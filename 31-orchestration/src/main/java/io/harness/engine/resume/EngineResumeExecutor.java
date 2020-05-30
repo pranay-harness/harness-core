@@ -2,6 +2,7 @@ package io.harness.engine.resume;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Injector;
 
 import io.harness.ambiance.Ambiance;
@@ -14,6 +15,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.async.AsyncExecutable;
+import io.harness.facilitator.modes.chain.TaskChainExecutable;
+import io.harness.facilitator.modes.chain.TaskChainExecutableResponse;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
 import io.harness.facilitator.modes.task.AsyncTaskExecutable;
@@ -80,9 +83,23 @@ public class EngineResumeExecutor implements Runnable {
           stepResponse =
               asyncTaskExecutable.handleTaskResult(ambiance, nodeExecution.getResolvedStepParameters(), response);
           break;
+        case TASK_CHAIN:
+          TaskChainExecutable taskChainExecutable = (TaskChainExecutable) stepRegistry.obtain(node.getStepType());
+          TaskChainExecutableResponse lastLinkResponse =
+              (TaskChainExecutableResponse) nodeExecution.getExecutableResponse();
+          if (lastLinkResponse.isChainEnd()) {
+            stepResponse =
+                taskChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(), response);
+            break;
+          } else {
+            executionEngine.triggerLink(taskChainExecutable, ambiance, nodeExecution, response);
+            return;
+          }
         default:
           throw new InvalidRequestException("Resume not handled for execution Mode : " + nodeExecution.getMode());
       }
+      Preconditions.checkNotNull(
+          stepResponse, "Step Response Cannot Be null. NodeExecutionId: " + nodeExecution.getUuid());
       executionEngine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
 
     } catch (Exception ex) {

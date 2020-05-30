@@ -13,8 +13,8 @@ import java.util.Set;
 public class OrchestrationStepRegistrar implements StepRegistrar {
   @Override
   public void register(Set<Pair<StepType, Class<? extends Step>>> stateClasses) {
-    stateClasses.add(Pair.of(ForkStep.STATE_TYPE, ForkStep.class));
-    stateClasses.add(Pair.of(SectionStep.STATE_TYPE, SectionStep.class));
-    stateClasses.add(Pair.of(DummyStep.STATE_TYPE, DummyStep.class));
+    stateClasses.add(Pair.of(ForkStep.STEP_TYPE, ForkStep.class));
+    stateClasses.add(Pair.of(SectionStep.STEP_TYPE, SectionStep.class));
+    stateClasses.add(Pair.of(DummyStep.STEP_TYPE, DummyStep.class));
   }
 }

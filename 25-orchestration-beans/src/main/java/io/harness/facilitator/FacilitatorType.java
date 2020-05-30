@@ -21,6 +21,7 @@ public class FacilitatorType implements RegistryKey {
   public static final String CHILDREN = "CHILDREN";
   public static final String SKIP = "SKIP";
   public static final String ASYNC_TASK = "ASYNC_TASK";
+  public static final String TASK_CHAIN = "TASK_CHAIN";
 
   @NonNull String type;
 }

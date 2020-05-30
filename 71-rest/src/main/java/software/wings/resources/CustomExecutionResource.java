@@ -66,6 +66,13 @@ public class CustomExecutionResource {
   }
 
   @GET
+  @Path("/task-chain")
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<PlanExecution> executeTaskChainPlan() {
+    return new RestResponse<>(customExecutionService.executeTaskChainPlan());
+  }
+
+  @GET
   @Path("/abort-plan")
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<Interrupt> abortPlan(

@@ -21,4 +21,10 @@ public class DummyTask implements Task {
   public String getTaskIdentifier() {
     return TASK_IDENTIFIER;
   }
+
+  @Nonnull
+  @Override
+  public String getTaskType() {
+    return TASK_IDENTIFIER;
+  }
 }

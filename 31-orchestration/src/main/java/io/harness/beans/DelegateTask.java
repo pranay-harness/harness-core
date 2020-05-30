@@ -113,6 +113,13 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
     return TASK_IDENTIFIER;
   }
 
+  @Override
+  @JsonIgnore
+  @Nonnull
+  public String getTaskType() {
+    return data.getTaskType();
+  }
+
   public static class ParametersConverter extends KryoConverter {
     public ParametersConverter() {
       super(Object[].class);
