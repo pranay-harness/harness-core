@@ -24,6 +24,8 @@ import static software.wings.utils.WingsTestConstants.DOMAIN;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import com.google.inject.Inject;
+
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
@@ -75,6 +77,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
   @Mock DelegateLogService logService;
   @Mock ShellExecutorConfig shellExecutorConfig;
   @Mock ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
+  @Inject @InjectMocks ShellScriptTaskHandler shellScriptTaskHandler;
 
   EncryptedDataDetail encryptedDataDetail1 = EncryptedDataDetail.builder()
                                                  .encryptedData(EncryptedRecordData.builder().build())
@@ -103,10 +106,11 @@ public class ShellScriptTaskTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    on(shellScriptTask).set("shellExecutorFactory", shellExecutorFactory);
-    on(shellScriptTask).set("containerDeploymentDelegateHelper", containerDeploymentDelegateHelper);
-    on(shellScriptTask).set("encryptionService", encryptionService);
-    on(shellScriptTask).set("sshExecutorFactory", sshExecutorFactory);
+    on(shellScriptTaskHandler).set("shellExecutorFactory", shellExecutorFactory);
+    on(shellScriptTaskHandler).set("containerDeploymentDelegateHelper", containerDeploymentDelegateHelper);
+    on(shellScriptTaskHandler).set("encryptionService", encryptionService);
+    on(shellScriptTaskHandler).set("sshExecutorFactory", sshExecutorFactory);
+    on(shellScriptTask).set("shellScriptTaskHandler", shellScriptTaskHandler);
   }
 
   @Test
