@@ -8,6 +8,6 @@ import io.harness.registries.RegistrableEntity;
 
 @OwnedBy(CDC)
 @Redesign
-public interface Adviser extends RegistrableEntity<AdviserType> {
+public interface Adviser extends RegistrableEntity {
   Advise onAdviseEvent(AdvisingEvent advisingEvent);
 }

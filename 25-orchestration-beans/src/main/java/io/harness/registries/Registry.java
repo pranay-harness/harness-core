@@ -7,10 +7,10 @@ import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(CDC)
 @Redesign
-public interface Registry<K extends RegistryKey, V extends Class<? extends RegistrableEntity<K>>> {
+public interface Registry<K extends RegistryKey, V extends Class<? extends RegistrableEntity>> {
   void register(K registryKey, V registrableEntity);
 
-  RegistrableEntity<K> obtain(K k);
+  RegistrableEntity obtain(K k);
 
   RegistryType getType();
 }

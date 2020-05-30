@@ -13,7 +13,7 @@ import java.util.List;
 
 @OwnedBy(CDC)
 @Redesign
-public interface Facilitator extends RegistrableEntity<FacilitatorType> {
+public interface Facilitator extends RegistrableEntity {
   FacilitatorResponse facilitate(
       Ambiance ambiance, StepParameters stepParameters, FacilitatorParameters parameters, List<StepTransput> inputs);
 }
