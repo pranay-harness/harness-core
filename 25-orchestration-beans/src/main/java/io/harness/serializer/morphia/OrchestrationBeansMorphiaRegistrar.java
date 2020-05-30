@@ -12,7 +12,7 @@ import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
-import io.harness.facilitator.modes.chain.AsyncChainResponse;
+import io.harness.facilitator.modes.chain.TaskChainResponse;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.task.AsyncTaskExecutableResponse;
@@ -56,7 +56,7 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     h.put("references.OutcomeRefObject", OutcomeRefObject.class);
 
     h.put("facilitator.modes.async.AsyncExecutableResponse", AsyncExecutableResponse.class);
-    h.put("facilitator.modes.chain.AsyncChainResponse", AsyncChainResponse.class);
+    h.put("facilitator.modes.chain.TaskChainResponse", TaskChainResponse.class);
     h.put("facilitator.modes.child.ChildExecutableResponse", ChildExecutableResponse.class);
     h.put("facilitator.modes.children.ChildrenExecutableResponse", ChildrenExecutableResponse.class);
     h.put("facilitator.modes.task.AsyncTaskExecutableResponse", AsyncTaskExecutableResponse.class);

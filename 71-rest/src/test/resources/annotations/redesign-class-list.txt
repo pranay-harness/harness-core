@@ -3,5 +3,6 @@ io.harness.engine.expressions.functors.ExecutionSweepingOutputFunctor
 io.harness.redesign.advisers.HttpResponseCodeSwitchAdviser
 io.harness.redesign.services.CustomExecutionUtils
 io.harness.redesign.states.http.BasicHttpStep
+io.harness.redesign.states.http.chain.BasicHttpChainStep
 io.harness.redesign.states.shell.ShellScriptStep
 io.harness.redesign.states.wait.WaitStep

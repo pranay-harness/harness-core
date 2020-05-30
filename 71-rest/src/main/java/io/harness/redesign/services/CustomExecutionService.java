@@ -22,6 +22,8 @@ public interface CustomExecutionService {
 
   PlanExecution executeSimpleShellScriptPlan();
 
+  PlanExecution executeTaskChainPlan();
+
   PlanExecution testInfraState();
 
   // Interrupts

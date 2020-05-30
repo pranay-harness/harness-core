@@ -21,7 +21,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Produces(Step.class)
 public class SectionStep implements Step, ChildExecutable {
-  public static final StepType STATE_TYPE = StepType.builder().type("SECTION").build();
+  public static final StepType STEP_TYPE = StepType.builder().type("SECTION").build();
 
   @Override
   public ChildExecutableResponse obtainChild(

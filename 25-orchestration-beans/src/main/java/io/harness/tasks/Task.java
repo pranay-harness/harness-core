@@ -8,4 +8,6 @@ public interface Task {
   String getWaitId();
 
   @Nonnull String getTaskIdentifier();
+
+  @Nonnull String getTaskType();
 }

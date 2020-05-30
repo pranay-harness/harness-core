@@ -27,7 +27,7 @@ import java.util.Map;
 @Redesign
 @Produces(Step.class)
 public class ForkStep implements Step, ChildrenExecutable {
-  public static final StepType STATE_TYPE = StepType.builder().type("FORK").build();
+  public static final StepType STEP_TYPE = StepType.builder().type("FORK").build();
 
   @Override
   public ChildrenExecutableResponse obtainChildren(

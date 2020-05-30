@@ -23,7 +23,7 @@ import java.util.List;
 @Redesign
 @Produces(Step.class)
 public class DummyStep implements Step, SyncExecutable {
-  public static final StepType STATE_TYPE = StepType.builder().type("DUMMY").build();
+  public static final StepType STEP_TYPE = StepType.builder().type("DUMMY").build();
 
   @Override
   public StepResponse executeSync(

@@ -86,6 +86,9 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   public boolean isChildSpawningMode() {
     return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN;
   }
+  public boolean isTaskSpawningMode() {
+    return mode == ExecutionMode.ASYNC_TASK || mode == ExecutionMode.TASK_CHAIN;
+  }
 
   public NodeExecution deepCopy() {
     return KryoUtils.clone(this);
