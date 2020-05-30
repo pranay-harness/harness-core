@@ -7,6 +7,9 @@ import static io.harness.eraro.ErrorCode.PAUSE_ALL_ALREADY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
 import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
+import static io.harness.interrupts.Interrupt.State.DISCARDED;
+import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
+import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.inject.Inject;
@@ -48,14 +51,16 @@ public class PauseAllHandler implements InterruptHandler {
     if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == PAUSE_ALL)) {
       throw new InvalidRequestException("Execution already has PAUSE_ALL interrupt", PAUSE_ALL_ALREADY, USER);
     }
+    interrupt.setState(PROCESSING);
     if (isEmpty(interrupts)) {
       return hPersistence.save(interrupt);
     }
-
     interrupts.stream()
         .filter(presentInterrupt -> presentInterrupt.getType() == RESUME_ALL)
         .findFirst()
-        .ifPresent(resumeAllInterrupt -> interruptService.seize(resumeAllInterrupt.getUuid()));
+        .ifPresent(resumeAllInterrupt
+            -> interruptService.markProcessed(resumeAllInterrupt.getUuid(),
+                resumeAllInterrupt.getState() == PROCESSING ? PROCESSED_SUCCESSFULLY : DISCARDED));
     return hPersistence.save(interrupt);
   }
 

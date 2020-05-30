@@ -6,6 +6,9 @@ import static io.harness.eraro.ErrorCode.RESUME_ALL_ALREADY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
 import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
+import static io.harness.interrupts.Interrupt.State.DISCARDED;
+import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
+import static io.harness.interrupts.Interrupt.State.PROCESSING;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -55,9 +58,11 @@ public class ResumeAllHandler implements InterruptHandler {
                                                   .planExecutionId(interrupt.getPlanExecutionId())
                                                   .interruptId(interrupt.getUuid())
                                                   .build());
-    interruptService.seize(pauseAllInterrupt.getUuid());
+    interruptService.markProcessed(
+        pauseAllInterrupt.getUuid(), pauseAllInterrupt.getState() == PROCESSING ? PROCESSED_SUCCESSFULLY : DISCARDED);
     waitNotifyEngine.doneWith(
         pauseAllInterrupt.getUuid(), StatusNotifyResponseData.builder().status(NodeExecutionStatus.SUCCEEDED).build());
+    interrupt.setState(PROCESSING);
     return hPersistence.save(interrupt);
   }
 
