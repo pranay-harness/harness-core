@@ -10,7 +10,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import io.harness.logging.AccessTokenBean;
 import io.harness.logging.RemoteStackdriverLogAppender;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +21,7 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
   private static final String APP_NAME = "delegate";
 
   private static TimeLimiter timeLimiter;
-  private static ManagerClient managerClient;
+  private static DelegateAgentManagerClient delegateAgentManagerClient;
   private static String delegateId;
 
   private String accountId = "";
@@ -55,13 +55,13 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
 
   @Override
   protected AccessTokenBean getLoggingToken() {
-    if (timeLimiter == null || managerClient == null) {
+    if (timeLimiter == null || delegateAgentManagerClient == null) {
       return null;
     }
 
     try {
       RestResponse<AccessTokenBean> response = timeLimiter.callWithTimeout(
-          () -> execute(managerClient.getLoggingToken(getAccountId())), 15L, TimeUnit.SECONDS, true);
+          () -> execute(delegateAgentManagerClient.getLoggingToken(getAccountId())), 15L, TimeUnit.SECONDS, true);
       if (response != null) {
         return response.getResource();
       }
@@ -78,8 +78,8 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
     DelegateStackdriverLogAppender.timeLimiter = timeLimiter;
   }
 
-  public static void setManagerClient(ManagerClient managerClient) {
-    DelegateStackdriverLogAppender.managerClient = managerClient;
+  public static void setManagerClient(DelegateAgentManagerClient delegateAgentManagerClient) {
+    DelegateStackdriverLogAppender.delegateAgentManagerClient = delegateAgentManagerClient;
   }
 
   public static void setDelegateId(String delegateId) {

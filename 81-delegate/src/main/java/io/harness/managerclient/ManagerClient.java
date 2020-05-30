@@ -1,21 +1,12 @@
 package io.harness.managerclient;
 
-import io.harness.delegate.beans.DelegateConnectionHeartbeat;
-import io.harness.delegate.beans.DelegateParams;
-import io.harness.delegate.beans.DelegateProfileParams;
-import io.harness.delegate.beans.DelegateRegisterResponse;
-import io.harness.delegate.beans.DelegateScripts;
-import io.harness.delegate.beans.DelegateTaskEvent;
-import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
 import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
-import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
@@ -39,38 +30,15 @@ import software.wings.sm.StateType;
 import java.util.List;
 
 public interface ManagerClient {
-  @POST("agent/delegates/register")
-  Call<RestResponse<DelegateRegisterResponse>> registerDelegate(
-      @Query("accountId") String accountId, @Body DelegateParams delegateParams);
-
-  @POST("agent/delegates/connectionHeartbeat/{delegateId}")
-  Call<RestResponse> doConnectionHeartbeat(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
-      @Body DelegateConnectionHeartbeat heartbeat);
-
-  @Headers({"Content-Type: application/x-kryo"})
-  @KryoRequest
-  @POST("agent/delegates/{delegateId}/tasks/{taskId}")
-  Call<ResponseBody> sendTaskStatus(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
-      @Query("accountId") String accountId, @Body DelegateTaskResponse delegateTaskResponse);
-
   @Multipart
   @POST("agent/delegateFiles/{delegateId}/tasks/{taskId}")
   Call<RestResponse<String>> uploadFile(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
       @Query("accountId") String accountId, @Query("fileBucket") FileBucket bucket, @Part MultipartBody.Part file);
 
-  @GET("agent/delegates/{delegateId}/profile")
-  Call<RestResponse<DelegateProfileParams>> checkForProfile(@Path("delegateId") String delegateId,
-      @Query("accountId") String accountId, @Query("profileId") String profileId,
-      @Query("lastUpdatedAt") Long lastUpdatedAt);
-
   @Multipart
   @POST("agent/delegateFiles/{delegateId}/profile-result")
   Call<RestResponse> saveProfileResult(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
       @Query("error") boolean error, @Query("fileBucket") FileBucket bucket, @Part MultipartBody.Part file);
-
-  @GET("agent/delegates/delegateScripts")
-  Call<RestResponse<DelegateScripts>> getDelegateScripts(
-      @Query("accountId") String accountId, @Query("delegateVersion") String delegateVersion);
 
   @GET("service-templates/{templateId}/compute-files")
   Call<RestResponse<List<ConfigFile>>> getConfigFiles(@Path("templateId") String templateId,
@@ -123,15 +91,8 @@ public interface ManagerClient {
   Call<RestResponse> failIfAllDelegatesFailed(
       @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
 
-  @GET("agent/delegates/{delegateId}/task-events")
-  Call<List<DelegateTaskEvent>> pollTaskEvents(
-      @Path("delegateId") String delegateId, @Query("accountId") String accountId);
-
   @POST("agent/delegates/heartbeat-with-polling")
   Call<RestResponse<Delegate>> delegateHeartbeat(@Query("accountId") String accountId, @Body Delegate delegate);
-
-  @GET("agent/infra-download/delegate-auth/delegate/logging-token")
-  Call<RestResponse<AccessTokenBean>> getLoggingToken(@Query("accountId") String accountId);
 
   @POST("agent/delegates/artifact-collection/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishArtifactCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
