@@ -19,7 +19,7 @@ import io.harness.facilitator.modes.chain.TaskChainExecutable;
 import io.harness.facilitator.modes.chain.TaskChainExecutableResponse;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
-import io.harness.facilitator.modes.task.AsyncTaskExecutable;
+import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.plan.ExecutionNode;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.io.StepResponse;
@@ -78,10 +78,9 @@ public class EngineResumeExecutor implements Runnable {
           stepResponse =
               childExecutable.handleChildResponse(ambiance, nodeExecution.getResolvedStepParameters(), response);
           break;
-        case ASYNC_TASK:
-          AsyncTaskExecutable asyncTaskExecutable = (AsyncTaskExecutable) stepRegistry.obtain(node.getStepType());
-          stepResponse =
-              asyncTaskExecutable.handleTaskResult(ambiance, nodeExecution.getResolvedStepParameters(), response);
+        case TASK:
+          TaskExecutable taskExecutable = (TaskExecutable) stepRegistry.obtain(node.getStepType());
+          stepResponse = taskExecutable.handleTaskResult(ambiance, nodeExecution.getResolvedStepParameters(), response);
           break;
         case TASK_CHAIN:
           TaskChainExecutable taskChainExecutable = (TaskChainExecutable) stepRegistry.obtain(node.getStepType());

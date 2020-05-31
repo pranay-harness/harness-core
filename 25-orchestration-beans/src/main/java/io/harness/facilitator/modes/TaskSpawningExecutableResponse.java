@@ -1,6 +1,6 @@
 package io.harness.facilitator.modes;
 
-public interface TaskExecutableResponse extends ExecutableResponse {
+public interface TaskSpawningExecutableResponse extends ExecutableResponse {
   String getTaskId();
 
   String getTaskIdentifier();

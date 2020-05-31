@@ -10,7 +10,7 @@ import io.harness.facilitator.chain.TaskChainFacilitator;
 import io.harness.facilitator.child.ChildFacilitator;
 import io.harness.facilitator.children.ChildrenFacilitator;
 import io.harness.facilitator.sync.SyncFacilitator;
-import io.harness.facilitator.task.AsyncTaskFacilitator;
+import io.harness.facilitator.task.TaskFacilitator;
 import io.harness.registries.registrar.FacilitatorRegistrar;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -24,7 +24,7 @@ public class OrchestrationFacilitatorRegistrar implements FacilitatorRegistrar {
     facilitatorClasses.add(Pair.of(SyncFacilitator.FACILITATOR_TYPE, SyncFacilitator.class));
     facilitatorClasses.add(Pair.of(ChildFacilitator.FACILITATOR_TYPE, ChildFacilitator.class));
     facilitatorClasses.add(Pair.of(ChildrenFacilitator.FACILITATOR_TYPE, ChildrenFacilitator.class));
-    facilitatorClasses.add(Pair.of(AsyncTaskFacilitator.FACILITATOR_TYPE, AsyncTaskFacilitator.class));
+    facilitatorClasses.add(Pair.of(TaskFacilitator.FACILITATOR_TYPE, TaskFacilitator.class));
     facilitatorClasses.add(Pair.of(TaskChainFacilitator.FACILITATOR_TYPE, TaskChainFacilitator.class));
   }
 }

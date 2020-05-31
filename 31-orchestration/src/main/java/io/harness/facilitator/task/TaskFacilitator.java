@@ -19,15 +19,14 @@ import java.util.List;
 @OwnedBy(CDC)
 @Redesign
 @Produces(Facilitator.class)
-public class AsyncTaskFacilitator implements Facilitator {
-  public static final FacilitatorType FACILITATOR_TYPE =
-      FacilitatorType.builder().type(FacilitatorType.ASYNC_TASK).build();
+public class TaskFacilitator implements Facilitator {
+  public static final FacilitatorType FACILITATOR_TYPE = FacilitatorType.builder().type(FacilitatorType.TASK).build();
 
   @Override
   public FacilitatorResponse facilitate(
       Ambiance ambiance, StepParameters stepParameters, FacilitatorParameters parameters, List<StepTransput> inputs) {
     return FacilitatorResponse.builder()
-        .executionMode(ExecutionMode.ASYNC_TASK)
+        .executionMode(ExecutionMode.TASK)
         .initialWait(parameters.getWaitDurationSeconds())
         .build();
   }

@@ -87,7 +87,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
     return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN;
   }
   public boolean isTaskSpawningMode() {
-    return mode == ExecutionMode.ASYNC_TASK || mode == ExecutionMode.TASK_CHAIN;
+    return mode == ExecutionMode.TASK || mode == ExecutionMode.TASK_CHAIN;
   }
 
   public NodeExecution deepCopy() {
