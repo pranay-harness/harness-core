@@ -16,7 +16,7 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Redesign
-public interface AsyncTaskExecutable {
+public interface TaskExecutable {
   Task obtainTask(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs);
 
   StepResponse handleTaskResult(

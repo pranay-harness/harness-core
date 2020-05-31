@@ -13,8 +13,8 @@ import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.facilitator.modes.task.AsyncTaskExecutable;
-import io.harness.facilitator.modes.task.AsyncTaskExecutableResponse;
+import io.harness.facilitator.modes.task.TaskExecutable;
+import io.harness.facilitator.modes.task.TaskExecutableResponse;
 import io.harness.tasks.Task;
 import io.harness.tasks.TaskExecutor;
 import io.harness.waiter.NotifyCallback;
@@ -23,7 +23,7 @@ import lombok.NonNull;
 
 import java.util.Map;
 
-public class AsyncTaskInvoker implements ExecutableInvoker {
+public class TaskExecutableInvoker implements ExecutableInvoker {
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
   @Inject private AmbianceHelper ambianceHelper;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -31,9 +31,9 @@ public class AsyncTaskInvoker implements ExecutableInvoker {
 
   @Override
   public void invokeExecutable(InvokerPackage invokerPackage) {
-    AsyncTaskExecutable asyncTaskExecutable = (AsyncTaskExecutable) invokerPackage.getStep();
+    TaskExecutable taskExecutable = (TaskExecutable) invokerPackage.getStep();
     Ambiance ambiance = invokerPackage.getAmbiance();
-    Task task = asyncTaskExecutable.obtainTask(ambiance, invokerPackage.getParameters(), invokerPackage.getInputs());
+    Task task = taskExecutable.obtainTask(ambiance, invokerPackage.getParameters(), invokerPackage.getInputs());
     handleResponse(ambiance, task);
   }
 
@@ -48,6 +48,6 @@ public class AsyncTaskInvoker implements ExecutableInvoker {
     nodeExecutionService.update(nodeExecution.getUuid(),
         ops
         -> ops.set(NodeExecutionKeys.executableResponse,
-            AsyncTaskExecutableResponse.builder().taskId(taskId).taskIdentifier(task.getTaskIdentifier()).build()));
+            TaskExecutableResponse.builder().taskId(taskId).taskIdentifier(task.getTaskIdentifier()).build()));
   }
 }

@@ -41,7 +41,7 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTest {
     assertThatThrownBy(() -> facilitatorRegistry.register(facilitatorType, Type1Facilitator.class))
         .isInstanceOf(DuplicateRegistryException.class);
 
-    assertThatThrownBy(() -> facilitatorRegistry.obtain(FacilitatorType.builder().type(FacilitatorType.SKIP).build()))
+    assertThatThrownBy(() -> facilitatorRegistry.obtain(FacilitatorType.builder().type("SKIP").build()))
         .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 

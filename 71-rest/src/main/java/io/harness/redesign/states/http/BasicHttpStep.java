@@ -15,7 +15,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.execution.status.NodeExecutionStatus;
-import io.harness.facilitator.modes.task.AsyncTaskExecutable;
+import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
@@ -36,7 +36,7 @@ import java.util.Map;
 @ExcludeRedesign
 @Produces(Step.class)
 @Slf4j
-public class BasicHttpStep implements Step, AsyncTaskExecutable {
+public class BasicHttpStep implements Step, TaskExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("BASIC_HTTP").build();
 
   @Override

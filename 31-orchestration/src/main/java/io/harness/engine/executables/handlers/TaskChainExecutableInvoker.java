@@ -24,7 +24,7 @@ import lombok.NonNull;
 
 import java.util.Map;
 
-public class TaskChainInvoker implements ExecutableInvoker {
+public class TaskChainExecutableInvoker implements ExecutableInvoker {
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
   @Inject private AmbianceHelper ambianceHelper;
   @Inject private WaitNotifyEngine waitNotifyEngine;

@@ -34,7 +34,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 import io.harness.execution.status.NodeExecutionStatus;
-import io.harness.facilitator.modes.task.AsyncTaskExecutable;
+import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputResolver;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.state.Step;
@@ -77,7 +77,7 @@ import java.util.Map;
 @ExcludeRedesign
 @Produces(Step.class)
 @Slf4j
-public class ShellScriptStep implements Step, AsyncTaskExecutable {
+public class ShellScriptStep implements Step, TaskExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type(SHELL_SCRIPT.name()).build();
 
   @Inject private ActivityService activityService;

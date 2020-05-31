@@ -31,7 +31,7 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.Abortable;
 import io.harness.facilitator.modes.ExecutableResponse;
-import io.harness.facilitator.modes.TaskExecutableResponse;
+import io.harness.facilitator.modes.TaskSpawningExecutableResponse;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.interrupts.InterruptEffect;
@@ -123,7 +123,7 @@ public class AbortAllHandler implements InterruptHandler {
       Step currentState = Preconditions.checkNotNull(stepRegistry.obtain(node.getStepType()));
       ExecutableResponse executableResponse = nodeExecution.getExecutableResponse();
       if (nodeExecution.isTaskSpawningMode()) {
-        TaskExecutableResponse taskExecutableResponse = (TaskExecutableResponse) executableResponse;
+        TaskSpawningExecutableResponse taskExecutableResponse = (TaskSpawningExecutableResponse) executableResponse;
         TaskExecutor executor = taskExecutorMap.get(taskExecutableResponse.getTaskIdentifier());
         executor.abortTask(ambiance, taskExecutableResponse.getTaskId());
       }

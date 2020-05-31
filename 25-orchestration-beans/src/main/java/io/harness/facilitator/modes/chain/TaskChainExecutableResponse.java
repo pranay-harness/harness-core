@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.facilitator.modes.TaskExecutableResponse;
+import io.harness.facilitator.modes.TaskSpawningExecutableResponse;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -13,7 +13,7 @@ import lombok.Value;
 @Redesign
 @Value
 @Builder
-public class TaskChainExecutableResponse implements TaskExecutableResponse {
+public class TaskChainExecutableResponse implements TaskSpawningExecutableResponse {
   @NonNull String taskId;
   @NonNull String taskIdentifier;
   @NonNull String taskType;

@@ -15,7 +15,7 @@ import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.chain.TaskChainResponse;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
-import io.harness.facilitator.modes.task.AsyncTaskExecutableResponse;
+import io.harness.facilitator.modes.task.TaskExecutableResponse;
 import io.harness.interrupts.Interrupt;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plan.Plan;
@@ -59,6 +59,6 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     h.put("facilitator.modes.chain.TaskChainResponse", TaskChainResponse.class);
     h.put("facilitator.modes.child.ChildExecutableResponse", ChildExecutableResponse.class);
     h.put("facilitator.modes.children.ChildrenExecutableResponse", ChildrenExecutableResponse.class);
-    h.put("facilitator.modes.task.AsyncTaskExecutableResponse", AsyncTaskExecutableResponse.class);
+    h.put("facilitator.modes.task.TaskExecutableResponse", TaskExecutableResponse.class);
   }
 }
