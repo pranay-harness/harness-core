@@ -29,8 +29,8 @@ import io.harness.facilitator.FacilitatorType;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.maintenance.MaintenanceGuard;
-import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
 import io.harness.plan.input.InputArgs;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.state.StepRegistry;
@@ -77,7 +77,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
     Plan oneNodePlan =
         Plan.builder()
             .uuid(generateUuid())
-            .node(ExecutionNode.builder()
+            .node(PlanNode.builder()
                       .name("Test Node")
                       .uuid(testNodeId)
                       .identifier("test1")
@@ -110,7 +110,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
     Plan oneNodePlan =
         Plan.builder()
             .uuid(generateUuid())
-            .node(ExecutionNode.builder()
+            .node(PlanNode.builder()
                       .name("Test Node")
                       .uuid(testStartNodeId)
                       .identifier("test1")
@@ -124,7 +124,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
                                                  .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                                  .build())
                       .build())
-            .node(ExecutionNode.builder()
+            .node(PlanNode.builder()
                       .name("Test Node 2")
                       .uuid(testSecondNodeId)
                       .identifier("test2")
@@ -157,7 +157,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
     Plan oneNodePlan =
         Plan.builder()
             .uuid(generateUuid())
-            .node(ExecutionNode.builder()
+            .node(PlanNode.builder()
                       .name("Test Node")
                       .uuid(testStartNodeId)
                       .identifier("test1")
@@ -171,7 +171,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
                                                  .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                                  .build())
                       .build())
-            .node(ExecutionNode.builder()
+            .node(PlanNode.builder()
                       .uuid(testWaitNodeId)
                       .name("Finish Node")
                       .identifier("finish")

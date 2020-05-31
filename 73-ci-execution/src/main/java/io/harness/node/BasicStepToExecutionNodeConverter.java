@@ -10,7 +10,7 @@ import io.harness.beans.steps.AbstractStepWithMetaInfo;
 import io.harness.beans.steps.StepMetadata;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
-import io.harness.plan.ExecutionNode;
+import io.harness.plan.PlanNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +22,8 @@ import java.util.List;
 @Singleton
 public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeConverter<AbstractStepWithMetaInfo> {
   @Override
-  public ExecutionNode convertStep(AbstractStepWithMetaInfo step, List<String> nextStepUuids) {
-    return ExecutionNode.builder()
+  public PlanNode convertStep(AbstractStepWithMetaInfo step, List<String> nextStepUuids) {
+    return PlanNode.builder()
         .name(step.getStepMetadata().getUuid())
         .uuid(step.getStepMetadata().getUuid())
         .stepType(step.getNonYamlInfo().getStepType())

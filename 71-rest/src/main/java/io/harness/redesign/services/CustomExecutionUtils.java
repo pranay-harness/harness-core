@@ -23,8 +23,8 @@ import io.harness.cdng.service.Service;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
-import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
 import io.harness.redesign.states.email.EmailStep;
 import io.harness.redesign.states.email.EmailStepParameters;
@@ -67,7 +67,7 @@ public class CustomExecutionUtils {
     BasicHttpStepParameters basicHttpStateParameters =
         BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
     return Plan.builder()
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(httpNodeId)
                   .name("Basic Http")
                   .stepType(BASIC_HTTP_STEP_TYPE)
@@ -86,7 +86,7 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .node(
-            ExecutionNode.builder()
+            PlanNode.builder()
                 .uuid(dummyNode1Id)
                 .name("Dummy Node 1")
                 .stepType(DUMMY_STEP_TYPE)
@@ -101,7 +101,7 @@ public class CustomExecutionUtils {
                 .refObject(OutcomeRefObject.builder().name("http").producerId(httpNodeId).build())
                 .build())
         .node(
-            ExecutionNode.builder()
+            PlanNode.builder()
                 .uuid(dummyNode2Id)
                 .name("Dummy Node 2")
                 .stepType(DUMMY_STEP_TYPE)
@@ -115,7 +115,7 @@ public class CustomExecutionUtils {
                                            .build())
                 .build())
         .node(
-            ExecutionNode.builder()
+            PlanNode.builder()
                 .uuid(dummyNode3Id)
                 .name("Dummy Node 3")
                 .stepType(DUMMY_STEP_TYPE)
@@ -128,7 +128,7 @@ public class CustomExecutionUtils {
                                            .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                            .build())
                 .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(waitNodeId)
                   .name("Wait Node")
                   .identifier("wait")
@@ -157,7 +157,7 @@ public class CustomExecutionUtils {
     BasicHttpStepParameters basicHttpStateParameters2 =
         BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(httpNodeId1)
                   .name("Basic Http 1")
                   .stepType(BASIC_HTTP_STEP_TYPE)
@@ -167,7 +167,7 @@ public class CustomExecutionUtils {
                                              .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
                                              .build())
                   .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(httpNodeId2)
                   .name("Basic Http 2")
                   .stepType(BASIC_HTTP_STEP_TYPE)
@@ -178,7 +178,7 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .node(
-            ExecutionNode.builder()
+            PlanNode.builder()
                 .uuid(forkNodeId)
                 .name("FORK")
                 .stepType(StepType.builder().type("FORK").build())
@@ -194,7 +194,7 @@ public class CustomExecutionUtils {
                                            .build())
                 .build())
         .node(
-            ExecutionNode.builder()
+            PlanNode.builder()
                 .uuid(dummyNodeId)
                 .name("Dummy Node 1")
                 .identifier("dummy1")
@@ -207,7 +207,7 @@ public class CustomExecutionUtils {
                                            .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                            .build())
                 .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(emailNodeId)
                   .name("Email Node")
                   .identifier("email")
@@ -241,7 +241,7 @@ public class CustomExecutionUtils {
         BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
         .node(
-            ExecutionNode.builder()
+            PlanNode.builder()
                 .uuid(httpNodeId1)
                 .name("Basic Http 1")
                 .stepType(BASIC_HTTP_STEP_TYPE)
@@ -256,7 +256,7 @@ public class CustomExecutionUtils {
                                        .build())
                 .build())
         .node(
-            ExecutionNode.builder()
+            PlanNode.builder()
                 .uuid(waitNodeId1)
                 .name("Wait Step")
                 .stepType(WaitStep.STEP_TYPE)
@@ -270,7 +270,7 @@ public class CustomExecutionUtils {
                                        .parameters(OnSuccessAdviserParameters.builder().nextNodeId(httpNodeId2).build())
                                        .build())
                 .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(httpNodeId2)
                   .name("Basic Http 2")
                   .stepType(BASIC_HTTP_STEP_TYPE)
@@ -281,7 +281,7 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .node(
-            ExecutionNode.builder()
+            PlanNode.builder()
                 .uuid(sectionNodeId)
                 .name("Section")
                 .stepType(StepType.builder().type("SECTION").build())
@@ -295,7 +295,7 @@ public class CustomExecutionUtils {
                                            .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
                                            .build())
                 .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(dummyNodeId)
                   .name("Dummy Node 1")
                   .identifier("dummy")
@@ -316,7 +316,7 @@ public class CustomExecutionUtils {
     return Plan.builder()
         .uuid(generateUuid())
         .startingNodeId(httpNodeId)
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(httpNodeId)
                   .name("Basic Http 1")
                   .stepType(BASIC_HTTP_STEP_TYPE)
@@ -352,7 +352,7 @@ public class CustomExecutionUtils {
         BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
         .node(
-            ExecutionNode.builder()
+            PlanNode.builder()
                 .uuid(httpNodeId1)
                 .name("Basic Http 1")
                 .stepType(BASIC_HTTP_STEP_TYPE)
@@ -366,7 +366,7 @@ public class CustomExecutionUtils {
                                        .parameters(OnSuccessAdviserParameters.builder().nextNodeId(httpNodeId2).build())
                                        .build())
                 .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(httpNodeId2)
                   .name("Basic Http 2")
                   .stepType(BASIC_HTTP_STEP_TYPE)
@@ -377,7 +377,7 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .node(
-            ExecutionNode.builder()
+            PlanNode.builder()
                 .uuid(sectionNodeId)
                 .name("Section")
                 .stepType(StepType.builder().type("SECTION").build())
@@ -396,7 +396,7 @@ public class CustomExecutionUtils {
                                            .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
                                            .build())
                 .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(rollbackSectionNodeId)
                   .name("Section")
                   .stepType(StepType.builder().type("SECTION").build())
@@ -406,7 +406,7 @@ public class CustomExecutionUtils {
                                              .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
                                              .build())
                   .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(rollbackHttpNodeId1)
                   .name("Rollback Http 1")
                   .stepType(BASIC_HTTP_STEP_TYPE)
@@ -416,7 +416,7 @@ public class CustomExecutionUtils {
                                              .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
                                              .build())
                   .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(dummyNodeId)
                   .name("Dummy Node 1")
                   .identifier("dummy")
@@ -456,7 +456,7 @@ public class CustomExecutionUtils {
     return Plan.builder()
         .uuid(generateUuid())
         .startingNodeId(section1NodeId)
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(section1NodeId)
                   .name("Section 1")
                   .identifier("section1")
@@ -471,7 +471,7 @@ public class CustomExecutionUtils {
                                              .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
                                              .build())
                   .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(section2NodeId)
                   .name("Section 2")
                   .identifier("section2")
@@ -481,7 +481,7 @@ public class CustomExecutionUtils {
                                              .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
                                              .build())
                   .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(shellScript1NodeId)
                   .name("Shell Script 1")
                   .identifier("shell1")
@@ -491,7 +491,7 @@ public class CustomExecutionUtils {
                                              .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
                                              .build())
                   .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(shellScript2NodeId)
                   .name("Shell Script 2")
                   .identifier("shell2")
@@ -516,7 +516,7 @@ public class CustomExecutionUtils {
         BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
     return Plan.builder()
         .node(
-            ExecutionNode.builder()
+            PlanNode.builder()
                 .uuid(sectionNodeId)
                 .name("Section")
                 .stepType(SectionStep.STEP_TYPE)
@@ -530,7 +530,7 @@ public class CustomExecutionUtils {
                                            .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
                                            .build())
                 .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(httpChainId)
                   .name("HTTP Chain")
                   .stepType(BasicHttpChainStep.STEP_TYPE)
@@ -543,7 +543,7 @@ public class CustomExecutionUtils {
                                              .type(FacilitatorType.builder().type(FacilitatorType.TASK_CHAIN).build())
                                              .build())
                   .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(dummyNodeId)
                   .name("Dummy Node 1")
                   .identifier("dummy")
@@ -602,7 +602,7 @@ public class CustomExecutionUtils {
     return Plan.builder()
         .uuid(generateUuid())
         .startingNodeId(pipelineSetupNodeId)
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(pipelineSetupNodeId)
                   .name(PIPELINE_SETUP)
                   .identifier(PIPELINE_SETUP)
@@ -617,7 +617,7 @@ public class CustomExecutionUtils {
                                              .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                              .build())
                   .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(infraSectionNodeId)
                   .name(INFRASTRUCTURE_SECTION)
                   .identifier(INFRASTRUCTURE_SECTION)
@@ -627,7 +627,7 @@ public class CustomExecutionUtils {
                                              .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
                                              .build())
                   .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(infraStateNodeId)
                   .name(INFRASTRUCTURE)
                   .identifier(INFRASTRUCTURE)
@@ -643,7 +643,7 @@ public class CustomExecutionUtils {
                           .parameters(OnSuccessAdviserParameters.builder().nextNodeId(scriptNodeId).build())
                           .build())
                   .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(scriptNodeId)
                   .name(SHELL_SCRIPT)
                   .identifier(SHELL_SCRIPT)

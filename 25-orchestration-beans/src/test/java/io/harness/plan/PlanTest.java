@@ -47,11 +47,11 @@ public class PlanTest extends OrchestrationBeansTest {
   @Category(UnitTests.class)
   public void shouldTestFetchNode() {
     Plan plan = buildDummyPlan();
-    ExecutionNode node1 = plan.fetchNode(DUMMY_NODE_1_ID);
+    PlanNode node1 = plan.fetchNode(DUMMY_NODE_1_ID);
     assertThat(node1).isNotNull();
     assertThat(node1.getName()).isEqualTo("Dummy Node 1");
 
-    ExecutionNode node2 = plan.fetchNode(DUMMY_NODE_2_ID);
+    PlanNode node2 = plan.fetchNode(DUMMY_NODE_2_ID);
     assertThat(node2).isNotNull();
     assertThat(node2.getName()).isEqualTo("Dummy Node 2");
 
@@ -63,7 +63,7 @@ public class PlanTest extends OrchestrationBeansTest {
   @Category(UnitTests.class)
   public void shouldTestFetchStartingNode() {
     Plan plan = buildDummyPlan();
-    ExecutionNode startingNode = plan.fetchStartingNode();
+    PlanNode startingNode = plan.fetchStartingNode();
     assertThat(startingNode).isNotNull();
     assertThat(startingNode.getName()).isEqualTo("Dummy Node 1");
   }
@@ -78,19 +78,19 @@ public class PlanTest extends OrchestrationBeansTest {
 
   private Plan buildDummyPlan() {
     return Plan.builder()
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(DUMMY_NODE_1_ID)
                   .name("Dummy Node 1")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy1")
                   .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(DUMMY_NODE_2_ID)
                   .name("Dummy Node 2")
                   .stepType(DUMMY_STEP_TYPE)
                   .identifier("dummy2")
                   .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(DUMMY_NODE_3_ID)
                   .name("Dummy Node 3")
                   .stepType(DUMMY_STEP_TYPE)

@@ -36,7 +36,7 @@ import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.persistence.HPersistence;
-import io.harness.plan.ExecutionNode;
+import io.harness.plan.PlanNode;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.Step;
 import io.harness.state.io.StepTransput;
@@ -119,7 +119,7 @@ public class AbortAllHandler implements InterruptHandler {
     boolean updated = false;
     try {
       Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
-      ExecutionNode node = nodeExecution.getNode();
+      PlanNode node = nodeExecution.getNode();
       Step currentState = Preconditions.checkNotNull(stepRegistry.obtain(node.getStepType()));
       ExecutableResponse executableResponse = nodeExecution.getExecutableResponse();
       if (nodeExecution.isTaskSpawningMode()) {

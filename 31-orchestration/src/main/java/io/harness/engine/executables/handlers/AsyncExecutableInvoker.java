@@ -20,7 +20,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
-import io.harness.plan.ExecutionNode;
+import io.harness.plan.PlanNode;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -44,9 +44,9 @@ public class AsyncExecutableInvoker implements ExecutableInvoker {
 
   private void handleResponse(Ambiance ambiance, AsyncExecutableResponse response) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
-    ExecutionNode nodeDefinition = nodeExecution.getNode();
+    PlanNode node = nodeExecution.getNode();
     if (isEmpty(response.getCallbackIds())) {
-      logger.error("StepResponse has no callbackIds - currentState : " + nodeDefinition.getName()
+      logger.error("StepResponse has no callbackIds - currentState : " + node.getName()
           + ", nodeExecutionId: " + nodeExecution.getUuid());
       throw new InvalidRequestException("Callback Ids cannot be empty for Async Executable Response");
     }

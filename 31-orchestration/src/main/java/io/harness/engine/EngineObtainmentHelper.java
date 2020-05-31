@@ -12,8 +12,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.persistence.HPersistence;
-import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
 import io.harness.references.RefObject;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.resolvers.Resolver;
@@ -44,7 +44,7 @@ public class EngineObtainmentHelper {
     return inputs;
   }
 
-  public ExecutionNode fetchExecutionNode(String nodeId, String executionInstanceId) {
+  public PlanNode fetchExecutionNode(String nodeId, String executionInstanceId) {
     PlanExecution instance =
         hPersistence.createQuery(PlanExecution.class).filter(PlanExecutionKeys.uuid, executionInstanceId).get();
     if (instance == null) {

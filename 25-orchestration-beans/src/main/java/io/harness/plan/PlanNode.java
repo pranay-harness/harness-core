@@ -18,7 +18,7 @@ import java.util.List;
 
 @OwnedBy(CDC)
 @Redesign
-public class ExecutionNode {
+public class PlanNode {
   // Identifiers
   @NonNull @Getter String uuid;
   @NonNull @Getter String name;
@@ -34,8 +34,8 @@ public class ExecutionNode {
   @Singular @Getter List<FacilitatorObtainment> facilitatorObtainments;
 
   @Builder
-  public ExecutionNode(@NonNull String uuid, @NonNull String name, @NonNull StepType stepType,
-      @NonNull String identifier, StepParameters stepParameters, @Singular List<RefObject> refObjects,
+  public PlanNode(@NonNull String uuid, @NonNull String name, @NonNull StepType stepType, @NonNull String identifier,
+      StepParameters stepParameters, @Singular List<RefObject> refObjects,
       @Singular List<AdviserObtainment> adviserObtainments,
       @Singular List<FacilitatorObtainment> facilitatorObtainments) {
     this.uuid = uuid;
@@ -48,7 +48,7 @@ public class ExecutionNode {
     this.facilitatorObtainments = facilitatorObtainments;
   }
 
-  ExecutionNode(String uuid) {
+  PlanNode(String uuid) {
     this.uuid = uuid;
   }
 }

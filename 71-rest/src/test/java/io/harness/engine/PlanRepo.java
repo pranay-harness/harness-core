@@ -9,8 +9,8 @@ import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.engine.interrupts.steps.SimpleStepAsyncParams;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
-import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
 import io.harness.state.StepType;
 import io.harness.state.core.dummy.DummyStep;
 import io.harness.state.core.section.SectionStepParameters;
@@ -25,7 +25,7 @@ public class PlanRepo {
     String dummyNodeId = generateUuid();
 
     return Plan.builder()
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(test1Id)
                   .name("Test1 - No Wait")
                   .stepType(SimpleAsyncStep.STEP_TYPE)
@@ -39,7 +39,7 @@ public class PlanRepo {
                                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(test2Id).build())
                                          .build())
                   .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(test2Id)
                   .name("Test2 - BigWait")
                   .stepType(SimpleAsyncStep.STEP_TYPE)
@@ -53,7 +53,7 @@ public class PlanRepo {
                                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(test3Id).build())
                                          .build())
                   .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(test3Id)
                   .name("Test 3")
                   .stepType(SimpleAsyncStep.STEP_TYPE)
@@ -64,7 +64,7 @@ public class PlanRepo {
                                              .build())
                   .build())
         .node(
-            ExecutionNode.builder()
+            PlanNode.builder()
                 .uuid(sectionNodeId)
                 .name("Section")
                 .stepType(StepType.builder().type("SECTION").build())
@@ -78,7 +78,7 @@ public class PlanRepo {
                                            .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
                                            .build())
                 .build())
-        .node(ExecutionNode.builder()
+        .node(PlanNode.builder()
                   .uuid(dummyNodeId)
                   .name("Dummy Node 1")
                   .identifier("dummy")

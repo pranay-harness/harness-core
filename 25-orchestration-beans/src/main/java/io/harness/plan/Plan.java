@@ -40,7 +40,7 @@ import javax.validation.constraints.NotNull;
 public class Plan implements PersistentEntity {
   @Id @NonNull String uuid;
 
-  @Singular List<ExecutionNode> nodes;
+  @Singular List<PlanNode> nodes;
 
   @NotNull String startingNodeId;
 
@@ -48,13 +48,12 @@ public class Plan implements PersistentEntity {
     return EmptyPredicate.isEmpty(nodes);
   }
 
-  public ExecutionNode fetchStartingNode() {
+  public PlanNode fetchStartingNode() {
     return fetchNode(startingNodeId);
   }
 
-  public ExecutionNode fetchNode(String nodeId) {
-    int nodeIndex =
-        Collections.binarySearch(nodes, new ExecutionNode(nodeId), Comparator.comparing(ExecutionNode::getUuid));
+  public PlanNode fetchNode(String nodeId) {
+    int nodeIndex = Collections.binarySearch(nodes, new PlanNode(nodeId), Comparator.comparing(PlanNode::getUuid));
     if (nodeIndex < 0) {
       throw new InvalidRequestException("No node found with Id :" + nodeId);
     }
@@ -66,7 +65,7 @@ public class Plan implements PersistentEntity {
       if (EmptyPredicate.isEmpty(nodes)) {
         return internalBuild();
       }
-      nodes.sort(Comparator.comparing(ExecutionNode::getUuid));
+      nodes.sort(Comparator.comparing(PlanNode::getUuid));
       return internalBuild();
     }
   }
