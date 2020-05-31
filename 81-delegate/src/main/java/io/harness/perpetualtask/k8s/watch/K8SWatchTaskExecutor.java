@@ -16,9 +16,9 @@ import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.CeExceptionMessage;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
-import io.harness.perpetualtask.PerpetualTaskParams;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
@@ -59,7 +59,8 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   }
 
   @Override
-  public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
+  public PerpetualTaskResponse runOnce(
+      PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     K8sWatchTaskParams watchTaskParams = AnyUtils.unpack(params.getCustomizedParams(), K8sWatchTaskParams.class);
     try {
       Instant now = Instant.now();
@@ -151,7 +152,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   }
 
   @Override
-  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskParams params) {
+  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskExecutionParams params) {
     if (taskWatchIdMap.get(taskId.getId()) == null) {
       return false;
     }

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask;
+
+option java_multiple_files = true;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+import "io/harness/perpetualtask/perpetual_task.proto";
+
+// params are tracked by clients
+message PerpetualTaskExecutionParams {
+  google.protobuf.Any customized_params = 1;
+}
+
+message PerpetualTaskAssignDetails {
+  PerpetualTaskId task_id = 1;
+  google.protobuf.Timestamp last_context_updated = 2;
+}
+
+message PerpetualTaskExecutionContext {
+  PerpetualTaskExecutionParams task_params = 1;
+  PerpetualTaskSchedule task_schedule = 2;
+  google.protobuf.Timestamp heartbeat_timestamp = 3;
+}

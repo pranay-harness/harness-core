@@ -67,7 +67,7 @@ public class AwsSshInstanceSyncExecutorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void runOnceWhenAwsCallSuccess() throws IOException {
     PerpetualTaskResponse perpetualTaskResponse;
-    PerpetualTaskParams perpetualTaskParams = getPerpetualTaskParams();
+    PerpetualTaskExecutionParams perpetualTaskParams = getPerpetualTaskParams();
     final Instance instance = new Instance();
     doReturn(Arrays.asList(instance))
         .when(ec2ServiceDelegate)
@@ -108,7 +108,7 @@ public class AwsSshInstanceSyncExecutorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void runOnceWhenAwsCallThrows() throws IOException {
     PerpetualTaskResponse perpetualTaskResponse;
-    PerpetualTaskParams perpetualTaskParams = getPerpetualTaskParams();
+    PerpetualTaskExecutionParams perpetualTaskParams = getPerpetualTaskParams();
     final Instance instance = new Instance();
     doThrow(new RuntimeException("invalid credentials"))
         .when(ec2ServiceDelegate)
@@ -144,7 +144,7 @@ public class AwsSshInstanceSyncExecutorTest extends CategoryTest {
     assertThat(perpetualTaskResponse.getResponseMessage()).contains("invalid credentials");
   }
 
-  private PerpetualTaskParams getPerpetualTaskParams() {
+  private PerpetualTaskExecutionParams getPerpetualTaskParams() {
     ByteString configBytes = ByteString.copyFrom(KryoUtils.asBytes(AwsConfig.builder().accountId("accountId").build()));
     ByteString filterBytes = ByteString.copyFrom(KryoUtils.asBytes(Arrays.asList(new Filter())));
     ByteString encryptionDetailsBytes = ByteString.copyFrom(KryoUtils.asBytes(new ArrayList<>()));
@@ -155,14 +155,15 @@ public class AwsSshInstanceSyncExecutorTest extends CategoryTest {
                                                        .setEncryptedData(encryptionDetailsBytes)
                                                        .setRegion("us-east-1")
                                                        .build();
-    return PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(params)).build();
+    return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(params)).build();
   }
 
   @Test
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
   public void cleanup() {
-    assertThat(executor.cleanup(PerpetualTaskId.newBuilder().build(), PerpetualTaskParams.newBuilder().build()))
+    assertThat(
+        executor.cleanup(PerpetualTaskId.newBuilder().build(), PerpetualTaskExecutionParams.newBuilder().build()))
         .isFalse();
   }
 }

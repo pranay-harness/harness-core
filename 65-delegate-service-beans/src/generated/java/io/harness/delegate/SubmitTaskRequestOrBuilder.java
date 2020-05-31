@@ -47,15 +47,23 @@ public interface SubmitTaskRequestOrBuilder extends
   io.harness.delegate.TaskDetailsOrBuilder getDetailsOrBuilder();
 
   /**
-   * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
    */
-  boolean hasCapabilities();
+  java.util.List<io.harness.delegate.Capability> getCapabilitiesList();
   /**
-   * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
    */
-  io.harness.delegate.TaskCapabilities getCapabilities();
+  io.harness.delegate.Capability getCapabilities(int index);
   /**
-   * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
    */
-  io.harness.delegate.TaskCapabilitiesOrBuilder getCapabilitiesOrBuilder();
+  int getCapabilitiesCount();
+  /**
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+   */
+  java.util.List<? extends io.harness.delegate.CapabilityOrBuilder> getCapabilitiesOrBuilderList();
+  /**
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+   */
+  io.harness.delegate.CapabilityOrBuilder getCapabilitiesOrBuilder(int index);
 }

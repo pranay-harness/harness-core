@@ -139,7 +139,7 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends CategoryTest {
     assertThat(executor.cleanup(PerpetualTaskId.newBuilder().setId("id").build(), getPerpetualTaskParams())).isFalse();
   }
 
-  private PerpetualTaskParams getPerpetualTaskParams() {
+  private PerpetualTaskExecutionParams getPerpetualTaskParams() {
     ByteString configBytes = ByteString.copyFrom(KryoUtils.asBytes(AwsConfig.builder().accountId("accountId").build()));
     ByteString encryptionDetailsBytes = ByteString.copyFrom(KryoUtils.asBytes(new ArrayList<>()));
 
@@ -149,6 +149,6 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends CategoryTest {
                                                        .setRegion("us-east-1")
                                                        .setAsgName("asg-1")
                                                        .build();
-    return PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(params)).build();
+    return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(params)).build();
   }
 }

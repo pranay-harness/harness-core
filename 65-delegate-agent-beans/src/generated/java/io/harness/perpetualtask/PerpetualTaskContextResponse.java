@@ -40,12 +40,12 @@ public final class PerpetualTaskContextResponse extends com.google.protobuf.Gene
             done = true;
             break;
           case 10: {
-            io.harness.perpetualtask.PerpetualTaskContext.Builder subBuilder = null;
+            io.harness.perpetualtask.PerpetualTaskExecutionContext.Builder subBuilder = null;
             if (perpetualTaskContext_ != null) {
               subBuilder = perpetualTaskContext_.toBuilder();
             }
             perpetualTaskContext_ =
-                input.readMessage(io.harness.perpetualtask.PerpetualTaskContext.parser(), extensionRegistry);
+                input.readMessage(io.harness.perpetualtask.PerpetualTaskExecutionContext.parser(), extensionRegistry);
             if (subBuilder != null) {
               subBuilder.mergeFrom(perpetualTaskContext_);
               perpetualTaskContext_ = subBuilder.buildPartial();
@@ -85,24 +85,24 @@ public final class PerpetualTaskContextResponse extends com.google.protobuf.Gene
   }
 
   public static final int PERPETUAL_TASK_CONTEXT_FIELD_NUMBER = 1;
-  private io.harness.perpetualtask.PerpetualTaskContext perpetualTaskContext_;
+  private io.harness.perpetualtask.PerpetualTaskExecutionContext perpetualTaskContext_;
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
    */
   public boolean hasPerpetualTaskContext() {
     return perpetualTaskContext_ != null;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
    */
-  public io.harness.perpetualtask.PerpetualTaskContext getPerpetualTaskContext() {
-    return perpetualTaskContext_ == null ? io.harness.perpetualtask.PerpetualTaskContext.getDefaultInstance()
+  public io.harness.perpetualtask.PerpetualTaskExecutionContext getPerpetualTaskContext() {
+    return perpetualTaskContext_ == null ? io.harness.perpetualtask.PerpetualTaskExecutionContext.getDefaultInstance()
                                          : perpetualTaskContext_;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
    */
-  public io.harness.perpetualtask.PerpetualTaskContextOrBuilder getPerpetualTaskContextOrBuilder() {
+  public io.harness.perpetualtask.PerpetualTaskExecutionContextOrBuilder getPerpetualTaskContextOrBuilder() {
     return getPerpetualTaskContext();
   }
 
@@ -403,31 +403,32 @@ public final class PerpetualTaskContextResponse extends com.google.protobuf.Gene
       return this;
     }
 
-    private io.harness.perpetualtask.PerpetualTaskContext perpetualTaskContext_;
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskContext,
-        io.harness.perpetualtask.PerpetualTaskContext.Builder, io.harness.perpetualtask.PerpetualTaskContextOrBuilder>
-        perpetualTaskContextBuilder_;
+    private io.harness.perpetualtask.PerpetualTaskExecutionContext perpetualTaskContext_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskExecutionContext,
+        io.harness.perpetualtask.PerpetualTaskExecutionContext.Builder,
+        io.harness.perpetualtask.PerpetualTaskExecutionContextOrBuilder> perpetualTaskContextBuilder_;
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
      */
     public boolean hasPerpetualTaskContext() {
       return perpetualTaskContextBuilder_ != null || perpetualTaskContext_ != null;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
      */
-    public io.harness.perpetualtask.PerpetualTaskContext getPerpetualTaskContext() {
+    public io.harness.perpetualtask.PerpetualTaskExecutionContext getPerpetualTaskContext() {
       if (perpetualTaskContextBuilder_ == null) {
-        return perpetualTaskContext_ == null ? io.harness.perpetualtask.PerpetualTaskContext.getDefaultInstance()
-                                             : perpetualTaskContext_;
+        return perpetualTaskContext_ == null
+            ? io.harness.perpetualtask.PerpetualTaskExecutionContext.getDefaultInstance()
+            : perpetualTaskContext_;
       } else {
         return perpetualTaskContextBuilder_.getMessage();
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
      */
-    public Builder setPerpetualTaskContext(io.harness.perpetualtask.PerpetualTaskContext value) {
+    public Builder setPerpetualTaskContext(io.harness.perpetualtask.PerpetualTaskExecutionContext value) {
       if (perpetualTaskContextBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -441,9 +442,10 @@ public final class PerpetualTaskContextResponse extends com.google.protobuf.Gene
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
      */
-    public Builder setPerpetualTaskContext(io.harness.perpetualtask.PerpetualTaskContext.Builder builderForValue) {
+    public Builder setPerpetualTaskContext(
+        io.harness.perpetualtask.PerpetualTaskExecutionContext.Builder builderForValue) {
       if (perpetualTaskContextBuilder_ == null) {
         perpetualTaskContext_ = builderForValue.build();
         onChanged();
@@ -454,14 +456,15 @@ public final class PerpetualTaskContextResponse extends com.google.protobuf.Gene
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
      */
-    public Builder mergePerpetualTaskContext(io.harness.perpetualtask.PerpetualTaskContext value) {
+    public Builder mergePerpetualTaskContext(io.harness.perpetualtask.PerpetualTaskExecutionContext value) {
       if (perpetualTaskContextBuilder_ == null) {
         if (perpetualTaskContext_ != null) {
-          perpetualTaskContext_ = io.harness.perpetualtask.PerpetualTaskContext.newBuilder(perpetualTaskContext_)
-                                      .mergeFrom(value)
-                                      .buildPartial();
+          perpetualTaskContext_ =
+              io.harness.perpetualtask.PerpetualTaskExecutionContext.newBuilder(perpetualTaskContext_)
+                  .mergeFrom(value)
+                  .buildPartial();
         } else {
           perpetualTaskContext_ = value;
         }
@@ -473,7 +476,7 @@ public final class PerpetualTaskContextResponse extends com.google.protobuf.Gene
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
      */
     public Builder clearPerpetualTaskContext() {
       if (perpetualTaskContextBuilder_ == null) {
@@ -487,34 +490,36 @@ public final class PerpetualTaskContextResponse extends com.google.protobuf.Gene
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
      */
-    public io.harness.perpetualtask.PerpetualTaskContext.Builder getPerpetualTaskContextBuilder() {
+    public io.harness.perpetualtask.PerpetualTaskExecutionContext.Builder getPerpetualTaskContextBuilder() {
       onChanged();
       return getPerpetualTaskContextFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
      */
-    public io.harness.perpetualtask.PerpetualTaskContextOrBuilder getPerpetualTaskContextOrBuilder() {
+    public io.harness.perpetualtask.PerpetualTaskExecutionContextOrBuilder getPerpetualTaskContextOrBuilder() {
       if (perpetualTaskContextBuilder_ != null) {
         return perpetualTaskContextBuilder_.getMessageOrBuilder();
       } else {
-        return perpetualTaskContext_ == null ? io.harness.perpetualtask.PerpetualTaskContext.getDefaultInstance()
-                                             : perpetualTaskContext_;
+        return perpetualTaskContext_ == null
+            ? io.harness.perpetualtask.PerpetualTaskExecutionContext.getDefaultInstance()
+            : perpetualTaskContext_;
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
      */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskContext,
-        io.harness.perpetualtask.PerpetualTaskContext.Builder, io.harness.perpetualtask.PerpetualTaskContextOrBuilder>
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskExecutionContext,
+        io.harness.perpetualtask.PerpetualTaskExecutionContext.Builder,
+        io.harness.perpetualtask.PerpetualTaskExecutionContextOrBuilder>
     getPerpetualTaskContextFieldBuilder() {
       if (perpetualTaskContextBuilder_ == null) {
         perpetualTaskContextBuilder_ =
-            new com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskContext,
-                io.harness.perpetualtask.PerpetualTaskContext.Builder,
-                io.harness.perpetualtask.PerpetualTaskContextOrBuilder>(
+            new com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskExecutionContext,
+                io.harness.perpetualtask.PerpetualTaskExecutionContext.Builder,
+                io.harness.perpetualtask.PerpetualTaskExecutionContextOrBuilder>(
                 getPerpetualTaskContext(), getParentForChildren(), isClean());
         perpetualTaskContext_ = null;
       }

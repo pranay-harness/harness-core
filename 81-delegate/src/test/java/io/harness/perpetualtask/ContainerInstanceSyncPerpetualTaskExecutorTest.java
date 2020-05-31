@@ -252,7 +252,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
         .isFalse();
   }
 
-  private PerpetualTaskParams getContainerInstancePerpetualTaskParams() {
+  private PerpetualTaskExecutionParams getContainerInstancePerpetualTaskParams() {
     AwsConfig awsConfig = AwsConfig.builder().accountId("accountId").build();
     ByteString configBytes = ByteString.copyFrom(KryoUtils.asBytes(
         SettingAttribute.Builder.aSettingAttribute().withAccountId("accountId").withValue(awsConfig).build()));
@@ -270,10 +270,10 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
                                                         .setClusterName("cluster")
                                                         .build())
             .build();
-    return PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(params)).build();
+    return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(params)).build();
   }
 
-  private PerpetualTaskParams getK8sPerpetualTaskParams() {
+  private PerpetualTaskExecutionParams getK8sPerpetualTaskParams() {
     ByteString configBytes =
         ByteString.copyFrom(KryoUtils.asBytes(K8sClusterConfig.builder().namespace("namespace").build()));
 
@@ -287,6 +287,6 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
                                                     .setReleaseName("release")
                                                     .build())
             .build();
-    return PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(params)).build();
+    return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(params)).build();
   }
 }

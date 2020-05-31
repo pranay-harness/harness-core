@@ -32,10 +32,6 @@ public final class Task {
       .Descriptor internal_static_io_harness_delegate_TaskDetails_ExpressionsEntry_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_delegate_TaskDetails_ExpressionsEntry_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors
-      .Descriptor internal_static_io_harness_delegate_TaskCapabilities_descriptor;
-  static final com.google.protobuf.GeneratedMessageV3
-      .FieldAccessorTable internal_static_io_harness_delegate_TaskCapabilities_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -57,9 +53,8 @@ public final class Task {
         + "1.io.harness.delegate.TaskDetails.Expres"
         + "sionsEntry\022 \n\030expression_functor_token\030\006"
         + " \001(\003\0322\n\020ExpressionsEntry\022\013\n\003key\030\001 \001(\t\022\r\n"
-        + "\005value\030\002 \001(\t:\0028\001B\014\n\nparameters\"A\n\020TaskCa"
-        + "pabilities\022-\n\004list\030\001 \003(\0132\037.io.harness.de"
-        + "legate.CapabilityB\002P\001b\006proto3"};
+        + "\005value\030\002 \001(\t:\0028\001B\014\n\nparametersB\002P\001b\006prot"
+        + "o3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -124,13 +119,6 @@ public final class Task {
             new java.lang.String[] {
                 "Key",
                 "Value",
-            });
-    internal_static_io_harness_delegate_TaskCapabilities_descriptor = getDescriptor().getMessageTypes().get(4);
-    internal_static_io_harness_delegate_TaskCapabilities_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_io_harness_delegate_TaskCapabilities_descriptor,
-            new java.lang.String[] {
-                "List",
             });
     com.google.protobuf.DurationProto.getDescriptor();
     io.harness.delegate.CapabilityOuterClass.getDescriptor();

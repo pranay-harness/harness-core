@@ -7,8 +7,8 @@ import io.harness.delegate.DelegateId;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.HeartbeatRequest;
 import io.harness.perpetualtask.PerpetualTaskAssignDetails;
-import io.harness.perpetualtask.PerpetualTaskContext;
 import io.harness.perpetualtask.PerpetualTaskContextRequest;
+import io.harness.perpetualtask.PerpetualTaskExecutionContext;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskListRequest;
 import io.harness.perpetualtask.PerpetualTaskListResponse;
@@ -39,7 +39,7 @@ public class PerpetualTaskServiceGrpcClient {
     return response.getPerpetualTaskAssignDetailsList();
   }
 
-  public PerpetualTaskContext perpetualTaskContext(PerpetualTaskId taskId) {
+  public PerpetualTaskExecutionContext perpetualTaskContext(PerpetualTaskId taskId) {
     return serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
         .perpetualTaskContext(PerpetualTaskContextRequest.newBuilder().setPerpetualTaskId(taskId).build())
         .getPerpetualTaskContext();

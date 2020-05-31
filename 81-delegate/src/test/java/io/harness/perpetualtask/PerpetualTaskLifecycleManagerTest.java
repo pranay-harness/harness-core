@@ -58,10 +58,11 @@ public class PerpetualTaskLifecycleManagerTest extends CategoryTest {
                                                         .setClusterName(CLUSTER_NAME)
                                                         .build();
 
-    PerpetualTaskParams params =
-        PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
+    PerpetualTaskExecutionParams params =
+        PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
     PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
-    PerpetualTaskContext taskContext = PerpetualTaskContext.newBuilder().setTaskParams(params).build();
+    PerpetualTaskExecutionContext taskContext =
+        PerpetualTaskExecutionContext.newBuilder().setTaskParams(params).build();
     perpetualTaskLifecycleManager = new PerpetualTaskLifecycleManager(
         perpetualTaskId, taskContext, factoryMap, perpetualTaskServiceGrpcClient, timeLimiter);
   }

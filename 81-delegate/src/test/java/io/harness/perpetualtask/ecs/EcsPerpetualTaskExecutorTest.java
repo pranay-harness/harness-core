@@ -26,8 +26,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.EcsUtilization;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskId;
-import io.harness.perpetualtask.PerpetualTaskParams;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.ecs.support.EcsMetricClient;
@@ -180,8 +180,8 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
                                                         .setEncryptionDetail(encryptionDetailBytes)
                                                         .build();
 
-    PerpetualTaskParams params =
-        PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
+    PerpetualTaskExecutionParams params =
+        PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
     PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
     PerpetualTaskResponse perpetualTaskResponse =
         ecsPerpetualTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
@@ -211,8 +211,8 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
                                                         .setEncryptionDetail(encryptionDetailBytes)
                                                         .build();
 
-    PerpetualTaskParams params =
-        PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
+    PerpetualTaskExecutionParams params =
+        PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
     PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
     ecsPerpetualTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
 
@@ -242,8 +242,8 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
                                                         .setEncryptionDetail(encryptionDetailBytes)
                                                         .build();
 
-    PerpetualTaskParams params =
-        PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
+    PerpetualTaskExecutionParams params =
+        PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
     PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
     ecsPerpetualTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
 
@@ -275,8 +275,8 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
                                                         .setEncryptionDetail(encryptionDetailBytes)
                                                         .build();
 
-    PerpetualTaskParams params =
-        PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
+    PerpetualTaskExecutionParams params =
+        PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
     PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
     ecsPerpetualTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
 
@@ -309,8 +309,8 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
                                                         .setEncryptionDetail(encryptionDetailBytes)
                                                         .build();
 
-    PerpetualTaskParams params =
-        PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
+    PerpetualTaskExecutionParams params =
+        PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
     PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
     ecsPerpetualTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
 

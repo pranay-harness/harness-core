@@ -43,7 +43,8 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
   @Inject private transient ContainerService containerService;
 
   @Override
-  public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
+  public PerpetualTaskResponse runOnce(
+      PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     logger.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
     ContainerInstanceSyncPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), ContainerInstanceSyncPerpetualTaskParams.class);
@@ -166,7 +167,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
   }
 
   @Override
-  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskParams params) {
+  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskExecutionParams params) {
     return false;
   }
 }

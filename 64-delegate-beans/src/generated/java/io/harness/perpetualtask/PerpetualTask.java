@@ -16,21 +16,9 @@ public final class PerpetualTask {
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_perpetualtask_PerpetualTaskId_fieldAccessorTable;
   static final com.google.protobuf.Descriptors
-      .Descriptor internal_static_io_harness_perpetualtask_PerpetualTaskParams_descriptor;
-  static final com.google.protobuf.GeneratedMessageV3
-      .FieldAccessorTable internal_static_io_harness_perpetualtask_PerpetualTaskParams_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors
       .Descriptor internal_static_io_harness_perpetualtask_PerpetualTaskSchedule_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_perpetualtask_PerpetualTaskSchedule_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors
-      .Descriptor internal_static_io_harness_perpetualtask_PerpetualTaskAssignDetails_descriptor;
-  static final com.google.protobuf.GeneratedMessageV3
-      .FieldAccessorTable internal_static_io_harness_perpetualtask_PerpetualTaskAssignDetails_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors
-      .Descriptor internal_static_io_harness_perpetualtask_PerpetualTaskContext_descriptor;
-  static final com.google.protobuf.GeneratedMessageV3
-      .FieldAccessorTable internal_static_io_harness_perpetualtask_PerpetualTaskContext_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -38,25 +26,12 @@ public final class PerpetualTask {
   private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
   static {
     java.lang.String[] descriptorData = {"\n-io/harness/perpetualtask/perpetual_tas"
-        + "k.proto\022\030io.harness.perpetualtask\032\031googl"
-        + "e/protobuf/any.proto\032\036google/protobuf/du"
-        + "ration.proto\032\037google/protobuf/timestamp."
-        + "proto\"\035\n\017PerpetualTaskId\022\n\n\002id\030\001 \001(\t\"F\n\023"
-        + "PerpetualTaskParams\022/\n\021customized_params"
-        + "\030\001 \001(\0132\024.google.protobuf.Any\"p\n\025Perpetua"
-        + "lTaskSchedule\022+\n\010interval\030\001 \001(\0132\031.google"
-        + ".protobuf.Duration\022*\n\007timeout\030\002 \001(\0132\031.go"
-        + "ogle.protobuf.Duration\"\222\001\n\032PerpetualTask"
-        + "AssignDetails\022:\n\007task_id\030\001 \001(\0132).io.harn"
-        + "ess.perpetualtask.PerpetualTaskId\0228\n\024las"
-        + "t_context_updated\030\002 \001(\0132\032.google.protobu"
-        + "f.Timestamp\"\333\001\n\024PerpetualTaskContext\022B\n\013"
-        + "task_params\030\001 \001(\0132-.io.harness.perpetual"
-        + "task.PerpetualTaskParams\022F\n\rtask_schedul"
-        + "e\030\002 \001(\0132/.io.harness.perpetualtask.Perpe"
-        + "tualTaskSchedule\0227\n\023heartbeat_timestamp\030"
-        + "\003 \001(\0132\032.google.protobuf.TimestampB\002P\001b\006p"
-        + "roto3"};
+        + "k.proto\022\030io.harness.perpetualtask\032\036googl"
+        + "e/protobuf/duration.proto\"\035\n\017PerpetualTa"
+        + "skId\022\n\n\002id\030\001 \001(\t\"p\n\025PerpetualTaskSchedul"
+        + "e\022+\n\010interval\030\001 \001(\0132\031.google.protobuf.Du"
+        + "ration\022*\n\007timeout\030\002 \001(\0132\031.google.protobu"
+        + "f.DurationB\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -67,9 +42,7 @@ public final class PerpetualTask {
         };
     com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-            com.google.protobuf.AnyProto.getDescriptor(),
             com.google.protobuf.DurationProto.getDescriptor(),
-            com.google.protobuf.TimestampProto.getDescriptor(),
         },
         assigner);
     internal_static_io_harness_perpetualtask_PerpetualTaskId_descriptor = getDescriptor().getMessageTypes().get(0);
@@ -79,15 +52,8 @@ public final class PerpetualTask {
             new java.lang.String[] {
                 "Id",
             });
-    internal_static_io_harness_perpetualtask_PerpetualTaskParams_descriptor = getDescriptor().getMessageTypes().get(1);
-    internal_static_io_harness_perpetualtask_PerpetualTaskParams_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_io_harness_perpetualtask_PerpetualTaskParams_descriptor,
-            new java.lang.String[] {
-                "CustomizedParams",
-            });
     internal_static_io_harness_perpetualtask_PerpetualTaskSchedule_descriptor =
-        getDescriptor().getMessageTypes().get(2);
+        getDescriptor().getMessageTypes().get(1);
     internal_static_io_harness_perpetualtask_PerpetualTaskSchedule_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_perpetualtask_PerpetualTaskSchedule_descriptor,
@@ -95,27 +61,7 @@ public final class PerpetualTask {
                 "Interval",
                 "Timeout",
             });
-    internal_static_io_harness_perpetualtask_PerpetualTaskAssignDetails_descriptor =
-        getDescriptor().getMessageTypes().get(3);
-    internal_static_io_harness_perpetualtask_PerpetualTaskAssignDetails_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_io_harness_perpetualtask_PerpetualTaskAssignDetails_descriptor,
-            new java.lang.String[] {
-                "TaskId",
-                "LastContextUpdated",
-            });
-    internal_static_io_harness_perpetualtask_PerpetualTaskContext_descriptor = getDescriptor().getMessageTypes().get(4);
-    internal_static_io_harness_perpetualtask_PerpetualTaskContext_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_io_harness_perpetualtask_PerpetualTaskContext_descriptor,
-            new java.lang.String[] {
-                "TaskParams",
-                "TaskSchedule",
-                "HeartbeatTimestamp",
-            });
-    com.google.protobuf.AnyProto.getDescriptor();
     com.google.protobuf.DurationProto.getDescriptor();
-    com.google.protobuf.TimestampProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

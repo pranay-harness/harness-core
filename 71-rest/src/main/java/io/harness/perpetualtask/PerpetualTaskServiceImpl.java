@@ -118,27 +118,27 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   }
 
   @Override
-  public PerpetualTaskContext perpetualTaskContext(String taskId) {
+  public PerpetualTaskExecutionContext perpetualTaskContext(String taskId) {
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecordDao.getTask(taskId);
 
-    PerpetualTaskParams params = getTaskParams(perpetualTaskRecord);
+    PerpetualTaskExecutionParams params = getTaskParams(perpetualTaskRecord);
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromSeconds(perpetualTaskRecord.getIntervalSeconds()))
                                          .setTimeout(Durations.fromMillis(perpetualTaskRecord.getTimeoutMillis()))
                                          .build();
 
-    return PerpetualTaskContext.newBuilder()
+    return PerpetualTaskExecutionContext.newBuilder()
         .setTaskParams(params)
         .setTaskSchedule(schedule)
         .setHeartbeatTimestamp(HTimestamps.fromMillis(perpetualTaskRecord.getLastHeartbeat()))
         .build();
   }
 
-  private PerpetualTaskParams getTaskParams(PerpetualTaskRecord perpetualTaskRecord) {
+  private PerpetualTaskExecutionParams getTaskParams(PerpetualTaskRecord perpetualTaskRecord) {
     PerpetualTaskServiceClient client = clientRegistry.getClient(perpetualTaskRecord.getPerpetualTaskType());
     Message perpetualTaskParams = client.getTaskParams(perpetualTaskRecord.getClientContext());
-    return PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(perpetualTaskParams)).build();
+    return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(perpetualTaskParams)).build();
   }
 
   @Override

@@ -166,7 +166,8 @@ public class MailerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VIKAS)
+  @Owner(developers = VIKAS, intermittent = true)
+
   @Category(UnitTests.class)
   public void shouldStartTLS() throws MessagingException {
     SmtpConfig smtpConfig = Mockito.spy(SmtpConfig.builder()

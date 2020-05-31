@@ -13,9 +13,9 @@ import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.managerclient.ManagerClient;
+import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
-import io.harness.perpetualtask.PerpetualTaskParams;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.serializer.KryoUtils;
@@ -52,7 +52,8 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
   }
 
   @Override
-  public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
+  public PerpetualTaskResponse runOnce(
+      PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     logger.info("In ArtifactPerpetualTask artifact collection");
     ArtifactCollectionTaskParams artifactCollectionTaskParams = getTaskParams(params);
 
@@ -205,13 +206,13 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
   }
 
   @Override
-  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskParams params) {
+  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskExecutionParams params) {
     ArtifactCollectionTaskParams taskParams = getTaskParams(params);
     cache.invalidate(taskParams.getArtifactStreamId());
     return false;
   }
 
-  private ArtifactCollectionTaskParams getTaskParams(PerpetualTaskParams params) {
+  private ArtifactCollectionTaskParams getTaskParams(PerpetualTaskExecutionParams params) {
     return AnyUtils.unpack(params.getCustomizedParams(), ArtifactCollectionTaskParams.class);
   }
 

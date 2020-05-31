@@ -45,32 +45,34 @@ public final class PerpetualTaskServiceOuterClass {
         + "k_service.proto\022\030io.harness.perpetualtas"
         + "k\032\037google/protobuf/timestamp.proto\032\"io/h"
         + "arness/delegate/delegate.proto\032-io/harne"
-        + "ss/perpetualtask/perpetual_task.proto\"P\n"
-        + "\030PerpetualTaskListRequest\0224\n\013delegate_id"
-        + "\030\001 \001(\0132\037.io.harness.delegate.DelegateId\""
-        + "x\n\031PerpetualTaskListResponse\022[\n\035perpetua"
-        + "l_task_assign_details\030\001 \003(\01324.io.harness"
-        + ".perpetualtask.PerpetualTaskAssignDetail"
-        + "s\"c\n\033PerpetualTaskContextRequest\022D\n\021perp"
-        + "etual_task_id\030\001 \001(\0132).io.harness.perpetu"
-        + "altask.PerpetualTaskId\"n\n\034PerpetualTaskC"
-        + "ontextResponse\022N\n\026perpetual_task_context"
-        + "\030\001 \001(\0132..io.harness.perpetualtask.Perpet"
-        + "ualTaskContext\"\234\001\n\020HeartbeatRequest\022\n\n\002i"
-        + "d\030\001 \001(\t\0227\n\023heartbeat_timestamp\030\002 \001(\0132\032.g"
-        + "oogle.protobuf.Timestamp\022\022\n\ntask_state\030\003"
-        + " \001(\t\022\025\n\rresponse_code\030\004 \001(\005\022\030\n\020response_"
-        + "message\030\005 \001(\t\"\023\n\021HeartbeatResponse2\202\003\n\024P"
-        + "erpetualTaskService\022|\n\021PerpetualTaskList"
-        + "\0222.io.harness.perpetualtask.PerpetualTas"
-        + "kListRequest\0323.io.harness.perpetualtask."
-        + "PerpetualTaskListResponse\022\205\001\n\024PerpetualT"
-        + "askContext\0225.io.harness.perpetualtask.Pe"
-        + "rpetualTaskContextRequest\0326.io.harness.p"
-        + "erpetualtask.PerpetualTaskContextRespons"
-        + "e\022d\n\tHeartbeat\022*.io.harness.perpetualtas"
-        + "k.HeartbeatRequest\032+.io.harness.perpetua"
-        + "ltask.HeartbeatResponseB\002P\001b\006proto3"};
+        + "ss/perpetualtask/perpetual_task.proto\0327i"
+        + "o/harness/perpetualtask/perpetual_task_e"
+        + "xecution.proto\"P\n\030PerpetualTaskListReque"
+        + "st\0224\n\013delegate_id\030\001 \001(\0132\037.io.harness.del"
+        + "egate.DelegateId\"x\n\031PerpetualTaskListRes"
+        + "ponse\022[\n\035perpetual_task_assign_details\030\001"
+        + " \003(\01324.io.harness.perpetualtask.Perpetua"
+        + "lTaskAssignDetails\"c\n\033PerpetualTaskConte"
+        + "xtRequest\022D\n\021perpetual_task_id\030\001 \001(\0132).i"
+        + "o.harness.perpetualtask.PerpetualTaskId\""
+        + "w\n\034PerpetualTaskContextResponse\022W\n\026perpe"
+        + "tual_task_context\030\001 \001(\01327.io.harness.per"
+        + "petualtask.PerpetualTaskExecutionContext"
+        + "\"\234\001\n\020HeartbeatRequest\022\n\n\002id\030\001 \001(\t\0227\n\023hea"
+        + "rtbeat_timestamp\030\002 \001(\0132\032.google.protobuf"
+        + ".Timestamp\022\022\n\ntask_state\030\003 \001(\t\022\025\n\rrespon"
+        + "se_code\030\004 \001(\005\022\030\n\020response_message\030\005 \001(\t\""
+        + "\023\n\021HeartbeatResponse2\202\003\n\024PerpetualTaskSe"
+        + "rvice\022|\n\021PerpetualTaskList\0222.io.harness."
+        + "perpetualtask.PerpetualTaskListRequest\0323"
+        + ".io.harness.perpetualtask.PerpetualTaskL"
+        + "istResponse\022\205\001\n\024PerpetualTaskContext\0225.i"
+        + "o.harness.perpetualtask.PerpetualTaskCon"
+        + "textRequest\0326.io.harness.perpetualtask.P"
+        + "erpetualTaskContextResponse\022d\n\tHeartbeat"
+        + "\022*.io.harness.perpetualtask.HeartbeatReq"
+        + "uest\032+.io.harness.perpetualtask.Heartbea"
+        + "tResponseB\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -84,6 +86,7 @@ public final class PerpetualTaskServiceOuterClass {
             com.google.protobuf.TimestampProto.getDescriptor(),
             io.harness.delegate.Delegate.getDescriptor(),
             io.harness.perpetualtask.PerpetualTask.getDescriptor(),
+            io.harness.perpetualtask.PerpetualTaskExecution.getDescriptor(),
         },
         assigner);
     internal_static_io_harness_perpetualtask_PerpetualTaskListRequest_descriptor =
@@ -136,6 +139,7 @@ public final class PerpetualTaskServiceOuterClass {
     com.google.protobuf.TimestampProto.getDescriptor();
     io.harness.delegate.Delegate.getDescriptor();
     io.harness.perpetualtask.PerpetualTask.getDescriptor();
+    io.harness.perpetualtask.PerpetualTaskExecution.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -154,7 +154,7 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends CategoryTest {
     assertThat(sentTaskExecutionResponse.getErrorMessage()).isEqualTo("Unable to fetch instance list");
   }
 
-  private PerpetualTaskParams getPerpetualTaskParams() {
+  private PerpetualTaskExecutionParams getPerpetualTaskParams() {
     ByteString awsConfigBytes =
         ByteString.copyFrom(KryoUtils.asBytes(AwsConfig.builder().accountId("accountId").build()));
     ByteString spotinstConfigBytes =
@@ -172,6 +172,6 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends CategoryTest {
             .setSpotinstEncryptedData(spotinstEncryptionDetailsBytes)
             .build();
 
-    return PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(taskParams)).build();
+    return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(taskParams)).build();
   }
 }

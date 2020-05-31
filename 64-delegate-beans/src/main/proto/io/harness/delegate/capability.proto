@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package io.harness.delegate;
+
+option java_multiple_files = true;
+
+// Task capabilities describe a need capability from the delegate executor for the task to be accomplished.
+message Capability {
+  bytes kryo_capability = 1;
+}
