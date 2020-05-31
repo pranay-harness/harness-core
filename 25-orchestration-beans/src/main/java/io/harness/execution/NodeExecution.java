@@ -15,7 +15,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.persistence.converters.DurationConverter;
-import io.harness.plan.ExecutionNode;
+import io.harness.plan.PlanNode;
 import io.harness.serializer.KryoUtils;
 import io.harness.state.io.StepParameters;
 import lombok.Builder;
@@ -43,7 +43,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   @Id String uuid;
   @NotNull String planExecutionId;
   @Singular List<Level> levels;
-  @NotNull ExecutionNode node;
+  @NotNull PlanNode node;
   @NotNull ExecutionMode mode;
   @Indexed long createdAt;
   private Long startTs;

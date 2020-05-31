@@ -49,8 +49,8 @@ import io.harness.facilitator.modes.chain.TaskChainExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.persistence.HPersistence;
-import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
 import io.harness.plan.input.InputArgs;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
@@ -112,8 +112,8 @@ public class ExecutionEngine implements Engine {
                                  .startTs(System.currentTimeMillis())
                                  .build();
     hPersistence.save(instance);
-    ExecutionNode executionNode = plan.fetchStartingNode();
-    if (executionNode == null) {
+    PlanNode planNode = plan.fetchStartingNode();
+    if (planNode == null) {
       logger.warn("Cannot Start Execution for empty plan");
       return null;
     }
@@ -135,7 +135,7 @@ public class ExecutionEngine implements Engine {
     NodeExecution nodeExecution = hPersistence.createQuery(NodeExecution.class)
                                       .filter(NodeExecutionKeys.uuid, ambiance.obtainCurrentRuntimeId())
                                       .get();
-    ExecutionNode node = nodeExecution.getNode();
+    PlanNode node = nodeExecution.getNode();
     // Facilitate and execute
     List<StepTransput> inputs = engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), additionalInputs);
     StepParameters resolvedStepParameters =
@@ -144,7 +144,7 @@ public class ExecutionEngine implements Engine {
     facilitateExecution(ambiance, nodeExecution, inputs);
   }
 
-  public void triggerExecution(Ambiance ambiance, ExecutionNode node) {
+  public void triggerExecution(Ambiance ambiance, PlanNode node) {
     String uuid = generateUuid();
     NodeExecution previousNodeExecution = null;
     if (ambiance.obtainCurrentRuntimeId() != null) {
@@ -170,7 +170,7 @@ public class ExecutionEngine implements Engine {
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).executionEngine(this).build());
   }
 
-  private Ambiance reBuildAmbiance(Ambiance ambiance, ExecutionNode node, String uuid) {
+  private Ambiance reBuildAmbiance(Ambiance ambiance, PlanNode node, String uuid) {
     Ambiance cloned = ambiance.obtainCurrentRuntimeId() == null ? ambiance : ambiance.cloneForFinish();
     cloned.addLevel(Level.builder()
                         .setupId(node.getUuid())
@@ -182,7 +182,7 @@ public class ExecutionEngine implements Engine {
   }
 
   private void facilitateExecution(Ambiance ambiance, NodeExecution nodeExecution, List<StepTransput> inputs) {
-    ExecutionNode node = nodeExecution.getNode();
+    PlanNode node = nodeExecution.getNode();
     FacilitatorResponse facilitatorResponse = null;
     for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
       Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
@@ -221,7 +221,7 @@ public class ExecutionEngine implements Engine {
 
   public void invokeState(Ambiance ambiance, FacilitatorResponse facilitatorResponse, List<StepTransput> inputs) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
-    ExecutionNode node = nodeExecution.getNode();
+    PlanNode node = nodeExecution.getNode();
     Step currentStep = stepRegistry.obtain(node.getStepType());
     ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(facilitatorResponse.getExecutionMode());
     invoker.invokeExecutable(InvokerPackage.builder()
@@ -244,7 +244,7 @@ public class ExecutionEngine implements Engine {
     handleOutcomes(ambiance, stepResponse.getOutcomes());
 
     // TODO handle Failure
-    ExecutionNode node = nodeExecution.getNode();
+    PlanNode node = nodeExecution.getNode();
     if (isEmpty(node.getAdviserObtainments())) {
       endTransition(nodeExecution);
       return;
@@ -324,7 +324,7 @@ public class ExecutionEngine implements Engine {
 
   public void triggerLink(TaskChainExecutable taskChainExecutable, Ambiance ambiance, NodeExecution nodeExecution,
       Map<String, ResponseData> response) {
-    ExecutionNode node = nodeExecution.getNode();
+    PlanNode node = nodeExecution.getNode();
     List<StepTransput> additionalInputs = new ArrayList<>();
     if (nodeExecution.getParentId() != null) {
       NodeExecution parent = nodeExecutionService.get(nodeExecution.getParentId());

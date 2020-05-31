@@ -11,8 +11,8 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.node.BasicStepToExecutionNodeConverter;
-import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import io.harness.state.StepType;
 import io.harness.yaml.core.Execution;
@@ -40,16 +40,16 @@ public class BasicExecutionPlanGeneratorTest extends CIExecutionTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldGenerateExecutionPlan() {
-    ExecutionNode executionNode = ExecutionNode.builder()
-                                      .uuid(UUID)
-                                      .name(NAME)
-                                      .identifier(generateUuid())
-                                      .stepType(StepType.builder().type("DUMMY").build())
-                                      .build();
+    PlanNode planNode = PlanNode.builder()
+                            .uuid(UUID)
+                            .name(NAME)
+                            .identifier(generateUuid())
+                            .stepType(StepType.builder().type("DUMMY").build())
+                            .build();
 
-    when(basicStepToExecutionNodeConverter.convertStep(any(), any())).thenReturn(executionNode);
+    when(basicStepToExecutionNodeConverter.convertStep(any(), any())).thenReturn(planNode);
     Execution execution = ciExecutionPlanTestHelper.getExecution();
     Plan plan = basicExecutionPlanGenerator.generateExecutionPlan(execution);
-    assertThat(plan.getNodes()).isEqualTo(Arrays.asList(executionNode, executionNode));
+    assertThat(plan.getNodes()).isEqualTo(Arrays.asList(planNode, planNode));
   }
 }

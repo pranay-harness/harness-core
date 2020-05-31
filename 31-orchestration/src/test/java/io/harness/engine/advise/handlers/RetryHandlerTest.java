@@ -16,7 +16,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.persistence.HPersistence;
-import io.harness.plan.ExecutionNode;
+import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import io.harness.state.StepType;
 import io.harness.testlib.RealMongo;
@@ -50,7 +50,7 @@ public class RetryHandlerTest extends OrchestrationTest {
                                       .uuid(NODE_EXECUTION_ID)
                                       .planExecutionId(ambiance.getPlanExecutionId())
                                       .levels(ambiance.getLevels())
-                                      .node(ExecutionNode.builder()
+                                      .node(PlanNode.builder()
                                                 .uuid(NODE_SETUP_ID)
                                                 .name("DUMMY")
                                                 .identifier("dummy")

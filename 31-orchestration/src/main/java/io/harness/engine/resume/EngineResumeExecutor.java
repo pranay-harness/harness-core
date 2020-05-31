@@ -20,7 +20,7 @@ import io.harness.facilitator.modes.chain.TaskChainExecutableResponse;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
 import io.harness.facilitator.modes.task.TaskExecutable;
-import io.harness.plan.ExecutionNode;
+import io.harness.plan.PlanNode;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.FailureInfo;
@@ -60,7 +60,7 @@ public class EngineResumeExecutor implements Runnable {
         return;
       }
 
-      ExecutionNode node = nodeExecution.getNode();
+      PlanNode node = nodeExecution.getNode();
       StepResponse stepResponse = null;
       switch (nodeExecution.getMode()) {
         case CHILDREN:

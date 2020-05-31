@@ -25,8 +25,8 @@ import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.persistence.HPersistence;
-import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -56,7 +56,7 @@ public class ChildExecutableInvoker implements ExecutableInvoker {
     PlanExecution planExecution = ambianceHelper.obtainExecutionInstance(ambiance);
     NodeExecution nodeExecution = ambianceHelper.obtainNodeExecution(ambiance);
     Plan plan = planExecution.getPlan();
-    ExecutionNode node = plan.fetchNode(response.getChildNodeId());
+    PlanNode node = plan.fetchNode(response.getChildNodeId());
     Ambiance clonedAmbiance = ambiance.cloneForChild();
     clonedAmbiance.addLevel(Level.builder()
                                 .setupId(node.getUuid())

@@ -9,8 +9,8 @@ import com.google.inject.Singleton;
 import graph.StepInfoGraph;
 import graph.StepInfoGraphConverter;
 import io.harness.node.BasicStepToExecutionNodeConverter;
-import io.harness.plan.ExecutionNode;
 import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
 import io.harness.yaml.core.Execution;
 
 import java.util.List;
@@ -28,14 +28,14 @@ public class BasicExecutionPlanGenerator implements ExecutionPlanGenerator {
   @Override
   public Plan generateExecutionPlan(Execution execution) {
     StepInfoGraph ciStepsGraph = getStepInfos(execution);
-    List<ExecutionNode> executionNodeList =
+    List<PlanNode> planNodeList =
         ciStepsGraph.getSteps()
             .stream()
             .map(ciStep -> basicStepToExecutionNodeConverter.convertStep(ciStep, ciStepsGraph.getNextNodeUuids(ciStep)))
             .collect(toList());
 
     return Plan.builder()
-        .nodes(executionNodeList)
+        .nodes(planNodeList)
         .startingNodeId(ciStepsGraph.getStartNodeUuid())
         .uuid(generateUuid())
         .build();
