@@ -14,6 +14,7 @@ import static io.harness.delegate.configuration.InstallUtils.installTerraformCon
 import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
+import static io.harness.delegate.message.ManagerMessageConstants.UPDATE_PERPETUAL_TASK;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_CDN;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_STORAGE_PROXY;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
@@ -716,6 +717,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       setSwitchStorage(true);
     } else if (StringUtils.equals(message, USE_STORAGE_PROXY)) {
       setSwitchStorage(false);
+    } else if (StringUtils.equals(message, UPDATE_PERPETUAL_TASK + delegateId)) {
+      updateTasks();
     } else if (StringUtils.startsWith(message, MIGRATE)) {
       migrate(StringUtils.substringAfter(message, MIGRATE));
     } else if (StringUtils.startsWith(message, JRE_VERSION)) {
@@ -735,6 +738,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         logger.info(message);
         logger.error("Exception while decoding task", e);
       }
+    }
+  }
+
+  private void updateTasks() {
+    if (perpetualTaskWorker != null) {
+      perpetualTaskWorker.updateTasks();
     }
   }
 

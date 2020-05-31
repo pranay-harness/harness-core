@@ -647,6 +647,11 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(DeploymentReconExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(DeploymentReconTask.class), random.nextInt(60), 15 * 60L, TimeUnit.SECONDS);
+
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
+        .scheduleWithFixedDelay(()
+                                    -> injector.getInstance(PerpetualTaskServiceImpl.class).broadcastToDelegate(),
+            0L, 10L, TimeUnit.SECONDS);
   }
 
   public static void registerObservers(Injector injector) {
