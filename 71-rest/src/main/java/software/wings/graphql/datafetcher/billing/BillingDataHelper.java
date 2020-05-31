@@ -30,6 +30,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ public class BillingDataHelper {
   private static final String TOTAL_COST_DATE_PATTERN_WITHOUT_YEAR = "MMM dd";
   private static final String DEFAULT_TIME_ZONE = "GMT";
   private static final long ONE_DAY_MILLIS = 86400000;
+  private static final long OBSERVATION_PERIOD = 30 * ONE_DAY_MILLIS;
   private static final int MAX_RETRY = 3;
 
   protected double roundingDoubleFieldValue(BillingDataMetaDataFields field, ResultSet resultSet) throws SQLException {
@@ -224,6 +226,30 @@ public class BillingDataHelper {
         new BigDecimal(actualTimeDiffMillis).divide(new BigDecimal(billingTimeDiffMillis), 2, RoundingMode.HALF_UP));
   }
 
+  public BigDecimal getNewForecastCost(QLBillingAmountData billingAmountData, Instant endInstant) {
+    Preconditions.checkNotNull(billingAmountData);
+    Instant currentTime = Instant.now();
+    if (currentTime.isAfter(endInstant)) {
+      return null;
+    }
+
+    BigDecimal totalBillingAmount = billingAmountData.getCost();
+    long actualTimeDiffMillis =
+        (endInstant.plus(1, ChronoUnit.SECONDS).toEpochMilli()) - billingAmountData.getMaxStartTime();
+
+    long billingTimeDiffMillis = ONE_DAY_MILLIS;
+    if (billingAmountData.getMaxStartTime() != billingAmountData.getMinStartTime()) {
+      billingTimeDiffMillis =
+          billingAmountData.getMaxStartTime() - billingAmountData.getMinStartTime() + ONE_DAY_MILLIS;
+    }
+    if (billingTimeDiffMillis != OBSERVATION_PERIOD) {
+      return null;
+    }
+
+    return totalBillingAmount.multiply(
+        new BigDecimal(actualTimeDiffMillis).divide(new BigDecimal(billingTimeDiffMillis), 2, RoundingMode.HALF_UP));
+  }
+
   public Instant getEndInstant(List<QLBillingDataFilter> filters) {
     return Instant.ofEpochMilli(getEndTimeFilter(filters).getValue().longValue());
   }
@@ -351,5 +377,53 @@ public class BillingDataHelper {
     List<String> topNElementIds = new ArrayList<>();
     list.forEach(entry -> topNElementIds.add(entry.getKey()));
     return topNElementIds;
+  }
+
+  public List<QLBillingDataFilter> getFiltersForForecastCost(List<QLBillingDataFilter> filters) {
+    List<QLBillingDataFilter> filtersForForecastCost =
+        filters.stream()
+            .filter(filter -> filter.getEndTime() == null && filter.getStartTime() == null)
+            .collect(Collectors.toList());
+    long timestampForFilters = getStartOfCurrentDay();
+    filtersForForecastCost.add(
+        QLBillingDataFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(timestampForFilters - 1000).build())
+            .build());
+    filtersForForecastCost.add(QLBillingDataFilter.builder()
+                                   .startTime(QLTimeFilter.builder()
+                                                  .operator(QLTimeOperator.AFTER)
+                                                  .value(timestampForFilters - 30 * ONE_DAY_MILLIS)
+                                                  .build())
+                                   .build());
+    return filtersForForecastCost;
+  }
+
+  public Instant getEndInstantForForecastCost(List<QLBillingDataFilter> filters) {
+    QLBillingDataFilter endTimeFilter =
+        filters.stream().filter(filter -> filter.getEndTime() != null).findFirst().orElse(null);
+    QLBillingDataFilter startTimeFilter =
+        filters.stream().filter(filter -> filter.getStartTime() != null).findFirst().orElse(null);
+    long currentDay = getStartOfCurrentDay();
+    long days = 0;
+    if (endTimeFilter != null && startTimeFilter != null) {
+      long endTimeFromFilters = endTimeFilter.getEndTime().getValue().longValue();
+      long startTimeFromFilters = startTimeFilter.getStartTime().getValue().longValue();
+      if (endTimeFromFilters == currentDay - 1000) {
+        days = (currentDay - startTimeFromFilters) / ONE_DAY_MILLIS;
+      }
+    }
+    return days != 0 ? Instant.ofEpochMilli(currentDay + (days - 1) * ONE_DAY_MILLIS - 1000)
+                     : Instant.ofEpochMilli(currentDay - ONE_DAY_MILLIS);
+  }
+
+  public Instant getStartInstantForForecastCost() {
+    return Instant.ofEpochMilli(getStartOfCurrentDay());
+  }
+
+  private long getStartOfCurrentDay() {
+    ZoneId zoneId = ZoneId.of(DEFAULT_TIME_ZONE);
+    LocalDate today = LocalDate.now(zoneId);
+    ZonedDateTime zdtStart = today.atStartOfDay(zoneId);
+    return zdtStart.toEpochSecond() * 1000;
   }
 }
