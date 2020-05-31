@@ -11,20 +11,30 @@ public class EngineExpressionServiceImpl implements EngineExpressionService {
 
   @Override
   public String renderExpression(Ambiance ambiance, String expression) {
-    EngineExpressionEvaluator evaluator = EngineExpressionEvaluator.builder()
-                                              .ambiance(ambiance)
-                                              .variableResolverTracker(new VariableResolverTracker())
-                                              .build();
+    EngineAmbianceExpressionEvaluator evaluator = EngineAmbianceExpressionEvaluator.builder()
+                                                      .ambiance(ambiance)
+                                                      .variableResolverTracker(new VariableResolverTracker())
+                                                      .build();
     injector.injectMembers(evaluator);
     return evaluator.renderExpression(expression);
   }
 
   @Override
+  public Object evaluateExpression(Ambiance ambiance, String expression) {
+    EngineAmbianceExpressionEvaluator evaluator = EngineAmbianceExpressionEvaluator.builder()
+                                                      .ambiance(ambiance)
+                                                      .variableResolverTracker(new VariableResolverTracker())
+                                                      .build();
+    injector.injectMembers(evaluator);
+    return evaluator.evaluateExpression(expression);
+  }
+
+  @Override
   public Object resolve(Ambiance ambiance, Object o) {
-    EngineExpressionEvaluator evaluator = EngineExpressionEvaluator.builder()
-                                              .ambiance(ambiance)
-                                              .variableResolverTracker(new VariableResolverTracker())
-                                              .build();
+    EngineAmbianceExpressionEvaluator evaluator = EngineAmbianceExpressionEvaluator.builder()
+                                                      .ambiance(ambiance)
+                                                      .variableResolverTracker(new VariableResolverTracker())
+                                                      .build();
     injector.injectMembers(evaluator);
     return evaluator.resolve(o);
   }

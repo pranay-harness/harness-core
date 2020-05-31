@@ -79,7 +79,7 @@ public class ParameterFieldDeserializer extends StdDeserializer<ParameterField<?
         ? valueDeserializer.deserialize(p, ctxt)
         : valueDeserializer.deserializeWithType(p, ctxt, valueTypeDeserializer);
 
-    return ParameterField.createField(refd, false, null);
+    return ParameterField.createField(refd);
   }
 
   @Override

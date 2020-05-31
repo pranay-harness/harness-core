@@ -3,8 +3,6 @@ package io.harness.expression;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.InvalidRequestException.USER;
 
-import io.harness.data.algorithm.IdentifierName;
-import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import org.apache.commons.collections.map.SingletonMap;
@@ -27,7 +25,7 @@ import java.util.regex.Pattern;
 /**
  * The Class ExpressionEvaluator.
  */
-public class ExpressionEvaluator {
+public class ExpressionEvaluator implements ExpressionEvaluatorItfc {
   public static final String DEFAULT_ARTIFACT_VARIABLE_NAME = "artifact";
   public static final String ARTIFACT_FILE_NAME_VARIABLE = "ARTIFACT_FILE_NAME";
 
@@ -35,10 +33,6 @@ public class ExpressionEvaluator {
   public static final Pattern variableNamePattern = Pattern.compile("^[-_a-zA-Z][-_\\w]*$");
   private static final Pattern serviceDefaultArtifactVariablePattern = Pattern.compile("\\$\\{artifact[.}]");
   private static final Pattern serviceArtifactVariablePattern = Pattern.compile("\\$\\{artifacts\\.([^.{}]+)[.}]");
-
-  public static final int EXPANSION_LIMIT = 256 * 1024; // 256 KB
-  private static final int EXPANSION_MULTIPLIER_LIMIT = 10;
-  private static final int DEPTH_LIMIT = 10;
 
   private Map<String, Object> expressionFunctorMap = new HashMap<>();
 
@@ -67,6 +61,7 @@ public class ExpressionEvaluator {
     return evaluate(expression, jc);
   }
 
+  @Override
   public Object evaluate(String expression, JexlContext context) {
     if (expression == null) {
       return null;
@@ -112,55 +107,7 @@ public class ExpressionEvaluator {
     }
 
     JexlContext jc = prepareContext(context, defaultObjectPrefix);
-
-    String prefix = IdentifierName.random();
-    String suffix = IdentifierName.random();
-
-    Pattern pattern = Pattern.compile(prefix + "[0-9]+" + suffix);
-
-    final EvaluateVariableResolver variableResolver = EvaluateVariableResolver.builder()
-                                                          .expressionEvaluator(this)
-                                                          .context(jc)
-                                                          .variableResolverTracker(tracker)
-                                                          .prefix(prefix)
-                                                          .suffix(suffix)
-                                                          .build();
-
-    StrSubstitutor substitutor = new StrSubstitutor();
-    substitutor.setEnableSubstitutionInVariables(true);
-    substitutor.setVariableResolver(variableResolver);
-
-    String result = expression;
-    int limit = Math.max(EXPANSION_LIMIT, EXPANSION_MULTIPLIER_LIMIT * expression.length());
-    for (int i = 0; i < DEPTH_LIMIT; i++) {
-      String original = result;
-      result = substitutor.replace(new StringBuffer(original));
-
-      for (;;) {
-        final Matcher matcher = pattern.matcher(result);
-        if (!matcher.find()) {
-          break;
-        }
-
-        StringBuffer sb = new StringBuffer();
-        do {
-          String name = matcher.group(0);
-          String value = String.valueOf(jc.get(name));
-          matcher.appendReplacement(sb, value.replace("\\", "\\\\").replace("$", "\\$"));
-        } while (matcher.find());
-        matcher.appendTail(sb);
-        result = sb.toString();
-      }
-      if (result.equals(original)) {
-        return result;
-      }
-      if (result.length() > limit) {
-        throw new CriticalExpressionEvaluationException("Exponentially growing interpretation", expression);
-      }
-    }
-
-    throw new CriticalExpressionEvaluationException(
-        "Infinite loop or too deep indirection in property interpretation", expression);
+    return ExpressionEvaluatorUtils.substitute(this, expression, jc, tracker);
   }
 
   public static void isValidVariableName(String name) {
