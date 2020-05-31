@@ -7,4 +7,5 @@ public interface ManagerMessageConstants {
   String USE_CDN = "[USE_CDN]";
   String USE_STORAGE_PROXY = "[USE_STORAGE_PROXY]";
   String JRE_VERSION = "[JRE_VERSION]";
+  String UPDATE_PERPETUAL_TASK = "[UPDATE_PERPETUAL_TASK]";
 }

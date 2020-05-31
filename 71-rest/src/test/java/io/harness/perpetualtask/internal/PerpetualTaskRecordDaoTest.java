@@ -33,7 +33,7 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
-  public void testSetDelegateId() {
+  public void testAppointDelegate() {
     long lastContextUpdated = 1L;
     String taskId = perpetualTaskRecordDao.save(PerpetualTaskRecord.builder().accountId(ACCOUNT_ID).build());
     perpetualTaskRecordDao.appointDelegate(taskId, DELEGATE_ID, lastContextUpdated);

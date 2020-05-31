@@ -1,5 +1,6 @@
 package io.harness.perpetualtask;
 
+import static io.harness.delegate.message.ManagerMessageConstants.UPDATE_PERPETUAL_TASK;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.inject.Inject;
@@ -18,26 +19,55 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.persistence.AccountLogContext;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
+import org.atmosphere.cpr.BroadcasterFactory;
+import org.eclipse.jetty.util.ConcurrentHashSet;
+import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
 public class PerpetualTaskServiceImpl implements PerpetualTaskService {
+  private Set<Pair<String, String>> broadcastAggregateSet = new ConcurrentHashSet<>();
+
   private final PerpetualTaskRecordDao perpetualTaskRecordDao;
   private final PerpetualTaskServiceClientRegistry clientRegistry;
+  private final BroadcasterFactory broadcasterFactory;
 
   @Inject
-  public PerpetualTaskServiceImpl(
-      PerpetualTaskRecordDao perpetualTaskRecordDao, PerpetualTaskServiceClientRegistry clientRegistry) {
+  public PerpetualTaskServiceImpl(PerpetualTaskRecordDao perpetualTaskRecordDao,
+      PerpetualTaskServiceClientRegistry clientRegistry, BroadcasterFactory broadcasterFactory) {
     this.perpetualTaskRecordDao = perpetualTaskRecordDao;
     this.clientRegistry = clientRegistry;
+    this.broadcasterFactory = broadcasterFactory;
   }
 
   @Getter private Subject<PerpetualTaskCrudObserver> perpetualTaskCrudSubject = new Subject<>();
+
+  @Override
+  public void appointDelegate(String accountId, String taskId, String delegateId, long lastContextUpdated) {
+    perpetualTaskRecordDao.appointDelegate(taskId, delegateId, lastContextUpdated);
+
+    broadcastAggregateSet.add(Pair.of(accountId, delegateId));
+  }
+
+  public void broadcastToDelegate() {
+    Set<Pair<String, String>> sendingHashSet;
+    synchronized (broadcastAggregateSet) {
+      sendingHashSet = new HashSet(broadcastAggregateSet);
+      broadcastAggregateSet.clear();
+    }
+
+    sendingHashSet.forEach(setEntry
+        -> broadcasterFactory.lookup(DelegateTaskBroadcastHelper.STREAM_DELEGATE_PATH + setEntry.getLeft(), true)
+               .broadcast(UPDATE_PERPETUAL_TASK + setEntry.getRight()));
+  }
 
   @Override
   public String createTask(PerpetualTaskType perpetualTaskType, String accountId,
@@ -151,11 +181,6 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
     perpetualTaskRecordDao.setTaskState(taskId, perpetualTaskResponse.getPerpetualTaskState().name());
     stateChangeCallback(taskId, perpetualTaskResponse);
     return heartbeatUpdated;
-  }
-
-  @Override
-  public void appointDelegate(String taskId, String delegateId, long lastContextUpdated) {
-    perpetualTaskRecordDao.appointDelegate(taskId, delegateId, lastContextUpdated);
   }
 
   @Override

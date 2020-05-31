@@ -22,7 +22,7 @@ public interface PerpetualTaskService {
 
   boolean triggerCallback(String taskId, long heartbeatMillis, PerpetualTaskResponse perpetualTaskResponse);
 
-  void appointDelegate(String taskId, String delegateId, long lastContextUpdated);
+  void appointDelegate(String accountId, String taskId, String delegateId, long lastContextUpdated);
 
   void setTaskState(String taskId, String state);
 }

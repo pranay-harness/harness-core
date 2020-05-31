@@ -58,7 +58,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
     when(k8sWatchPerpetualTaskServiceClient.getValidationTask(isA(PerpetualTaskClientContext.class), anyString()))
         .thenReturn(delegateTask);
 
-    doNothing().when(perpetualTaskService).appointDelegate(anyString(), eq(delegateId), anyLong());
+    doNothing().when(perpetualTaskService).appointDelegate(eq(accountId), anyString(), eq(delegateId), anyLong());
   }
 
   @Test
@@ -71,7 +71,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
                                                   .build();
     when(delegateService.executeTask(isA(DelegateTask.class))).thenReturn(response);
     perpetualTaskRecordHandler.handle(record);
-    verify(perpetualTaskService).appointDelegate(anyString(), eq(delegateId), anyLong());
+    verify(perpetualTaskService).appointDelegate(eq(accountId), anyString(), eq(delegateId), anyLong());
   }
 
   @Test
@@ -81,6 +81,6 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
     RemoteMethodReturnValueData response = RemoteMethodReturnValueData.builder().build();
     when(delegateService.executeTask(isA(DelegateTask.class))).thenReturn(response);
     perpetualTaskRecordHandler.handle(record);
-    verify(perpetualTaskService, times(0)).appointDelegate(anyString(), eq(delegateId), anyLong());
+    verify(perpetualTaskService, times(0)).appointDelegate(eq(accountId), anyString(), eq(delegateId), anyLong());
   }
 }
