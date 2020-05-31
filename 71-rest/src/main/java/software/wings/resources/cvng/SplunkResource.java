@@ -24,7 +24,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(PermissionAttribute.ResourceType.SETTING)
 public class SplunkResource {
-  @Inject SplunkAnalysisService splunkAnalysisService;
+  @Inject private SplunkAnalysisService splunkAnalysisService;
   @GET
   @Path("saved-searches")
   @Timed
