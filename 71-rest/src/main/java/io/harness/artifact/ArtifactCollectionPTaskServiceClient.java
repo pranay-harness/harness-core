@@ -30,6 +30,7 @@ import java.util.Map;
 public class ArtifactCollectionPTaskServiceClient
     implements PerpetualTaskServiceClient<ArtifactCollectionPTaskClientParams> {
   private static final String ARTIFACT_STREAM_ID = "artifactStreamId";
+
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
