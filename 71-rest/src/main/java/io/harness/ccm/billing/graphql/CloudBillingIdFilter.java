@@ -26,6 +26,7 @@ import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Data
 @Builder
@@ -33,6 +34,13 @@ public class CloudBillingIdFilter implements Filter {
   private QLIdOperator operator;
   private String variable;
   private String[] values;
+
+  private static final String[] listOfNullTranslatedFilters = {PreAggregateConstants.entityConstantNoRegion,
+      PreAggregateConstants.entityConstantAwsNoLinkedAccount, PreAggregateConstants.entityConstantAwsNoUsageType,
+      PreAggregateConstants.entityConstantAwsNoInstanceType, PreAggregateConstants.entityConstantAwsNoService,
+      PreAggregateConstants.entityConstantGcpNoProjectId, PreAggregateConstants.entityConstantGcpNoProduct,
+      PreAggregateConstants.entityConstantGcpNoSkuId, PreAggregateConstants.entityConstantGcpNoSku,
+      PreAggregateConstants.entityNoCloudProviderConst};
 
   @Override
   public Object getOperator() {
@@ -84,7 +92,7 @@ public class CloudBillingIdFilter implements Filter {
         return null;
     }
 
-    boolean containsNullStringConst = Arrays.asList(values).contains(PreAggregateConstants.nullStringValueConstant);
+    boolean containsNullStringConst = containsNullFilter(Arrays.asList(values));
 
     Condition condition;
     switch (operator) {
@@ -96,7 +104,7 @@ public class CloudBillingIdFilter implements Filter {
         break;
       case IN:
         if (containsNullStringConst) {
-          return ComboCondition.and(new InCondition(dbColumn, getValues()), UnaryCondition.isNull(dbColumn));
+          return ComboCondition.or(new InCondition(dbColumn, getValues()), UnaryCondition.isNull(dbColumn));
         }
         return new InCondition(dbColumn, getValues());
       case NOT_IN:
@@ -110,5 +118,14 @@ public class CloudBillingIdFilter implements Filter {
     }
 
     return condition;
+  }
+
+  private boolean containsNullFilter(List<String> values) {
+    for (String filter : listOfNullTranslatedFilters) {
+      if (values.contains(filter)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
