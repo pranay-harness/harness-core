@@ -2,7 +2,7 @@ package software.wings.expression;
 
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.exception.FunctorException;
-import io.harness.expression.ExpressionEvaluator;
+import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.ExpressionFunctor;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ import java.nio.charset.Charset;
 @Builder
 @Slf4j
 public class ConfigFileFunctor implements ExpressionFunctor {
-  static final int MAX_CONFIG_FILE_SIZE = ExpressionEvaluator.EXPANSION_LIMIT;
+  static final int MAX_CONFIG_FILE_SIZE = ExpressionEvaluatorUtils.EXPANSION_LIMIT;
 
   private ServiceTemplateService serviceTemplateService;
   private ConfigService configService;

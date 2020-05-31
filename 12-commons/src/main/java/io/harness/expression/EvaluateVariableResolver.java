@@ -9,7 +9,7 @@ import org.apache.commons.text.StrLookup;
 @Builder
 public class EvaluateVariableResolver extends StrLookup {
   private JexlContext context;
-  private ExpressionEvaluator expressionEvaluator;
+  private ExpressionEvaluatorItfc expressionEvaluator;
   private int varIndex;
   private String prefix;
   private String suffix;
