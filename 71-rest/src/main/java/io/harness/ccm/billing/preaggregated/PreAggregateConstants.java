@@ -5,6 +5,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class PreAggregateConstants {
   public static final String nullStringValueConstant = "Others";
+  public static final String totalStringValueConstant = "Total";
   public static final String entityConstantRegion = "region";
   public static final String entityConstantAwsLinkedAccount = "awsUsageaccountid";
   public static final String entityConstantAwsUsageType = "awsUsagetype";
