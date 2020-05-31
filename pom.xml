@@ -34,8 +34,8 @@
         <module>75-model-test</module>
         <module>76-graphql-test</module>
         <module>78-batch-processing</module>
-        <module>80-cv-nextgen</module>
         <module>79-verification</module>
+        <module>80-cv-nextgen</module>
         <module>81-delegate</module>
         <module>82-watcher</module>
         <module>84-command-library-server</module>

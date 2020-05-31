@@ -12,6 +12,7 @@ import retrofit2.http.Body;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
+import java.util.List;
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -45,21 +46,63 @@ public class CVConfigResource {
     return new RestResponse<>(cvConfigService.save(accountId, cvConfig));
   }
 
+  @POST
+  @Path("batch")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<CVConfig>> saveCVConfig(
+      @QueryParam("accountId") @Valid final String accountId, @Body List<CVConfig> cvConfigs) {
+    return new RestResponse<>(cvConfigService.save(accountId, cvConfigs));
+  }
+
   @PUT
   @Path("{cvConfigId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> updateCVConfig(@PathParam("cvConfigId") String cvConfigId,
+  public RestResponse<CVConfig> updateCVConfig(@PathParam("cvConfigId") String cvConfigId,
       @QueryParam("accountId") @Valid final String accountId, @Body CVConfig cvConfig) {
-    return null;
+    cvConfig.setUuid(cvConfigId);
+    cvConfigService.update(cvConfig);
+    return new RestResponse<>(cvConfig);
+  }
+
+  @PUT
+  @Path("batch")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<CVConfig>> updateCVConfig(
+      @QueryParam("accountId") @Valid final String accountId, @Body List<CVConfig> cvConfigs) {
+    cvConfigService.update(cvConfigs);
+    return new RestResponse<>(cvConfigs);
   }
 
   @DELETE
   @Path("{cvConfigId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> deleteCVConfig(
+  public RestResponse<Void> deleteCVConfig(
       @PathParam("cvConfigId") String cvConfigId, @QueryParam("accountId") @Valid final String accountId) {
+    cvConfigService.delete(cvConfigId);
     return null;
+  }
+
+  @DELETE
+  @Path("batch")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Void> deleteCVConfig(
+      @QueryParam("accountId") @Valid final String accountId, @Body List<String> cvConfigIds) {
+    cvConfigService.delete(cvConfigIds);
+    return null;
+  }
+
+  @GET
+  @Path("/list")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<CVConfig>> listCVConfigs(
+      @QueryParam("accountId") @Valid final String accountId, @QueryParam("connectorId") String connectorId) {
+    // keeping it simple for now. We will improve and evolve it based on more requirement on list api.
+    return new RestResponse<>(cvConfigService.list(accountId, connectorId));
   }
 }

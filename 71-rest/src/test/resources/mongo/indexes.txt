@@ -116,6 +116,8 @@ cvActivityLogs {"name": "dataCollectionMinute_1", "background": true} {"dataColl
 cvActivityLogs {"name": "service_guard_idx", "background": true} {"cvConfigId": 1, "dataCollectionMinute": -1, "createdAt": 1}
 cvActivityLogs {"name": "stateExecutionId_1", "background": true} {"stateExecutionId": 1}
 cvActivityLogs {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+cvConfigs {"name": "accountId_1", "background": true} {"accountId": 1}
+cvConfigs {"name": "connectorId_1", "background": true} {"connectorId": 1}
 cvExecutionData {"name": "accountId_1", "background": true} {"accountId": 1}
 cvExecutionData {"name": "appId_1", "background": true} {"appId": 1}
 cvExecutionData {"name": "applicationId_1", "background": true} {"applicationId": 1}

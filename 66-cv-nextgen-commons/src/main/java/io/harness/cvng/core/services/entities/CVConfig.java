@@ -1,38 +1,41 @@
 package io.harness.cvng.core.services.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotation.HarnessEntity;
-import io.harness.cvng.models.VerificationDefinition;
+import io.harness.cvng.models.DataSourceType;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Singular;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Indexed;
 
-import java.util.List;
+import javax.validation.constraints.NotNull;
+
 @Data
-@Builder
+@FieldNameConstants(innerTypeName = "CVConfigKeys")
 @NoArgsConstructor
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "cvConfigs", noClassnameStored = true)
+@Entity(value = "cvConfigs")
 @HarnessEntity(exportable = true)
-public class CVConfig implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
+public abstract class CVConfig implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
+  @NotNull private String name;
   private long createdAt;
   private long lastUpdatedAt;
-  private String accountId;
-  private String connectorId;
-  private String serviceId;
-  private String envId;
-  private String projectId;
-  private String categoryId;
-  @Singular("addVerificationDefinition") private List<VerificationDefinition> verificationDefinitions;
+  @NotNull @Indexed private String accountId;
+  @NotNull @Indexed private String connectorId;
+  @NotNull private String serviceId;
+  @NotNull private String envId;
+  @NotNull private String projectId;
+  private String category;
+  private String productName;
+  public abstract DataSourceType getType();
 }
