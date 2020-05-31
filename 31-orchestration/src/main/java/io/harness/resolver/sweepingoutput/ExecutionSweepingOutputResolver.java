@@ -11,14 +11,13 @@ import com.google.inject.name.Named;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutput;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.references.RefObject;
-import io.harness.references.RefType;
 import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputInstance.ExecutionSweepingOutputKeys;
 import io.harness.resolvers.Resolver;
 
@@ -32,17 +31,15 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @Singleton
 public class ExecutionSweepingOutputResolver implements Resolver<SweepingOutput> {
-  public static final String RESOLVER_TYPE = RefType.SWEEPING_OUTPUT;
-
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
 
   @Override
   public SweepingOutput consume(@NotNull Ambiance ambiance, @NotNull String name, @NotNull SweepingOutput value) {
-    return save(ambiance, name, value, -1);
+    save(ambiance, name, value, -1);
+    return value;
   }
 
-  public SweepingOutput save(
-      @NotNull Ambiance ambiance, @NotNull String name, @NotNull SweepingOutput value, int levelsToKeep) {
+  public void save(@NotNull Ambiance ambiance, @NotNull String name, @NotNull SweepingOutput value, int levelsToKeep) {
     if (levelsToKeep >= 0) {
       ambiance = ambiance.cloneForFinish(levelsToKeep);
     }
@@ -56,10 +53,34 @@ public class ExecutionSweepingOutputResolver implements Resolver<SweepingOutput>
                             .value(value)
                             .build());
     } catch (DuplicateKeyException ex) {
-      throw new InvalidRequestException(format("Sweeping output with name %s is already saved", name), ex);
+      throw new SweepingOutputException(format("Sweeping output with name %s is already saved", name), ex);
+    }
+  }
+
+  public void saveAtGlobalScope(@NotNull Ambiance ambiance, @NotNull String name, @NotNull SweepingOutput value) {
+    save(ambiance, name, value, 0);
+  }
+
+  public void saveAtGroupScope(
+      @NotNull Ambiance ambiance, @NotNull String name, @NotNull SweepingOutput value, @NotNull String stepTypeGroup) {
+    if (EmptyPredicate.isEmpty(ambiance.getLevels())) {
+      throwGroupNotFoundException(stepTypeGroup);
     }
 
-    return value;
+    List<Level> levels = ambiance.getLevels();
+    for (int i = levels.size() - 1; i >= 0; i--) {
+      Level level = levels.get(i);
+      if (stepTypeGroup.equals(level.getStepType().getGroup())) {
+        save(ambiance, name, value, i + 1);
+        return;
+      }
+    }
+
+    throwGroupNotFoundException(stepTypeGroup);
+  }
+
+  private void throwGroupNotFoundException(@NotNull String stepTypeGroup) {
+    throw new GroupNotFoundException(stepTypeGroup);
   }
 
   @Override
@@ -80,7 +101,7 @@ public class ExecutionSweepingOutputResolver implements Resolver<SweepingOutput>
               .max(Comparator.comparing(ExecutionSweepingOutputInstance::getLevelRuntimeIdIdx))
               .orElse(null);
     if (instance == null) {
-      throw new InvalidRequestException(format("Could not resolve sweeping output with name '%s'", name));
+      throw new SweepingOutputException(format("Could not resolve sweeping output with name '%s'", name));
     }
 
     return instance.getValue();

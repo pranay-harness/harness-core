@@ -12,9 +12,9 @@ import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.InvalidRequestException;
 import io.harness.references.SweepingOutputRefObject;
 import io.harness.rule.Owner;
+import io.harness.state.StepType;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.DummySweepingOutput;
@@ -25,18 +25,6 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
   private static final String STEP_RUNTIME_ID = generateUuid();
   private static final String STEP_SETUP_ID = generateUuid();
 
-  private static final String outputName = "outputName";
-  private static final String testValueSection = "testSection";
-  private static final String testValueStep = "testStep";
-
-  private static final Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
-  private static final Ambiance ambiancePhase = AmbianceTestUtils.buildAmbiance();
-  private static final Ambiance ambianceStep = AmbianceTestUtils.buildAmbiance();
-
-  static {
-    ambianceStep.addLevel(Level.builder().runtimeId(STEP_RUNTIME_ID).setupId(STEP_SETUP_ID).build());
-  }
-
   @Inject private ExecutionSweepingOutputResolver executionSweepingOutputResolver;
 
   @Test
@@ -46,8 +34,7 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
   public void testConsumeAndFind() {
     Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
     Ambiance ambiancePhase = ambianceSection.cloneForFinish();
-    Ambiance ambianceStep = ambianceSection.cloneForChild();
-    ambianceStep.addLevel(Level.builder().runtimeId(STEP_RUNTIME_ID).setupId(STEP_SETUP_ID).build());
+    Ambiance ambianceStep = prepareStepAmbiance(ambianceSection);
 
     String outputName = "outputName";
     String testValueSection = "testSection";
@@ -57,13 +44,13 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
         ambianceSection, outputName, DummySweepingOutput.builder().test(testValueSection).build());
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
-    assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
     executionSweepingOutputResolver.consume(
         ambianceStep, outputName, DummySweepingOutput.builder().test(testValueStep).build());
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueStep);
-    assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
   }
 
   @Test
@@ -73,8 +60,7 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
   public void testSaveAndFind() {
     Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
     Ambiance ambiancePhase = ambianceSection.cloneForFinish();
-    Ambiance ambianceStep = ambianceSection.cloneForChild();
-    ambianceStep.addLevel(Level.builder().runtimeId(STEP_RUNTIME_ID).setupId(STEP_SETUP_ID).build());
+    Ambiance ambianceStep = prepareStepAmbiance(ambianceSection);
 
     String outputName = "outputName";
     String testValueSection = "testSection";
@@ -84,7 +70,7 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
         ambianceSection, outputName, DummySweepingOutput.builder().test(testValueSection).build(), 2);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
-    assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
     executionSweepingOutputResolver.save(
         ambianceStep, outputName, DummySweepingOutput.builder().test(testValueStep).build(), 0);
@@ -93,12 +79,53 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
     validateResult(resolve(ambianceStep, outputName), testValueSection);
   }
 
+  @Test
+  @RealMongo
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testSaveAtScopeAndFind() {
+    Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
+    Ambiance ambiancePhase = ambianceSection.cloneForFinish();
+    Ambiance ambianceStep = prepareStepAmbiance(ambianceSection);
+
+    String outputName = "outputName";
+    String testValueSection = "testSection";
+    String testValueStep = "testStep";
+
+    executionSweepingOutputResolver.saveAtGroupScope(
+        ambianceSection, outputName, DummySweepingOutput.builder().test(testValueSection).build(), "SECTION");
+    validateResult(resolve(ambianceSection, outputName), testValueSection);
+    validateResult(resolve(ambianceStep, outputName), testValueSection);
+    assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
+
+    executionSweepingOutputResolver.saveAtGlobalScope(
+        ambianceStep, outputName, DummySweepingOutput.builder().test(testValueStep).build());
+    validateResult(resolve(ambiancePhase, outputName), testValueStep);
+    validateResult(resolve(ambianceSection, outputName), testValueSection);
+    validateResult(resolve(ambianceStep, outputName), testValueSection);
+
+    assertThatThrownBy(()
+                           -> executionSweepingOutputResolver.saveAtGroupScope(ambianceSection, "randomOutputName",
+                               DummySweepingOutput.builder().test("randomTestValue").build(), "RANDOM"))
+        .isInstanceOf(GroupNotFoundException.class);
+  }
+
   private void validateResult(SweepingOutput foundOutput, String testValue) {
     assertThat(foundOutput).isNotNull();
     assertThat(foundOutput).isInstanceOf(DummySweepingOutput.class);
 
     DummySweepingOutput dummySweepingOutput = (DummySweepingOutput) foundOutput;
     assertThat(dummySweepingOutput.getTest()).isEqualTo(testValue);
+  }
+
+  private Ambiance prepareStepAmbiance(Ambiance ambianceSection) {
+    Ambiance ambianceStep = ambianceSection.cloneForChild();
+    ambianceStep.addLevel(Level.builder()
+                              .runtimeId(STEP_RUNTIME_ID)
+                              .setupId(STEP_SETUP_ID)
+                              .stepType(StepType.builder().type("SHELL_SCRIPT").build())
+                              .build());
+    return ambianceStep;
   }
 
   @Test

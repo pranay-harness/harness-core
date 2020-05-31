@@ -420,7 +420,9 @@ public enum ErrorCode {
 
   ENGINE_INTERRUPT_PROCESSING_EXCEPTION,
 
-  ENGINE_IO_EXCEPTION;
+  ENGINE_IO_EXCEPTION,
+
+  ENGINE_SWEEPING_OUTPUT_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;
