@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.cloud.bigquery.TableInfo;
 import com.google.cloud.bigquery.datatransfer.v1.DataTransferServiceClient;
 
 import io.harness.batch.processing.config.BatchMainConfig;
@@ -51,7 +52,6 @@ public class BillingDataPipelineServiceImplTest {
   private static final String scheduledQueryName = "scheduledQuery_accountname_accountid";
   private static final String preAggQueryName = "awsPreAggQuery_accountname_accountid";
 
-  private static final String gcpServiceAccount = "serviceAccount";
   private static final String gcpProjectId = "projectId";
   private static final String gcsBasePath = "gs://bucketName";
 
@@ -112,5 +112,13 @@ public class BillingDataPipelineServiceImplTest {
     String dataTransferJob =
         billingDataPipelineService.createDataTransferJobFromGCS(dataSetId, settingId, accountId, accountName);
     assertThat(dataTransferJob).isEqualTo(transferJobName);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void shouldTestPreAggregateTableSchema() {
+    TableInfo tableInfo = billingDataPipelineService.getPreAggregateTableInfo(dataSetId);
+    assertThat(tableInfo.getDefinition().getSchema().getFields().size()).isEqualTo(19);
   }
 }

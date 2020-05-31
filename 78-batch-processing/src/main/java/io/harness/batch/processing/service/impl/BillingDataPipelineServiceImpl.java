@@ -11,6 +11,13 @@ import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.DatasetInfo;
+import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.Schema;
+import com.google.cloud.bigquery.StandardSQLTypeName;
+import com.google.cloud.bigquery.StandardTableDefinition;
+import com.google.cloud.bigquery.TableId;
+import com.google.cloud.bigquery.TableInfo;
+import com.google.cloud.bigquery.TimePartitioning;
 import com.google.cloud.bigquery.datatransfer.v1.CreateTransferConfigRequest;
 import com.google.cloud.bigquery.datatransfer.v1.DataTransferServiceClient;
 import com.google.cloud.bigquery.datatransfer.v1.DataTransferServiceSettings;
@@ -56,11 +63,12 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   private static final String TEMP_DEST_TABLE_NAME_VALUE = "awsCurTable_{run_time|\"%Y_%m\"}";
   private static final String DEST_TABLE_NAME_VALUE = "awscur_{run_time|\"%Y_%m\"}";
   private static final String PRE_AGG_TABLE_NAME_VALUE = "preAggregated";
+  private static final String LOCATION = "us";
   private static final String GCS_DATA_SOURCE_ID = "google_cloud_storage";
   private static final String SCHEDULED_QUERY_DATA_SOURCE_ID = "scheduled_query";
   private static final String WRITE_TRUNCATE_VALUE = "WRITE_TRUNCATE";
-  private static final String WRITE_APPEND_VALUE = "WRITE_APPEND";
-  private static final String PARENT_TEMPLATE = "projects/%s";
+  protected static final String PARENT_TEMPLATE = "projects/%s";
+  protected static final String PARENT_TEMPLATE_WITH_LOCATION = "projects/%s/locations/%s";
   private static final String DATA_PATH_TEMPLATE = "%s/%s/%s/*/*/*/*/*.csv.gz";
   private static final String TRANSFER_JOB_NAME_TEMPLATE = "gcsToBigQueryTransferJob_%s";
   private static final String SCHEDULED_QUERY_TEMPLATE = "scheduledQuery_%s";
@@ -75,25 +83,29 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   private static final String TEMP_TABLE_SCHEDULED_QUERY_TEMPLATE =
       "SELECT * FROM `%s.%s.awsCurTable_*` WHERE _TABLE_SUFFIX = CONCAT(CAST(EXTRACT(YEAR from "
       + "TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),'_' , LPAD(CAST(EXTRACT(MONTH from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),2,'0'));";
-  private static final String AWS_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE =
-      "SELECT TIMESTAMP_TRUNC(usagestartdate, DAY) as startTime, min(blendedrate) AS awsBlendedRate, sum(blendedcost)"
-      + " AS awsBlendedCost, min(unblendedrate) AS awsUnblendedRate, sum(unblendedcost) AS awsUnblendedCost,"
-      + " sum(unblendedcost) AS cost, productname AS awsServicecode, region, availabilityzone AS awsAvailabilityzone,"
-      + " usageaccountid AS awsUsageaccountid, instancetype AS awsInstancetype, usagetype AS awsUsagetype,"
-      + " \"AWS\" AS cloudProvider FROM `%s.%s.awscur_*` WHERE lineitemtype != 'Tax' AND _TABLE_SUFFIX ="
-      + " CONCAT(CAST(EXTRACT(YEAR from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),'_' , LPAD(CAST(EXTRACT(MONTH from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY))"
-      + " as string),2,'0')) AND TIMESTAMP_TRUNC(usagestartdate, DAY) = TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY) GROUP"
-      + " BY awsServicecode, region, awsAvailabilityzone, awsUsageaccountid, awsInstancetype, awsUsagetype, startTime;";
+  private static final String AWS_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE = "DELETE FROM `%s.preAggregated`%n"
+      + "WHERE DATE(startTime) >= DATE_SUB(@run_date , INTERVAL 3 DAY) AND cloudProvider = \"AWS\";%n"
+      + "INSERT INTO `%s.preAggregated` (startTime, awsBlendedRate,awsBlendedCost,awsUnblendedRate, awsUnblendedCost,"
+      + " cost, awsServicecode, region,awsAvailabilityzone,awsUsageaccountid,awsInstancetype,awsUsagetype,cloudProvider)%n"
+      + "SELECT TIMESTAMP_TRUNC(usagestartdate, DAY) as startTime, min(blendedrate) AS awsBlendedRate, sum(blendedcost) AS awsBlendedCost,"
+      + " min(unblendedrate) AS awsUnblendedRate, sum(unblendedcost) AS awsUnblendedCost, sum(unblendedcost) AS cost, productname AS awsServicecode,"
+      + " region, availabilityzone AS awsAvailabilityzone, usageaccountid AS awsUsageaccountid, instancetype AS awsInstancetype, usagetype AS awsUsagetype,"
+      + " \"AWS\" AS cloudProvider FROM `%s.awscur_*` WHERE lineitemtype != 'Tax' AND _TABLE_SUFFIX = CONCAT(CAST(EXTRACT(YEAR from "
+      + "TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),'_' , LPAD(CAST(EXTRACT(MONTH from "
+      + "TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),2,'0')) AND TIMESTAMP_TRUNC(usagestartdate, DAY) "
+      + "<= TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY) AND TIMESTAMP_TRUNC(usagestartdate, DAY) >= "
+      + "TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 3 DAY), DAY)GROUP BY awsServicecode, region, awsAvailabilityzone, "
+      + "awsUsageaccountid, awsInstancetype, awsUsagetype, startTime;";
 
-  private static final String GCP_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE =
-      "SELECT SUM(cost) AS cost, service.description AS gcpProduct, sku.id AS gcpSkuId, "
-      + "sku.description AS gcpSkuDescription, TIMESTAMP_TRUNC(usage_start_time, DAY) as startTime, "
-      + "project.id AS gcpProjectId, location.region AS region, location.zone AS zone, "
-      + "billing_account_id AS gcpBillingAccountId, \"GCP\" AS cloudProvider "
-      + "FROM `%s.%s.gcp_billing_export*` "
-      + "WHERE DATE(usage_start_time) = DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 1 DAY) "
-      + "GROUP BY service.description, sku.id, sku.description, startTime, project.id, "
-      + "location.region, location.zone, billing_account_id;";
+  private static final String GCP_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE = "DELETE FROM `%s.preAggregated`%n"
+      + "WHERE DATE(startTime) >= DATE_SUB(@run_date , INTERVAL 3 DAY) AND cloudProvider = \"GCP\";%n"
+      + "INSERT INTO `%s.preAggregated` (cost, gcpProduct,gcpSkuId,gcpSkuDescription, startTime,gcpProjectId,region,zone,gcpBillingAccountId,cloudProvider)%n"
+      + "SELECT SUM(cost) AS cost, service.description AS gcpProduct, sku.id AS gcpSkuId, sku.description AS gcpSkuDescription,"
+      + " TIMESTAMP_TRUNC(usage_start_time, DAY) as startTime, project.id AS gcpProjectId, location.region AS region, location.zone AS zone,"
+      + " billing_account_id AS gcpBillingAccountId, \"GCP\" AS cloudProvider FROM `%s.gcp_billing_export*` WHERE DATE(usage_start_time) <= "
+      + "DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 1 DAY) AND DATE(usage_start_time) >= "
+      + "DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 3 DAY) GROUP BY service.description, sku.id, sku.description, startTime,"
+      + " project.id, location.region, location.zone, billing_account_id;";
 
   private BatchMainConfig mainConfig;
   private BillingDataPipelineRecordDao billingDataPipelineRecordDao;
@@ -126,9 +138,10 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
           DatasetInfo.newBuilder(dataSetName).setDescription(description).setLabels(labelMap).build();
 
       Dataset createdDataSet = bigquery.create(datasetInfo);
+      bigquery.create(getPreAggregateTableInfo(dataSetName));
       return createdDataSet.getDatasetId().getDataset();
     } catch (BigQueryException bigQueryEx) {
-      // data set name already exists.
+      // data set/PreAggregate Table already exists.
       if (bigQueryEx.getCode() == 409) {
         return dataSetName;
       }
@@ -141,7 +154,8 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   public void createScheduledQueriesForGCP(String scheduledQueryName, String dstDataSetId) throws IOException {
     String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
     DataTransferServiceClient dataTransferServiceClient = getDataTransferClient();
-    String query = String.format(GCP_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE, gcpProjectId, dstDataSetId);
+    String tablePrefix = gcpProjectId + "." + dstDataSetId;
+    String query = String.format(GCP_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE, tablePrefix, tablePrefix, tablePrefix);
     CreateTransferConfigRequest scheduledTransferConfigRequest =
         getTransferConfigRequest(dstDataSetId, scheduledQueryName, true, query);
     executeDataTransferJobCreate(scheduledTransferConfigRequest, dataTransferServiceClient);
@@ -166,7 +180,8 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
 
     // Create Scheduled query for the Pre-Aggregated Table
     String scheduledQueryName2 = String.format(AWS_PRE_AGG_QUERY_TEMPLATE, uniqueSuffixFromAccountId);
-    String query2 = String.format(AWS_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE, gcpProjectId, dstDataSetId);
+    String tablePrefix = gcpProjectId + "." + dstDataSetId;
+    String query2 = String.format(AWS_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE, tablePrefix, tablePrefix, tablePrefix);
     CreateTransferConfigRequest preAggTransferConfigRequest =
         getTransferConfigRequest(dstDataSetId, scheduledQueryName2, true, query2);
     executeDataTransferJobCreate(preAggTransferConfigRequest, dataTransferServiceClient);
@@ -177,38 +192,46 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   private CreateTransferConfigRequest getTransferConfigRequest(
       String dstDataSetId, String scheduledQueryName, boolean isPreAggregateScheduledQuery, String query) {
     String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
-    String parent = String.format(PARENT_TEMPLATE, gcpProjectId);
-    String writeDisposition;
-    String destinationTable;
+    String parent;
     int numberOfHours;
     int numberOfMinutes;
+    TransferConfig transferConfig;
 
     if (isPreAggregateScheduledQuery) {
-      writeDisposition = WRITE_APPEND_VALUE;
-      destinationTable = PRE_AGG_TABLE_NAME_VALUE;
+      parent = String.format(PARENT_TEMPLATE_WITH_LOCATION, gcpProjectId, LOCATION);
       numberOfHours = 6;
       numberOfMinutes = 30;
+
+      transferConfig =
+          TransferConfig.newBuilder()
+              .setDisplayName(scheduledQueryName)
+              .setParams(
+                  Struct.newBuilder().putFields(QUERY_CONST, Value.newBuilder().setStringValue(query).build()).build())
+              .setScheduleOptions(ScheduleOptions.newBuilder()
+                                      .setStartTime(getJobStartTimeStamp(numberOfHours, numberOfMinutes))
+                                      .build())
+              .setDataSourceId(SCHEDULED_QUERY_DATA_SOURCE_ID)
+              .build();
     } else {
-      writeDisposition = WRITE_TRUNCATE_VALUE;
-      destinationTable = DEST_TABLE_NAME_VALUE;
+      parent = String.format(PARENT_TEMPLATE, gcpProjectId);
       numberOfHours = 6;
       numberOfMinutes = 15;
+      transferConfig = TransferConfig.newBuilder()
+                           .setDisplayName(scheduledQueryName)
+                           .setParams(Struct.newBuilder()
+                                          .putFields(QUERY_CONST, Value.newBuilder().setStringValue(query).build())
+                                          .putFields(WRITE_DISPOSITION_CONST,
+                                              Value.newBuilder().setStringValue(WRITE_TRUNCATE_VALUE).build())
+                                          .putFields(DEST_TABLE_NAME_CONST,
+                                              Value.newBuilder().setStringValue(DEST_TABLE_NAME_VALUE).build())
+                                          .build())
+                           .setDestinationDatasetId(dstDataSetId)
+                           .setScheduleOptions(ScheduleOptions.newBuilder()
+                                                   .setStartTime(getJobStartTimeStamp(numberOfHours, numberOfMinutes))
+                                                   .build())
+                           .setDataSourceId(SCHEDULED_QUERY_DATA_SOURCE_ID)
+                           .build();
     }
-
-    TransferConfig transferConfig =
-        TransferConfig.newBuilder()
-            .setDisplayName(scheduledQueryName)
-            .setParams(
-                Struct.newBuilder()
-                    .putFields(QUERY_CONST, Value.newBuilder().setStringValue(query).build())
-                    .putFields(WRITE_DISPOSITION_CONST, Value.newBuilder().setStringValue(writeDisposition).build())
-                    .putFields(DEST_TABLE_NAME_CONST, Value.newBuilder().setStringValue(destinationTable).build())
-                    .build())
-            .setDestinationDatasetId(dstDataSetId)
-            .setScheduleOptions(
-                ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(numberOfHours, numberOfMinutes)).build())
-            .setDataSourceId(SCHEDULED_QUERY_DATA_SOURCE_ID)
-            .build();
 
     return CreateTransferConfigRequest.newBuilder().setTransferConfig(transferConfig).setParent(parent).build();
   }
@@ -328,5 +351,29 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
             .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
             .build();
     return DataTransferServiceClient.create(dataTransferServiceSettings);
+  }
+
+  protected static TableInfo getPreAggregateTableInfo(String dataSetName) {
+    TableId tableId = TableId.of(dataSetName, PRE_AGG_TABLE_NAME_VALUE);
+    TimePartitioning partitioning =
+        TimePartitioning.newBuilder(TimePartitioning.Type.DAY).setField("startTime").build();
+
+    Schema schema = Schema.of(Field.of("cost", StandardSQLTypeName.FLOAT64),
+        Field.of("gcpProduct", StandardSQLTypeName.STRING), Field.of("gcpSkuId", StandardSQLTypeName.STRING),
+        Field.of("gcpSkuDescription", StandardSQLTypeName.STRING), Field.of("startTime", StandardSQLTypeName.TIMESTAMP),
+        Field.of("gcpProjectId", StandardSQLTypeName.STRING), Field.of("region", StandardSQLTypeName.STRING),
+        Field.of("zone", StandardSQLTypeName.STRING), Field.of("gcpBillingAccountId", StandardSQLTypeName.STRING),
+        Field.of("cloudProvider", StandardSQLTypeName.STRING), Field.of("awsBlendedRate", StandardSQLTypeName.STRING),
+        Field.of("awsBlendedCost", StandardSQLTypeName.FLOAT64),
+        Field.of("awsUnblendedRate", StandardSQLTypeName.STRING),
+        Field.of("awsUnblendedCost", StandardSQLTypeName.FLOAT64),
+        Field.of("awsServicecode", StandardSQLTypeName.STRING),
+        Field.of("awsAvailabilityzone", StandardSQLTypeName.STRING),
+        Field.of("awsUsageaccountid", StandardSQLTypeName.STRING),
+        Field.of("awsInstancetype", StandardSQLTypeName.STRING), Field.of("awsUsagetype", StandardSQLTypeName.STRING));
+
+    StandardTableDefinition tableDefinition =
+        StandardTableDefinition.newBuilder().setSchema(schema).setTimePartitioning(partitioning).build();
+    return TableInfo.newBuilder(tableId, tableDefinition).build();
   }
 }
