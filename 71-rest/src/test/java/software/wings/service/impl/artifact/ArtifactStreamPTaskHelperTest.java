@@ -84,7 +84,7 @@ public class ArtifactStreamPTaskHelperTest extends CategoryTest {
     artifactStreamPTaskHelper.createPerpetualTask(artifactStream);
     verify(artifactCollectionPTaskServiceClient, times(3))
         .create(eq(ACCOUNT_ID), any(ArtifactCollectionPTaskClientParams.class));
-    verify(perpetualTaskService, times(1)).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, times(2)).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
     ArtifactStream artifactStreamWithPerpetualTaskId = prepareArtifactStream();
     artifactStreamWithPerpetualTaskId.setPerpetualTaskId(PERPETUAL_TASK_ID);

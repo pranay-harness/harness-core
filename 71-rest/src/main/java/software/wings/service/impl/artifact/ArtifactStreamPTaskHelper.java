@@ -20,12 +20,14 @@ import io.harness.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.delegatetasks.buildsource.ArtifactStreamLogContext;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactStreamService;
 
 @OwnedBy(CDC)
 @Slf4j
 @Singleton
 public class ArtifactStreamPTaskHelper {
+  @Inject private WingsPersistence wingsPersistence;
   @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private PerpetualTaskService perpetualTaskService;
@@ -36,10 +38,10 @@ public class ArtifactStreamPTaskHelper {
   }
 
   public void createPerpetualTask(ArtifactStream artifactStream) {
-    Validator.notNullCheck("ArtifactStreamId is missing", artifactStream.getUuid());
+    Validator.notNullCheck("Artifact stream id is missing", artifactStream.getUuid());
     if (artifactStream.getPerpetualTaskId() != null) {
       throw new InvalidRequestException(
-          format("Perpetual task already exists for artifact stream [%s]", artifactStream.getUuid()));
+          format("Perpetual task already exists for artifact stream: %s", artifactStream.getUuid()));
     }
 
     try (AutoLogContext ignore1 = new AccountLogContext(artifactStream.getAccountId(), OVERRIDE_ERROR);
@@ -52,17 +54,22 @@ public class ArtifactStreamPTaskHelper {
       String perpetualTaskId = client.create(artifactStream.getAccountId(), artifactCollectionPTaskClientParams);
       logger.info("Created perpetual task: {}", perpetualTaskId);
 
-      boolean updated = artifactStreamService.attachPerpetualTaskId(artifactStream, perpetualTaskId);
-      if (!updated) {
-        // If artifact stream is not updated, it doesn't know about the perpetual task. So the perpetual task becomes a
-        // zombie and is never reset or deleted on config change. It might try to do regular collection along with
-        // perpetual task which can lead to race conditions.
-        perpetualTaskService.deleteTask(artifactStream.getAccountId(), perpetualTaskId);
+      boolean updated = false;
+      try {
+        updated = artifactStreamService.attachPerpetualTaskId(artifactStream, perpetualTaskId);
+        logger.info("Attaching perpetual task: {} to artifact stream: {}", perpetualTaskId, artifactStream.getUuid());
+      } finally {
+        if (!updated) {
+          // If artifact stream is not updated, it doesn't know about the perpetual task. So the perpetual task becomes
+          // a zombie and is never reset or deleted on config change. It might try to do regular collection along with
+          // perpetual task which can lead to race conditions.
+          perpetualTaskService.deleteTask(artifactStream.getAccountId(), perpetualTaskId);
+        }
       }
     } catch (Exception ex) {
       // This is background-type operation. Artifact stream can be created but perpetual task creation can fail. We
       // should not fail the save operation and try assigning to perpetual task later.
-      logger.error(format("Unable to create perpetual task for artifactStreamId: %s", artifactStream.getUuid()), ex);
+      logger.error(format("Unable to create perpetual task for artifact stream: %s", artifactStream.getUuid()), ex);
     }
   }
 }

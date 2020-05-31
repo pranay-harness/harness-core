@@ -20,6 +20,8 @@ import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Before;
@@ -41,17 +43,21 @@ import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.Collections;
 
-public class ArtifactStreamPTaskJobTest extends CategoryTest {
+public class ArtifactStreamPTaskMigrationJobTest extends CategoryTest {
   @Mock private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
   @Mock private WingsPersistence mockWingsPersistence;
+  @Mock private PersistentLocker persistentLocker;
   @Mock private FeatureFlagService featureFlagService;
 
-  @Inject @InjectMocks private ArtifactStreamPTaskJob job;
+  @Inject @InjectMocks private ArtifactStreamPTaskMigrationJob job;
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Before
-  public void setup() {}
+  public void setup() {
+    AcquiredLock<?> acquiredLock = mock(AcquiredLock.class);
+    when(persistentLocker.tryToAcquireLock(anyString(), any())).thenReturn(acquiredLock);
+  }
 
   @Test
   @Owner(developers = OwnerRule.GARVIT)
