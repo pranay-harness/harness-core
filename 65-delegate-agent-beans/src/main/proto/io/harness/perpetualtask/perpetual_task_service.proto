@@ -7,7 +7,9 @@ option java_multiple_files = true;
 import "google/protobuf/timestamp.proto";
 
 import "io/harness/delegate/delegate.proto";
+
 import "io/harness/perpetualtask/perpetual_task.proto";
+import "io/harness/perpetualtask/perpetual_task_execution.proto";
 
 service PerpetualTaskService {
   rpc PerpetualTaskList(PerpetualTaskListRequest) returns (PerpetualTaskListResponse);
@@ -28,7 +30,7 @@ message PerpetualTaskContextRequest {
 }
 
 message PerpetualTaskContextResponse {
-  PerpetualTaskContext perpetual_task_context = 1;
+  PerpetualTaskExecutionContext perpetual_task_context = 1;
 }
 
 message HeartbeatRequest {

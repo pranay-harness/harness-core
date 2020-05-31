@@ -26,7 +26,8 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExe
   @Inject private ManagerClient managerClient;
 
   @Override
-  public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
+  public PerpetualTaskResponse runOnce(
+      PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     logger.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
 
     final AwsAmiInstanceSyncPerpetualTaskParams taskParams =
@@ -90,7 +91,7 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExe
   }
 
   @Override
-  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskParams params) {
+  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskExecutionParams params) {
     return false;
   }
 }

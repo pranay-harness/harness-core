@@ -21,15 +21,15 @@ public class PerpetualTaskLifecycleManager {
   private final long timeoutMillis;
   private final PerpetualTaskId taskId;
   private final TimeLimiter timeLimiter;
-  private final PerpetualTaskParams params;
-  private final PerpetualTaskContext context;
+  private final PerpetualTaskExecutionParams params;
+  private final PerpetualTaskExecutionContext context;
   private final PerpetualTaskExecutor perpetualTaskExecutor;
   private final PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient;
 
   private Cache<String, PerpetualTaskResponse> perpetualTaskResponseCache =
       Caffeine.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build();
 
-  PerpetualTaskLifecycleManager(PerpetualTaskId taskId, PerpetualTaskContext context,
+  PerpetualTaskLifecycleManager(PerpetualTaskId taskId, PerpetualTaskExecutionContext context,
       Map<String, PerpetualTaskExecutor> factoryMap, PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient,
       TimeLimiter timeLimiter) {
     this.taskId = taskId;
@@ -91,7 +91,7 @@ public class PerpetualTaskLifecycleManager {
     return null;
   }
 
-  private String getTaskType(PerpetualTaskParams params) {
+  private String getTaskType(PerpetualTaskExecutionParams params) {
     String fullyQualifiedClassName = AnyUtils.toFqcn(params.getCustomizedParams());
     return StringUtils.substringAfterLast(fullyQualifiedClassName, ".");
   }

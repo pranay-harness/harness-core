@@ -51,8 +51,3 @@ message TaskDetails {
   // obtaining secrets are system generated, and not a hack from customers input.
   int64 expression_functor_token = 6;
 }
-
-// List of all capabilities needed for the task
-message TaskCapabilities {
-  repeated Capability list = 1;
-}

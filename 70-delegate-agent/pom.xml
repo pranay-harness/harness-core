@@ -34,11 +34,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>65-delegate-service-beans</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>11-commons-test</artifactId>
             <version>${project.parent.version}</version>
             <scope>test</scope>

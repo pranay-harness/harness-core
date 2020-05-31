@@ -8,7 +8,9 @@ import "io/harness/delegate/account.proto";
 import "io/harness/delegate/task.proto";
 import "io/harness/delegate/progress.proto";
 
+import "io/harness/delegate/capability.proto";
 import "io/harness/perpetualtask/perpetual_task.proto";
+import "io/harness/perpetualtask/perpetual_task_client.proto";
 
 service DelegateService {
   rpc SubmitTask(SubmitTaskRequest) returns (SubmitTaskResponse);
@@ -16,6 +18,8 @@ service DelegateService {
   rpc TaskProgress(TaskProgressRequest) returns (TaskProgressResponse);
   rpc TaskProgressUpdates(TaskProgressUpdatesRequest) returns (stream TaskProgressUpdatesResponse);
 
+  rpc RegisterPerpetualTaskClientEntrypoint(RegisterPerpetualTaskClientEntrypointRequest)
+      returns (RegisterPerpetualTaskClientEntrypointResponse);
   rpc CreatePerpetualTask(CreatePerpetualTaskRequest) returns (CreatePerpetualTaskResponse);
   rpc DeletePerpetualTask(DeletePerpetualTaskRequest) returns (DeletePerpetualTaskResponse);
   rpc ResetPerpetualTask(ResetPerpetualTaskRequest) returns (ResetPerpetualTaskResponse);
@@ -25,7 +29,7 @@ message SubmitTaskRequest {
   AccountId account_id = 1;
   TaskSetupAbstractions setup_abstractions = 2;
   TaskDetails details = 3;
-  TaskCapabilities capabilities = 4;
+  repeated Capability capabilities = 4;
 }
 
 message SubmitTaskResponse {
@@ -56,11 +60,19 @@ message TaskProgressUpdatesResponse {
   TaskExecutionStage currently_at_stage = 1;
 }
 
+message RegisterPerpetualTaskClientEntrypointRequest {
+  string type = 1;
+  perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;
+}
+
+message RegisterPerpetualTaskClientEntrypointResponse {
+}
+
 message CreatePerpetualTaskRequest {
   AccountId account_id = 1;
   string type = 2;
   perpetualtask.PerpetualTaskSchedule schedule = 3;
-  perpetualtask.PerpetualTaskContext context = 4;
+  perpetualtask.PerpetualTaskClientContextDetails context = 4;
   bool allow_duplicate = 5;
 }
 

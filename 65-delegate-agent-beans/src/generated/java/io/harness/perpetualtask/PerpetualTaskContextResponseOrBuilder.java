@@ -9,15 +9,15 @@ public interface PerpetualTaskContextResponseOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.PerpetualTaskContextResponse)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
    */
   boolean hasPerpetualTaskContext();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
    */
-  io.harness.perpetualtask.PerpetualTaskContext getPerpetualTaskContext();
+  io.harness.perpetualtask.PerpetualTaskExecutionContext getPerpetualTaskContext();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskContext perpetual_task_context = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
    */
-  io.harness.perpetualtask.PerpetualTaskContextOrBuilder getPerpetualTaskContextOrBuilder();
+  io.harness.perpetualtask.PerpetualTaskExecutionContextOrBuilder getPerpetualTaskContextOrBuilder();
 }

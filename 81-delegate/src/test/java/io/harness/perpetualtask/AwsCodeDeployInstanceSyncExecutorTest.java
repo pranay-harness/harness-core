@@ -69,7 +69,7 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testRunOnceSuccessful() throws IOException {
-    PerpetualTaskParams perpetualTaskParams = getPerpetualTaskParams();
+    PerpetualTaskExecutionParams perpetualTaskParams = getPerpetualTaskParams();
     ArgumentCaptor<AwsCodeDeployListDeploymentInstancesResponse> captor =
         ArgumentCaptor.forClass(AwsCodeDeployListDeploymentInstancesResponse.class);
 
@@ -104,7 +104,7 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testRunOnceWhenInstancesFetchThrowException() {
-    PerpetualTaskParams perpetualTaskParams = getPerpetualTaskParams();
+    PerpetualTaskExecutionParams perpetualTaskParams = getPerpetualTaskParams();
     ArgumentCaptor<AwsCodeDeployListDeploymentInstancesResponse> captor =
         ArgumentCaptor.forClass(AwsCodeDeployListDeploymentInstancesResponse.class);
 
@@ -134,7 +134,7 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends CategoryTest {
     assertThat(taskResponse.getResponseMessage()).contains("Invalid deployment id");
   }
 
-  private PerpetualTaskParams getPerpetualTaskParams() {
+  private PerpetualTaskExecutionParams getPerpetualTaskParams() {
     ByteString configBytes = ByteString.copyFrom(KryoUtils.asBytes(AwsConfig.builder().accountId("accountId").build()));
     ByteString encryptionDetailsBytes = ByteString.copyFrom(KryoUtils.asBytes(new ArrayList<>()));
     AwsCodeDeployInstanceSyncPerpetualTaskParams.Builder paramsBuilder =
@@ -146,6 +146,6 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends CategoryTest {
     ByteString filterBytes = ByteString.copyFrom(KryoUtils.asBytes(singletonList(new Filter())));
     paramsBuilder.setFilter(filterBytes);
 
-    return PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(paramsBuilder.build())).build();
+    return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(paramsBuilder.build())).build();
   }
 }

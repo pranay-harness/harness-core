@@ -156,7 +156,7 @@ public class PerpetualTaskWorker {
   @VisibleForTesting
   void startTask(PerpetualTaskAssignDetails task) {
     try (AutoLogContext ignore1 = new PerpetualTaskLogContext(task.getTaskId().getId(), OVERRIDE_ERROR)) {
-      PerpetualTaskContext context = perpetualTaskServiceGrpcClient.perpetualTaskContext(task.getTaskId());
+      PerpetualTaskExecutionContext context = perpetualTaskServiceGrpcClient.perpetualTaskContext(task.getTaskId());
       PerpetualTaskSchedule schedule = context.getTaskSchedule();
       long intervalSeconds = Durations.toSeconds(schedule.getInterval());
 

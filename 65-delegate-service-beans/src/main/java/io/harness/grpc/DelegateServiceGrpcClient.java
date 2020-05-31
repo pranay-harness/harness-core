@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.CancelTaskRequest;
 import io.harness.delegate.CancelTaskResponse;
+import io.harness.delegate.Capability;
 import io.harness.delegate.CreatePerpetualTaskRequest;
 import io.harness.delegate.CreatePerpetualTaskResponse;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
@@ -13,7 +14,6 @@ import io.harness.delegate.DeletePerpetualTaskRequest;
 import io.harness.delegate.ResetPerpetualTaskRequest;
 import io.harness.delegate.SubmitTaskRequest;
 import io.harness.delegate.SubmitTaskResponse;
-import io.harness.delegate.TaskCapabilities;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
@@ -22,7 +22,7 @@ import io.harness.delegate.TaskProgressResponse;
 import io.harness.delegate.TaskProgressUpdatesRequest;
 import io.harness.delegate.TaskProgressUpdatesResponse;
 import io.harness.delegate.TaskSetupAbstractions;
-import io.harness.perpetualtask.PerpetualTaskContext;
+import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import lombok.extern.slf4j.Slf4j;
@@ -44,12 +44,12 @@ public class DelegateServiceGrpcClient {
   }
 
   public TaskId submitTask(
-      TaskSetupAbstractions taskSetupAbstractions, TaskDetails taskDetails, TaskCapabilities taskCapabilities) {
+      TaskSetupAbstractions taskSetupAbstractions, TaskDetails taskDetails, List<Capability> capabilities) {
     SubmitTaskResponse response = delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
                                       .submitTask(SubmitTaskRequest.newBuilder()
                                                       .setSetupAbstractions(taskSetupAbstractions)
                                                       .setDetails(taskDetails)
-                                                      .setCapabilities(taskCapabilities)
+                                                      .addAllCapabilities(capabilities)
                                                       .build());
 
     return response.getTaskId();
@@ -81,7 +81,7 @@ public class DelegateServiceGrpcClient {
   }
 
   public PerpetualTaskId createPerpetualTask(AccountId accountId, String type, PerpetualTaskSchedule schedule,
-      PerpetualTaskContext context, boolean allowDuplicate) {
+      PerpetualTaskClientContextDetails context, boolean allowDuplicate) {
     CreatePerpetualTaskResponse response = delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
                                                .createPerpetualTask(CreatePerpetualTaskRequest.newBuilder()
                                                                         .setAccountId(accountId)

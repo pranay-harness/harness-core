@@ -28,7 +28,8 @@ public class AwsCodeDeployInstanceSyncExecutor implements PerpetualTaskExecutor 
   @Inject private ManagerClient managerClient;
 
   @Override
-  public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
+  public PerpetualTaskResponse runOnce(
+      PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     final AwsCodeDeployInstanceSyncPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), AwsCodeDeployInstanceSyncPerpetualTaskParams.class);
     final List<Filter> filters = (List<Filter>) KryoUtils.asObject(taskParams.getFilter().toByteArray());
@@ -49,7 +50,7 @@ public class AwsCodeDeployInstanceSyncExecutor implements PerpetualTaskExecutor 
   }
 
   @Override
-  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskParams params) {
+  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskExecutionParams params) {
     return false;
   }
 

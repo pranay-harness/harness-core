@@ -18,7 +18,7 @@ public interface PerpetualTaskService {
 
   PerpetualTaskType getPerpetualTaskType(String taskId);
 
-  PerpetualTaskContext perpetualTaskContext(String taskId);
+  PerpetualTaskExecutionContext perpetualTaskContext(String taskId);
 
   boolean triggerCallback(String taskId, long heartbeatMillis, PerpetualTaskResponse perpetualTaskResponse);
 

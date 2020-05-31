@@ -18,8 +18,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.managerclient.ManagerClient;
+import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskId;
-import io.harness.perpetualtask.PerpetualTaskParams;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.rest.RestResponse;
@@ -128,8 +128,8 @@ public class ArtifactPerpetualTaskExecutorTest extends CategoryTest {
     when(artifactRepositoryService.publishCollectedArtifacts(any(BuildSourceParameters.class)))
         .thenReturn(buildSourceExecutionResponse);
 
-    PerpetualTaskParams params =
-        PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(artifactCollectionTaskParams)).build();
+    PerpetualTaskExecutionParams params =
+        PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(artifactCollectionTaskParams)).build();
     return artifactPerpetualTaskExecutor.runOnce(perpetualTaskId, params, Instant.now());
   }
 }

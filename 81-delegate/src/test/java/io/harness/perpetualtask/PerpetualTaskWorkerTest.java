@@ -55,8 +55,8 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
   PerpetualTaskAssignDetails task2 = PerpetualTaskAssignDetails.newBuilder().setTaskId(taskId2).build();
 
   KubernetesClusterConfig kubernetesClusterConfig;
-  PerpetualTaskParams params;
-  PerpetualTaskContext context;
+  PerpetualTaskExecutionParams params;
+  PerpetualTaskExecutionContext context;
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient;
@@ -71,10 +71,10 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
     K8sWatchTaskParams k8sWatchTaskParams =
         K8sWatchTaskParams.newBuilder().setCloudProviderId(cloudProviderId).setK8SClusterConfig(bytes).build();
 
-    params = PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(k8sWatchTaskParams)).build();
+    params = PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(k8sWatchTaskParams)).build();
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder().setInterval(Durations.fromSeconds(1)).build();
-    context = PerpetualTaskContext.newBuilder().setTaskParams(params).setTaskSchedule(schedule).build();
+    context = PerpetualTaskExecutionContext.newBuilder().setTaskParams(params).setTaskSchedule(schedule).build();
 
     when(perpetualTaskServiceGrpcClient.perpetualTaskContext(isA(PerpetualTaskId.class))).thenReturn(context);
   }

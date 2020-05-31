@@ -15,7 +15,9 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
   private SubmitTaskRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private SubmitTaskRequest() {}
+  private SubmitTaskRequest() {
+    capabilities_ = java.util.Collections.emptyList();
+  }
 
   @java.
   lang.Override
@@ -80,16 +82,11 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
             break;
           }
           case 34: {
-            io.harness.delegate.TaskCapabilities.Builder subBuilder = null;
-            if (capabilities_ != null) {
-              subBuilder = capabilities_.toBuilder();
+            if (!((mutable_bitField0_ & 0x00000008) != 0)) {
+              capabilities_ = new java.util.ArrayList<io.harness.delegate.Capability>();
+              mutable_bitField0_ |= 0x00000008;
             }
-            capabilities_ = input.readMessage(io.harness.delegate.TaskCapabilities.parser(), extensionRegistry);
-            if (subBuilder != null) {
-              subBuilder.mergeFrom(capabilities_);
-              capabilities_ = subBuilder.buildPartial();
-            }
-
+            capabilities_.add(input.readMessage(io.harness.delegate.Capability.parser(), extensionRegistry));
             break;
           }
           default: {
@@ -105,6 +102,9 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     } catch (java.io.IOException e) {
       throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
     } finally {
+      if (((mutable_bitField0_ & 0x00000008) != 0)) {
+        capabilities_ = java.util.Collections.unmodifiableList(capabilities_);
+      }
       this.unknownFields = unknownFields.build();
       makeExtensionsImmutable();
     }
@@ -122,6 +122,7 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
             io.harness.delegate.SubmitTaskRequest.class, io.harness.delegate.SubmitTaskRequest.Builder.class);
   }
 
+  private int bitField0_;
   public static final int ACCOUNT_ID_FIELD_NUMBER = 1;
   private io.harness.delegate.AccountId accountId_;
   /**
@@ -187,24 +188,36 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
   }
 
   public static final int CAPABILITIES_FIELD_NUMBER = 4;
-  private io.harness.delegate.TaskCapabilities capabilities_;
+  private java.util.List<io.harness.delegate.Capability> capabilities_;
   /**
-   * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
    */
-  public boolean hasCapabilities() {
-    return capabilities_ != null;
+  public java.util.List<io.harness.delegate.Capability> getCapabilitiesList() {
+    return capabilities_;
   }
   /**
-   * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
    */
-  public io.harness.delegate.TaskCapabilities getCapabilities() {
-    return capabilities_ == null ? io.harness.delegate.TaskCapabilities.getDefaultInstance() : capabilities_;
+  public java.util.List<? extends io.harness.delegate.CapabilityOrBuilder> getCapabilitiesOrBuilderList() {
+    return capabilities_;
   }
   /**
-   * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
    */
-  public io.harness.delegate.TaskCapabilitiesOrBuilder getCapabilitiesOrBuilder() {
-    return getCapabilities();
+  public int getCapabilitiesCount() {
+    return capabilities_.size();
+  }
+  /**
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+   */
+  public io.harness.delegate.Capability getCapabilities(int index) {
+    return capabilities_.get(index);
+  }
+  /**
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+   */
+  public io.harness.delegate.CapabilityOrBuilder getCapabilitiesOrBuilder(int index) {
+    return capabilities_.get(index);
   }
 
   private byte memoizedIsInitialized = -1;
@@ -231,8 +244,8 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     if (details_ != null) {
       output.writeMessage(3, getDetails());
     }
-    if (capabilities_ != null) {
-      output.writeMessage(4, getCapabilities());
+    for (int i = 0; i < capabilities_.size(); i++) {
+      output.writeMessage(4, capabilities_.get(i));
     }
     unknownFields.writeTo(output);
   }
@@ -253,8 +266,8 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     if (details_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, getDetails());
     }
-    if (capabilities_ != null) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(4, getCapabilities());
+    for (int i = 0; i < capabilities_.size(); i++) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(4, capabilities_.get(i));
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -289,12 +302,8 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
       if (!getDetails().equals(other.getDetails()))
         return false;
     }
-    if (hasCapabilities() != other.hasCapabilities())
+    if (!getCapabilitiesList().equals(other.getCapabilitiesList()))
       return false;
-    if (hasCapabilities()) {
-      if (!getCapabilities().equals(other.getCapabilities()))
-        return false;
-    }
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -319,9 +328,9 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
       hash = (37 * hash) + DETAILS_FIELD_NUMBER;
       hash = (53 * hash) + getDetails().hashCode();
     }
-    if (hasCapabilities()) {
+    if (getCapabilitiesCount() > 0) {
       hash = (37 * hash) + CAPABILITIES_FIELD_NUMBER;
-      hash = (53 * hash) + getCapabilities().hashCode();
+      hash = (53 * hash) + getCapabilitiesList().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -429,6 +438,7 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     }
     private void maybeForceBuilderInitialization() {
       if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+        getCapabilitiesFieldBuilder();
       }
     }
     @java.lang.Override
@@ -453,10 +463,10 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
         detailsBuilder_ = null;
       }
       if (capabilitiesBuilder_ == null) {
-        capabilities_ = null;
+        capabilities_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000008);
       } else {
-        capabilities_ = null;
-        capabilitiesBuilder_ = null;
+        capabilitiesBuilder_.clear();
       }
       return this;
     }
@@ -488,6 +498,8 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     lang.Override
     public io.harness.delegate.SubmitTaskRequest buildPartial() {
       io.harness.delegate.SubmitTaskRequest result = new io.harness.delegate.SubmitTaskRequest(this);
+      int from_bitField0_ = bitField0_;
+      int to_bitField0_ = 0;
       if (accountIdBuilder_ == null) {
         result.accountId_ = accountId_;
       } else {
@@ -504,10 +516,15 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
         result.details_ = detailsBuilder_.build();
       }
       if (capabilitiesBuilder_ == null) {
+        if (((bitField0_ & 0x00000008) != 0)) {
+          capabilities_ = java.util.Collections.unmodifiableList(capabilities_);
+          bitField0_ = (bitField0_ & ~0x00000008);
+        }
         result.capabilities_ = capabilities_;
       } else {
         result.capabilities_ = capabilitiesBuilder_.build();
       }
+      result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
     }
@@ -559,8 +576,30 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
       if (other.hasDetails()) {
         mergeDetails(other.getDetails());
       }
-      if (other.hasCapabilities()) {
-        mergeCapabilities(other.getCapabilities());
+      if (capabilitiesBuilder_ == null) {
+        if (!other.capabilities_.isEmpty()) {
+          if (capabilities_.isEmpty()) {
+            capabilities_ = other.capabilities_;
+            bitField0_ = (bitField0_ & ~0x00000008);
+          } else {
+            ensureCapabilitiesIsMutable();
+            capabilities_.addAll(other.capabilities_);
+          }
+          onChanged();
+        }
+      } else {
+        if (!other.capabilities_.isEmpty()) {
+          if (capabilitiesBuilder_.isEmpty()) {
+            capabilitiesBuilder_.dispose();
+            capabilitiesBuilder_ = null;
+            capabilities_ = other.capabilities_;
+            bitField0_ = (bitField0_ & ~0x00000008);
+            capabilitiesBuilder_ =
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ? getCapabilitiesFieldBuilder() : null;
+          } else {
+            capabilitiesBuilder_.addAllMessages(other.capabilities_);
+          }
+        }
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -588,6 +627,7 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
       }
       return this;
     }
+    private int bitField0_;
 
     private io.harness.delegate.AccountId accountId_;
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.AccountId,
@@ -927,114 +967,224 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
       return detailsBuilder_;
     }
 
-    private io.harness.delegate.TaskCapabilities capabilities_;
-    private com.google.protobuf
-        .SingleFieldBuilderV3<io.harness.delegate.TaskCapabilities, io.harness.delegate.TaskCapabilities.Builder,
-            io.harness.delegate.TaskCapabilitiesOrBuilder> capabilitiesBuilder_;
-    /**
-     * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
-     */
-    public boolean hasCapabilities() {
-      return capabilitiesBuilder_ != null || capabilities_ != null;
+    private java.util.List<io.harness.delegate.Capability> capabilities_ = java.util.Collections.emptyList();
+    private void ensureCapabilitiesIsMutable() {
+      if (!((bitField0_ & 0x00000008) != 0)) {
+        capabilities_ = new java.util.ArrayList<io.harness.delegate.Capability>(capabilities_);
+        bitField0_ |= 0x00000008;
+      }
     }
+
+    private com.google.protobuf.RepeatedFieldBuilderV3<io.harness.delegate.Capability,
+        io.harness.delegate.Capability.Builder, io.harness.delegate.CapabilityOrBuilder> capabilitiesBuilder_;
+
     /**
-     * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
      */
-    public io.harness.delegate.TaskCapabilities getCapabilities() {
+    public java.util.List<io.harness.delegate.Capability> getCapabilitiesList() {
       if (capabilitiesBuilder_ == null) {
-        return capabilities_ == null ? io.harness.delegate.TaskCapabilities.getDefaultInstance() : capabilities_;
+        return java.util.Collections.unmodifiableList(capabilities_);
       } else {
-        return capabilitiesBuilder_.getMessage();
+        return capabilitiesBuilder_.getMessageList();
       }
     }
     /**
-     * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
      */
-    public Builder setCapabilities(io.harness.delegate.TaskCapabilities value) {
+    public int getCapabilitiesCount() {
+      if (capabilitiesBuilder_ == null) {
+        return capabilities_.size();
+      } else {
+        return capabilitiesBuilder_.getCount();
+      }
+    }
+    /**
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+     */
+    public io.harness.delegate.Capability getCapabilities(int index) {
+      if (capabilitiesBuilder_ == null) {
+        return capabilities_.get(index);
+      } else {
+        return capabilitiesBuilder_.getMessage(index);
+      }
+    }
+    /**
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+     */
+    public Builder setCapabilities(int index, io.harness.delegate.Capability value) {
       if (capabilitiesBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
         }
-        capabilities_ = value;
+        ensureCapabilitiesIsMutable();
+        capabilities_.set(index, value);
         onChanged();
       } else {
-        capabilitiesBuilder_.setMessage(value);
+        capabilitiesBuilder_.setMessage(index, value);
       }
-
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
      */
-    public Builder setCapabilities(io.harness.delegate.TaskCapabilities.Builder builderForValue) {
+    public Builder setCapabilities(int index, io.harness.delegate.Capability.Builder builderForValue) {
       if (capabilitiesBuilder_ == null) {
-        capabilities_ = builderForValue.build();
+        ensureCapabilitiesIsMutable();
+        capabilities_.set(index, builderForValue.build());
         onChanged();
       } else {
-        capabilitiesBuilder_.setMessage(builderForValue.build());
+        capabilitiesBuilder_.setMessage(index, builderForValue.build());
       }
-
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
      */
-    public Builder mergeCapabilities(io.harness.delegate.TaskCapabilities value) {
+    public Builder addCapabilities(io.harness.delegate.Capability value) {
       if (capabilitiesBuilder_ == null) {
-        if (capabilities_ != null) {
-          capabilities_ =
-              io.harness.delegate.TaskCapabilities.newBuilder(capabilities_).mergeFrom(value).buildPartial();
-        } else {
-          capabilities_ = value;
+        if (value == null) {
+          throw new NullPointerException();
         }
+        ensureCapabilitiesIsMutable();
+        capabilities_.add(value);
         onChanged();
       } else {
-        capabilitiesBuilder_.mergeFrom(value);
+        capabilitiesBuilder_.addMessage(value);
       }
-
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+     */
+    public Builder addCapabilities(int index, io.harness.delegate.Capability value) {
+      if (capabilitiesBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureCapabilitiesIsMutable();
+        capabilities_.add(index, value);
+        onChanged();
+      } else {
+        capabilitiesBuilder_.addMessage(index, value);
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+     */
+    public Builder addCapabilities(io.harness.delegate.Capability.Builder builderForValue) {
+      if (capabilitiesBuilder_ == null) {
+        ensureCapabilitiesIsMutable();
+        capabilities_.add(builderForValue.build());
+        onChanged();
+      } else {
+        capabilitiesBuilder_.addMessage(builderForValue.build());
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+     */
+    public Builder addCapabilities(int index, io.harness.delegate.Capability.Builder builderForValue) {
+      if (capabilitiesBuilder_ == null) {
+        ensureCapabilitiesIsMutable();
+        capabilities_.add(index, builderForValue.build());
+        onChanged();
+      } else {
+        capabilitiesBuilder_.addMessage(index, builderForValue.build());
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+     */
+    public Builder addAllCapabilities(java.lang.Iterable<? extends io.harness.delegate.Capability> values) {
+      if (capabilitiesBuilder_ == null) {
+        ensureCapabilitiesIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, capabilities_);
+        onChanged();
+      } else {
+        capabilitiesBuilder_.addAllMessages(values);
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
      */
     public Builder clearCapabilities() {
       if (capabilitiesBuilder_ == null) {
-        capabilities_ = null;
+        capabilities_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000008);
         onChanged();
       } else {
-        capabilities_ = null;
-        capabilitiesBuilder_ = null;
+        capabilitiesBuilder_.clear();
       }
-
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
      */
-    public io.harness.delegate.TaskCapabilities.Builder getCapabilitiesBuilder() {
-      onChanged();
-      return getCapabilitiesFieldBuilder().getBuilder();
+    public Builder removeCapabilities(int index) {
+      if (capabilitiesBuilder_ == null) {
+        ensureCapabilitiesIsMutable();
+        capabilities_.remove(index);
+        onChanged();
+      } else {
+        capabilitiesBuilder_.remove(index);
+      }
+      return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
      */
-    public io.harness.delegate.TaskCapabilitiesOrBuilder getCapabilitiesOrBuilder() {
-      if (capabilitiesBuilder_ != null) {
-        return capabilitiesBuilder_.getMessageOrBuilder();
+    public io.harness.delegate.Capability.Builder getCapabilitiesBuilder(int index) {
+      return getCapabilitiesFieldBuilder().getBuilder(index);
+    }
+    /**
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+     */
+    public io.harness.delegate.CapabilityOrBuilder getCapabilitiesOrBuilder(int index) {
+      if (capabilitiesBuilder_ == null) {
+        return capabilities_.get(index);
       } else {
-        return capabilities_ == null ? io.harness.delegate.TaskCapabilities.getDefaultInstance() : capabilities_;
+        return capabilitiesBuilder_.getMessageOrBuilder(index);
       }
     }
     /**
-     * <code>.io.harness.delegate.TaskCapabilities capabilities = 4;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
      */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskCapabilities,
-        io.harness.delegate.TaskCapabilities.Builder, io.harness.delegate.TaskCapabilitiesOrBuilder>
+    public java.util.List<? extends io.harness.delegate.CapabilityOrBuilder> getCapabilitiesOrBuilderList() {
+      if (capabilitiesBuilder_ != null) {
+        return capabilitiesBuilder_.getMessageOrBuilderList();
+      } else {
+        return java.util.Collections.unmodifiableList(capabilities_);
+      }
+    }
+    /**
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+     */
+    public io.harness.delegate.Capability.Builder addCapabilitiesBuilder() {
+      return getCapabilitiesFieldBuilder().addBuilder(io.harness.delegate.Capability.getDefaultInstance());
+    }
+    /**
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+     */
+    public io.harness.delegate.Capability.Builder addCapabilitiesBuilder(int index) {
+      return getCapabilitiesFieldBuilder().addBuilder(index, io.harness.delegate.Capability.getDefaultInstance());
+    }
+    /**
+     * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+     */
+    public java.util.List<io.harness.delegate.Capability.Builder> getCapabilitiesBuilderList() {
+      return getCapabilitiesFieldBuilder().getBuilderList();
+    }
+    private com.google.protobuf.RepeatedFieldBuilderV3<io.harness.delegate.Capability,
+        io.harness.delegate.Capability.Builder, io.harness.delegate.CapabilityOrBuilder>
     getCapabilitiesFieldBuilder() {
       if (capabilitiesBuilder_ == null) {
-        capabilitiesBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskCapabilities,
-            io.harness.delegate.TaskCapabilities.Builder, io.harness.delegate.TaskCapabilitiesOrBuilder>(
-            getCapabilities(), getParentForChildren(), isClean());
+        capabilitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<io.harness.delegate.Capability,
+            io.harness.delegate.Capability.Builder, io.harness.delegate.CapabilityOrBuilder>(
+            capabilities_, ((bitField0_ & 0x00000008) != 0), getParentForChildren(), isClean());
         capabilities_ = null;
       }
       return capabilitiesBuilder_;

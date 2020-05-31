@@ -43,17 +43,17 @@ public interface CreatePerpetualTaskRequestOrBuilder extends
   io.harness.perpetualtask.PerpetualTaskScheduleOrBuilder getScheduleOrBuilder();
 
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskContext context = 4;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
    */
   boolean hasContext();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskContext context = 4;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
    */
-  io.harness.perpetualtask.PerpetualTaskContext getContext();
+  io.harness.perpetualtask.PerpetualTaskClientContextDetails getContext();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskContext context = 4;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
    */
-  io.harness.perpetualtask.PerpetualTaskContextOrBuilder getContextOrBuilder();
+  io.harness.perpetualtask.PerpetualTaskClientContextDetailsOrBuilder getContextOrBuilder();
 
   /**
    * <code>bool allow_duplicate = 5;</code>

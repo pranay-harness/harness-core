@@ -33,7 +33,8 @@ public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
   @Inject ManagerClient managerClient;
 
   @Override
-  public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
+  public PerpetualTaskResponse runOnce(
+      PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     logger.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
     PcfInstanceSyncPerpetualTaskParams instanceSyncParams =
         AnyUtils.unpack(params.getCustomizedParams(), PcfInstanceSyncPerpetualTaskParams.class);
@@ -98,7 +99,7 @@ public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
   }
 
   @Override
-  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskParams params) {
+  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskExecutionParams params) {
     return false;
   }
 }

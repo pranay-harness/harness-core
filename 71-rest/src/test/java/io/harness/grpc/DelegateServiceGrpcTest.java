@@ -15,12 +15,11 @@ import io.harness.MockableTestMixin;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.DelegateServiceGrpc;
-import io.harness.delegate.TaskCapabilities;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
 import io.harness.delegate.TaskSetupAbstractions;
-import io.harness.perpetualtask.PerpetualTaskContext;
+import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.rule.Owner;
@@ -32,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 
+import java.util.Collections;
 import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -68,8 +68,8 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testSubmitTask() {
-    TaskId taskId = delegateServiceGrpcClient.submitTask(TaskSetupAbstractions.newBuilder().build(),
-        TaskDetails.newBuilder().build(), TaskCapabilities.newBuilder().build());
+    TaskId taskId = delegateServiceGrpcClient.submitTask(
+        TaskSetupAbstractions.newBuilder().build(), TaskDetails.newBuilder().build(), Collections.emptyList());
     assertThat(taskId).isNotNull();
     assertThat(taskId.getId()).isNullOrEmpty();
   }
@@ -108,7 +108,7 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
   @Category(UnitTests.class)
   public void testCreatePerpetualTask() {
     PerpetualTaskId perpetualTaskId = delegateServiceGrpcClient.createPerpetualTask(AccountId.newBuilder().build(), "",
-        PerpetualTaskSchedule.newBuilder().build(), PerpetualTaskContext.newBuilder().build(), false);
+        PerpetualTaskSchedule.newBuilder().build(), PerpetualTaskClientContextDetails.newBuilder().build(), false);
 
     assertThat(perpetualTaskId).isNotNull();
     assertThat(perpetualTaskId.getId()).isNullOrEmpty();

@@ -43,9 +43,9 @@ import io.harness.event.payloads.ReservedResource;
 import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
-import io.harness.perpetualtask.PerpetualTaskParams;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.ecs.support.EcsMetricClient;
@@ -98,7 +98,8 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
   }
 
   @Override
-  public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
+  public PerpetualTaskResponse runOnce(
+      PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     try {
       EcsPerpetualTaskParams ecsPerpetualTaskParams = getTaskParams(params);
       String clusterName = ecsPerpetualTaskParams.getClusterName();
@@ -143,7 +144,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
         .build();
   }
 
-  private EcsPerpetualTaskParams getTaskParams(PerpetualTaskParams params) {
+  private EcsPerpetualTaskParams getTaskParams(PerpetualTaskExecutionParams params) {
     return AnyUtils.unpack(params.getCustomizedParams(), EcsPerpetualTaskParams.class);
   }
 
@@ -572,7 +573,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
   }
 
   @Override
-  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskParams params) {
+  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskExecutionParams params) {
     EcsPerpetualTaskParams taskParams = getTaskParams(params);
     cache.invalidate(taskParams.getClusterId());
     return true;
