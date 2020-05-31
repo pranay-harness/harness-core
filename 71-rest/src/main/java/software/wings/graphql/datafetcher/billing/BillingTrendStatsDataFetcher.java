@@ -36,7 +36,6 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
   @Inject BillingDataHelper billingDataHelper;
   @Inject private IdleCostTrendStatsDataFetcher idleCostTrendStatsDataFetcher;
 
-  private static final long ONE_DAY_MILLIS = 86400000;
   private static final String TOTAL_COST_DESCRIPTION = "of %s - %s";
   private static final String TOTAL_COST_LABEL = "Total Cost";
   private static final String TREND_COST_LABEL = "Cost Trend";
@@ -76,17 +75,20 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     QLTrendStatsCostData billingAmountData = getBillingAmountData(accountId, aggregateFunction, filters);
     if (billingAmountData != null && billingAmountData.getTotalCostData() != null) {
       BigDecimal totalBillingAmount = billingAmountData.getTotalCostData().getCost();
-      BigDecimal forecastCost = billingDataHelper.getForecastCost(
-          billingAmountData.getTotalCostData(), billingDataHelper.getEndInstant(filters));
+      Instant endInstantForForecastCost = billingDataHelper.getEndInstantForForecastCost(filters);
+      BigDecimal forecastCost = billingDataHelper.getNewForecastCost(
+          getBillingAmountData(accountId, aggregateFunction, billingDataHelper.getFiltersForForecastCost(filters))
+              .getTotalCostData(),
+          endInstantForForecastCost);
       BigDecimal unallocatedCost = null;
       if (isUnallocatedCostRequired(aggregateFunction) && billingAmountData.getUnallocatedCostData() != null) {
         unallocatedCost = billingAmountData.getUnallocatedCostData().getCost();
       }
       return QLBillingTrendStats.builder()
           .totalCost(getTotalBillingStats(billingAmountData.getTotalCostData(), filters))
-          .costTrend(getBillingTrend(accountId, totalBillingAmount, forecastCost, aggregateFunction, filters))
-          .forecastCost(getForecastBillingStats(forecastCost, billingAmountData.getTotalCostData(),
-              billingDataHelper.getStartInstant(filters), billingDataHelper.getEndInstant(filters)))
+          .costTrend(getBillingTrend(accountId, totalBillingAmount, aggregateFunction, filters))
+          .forecastCost(getForecastBillingStats(forecastCost, billingDataHelper.getStartInstantForForecastCost(),
+              endInstantForForecastCost.plus(1, ChronoUnit.SECONDS)))
           .idleCost(getIdleCostStats(billingAmountData.getIdleCostData(), billingAmountData.getTotalCostData()))
           .unallocatedCost(getUnallocatedCostStats(unallocatedCost, billingAmountData.getTotalCostData()))
           .utilizedCost(getUtilizedCostStats(billingAmountData.getIdleCostData(), billingAmountData.getTotalCostData(),
@@ -98,11 +100,10 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
   }
 
   private QLBillingStatsInfo getForecastBillingStats(
-      BigDecimal forecastCost, QLBillingAmountData billingAmountData, Instant startInstant, Instant endInstant) {
+      BigDecimal forecastCost, Instant startInstant, Instant endInstant) {
     String forecastCostDescription = EMPTY_VALUE;
     String forecastCostValue = EMPTY_VALUE;
-    long timeDiff = billingAmountData.getMaxStartTime() - startInstant.toEpochMilli();
-    if (forecastCost != null && timeDiff > 4 * ONE_DAY_MILLIS) {
+    if (forecastCost != null) {
       boolean isYearRequired = billingDataHelper.isYearRequired(startInstant, endInstant);
       String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant, isYearRequired);
       String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant, isYearRequired);
@@ -198,7 +199,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
         .build();
   }
 
-  private QLBillingStatsInfo getBillingTrend(String accountId, BigDecimal totalBillingAmount, BigDecimal forecastCost,
+  private QLBillingStatsInfo getBillingTrend(String accountId, BigDecimal totalBillingAmount,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLBillingDataFilter> filters) {
     List<QLBillingDataFilter> trendFilters = billingDataHelper.getTrendFilter(
         filters, billingDataHelper.getStartInstant(filters), billingDataHelper.getEndInstant(filters));
@@ -220,9 +221,6 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
       String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant, isYearRequired);
       String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant, isYearRequired);
       BigDecimal amountDifference = totalBillingAmount.subtract(prevTotalBillingAmount);
-      if (null != forecastCost) {
-        amountDifference = forecastCost.subtract(prevTotalBillingAmount);
-      }
       trendCostDescription = String.format(TREND_COST_DESCRIPTION, Math.abs(getRoundedDoubleValue(amountDifference)),
           startInstantFormat, endInstantFormat);
       if (amountDifference.compareTo(BigDecimal.ZERO) < 0) {
