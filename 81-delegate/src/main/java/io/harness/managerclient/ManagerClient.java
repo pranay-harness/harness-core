@@ -86,11 +86,6 @@ public interface ManagerClient {
   Call<DelegateTaskPackage> reportConnectionResults(@Path("delegateId") String delegateId, @Path("taskId") String uuid,
       @Query("accountId") String accountId, @Body List<DelegateConnectionResult> results);
 
-  @KryoResponse
-  @GET("agent/delegates/{delegateId}/tasks/{taskId}/fail")
-  Call<RestResponse> failIfAllDelegatesFailed(
-      @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
-
   @POST("agent/delegates/heartbeat-with-polling")
   Call<RestResponse<Delegate>> delegateHeartbeat(@Query("accountId") String accountId, @Body Delegate delegate);
 

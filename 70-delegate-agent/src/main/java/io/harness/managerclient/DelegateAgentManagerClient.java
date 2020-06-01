@@ -40,6 +40,11 @@ public interface DelegateAgentManagerClient {
       @Query("accountId") String accountId, @Query("profileId") String profileId,
       @Query("lastUpdatedAt") Long lastUpdatedAt);
 
+  @KryoResponse
+  @GET("agent/delegates/{delegateId}/tasks/{taskId}/fail")
+  Call<RestResponse> failIfAllDelegatesFailed(
+      @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
+
   @GET("agent/delegates/delegateScripts")
   Call<RestResponse<DelegateScripts>> getDelegateScripts(
       @Query("accountId") String accountId, @Query("delegateVersion") String delegateVersion);
