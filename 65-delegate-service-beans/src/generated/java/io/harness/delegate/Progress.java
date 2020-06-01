@@ -22,16 +22,8 @@ public final class Progress {
         + "\024\n\020TYPE_UNSPECIFIED\020\000\022\014\n\010QUEUEING\020\001\022\016\n\nV"
         + "ALIDATING\020\002\022\r\n\tEXECUTING\020\003\022\014\n\010FINISHED\020\004"
         + "B\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {}, assigner);
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
   }
 
   // @@protoc_insertion_point(outer_class_scope)

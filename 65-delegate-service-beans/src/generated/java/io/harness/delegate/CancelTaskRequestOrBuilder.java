@@ -8,15 +8,17 @@ public interface CancelTaskRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.CancelTaskRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * @return Whether the taskId field is set.
    */
   boolean hasTaskId();
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * @return The taskId.
    */
   io.harness.delegate.TaskId getTaskId();
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
    */
   io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder();
 }

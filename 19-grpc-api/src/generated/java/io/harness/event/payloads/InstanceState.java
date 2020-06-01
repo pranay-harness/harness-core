@@ -21,6 +21,13 @@ public final class InstanceState extends com.google.protobuf.GeneratedMessageV3 
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new InstanceState();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -31,7 +38,6 @@ public final class InstanceState extends com.google.protobuf.GeneratedMessageV3 
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -83,7 +89,8 @@ public final class InstanceState extends com.google.protobuf.GeneratedMessageV3 
   public static final int CODE_FIELD_NUMBER = 1;
   private int code_;
   /**
-   * <code>int32 code = 1;</code>
+   * <code>int32 code = 1[json_name = "code"];</code>
+   * @return The code.
    */
   public int getCode() {
     return code_;
@@ -92,7 +99,8 @@ public final class InstanceState extends com.google.protobuf.GeneratedMessageV3 
   public static final int NAME_FIELD_NUMBER = 2;
   private volatile java.lang.Object name_;
   /**
-   * <code>string name = 2;</code>
+   * <code>string name = 2[json_name = "name"];</code>
+   * @return The name.
    */
   public java.lang.String getName() {
     java.lang.Object ref = name_;
@@ -106,7 +114,8 @@ public final class InstanceState extends com.google.protobuf.GeneratedMessageV3 
     }
   }
   /**
-   * <code>string name = 2;</code>
+   * <code>string name = 2[json_name = "name"];</code>
+   * @return The bytes for name.
    */
   public com.google.protobuf.ByteString getNameBytes() {
     java.lang.Object ref = name_;
@@ -415,13 +424,16 @@ public final class InstanceState extends com.google.protobuf.GeneratedMessageV3 
 
     private int code_;
     /**
-     * <code>int32 code = 1;</code>
+     * <code>int32 code = 1[json_name = "code"];</code>
+     * @return The code.
      */
     public int getCode() {
       return code_;
     }
     /**
-     * <code>int32 code = 1;</code>
+     * <code>int32 code = 1[json_name = "code"];</code>
+     * @param value The code to set.
+     * @return This builder for chaining.
      */
     public Builder setCode(int value) {
       code_ = value;
@@ -429,7 +441,8 @@ public final class InstanceState extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>int32 code = 1;</code>
+     * <code>int32 code = 1[json_name = "code"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCode() {
       code_ = 0;
@@ -439,7 +452,8 @@ public final class InstanceState extends com.google.protobuf.GeneratedMessageV3 
 
     private java.lang.Object name_ = "";
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @return The name.
      */
     public java.lang.String getName() {
       java.lang.Object ref = name_;
@@ -453,7 +467,8 @@ public final class InstanceState extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @return The bytes for name.
      */
     public com.google.protobuf.ByteString getNameBytes() {
       java.lang.Object ref = name_;
@@ -466,7 +481,9 @@ public final class InstanceState extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @param value The name to set.
+     * @return This builder for chaining.
      */
     public Builder setName(java.lang.String value) {
       if (value == null) {
@@ -478,7 +495,8 @@ public final class InstanceState extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearName() {
       name_ = getDefaultInstance().getName();
@@ -486,7 +504,9 @@ public final class InstanceState extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @param value The bytes for name to set.
+     * @return This builder for chaining.
      */
     public Builder setNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

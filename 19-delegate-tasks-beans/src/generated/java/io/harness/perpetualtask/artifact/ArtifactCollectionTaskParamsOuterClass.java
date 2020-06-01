@@ -24,20 +24,13 @@ public final class ArtifactCollectionTaskParamsOuterClass {
   static {
     java.lang.String[] descriptorData = {"\nGio/harness/perpetualtask/artifact/arti"
         + "fact_collection_task_params.proto\022!io.ha"
-        + "rness.perpetualtask.artifact\"W\n\034Artifact"
-        + "CollectionTaskParams\022\032\n\022artifact_stream_"
-        + "id\030\001 \001(\t\022\033\n\023build_source_params\030\002 \001(\014B\002P"
-        + "\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {}, assigner);
+        + "rness.perpetualtask.artifact\"|\n\034Artifact"
+        + "CollectionTaskParams\022,\n\022artifact_stream_"
+        + "id\030\001 \001(\tR\020artifactStreamId\022.\n\023build_sour"
+        + "ce_params\030\002 \001(\014R\021buildSourceParamsB\002P\001b\006"
+        + "proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
     internal_static_io_harness_perpetualtask_artifact_ArtifactCollectionTaskParams_descriptor =
         getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_perpetualtask_artifact_ArtifactCollectionTaskParams_fieldAccessorTable =

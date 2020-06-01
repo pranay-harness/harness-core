@@ -9,45 +9,51 @@ public interface ContainerInstanceSyncPerpetualTaskParamsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskParams)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string container_type = 1;</code>
+   * <code>string container_type = 1[json_name = "containerType"];</code>
+   * @return The containerType.
    */
   java.lang.String getContainerType();
   /**
-   * <code>string container_type = 1;</code>
+   * <code>string container_type = 1[json_name = "containerType"];</code>
+   * @return The bytes for containerType.
    */
   com.google.protobuf.ByteString getContainerTypeBytes();
 
   /**
    * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-   * k8s_container_perpetual_task_params = 2;</code>
+   * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
+   * @return Whether the k8sContainerPerpetualTaskParams field is set.
    */
   boolean hasK8SContainerPerpetualTaskParams();
   /**
    * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-   * k8s_container_perpetual_task_params = 2;</code>
+   * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
+   * @return The k8sContainerPerpetualTaskParams.
    */
   io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
   getK8SContainerPerpetualTaskParams();
   /**
    * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-   * k8s_container_perpetual_task_params = 2;</code>
+   * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
    */
   io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParamsOrBuilder
   getK8SContainerPerpetualTaskParamsOrBuilder();
 
   /**
    * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-   * container_service_perpetual_task_params = 3;</code>
+   * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
+   * @return Whether the containerServicePerpetualTaskParams field is set.
    */
   boolean hasContainerServicePerpetualTaskParams();
   /**
    * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-   * container_service_perpetual_task_params = 3;</code>
+   * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
+   * @return The containerServicePerpetualTaskParams.
    */
   io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams getContainerServicePerpetualTaskParams();
   /**
    * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-   * container_service_perpetual_task_params = 3;</code>
+   * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
    */
   io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParamsOrBuilder
   getContainerServicePerpetualTaskParamsOrBuilder();

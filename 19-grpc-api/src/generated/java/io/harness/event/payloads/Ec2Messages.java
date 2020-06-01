@@ -32,30 +32,26 @@ public final class Ec2Messages {
     java.lang.String[] descriptorData = {"\n,io/harness/event/payloads/ec2_messages"
         + ".proto\022\031io.harness.event.payloads\032/io/ha"
         + "rness/event/payloads/common_messages.pro"
-        + "to\"\253\002\n\017Ec2InstanceInfo\022\023\n\013instance_id\030\001 "
-        + "\001(\t\022\025\n\rinstance_type\030\002 \001(\t\022\037\n\027capacity_r"
-        + "eservation_id\030\003 \001(\t\022 \n\030spot_instance_req"
-        + "uest_id\030\004 \001(\t\022\032\n\022instance_lifecycle\030\005 \001("
-        + "\t\022@\n\016instance_state\030\006 \001(\0132(.io.harness.e"
-        + "vent.payloads.InstanceState\022\023\n\013cluster_a"
-        + "rn\030\007 \001(\t\022\016\n\006region\030\010 \001(\t\022\022\n\ncluster_id\030\t"
-        + " \001(\t\022\022\n\nsetting_id\030\n \001(\t\"+\n\rInstanceStat"
-        + "e\022\014\n\004code\030\001 \001(\005\022\014\n\004name\030\002 \001(\t\"G\n\014Ec2Life"
-        + "cycle\0227\n\tlifecycle\030\001 \001(\0132$.io.harness.ev"
-        + "ent.payloads.LifecycleB\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
+        + "to\"\277\003\n\017Ec2InstanceInfo\022\037\n\013instance_id\030\001 "
+        + "\001(\tR\ninstanceId\022#\n\rinstance_type\030\002 \001(\tR\014"
+        + "instanceType\0226\n\027capacity_reservation_id\030"
+        + "\003 \001(\tR\025capacityReservationId\0227\n\030spot_ins"
+        + "tance_request_id\030\004 \001(\tR\025spotInstanceRequ"
+        + "estId\022-\n\022instance_lifecycle\030\005 \001(\tR\021insta"
+        + "nceLifecycle\022O\n\016instance_state\030\006 \001(\0132(.i"
+        + "o.harness.event.payloads.InstanceStateR\r"
+        + "instanceState\022\037\n\013cluster_arn\030\007 \001(\tR\nclus"
+        + "terArn\022\026\n\006region\030\010 \001(\tR\006region\022\035\n\ncluste"
+        + "r_id\030\t \001(\tR\tclusterId\022\035\n\nsetting_id\030\n \001("
+        + "\tR\tsettingId\"7\n\rInstanceState\022\022\n\004code\030\001 "
+        + "\001(\005R\004code\022\022\n\004name\030\002 \001(\tR\004name\"R\n\014Ec2Life"
+        + "cycle\022B\n\tlifecycle\030\001 \001(\0132$.io.harness.ev"
+        + "ent.payloads.LifecycleR\tlifecycleB\002P\001b\006p"
+        + "roto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             io.harness.event.payloads.CommonMessages.getDescriptor(),
-        },
-        assigner);
+        });
     internal_static_io_harness_event_payloads_Ec2InstanceInfo_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_event_payloads_Ec2InstanceInfo_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(

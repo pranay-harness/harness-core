@@ -9,48 +9,58 @@ public interface PcfInstanceSyncPerpetualTaskParamsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskParams)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string infra_mapping_id = 1;</code>
+   * <code>string infra_mapping_id = 1[json_name = "infraMappingId"];</code>
+   * @return The infraMappingId.
    */
   java.lang.String getInfraMappingId();
   /**
-   * <code>string infra_mapping_id = 1;</code>
+   * <code>string infra_mapping_id = 1[json_name = "infraMappingId"];</code>
+   * @return The bytes for infraMappingId.
    */
   com.google.protobuf.ByteString getInfraMappingIdBytes();
 
   /**
-   * <code>string application_name = 2;</code>
+   * <code>string application_name = 2[json_name = "applicationName"];</code>
+   * @return The applicationName.
    */
   java.lang.String getApplicationName();
   /**
-   * <code>string application_name = 2;</code>
+   * <code>string application_name = 2[json_name = "applicationName"];</code>
+   * @return The bytes for applicationName.
    */
   com.google.protobuf.ByteString getApplicationNameBytes();
 
   /**
-   * <code>string org_name = 3;</code>
+   * <code>string org_name = 3[json_name = "orgName"];</code>
+   * @return The orgName.
    */
   java.lang.String getOrgName();
   /**
-   * <code>string org_name = 3;</code>
+   * <code>string org_name = 3[json_name = "orgName"];</code>
+   * @return The bytes for orgName.
    */
   com.google.protobuf.ByteString getOrgNameBytes();
 
   /**
-   * <code>string space = 4;</code>
+   * <code>string space = 4[json_name = "space"];</code>
+   * @return The space.
    */
   java.lang.String getSpace();
   /**
-   * <code>string space = 4;</code>
+   * <code>string space = 4[json_name = "space"];</code>
+   * @return The bytes for space.
    */
   com.google.protobuf.ByteString getSpaceBytes();
 
   /**
-   * <code>bytes pcf_config = 5;</code>
+   * <code>bytes pcf_config = 5[json_name = "pcfConfig"];</code>
+   * @return The pcfConfig.
    */
   com.google.protobuf.ByteString getPcfConfig();
 
   /**
-   * <code>bytes encrypted_data = 6;</code>
+   * <code>bytes encrypted_data = 6[json_name = "encryptedData"];</code>
+   * @return The encryptedData.
    */
   com.google.protobuf.ByteString getEncryptedData();
 }

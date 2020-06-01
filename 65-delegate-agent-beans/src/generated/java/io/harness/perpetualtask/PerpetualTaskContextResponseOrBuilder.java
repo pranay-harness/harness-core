@@ -9,15 +9,20 @@ public interface PerpetualTaskContextResponseOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.PerpetualTaskContextResponse)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1[json_name =
+   * "perpetualTaskContext"];</code>
+   * @return Whether the perpetualTaskContext field is set.
    */
   boolean hasPerpetualTaskContext();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1[json_name =
+   * "perpetualTaskContext"];</code>
+   * @return The perpetualTaskContext.
    */
   io.harness.perpetualtask.PerpetualTaskExecutionContext getPerpetualTaskContext();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionContext perpetual_task_context = 1[json_name =
+   * "perpetualTaskContext"];</code>
    */
   io.harness.perpetualtask.PerpetualTaskExecutionContextOrBuilder getPerpetualTaskContextOrBuilder();
 }

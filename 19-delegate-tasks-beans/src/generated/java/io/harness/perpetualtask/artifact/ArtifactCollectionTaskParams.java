@@ -22,6 +22,13 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new ArtifactCollectionTaskParams();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -32,7 +39,6 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -86,7 +92,8 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
   public static final int ARTIFACT_STREAM_ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object artifactStreamId_;
   /**
-   * <code>string artifact_stream_id = 1;</code>
+   * <code>string artifact_stream_id = 1[json_name = "artifactStreamId"];</code>
+   * @return The artifactStreamId.
    */
   public java.lang.String getArtifactStreamId() {
     java.lang.Object ref = artifactStreamId_;
@@ -100,7 +107,8 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
     }
   }
   /**
-   * <code>string artifact_stream_id = 1;</code>
+   * <code>string artifact_stream_id = 1[json_name = "artifactStreamId"];</code>
+   * @return The bytes for artifactStreamId.
    */
   public com.google.protobuf.ByteString getArtifactStreamIdBytes() {
     java.lang.Object ref = artifactStreamId_;
@@ -116,7 +124,8 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
   public static final int BUILD_SOURCE_PARAMS_FIELD_NUMBER = 2;
   private com.google.protobuf.ByteString buildSourceParams_;
   /**
-   * <code>bytes build_source_params = 2;</code>
+   * <code>bytes build_source_params = 2[json_name = "buildSourceParams"];</code>
+   * @return The buildSourceParams.
    */
   public com.google.protobuf.ByteString getBuildSourceParams() {
     return buildSourceParams_;
@@ -425,7 +434,8 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
 
     private java.lang.Object artifactStreamId_ = "";
     /**
-     * <code>string artifact_stream_id = 1;</code>
+     * <code>string artifact_stream_id = 1[json_name = "artifactStreamId"];</code>
+     * @return The artifactStreamId.
      */
     public java.lang.String getArtifactStreamId() {
       java.lang.Object ref = artifactStreamId_;
@@ -439,7 +449,8 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
       }
     }
     /**
-     * <code>string artifact_stream_id = 1;</code>
+     * <code>string artifact_stream_id = 1[json_name = "artifactStreamId"];</code>
+     * @return The bytes for artifactStreamId.
      */
     public com.google.protobuf.ByteString getArtifactStreamIdBytes() {
       java.lang.Object ref = artifactStreamId_;
@@ -452,7 +463,9 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
       }
     }
     /**
-     * <code>string artifact_stream_id = 1;</code>
+     * <code>string artifact_stream_id = 1[json_name = "artifactStreamId"];</code>
+     * @param value The artifactStreamId to set.
+     * @return This builder for chaining.
      */
     public Builder setArtifactStreamId(java.lang.String value) {
       if (value == null) {
@@ -464,7 +477,8 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
       return this;
     }
     /**
-     * <code>string artifact_stream_id = 1;</code>
+     * <code>string artifact_stream_id = 1[json_name = "artifactStreamId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearArtifactStreamId() {
       artifactStreamId_ = getDefaultInstance().getArtifactStreamId();
@@ -472,7 +486,9 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
       return this;
     }
     /**
-     * <code>string artifact_stream_id = 1;</code>
+     * <code>string artifact_stream_id = 1[json_name = "artifactStreamId"];</code>
+     * @param value The bytes for artifactStreamId to set.
+     * @return This builder for chaining.
      */
     public Builder setArtifactStreamIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -487,13 +503,16 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
 
     private com.google.protobuf.ByteString buildSourceParams_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes build_source_params = 2;</code>
+     * <code>bytes build_source_params = 2[json_name = "buildSourceParams"];</code>
+     * @return The buildSourceParams.
      */
     public com.google.protobuf.ByteString getBuildSourceParams() {
       return buildSourceParams_;
     }
     /**
-     * <code>bytes build_source_params = 2;</code>
+     * <code>bytes build_source_params = 2[json_name = "buildSourceParams"];</code>
+     * @param value The buildSourceParams to set.
+     * @return This builder for chaining.
      */
     public Builder setBuildSourceParams(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -505,7 +524,8 @@ public final class ArtifactCollectionTaskParams extends com.google.protobuf.Gene
       return this;
     }
     /**
-     * <code>bytes build_source_params = 2;</code>
+     * <code>bytes build_source_params = 2[json_name = "buildSourceParams"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearBuildSourceParams() {
       buildSourceParams_ = getDefaultInstance().getBuildSourceParams();

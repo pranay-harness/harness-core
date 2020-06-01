@@ -23,20 +23,13 @@ public final class K8SWatch {
   static {
     java.lang.String[] descriptorData = {"\n2io/harness/perpetualtask/k8s/watch/k8s"
         + "_watch.proto\022\"io.harness.perpetualtask.k"
-        + "8s.watch\"u\n\022K8sWatchTaskParams\022\031\n\021cloud_"
-        + "provider_id\030\001 \001(\t\022\032\n\022k8s_cluster_config\030"
-        + "\002 \001(\014\022\022\n\ncluster_id\030\003 \001(\t\022\024\n\014cluster_nam"
-        + "e\030\004 \001(\tB\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {}, assigner);
+        + "8s.watch\"\260\001\n\022K8sWatchTaskParams\022*\n\021cloud"
+        + "_provider_id\030\001 \001(\tR\017cloudProviderId\022,\n\022k"
+        + "8s_cluster_config\030\002 \001(\014R\020k8sClusterConfi"
+        + "g\022\035\n\ncluster_id\030\003 \001(\tR\tclusterId\022!\n\014clus"
+        + "ter_name\030\004 \001(\tR\013clusterNameB\002P\001b\006proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
     internal_static_io_harness_perpetualtask_k8s_watch_K8sWatchTaskParams_descriptor =
         getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_perpetualtask_k8s_watch_K8sWatchTaskParams_fieldAccessorTable =

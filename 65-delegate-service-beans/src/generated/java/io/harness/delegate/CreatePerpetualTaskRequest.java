@@ -21,6 +21,13 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new CreatePerpetualTaskRequest();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -31,7 +38,6 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -125,19 +131,21 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
   public static final int ACCOUNT_ID_FIELD_NUMBER = 1;
   private io.harness.delegate.AccountId accountId_;
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+   * @return Whether the accountId field is set.
    */
   public boolean hasAccountId() {
     return accountId_ != null;
   }
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+   * @return The accountId.
    */
   public io.harness.delegate.AccountId getAccountId() {
     return accountId_ == null ? io.harness.delegate.AccountId.getDefaultInstance() : accountId_;
   }
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
    */
   public io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder() {
     return getAccountId();
@@ -146,7 +154,8 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
   public static final int TYPE_FIELD_NUMBER = 2;
   private volatile java.lang.Object type_;
   /**
-   * <code>string type = 2;</code>
+   * <code>string type = 2[json_name = "type"];</code>
+   * @return The type.
    */
   public java.lang.String getType() {
     java.lang.Object ref = type_;
@@ -160,7 +169,8 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
     }
   }
   /**
-   * <code>string type = 2;</code>
+   * <code>string type = 2[json_name = "type"];</code>
+   * @return The bytes for type.
    */
   public com.google.protobuf.ByteString getTypeBytes() {
     java.lang.Object ref = type_;
@@ -176,19 +186,21 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
   public static final int SCHEDULE_FIELD_NUMBER = 3;
   private io.harness.perpetualtask.PerpetualTaskSchedule schedule_;
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
+   * @return Whether the schedule field is set.
    */
   public boolean hasSchedule() {
     return schedule_ != null;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
+   * @return The schedule.
    */
   public io.harness.perpetualtask.PerpetualTaskSchedule getSchedule() {
     return schedule_ == null ? io.harness.perpetualtask.PerpetualTaskSchedule.getDefaultInstance() : schedule_;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
    */
   public io.harness.perpetualtask.PerpetualTaskScheduleOrBuilder getScheduleOrBuilder() {
     return getSchedule();
@@ -197,20 +209,22 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
   public static final int CONTEXT_FIELD_NUMBER = 4;
   private io.harness.perpetualtask.PerpetualTaskClientContextDetails context_;
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
+   * @return Whether the context field is set.
    */
   public boolean hasContext() {
     return context_ != null;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
+   * @return The context.
    */
   public io.harness.perpetualtask.PerpetualTaskClientContextDetails getContext() {
     return context_ == null ? io.harness.perpetualtask.PerpetualTaskClientContextDetails.getDefaultInstance()
                             : context_;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
    */
   public io.harness.perpetualtask.PerpetualTaskClientContextDetailsOrBuilder getContextOrBuilder() {
     return getContext();
@@ -219,7 +233,8 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
   public static final int ALLOW_DUPLICATE_FIELD_NUMBER = 5;
   private boolean allowDuplicate_;
   /**
-   * <code>bool allow_duplicate = 5;</code>
+   * <code>bool allow_duplicate = 5[json_name = "allowDuplicate"];</code>
+   * @return The allowDuplicate.
    */
   public boolean getAllowDuplicate() {
     return allowDuplicate_;
@@ -616,13 +631,15 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.AccountId,
         io.harness.delegate.AccountId.Builder, io.harness.delegate.AccountIdOrBuilder> accountIdBuilder_;
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+     * @return Whether the accountId field is set.
      */
     public boolean hasAccountId() {
       return accountIdBuilder_ != null || accountId_ != null;
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+     * @return The accountId.
      */
     public io.harness.delegate.AccountId getAccountId() {
       if (accountIdBuilder_ == null) {
@@ -632,7 +649,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       }
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
      */
     public Builder setAccountId(io.harness.delegate.AccountId value) {
       if (accountIdBuilder_ == null) {
@@ -648,7 +665,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
      */
     public Builder setAccountId(io.harness.delegate.AccountId.Builder builderForValue) {
       if (accountIdBuilder_ == null) {
@@ -661,7 +678,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
      */
     public Builder mergeAccountId(io.harness.delegate.AccountId value) {
       if (accountIdBuilder_ == null) {
@@ -678,7 +695,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
      */
     public Builder clearAccountId() {
       if (accountIdBuilder_ == null) {
@@ -692,14 +709,14 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
      */
     public io.harness.delegate.AccountId.Builder getAccountIdBuilder() {
       onChanged();
       return getAccountIdFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
      */
     public io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder() {
       if (accountIdBuilder_ != null) {
@@ -709,7 +726,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       }
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.AccountId,
         io.harness.delegate.AccountId.Builder, io.harness.delegate.AccountIdOrBuilder>
@@ -725,7 +742,8 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
 
     private java.lang.Object type_ = "";
     /**
-     * <code>string type = 2;</code>
+     * <code>string type = 2[json_name = "type"];</code>
+     * @return The type.
      */
     public java.lang.String getType() {
       java.lang.Object ref = type_;
@@ -739,7 +757,8 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       }
     }
     /**
-     * <code>string type = 2;</code>
+     * <code>string type = 2[json_name = "type"];</code>
+     * @return The bytes for type.
      */
     public com.google.protobuf.ByteString getTypeBytes() {
       java.lang.Object ref = type_;
@@ -752,7 +771,9 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       }
     }
     /**
-     * <code>string type = 2;</code>
+     * <code>string type = 2[json_name = "type"];</code>
+     * @param value The type to set.
+     * @return This builder for chaining.
      */
     public Builder setType(java.lang.String value) {
       if (value == null) {
@@ -764,7 +785,8 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>string type = 2;</code>
+     * <code>string type = 2[json_name = "type"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearType() {
       type_ = getDefaultInstance().getType();
@@ -772,7 +794,9 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>string type = 2;</code>
+     * <code>string type = 2[json_name = "type"];</code>
+     * @param value The bytes for type to set.
+     * @return This builder for chaining.
      */
     public Builder setTypeBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -790,13 +814,15 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
         io.harness.perpetualtask.PerpetualTaskSchedule.Builder, io.harness.perpetualtask.PerpetualTaskScheduleOrBuilder>
         scheduleBuilder_;
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
+     * @return Whether the schedule field is set.
      */
     public boolean hasSchedule() {
       return scheduleBuilder_ != null || schedule_ != null;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
+     * @return The schedule.
      */
     public io.harness.perpetualtask.PerpetualTaskSchedule getSchedule() {
       if (scheduleBuilder_ == null) {
@@ -806,7 +832,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
      */
     public Builder setSchedule(io.harness.perpetualtask.PerpetualTaskSchedule value) {
       if (scheduleBuilder_ == null) {
@@ -822,7 +848,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
      */
     public Builder setSchedule(io.harness.perpetualtask.PerpetualTaskSchedule.Builder builderForValue) {
       if (scheduleBuilder_ == null) {
@@ -835,7 +861,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
      */
     public Builder mergeSchedule(io.harness.perpetualtask.PerpetualTaskSchedule value) {
       if (scheduleBuilder_ == null) {
@@ -853,7 +879,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
      */
     public Builder clearSchedule() {
       if (scheduleBuilder_ == null) {
@@ -867,14 +893,14 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
      */
     public io.harness.perpetualtask.PerpetualTaskSchedule.Builder getScheduleBuilder() {
       onChanged();
       return getScheduleFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
      */
     public io.harness.perpetualtask.PerpetualTaskScheduleOrBuilder getScheduleOrBuilder() {
       if (scheduleBuilder_ != null) {
@@ -884,7 +910,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskSchedule,
         io.harness.perpetualtask.PerpetualTaskSchedule.Builder, io.harness.perpetualtask.PerpetualTaskScheduleOrBuilder>
@@ -903,13 +929,15 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
         io.harness.perpetualtask.PerpetualTaskClientContextDetails.Builder,
         io.harness.perpetualtask.PerpetualTaskClientContextDetailsOrBuilder> contextBuilder_;
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
+     * @return Whether the context field is set.
      */
     public boolean hasContext() {
       return contextBuilder_ != null || context_ != null;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
+     * @return The context.
      */
     public io.harness.perpetualtask.PerpetualTaskClientContextDetails getContext() {
       if (contextBuilder_ == null) {
@@ -920,7 +948,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
      */
     public Builder setContext(io.harness.perpetualtask.PerpetualTaskClientContextDetails value) {
       if (contextBuilder_ == null) {
@@ -936,7 +964,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
      */
     public Builder setContext(io.harness.perpetualtask.PerpetualTaskClientContextDetails.Builder builderForValue) {
       if (contextBuilder_ == null) {
@@ -949,7 +977,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
      */
     public Builder mergeContext(io.harness.perpetualtask.PerpetualTaskClientContextDetails value) {
       if (contextBuilder_ == null) {
@@ -968,7 +996,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
      */
     public Builder clearContext() {
       if (contextBuilder_ == null) {
@@ -982,14 +1010,14 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
      */
     public io.harness.perpetualtask.PerpetualTaskClientContextDetails.Builder getContextBuilder() {
       onChanged();
       return getContextFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
      */
     public io.harness.perpetualtask.PerpetualTaskClientContextDetailsOrBuilder getContextOrBuilder() {
       if (contextBuilder_ != null) {
@@ -1000,7 +1028,7 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskClientContextDetails,
         io.harness.perpetualtask.PerpetualTaskClientContextDetails.Builder,
@@ -1019,13 +1047,16 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
 
     private boolean allowDuplicate_;
     /**
-     * <code>bool allow_duplicate = 5;</code>
+     * <code>bool allow_duplicate = 5[json_name = "allowDuplicate"];</code>
+     * @return The allowDuplicate.
      */
     public boolean getAllowDuplicate() {
       return allowDuplicate_;
     }
     /**
-     * <code>bool allow_duplicate = 5;</code>
+     * <code>bool allow_duplicate = 5[json_name = "allowDuplicate"];</code>
+     * @param value The allowDuplicate to set.
+     * @return This builder for chaining.
      */
     public Builder setAllowDuplicate(boolean value) {
       allowDuplicate_ = value;
@@ -1033,7 +1064,8 @@ public final class CreatePerpetualTaskRequest extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>bool allow_duplicate = 5;</code>
+     * <code>bool allow_duplicate = 5[json_name = "allowDuplicate"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearAllowDuplicate() {
       allowDuplicate_ = false;

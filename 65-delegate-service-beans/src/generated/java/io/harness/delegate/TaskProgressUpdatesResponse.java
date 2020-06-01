@@ -21,6 +21,13 @@ public final class TaskProgressUpdatesResponse extends com.google.protobuf.Gener
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new TaskProgressUpdatesResponse();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -31,7 +38,6 @@ public final class TaskProgressUpdatesResponse extends com.google.protobuf.Gener
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -81,13 +87,15 @@ public final class TaskProgressUpdatesResponse extends com.google.protobuf.Gener
   public static final int CURRENTLY_AT_STAGE_FIELD_NUMBER = 1;
   private int currentlyAtStage_;
   /**
-   * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1;</code>
+   * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1[json_name = "currentlyAtStage"];</code>
+   * @return The enum numeric value on the wire for currentlyAtStage.
    */
   public int getCurrentlyAtStageValue() {
     return currentlyAtStage_;
   }
   /**
-   * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1;</code>
+   * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1[json_name = "currentlyAtStage"];</code>
+   * @return The currentlyAtStage.
    */
   public io.harness.delegate.TaskExecutionStage getCurrentlyAtStage() {
     @SuppressWarnings("deprecation")
@@ -378,13 +386,16 @@ public final class TaskProgressUpdatesResponse extends com.google.protobuf.Gener
 
     private int currentlyAtStage_ = 0;
     /**
-     * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1;</code>
+     * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1[json_name = "currentlyAtStage"];</code>
+     * @return The enum numeric value on the wire for currentlyAtStage.
      */
     public int getCurrentlyAtStageValue() {
       return currentlyAtStage_;
     }
     /**
-     * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1;</code>
+     * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1[json_name = "currentlyAtStage"];</code>
+     * @param value The enum numeric value on the wire for currentlyAtStage to set.
+     * @return This builder for chaining.
      */
     public Builder setCurrentlyAtStageValue(int value) {
       currentlyAtStage_ = value;
@@ -392,7 +403,8 @@ public final class TaskProgressUpdatesResponse extends com.google.protobuf.Gener
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1;</code>
+     * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1[json_name = "currentlyAtStage"];</code>
+     * @return The currentlyAtStage.
      */
     public io.harness.delegate.TaskExecutionStage getCurrentlyAtStage() {
       @SuppressWarnings("deprecation")
@@ -400,7 +412,9 @@ public final class TaskProgressUpdatesResponse extends com.google.protobuf.Gener
       return result == null ? io.harness.delegate.TaskExecutionStage.UNRECOGNIZED : result;
     }
     /**
-     * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1;</code>
+     * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1[json_name = "currentlyAtStage"];</code>
+     * @param value The currentlyAtStage to set.
+     * @return This builder for chaining.
      */
     public Builder setCurrentlyAtStage(io.harness.delegate.TaskExecutionStage value) {
       if (value == null) {
@@ -412,7 +426,8 @@ public final class TaskProgressUpdatesResponse extends com.google.protobuf.Gener
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1;</code>
+     * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1[json_name = "currentlyAtStage"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCurrentlyAtStage() {
       currentlyAtStage_ = 0;

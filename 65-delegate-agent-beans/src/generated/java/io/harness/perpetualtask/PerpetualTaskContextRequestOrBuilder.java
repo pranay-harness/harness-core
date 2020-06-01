@@ -9,15 +9,17 @@ public interface PerpetualTaskContextRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.PerpetualTaskContextRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1[json_name = "perpetualTaskId"];</code>
+   * @return Whether the perpetualTaskId field is set.
    */
   boolean hasPerpetualTaskId();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1[json_name = "perpetualTaskId"];</code>
+   * @return The perpetualTaskId.
    */
   io.harness.perpetualtask.PerpetualTaskId getPerpetualTaskId();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 1[json_name = "perpetualTaskId"];</code>
    */
   io.harness.perpetualtask.PerpetualTaskIdOrBuilder getPerpetualTaskIdOrBuilder();
 }

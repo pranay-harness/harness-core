@@ -22,6 +22,13 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new PublishMessage();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -56,9 +63,9 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
             break;
           }
           case 18: {
-            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
               attributes_ = com.google.protobuf.MapField.newMapField(AttributesDefaultEntryHolder.defaultEntry);
-              mutable_bitField0_ |= 0x00000002;
+              mutable_bitField0_ |= 0x00000001;
             }
             com.google.protobuf.MapEntry<java.lang.String, java.lang.String> attributes__ =
                 input.readMessage(AttributesDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
@@ -130,23 +137,24 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
             io.harness.event.PublishMessage.class, io.harness.event.PublishMessage.Builder.class);
   }
 
-  private int bitField0_;
   public static final int PAYLOAD_FIELD_NUMBER = 1;
   private com.google.protobuf.Any payload_;
   /**
-   * <code>.google.protobuf.Any payload = 1;</code>
+   * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
+   * @return Whether the payload field is set.
    */
   public boolean hasPayload() {
     return payload_ != null;
   }
   /**
-   * <code>.google.protobuf.Any payload = 1;</code>
+   * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
+   * @return The payload.
    */
   public com.google.protobuf.Any getPayload() {
     return payload_ == null ? com.google.protobuf.Any.getDefaultInstance() : payload_;
   }
   /**
-   * <code>.google.protobuf.Any payload = 1;</code>
+   * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
    */
   public com.google.protobuf.AnyOrBuilder getPayloadOrBuilder() {
     return getPayload();
@@ -172,7 +180,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     return internalGetAttributes().getMap().size();
   }
   /**
-   * <code>map&lt;string, string&gt; attributes = 2;</code>
+   * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
    */
 
   public boolean containsAttributes(java.lang.String key) {
@@ -190,14 +198,14 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     return getAttributesMap();
   }
   /**
-   * <code>map&lt;string, string&gt; attributes = 2;</code>
+   * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
    */
 
   public java.util.Map<java.lang.String, java.lang.String> getAttributesMap() {
     return internalGetAttributes().getMap();
   }
   /**
-   * <code>map&lt;string, string&gt; attributes = 2;</code>
+   * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
    */
 
   public java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -208,7 +216,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
   /**
-   * <code>map&lt;string, string&gt; attributes = 2;</code>
+   * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
    */
 
   public java.lang.String getAttributesOrThrow(java.lang.String key) {
@@ -225,19 +233,21 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
   public static final int OCCURRED_AT_FIELD_NUMBER = 3;
   private com.google.protobuf.Timestamp occurredAt_;
   /**
-   * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+   * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
+   * @return Whether the occurredAt field is set.
    */
   public boolean hasOccurredAt() {
     return occurredAt_ != null;
   }
   /**
-   * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+   * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
+   * @return The occurredAt.
    */
   public com.google.protobuf.Timestamp getOccurredAt() {
     return occurredAt_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : occurredAt_;
   }
   /**
-   * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+   * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
    */
   public com.google.protobuf.TimestampOrBuilder getOccurredAtOrBuilder() {
     return getOccurredAt();
@@ -246,7 +256,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
   public static final int MESSAGE_ID_FIELD_NUMBER = 4;
   private volatile java.lang.Object messageId_;
   /**
-   * <code>string message_id = 4;</code>
+   * <code>string message_id = 4[json_name = "messageId"];</code>
+   * @return The messageId.
    */
   public java.lang.String getMessageId() {
     java.lang.Object ref = messageId_;
@@ -260,7 +271,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     }
   }
   /**
-   * <code>string message_id = 4;</code>
+   * <code>string message_id = 4[json_name = "messageId"];</code>
+   * @return The bytes for messageId.
    */
   public com.google.protobuf.ByteString getMessageIdBytes() {
     java.lang.Object ref = messageId_;
@@ -276,7 +288,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
   public static final int CATEGORY_FIELD_NUMBER = 5;
   private volatile java.lang.Object category_;
   /**
-   * <code>string category = 5;</code>
+   * <code>string category = 5[json_name = "category"];</code>
+   * @return The category.
    */
   public java.lang.String getCategory() {
     java.lang.Object ref = category_;
@@ -290,7 +303,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     }
   }
   /**
-   * <code>string category = 5;</code>
+   * <code>string category = 5[json_name = "category"];</code>
+   * @return The bytes for category.
    */
   public com.google.protobuf.ByteString getCategoryBytes() {
     java.lang.Object ref = category_;
@@ -598,7 +612,6 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     public io.harness.event.PublishMessage buildPartial() {
       io.harness.event.PublishMessage result = new io.harness.event.PublishMessage(this);
       int from_bitField0_ = bitField0_;
-      int to_bitField0_ = 0;
       if (payloadBuilder_ == null) {
         result.payload_ = payload_;
       } else {
@@ -613,7 +626,6 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       }
       result.messageId_ = messageId_;
       result.category_ = category_;
-      result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
     }
@@ -703,13 +715,15 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Any, com.google.protobuf.Any.Builder,
         com.google.protobuf.AnyOrBuilder> payloadBuilder_;
     /**
-     * <code>.google.protobuf.Any payload = 1;</code>
+     * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
+     * @return Whether the payload field is set.
      */
     public boolean hasPayload() {
       return payloadBuilder_ != null || payload_ != null;
     }
     /**
-     * <code>.google.protobuf.Any payload = 1;</code>
+     * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
+     * @return The payload.
      */
     public com.google.protobuf.Any getPayload() {
       if (payloadBuilder_ == null) {
@@ -719,7 +733,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       }
     }
     /**
-     * <code>.google.protobuf.Any payload = 1;</code>
+     * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
      */
     public Builder setPayload(com.google.protobuf.Any value) {
       if (payloadBuilder_ == null) {
@@ -735,7 +749,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
     /**
-     * <code>.google.protobuf.Any payload = 1;</code>
+     * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
      */
     public Builder setPayload(com.google.protobuf.Any.Builder builderForValue) {
       if (payloadBuilder_ == null) {
@@ -748,7 +762,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
     /**
-     * <code>.google.protobuf.Any payload = 1;</code>
+     * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
      */
     public Builder mergePayload(com.google.protobuf.Any value) {
       if (payloadBuilder_ == null) {
@@ -765,7 +779,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
     /**
-     * <code>.google.protobuf.Any payload = 1;</code>
+     * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
      */
     public Builder clearPayload() {
       if (payloadBuilder_ == null) {
@@ -779,14 +793,14 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
     /**
-     * <code>.google.protobuf.Any payload = 1;</code>
+     * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
      */
     public com.google.protobuf.Any.Builder getPayloadBuilder() {
       onChanged();
       return getPayloadFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Any payload = 1;</code>
+     * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
      */
     public com.google.protobuf.AnyOrBuilder getPayloadOrBuilder() {
       if (payloadBuilder_ != null) {
@@ -796,7 +810,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       }
     }
     /**
-     * <code>.google.protobuf.Any payload = 1;</code>
+     * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Any, com.google.protobuf.Any.Builder,
         com.google.protobuf.AnyOrBuilder>
@@ -833,7 +847,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return internalGetAttributes().getMap().size();
     }
     /**
-     * <code>map&lt;string, string&gt; attributes = 2;</code>
+     * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
      */
 
     public boolean containsAttributes(java.lang.String key) {
@@ -851,14 +865,14 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return getAttributesMap();
     }
     /**
-     * <code>map&lt;string, string&gt; attributes = 2;</code>
+     * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
      */
 
     public java.util.Map<java.lang.String, java.lang.String> getAttributesMap() {
       return internalGetAttributes().getMap();
     }
     /**
-     * <code>map&lt;string, string&gt; attributes = 2;</code>
+     * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
      */
 
     public java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -869,7 +883,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, string&gt; attributes = 2;</code>
+     * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
      */
 
     public java.lang.String getAttributesOrThrow(java.lang.String key) {
@@ -888,7 +902,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
     /**
-     * <code>map&lt;string, string&gt; attributes = 2;</code>
+     * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
      */
 
     public Builder removeAttributes(java.lang.String key) {
@@ -907,7 +921,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return internalGetMutableAttributes().getMutableMap();
     }
     /**
-     * <code>map&lt;string, string&gt; attributes = 2;</code>
+     * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
      */
     public Builder putAttributes(java.lang.String key, java.lang.String value) {
       if (key == null) {
@@ -920,7 +934,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
     /**
-     * <code>map&lt;string, string&gt; attributes = 2;</code>
+     * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
      */
 
     public Builder putAllAttributes(java.util.Map<java.lang.String, java.lang.String> values) {
@@ -932,13 +946,15 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> occurredAtBuilder_;
     /**
-     * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+     * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
+     * @return Whether the occurredAt field is set.
      */
     public boolean hasOccurredAt() {
       return occurredAtBuilder_ != null || occurredAt_ != null;
     }
     /**
-     * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+     * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
+     * @return The occurredAt.
      */
     public com.google.protobuf.Timestamp getOccurredAt() {
       if (occurredAtBuilder_ == null) {
@@ -948,7 +964,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+     * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
      */
     public Builder setOccurredAt(com.google.protobuf.Timestamp value) {
       if (occurredAtBuilder_ == null) {
@@ -964,7 +980,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+     * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
      */
     public Builder setOccurredAt(com.google.protobuf.Timestamp.Builder builderForValue) {
       if (occurredAtBuilder_ == null) {
@@ -977,7 +993,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+     * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
      */
     public Builder mergeOccurredAt(com.google.protobuf.Timestamp value) {
       if (occurredAtBuilder_ == null) {
@@ -994,7 +1010,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+     * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
      */
     public Builder clearOccurredAt() {
       if (occurredAtBuilder_ == null) {
@@ -1008,14 +1024,14 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+     * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
      */
     public com.google.protobuf.Timestamp.Builder getOccurredAtBuilder() {
       onChanged();
       return getOccurredAtFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+     * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
      */
     public com.google.protobuf.TimestampOrBuilder getOccurredAtOrBuilder() {
       if (occurredAtBuilder_ != null) {
@@ -1025,7 +1041,7 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+     * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>
@@ -1041,7 +1057,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
 
     private java.lang.Object messageId_ = "";
     /**
-     * <code>string message_id = 4;</code>
+     * <code>string message_id = 4[json_name = "messageId"];</code>
+     * @return The messageId.
      */
     public java.lang.String getMessageId() {
       java.lang.Object ref = messageId_;
@@ -1055,7 +1072,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       }
     }
     /**
-     * <code>string message_id = 4;</code>
+     * <code>string message_id = 4[json_name = "messageId"];</code>
+     * @return The bytes for messageId.
      */
     public com.google.protobuf.ByteString getMessageIdBytes() {
       java.lang.Object ref = messageId_;
@@ -1068,7 +1086,9 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       }
     }
     /**
-     * <code>string message_id = 4;</code>
+     * <code>string message_id = 4[json_name = "messageId"];</code>
+     * @param value The messageId to set.
+     * @return This builder for chaining.
      */
     public Builder setMessageId(java.lang.String value) {
       if (value == null) {
@@ -1080,7 +1100,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
     /**
-     * <code>string message_id = 4;</code>
+     * <code>string message_id = 4[json_name = "messageId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearMessageId() {
       messageId_ = getDefaultInstance().getMessageId();
@@ -1088,7 +1109,9 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
     /**
-     * <code>string message_id = 4;</code>
+     * <code>string message_id = 4[json_name = "messageId"];</code>
+     * @param value The bytes for messageId to set.
+     * @return This builder for chaining.
      */
     public Builder setMessageIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1103,7 +1126,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
 
     private java.lang.Object category_ = "";
     /**
-     * <code>string category = 5;</code>
+     * <code>string category = 5[json_name = "category"];</code>
+     * @return The category.
      */
     public java.lang.String getCategory() {
       java.lang.Object ref = category_;
@@ -1117,7 +1141,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       }
     }
     /**
-     * <code>string category = 5;</code>
+     * <code>string category = 5[json_name = "category"];</code>
+     * @return The bytes for category.
      */
     public com.google.protobuf.ByteString getCategoryBytes() {
       java.lang.Object ref = category_;
@@ -1130,7 +1155,9 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       }
     }
     /**
-     * <code>string category = 5;</code>
+     * <code>string category = 5[json_name = "category"];</code>
+     * @param value The category to set.
+     * @return This builder for chaining.
      */
     public Builder setCategory(java.lang.String value) {
       if (value == null) {
@@ -1142,7 +1169,8 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
     /**
-     * <code>string category = 5;</code>
+     * <code>string category = 5[json_name = "category"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCategory() {
       category_ = getDefaultInstance().getCategory();
@@ -1150,7 +1178,9 @@ public final class PublishMessage extends com.google.protobuf.GeneratedMessageV3
       return this;
     }
     /**
-     * <code>string category = 5;</code>
+     * <code>string category = 5[json_name = "category"];</code>
+     * @param value The bytes for category to set.
+     * @return This builder for chaining.
      */
     public Builder setCategoryBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

@@ -8,11 +8,13 @@ public interface TaskTypeOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.TaskType)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string type = 1;</code>
+   * <code>string type = 1[json_name = "type"];</code>
+   * @return The type.
    */
   java.lang.String getType();
   /**
-   * <code>string type = 1;</code>
+   * <code>string type = 1[json_name = "type"];</code>
+   * @return The bytes for type.
    */
   com.google.protobuf.ByteString getTypeBytes();
 }

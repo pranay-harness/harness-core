@@ -8,51 +8,59 @@ public interface NodeInfoOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.k8s.watch.NodeInfo)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string cloud_provider_id = 2;</code>
+   * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   java.lang.String getCloudProviderId();
   /**
-   * <code>string cloud_provider_id = 2;</code>
+   * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   com.google.protobuf.ByteString getCloudProviderIdBytes();
 
   /**
-   * <code>string node_uid = 3;</code>
+   * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+   * @return The nodeUid.
    */
   java.lang.String getNodeUid();
   /**
-   * <code>string node_uid = 3;</code>
+   * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+   * @return The bytes for nodeUid.
    */
   com.google.protobuf.ByteString getNodeUidBytes();
 
   /**
-   * <code>string node_name = 4;</code>
+   * <code>string node_name = 4[json_name = "nodeName"];</code>
+   * @return The nodeName.
    */
   java.lang.String getNodeName();
   /**
-   * <code>string node_name = 4;</code>
+   * <code>string node_name = 4[json_name = "nodeName"];</code>
+   * @return The bytes for nodeName.
    */
   com.google.protobuf.ByteString getNodeNameBytes();
 
   /**
-   * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+   * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
+   * @return Whether the creationTime field is set.
    */
   boolean hasCreationTime();
   /**
-   * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+   * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
+   * @return The creationTime.
    */
   com.google.protobuf.Timestamp getCreationTime();
   /**
-   * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+   * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
    */
   com.google.protobuf.TimestampOrBuilder getCreationTimeOrBuilder();
 
   /**
-   * <code>map&lt;string, string&gt; labels = 6;</code>
+   * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
    */
   int getLabelsCount();
   /**
-   * <code>map&lt;string, string&gt; labels = 6;</code>
+   * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
    */
   boolean containsLabels(java.lang.String key);
   /**
@@ -60,26 +68,28 @@ public interface NodeInfoOrBuilder extends
    */
   @java.lang.Deprecated java.util.Map<java.lang.String, java.lang.String> getLabels();
   /**
-   * <code>map&lt;string, string&gt; labels = 6;</code>
+   * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
    */
   java.util.Map<java.lang.String, java.lang.String> getLabelsMap();
   /**
-   * <code>map&lt;string, string&gt; labels = 6;</code>
+   * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
    */
 
   java.lang.String getLabelsOrDefault(java.lang.String key, java.lang.String defaultValue);
   /**
-   * <code>map&lt;string, string&gt; labels = 6;</code>
+   * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
    */
 
   java.lang.String getLabelsOrThrow(java.lang.String key);
 
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name =
+   * "allocatableResource"];</code>
    */
   int getAllocatableResourceCount();
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name =
+   * "allocatableResource"];</code>
    */
   boolean containsAllocatableResource(java.lang.String key);
   /**
@@ -88,54 +98,65 @@ public interface NodeInfoOrBuilder extends
   @java.lang.Deprecated
   java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> getAllocatableResource();
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name =
+   * "allocatableResource"];</code>
    */
   java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> getAllocatableResourceMap();
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name =
+   * "allocatableResource"];</code>
    */
 
   io.harness.perpetualtask.k8s.watch.Resource.Quantity getAllocatableResourceOrDefault(
       java.lang.String key, io.harness.perpetualtask.k8s.watch.Resource.Quantity defaultValue);
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name =
+   * "allocatableResource"];</code>
    */
 
   io.harness.perpetualtask.k8s.watch.Resource.Quantity getAllocatableResourceOrThrow(java.lang.String key);
 
   /**
-   * <code>string cluster_id = 8;</code>
+   * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   java.lang.String getClusterId();
   /**
-   * <code>string cluster_id = 8;</code>
+   * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   com.google.protobuf.ByteString getClusterIdBytes();
 
   /**
-   * <code>string cluster_name = 9;</code>
+   * <code>string cluster_name = 9[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   java.lang.String getClusterName();
   /**
-   * <code>string cluster_name = 9;</code>
+   * <code>string cluster_name = 9[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   com.google.protobuf.ByteString getClusterNameBytes();
 
   /**
-   * <code>string provider_id = 10;</code>
+   * <code>string provider_id = 10[json_name = "providerId"];</code>
+   * @return The providerId.
    */
   java.lang.String getProviderId();
   /**
-   * <code>string provider_id = 10;</code>
+   * <code>string provider_id = 10[json_name = "providerId"];</code>
+   * @return The bytes for providerId.
    */
   com.google.protobuf.ByteString getProviderIdBytes();
 
   /**
-   * <code>string kube_system_uid = 11;</code>
+   * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+   * @return The kubeSystemUid.
    */
   java.lang.String getKubeSystemUid();
   /**
-   * <code>string kube_system_uid = 11;</code>
+   * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+   * @return The bytes for kubeSystemUid.
    */
   com.google.protobuf.ByteString getKubeSystemUidBytes();
 }

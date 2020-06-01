@@ -8,83 +8,101 @@ public interface EcsTaskDescriptionOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.payloads.EcsTaskDescription)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string task_arn = 1;</code>
+   * <code>string task_arn = 1[json_name = "taskArn"];</code>
+   * @return The taskArn.
    */
   java.lang.String getTaskArn();
   /**
-   * <code>string task_arn = 1;</code>
+   * <code>string task_arn = 1[json_name = "taskArn"];</code>
+   * @return The bytes for taskArn.
    */
   com.google.protobuf.ByteString getTaskArnBytes();
 
   /**
-   * <code>string cluster_arn = 2;</code>
+   * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+   * @return The clusterArn.
    */
   java.lang.String getClusterArn();
   /**
-   * <code>string cluster_arn = 2;</code>
+   * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+   * @return The bytes for clusterArn.
    */
   com.google.protobuf.ByteString getClusterArnBytes();
 
   /**
-   * <code>string service_name = 3;</code>
+   * <code>string service_name = 3[json_name = "serviceName"];</code>
+   * @return The serviceName.
    */
   java.lang.String getServiceName();
   /**
-   * <code>string service_name = 3;</code>
+   * <code>string service_name = 3[json_name = "serviceName"];</code>
+   * @return The bytes for serviceName.
    */
   com.google.protobuf.ByteString getServiceNameBytes();
 
   /**
-   * <code>string container_instance_arn = 4;</code>
+   * <code>string container_instance_arn = 4[json_name = "containerInstanceArn"];</code>
+   * @return The containerInstanceArn.
    */
   java.lang.String getContainerInstanceArn();
   /**
-   * <code>string container_instance_arn = 4;</code>
+   * <code>string container_instance_arn = 4[json_name = "containerInstanceArn"];</code>
+   * @return The bytes for containerInstanceArn.
    */
   com.google.protobuf.ByteString getContainerInstanceArnBytes();
 
   /**
-   * <code>string launch_type = 5;</code>
+   * <code>string launch_type = 5[json_name = "launchType"];</code>
+   * @return The launchType.
    */
   java.lang.String getLaunchType();
   /**
-   * <code>string launch_type = 5;</code>
+   * <code>string launch_type = 5[json_name = "launchType"];</code>
+   * @return The bytes for launchType.
    */
   com.google.protobuf.ByteString getLaunchTypeBytes();
 
   /**
-   * <code>string desired_status = 6;</code>
+   * <code>string desired_status = 6[json_name = "desiredStatus"];</code>
+   * @return The desiredStatus.
    */
   java.lang.String getDesiredStatus();
   /**
-   * <code>string desired_status = 6;</code>
+   * <code>string desired_status = 6[json_name = "desiredStatus"];</code>
+   * @return The bytes for desiredStatus.
    */
   com.google.protobuf.ByteString getDesiredStatusBytes();
 
   /**
-   * <code>string region = 7;</code>
+   * <code>string region = 7[json_name = "region"];</code>
+   * @return The region.
    */
   java.lang.String getRegion();
   /**
-   * <code>string region = 7;</code>
+   * <code>string region = 7[json_name = "region"];</code>
+   * @return The bytes for region.
    */
   com.google.protobuf.ByteString getRegionBytes();
 
   /**
-   * <code>string cluster_id = 8;</code>
+   * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   java.lang.String getClusterId();
   /**
-   * <code>string cluster_id = 8;</code>
+   * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   com.google.protobuf.ByteString getClusterIdBytes();
 
   /**
-   * <code>string setting_id = 9;</code>
+   * <code>string setting_id = 9[json_name = "settingId"];</code>
+   * @return The settingId.
    */
   java.lang.String getSettingId();
   /**
-   * <code>string setting_id = 9;</code>
+   * <code>string setting_id = 9[json_name = "settingId"];</code>
+   * @return The bytes for settingId.
    */
   com.google.protobuf.ByteString getSettingIdBytes();
 }

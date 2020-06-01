@@ -8,47 +8,56 @@ public interface HeartbeatRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.HeartbeatRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string id = 1;</code>
+   * <code>string id = 1[json_name = "id"];</code>
+   * @return The id.
    */
   java.lang.String getId();
   /**
-   * <code>string id = 1;</code>
+   * <code>string id = 1[json_name = "id"];</code>
+   * @return The bytes for id.
    */
   com.google.protobuf.ByteString getIdBytes();
 
   /**
-   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
+   * @return Whether the heartbeatTimestamp field is set.
    */
   boolean hasHeartbeatTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
+   * @return The heartbeatTimestamp.
    */
   com.google.protobuf.Timestamp getHeartbeatTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
    */
   com.google.protobuf.TimestampOrBuilder getHeartbeatTimestampOrBuilder();
 
   /**
-   * <code>string task_state = 3;</code>
+   * <code>string task_state = 3[json_name = "taskState"];</code>
+   * @return The taskState.
    */
   java.lang.String getTaskState();
   /**
-   * <code>string task_state = 3;</code>
+   * <code>string task_state = 3[json_name = "taskState"];</code>
+   * @return The bytes for taskState.
    */
   com.google.protobuf.ByteString getTaskStateBytes();
 
   /**
-   * <code>int32 response_code = 4;</code>
+   * <code>int32 response_code = 4[json_name = "responseCode"];</code>
+   * @return The responseCode.
    */
   int getResponseCode();
 
   /**
-   * <code>string response_message = 5;</code>
+   * <code>string response_message = 5[json_name = "responseMessage"];</code>
+   * @return The responseMessage.
    */
   java.lang.String getResponseMessage();
   /**
-   * <code>string response_message = 5;</code>
+   * <code>string response_message = 5[json_name = "responseMessage"];</code>
+   * @return The bytes for responseMessage.
    */
   com.google.protobuf.ByteString getResponseMessageBytes();
 }

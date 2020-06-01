@@ -8,55 +8,57 @@ public interface K8sObjectReferenceOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.k8s.watch.K8sObjectReference)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string kind = 1;</code>
+   * <code>string kind = 1[json_name = "kind"];</code>
+   * @return The kind.
    */
   java.lang.String getKind();
   /**
-   * <code>string kind = 1;</code>
+   * <code>string kind = 1[json_name = "kind"];</code>
+   * @return The bytes for kind.
    */
   com.google.protobuf.ByteString getKindBytes();
 
   /**
-   * <code>string name = 2;</code>
+   * <code>string name = 2[json_name = "name"];</code>
+   * @return The name.
    */
   java.lang.String getName();
   /**
-   * <code>string name = 2;</code>
+   * <code>string name = 2[json_name = "name"];</code>
+   * @return The bytes for name.
    */
   com.google.protobuf.ByteString getNameBytes();
 
   /**
-   * <code>string namespace = 3;</code>
+   * <code>string namespace = 3[json_name = "namespace"];</code>
+   * @return The namespace.
    */
   java.lang.String getNamespace();
   /**
-   * <code>string namespace = 3;</code>
+   * <code>string namespace = 3[json_name = "namespace"];</code>
+   * @return The bytes for namespace.
    */
   com.google.protobuf.ByteString getNamespaceBytes();
 
   /**
-   * <code>string uid = 4;</code>
+   * <code>string uid = 4[json_name = "uid"];</code>
+   * @return The uid.
    */
   java.lang.String getUid();
   /**
-   * <code>string uid = 4;</code>
+   * <code>string uid = 4[json_name = "uid"];</code>
+   * @return The bytes for uid.
    */
   com.google.protobuf.ByteString getUidBytes();
 
   /**
-   * <pre>
-   * optional
-   * </pre>
-   *
-   * <code>string resource_version = 5;</code>
+   * <code>string resource_version = 5[json_name = "resourceVersion"];</code>
+   * @return The resourceVersion.
    */
   java.lang.String getResourceVersion();
   /**
-   * <pre>
-   * optional
-   * </pre>
-   *
-   * <code>string resource_version = 5;</code>
+   * <code>string resource_version = 5[json_name = "resourceVersion"];</code>
+   * @return The bytes for resourceVersion.
    */
   com.google.protobuf.ByteString getResourceVersionBytes();
 }

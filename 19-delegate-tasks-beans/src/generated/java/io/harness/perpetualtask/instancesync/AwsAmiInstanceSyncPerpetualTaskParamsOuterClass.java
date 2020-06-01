@@ -25,20 +25,13 @@ public final class AwsAmiInstanceSyncPerpetualTaskParamsOuterClass {
     java.lang.String[] descriptorData = {"\nWio/harness/perpetualtask/instancesync/"
         + "aws_ami_instance_sync_perpetual_task_par"
         + "ams.proto\022%io.harness.perpetualtask.inst"
-        + "ancesync\"u\n%AwsAmiInstanceSyncPerpetualT"
-        + "askParams\022\016\n\006region\030\001 \001(\t\022\022\n\naws_config\030"
-        + "\002 \001(\014\022\020\n\010asg_name\030\003 \001(\t\022\026\n\016encrypted_dat"
-        + "a\030\004 \001(\014B\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {}, assigner);
+        + "ancesync\"\240\001\n%AwsAmiInstanceSyncPerpetual"
+        + "TaskParams\022\026\n\006region\030\001 \001(\tR\006region\022\035\n\naw"
+        + "s_config\030\002 \001(\014R\tawsConfig\022\031\n\010asg_name\030\003 "
+        + "\001(\tR\007asgName\022%\n\016encrypted_data\030\004 \001(\014R\ren"
+        + "cryptedDataB\002P\001b\006proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
     internal_static_io_harness_perpetualtask_instancesync_AwsAmiInstanceSyncPerpetualTaskParams_descriptor =
         getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_perpetualtask_instancesync_AwsAmiInstanceSyncPerpetualTaskParams_fieldAccessorTable =

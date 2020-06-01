@@ -4,10 +4,6 @@
 package io.harness.delegate;
 
 /**
- * <pre>
- * Task global unique identifier
- * </pre>
- *
  * Protobuf type {@code io.harness.delegate.TaskId}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:TaskId.java.pb.meta")
@@ -25,6 +21,13 @@ public final class TaskId extends com.google.protobuf.GeneratedMessageV3 impleme
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new TaskId();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -35,7 +38,6 @@ public final class TaskId extends com.google.protobuf.GeneratedMessageV3 impleme
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -82,7 +84,8 @@ public final class TaskId extends com.google.protobuf.GeneratedMessageV3 impleme
   public static final int ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object id_;
   /**
-   * <code>string id = 1;</code>
+   * <code>string id = 1[json_name = "id"];</code>
+   * @return The id.
    */
   public java.lang.String getId() {
     java.lang.Object ref = id_;
@@ -96,7 +99,8 @@ public final class TaskId extends com.google.protobuf.GeneratedMessageV3 impleme
     }
   }
   /**
-   * <code>string id = 1;</code>
+   * <code>string id = 1[json_name = "id"];</code>
+   * @return The bytes for id.
    */
   public com.google.protobuf.ByteString getIdBytes() {
     java.lang.Object ref = id_;
@@ -247,10 +251,6 @@ public final class TaskId extends com.google.protobuf.GeneratedMessageV3 impleme
     return builder;
   }
   /**
-   * <pre>
-   * Task global unique identifier
-   * </pre>
-   *
    * Protobuf type {@code io.harness.delegate.TaskId}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
@@ -390,7 +390,8 @@ public final class TaskId extends com.google.protobuf.GeneratedMessageV3 impleme
 
     private java.lang.Object id_ = "";
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @return The id.
      */
     public java.lang.String getId() {
       java.lang.Object ref = id_;
@@ -404,7 +405,8 @@ public final class TaskId extends com.google.protobuf.GeneratedMessageV3 impleme
       }
     }
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @return The bytes for id.
      */
     public com.google.protobuf.ByteString getIdBytes() {
       java.lang.Object ref = id_;
@@ -417,7 +419,9 @@ public final class TaskId extends com.google.protobuf.GeneratedMessageV3 impleme
       }
     }
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @param value The id to set.
+     * @return This builder for chaining.
      */
     public Builder setId(java.lang.String value) {
       if (value == null) {
@@ -429,7 +433,8 @@ public final class TaskId extends com.google.protobuf.GeneratedMessageV3 impleme
       return this;
     }
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearId() {
       id_ = getDefaultInstance().getId();
@@ -437,7 +442,9 @@ public final class TaskId extends com.google.protobuf.GeneratedMessageV3 impleme
       return this;
     }
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @param value The bytes for id to set.
+     * @return This builder for chaining.
      */
     public Builder setIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

@@ -8,55 +8,64 @@ public interface CreatePerpetualTaskRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.CreatePerpetualTaskRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+   * @return Whether the accountId field is set.
    */
   boolean hasAccountId();
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+   * @return The accountId.
    */
   io.harness.delegate.AccountId getAccountId();
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
    */
   io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder();
 
   /**
-   * <code>string type = 2;</code>
+   * <code>string type = 2[json_name = "type"];</code>
+   * @return The type.
    */
   java.lang.String getType();
   /**
-   * <code>string type = 2;</code>
+   * <code>string type = 2[json_name = "type"];</code>
+   * @return The bytes for type.
    */
   com.google.protobuf.ByteString getTypeBytes();
 
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
+   * @return Whether the schedule field is set.
    */
   boolean hasSchedule();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
+   * @return The schedule.
    */
   io.harness.perpetualtask.PerpetualTaskSchedule getSchedule();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule schedule = 3[json_name = "schedule"];</code>
    */
   io.harness.perpetualtask.PerpetualTaskScheduleOrBuilder getScheduleOrBuilder();
 
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
+   * @return Whether the context field is set.
    */
   boolean hasContext();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
+   * @return The context.
    */
   io.harness.perpetualtask.PerpetualTaskClientContextDetails getContext();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientContextDetails context = 4[json_name = "context"];</code>
    */
   io.harness.perpetualtask.PerpetualTaskClientContextDetailsOrBuilder getContextOrBuilder();
 
   /**
-   * <code>bool allow_duplicate = 5;</code>
+   * <code>bool allow_duplicate = 5[json_name = "allowDuplicate"];</code>
+   * @return The allowDuplicate.
    */
   boolean getAllowDuplicate();
 }

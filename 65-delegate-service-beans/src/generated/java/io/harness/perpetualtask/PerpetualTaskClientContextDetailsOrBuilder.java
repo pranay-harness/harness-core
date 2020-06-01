@@ -9,11 +9,11 @@ public interface PerpetualTaskClientContextDetailsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.PerpetualTaskClientContextDetails)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
    */
   int getTaskClientParamsCount();
   /**
-   * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
    */
   boolean containsTaskClientParams(java.lang.String key);
   /**
@@ -21,30 +21,32 @@ public interface PerpetualTaskClientContextDetailsOrBuilder extends
    */
   @java.lang.Deprecated java.util.Map<java.lang.String, java.lang.String> getTaskClientParams();
   /**
-   * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
    */
   java.util.Map<java.lang.String, java.lang.String> getTaskClientParamsMap();
   /**
-   * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
    */
 
   java.lang.String getTaskClientParamsOrDefault(java.lang.String key, java.lang.String defaultValue);
   /**
-   * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
    */
 
   java.lang.String getTaskClientParamsOrThrow(java.lang.String key);
 
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+   * @return Whether the lastContextUpdated field is set.
    */
   boolean hasLastContextUpdated();
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+   * @return The lastContextUpdated.
    */
   com.google.protobuf.Timestamp getLastContextUpdated();
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
    */
   com.google.protobuf.TimestampOrBuilder getLastContextUpdatedOrBuilder();
 }

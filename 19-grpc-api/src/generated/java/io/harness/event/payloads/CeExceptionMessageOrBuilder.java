@@ -8,20 +8,24 @@ public interface CeExceptionMessageOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.payloads.CeExceptionMessage)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   java.lang.String getClusterId();
   /**
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   com.google.protobuf.ByteString getClusterIdBytes();
 
   /**
-   * <code>string message = 2;</code>
+   * <code>string message = 2[json_name = "message"];</code>
+   * @return The message.
    */
   java.lang.String getMessage();
   /**
-   * <code>string message = 2;</code>
+   * <code>string message = 2[json_name = "message"];</code>
+   * @return The bytes for message.
    */
   com.google.protobuf.ByteString getMessageBytes();
 }

@@ -30,6 +30,13 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new PodInfo();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -107,9 +114,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             break;
           }
           case 74: {
-            if (!((mutable_bitField0_ & 0x00000080) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
               labels_ = com.google.protobuf.MapField.newMapField(LabelsDefaultEntryHolder.defaultEntry);
-              mutable_bitField0_ |= 0x00000080;
+              mutable_bitField0_ |= 0x00000001;
             }
             com.google.protobuf.MapEntry<java.lang.String, java.lang.String> labels__ =
                 input.readMessage(LabelsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
@@ -130,9 +137,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             break;
           }
           case 98: {
-            if (!((mutable_bitField0_ & 0x00000200) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
               containers_ = new java.util.ArrayList<io.harness.perpetualtask.k8s.watch.Container>();
-              mutable_bitField0_ |= 0x00000200;
+              mutable_bitField0_ |= 0x00000002;
             }
             containers_.add(
                 input.readMessage(io.harness.perpetualtask.k8s.watch.Container.parser(), extensionRegistry));
@@ -175,7 +182,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     } catch (java.io.IOException e) {
       throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
     } finally {
-      if (((mutable_bitField0_ & 0x00000200) != 0)) {
+      if (((mutable_bitField0_ & 0x00000002) != 0)) {
         containers_ = java.util.Collections.unmodifiableList(containers_);
       }
       this.unknownFields = unknownFields.build();
@@ -206,11 +213,11 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             io.harness.perpetualtask.k8s.watch.PodInfo.class, io.harness.perpetualtask.k8s.watch.PodInfo.Builder.class);
   }
 
-  private int bitField0_;
   public static final int CLOUD_PROVIDER_ID_FIELD_NUMBER = 2;
   private volatile java.lang.Object cloudProviderId_;
   /**
-   * <code>string cloud_provider_id = 2;</code>
+   * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   public java.lang.String getCloudProviderId() {
     java.lang.Object ref = cloudProviderId_;
@@ -224,7 +231,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
   }
   /**
-   * <code>string cloud_provider_id = 2;</code>
+   * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   public com.google.protobuf.ByteString getCloudProviderIdBytes() {
     java.lang.Object ref = cloudProviderId_;
@@ -240,7 +248,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
   public static final int POD_UID_FIELD_NUMBER = 3;
   private volatile java.lang.Object podUid_;
   /**
-   * <code>string pod_uid = 3;</code>
+   * <code>string pod_uid = 3[json_name = "podUid"];</code>
+   * @return The podUid.
    */
   public java.lang.String getPodUid() {
     java.lang.Object ref = podUid_;
@@ -254,7 +263,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
   }
   /**
-   * <code>string pod_uid = 3;</code>
+   * <code>string pod_uid = 3[json_name = "podUid"];</code>
+   * @return The bytes for podUid.
    */
   public com.google.protobuf.ByteString getPodUidBytes() {
     java.lang.Object ref = podUid_;
@@ -270,7 +280,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
   public static final int POD_NAME_FIELD_NUMBER = 4;
   private volatile java.lang.Object podName_;
   /**
-   * <code>string pod_name = 4;</code>
+   * <code>string pod_name = 4[json_name = "podName"];</code>
+   * @return The podName.
    */
   public java.lang.String getPodName() {
     java.lang.Object ref = podName_;
@@ -284,7 +295,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
   }
   /**
-   * <code>string pod_name = 4;</code>
+   * <code>string pod_name = 4[json_name = "podName"];</code>
+   * @return The bytes for podName.
    */
   public com.google.protobuf.ByteString getPodNameBytes() {
     java.lang.Object ref = podName_;
@@ -300,7 +312,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
   public static final int NAMESPACE_FIELD_NUMBER = 5;
   private volatile java.lang.Object namespace_;
   /**
-   * <code>string namespace = 5;</code>
+   * <code>string namespace = 5[json_name = "namespace"];</code>
+   * @return The namespace.
    */
   public java.lang.String getNamespace() {
     java.lang.Object ref = namespace_;
@@ -314,7 +327,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
   }
   /**
-   * <code>string namespace = 5;</code>
+   * <code>string namespace = 5[json_name = "namespace"];</code>
+   * @return The bytes for namespace.
    */
   public com.google.protobuf.ByteString getNamespaceBytes() {
     java.lang.Object ref = namespace_;
@@ -330,7 +344,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
   public static final int NODE_NAME_FIELD_NUMBER = 6;
   private volatile java.lang.Object nodeName_;
   /**
-   * <code>string node_name = 6;</code>
+   * <code>string node_name = 6[json_name = "nodeName"];</code>
+   * @return The nodeName.
    */
   public java.lang.String getNodeName() {
     java.lang.Object ref = nodeName_;
@@ -344,7 +359,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
   }
   /**
-   * <code>string node_name = 6;</code>
+   * <code>string node_name = 6[json_name = "nodeName"];</code>
+   * @return The bytes for nodeName.
    */
   public com.google.protobuf.ByteString getNodeNameBytes() {
     java.lang.Object ref = nodeName_;
@@ -360,19 +376,21 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
   public static final int TOTAL_RESOURCE_FIELD_NUMBER = 7;
   private io.harness.perpetualtask.k8s.watch.Resource totalResource_;
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
+   * @return Whether the totalResource field is set.
    */
   public boolean hasTotalResource() {
     return totalResource_ != null;
   }
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
+   * @return The totalResource.
    */
   public io.harness.perpetualtask.k8s.watch.Resource getTotalResource() {
     return totalResource_ == null ? io.harness.perpetualtask.k8s.watch.Resource.getDefaultInstance() : totalResource_;
   }
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
    */
   public io.harness.perpetualtask.k8s.watch.ResourceOrBuilder getTotalResourceOrBuilder() {
     return getTotalResource();
@@ -381,19 +399,21 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
   public static final int CREATION_TIMESTAMP_FIELD_NUMBER = 8;
   private com.google.protobuf.Timestamp creationTimestamp_;
   /**
-   * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+   * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
+   * @return Whether the creationTimestamp field is set.
    */
   public boolean hasCreationTimestamp() {
     return creationTimestamp_ != null;
   }
   /**
-   * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+   * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
+   * @return The creationTimestamp.
    */
   public com.google.protobuf.Timestamp getCreationTimestamp() {
     return creationTimestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : creationTimestamp_;
   }
   /**
-   * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+   * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
    */
   public com.google.protobuf.TimestampOrBuilder getCreationTimestampOrBuilder() {
     return getCreationTimestamp();
@@ -419,11 +439,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     return internalGetLabels().getMap().size();
   }
   /**
-   * <pre>
-   * label without value is invalid
-   * </pre>
-   *
-   * <code>map&lt;string, string&gt; labels = 9;</code>
+   * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
    */
 
   public boolean containsLabels(java.lang.String key) {
@@ -441,22 +457,14 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     return getLabelsMap();
   }
   /**
-   * <pre>
-   * label without value is invalid
-   * </pre>
-   *
-   * <code>map&lt;string, string&gt; labels = 9;</code>
+   * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
    */
 
   public java.util.Map<java.lang.String, java.lang.String> getLabelsMap() {
     return internalGetLabels().getMap();
   }
   /**
-   * <pre>
-   * label without value is invalid
-   * </pre>
-   *
-   * <code>map&lt;string, string&gt; labels = 9;</code>
+   * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
    */
 
   public java.lang.String getLabelsOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -467,11 +475,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
   /**
-   * <pre>
-   * label without value is invalid
-   * </pre>
-   *
-   * <code>map&lt;string, string&gt; labels = 9;</code>
+   * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
    */
 
   public java.lang.String getLabelsOrThrow(java.lang.String key) {
@@ -488,19 +492,21 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
   public static final int TOP_LEVEL_OWNER_FIELD_NUMBER = 11;
   private io.harness.perpetualtask.k8s.watch.Owner topLevelOwner_;
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
+   * @return Whether the topLevelOwner field is set.
    */
   public boolean hasTopLevelOwner() {
     return topLevelOwner_ != null;
   }
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
+   * @return The topLevelOwner.
    */
   public io.harness.perpetualtask.k8s.watch.Owner getTopLevelOwner() {
     return topLevelOwner_ == null ? io.harness.perpetualtask.k8s.watch.Owner.getDefaultInstance() : topLevelOwner_;
   }
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
    */
   public io.harness.perpetualtask.k8s.watch.OwnerOrBuilder getTopLevelOwnerOrBuilder() {
     return getTopLevelOwner();
@@ -509,31 +515,31 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
   public static final int CONTAINERS_FIELD_NUMBER = 12;
   private java.util.List<io.harness.perpetualtask.k8s.watch.Container> containers_;
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
    */
   public java.util.List<io.harness.perpetualtask.k8s.watch.Container> getContainersList() {
     return containers_;
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
    */
   public java.util.List<? extends io.harness.perpetualtask.k8s.watch.ContainerOrBuilder> getContainersOrBuilderList() {
     return containers_;
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
    */
   public int getContainersCount() {
     return containers_.size();
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
    */
   public io.harness.perpetualtask.k8s.watch.Container getContainers(int index) {
     return containers_.get(index);
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
    */
   public io.harness.perpetualtask.k8s.watch.ContainerOrBuilder getContainersOrBuilder(int index) {
     return containers_.get(index);
@@ -542,7 +548,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
   public static final int CLUSTER_ID_FIELD_NUMBER = 13;
   private volatile java.lang.Object clusterId_;
   /**
-   * <code>string cluster_id = 13;</code>
+   * <code>string cluster_id = 13[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -556,7 +563,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
   }
   /**
-   * <code>string cluster_id = 13;</code>
+   * <code>string cluster_id = 13[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -572,7 +580,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
   public static final int CLUSTER_NAME_FIELD_NUMBER = 14;
   private volatile java.lang.Object clusterName_;
   /**
-   * <code>string cluster_name = 14;</code>
+   * <code>string cluster_name = 14[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   public java.lang.String getClusterName() {
     java.lang.Object ref = clusterName_;
@@ -586,7 +595,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
   }
   /**
-   * <code>string cluster_name = 14;</code>
+   * <code>string cluster_name = 14[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   public com.google.protobuf.ByteString getClusterNameBytes() {
     java.lang.Object ref = clusterName_;
@@ -602,7 +612,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
   public static final int KUBE_SYSTEM_UID_FIELD_NUMBER = 15;
   private volatile java.lang.Object kubeSystemUid_;
   /**
-   * <code>string kube_system_uid = 15;</code>
+   * <code>string kube_system_uid = 15[json_name = "kubeSystemUid"];</code>
+   * @return The kubeSystemUid.
    */
   public java.lang.String getKubeSystemUid() {
     java.lang.Object ref = kubeSystemUid_;
@@ -616,7 +627,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
   }
   /**
-   * <code>string kube_system_uid = 15;</code>
+   * <code>string kube_system_uid = 15[json_name = "kubeSystemUid"];</code>
+   * @return The bytes for kubeSystemUid.
    */
   public com.google.protobuf.ByteString getKubeSystemUidBytes() {
     java.lang.Object ref = kubeSystemUid_;
@@ -632,7 +644,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
   public static final int QOS_CLASS_FIELD_NUMBER = 16;
   private volatile java.lang.Object qosClass_;
   /**
-   * <code>string qos_class = 16;</code>
+   * <code>string qos_class = 16[json_name = "qosClass"];</code>
+   * @return The qosClass.
    */
   public java.lang.String getQosClass() {
     java.lang.Object ref = qosClass_;
@@ -646,7 +659,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
   }
   /**
-   * <code>string qos_class = 16;</code>
+   * <code>string qos_class = 16[json_name = "qosClass"];</code>
+   * @return The bytes for qosClass.
    */
   public com.google.protobuf.ByteString getQosClassBytes() {
     java.lang.Object ref = qosClass_;
@@ -1040,7 +1054,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
       if (containersBuilder_ == null) {
         containers_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000200);
+        bitField0_ = (bitField0_ & ~0x00000002);
       } else {
         containersBuilder_.clear();
       }
@@ -1083,7 +1097,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     public io.harness.perpetualtask.k8s.watch.PodInfo buildPartial() {
       io.harness.perpetualtask.k8s.watch.PodInfo result = new io.harness.perpetualtask.k8s.watch.PodInfo(this);
       int from_bitField0_ = bitField0_;
-      int to_bitField0_ = 0;
       result.cloudProviderId_ = cloudProviderId_;
       result.podUid_ = podUid_;
       result.podName_ = podName_;
@@ -1107,9 +1120,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
         result.topLevelOwner_ = topLevelOwnerBuilder_.build();
       }
       if (containersBuilder_ == null) {
-        if (((bitField0_ & 0x00000200) != 0)) {
+        if (((bitField0_ & 0x00000002) != 0)) {
           containers_ = java.util.Collections.unmodifiableList(containers_);
-          bitField0_ = (bitField0_ & ~0x00000200);
+          bitField0_ = (bitField0_ & ~0x00000002);
         }
         result.containers_ = containers_;
       } else {
@@ -1119,7 +1132,6 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       result.clusterName_ = clusterName_;
       result.kubeSystemUid_ = kubeSystemUid_;
       result.qosClass_ = qosClass_;
-      result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
     }
@@ -1196,7 +1208,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
         if (!other.containers_.isEmpty()) {
           if (containers_.isEmpty()) {
             containers_ = other.containers_;
-            bitField0_ = (bitField0_ & ~0x00000200);
+            bitField0_ = (bitField0_ & ~0x00000002);
           } else {
             ensureContainersIsMutable();
             containers_.addAll(other.containers_);
@@ -1209,7 +1221,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             containersBuilder_.dispose();
             containersBuilder_ = null;
             containers_ = other.containers_;
-            bitField0_ = (bitField0_ & ~0x00000200);
+            bitField0_ = (bitField0_ & ~0x00000002);
             containersBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ? getContainersFieldBuilder() : null;
           } else {
@@ -1263,7 +1275,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
 
     private java.lang.Object cloudProviderId_ = "";
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @return The cloudProviderId.
      */
     public java.lang.String getCloudProviderId() {
       java.lang.Object ref = cloudProviderId_;
@@ -1277,7 +1290,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @return The bytes for cloudProviderId.
      */
     public com.google.protobuf.ByteString getCloudProviderIdBytes() {
       java.lang.Object ref = cloudProviderId_;
@@ -1290,7 +1304,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @param value The cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderId(java.lang.String value) {
       if (value == null) {
@@ -1302,7 +1318,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCloudProviderId() {
       cloudProviderId_ = getDefaultInstance().getCloudProviderId();
@@ -1310,7 +1327,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @param value The bytes for cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1325,7 +1344,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
 
     private java.lang.Object podUid_ = "";
     /**
-     * <code>string pod_uid = 3;</code>
+     * <code>string pod_uid = 3[json_name = "podUid"];</code>
+     * @return The podUid.
      */
     public java.lang.String getPodUid() {
       java.lang.Object ref = podUid_;
@@ -1339,7 +1359,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string pod_uid = 3;</code>
+     * <code>string pod_uid = 3[json_name = "podUid"];</code>
+     * @return The bytes for podUid.
      */
     public com.google.protobuf.ByteString getPodUidBytes() {
       java.lang.Object ref = podUid_;
@@ -1352,7 +1373,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string pod_uid = 3;</code>
+     * <code>string pod_uid = 3[json_name = "podUid"];</code>
+     * @param value The podUid to set.
+     * @return This builder for chaining.
      */
     public Builder setPodUid(java.lang.String value) {
       if (value == null) {
@@ -1364,7 +1387,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string pod_uid = 3;</code>
+     * <code>string pod_uid = 3[json_name = "podUid"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearPodUid() {
       podUid_ = getDefaultInstance().getPodUid();
@@ -1372,7 +1396,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string pod_uid = 3;</code>
+     * <code>string pod_uid = 3[json_name = "podUid"];</code>
+     * @param value The bytes for podUid to set.
+     * @return This builder for chaining.
      */
     public Builder setPodUidBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1387,7 +1413,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
 
     private java.lang.Object podName_ = "";
     /**
-     * <code>string pod_name = 4;</code>
+     * <code>string pod_name = 4[json_name = "podName"];</code>
+     * @return The podName.
      */
     public java.lang.String getPodName() {
       java.lang.Object ref = podName_;
@@ -1401,7 +1428,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string pod_name = 4;</code>
+     * <code>string pod_name = 4[json_name = "podName"];</code>
+     * @return The bytes for podName.
      */
     public com.google.protobuf.ByteString getPodNameBytes() {
       java.lang.Object ref = podName_;
@@ -1414,7 +1442,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string pod_name = 4;</code>
+     * <code>string pod_name = 4[json_name = "podName"];</code>
+     * @param value The podName to set.
+     * @return This builder for chaining.
      */
     public Builder setPodName(java.lang.String value) {
       if (value == null) {
@@ -1426,7 +1456,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string pod_name = 4;</code>
+     * <code>string pod_name = 4[json_name = "podName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearPodName() {
       podName_ = getDefaultInstance().getPodName();
@@ -1434,7 +1465,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string pod_name = 4;</code>
+     * <code>string pod_name = 4[json_name = "podName"];</code>
+     * @param value The bytes for podName to set.
+     * @return This builder for chaining.
      */
     public Builder setPodNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1449,7 +1482,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
 
     private java.lang.Object namespace_ = "";
     /**
-     * <code>string namespace = 5;</code>
+     * <code>string namespace = 5[json_name = "namespace"];</code>
+     * @return The namespace.
      */
     public java.lang.String getNamespace() {
       java.lang.Object ref = namespace_;
@@ -1463,7 +1497,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string namespace = 5;</code>
+     * <code>string namespace = 5[json_name = "namespace"];</code>
+     * @return The bytes for namespace.
      */
     public com.google.protobuf.ByteString getNamespaceBytes() {
       java.lang.Object ref = namespace_;
@@ -1476,7 +1511,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string namespace = 5;</code>
+     * <code>string namespace = 5[json_name = "namespace"];</code>
+     * @param value The namespace to set.
+     * @return This builder for chaining.
      */
     public Builder setNamespace(java.lang.String value) {
       if (value == null) {
@@ -1488,7 +1525,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string namespace = 5;</code>
+     * <code>string namespace = 5[json_name = "namespace"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearNamespace() {
       namespace_ = getDefaultInstance().getNamespace();
@@ -1496,7 +1534,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string namespace = 5;</code>
+     * <code>string namespace = 5[json_name = "namespace"];</code>
+     * @param value The bytes for namespace to set.
+     * @return This builder for chaining.
      */
     public Builder setNamespaceBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1511,7 +1551,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
 
     private java.lang.Object nodeName_ = "";
     /**
-     * <code>string node_name = 6;</code>
+     * <code>string node_name = 6[json_name = "nodeName"];</code>
+     * @return The nodeName.
      */
     public java.lang.String getNodeName() {
       java.lang.Object ref = nodeName_;
@@ -1525,7 +1566,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string node_name = 6;</code>
+     * <code>string node_name = 6[json_name = "nodeName"];</code>
+     * @return The bytes for nodeName.
      */
     public com.google.protobuf.ByteString getNodeNameBytes() {
       java.lang.Object ref = nodeName_;
@@ -1538,7 +1580,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string node_name = 6;</code>
+     * <code>string node_name = 6[json_name = "nodeName"];</code>
+     * @param value The nodeName to set.
+     * @return This builder for chaining.
      */
     public Builder setNodeName(java.lang.String value) {
       if (value == null) {
@@ -1550,7 +1594,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string node_name = 6;</code>
+     * <code>string node_name = 6[json_name = "nodeName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearNodeName() {
       nodeName_ = getDefaultInstance().getNodeName();
@@ -1558,7 +1603,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string node_name = 6;</code>
+     * <code>string node_name = 6[json_name = "nodeName"];</code>
+     * @param value The bytes for nodeName to set.
+     * @return This builder for chaining.
      */
     public Builder setNodeNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1576,13 +1623,15 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
         io.harness.perpetualtask.k8s.watch.Resource.Builder, io.harness.perpetualtask.k8s.watch.ResourceOrBuilder>
         totalResourceBuilder_;
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
+     * @return Whether the totalResource field is set.
      */
     public boolean hasTotalResource() {
       return totalResourceBuilder_ != null || totalResource_ != null;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
+     * @return The totalResource.
      */
     public io.harness.perpetualtask.k8s.watch.Resource getTotalResource() {
       if (totalResourceBuilder_ == null) {
@@ -1593,7 +1642,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
      */
     public Builder setTotalResource(io.harness.perpetualtask.k8s.watch.Resource value) {
       if (totalResourceBuilder_ == null) {
@@ -1609,7 +1658,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
      */
     public Builder setTotalResource(io.harness.perpetualtask.k8s.watch.Resource.Builder builderForValue) {
       if (totalResourceBuilder_ == null) {
@@ -1622,7 +1671,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
      */
     public Builder mergeTotalResource(io.harness.perpetualtask.k8s.watch.Resource value) {
       if (totalResourceBuilder_ == null) {
@@ -1640,7 +1689,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
      */
     public Builder clearTotalResource() {
       if (totalResourceBuilder_ == null) {
@@ -1654,14 +1703,14 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.Resource.Builder getTotalResourceBuilder() {
       onChanged();
       return getTotalResourceFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.ResourceOrBuilder getTotalResourceOrBuilder() {
       if (totalResourceBuilder_ != null) {
@@ -1672,7 +1721,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Resource,
         io.harness.perpetualtask.k8s.watch.Resource.Builder, io.harness.perpetualtask.k8s.watch.ResourceOrBuilder>
@@ -1692,13 +1741,15 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> creationTimestampBuilder_;
     /**
-     * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+     * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
+     * @return Whether the creationTimestamp field is set.
      */
     public boolean hasCreationTimestamp() {
       return creationTimestampBuilder_ != null || creationTimestamp_ != null;
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+     * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
+     * @return The creationTimestamp.
      */
     public com.google.protobuf.Timestamp getCreationTimestamp() {
       if (creationTimestampBuilder_ == null) {
@@ -1708,7 +1759,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+     * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
      */
     public Builder setCreationTimestamp(com.google.protobuf.Timestamp value) {
       if (creationTimestampBuilder_ == null) {
@@ -1724,7 +1775,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+     * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
      */
     public Builder setCreationTimestamp(com.google.protobuf.Timestamp.Builder builderForValue) {
       if (creationTimestampBuilder_ == null) {
@@ -1737,7 +1788,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+     * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
      */
     public Builder mergeCreationTimestamp(com.google.protobuf.Timestamp value) {
       if (creationTimestampBuilder_ == null) {
@@ -1755,7 +1806,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+     * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
      */
     public Builder clearCreationTimestamp() {
       if (creationTimestampBuilder_ == null) {
@@ -1769,14 +1820,14 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+     * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
      */
     public com.google.protobuf.Timestamp.Builder getCreationTimestampBuilder() {
       onChanged();
       return getCreationTimestampFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+     * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
      */
     public com.google.protobuf.TimestampOrBuilder getCreationTimestampOrBuilder() {
       if (creationTimestampBuilder_ != null) {
@@ -1786,7 +1837,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+     * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>
@@ -1823,11 +1874,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return internalGetLabels().getMap().size();
     }
     /**
-     * <pre>
-     * label without value is invalid
-     * </pre>
-     *
-     * <code>map&lt;string, string&gt; labels = 9;</code>
+     * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
      */
 
     public boolean containsLabels(java.lang.String key) {
@@ -1845,22 +1892,14 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return getLabelsMap();
     }
     /**
-     * <pre>
-     * label without value is invalid
-     * </pre>
-     *
-     * <code>map&lt;string, string&gt; labels = 9;</code>
+     * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
      */
 
     public java.util.Map<java.lang.String, java.lang.String> getLabelsMap() {
       return internalGetLabels().getMap();
     }
     /**
-     * <pre>
-     * label without value is invalid
-     * </pre>
-     *
-     * <code>map&lt;string, string&gt; labels = 9;</code>
+     * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
      */
 
     public java.lang.String getLabelsOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -1871,11 +1910,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <pre>
-     * label without value is invalid
-     * </pre>
-     *
-     * <code>map&lt;string, string&gt; labels = 9;</code>
+     * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
      */
 
     public java.lang.String getLabelsOrThrow(java.lang.String key) {
@@ -1894,11 +1929,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <pre>
-     * label without value is invalid
-     * </pre>
-     *
-     * <code>map&lt;string, string&gt; labels = 9;</code>
+     * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
      */
 
     public Builder removeLabels(java.lang.String key) {
@@ -1917,11 +1948,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return internalGetMutableLabels().getMutableMap();
     }
     /**
-     * <pre>
-     * label without value is invalid
-     * </pre>
-     *
-     * <code>map&lt;string, string&gt; labels = 9;</code>
+     * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
      */
     public Builder putLabels(java.lang.String key, java.lang.String value) {
       if (key == null) {
@@ -1934,11 +1961,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <pre>
-     * label without value is invalid
-     * </pre>
-     *
-     * <code>map&lt;string, string&gt; labels = 9;</code>
+     * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
      */
 
     public Builder putAllLabels(java.util.Map<java.lang.String, java.lang.String> values) {
@@ -1951,13 +1974,15 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
         io.harness.perpetualtask.k8s.watch.Owner.Builder, io.harness.perpetualtask.k8s.watch.OwnerOrBuilder>
         topLevelOwnerBuilder_;
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
+     * @return Whether the topLevelOwner field is set.
      */
     public boolean hasTopLevelOwner() {
       return topLevelOwnerBuilder_ != null || topLevelOwner_ != null;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
+     * @return The topLevelOwner.
      */
     public io.harness.perpetualtask.k8s.watch.Owner getTopLevelOwner() {
       if (topLevelOwnerBuilder_ == null) {
@@ -1967,7 +1992,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
      */
     public Builder setTopLevelOwner(io.harness.perpetualtask.k8s.watch.Owner value) {
       if (topLevelOwnerBuilder_ == null) {
@@ -1983,7 +2008,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
      */
     public Builder setTopLevelOwner(io.harness.perpetualtask.k8s.watch.Owner.Builder builderForValue) {
       if (topLevelOwnerBuilder_ == null) {
@@ -1996,7 +2021,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
      */
     public Builder mergeTopLevelOwner(io.harness.perpetualtask.k8s.watch.Owner value) {
       if (topLevelOwnerBuilder_ == null) {
@@ -2014,7 +2039,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
      */
     public Builder clearTopLevelOwner() {
       if (topLevelOwnerBuilder_ == null) {
@@ -2028,14 +2053,14 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.Owner.Builder getTopLevelOwnerBuilder() {
       onChanged();
       return getTopLevelOwnerFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.OwnerOrBuilder getTopLevelOwnerOrBuilder() {
       if (topLevelOwnerBuilder_ != null) {
@@ -2045,7 +2070,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Owner,
         io.harness.perpetualtask.k8s.watch.Owner.Builder, io.harness.perpetualtask.k8s.watch.OwnerOrBuilder>
@@ -2062,9 +2087,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     private java.util.List<io.harness.perpetualtask.k8s.watch.Container> containers_ =
         java.util.Collections.emptyList();
     private void ensureContainersIsMutable() {
-      if (!((bitField0_ & 0x00000200) != 0)) {
+      if (!((bitField0_ & 0x00000002) != 0)) {
         containers_ = new java.util.ArrayList<io.harness.perpetualtask.k8s.watch.Container>(containers_);
-        bitField0_ |= 0x00000200;
+        bitField0_ |= 0x00000002;
       }
     }
 
@@ -2073,7 +2098,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
         containersBuilder_;
 
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public java.util.List<io.harness.perpetualtask.k8s.watch.Container> getContainersList() {
       if (containersBuilder_ == null) {
@@ -2083,7 +2108,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public int getContainersCount() {
       if (containersBuilder_ == null) {
@@ -2093,7 +2118,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.Container getContainers(int index) {
       if (containersBuilder_ == null) {
@@ -2103,7 +2128,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public Builder setContainers(int index, io.harness.perpetualtask.k8s.watch.Container value) {
       if (containersBuilder_ == null) {
@@ -2119,7 +2144,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public Builder setContainers(int index, io.harness.perpetualtask.k8s.watch.Container.Builder builderForValue) {
       if (containersBuilder_ == null) {
@@ -2132,7 +2157,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public Builder addContainers(io.harness.perpetualtask.k8s.watch.Container value) {
       if (containersBuilder_ == null) {
@@ -2148,7 +2173,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public Builder addContainers(int index, io.harness.perpetualtask.k8s.watch.Container value) {
       if (containersBuilder_ == null) {
@@ -2164,7 +2189,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public Builder addContainers(io.harness.perpetualtask.k8s.watch.Container.Builder builderForValue) {
       if (containersBuilder_ == null) {
@@ -2177,7 +2202,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public Builder addContainers(int index, io.harness.perpetualtask.k8s.watch.Container.Builder builderForValue) {
       if (containersBuilder_ == null) {
@@ -2190,7 +2215,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public Builder addAllContainers(java.lang.Iterable<? extends io.harness.perpetualtask.k8s.watch.Container> values) {
       if (containersBuilder_ == null) {
@@ -2203,12 +2228,12 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public Builder clearContainers() {
       if (containersBuilder_ == null) {
         containers_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000200);
+        bitField0_ = (bitField0_ & ~0x00000002);
         onChanged();
       } else {
         containersBuilder_.clear();
@@ -2216,7 +2241,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public Builder removeContainers(int index) {
       if (containersBuilder_ == null) {
@@ -2229,13 +2254,13 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.Container.Builder getContainersBuilder(int index) {
       return getContainersFieldBuilder().getBuilder(index);
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.ContainerOrBuilder getContainersOrBuilder(int index) {
       if (containersBuilder_ == null) {
@@ -2245,7 +2270,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public java.util.List<? extends io.harness.perpetualtask.k8s.watch.ContainerOrBuilder>
     getContainersOrBuilderList() {
@@ -2256,20 +2281,20 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.Container.Builder addContainersBuilder() {
       return getContainersFieldBuilder().addBuilder(io.harness.perpetualtask.k8s.watch.Container.getDefaultInstance());
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.Container.Builder addContainersBuilder(int index) {
       return getContainersFieldBuilder().addBuilder(
           index, io.harness.perpetualtask.k8s.watch.Container.getDefaultInstance());
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
      */
     public java.util.List<io.harness.perpetualtask.k8s.watch.Container.Builder> getContainersBuilderList() {
       return getContainersFieldBuilder().getBuilderList();
@@ -2282,7 +2307,7 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             new com.google.protobuf.RepeatedFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Container,
                 io.harness.perpetualtask.k8s.watch.Container.Builder,
                 io.harness.perpetualtask.k8s.watch.ContainerOrBuilder>(
-                containers_, ((bitField0_ & 0x00000200) != 0), getParentForChildren(), isClean());
+                containers_, ((bitField0_ & 0x00000002) != 0), getParentForChildren(), isClean());
         containers_ = null;
       }
       return containersBuilder_;
@@ -2290,7 +2315,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <code>string cluster_id = 13;</code>
+     * <code>string cluster_id = 13[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -2304,7 +2330,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string cluster_id = 13;</code>
+     * <code>string cluster_id = 13[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -2317,7 +2344,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string cluster_id = 13;</code>
+     * <code>string cluster_id = 13[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -2329,7 +2358,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string cluster_id = 13;</code>
+     * <code>string cluster_id = 13[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -2337,7 +2367,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string cluster_id = 13;</code>
+     * <code>string cluster_id = 13[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -2352,7 +2384,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
 
     private java.lang.Object clusterName_ = "";
     /**
-     * <code>string cluster_name = 14;</code>
+     * <code>string cluster_name = 14[json_name = "clusterName"];</code>
+     * @return The clusterName.
      */
     public java.lang.String getClusterName() {
       java.lang.Object ref = clusterName_;
@@ -2366,7 +2399,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string cluster_name = 14;</code>
+     * <code>string cluster_name = 14[json_name = "clusterName"];</code>
+     * @return The bytes for clusterName.
      */
     public com.google.protobuf.ByteString getClusterNameBytes() {
       java.lang.Object ref = clusterName_;
@@ -2379,7 +2413,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string cluster_name = 14;</code>
+     * <code>string cluster_name = 14[json_name = "clusterName"];</code>
+     * @param value The clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterName(java.lang.String value) {
       if (value == null) {
@@ -2391,7 +2427,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string cluster_name = 14;</code>
+     * <code>string cluster_name = 14[json_name = "clusterName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterName() {
       clusterName_ = getDefaultInstance().getClusterName();
@@ -2399,7 +2436,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string cluster_name = 14;</code>
+     * <code>string cluster_name = 14[json_name = "clusterName"];</code>
+     * @param value The bytes for clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -2414,7 +2453,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
 
     private java.lang.Object kubeSystemUid_ = "";
     /**
-     * <code>string kube_system_uid = 15;</code>
+     * <code>string kube_system_uid = 15[json_name = "kubeSystemUid"];</code>
+     * @return The kubeSystemUid.
      */
     public java.lang.String getKubeSystemUid() {
       java.lang.Object ref = kubeSystemUid_;
@@ -2428,7 +2468,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string kube_system_uid = 15;</code>
+     * <code>string kube_system_uid = 15[json_name = "kubeSystemUid"];</code>
+     * @return The bytes for kubeSystemUid.
      */
     public com.google.protobuf.ByteString getKubeSystemUidBytes() {
       java.lang.Object ref = kubeSystemUid_;
@@ -2441,7 +2482,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string kube_system_uid = 15;</code>
+     * <code>string kube_system_uid = 15[json_name = "kubeSystemUid"];</code>
+     * @param value The kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUid(java.lang.String value) {
       if (value == null) {
@@ -2453,7 +2496,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string kube_system_uid = 15;</code>
+     * <code>string kube_system_uid = 15[json_name = "kubeSystemUid"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearKubeSystemUid() {
       kubeSystemUid_ = getDefaultInstance().getKubeSystemUid();
@@ -2461,7 +2505,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string kube_system_uid = 15;</code>
+     * <code>string kube_system_uid = 15[json_name = "kubeSystemUid"];</code>
+     * @param value The bytes for kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUidBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -2476,7 +2522,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
 
     private java.lang.Object qosClass_ = "";
     /**
-     * <code>string qos_class = 16;</code>
+     * <code>string qos_class = 16[json_name = "qosClass"];</code>
+     * @return The qosClass.
      */
     public java.lang.String getQosClass() {
       java.lang.Object ref = qosClass_;
@@ -2490,7 +2537,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string qos_class = 16;</code>
+     * <code>string qos_class = 16[json_name = "qosClass"];</code>
+     * @return The bytes for qosClass.
      */
     public com.google.protobuf.ByteString getQosClassBytes() {
       java.lang.Object ref = qosClass_;
@@ -2503,7 +2551,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       }
     }
     /**
-     * <code>string qos_class = 16;</code>
+     * <code>string qos_class = 16[json_name = "qosClass"];</code>
+     * @param value The qosClass to set.
+     * @return This builder for chaining.
      */
     public Builder setQosClass(java.lang.String value) {
       if (value == null) {
@@ -2515,7 +2565,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string qos_class = 16;</code>
+     * <code>string qos_class = 16[json_name = "qosClass"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearQosClass() {
       qosClass_ = getDefaultInstance().getQosClass();
@@ -2523,7 +2574,9 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       return this;
     }
     /**
-     * <code>string qos_class = 16;</code>
+     * <code>string qos_class = 16[json_name = "qosClass"];</code>
+     * @param value The bytes for qosClass to set.
+     * @return This builder for chaining.
      */
     public Builder setQosClassBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

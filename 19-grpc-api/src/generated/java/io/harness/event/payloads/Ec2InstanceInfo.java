@@ -29,6 +29,13 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new Ec2InstanceInfo();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -39,7 +46,6 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -148,7 +154,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
   public static final int INSTANCE_ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object instanceId_;
   /**
-   * <code>string instance_id = 1;</code>
+   * <code>string instance_id = 1[json_name = "instanceId"];</code>
+   * @return The instanceId.
    */
   public java.lang.String getInstanceId() {
     java.lang.Object ref = instanceId_;
@@ -162,7 +169,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string instance_id = 1;</code>
+   * <code>string instance_id = 1[json_name = "instanceId"];</code>
+   * @return The bytes for instanceId.
    */
   public com.google.protobuf.ByteString getInstanceIdBytes() {
     java.lang.Object ref = instanceId_;
@@ -178,7 +186,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
   public static final int INSTANCE_TYPE_FIELD_NUMBER = 2;
   private volatile java.lang.Object instanceType_;
   /**
-   * <code>string instance_type = 2;</code>
+   * <code>string instance_type = 2[json_name = "instanceType"];</code>
+   * @return The instanceType.
    */
   public java.lang.String getInstanceType() {
     java.lang.Object ref = instanceType_;
@@ -192,7 +201,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string instance_type = 2;</code>
+   * <code>string instance_type = 2[json_name = "instanceType"];</code>
+   * @return The bytes for instanceType.
    */
   public com.google.protobuf.ByteString getInstanceTypeBytes() {
     java.lang.Object ref = instanceType_;
@@ -208,7 +218,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
   public static final int CAPACITY_RESERVATION_ID_FIELD_NUMBER = 3;
   private volatile java.lang.Object capacityReservationId_;
   /**
-   * <code>string capacity_reservation_id = 3;</code>
+   * <code>string capacity_reservation_id = 3[json_name = "capacityReservationId"];</code>
+   * @return The capacityReservationId.
    */
   public java.lang.String getCapacityReservationId() {
     java.lang.Object ref = capacityReservationId_;
@@ -222,7 +233,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string capacity_reservation_id = 3;</code>
+   * <code>string capacity_reservation_id = 3[json_name = "capacityReservationId"];</code>
+   * @return The bytes for capacityReservationId.
    */
   public com.google.protobuf.ByteString getCapacityReservationIdBytes() {
     java.lang.Object ref = capacityReservationId_;
@@ -238,7 +250,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
   public static final int SPOT_INSTANCE_REQUEST_ID_FIELD_NUMBER = 4;
   private volatile java.lang.Object spotInstanceRequestId_;
   /**
-   * <code>string spot_instance_request_id = 4;</code>
+   * <code>string spot_instance_request_id = 4[json_name = "spotInstanceRequestId"];</code>
+   * @return The spotInstanceRequestId.
    */
   public java.lang.String getSpotInstanceRequestId() {
     java.lang.Object ref = spotInstanceRequestId_;
@@ -252,7 +265,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string spot_instance_request_id = 4;</code>
+   * <code>string spot_instance_request_id = 4[json_name = "spotInstanceRequestId"];</code>
+   * @return The bytes for spotInstanceRequestId.
    */
   public com.google.protobuf.ByteString getSpotInstanceRequestIdBytes() {
     java.lang.Object ref = spotInstanceRequestId_;
@@ -268,7 +282,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
   public static final int INSTANCE_LIFECYCLE_FIELD_NUMBER = 5;
   private volatile java.lang.Object instanceLifecycle_;
   /**
-   * <code>string instance_lifecycle = 5;</code>
+   * <code>string instance_lifecycle = 5[json_name = "instanceLifecycle"];</code>
+   * @return The instanceLifecycle.
    */
   public java.lang.String getInstanceLifecycle() {
     java.lang.Object ref = instanceLifecycle_;
@@ -282,7 +297,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string instance_lifecycle = 5;</code>
+   * <code>string instance_lifecycle = 5[json_name = "instanceLifecycle"];</code>
+   * @return The bytes for instanceLifecycle.
    */
   public com.google.protobuf.ByteString getInstanceLifecycleBytes() {
     java.lang.Object ref = instanceLifecycle_;
@@ -298,19 +314,21 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
   public static final int INSTANCE_STATE_FIELD_NUMBER = 6;
   private io.harness.event.payloads.InstanceState instanceState_;
   /**
-   * <code>.io.harness.event.payloads.InstanceState instance_state = 6;</code>
+   * <code>.io.harness.event.payloads.InstanceState instance_state = 6[json_name = "instanceState"];</code>
+   * @return Whether the instanceState field is set.
    */
   public boolean hasInstanceState() {
     return instanceState_ != null;
   }
   /**
-   * <code>.io.harness.event.payloads.InstanceState instance_state = 6;</code>
+   * <code>.io.harness.event.payloads.InstanceState instance_state = 6[json_name = "instanceState"];</code>
+   * @return The instanceState.
    */
   public io.harness.event.payloads.InstanceState getInstanceState() {
     return instanceState_ == null ? io.harness.event.payloads.InstanceState.getDefaultInstance() : instanceState_;
   }
   /**
-   * <code>.io.harness.event.payloads.InstanceState instance_state = 6;</code>
+   * <code>.io.harness.event.payloads.InstanceState instance_state = 6[json_name = "instanceState"];</code>
    */
   public io.harness.event.payloads.InstanceStateOrBuilder getInstanceStateOrBuilder() {
     return getInstanceState();
@@ -319,7 +337,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
   public static final int CLUSTER_ARN_FIELD_NUMBER = 7;
   private volatile java.lang.Object clusterArn_;
   /**
-   * <code>string cluster_arn = 7;</code>
+   * <code>string cluster_arn = 7[json_name = "clusterArn"];</code>
+   * @return The clusterArn.
    */
   public java.lang.String getClusterArn() {
     java.lang.Object ref = clusterArn_;
@@ -333,7 +352,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string cluster_arn = 7;</code>
+   * <code>string cluster_arn = 7[json_name = "clusterArn"];</code>
+   * @return The bytes for clusterArn.
    */
   public com.google.protobuf.ByteString getClusterArnBytes() {
     java.lang.Object ref = clusterArn_;
@@ -349,7 +369,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
   public static final int REGION_FIELD_NUMBER = 8;
   private volatile java.lang.Object region_;
   /**
-   * <code>string region = 8;</code>
+   * <code>string region = 8[json_name = "region"];</code>
+   * @return The region.
    */
   public java.lang.String getRegion() {
     java.lang.Object ref = region_;
@@ -363,7 +384,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string region = 8;</code>
+   * <code>string region = 8[json_name = "region"];</code>
+   * @return The bytes for region.
    */
   public com.google.protobuf.ByteString getRegionBytes() {
     java.lang.Object ref = region_;
@@ -379,7 +401,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
   public static final int CLUSTER_ID_FIELD_NUMBER = 9;
   private volatile java.lang.Object clusterId_;
   /**
-   * <code>string cluster_id = 9;</code>
+   * <code>string cluster_id = 9[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -393,7 +416,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string cluster_id = 9;</code>
+   * <code>string cluster_id = 9[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -409,7 +433,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
   public static final int SETTING_ID_FIELD_NUMBER = 10;
   private volatile java.lang.Object settingId_;
   /**
-   * <code>string setting_id = 10;</code>
+   * <code>string setting_id = 10[json_name = "settingId"];</code>
+   * @return The settingId.
    */
   public java.lang.String getSettingId() {
     java.lang.Object ref = settingId_;
@@ -423,7 +448,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string setting_id = 10;</code>
+   * <code>string setting_id = 10[json_name = "settingId"];</code>
+   * @return The bytes for settingId.
    */
   public com.google.protobuf.ByteString getSettingIdBytes() {
     java.lang.Object ref = settingId_;
@@ -882,7 +908,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object instanceId_ = "";
     /**
-     * <code>string instance_id = 1;</code>
+     * <code>string instance_id = 1[json_name = "instanceId"];</code>
+     * @return The instanceId.
      */
     public java.lang.String getInstanceId() {
       java.lang.Object ref = instanceId_;
@@ -896,7 +923,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string instance_id = 1;</code>
+     * <code>string instance_id = 1[json_name = "instanceId"];</code>
+     * @return The bytes for instanceId.
      */
     public com.google.protobuf.ByteString getInstanceIdBytes() {
       java.lang.Object ref = instanceId_;
@@ -909,7 +937,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string instance_id = 1;</code>
+     * <code>string instance_id = 1[json_name = "instanceId"];</code>
+     * @param value The instanceId to set.
+     * @return This builder for chaining.
      */
     public Builder setInstanceId(java.lang.String value) {
       if (value == null) {
@@ -921,7 +951,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string instance_id = 1;</code>
+     * <code>string instance_id = 1[json_name = "instanceId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearInstanceId() {
       instanceId_ = getDefaultInstance().getInstanceId();
@@ -929,7 +960,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string instance_id = 1;</code>
+     * <code>string instance_id = 1[json_name = "instanceId"];</code>
+     * @param value The bytes for instanceId to set.
+     * @return This builder for chaining.
      */
     public Builder setInstanceIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -944,7 +977,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object instanceType_ = "";
     /**
-     * <code>string instance_type = 2;</code>
+     * <code>string instance_type = 2[json_name = "instanceType"];</code>
+     * @return The instanceType.
      */
     public java.lang.String getInstanceType() {
       java.lang.Object ref = instanceType_;
@@ -958,7 +992,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string instance_type = 2;</code>
+     * <code>string instance_type = 2[json_name = "instanceType"];</code>
+     * @return The bytes for instanceType.
      */
     public com.google.protobuf.ByteString getInstanceTypeBytes() {
       java.lang.Object ref = instanceType_;
@@ -971,7 +1006,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string instance_type = 2;</code>
+     * <code>string instance_type = 2[json_name = "instanceType"];</code>
+     * @param value The instanceType to set.
+     * @return This builder for chaining.
      */
     public Builder setInstanceType(java.lang.String value) {
       if (value == null) {
@@ -983,7 +1020,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string instance_type = 2;</code>
+     * <code>string instance_type = 2[json_name = "instanceType"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearInstanceType() {
       instanceType_ = getDefaultInstance().getInstanceType();
@@ -991,7 +1029,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string instance_type = 2;</code>
+     * <code>string instance_type = 2[json_name = "instanceType"];</code>
+     * @param value The bytes for instanceType to set.
+     * @return This builder for chaining.
      */
     public Builder setInstanceTypeBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1006,7 +1046,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object capacityReservationId_ = "";
     /**
-     * <code>string capacity_reservation_id = 3;</code>
+     * <code>string capacity_reservation_id = 3[json_name = "capacityReservationId"];</code>
+     * @return The capacityReservationId.
      */
     public java.lang.String getCapacityReservationId() {
       java.lang.Object ref = capacityReservationId_;
@@ -1020,7 +1061,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string capacity_reservation_id = 3;</code>
+     * <code>string capacity_reservation_id = 3[json_name = "capacityReservationId"];</code>
+     * @return The bytes for capacityReservationId.
      */
     public com.google.protobuf.ByteString getCapacityReservationIdBytes() {
       java.lang.Object ref = capacityReservationId_;
@@ -1033,7 +1075,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string capacity_reservation_id = 3;</code>
+     * <code>string capacity_reservation_id = 3[json_name = "capacityReservationId"];</code>
+     * @param value The capacityReservationId to set.
+     * @return This builder for chaining.
      */
     public Builder setCapacityReservationId(java.lang.String value) {
       if (value == null) {
@@ -1045,7 +1089,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string capacity_reservation_id = 3;</code>
+     * <code>string capacity_reservation_id = 3[json_name = "capacityReservationId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCapacityReservationId() {
       capacityReservationId_ = getDefaultInstance().getCapacityReservationId();
@@ -1053,7 +1098,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string capacity_reservation_id = 3;</code>
+     * <code>string capacity_reservation_id = 3[json_name = "capacityReservationId"];</code>
+     * @param value The bytes for capacityReservationId to set.
+     * @return This builder for chaining.
      */
     public Builder setCapacityReservationIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1068,7 +1115,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object spotInstanceRequestId_ = "";
     /**
-     * <code>string spot_instance_request_id = 4;</code>
+     * <code>string spot_instance_request_id = 4[json_name = "spotInstanceRequestId"];</code>
+     * @return The spotInstanceRequestId.
      */
     public java.lang.String getSpotInstanceRequestId() {
       java.lang.Object ref = spotInstanceRequestId_;
@@ -1082,7 +1130,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string spot_instance_request_id = 4;</code>
+     * <code>string spot_instance_request_id = 4[json_name = "spotInstanceRequestId"];</code>
+     * @return The bytes for spotInstanceRequestId.
      */
     public com.google.protobuf.ByteString getSpotInstanceRequestIdBytes() {
       java.lang.Object ref = spotInstanceRequestId_;
@@ -1095,7 +1144,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string spot_instance_request_id = 4;</code>
+     * <code>string spot_instance_request_id = 4[json_name = "spotInstanceRequestId"];</code>
+     * @param value The spotInstanceRequestId to set.
+     * @return This builder for chaining.
      */
     public Builder setSpotInstanceRequestId(java.lang.String value) {
       if (value == null) {
@@ -1107,7 +1158,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string spot_instance_request_id = 4;</code>
+     * <code>string spot_instance_request_id = 4[json_name = "spotInstanceRequestId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearSpotInstanceRequestId() {
       spotInstanceRequestId_ = getDefaultInstance().getSpotInstanceRequestId();
@@ -1115,7 +1167,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string spot_instance_request_id = 4;</code>
+     * <code>string spot_instance_request_id = 4[json_name = "spotInstanceRequestId"];</code>
+     * @param value The bytes for spotInstanceRequestId to set.
+     * @return This builder for chaining.
      */
     public Builder setSpotInstanceRequestIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1130,7 +1184,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object instanceLifecycle_ = "";
     /**
-     * <code>string instance_lifecycle = 5;</code>
+     * <code>string instance_lifecycle = 5[json_name = "instanceLifecycle"];</code>
+     * @return The instanceLifecycle.
      */
     public java.lang.String getInstanceLifecycle() {
       java.lang.Object ref = instanceLifecycle_;
@@ -1144,7 +1199,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string instance_lifecycle = 5;</code>
+     * <code>string instance_lifecycle = 5[json_name = "instanceLifecycle"];</code>
+     * @return The bytes for instanceLifecycle.
      */
     public com.google.protobuf.ByteString getInstanceLifecycleBytes() {
       java.lang.Object ref = instanceLifecycle_;
@@ -1157,7 +1213,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string instance_lifecycle = 5;</code>
+     * <code>string instance_lifecycle = 5[json_name = "instanceLifecycle"];</code>
+     * @param value The instanceLifecycle to set.
+     * @return This builder for chaining.
      */
     public Builder setInstanceLifecycle(java.lang.String value) {
       if (value == null) {
@@ -1169,7 +1227,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string instance_lifecycle = 5;</code>
+     * <code>string instance_lifecycle = 5[json_name = "instanceLifecycle"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearInstanceLifecycle() {
       instanceLifecycle_ = getDefaultInstance().getInstanceLifecycle();
@@ -1177,7 +1236,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string instance_lifecycle = 5;</code>
+     * <code>string instance_lifecycle = 5[json_name = "instanceLifecycle"];</code>
+     * @param value The bytes for instanceLifecycle to set.
+     * @return This builder for chaining.
      */
     public Builder setInstanceLifecycleBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1195,13 +1256,15 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
         .SingleFieldBuilderV3<io.harness.event.payloads.InstanceState, io.harness.event.payloads.InstanceState.Builder,
             io.harness.event.payloads.InstanceStateOrBuilder> instanceStateBuilder_;
     /**
-     * <code>.io.harness.event.payloads.InstanceState instance_state = 6;</code>
+     * <code>.io.harness.event.payloads.InstanceState instance_state = 6[json_name = "instanceState"];</code>
+     * @return Whether the instanceState field is set.
      */
     public boolean hasInstanceState() {
       return instanceStateBuilder_ != null || instanceState_ != null;
     }
     /**
-     * <code>.io.harness.event.payloads.InstanceState instance_state = 6;</code>
+     * <code>.io.harness.event.payloads.InstanceState instance_state = 6[json_name = "instanceState"];</code>
+     * @return The instanceState.
      */
     public io.harness.event.payloads.InstanceState getInstanceState() {
       if (instanceStateBuilder_ == null) {
@@ -1211,7 +1274,7 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>.io.harness.event.payloads.InstanceState instance_state = 6;</code>
+     * <code>.io.harness.event.payloads.InstanceState instance_state = 6[json_name = "instanceState"];</code>
      */
     public Builder setInstanceState(io.harness.event.payloads.InstanceState value) {
       if (instanceStateBuilder_ == null) {
@@ -1227,7 +1290,7 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.InstanceState instance_state = 6;</code>
+     * <code>.io.harness.event.payloads.InstanceState instance_state = 6[json_name = "instanceState"];</code>
      */
     public Builder setInstanceState(io.harness.event.payloads.InstanceState.Builder builderForValue) {
       if (instanceStateBuilder_ == null) {
@@ -1240,7 +1303,7 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.InstanceState instance_state = 6;</code>
+     * <code>.io.harness.event.payloads.InstanceState instance_state = 6[json_name = "instanceState"];</code>
      */
     public Builder mergeInstanceState(io.harness.event.payloads.InstanceState value) {
       if (instanceStateBuilder_ == null) {
@@ -1258,7 +1321,7 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.InstanceState instance_state = 6;</code>
+     * <code>.io.harness.event.payloads.InstanceState instance_state = 6[json_name = "instanceState"];</code>
      */
     public Builder clearInstanceState() {
       if (instanceStateBuilder_ == null) {
@@ -1272,14 +1335,14 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.InstanceState instance_state = 6;</code>
+     * <code>.io.harness.event.payloads.InstanceState instance_state = 6[json_name = "instanceState"];</code>
      */
     public io.harness.event.payloads.InstanceState.Builder getInstanceStateBuilder() {
       onChanged();
       return getInstanceStateFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.event.payloads.InstanceState instance_state = 6;</code>
+     * <code>.io.harness.event.payloads.InstanceState instance_state = 6[json_name = "instanceState"];</code>
      */
     public io.harness.event.payloads.InstanceStateOrBuilder getInstanceStateOrBuilder() {
       if (instanceStateBuilder_ != null) {
@@ -1289,7 +1352,7 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>.io.harness.event.payloads.InstanceState instance_state = 6;</code>
+     * <code>.io.harness.event.payloads.InstanceState instance_state = 6[json_name = "instanceState"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.InstanceState,
         io.harness.event.payloads.InstanceState.Builder, io.harness.event.payloads.InstanceStateOrBuilder>
@@ -1305,7 +1368,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object clusterArn_ = "";
     /**
-     * <code>string cluster_arn = 7;</code>
+     * <code>string cluster_arn = 7[json_name = "clusterArn"];</code>
+     * @return The clusterArn.
      */
     public java.lang.String getClusterArn() {
       java.lang.Object ref = clusterArn_;
@@ -1319,7 +1383,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string cluster_arn = 7;</code>
+     * <code>string cluster_arn = 7[json_name = "clusterArn"];</code>
+     * @return The bytes for clusterArn.
      */
     public com.google.protobuf.ByteString getClusterArnBytes() {
       java.lang.Object ref = clusterArn_;
@@ -1332,7 +1397,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string cluster_arn = 7;</code>
+     * <code>string cluster_arn = 7[json_name = "clusterArn"];</code>
+     * @param value The clusterArn to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterArn(java.lang.String value) {
       if (value == null) {
@@ -1344,7 +1411,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string cluster_arn = 7;</code>
+     * <code>string cluster_arn = 7[json_name = "clusterArn"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterArn() {
       clusterArn_ = getDefaultInstance().getClusterArn();
@@ -1352,7 +1420,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string cluster_arn = 7;</code>
+     * <code>string cluster_arn = 7[json_name = "clusterArn"];</code>
+     * @param value The bytes for clusterArn to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterArnBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1367,7 +1437,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object region_ = "";
     /**
-     * <code>string region = 8;</code>
+     * <code>string region = 8[json_name = "region"];</code>
+     * @return The region.
      */
     public java.lang.String getRegion() {
       java.lang.Object ref = region_;
@@ -1381,7 +1452,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string region = 8;</code>
+     * <code>string region = 8[json_name = "region"];</code>
+     * @return The bytes for region.
      */
     public com.google.protobuf.ByteString getRegionBytes() {
       java.lang.Object ref = region_;
@@ -1394,7 +1466,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string region = 8;</code>
+     * <code>string region = 8[json_name = "region"];</code>
+     * @param value The region to set.
+     * @return This builder for chaining.
      */
     public Builder setRegion(java.lang.String value) {
       if (value == null) {
@@ -1406,7 +1480,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string region = 8;</code>
+     * <code>string region = 8[json_name = "region"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearRegion() {
       region_ = getDefaultInstance().getRegion();
@@ -1414,7 +1489,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string region = 8;</code>
+     * <code>string region = 8[json_name = "region"];</code>
+     * @param value The bytes for region to set.
+     * @return This builder for chaining.
      */
     public Builder setRegionBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1429,7 +1506,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <code>string cluster_id = 9;</code>
+     * <code>string cluster_id = 9[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -1443,7 +1521,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string cluster_id = 9;</code>
+     * <code>string cluster_id = 9[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -1456,7 +1535,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string cluster_id = 9;</code>
+     * <code>string cluster_id = 9[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -1468,7 +1549,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string cluster_id = 9;</code>
+     * <code>string cluster_id = 9[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -1476,7 +1558,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string cluster_id = 9;</code>
+     * <code>string cluster_id = 9[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1491,7 +1575,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object settingId_ = "";
     /**
-     * <code>string setting_id = 10;</code>
+     * <code>string setting_id = 10[json_name = "settingId"];</code>
+     * @return The settingId.
      */
     public java.lang.String getSettingId() {
       java.lang.Object ref = settingId_;
@@ -1505,7 +1590,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string setting_id = 10;</code>
+     * <code>string setting_id = 10[json_name = "settingId"];</code>
+     * @return The bytes for settingId.
      */
     public com.google.protobuf.ByteString getSettingIdBytes() {
       java.lang.Object ref = settingId_;
@@ -1518,7 +1604,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string setting_id = 10;</code>
+     * <code>string setting_id = 10[json_name = "settingId"];</code>
+     * @param value The settingId to set.
+     * @return This builder for chaining.
      */
     public Builder setSettingId(java.lang.String value) {
       if (value == null) {
@@ -1530,7 +1618,8 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string setting_id = 10;</code>
+     * <code>string setting_id = 10[json_name = "settingId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearSettingId() {
       settingId_ = getDefaultInstance().getSettingId();
@@ -1538,7 +1627,9 @@ public final class Ec2InstanceInfo extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string setting_id = 10;</code>
+     * <code>string setting_id = 10[json_name = "settingId"];</code>
+     * @param value The bytes for settingId to set.
+     * @return This builder for chaining.
      */
     public Builder setSettingIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

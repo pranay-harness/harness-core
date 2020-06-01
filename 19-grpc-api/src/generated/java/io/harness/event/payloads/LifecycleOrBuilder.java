@@ -8,64 +8,76 @@ public interface LifecycleOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.payloads.Lifecycle)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string instance_id = 1;</code>
+   * <code>string instance_id = 1[json_name = "instanceId"];</code>
+   * @return The instanceId.
    */
   java.lang.String getInstanceId();
   /**
-   * <code>string instance_id = 1;</code>
+   * <code>string instance_id = 1[json_name = "instanceId"];</code>
+   * @return The bytes for instanceId.
    */
   com.google.protobuf.ByteString getInstanceIdBytes();
 
   /**
-   * <code>.io.harness.event.payloads.Lifecycle.EventType type = 2;</code>
+   * <code>.io.harness.event.payloads.Lifecycle.EventType type = 2[json_name = "type"];</code>
+   * @return The enum numeric value on the wire for type.
    */
   int getTypeValue();
   /**
-   * <code>.io.harness.event.payloads.Lifecycle.EventType type = 2;</code>
+   * <code>.io.harness.event.payloads.Lifecycle.EventType type = 2[json_name = "type"];</code>
+   * @return The type.
    */
   io.harness.event.payloads.Lifecycle.EventType getType();
 
   /**
-   * <code>.google.protobuf.Timestamp timestamp = 3;</code>
+   * <code>.google.protobuf.Timestamp timestamp = 3[json_name = "timestamp"];</code>
+   * @return Whether the timestamp field is set.
    */
   boolean hasTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp timestamp = 3;</code>
+   * <code>.google.protobuf.Timestamp timestamp = 3[json_name = "timestamp"];</code>
+   * @return The timestamp.
    */
   com.google.protobuf.Timestamp getTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp timestamp = 3;</code>
+   * <code>.google.protobuf.Timestamp timestamp = 3[json_name = "timestamp"];</code>
    */
   com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder();
 
   /**
-   * <code>.google.protobuf.Timestamp created_timestamp = 4;</code>
+   * <code>.google.protobuf.Timestamp created_timestamp = 4[json_name = "createdTimestamp"];</code>
+   * @return Whether the createdTimestamp field is set.
    */
   boolean hasCreatedTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp created_timestamp = 4;</code>
+   * <code>.google.protobuf.Timestamp created_timestamp = 4[json_name = "createdTimestamp"];</code>
+   * @return The createdTimestamp.
    */
   com.google.protobuf.Timestamp getCreatedTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp created_timestamp = 4;</code>
+   * <code>.google.protobuf.Timestamp created_timestamp = 4[json_name = "createdTimestamp"];</code>
    */
   com.google.protobuf.TimestampOrBuilder getCreatedTimestampOrBuilder();
 
   /**
-   * <code>string cluster_id = 5;</code>
+   * <code>string cluster_id = 5[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   java.lang.String getClusterId();
   /**
-   * <code>string cluster_id = 5;</code>
+   * <code>string cluster_id = 5[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   com.google.protobuf.ByteString getClusterIdBytes();
 
   /**
-   * <code>string setting_id = 6;</code>
+   * <code>string setting_id = 6[json_name = "settingId"];</code>
+   * @return The settingId.
    */
   java.lang.String getSettingId();
   /**
-   * <code>string setting_id = 6;</code>
+   * <code>string setting_id = 6[json_name = "settingId"];</code>
+   * @return The bytes for settingId.
    */
   com.google.protobuf.ByteString getSettingIdBytes();
 }

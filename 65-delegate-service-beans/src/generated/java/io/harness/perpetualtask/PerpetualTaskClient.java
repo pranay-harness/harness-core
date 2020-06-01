@@ -31,32 +31,20 @@ public final class PerpetualTaskClient {
   static {
     java.lang.String[] descriptorData = {"\n4io/harness/perpetualtask/perpetual_tas"
         + "k_client.proto\022\030io.harness.perpetualtask"
-        + "\032\031google/protobuf/any.proto\032\037google/prot"
-        + "obuf/timestamp.proto\032-io/harness/perpetu"
-        + "altask/perpetual_task.proto\"\205\002\n!Perpetua"
-        + "lTaskClientContextDetails\022m\n\022task_client"
-        + "_params\030\001 \003(\0132Q.io.harness.perpetualtask"
-        + ".PerpetualTaskClientContextDetails.TaskC"
-        + "lientParamsEntry\0228\n\024last_context_updated"
-        + "\030\002 \001(\0132\032.google.protobuf.Timestamp\0327\n\025Ta"
-        + "skClientParamsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005valu"
-        + "e\030\002 \001(\t:\0028\001\"\037\n\035PerpetualTaskClientEntryp"
-        + "ointB\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
+        + "\032\037google/protobuf/timestamp.proto\"\267\002\n!Pe"
+        + "rpetualTaskClientContextDetails\022\177\n\022task_"
+        + "client_params\030\001 \003(\0132Q.io.harness.perpetu"
+        + "altask.PerpetualTaskClientContextDetails"
+        + ".TaskClientParamsEntryR\020taskClientParams"
+        + "\022L\n\024last_context_updated\030\002 \001(\0132\032.google."
+        + "protobuf.TimestampR\022lastContextUpdated\032C"
+        + "\n\025TaskClientParamsEntry\022\020\n\003key\030\001 \001(\tR\003ke"
+        + "y\022\024\n\005value\030\002 \001(\tR\005value:\0028\001\"\037\n\035Perpetual"
+        + "TaskClientEntrypointB\002P\001b\006proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-            com.google.protobuf.AnyProto.getDescriptor(),
             com.google.protobuf.TimestampProto.getDescriptor(),
-            io.harness.perpetualtask.PerpetualTask.getDescriptor(),
-        },
-        assigner);
+        });
     internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_descriptor =
         getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_fieldAccessorTable =
@@ -81,9 +69,7 @@ public final class PerpetualTaskClient {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_perpetualtask_PerpetualTaskClientEntrypoint_descriptor,
             new java.lang.String[] {});
-    com.google.protobuf.AnyProto.getDescriptor();
     com.google.protobuf.TimestampProto.getDescriptor();
-    io.harness.perpetualtask.PerpetualTask.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -27,6 +27,13 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new EcsContainerInstanceDescription();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -37,7 +44,6 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -123,7 +129,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
   public static final int CONTAINER_INSTANCE_ARN_FIELD_NUMBER = 1;
   private volatile java.lang.Object containerInstanceArn_;
   /**
-   * <code>string container_instance_arn = 1;</code>
+   * <code>string container_instance_arn = 1[json_name = "containerInstanceArn"];</code>
+   * @return The containerInstanceArn.
    */
   public java.lang.String getContainerInstanceArn() {
     java.lang.Object ref = containerInstanceArn_;
@@ -137,7 +144,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
     }
   }
   /**
-   * <code>string container_instance_arn = 1;</code>
+   * <code>string container_instance_arn = 1[json_name = "containerInstanceArn"];</code>
+   * @return The bytes for containerInstanceArn.
    */
   public com.google.protobuf.ByteString getContainerInstanceArnBytes() {
     java.lang.Object ref = containerInstanceArn_;
@@ -153,7 +161,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
   public static final int CLUSTER_ARN_FIELD_NUMBER = 2;
   private volatile java.lang.Object clusterArn_;
   /**
-   * <code>string cluster_arn = 2;</code>
+   * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+   * @return The clusterArn.
    */
   public java.lang.String getClusterArn() {
     java.lang.Object ref = clusterArn_;
@@ -167,7 +176,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
     }
   }
   /**
-   * <code>string cluster_arn = 2;</code>
+   * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+   * @return The bytes for clusterArn.
    */
   public com.google.protobuf.ByteString getClusterArnBytes() {
     java.lang.Object ref = clusterArn_;
@@ -183,7 +193,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
   public static final int EC2_INSTANCE_ID_FIELD_NUMBER = 3;
   private volatile java.lang.Object ec2InstanceId_;
   /**
-   * <code>string ec2_instance_id = 3;</code>
+   * <code>string ec2_instance_id = 3[json_name = "ec2InstanceId"];</code>
+   * @return The ec2InstanceId.
    */
   public java.lang.String getEc2InstanceId() {
     java.lang.Object ref = ec2InstanceId_;
@@ -197,7 +208,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
     }
   }
   /**
-   * <code>string ec2_instance_id = 3;</code>
+   * <code>string ec2_instance_id = 3[json_name = "ec2InstanceId"];</code>
+   * @return The bytes for ec2InstanceId.
    */
   public com.google.protobuf.ByteString getEc2InstanceIdBytes() {
     java.lang.Object ref = ec2InstanceId_;
@@ -213,7 +225,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
   public static final int OPERATING_SYSTEM_FIELD_NUMBER = 4;
   private volatile java.lang.Object operatingSystem_;
   /**
-   * <code>string operating_system = 4;</code>
+   * <code>string operating_system = 4[json_name = "operatingSystem"];</code>
+   * @return The operatingSystem.
    */
   public java.lang.String getOperatingSystem() {
     java.lang.Object ref = operatingSystem_;
@@ -227,7 +240,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
     }
   }
   /**
-   * <code>string operating_system = 4;</code>
+   * <code>string operating_system = 4[json_name = "operatingSystem"];</code>
+   * @return The bytes for operatingSystem.
    */
   public com.google.protobuf.ByteString getOperatingSystemBytes() {
     java.lang.Object ref = operatingSystem_;
@@ -243,7 +257,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
   public static final int REGION_FIELD_NUMBER = 5;
   private volatile java.lang.Object region_;
   /**
-   * <code>string region = 5;</code>
+   * <code>string region = 5[json_name = "region"];</code>
+   * @return The region.
    */
   public java.lang.String getRegion() {
     java.lang.Object ref = region_;
@@ -257,7 +272,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
     }
   }
   /**
-   * <code>string region = 5;</code>
+   * <code>string region = 5[json_name = "region"];</code>
+   * @return The bytes for region.
    */
   public com.google.protobuf.ByteString getRegionBytes() {
     java.lang.Object ref = region_;
@@ -273,7 +289,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
   public static final int CLUSTER_ID_FIELD_NUMBER = 6;
   private volatile java.lang.Object clusterId_;
   /**
-   * <code>string cluster_id = 6;</code>
+   * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -287,7 +304,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
     }
   }
   /**
-   * <code>string cluster_id = 6;</code>
+   * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -303,7 +321,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
   public static final int SETTING_ID_FIELD_NUMBER = 7;
   private volatile java.lang.Object settingId_;
   /**
-   * <code>string setting_id = 7;</code>
+   * <code>string setting_id = 7[json_name = "settingId"];</code>
+   * @return The settingId.
    */
   public java.lang.String getSettingId() {
     java.lang.Object ref = settingId_;
@@ -317,7 +336,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
     }
   }
   /**
-   * <code>string setting_id = 7;</code>
+   * <code>string setting_id = 7[json_name = "settingId"];</code>
+   * @return The bytes for settingId.
    */
   public com.google.protobuf.ByteString getSettingIdBytes() {
     java.lang.Object ref = settingId_;
@@ -718,7 +738,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
 
     private java.lang.Object containerInstanceArn_ = "";
     /**
-     * <code>string container_instance_arn = 1;</code>
+     * <code>string container_instance_arn = 1[json_name = "containerInstanceArn"];</code>
+     * @return The containerInstanceArn.
      */
     public java.lang.String getContainerInstanceArn() {
       java.lang.Object ref = containerInstanceArn_;
@@ -732,7 +753,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       }
     }
     /**
-     * <code>string container_instance_arn = 1;</code>
+     * <code>string container_instance_arn = 1[json_name = "containerInstanceArn"];</code>
+     * @return The bytes for containerInstanceArn.
      */
     public com.google.protobuf.ByteString getContainerInstanceArnBytes() {
       java.lang.Object ref = containerInstanceArn_;
@@ -745,7 +767,9 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       }
     }
     /**
-     * <code>string container_instance_arn = 1;</code>
+     * <code>string container_instance_arn = 1[json_name = "containerInstanceArn"];</code>
+     * @param value The containerInstanceArn to set.
+     * @return This builder for chaining.
      */
     public Builder setContainerInstanceArn(java.lang.String value) {
       if (value == null) {
@@ -757,7 +781,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       return this;
     }
     /**
-     * <code>string container_instance_arn = 1;</code>
+     * <code>string container_instance_arn = 1[json_name = "containerInstanceArn"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearContainerInstanceArn() {
       containerInstanceArn_ = getDefaultInstance().getContainerInstanceArn();
@@ -765,7 +790,9 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       return this;
     }
     /**
-     * <code>string container_instance_arn = 1;</code>
+     * <code>string container_instance_arn = 1[json_name = "containerInstanceArn"];</code>
+     * @param value The bytes for containerInstanceArn to set.
+     * @return This builder for chaining.
      */
     public Builder setContainerInstanceArnBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -780,7 +807,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
 
     private java.lang.Object clusterArn_ = "";
     /**
-     * <code>string cluster_arn = 2;</code>
+     * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+     * @return The clusterArn.
      */
     public java.lang.String getClusterArn() {
       java.lang.Object ref = clusterArn_;
@@ -794,7 +822,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       }
     }
     /**
-     * <code>string cluster_arn = 2;</code>
+     * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+     * @return The bytes for clusterArn.
      */
     public com.google.protobuf.ByteString getClusterArnBytes() {
       java.lang.Object ref = clusterArn_;
@@ -807,7 +836,9 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       }
     }
     /**
-     * <code>string cluster_arn = 2;</code>
+     * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+     * @param value The clusterArn to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterArn(java.lang.String value) {
       if (value == null) {
@@ -819,7 +850,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       return this;
     }
     /**
-     * <code>string cluster_arn = 2;</code>
+     * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterArn() {
       clusterArn_ = getDefaultInstance().getClusterArn();
@@ -827,7 +859,9 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       return this;
     }
     /**
-     * <code>string cluster_arn = 2;</code>
+     * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+     * @param value The bytes for clusterArn to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterArnBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -842,7 +876,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
 
     private java.lang.Object ec2InstanceId_ = "";
     /**
-     * <code>string ec2_instance_id = 3;</code>
+     * <code>string ec2_instance_id = 3[json_name = "ec2InstanceId"];</code>
+     * @return The ec2InstanceId.
      */
     public java.lang.String getEc2InstanceId() {
       java.lang.Object ref = ec2InstanceId_;
@@ -856,7 +891,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       }
     }
     /**
-     * <code>string ec2_instance_id = 3;</code>
+     * <code>string ec2_instance_id = 3[json_name = "ec2InstanceId"];</code>
+     * @return The bytes for ec2InstanceId.
      */
     public com.google.protobuf.ByteString getEc2InstanceIdBytes() {
       java.lang.Object ref = ec2InstanceId_;
@@ -869,7 +905,9 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       }
     }
     /**
-     * <code>string ec2_instance_id = 3;</code>
+     * <code>string ec2_instance_id = 3[json_name = "ec2InstanceId"];</code>
+     * @param value The ec2InstanceId to set.
+     * @return This builder for chaining.
      */
     public Builder setEc2InstanceId(java.lang.String value) {
       if (value == null) {
@@ -881,7 +919,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       return this;
     }
     /**
-     * <code>string ec2_instance_id = 3;</code>
+     * <code>string ec2_instance_id = 3[json_name = "ec2InstanceId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearEc2InstanceId() {
       ec2InstanceId_ = getDefaultInstance().getEc2InstanceId();
@@ -889,7 +928,9 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       return this;
     }
     /**
-     * <code>string ec2_instance_id = 3;</code>
+     * <code>string ec2_instance_id = 3[json_name = "ec2InstanceId"];</code>
+     * @param value The bytes for ec2InstanceId to set.
+     * @return This builder for chaining.
      */
     public Builder setEc2InstanceIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -904,7 +945,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
 
     private java.lang.Object operatingSystem_ = "";
     /**
-     * <code>string operating_system = 4;</code>
+     * <code>string operating_system = 4[json_name = "operatingSystem"];</code>
+     * @return The operatingSystem.
      */
     public java.lang.String getOperatingSystem() {
       java.lang.Object ref = operatingSystem_;
@@ -918,7 +960,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       }
     }
     /**
-     * <code>string operating_system = 4;</code>
+     * <code>string operating_system = 4[json_name = "operatingSystem"];</code>
+     * @return The bytes for operatingSystem.
      */
     public com.google.protobuf.ByteString getOperatingSystemBytes() {
       java.lang.Object ref = operatingSystem_;
@@ -931,7 +974,9 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       }
     }
     /**
-     * <code>string operating_system = 4;</code>
+     * <code>string operating_system = 4[json_name = "operatingSystem"];</code>
+     * @param value The operatingSystem to set.
+     * @return This builder for chaining.
      */
     public Builder setOperatingSystem(java.lang.String value) {
       if (value == null) {
@@ -943,7 +988,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       return this;
     }
     /**
-     * <code>string operating_system = 4;</code>
+     * <code>string operating_system = 4[json_name = "operatingSystem"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearOperatingSystem() {
       operatingSystem_ = getDefaultInstance().getOperatingSystem();
@@ -951,7 +997,9 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       return this;
     }
     /**
-     * <code>string operating_system = 4;</code>
+     * <code>string operating_system = 4[json_name = "operatingSystem"];</code>
+     * @param value The bytes for operatingSystem to set.
+     * @return This builder for chaining.
      */
     public Builder setOperatingSystemBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -966,7 +1014,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
 
     private java.lang.Object region_ = "";
     /**
-     * <code>string region = 5;</code>
+     * <code>string region = 5[json_name = "region"];</code>
+     * @return The region.
      */
     public java.lang.String getRegion() {
       java.lang.Object ref = region_;
@@ -980,7 +1029,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       }
     }
     /**
-     * <code>string region = 5;</code>
+     * <code>string region = 5[json_name = "region"];</code>
+     * @return The bytes for region.
      */
     public com.google.protobuf.ByteString getRegionBytes() {
       java.lang.Object ref = region_;
@@ -993,7 +1043,9 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       }
     }
     /**
-     * <code>string region = 5;</code>
+     * <code>string region = 5[json_name = "region"];</code>
+     * @param value The region to set.
+     * @return This builder for chaining.
      */
     public Builder setRegion(java.lang.String value) {
       if (value == null) {
@@ -1005,7 +1057,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       return this;
     }
     /**
-     * <code>string region = 5;</code>
+     * <code>string region = 5[json_name = "region"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearRegion() {
       region_ = getDefaultInstance().getRegion();
@@ -1013,7 +1066,9 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       return this;
     }
     /**
-     * <code>string region = 5;</code>
+     * <code>string region = 5[json_name = "region"];</code>
+     * @param value The bytes for region to set.
+     * @return This builder for chaining.
      */
     public Builder setRegionBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1028,7 +1083,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <code>string cluster_id = 6;</code>
+     * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -1042,7 +1098,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       }
     }
     /**
-     * <code>string cluster_id = 6;</code>
+     * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -1055,7 +1112,9 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       }
     }
     /**
-     * <code>string cluster_id = 6;</code>
+     * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -1067,7 +1126,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       return this;
     }
     /**
-     * <code>string cluster_id = 6;</code>
+     * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -1075,7 +1135,9 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       return this;
     }
     /**
-     * <code>string cluster_id = 6;</code>
+     * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1090,7 +1152,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
 
     private java.lang.Object settingId_ = "";
     /**
-     * <code>string setting_id = 7;</code>
+     * <code>string setting_id = 7[json_name = "settingId"];</code>
+     * @return The settingId.
      */
     public java.lang.String getSettingId() {
       java.lang.Object ref = settingId_;
@@ -1104,7 +1167,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       }
     }
     /**
-     * <code>string setting_id = 7;</code>
+     * <code>string setting_id = 7[json_name = "settingId"];</code>
+     * @return The bytes for settingId.
      */
     public com.google.protobuf.ByteString getSettingIdBytes() {
       java.lang.Object ref = settingId_;
@@ -1117,7 +1181,9 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       }
     }
     /**
-     * <code>string setting_id = 7;</code>
+     * <code>string setting_id = 7[json_name = "settingId"];</code>
+     * @param value The settingId to set.
+     * @return This builder for chaining.
      */
     public Builder setSettingId(java.lang.String value) {
       if (value == null) {
@@ -1129,7 +1195,8 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       return this;
     }
     /**
-     * <code>string setting_id = 7;</code>
+     * <code>string setting_id = 7[json_name = "settingId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearSettingId() {
       settingId_ = getDefaultInstance().getSettingId();
@@ -1137,7 +1204,9 @@ public final class EcsContainerInstanceDescription extends com.google.protobuf.G
       return this;
     }
     /**
-     * <code>string setting_id = 7;</code>
+     * <code>string setting_id = 7[json_name = "settingId"];</code>
+     * @param value The bytes for settingId to set.
+     * @return This builder for chaining.
      */
     public Builder setSettingIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

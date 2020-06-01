@@ -8,28 +8,32 @@ public interface DeletePerpetualTaskRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.DeletePerpetualTaskRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+   * @return Whether the accountId field is set.
    */
   boolean hasAccountId();
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+   * @return The accountId.
    */
   io.harness.delegate.AccountId getAccountId();
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
    */
   io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder();
 
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2[json_name = "perpetualTaskId"];</code>
+   * @return Whether the perpetualTaskId field is set.
    */
   boolean hasPerpetualTaskId();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2[json_name = "perpetualTaskId"];</code>
+   * @return The perpetualTaskId.
    */
   io.harness.perpetualtask.PerpetualTaskId getPerpetualTaskId();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2[json_name = "perpetualTaskId"];</code>
    */
   io.harness.perpetualtask.PerpetualTaskIdOrBuilder getPerpetualTaskIdOrBuilder();
 }

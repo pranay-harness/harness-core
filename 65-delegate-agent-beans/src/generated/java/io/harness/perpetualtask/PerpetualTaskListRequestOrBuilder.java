@@ -8,15 +8,17 @@ public interface PerpetualTaskListRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.PerpetualTaskListRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+   * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
+   * @return Whether the delegateId field is set.
    */
   boolean hasDelegateId();
   /**
-   * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+   * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
+   * @return The delegateId.
    */
   io.harness.delegate.DelegateId getDelegateId();
   /**
-   * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+   * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
    */
   io.harness.delegate.DelegateIdOrBuilder getDelegateIdOrBuilder();
 }

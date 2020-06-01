@@ -9,16 +9,19 @@ public interface ArtifactCollectionTaskParamsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string artifact_stream_id = 1;</code>
+   * <code>string artifact_stream_id = 1[json_name = "artifactStreamId"];</code>
+   * @return The artifactStreamId.
    */
   java.lang.String getArtifactStreamId();
   /**
-   * <code>string artifact_stream_id = 1;</code>
+   * <code>string artifact_stream_id = 1[json_name = "artifactStreamId"];</code>
+   * @return The bytes for artifactStreamId.
    */
   com.google.protobuf.ByteString getArtifactStreamIdBytes();
 
   /**
-   * <code>bytes build_source_params = 2;</code>
+   * <code>bytes build_source_params = 2[json_name = "buildSourceParams"];</code>
+   * @return The buildSourceParams.
    */
   com.google.protobuf.ByteString getBuildSourceParams();
 }

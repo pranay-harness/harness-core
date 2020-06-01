@@ -19,6 +19,13 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new Resource();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -109,16 +116,19 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.k8s.watch.Resource.Quantity)
       com.google.protobuf.MessageOrBuilder {
     /**
-     * <code>int64 amount = 1;</code>
+     * <code>int64 amount = 1[json_name = "amount"];</code>
+     * @return The amount.
      */
     long getAmount();
 
     /**
-     * <code>string unit = 2;</code>
+     * <code>string unit = 2[json_name = "unit"];</code>
+     * @return The unit.
      */
     java.lang.String getUnit();
     /**
-     * <code>string unit = 2;</code>
+     * <code>string unit = 2[json_name = "unit"];</code>
+     * @return The bytes for unit.
      */
     com.google.protobuf.ByteString getUnitBytes();
   }
@@ -139,6 +149,13 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
 
     @java.
     lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+      return new Quantity();
+    }
+
+    @java.
+    lang.Override
     public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
@@ -149,7 +166,6 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       if (extensionRegistry == null) {
         throw new java.lang.NullPointerException();
       }
-      int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
         boolean done = false;
@@ -203,7 +219,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
     public static final int AMOUNT_FIELD_NUMBER = 1;
     private long amount_;
     /**
-     * <code>int64 amount = 1;</code>
+     * <code>int64 amount = 1[json_name = "amount"];</code>
+     * @return The amount.
      */
     public long getAmount() {
       return amount_;
@@ -212,7 +229,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
     public static final int UNIT_FIELD_NUMBER = 2;
     private volatile java.lang.Object unit_;
     /**
-     * <code>string unit = 2;</code>
+     * <code>string unit = 2[json_name = "unit"];</code>
+     * @return The unit.
      */
     public java.lang.String getUnit() {
       java.lang.Object ref = unit_;
@@ -226,7 +244,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string unit = 2;</code>
+     * <code>string unit = 2[json_name = "unit"];</code>
+     * @return The bytes for unit.
      */
     public com.google.protobuf.ByteString getUnitBytes() {
       java.lang.Object ref = unit_;
@@ -541,13 +560,16 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
 
       private long amount_;
       /**
-       * <code>int64 amount = 1;</code>
+       * <code>int64 amount = 1[json_name = "amount"];</code>
+       * @return The amount.
        */
       public long getAmount() {
         return amount_;
       }
       /**
-       * <code>int64 amount = 1;</code>
+       * <code>int64 amount = 1[json_name = "amount"];</code>
+       * @param value The amount to set.
+       * @return This builder for chaining.
        */
       public Builder setAmount(long value) {
         amount_ = value;
@@ -555,7 +577,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
         return this;
       }
       /**
-       * <code>int64 amount = 1;</code>
+       * <code>int64 amount = 1[json_name = "amount"];</code>
+       * @return This builder for chaining.
        */
       public Builder clearAmount() {
         amount_ = 0L;
@@ -565,7 +588,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
 
       private java.lang.Object unit_ = "";
       /**
-       * <code>string unit = 2;</code>
+       * <code>string unit = 2[json_name = "unit"];</code>
+       * @return The unit.
        */
       public java.lang.String getUnit() {
         java.lang.Object ref = unit_;
@@ -579,7 +603,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
         }
       }
       /**
-       * <code>string unit = 2;</code>
+       * <code>string unit = 2[json_name = "unit"];</code>
+       * @return The bytes for unit.
        */
       public com.google.protobuf.ByteString getUnitBytes() {
         java.lang.Object ref = unit_;
@@ -592,7 +617,9 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
         }
       }
       /**
-       * <code>string unit = 2;</code>
+       * <code>string unit = 2[json_name = "unit"];</code>
+       * @param value The unit to set.
+       * @return This builder for chaining.
        */
       public Builder setUnit(java.lang.String value) {
         if (value == null) {
@@ -604,7 +631,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
         return this;
       }
       /**
-       * <code>string unit = 2;</code>
+       * <code>string unit = 2[json_name = "unit"];</code>
+       * @return This builder for chaining.
        */
       public Builder clearUnit() {
         unit_ = getDefaultInstance().getUnit();
@@ -612,7 +640,9 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
         return this;
       }
       /**
-       * <code>string unit = 2;</code>
+       * <code>string unit = 2[json_name = "unit"];</code>
+       * @param value The bytes for unit to set.
+       * @return This builder for chaining.
        */
       public Builder setUnitBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -699,7 +729,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
     return internalGetRequests().getMap().size();
   }
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1[json_name =
+   * "requests"];</code>
    */
 
   public boolean containsRequests(java.lang.String key) {
@@ -717,14 +748,16 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
     return getRequestsMap();
   }
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1[json_name =
+   * "requests"];</code>
    */
 
   public java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> getRequestsMap() {
     return internalGetRequests().getMap();
   }
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1[json_name =
+   * "requests"];</code>
    */
 
   public io.harness.perpetualtask.k8s.watch.Resource.Quantity getRequestsOrDefault(
@@ -737,7 +770,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1[json_name =
+   * "requests"];</code>
    */
 
   public io.harness.perpetualtask.k8s.watch.Resource.Quantity getRequestsOrThrow(java.lang.String key) {
@@ -776,7 +810,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
     return internalGetLimits().getMap().size();
   }
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2[json_name =
+   * "limits"];</code>
    */
 
   public boolean containsLimits(java.lang.String key) {
@@ -794,14 +829,16 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
     return getLimitsMap();
   }
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2[json_name =
+   * "limits"];</code>
    */
 
   public java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> getLimitsMap() {
     return internalGetLimits().getMap();
   }
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2[json_name =
+   * "limits"];</code>
    */
 
   public io.harness.perpetualtask.k8s.watch.Resource.Quantity getLimitsOrDefault(
@@ -814,7 +851,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2[json_name =
+   * "limits"];</code>
    */
 
   public io.harness.perpetualtask.k8s.watch.Resource.Quantity getLimitsOrThrow(java.lang.String key) {
@@ -1185,7 +1223,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       return internalGetRequests().getMap().size();
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1[json_name =
+     * "requests"];</code>
      */
 
     public boolean containsRequests(java.lang.String key) {
@@ -1203,14 +1242,16 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       return getRequestsMap();
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1[json_name =
+     * "requests"];</code>
      */
 
     public java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> getRequestsMap() {
       return internalGetRequests().getMap();
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1[json_name =
+     * "requests"];</code>
      */
 
     public io.harness.perpetualtask.k8s.watch.Resource.Quantity getRequestsOrDefault(
@@ -1223,7 +1264,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1[json_name =
+     * "requests"];</code>
      */
 
     public io.harness.perpetualtask.k8s.watch.Resource.Quantity getRequestsOrThrow(java.lang.String key) {
@@ -1243,7 +1285,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1[json_name =
+     * "requests"];</code>
      */
 
     public Builder removeRequests(java.lang.String key) {
@@ -1262,7 +1305,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       return internalGetMutableRequests().getMutableMap();
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1[json_name =
+     * "requests"];</code>
      */
     public Builder putRequests(java.lang.String key, io.harness.perpetualtask.k8s.watch.Resource.Quantity value) {
       if (key == null) {
@@ -1275,7 +1319,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; requests = 1[json_name =
+     * "requests"];</code>
      */
 
     public Builder putAllRequests(
@@ -1310,7 +1355,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       return internalGetLimits().getMap().size();
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2[json_name =
+     * "limits"];</code>
      */
 
     public boolean containsLimits(java.lang.String key) {
@@ -1328,14 +1374,16 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       return getLimitsMap();
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2[json_name =
+     * "limits"];</code>
      */
 
     public java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity> getLimitsMap() {
       return internalGetLimits().getMap();
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2[json_name =
+     * "limits"];</code>
      */
 
     public io.harness.perpetualtask.k8s.watch.Resource.Quantity getLimitsOrDefault(
@@ -1348,7 +1396,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2[json_name =
+     * "limits"];</code>
      */
 
     public io.harness.perpetualtask.k8s.watch.Resource.Quantity getLimitsOrThrow(java.lang.String key) {
@@ -1368,7 +1417,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2[json_name =
+     * "limits"];</code>
      */
 
     public Builder removeLimits(java.lang.String key) {
@@ -1387,7 +1437,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       return internalGetMutableLimits().getMutableMap();
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2[json_name =
+     * "limits"];</code>
      */
     public Builder putLimits(java.lang.String key, io.harness.perpetualtask.k8s.watch.Resource.Quantity value) {
       if (key == null) {
@@ -1400,7 +1451,8 @@ public final class Resource extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; limits = 2[json_name =
+     * "limits"];</code>
      */
 
     public Builder putAllLimits(

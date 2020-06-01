@@ -8,60 +8,72 @@ public interface PodEventOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.k8s.watch.PodEvent)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string cloud_provider_id = 2;</code>
+   * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   java.lang.String getCloudProviderId();
   /**
-   * <code>string cloud_provider_id = 2;</code>
+   * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   com.google.protobuf.ByteString getCloudProviderIdBytes();
 
   /**
-   * <code>string pod_uid = 3;</code>
+   * <code>string pod_uid = 3[json_name = "podUid"];</code>
+   * @return The podUid.
    */
   java.lang.String getPodUid();
   /**
-   * <code>string pod_uid = 3;</code>
+   * <code>string pod_uid = 3[json_name = "podUid"];</code>
+   * @return The bytes for podUid.
    */
   com.google.protobuf.ByteString getPodUidBytes();
 
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.PodEvent.EventType type = 4;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.PodEvent.EventType type = 4[json_name = "type"];</code>
+   * @return The enum numeric value on the wire for type.
    */
   int getTypeValue();
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.PodEvent.EventType type = 4;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.PodEvent.EventType type = 4[json_name = "type"];</code>
+   * @return The type.
    */
   io.harness.perpetualtask.k8s.watch.PodEvent.EventType getType();
 
   /**
-   * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+   * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
+   * @return Whether the timestamp field is set.
    */
   boolean hasTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+   * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
+   * @return The timestamp.
    */
   com.google.protobuf.Timestamp getTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+   * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
    */
   com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder();
 
   /**
-   * <code>string cluster_id = 6;</code>
+   * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   java.lang.String getClusterId();
   /**
-   * <code>string cluster_id = 6;</code>
+   * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   com.google.protobuf.ByteString getClusterIdBytes();
 
   /**
-   * <code>string kube_system_uid = 7;</code>
+   * <code>string kube_system_uid = 7[json_name = "kubeSystemUid"];</code>
+   * @return The kubeSystemUid.
    */
   java.lang.String getKubeSystemUid();
   /**
-   * <code>string kube_system_uid = 7;</code>
+   * <code>string kube_system_uid = 7[json_name = "kubeSystemUid"];</code>
+   * @return The bytes for kubeSystemUid.
    */
   com.google.protobuf.ByteString getKubeSystemUidBytes();
 }

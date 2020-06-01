@@ -4,11 +4,6 @@
 package io.harness.delegate;
 
 /**
- * <pre>
- * Represents a map of arbitrary key and value pairs that make sense on the task setup level They are pass through for
- * the delegate system
- * </pre>
- *
  * Protobuf type {@code io.harness.delegate.TaskSetupAbstractions}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:TaskSetupAbstractions.java.pb.meta")
@@ -21,6 +16,13 @@ public final class TaskSetupAbstractions extends com.google.protobuf.GeneratedMe
     super(builder);
   }
   private TaskSetupAbstractions() {}
+
+  @java.
+  lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new TaskSetupAbstractions();
+  }
 
   @java.
   lang.Override
@@ -113,7 +115,7 @@ public final class TaskSetupAbstractions extends com.google.protobuf.GeneratedMe
     return internalGetValues().getMap().size();
   }
   /**
-   * <code>map&lt;string, string&gt; values = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
    */
 
   public boolean containsValues(java.lang.String key) {
@@ -131,14 +133,14 @@ public final class TaskSetupAbstractions extends com.google.protobuf.GeneratedMe
     return getValuesMap();
   }
   /**
-   * <code>map&lt;string, string&gt; values = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
    */
 
   public java.util.Map<java.lang.String, java.lang.String> getValuesMap() {
     return internalGetValues().getMap();
   }
   /**
-   * <code>map&lt;string, string&gt; values = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
    */
 
   public java.lang.String getValuesOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -149,7 +151,7 @@ public final class TaskSetupAbstractions extends com.google.protobuf.GeneratedMe
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
   /**
-   * <code>map&lt;string, string&gt; values = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
    */
 
   public java.lang.String getValuesOrThrow(java.lang.String key) {
@@ -309,11 +311,6 @@ public final class TaskSetupAbstractions extends com.google.protobuf.GeneratedMe
     return builder;
   }
   /**
-   * <pre>
-   * Represents a map of arbitrary key and value pairs that make sense on the task setup level They are pass through for
-   * the delegate system
-   * </pre>
-   *
    * Protobuf type {@code io.harness.delegate.TaskSetupAbstractions}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
@@ -492,7 +489,7 @@ public final class TaskSetupAbstractions extends com.google.protobuf.GeneratedMe
       return internalGetValues().getMap().size();
     }
     /**
-     * <code>map&lt;string, string&gt; values = 1;</code>
+     * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
      */
 
     public boolean containsValues(java.lang.String key) {
@@ -510,14 +507,14 @@ public final class TaskSetupAbstractions extends com.google.protobuf.GeneratedMe
       return getValuesMap();
     }
     /**
-     * <code>map&lt;string, string&gt; values = 1;</code>
+     * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
      */
 
     public java.util.Map<java.lang.String, java.lang.String> getValuesMap() {
       return internalGetValues().getMap();
     }
     /**
-     * <code>map&lt;string, string&gt; values = 1;</code>
+     * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
      */
 
     public java.lang.String getValuesOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -528,7 +525,7 @@ public final class TaskSetupAbstractions extends com.google.protobuf.GeneratedMe
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, string&gt; values = 1;</code>
+     * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
      */
 
     public java.lang.String getValuesOrThrow(java.lang.String key) {
@@ -547,7 +544,7 @@ public final class TaskSetupAbstractions extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
-     * <code>map&lt;string, string&gt; values = 1;</code>
+     * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
      */
 
     public Builder removeValues(java.lang.String key) {
@@ -566,7 +563,7 @@ public final class TaskSetupAbstractions extends com.google.protobuf.GeneratedMe
       return internalGetMutableValues().getMutableMap();
     }
     /**
-     * <code>map&lt;string, string&gt; values = 1;</code>
+     * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
      */
     public Builder putValues(java.lang.String key, java.lang.String value) {
       if (key == null) {
@@ -579,7 +576,7 @@ public final class TaskSetupAbstractions extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
-     * <code>map&lt;string, string&gt; values = 1;</code>
+     * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
      */
 
     public Builder putAllValues(java.util.Map<java.lang.String, java.lang.String> values) {

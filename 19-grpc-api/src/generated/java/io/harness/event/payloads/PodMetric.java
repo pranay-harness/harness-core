@@ -25,6 +25,13 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new PodMetric();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -35,7 +42,6 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -147,7 +153,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int CLOUD_PROVIDER_ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object cloudProviderId_;
   /**
-   * <code>string cloud_provider_id = 1;</code>
+   * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   public java.lang.String getCloudProviderId() {
     java.lang.Object ref = cloudProviderId_;
@@ -161,7 +168,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
     }
   }
   /**
-   * <code>string cloud_provider_id = 1;</code>
+   * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   public com.google.protobuf.ByteString getCloudProviderIdBytes() {
     java.lang.Object ref = cloudProviderId_;
@@ -177,7 +185,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int NAME_FIELD_NUMBER = 2;
   private volatile java.lang.Object name_;
   /**
-   * <code>string name = 2;</code>
+   * <code>string name = 2[json_name = "name"];</code>
+   * @return The name.
    */
   public java.lang.String getName() {
     java.lang.Object ref = name_;
@@ -191,7 +200,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
     }
   }
   /**
-   * <code>string name = 2;</code>
+   * <code>string name = 2[json_name = "name"];</code>
+   * @return The bytes for name.
    */
   public com.google.protobuf.ByteString getNameBytes() {
     java.lang.Object ref = name_;
@@ -207,7 +217,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int NAMESPACE_FIELD_NUMBER = 3;
   private volatile java.lang.Object namespace_;
   /**
-   * <code>string namespace = 3;</code>
+   * <code>string namespace = 3[json_name = "namespace"];</code>
+   * @return The namespace.
    */
   public java.lang.String getNamespace() {
     java.lang.Object ref = namespace_;
@@ -221,7 +232,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
     }
   }
   /**
-   * <code>string namespace = 3;</code>
+   * <code>string namespace = 3[json_name = "namespace"];</code>
+   * @return The bytes for namespace.
    */
   public com.google.protobuf.ByteString getNamespaceBytes() {
     java.lang.Object ref = namespace_;
@@ -237,19 +249,21 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int TIMESTAMP_FIELD_NUMBER = 4;
   private com.google.protobuf.Timestamp timestamp_;
   /**
-   * <code>.google.protobuf.Timestamp timestamp = 4;</code>
+   * <code>.google.protobuf.Timestamp timestamp = 4[json_name = "timestamp"];</code>
+   * @return Whether the timestamp field is set.
    */
   public boolean hasTimestamp() {
     return timestamp_ != null;
   }
   /**
-   * <code>.google.protobuf.Timestamp timestamp = 4;</code>
+   * <code>.google.protobuf.Timestamp timestamp = 4[json_name = "timestamp"];</code>
+   * @return The timestamp.
    */
   public com.google.protobuf.Timestamp getTimestamp() {
     return timestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
   }
   /**
-   * <code>.google.protobuf.Timestamp timestamp = 4;</code>
+   * <code>.google.protobuf.Timestamp timestamp = 4[json_name = "timestamp"];</code>
    */
   public com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder() {
     return getTimestamp();
@@ -258,19 +272,21 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int WINDOW_FIELD_NUMBER = 5;
   private com.google.protobuf.Duration window_;
   /**
-   * <code>.google.protobuf.Duration window = 5;</code>
+   * <code>.google.protobuf.Duration window = 5[json_name = "window"];</code>
+   * @return Whether the window field is set.
    */
   public boolean hasWindow() {
     return window_ != null;
   }
   /**
-   * <code>.google.protobuf.Duration window = 5;</code>
+   * <code>.google.protobuf.Duration window = 5[json_name = "window"];</code>
+   * @return The window.
    */
   public com.google.protobuf.Duration getWindow() {
     return window_ == null ? com.google.protobuf.Duration.getDefaultInstance() : window_;
   }
   /**
-   * <code>.google.protobuf.Duration window = 5;</code>
+   * <code>.google.protobuf.Duration window = 5[json_name = "window"];</code>
    */
   public com.google.protobuf.DurationOrBuilder getWindowOrBuilder() {
     return getWindow();
@@ -279,7 +295,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int CLUSTER_ID_FIELD_NUMBER = 7;
   private volatile java.lang.Object clusterId_;
   /**
-   * <code>string cluster_id = 7;</code>
+   * <code>string cluster_id = 7[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -293,7 +310,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
     }
   }
   /**
-   * <code>string cluster_id = 7;</code>
+   * <code>string cluster_id = 7[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -309,7 +327,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int KUBE_SYSTEM_UID_FIELD_NUMBER = 8;
   private volatile java.lang.Object kubeSystemUid_;
   /**
-   * <code>string kube_system_uid = 8;</code>
+   * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+   * @return The kubeSystemUid.
    */
   public java.lang.String getKubeSystemUid() {
     java.lang.Object ref = kubeSystemUid_;
@@ -323,7 +342,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
     }
   }
   /**
-   * <code>string kube_system_uid = 8;</code>
+   * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+   * @return The bytes for kubeSystemUid.
    */
   public com.google.protobuf.ByteString getKubeSystemUidBytes() {
     java.lang.Object ref = kubeSystemUid_;
@@ -339,19 +359,21 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int AGGREGATED_USAGE_FIELD_NUMBER = 9;
   private io.harness.event.payloads.AggregatedUsage aggregatedUsage_;
   /**
-   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9[json_name = "aggregatedUsage"];</code>
+   * @return Whether the aggregatedUsage field is set.
    */
   public boolean hasAggregatedUsage() {
     return aggregatedUsage_ != null;
   }
   /**
-   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9[json_name = "aggregatedUsage"];</code>
+   * @return The aggregatedUsage.
    */
   public io.harness.event.payloads.AggregatedUsage getAggregatedUsage() {
     return aggregatedUsage_ == null ? io.harness.event.payloads.AggregatedUsage.getDefaultInstance() : aggregatedUsage_;
   }
   /**
-   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+   * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9[json_name = "aggregatedUsage"];</code>
    */
   public io.harness.event.payloads.AggregatedUsageOrBuilder getAggregatedUsageOrBuilder() {
     return getAggregatedUsage();
@@ -796,7 +818,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
 
     private java.lang.Object cloudProviderId_ = "";
     /**
-     * <code>string cloud_provider_id = 1;</code>
+     * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+     * @return The cloudProviderId.
      */
     public java.lang.String getCloudProviderId() {
       java.lang.Object ref = cloudProviderId_;
@@ -810,7 +833,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string cloud_provider_id = 1;</code>
+     * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+     * @return The bytes for cloudProviderId.
      */
     public com.google.protobuf.ByteString getCloudProviderIdBytes() {
       java.lang.Object ref = cloudProviderId_;
@@ -823,7 +847,9 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string cloud_provider_id = 1;</code>
+     * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+     * @param value The cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderId(java.lang.String value) {
       if (value == null) {
@@ -835,7 +861,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 1;</code>
+     * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCloudProviderId() {
       cloudProviderId_ = getDefaultInstance().getCloudProviderId();
@@ -843,7 +870,9 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 1;</code>
+     * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+     * @param value The bytes for cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -858,7 +887,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
 
     private java.lang.Object name_ = "";
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @return The name.
      */
     public java.lang.String getName() {
       java.lang.Object ref = name_;
@@ -872,7 +902,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @return The bytes for name.
      */
     public com.google.protobuf.ByteString getNameBytes() {
       java.lang.Object ref = name_;
@@ -885,7 +916,9 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @param value The name to set.
+     * @return This builder for chaining.
      */
     public Builder setName(java.lang.String value) {
       if (value == null) {
@@ -897,7 +930,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearName() {
       name_ = getDefaultInstance().getName();
@@ -905,7 +939,9 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @param value The bytes for name to set.
+     * @return This builder for chaining.
      */
     public Builder setNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -920,7 +956,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
 
     private java.lang.Object namespace_ = "";
     /**
-     * <code>string namespace = 3;</code>
+     * <code>string namespace = 3[json_name = "namespace"];</code>
+     * @return The namespace.
      */
     public java.lang.String getNamespace() {
       java.lang.Object ref = namespace_;
@@ -934,7 +971,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string namespace = 3;</code>
+     * <code>string namespace = 3[json_name = "namespace"];</code>
+     * @return The bytes for namespace.
      */
     public com.google.protobuf.ByteString getNamespaceBytes() {
       java.lang.Object ref = namespace_;
@@ -947,7 +985,9 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string namespace = 3;</code>
+     * <code>string namespace = 3[json_name = "namespace"];</code>
+     * @param value The namespace to set.
+     * @return This builder for chaining.
      */
     public Builder setNamespace(java.lang.String value) {
       if (value == null) {
@@ -959,7 +999,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string namespace = 3;</code>
+     * <code>string namespace = 3[json_name = "namespace"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearNamespace() {
       namespace_ = getDefaultInstance().getNamespace();
@@ -967,7 +1008,9 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string namespace = 3;</code>
+     * <code>string namespace = 3[json_name = "namespace"];</code>
+     * @param value The bytes for namespace to set.
+     * @return This builder for chaining.
      */
     public Builder setNamespaceBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -984,13 +1027,15 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> timestampBuilder_;
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 4;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 4[json_name = "timestamp"];</code>
+     * @return Whether the timestamp field is set.
      */
     public boolean hasTimestamp() {
       return timestampBuilder_ != null || timestamp_ != null;
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 4;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 4[json_name = "timestamp"];</code>
+     * @return The timestamp.
      */
     public com.google.protobuf.Timestamp getTimestamp() {
       if (timestampBuilder_ == null) {
@@ -1000,7 +1045,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 4;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 4[json_name = "timestamp"];</code>
      */
     public Builder setTimestamp(com.google.protobuf.Timestamp value) {
       if (timestampBuilder_ == null) {
@@ -1016,7 +1061,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 4;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 4[json_name = "timestamp"];</code>
      */
     public Builder setTimestamp(com.google.protobuf.Timestamp.Builder builderForValue) {
       if (timestampBuilder_ == null) {
@@ -1029,7 +1074,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 4;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 4[json_name = "timestamp"];</code>
      */
     public Builder mergeTimestamp(com.google.protobuf.Timestamp value) {
       if (timestampBuilder_ == null) {
@@ -1046,7 +1091,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 4;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 4[json_name = "timestamp"];</code>
      */
     public Builder clearTimestamp() {
       if (timestampBuilder_ == null) {
@@ -1060,14 +1105,14 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 4;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 4[json_name = "timestamp"];</code>
      */
     public com.google.protobuf.Timestamp.Builder getTimestampBuilder() {
       onChanged();
       return getTimestampFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 4;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 4[json_name = "timestamp"];</code>
      */
     public com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder() {
       if (timestampBuilder_ != null) {
@@ -1077,7 +1122,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 4;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 4[json_name = "timestamp"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>
@@ -1095,13 +1140,15 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Duration, com.google.protobuf.Duration.Builder,
         com.google.protobuf.DurationOrBuilder> windowBuilder_;
     /**
-     * <code>.google.protobuf.Duration window = 5;</code>
+     * <code>.google.protobuf.Duration window = 5[json_name = "window"];</code>
+     * @return Whether the window field is set.
      */
     public boolean hasWindow() {
       return windowBuilder_ != null || window_ != null;
     }
     /**
-     * <code>.google.protobuf.Duration window = 5;</code>
+     * <code>.google.protobuf.Duration window = 5[json_name = "window"];</code>
+     * @return The window.
      */
     public com.google.protobuf.Duration getWindow() {
       if (windowBuilder_ == null) {
@@ -1111,7 +1158,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>.google.protobuf.Duration window = 5;</code>
+     * <code>.google.protobuf.Duration window = 5[json_name = "window"];</code>
      */
     public Builder setWindow(com.google.protobuf.Duration value) {
       if (windowBuilder_ == null) {
@@ -1127,7 +1174,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.google.protobuf.Duration window = 5;</code>
+     * <code>.google.protobuf.Duration window = 5[json_name = "window"];</code>
      */
     public Builder setWindow(com.google.protobuf.Duration.Builder builderForValue) {
       if (windowBuilder_ == null) {
@@ -1140,7 +1187,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.google.protobuf.Duration window = 5;</code>
+     * <code>.google.protobuf.Duration window = 5[json_name = "window"];</code>
      */
     public Builder mergeWindow(com.google.protobuf.Duration value) {
       if (windowBuilder_ == null) {
@@ -1157,7 +1204,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.google.protobuf.Duration window = 5;</code>
+     * <code>.google.protobuf.Duration window = 5[json_name = "window"];</code>
      */
     public Builder clearWindow() {
       if (windowBuilder_ == null) {
@@ -1171,14 +1218,14 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.google.protobuf.Duration window = 5;</code>
+     * <code>.google.protobuf.Duration window = 5[json_name = "window"];</code>
      */
     public com.google.protobuf.Duration.Builder getWindowBuilder() {
       onChanged();
       return getWindowFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Duration window = 5;</code>
+     * <code>.google.protobuf.Duration window = 5[json_name = "window"];</code>
      */
     public com.google.protobuf.DurationOrBuilder getWindowOrBuilder() {
       if (windowBuilder_ != null) {
@@ -1188,7 +1235,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>.google.protobuf.Duration window = 5;</code>
+     * <code>.google.protobuf.Duration window = 5[json_name = "window"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Duration, com.google.protobuf.Duration.Builder,
         com.google.protobuf.DurationOrBuilder>
@@ -1204,7 +1251,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <code>string cluster_id = 7;</code>
+     * <code>string cluster_id = 7[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -1218,7 +1266,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string cluster_id = 7;</code>
+     * <code>string cluster_id = 7[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -1231,7 +1280,9 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string cluster_id = 7;</code>
+     * <code>string cluster_id = 7[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -1243,7 +1294,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string cluster_id = 7;</code>
+     * <code>string cluster_id = 7[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -1251,7 +1303,9 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string cluster_id = 7;</code>
+     * <code>string cluster_id = 7[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1266,7 +1320,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
 
     private java.lang.Object kubeSystemUid_ = "";
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @return The kubeSystemUid.
      */
     public java.lang.String getKubeSystemUid() {
       java.lang.Object ref = kubeSystemUid_;
@@ -1280,7 +1335,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @return The bytes for kubeSystemUid.
      */
     public com.google.protobuf.ByteString getKubeSystemUidBytes() {
       java.lang.Object ref = kubeSystemUid_;
@@ -1293,7 +1349,9 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @param value The kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUid(java.lang.String value) {
       if (value == null) {
@@ -1305,7 +1363,8 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearKubeSystemUid() {
       kubeSystemUid_ = getDefaultInstance().getKubeSystemUid();
@@ -1313,7 +1372,9 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @param value The bytes for kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUidBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1331,13 +1392,15 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
         io.harness.event.payloads.AggregatedUsage.Builder, io.harness.event.payloads.AggregatedUsageOrBuilder>
         aggregatedUsageBuilder_;
     /**
-     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9[json_name = "aggregatedUsage"];</code>
+     * @return Whether the aggregatedUsage field is set.
      */
     public boolean hasAggregatedUsage() {
       return aggregatedUsageBuilder_ != null || aggregatedUsage_ != null;
     }
     /**
-     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9[json_name = "aggregatedUsage"];</code>
+     * @return The aggregatedUsage.
      */
     public io.harness.event.payloads.AggregatedUsage getAggregatedUsage() {
       if (aggregatedUsageBuilder_ == null) {
@@ -1348,7 +1411,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9[json_name = "aggregatedUsage"];</code>
      */
     public Builder setAggregatedUsage(io.harness.event.payloads.AggregatedUsage value) {
       if (aggregatedUsageBuilder_ == null) {
@@ -1364,7 +1427,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9[json_name = "aggregatedUsage"];</code>
      */
     public Builder setAggregatedUsage(io.harness.event.payloads.AggregatedUsage.Builder builderForValue) {
       if (aggregatedUsageBuilder_ == null) {
@@ -1377,7 +1440,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9[json_name = "aggregatedUsage"];</code>
      */
     public Builder mergeAggregatedUsage(io.harness.event.payloads.AggregatedUsage value) {
       if (aggregatedUsageBuilder_ == null) {
@@ -1395,7 +1458,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9[json_name = "aggregatedUsage"];</code>
      */
     public Builder clearAggregatedUsage() {
       if (aggregatedUsageBuilder_ == null) {
@@ -1409,14 +1472,14 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9[json_name = "aggregatedUsage"];</code>
      */
     public io.harness.event.payloads.AggregatedUsage.Builder getAggregatedUsageBuilder() {
       onChanged();
       return getAggregatedUsageFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9[json_name = "aggregatedUsage"];</code>
      */
     public io.harness.event.payloads.AggregatedUsageOrBuilder getAggregatedUsageOrBuilder() {
       if (aggregatedUsageBuilder_ != null) {
@@ -1427,7 +1490,7 @@ public final class PodMetric extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9;</code>
+     * <code>.io.harness.event.payloads.AggregatedUsage aggregated_usage = 9[json_name = "aggregatedUsage"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.AggregatedUsage,
         io.harness.event.payloads.AggregatedUsage.Builder, io.harness.event.payloads.AggregatedUsageOrBuilder>

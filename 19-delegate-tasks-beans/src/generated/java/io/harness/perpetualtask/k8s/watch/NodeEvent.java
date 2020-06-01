@@ -26,6 +26,13 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new NodeEvent();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -36,7 +43,6 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -166,6 +172,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -173,6 +181,10 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static EventType forNumber(int value) {
       switch (value) {
         case 0:
@@ -230,7 +242,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int CLOUD_PROVIDER_ID_FIELD_NUMBER = 2;
   private volatile java.lang.Object cloudProviderId_;
   /**
-   * <code>string cloud_provider_id = 2;</code>
+   * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   public java.lang.String getCloudProviderId() {
     java.lang.Object ref = cloudProviderId_;
@@ -244,7 +257,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     }
   }
   /**
-   * <code>string cloud_provider_id = 2;</code>
+   * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   public com.google.protobuf.ByteString getCloudProviderIdBytes() {
     java.lang.Object ref = cloudProviderId_;
@@ -260,7 +274,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int NODE_UID_FIELD_NUMBER = 3;
   private volatile java.lang.Object nodeUid_;
   /**
-   * <code>string node_uid = 3;</code>
+   * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+   * @return The nodeUid.
    */
   public java.lang.String getNodeUid() {
     java.lang.Object ref = nodeUid_;
@@ -274,7 +289,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     }
   }
   /**
-   * <code>string node_uid = 3;</code>
+   * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+   * @return The bytes for nodeUid.
    */
   public com.google.protobuf.ByteString getNodeUidBytes() {
     java.lang.Object ref = nodeUid_;
@@ -290,13 +306,15 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int TYPE_FIELD_NUMBER = 4;
   private int type_;
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.NodeEvent.EventType type = 4;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.NodeEvent.EventType type = 4[json_name = "type"];</code>
+   * @return The enum numeric value on the wire for type.
    */
   public int getTypeValue() {
     return type_;
   }
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.NodeEvent.EventType type = 4;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.NodeEvent.EventType type = 4[json_name = "type"];</code>
+   * @return The type.
    */
   public io.harness.perpetualtask.k8s.watch.NodeEvent.EventType getType() {
     @SuppressWarnings("deprecation")
@@ -308,19 +326,21 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int TIMESTAMP_FIELD_NUMBER = 5;
   private com.google.protobuf.Timestamp timestamp_;
   /**
-   * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+   * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
+   * @return Whether the timestamp field is set.
    */
   public boolean hasTimestamp() {
     return timestamp_ != null;
   }
   /**
-   * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+   * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
+   * @return The timestamp.
    */
   public com.google.protobuf.Timestamp getTimestamp() {
     return timestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
   }
   /**
-   * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+   * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
    */
   public com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder() {
     return getTimestamp();
@@ -329,7 +349,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int NODE_NAME_FIELD_NUMBER = 6;
   private volatile java.lang.Object nodeName_;
   /**
-   * <code>string node_name = 6;</code>
+   * <code>string node_name = 6[json_name = "nodeName"];</code>
+   * @return The nodeName.
    */
   public java.lang.String getNodeName() {
     java.lang.Object ref = nodeName_;
@@ -343,7 +364,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     }
   }
   /**
-   * <code>string node_name = 6;</code>
+   * <code>string node_name = 6[json_name = "nodeName"];</code>
+   * @return The bytes for nodeName.
    */
   public com.google.protobuf.ByteString getNodeNameBytes() {
     java.lang.Object ref = nodeName_;
@@ -359,7 +381,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int CLUSTER_ID_FIELD_NUMBER = 7;
   private volatile java.lang.Object clusterId_;
   /**
-   * <code>string cluster_id = 7;</code>
+   * <code>string cluster_id = 7[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -373,7 +396,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     }
   }
   /**
-   * <code>string cluster_id = 7;</code>
+   * <code>string cluster_id = 7[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -389,7 +413,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int KUBE_SYSTEM_UID_FIELD_NUMBER = 8;
   private volatile java.lang.Object kubeSystemUid_;
   /**
-   * <code>string kube_system_uid = 8;</code>
+   * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+   * @return The kubeSystemUid.
    */
   public java.lang.String getKubeSystemUid() {
     java.lang.Object ref = kubeSystemUid_;
@@ -403,7 +428,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     }
   }
   /**
-   * <code>string kube_system_uid = 8;</code>
+   * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+   * @return The bytes for kubeSystemUid.
    */
   public com.google.protobuf.ByteString getKubeSystemUidBytes() {
     java.lang.Object ref = kubeSystemUid_;
@@ -813,7 +839,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
 
     private java.lang.Object cloudProviderId_ = "";
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @return The cloudProviderId.
      */
     public java.lang.String getCloudProviderId() {
       java.lang.Object ref = cloudProviderId_;
@@ -827,7 +854,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @return The bytes for cloudProviderId.
      */
     public com.google.protobuf.ByteString getCloudProviderIdBytes() {
       java.lang.Object ref = cloudProviderId_;
@@ -840,7 +868,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @param value The cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderId(java.lang.String value) {
       if (value == null) {
@@ -852,7 +882,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCloudProviderId() {
       cloudProviderId_ = getDefaultInstance().getCloudProviderId();
@@ -860,7 +891,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @param value The bytes for cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -875,7 +908,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
 
     private java.lang.Object nodeUid_ = "";
     /**
-     * <code>string node_uid = 3;</code>
+     * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+     * @return The nodeUid.
      */
     public java.lang.String getNodeUid() {
       java.lang.Object ref = nodeUid_;
@@ -889,7 +923,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string node_uid = 3;</code>
+     * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+     * @return The bytes for nodeUid.
      */
     public com.google.protobuf.ByteString getNodeUidBytes() {
       java.lang.Object ref = nodeUid_;
@@ -902,7 +937,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string node_uid = 3;</code>
+     * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+     * @param value The nodeUid to set.
+     * @return This builder for chaining.
      */
     public Builder setNodeUid(java.lang.String value) {
       if (value == null) {
@@ -914,7 +951,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string node_uid = 3;</code>
+     * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearNodeUid() {
       nodeUid_ = getDefaultInstance().getNodeUid();
@@ -922,7 +960,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string node_uid = 3;</code>
+     * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+     * @param value The bytes for nodeUid to set.
+     * @return This builder for chaining.
      */
     public Builder setNodeUidBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -937,13 +977,16 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
 
     private int type_ = 0;
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.NodeEvent.EventType type = 4;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.NodeEvent.EventType type = 4[json_name = "type"];</code>
+     * @return The enum numeric value on the wire for type.
      */
     public int getTypeValue() {
       return type_;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.NodeEvent.EventType type = 4;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.NodeEvent.EventType type = 4[json_name = "type"];</code>
+     * @param value The enum numeric value on the wire for type to set.
+     * @return This builder for chaining.
      */
     public Builder setTypeValue(int value) {
       type_ = value;
@@ -951,7 +994,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.NodeEvent.EventType type = 4;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.NodeEvent.EventType type = 4[json_name = "type"];</code>
+     * @return The type.
      */
     public io.harness.perpetualtask.k8s.watch.NodeEvent.EventType getType() {
       @SuppressWarnings("deprecation")
@@ -960,7 +1004,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return result == null ? io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.UNRECOGNIZED : result;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.NodeEvent.EventType type = 4;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.NodeEvent.EventType type = 4[json_name = "type"];</code>
+     * @param value The type to set.
+     * @return This builder for chaining.
      */
     public Builder setType(io.harness.perpetualtask.k8s.watch.NodeEvent.EventType value) {
       if (value == null) {
@@ -972,7 +1018,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.NodeEvent.EventType type = 4;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.NodeEvent.EventType type = 4[json_name = "type"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearType() {
       type_ = 0;
@@ -984,13 +1031,15 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> timestampBuilder_;
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
+     * @return Whether the timestamp field is set.
      */
     public boolean hasTimestamp() {
       return timestampBuilder_ != null || timestamp_ != null;
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
+     * @return The timestamp.
      */
     public com.google.protobuf.Timestamp getTimestamp() {
       if (timestampBuilder_ == null) {
@@ -1000,7 +1049,7 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
      */
     public Builder setTimestamp(com.google.protobuf.Timestamp value) {
       if (timestampBuilder_ == null) {
@@ -1016,7 +1065,7 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
      */
     public Builder setTimestamp(com.google.protobuf.Timestamp.Builder builderForValue) {
       if (timestampBuilder_ == null) {
@@ -1029,7 +1078,7 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
      */
     public Builder mergeTimestamp(com.google.protobuf.Timestamp value) {
       if (timestampBuilder_ == null) {
@@ -1046,7 +1095,7 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
      */
     public Builder clearTimestamp() {
       if (timestampBuilder_ == null) {
@@ -1060,14 +1109,14 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
      */
     public com.google.protobuf.Timestamp.Builder getTimestampBuilder() {
       onChanged();
       return getTimestampFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
      */
     public com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder() {
       if (timestampBuilder_ != null) {
@@ -1077,7 +1126,7 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp timestamp = 5[json_name = "timestamp"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>
@@ -1093,7 +1142,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
 
     private java.lang.Object nodeName_ = "";
     /**
-     * <code>string node_name = 6;</code>
+     * <code>string node_name = 6[json_name = "nodeName"];</code>
+     * @return The nodeName.
      */
     public java.lang.String getNodeName() {
       java.lang.Object ref = nodeName_;
@@ -1107,7 +1157,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string node_name = 6;</code>
+     * <code>string node_name = 6[json_name = "nodeName"];</code>
+     * @return The bytes for nodeName.
      */
     public com.google.protobuf.ByteString getNodeNameBytes() {
       java.lang.Object ref = nodeName_;
@@ -1120,7 +1171,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string node_name = 6;</code>
+     * <code>string node_name = 6[json_name = "nodeName"];</code>
+     * @param value The nodeName to set.
+     * @return This builder for chaining.
      */
     public Builder setNodeName(java.lang.String value) {
       if (value == null) {
@@ -1132,7 +1185,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string node_name = 6;</code>
+     * <code>string node_name = 6[json_name = "nodeName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearNodeName() {
       nodeName_ = getDefaultInstance().getNodeName();
@@ -1140,7 +1194,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string node_name = 6;</code>
+     * <code>string node_name = 6[json_name = "nodeName"];</code>
+     * @param value The bytes for nodeName to set.
+     * @return This builder for chaining.
      */
     public Builder setNodeNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1155,7 +1211,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <code>string cluster_id = 7;</code>
+     * <code>string cluster_id = 7[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -1169,7 +1226,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string cluster_id = 7;</code>
+     * <code>string cluster_id = 7[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -1182,7 +1240,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string cluster_id = 7;</code>
+     * <code>string cluster_id = 7[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -1194,7 +1254,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string cluster_id = 7;</code>
+     * <code>string cluster_id = 7[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -1202,7 +1263,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string cluster_id = 7;</code>
+     * <code>string cluster_id = 7[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1217,7 +1280,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
 
     private java.lang.Object kubeSystemUid_ = "";
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @return The kubeSystemUid.
      */
     public java.lang.String getKubeSystemUid() {
       java.lang.Object ref = kubeSystemUid_;
@@ -1231,7 +1295,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @return The bytes for kubeSystemUid.
      */
     public com.google.protobuf.ByteString getKubeSystemUidBytes() {
       java.lang.Object ref = kubeSystemUid_;
@@ -1244,7 +1309,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @param value The kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUid(java.lang.String value) {
       if (value == null) {
@@ -1256,7 +1323,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearKubeSystemUid() {
       kubeSystemUid_ = getDefaultInstance().getKubeSystemUid();
@@ -1264,7 +1332,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @param value The bytes for kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUidBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

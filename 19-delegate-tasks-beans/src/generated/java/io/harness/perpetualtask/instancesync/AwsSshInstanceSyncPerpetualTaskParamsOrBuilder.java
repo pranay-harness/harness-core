@@ -9,26 +9,31 @@ public interface AwsSshInstanceSyncPerpetualTaskParamsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPerpetualTaskParams)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string region = 1;</code>
+   * <code>string region = 1[json_name = "region"];</code>
+   * @return The region.
    */
   java.lang.String getRegion();
   /**
-   * <code>string region = 1;</code>
+   * <code>string region = 1[json_name = "region"];</code>
+   * @return The bytes for region.
    */
   com.google.protobuf.ByteString getRegionBytes();
 
   /**
-   * <code>bytes filter = 2;</code>
+   * <code>bytes filter = 2[json_name = "filter"];</code>
+   * @return The filter.
    */
   com.google.protobuf.ByteString getFilter();
 
   /**
-   * <code>bytes aws_config = 3;</code>
+   * <code>bytes aws_config = 3[json_name = "awsConfig"];</code>
+   * @return The awsConfig.
    */
   com.google.protobuf.ByteString getAwsConfig();
 
   /**
-   * <code>bytes encrypted_data = 4;</code>
+   * <code>bytes encrypted_data = 4[json_name = "encryptedData"];</code>
+   * @return The encryptedData.
    */
   com.google.protobuf.ByteString getEncryptedData();
 }

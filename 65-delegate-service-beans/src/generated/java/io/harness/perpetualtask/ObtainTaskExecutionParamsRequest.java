@@ -19,6 +19,13 @@ public final class ObtainTaskExecutionParamsRequest extends com.google.protobuf.
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new ObtainTaskExecutionParamsRequest();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -29,7 +36,6 @@ public final class ObtainTaskExecutionParamsRequest extends com.google.protobuf.
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -86,19 +92,21 @@ public final class ObtainTaskExecutionParamsRequest extends com.google.protobuf.
   public static final int TASK_ID_FIELD_NUMBER = 1;
   private io.harness.perpetualtask.PerpetualTaskId taskId_;
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
+   * @return Whether the taskId field is set.
    */
   public boolean hasTaskId() {
     return taskId_ != null;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
+   * @return The taskId.
    */
   public io.harness.perpetualtask.PerpetualTaskId getTaskId() {
     return taskId_ == null ? io.harness.perpetualtask.PerpetualTaskId.getDefaultInstance() : taskId_;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
    */
   public io.harness.perpetualtask.PerpetualTaskIdOrBuilder getTaskIdOrBuilder() {
     return getTaskId();
@@ -406,13 +414,15 @@ public final class ObtainTaskExecutionParamsRequest extends com.google.protobuf.
         io.harness.perpetualtask.PerpetualTaskId.Builder, io.harness.perpetualtask.PerpetualTaskIdOrBuilder>
         taskIdBuilder_;
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
+     * @return Whether the taskId field is set.
      */
     public boolean hasTaskId() {
       return taskIdBuilder_ != null || taskId_ != null;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
+     * @return The taskId.
      */
     public io.harness.perpetualtask.PerpetualTaskId getTaskId() {
       if (taskIdBuilder_ == null) {
@@ -422,7 +432,7 @@ public final class ObtainTaskExecutionParamsRequest extends com.google.protobuf.
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
      */
     public Builder setTaskId(io.harness.perpetualtask.PerpetualTaskId value) {
       if (taskIdBuilder_ == null) {
@@ -438,7 +448,7 @@ public final class ObtainTaskExecutionParamsRequest extends com.google.protobuf.
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
      */
     public Builder setTaskId(io.harness.perpetualtask.PerpetualTaskId.Builder builderForValue) {
       if (taskIdBuilder_ == null) {
@@ -451,7 +461,7 @@ public final class ObtainTaskExecutionParamsRequest extends com.google.protobuf.
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
      */
     public Builder mergeTaskId(io.harness.perpetualtask.PerpetualTaskId value) {
       if (taskIdBuilder_ == null) {
@@ -468,7 +478,7 @@ public final class ObtainTaskExecutionParamsRequest extends com.google.protobuf.
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
      */
     public Builder clearTaskId() {
       if (taskIdBuilder_ == null) {
@@ -482,14 +492,14 @@ public final class ObtainTaskExecutionParamsRequest extends com.google.protobuf.
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
      */
     public io.harness.perpetualtask.PerpetualTaskId.Builder getTaskIdBuilder() {
       onChanged();
       return getTaskIdFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
      */
     public io.harness.perpetualtask.PerpetualTaskIdOrBuilder getTaskIdOrBuilder() {
       if (taskIdBuilder_ != null) {
@@ -499,7 +509,7 @@ public final class ObtainTaskExecutionParamsRequest extends com.google.protobuf.
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskId,
         io.harness.perpetualtask.PerpetualTaskId.Builder, io.harness.perpetualtask.PerpetualTaskIdOrBuilder>

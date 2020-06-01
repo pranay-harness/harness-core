@@ -8,90 +8,96 @@ public interface PodInfoOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.k8s.watch.PodInfo)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string cloud_provider_id = 2;</code>
+   * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   java.lang.String getCloudProviderId();
   /**
-   * <code>string cloud_provider_id = 2;</code>
+   * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   com.google.protobuf.ByteString getCloudProviderIdBytes();
 
   /**
-   * <code>string pod_uid = 3;</code>
+   * <code>string pod_uid = 3[json_name = "podUid"];</code>
+   * @return The podUid.
    */
   java.lang.String getPodUid();
   /**
-   * <code>string pod_uid = 3;</code>
+   * <code>string pod_uid = 3[json_name = "podUid"];</code>
+   * @return The bytes for podUid.
    */
   com.google.protobuf.ByteString getPodUidBytes();
 
   /**
-   * <code>string pod_name = 4;</code>
+   * <code>string pod_name = 4[json_name = "podName"];</code>
+   * @return The podName.
    */
   java.lang.String getPodName();
   /**
-   * <code>string pod_name = 4;</code>
+   * <code>string pod_name = 4[json_name = "podName"];</code>
+   * @return The bytes for podName.
    */
   com.google.protobuf.ByteString getPodNameBytes();
 
   /**
-   * <code>string namespace = 5;</code>
+   * <code>string namespace = 5[json_name = "namespace"];</code>
+   * @return The namespace.
    */
   java.lang.String getNamespace();
   /**
-   * <code>string namespace = 5;</code>
+   * <code>string namespace = 5[json_name = "namespace"];</code>
+   * @return The bytes for namespace.
    */
   com.google.protobuf.ByteString getNamespaceBytes();
 
   /**
-   * <code>string node_name = 6;</code>
+   * <code>string node_name = 6[json_name = "nodeName"];</code>
+   * @return The nodeName.
    */
   java.lang.String getNodeName();
   /**
-   * <code>string node_name = 6;</code>
+   * <code>string node_name = 6[json_name = "nodeName"];</code>
+   * @return The bytes for nodeName.
    */
   com.google.protobuf.ByteString getNodeNameBytes();
 
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
+   * @return Whether the totalResource field is set.
    */
   boolean hasTotalResource();
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
+   * @return The totalResource.
    */
   io.harness.perpetualtask.k8s.watch.Resource getTotalResource();
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource total_resource = 7[json_name = "totalResource"];</code>
    */
   io.harness.perpetualtask.k8s.watch.ResourceOrBuilder getTotalResourceOrBuilder();
 
   /**
-   * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+   * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
+   * @return Whether the creationTimestamp field is set.
    */
   boolean hasCreationTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+   * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
+   * @return The creationTimestamp.
    */
   com.google.protobuf.Timestamp getCreationTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp creation_timestamp = 8;</code>
+   * <code>.google.protobuf.Timestamp creation_timestamp = 8[json_name = "creationTimestamp"];</code>
    */
   com.google.protobuf.TimestampOrBuilder getCreationTimestampOrBuilder();
 
   /**
-   * <pre>
-   * label without value is invalid
-   * </pre>
-   *
-   * <code>map&lt;string, string&gt; labels = 9;</code>
+   * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
    */
   int getLabelsCount();
   /**
-   * <pre>
-   * label without value is invalid
-   * </pre>
-   *
-   * <code>map&lt;string, string&gt; labels = 9;</code>
+   * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
    */
   boolean containsLabels(java.lang.String key);
   /**
@@ -99,99 +105,97 @@ public interface PodInfoOrBuilder extends
    */
   @java.lang.Deprecated java.util.Map<java.lang.String, java.lang.String> getLabels();
   /**
-   * <pre>
-   * label without value is invalid
-   * </pre>
-   *
-   * <code>map&lt;string, string&gt; labels = 9;</code>
+   * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
    */
   java.util.Map<java.lang.String, java.lang.String> getLabelsMap();
   /**
-   * <pre>
-   * label without value is invalid
-   * </pre>
-   *
-   * <code>map&lt;string, string&gt; labels = 9;</code>
+   * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
    */
 
   java.lang.String getLabelsOrDefault(java.lang.String key, java.lang.String defaultValue);
   /**
-   * <pre>
-   * label without value is invalid
-   * </pre>
-   *
-   * <code>map&lt;string, string&gt; labels = 9;</code>
+   * <code>map&lt;string, string&gt; labels = 9[json_name = "labels"];</code>
    */
 
   java.lang.String getLabelsOrThrow(java.lang.String key);
 
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
+   * @return Whether the topLevelOwner field is set.
    */
   boolean hasTopLevelOwner();
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
+   * @return The topLevelOwner.
    */
   io.harness.perpetualtask.k8s.watch.Owner getTopLevelOwner();
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Owner top_level_owner = 11[json_name = "topLevelOwner"];</code>
    */
   io.harness.perpetualtask.k8s.watch.OwnerOrBuilder getTopLevelOwnerOrBuilder();
 
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
    */
   java.util.List<io.harness.perpetualtask.k8s.watch.Container> getContainersList();
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
    */
   io.harness.perpetualtask.k8s.watch.Container getContainers(int index);
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
    */
   int getContainersCount();
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
    */
   java.util.List<? extends io.harness.perpetualtask.k8s.watch.ContainerOrBuilder> getContainersOrBuilderList();
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12[json_name = "containers"];</code>
    */
   io.harness.perpetualtask.k8s.watch.ContainerOrBuilder getContainersOrBuilder(int index);
 
   /**
-   * <code>string cluster_id = 13;</code>
+   * <code>string cluster_id = 13[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   java.lang.String getClusterId();
   /**
-   * <code>string cluster_id = 13;</code>
+   * <code>string cluster_id = 13[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   com.google.protobuf.ByteString getClusterIdBytes();
 
   /**
-   * <code>string cluster_name = 14;</code>
+   * <code>string cluster_name = 14[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   java.lang.String getClusterName();
   /**
-   * <code>string cluster_name = 14;</code>
+   * <code>string cluster_name = 14[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   com.google.protobuf.ByteString getClusterNameBytes();
 
   /**
-   * <code>string kube_system_uid = 15;</code>
+   * <code>string kube_system_uid = 15[json_name = "kubeSystemUid"];</code>
+   * @return The kubeSystemUid.
    */
   java.lang.String getKubeSystemUid();
   /**
-   * <code>string kube_system_uid = 15;</code>
+   * <code>string kube_system_uid = 15[json_name = "kubeSystemUid"];</code>
+   * @return The bytes for kubeSystemUid.
    */
   com.google.protobuf.ByteString getKubeSystemUidBytes();
 
   /**
-   * <code>string qos_class = 16;</code>
+   * <code>string qos_class = 16[json_name = "qosClass"];</code>
+   * @return The qosClass.
    */
   java.lang.String getQosClass();
   /**
-   * <code>string qos_class = 16;</code>
+   * <code>string qos_class = 16[json_name = "qosClass"];</code>
+   * @return The bytes for qosClass.
    */
   com.google.protobuf.ByteString getQosClassBytes();
 }

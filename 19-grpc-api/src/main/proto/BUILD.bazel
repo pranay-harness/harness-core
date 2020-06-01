@@ -1,0 +1,22 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_proto_grpc//java:defs.bzl", "java_grpc_compile")
+
+proto_library(
+    name = "19_grpc_api_proto",
+    srcs = glob(["**/*.proto"]),
+    strip_import_prefix = "",
+    deps = [
+        "@com_google_protobuf//:any_proto",
+        "@com_google_protobuf//:timestamp_proto",
+        "@com_google_protobuf//:duration_proto",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+java_grpc_compile(
+    name = "19_grpc_api_java_proto",
+    deps = [
+        ":19_grpc_api_proto",
+    ],
+    visibility = ["//visibility:public"],
+)

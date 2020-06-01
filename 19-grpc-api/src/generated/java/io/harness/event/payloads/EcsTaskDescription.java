@@ -29,6 +29,13 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new EcsTaskDescription();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -39,7 +46,6 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -137,7 +143,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
   public static final int TASK_ARN_FIELD_NUMBER = 1;
   private volatile java.lang.Object taskArn_;
   /**
-   * <code>string task_arn = 1;</code>
+   * <code>string task_arn = 1[json_name = "taskArn"];</code>
+   * @return The taskArn.
    */
   public java.lang.String getTaskArn() {
     java.lang.Object ref = taskArn_;
@@ -151,7 +158,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string task_arn = 1;</code>
+   * <code>string task_arn = 1[json_name = "taskArn"];</code>
+   * @return The bytes for taskArn.
    */
   public com.google.protobuf.ByteString getTaskArnBytes() {
     java.lang.Object ref = taskArn_;
@@ -167,7 +175,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
   public static final int CLUSTER_ARN_FIELD_NUMBER = 2;
   private volatile java.lang.Object clusterArn_;
   /**
-   * <code>string cluster_arn = 2;</code>
+   * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+   * @return The clusterArn.
    */
   public java.lang.String getClusterArn() {
     java.lang.Object ref = clusterArn_;
@@ -181,7 +190,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string cluster_arn = 2;</code>
+   * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+   * @return The bytes for clusterArn.
    */
   public com.google.protobuf.ByteString getClusterArnBytes() {
     java.lang.Object ref = clusterArn_;
@@ -197,7 +207,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
   public static final int SERVICE_NAME_FIELD_NUMBER = 3;
   private volatile java.lang.Object serviceName_;
   /**
-   * <code>string service_name = 3;</code>
+   * <code>string service_name = 3[json_name = "serviceName"];</code>
+   * @return The serviceName.
    */
   public java.lang.String getServiceName() {
     java.lang.Object ref = serviceName_;
@@ -211,7 +222,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string service_name = 3;</code>
+   * <code>string service_name = 3[json_name = "serviceName"];</code>
+   * @return The bytes for serviceName.
    */
   public com.google.protobuf.ByteString getServiceNameBytes() {
     java.lang.Object ref = serviceName_;
@@ -227,7 +239,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
   public static final int CONTAINER_INSTANCE_ARN_FIELD_NUMBER = 4;
   private volatile java.lang.Object containerInstanceArn_;
   /**
-   * <code>string container_instance_arn = 4;</code>
+   * <code>string container_instance_arn = 4[json_name = "containerInstanceArn"];</code>
+   * @return The containerInstanceArn.
    */
   public java.lang.String getContainerInstanceArn() {
     java.lang.Object ref = containerInstanceArn_;
@@ -241,7 +254,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string container_instance_arn = 4;</code>
+   * <code>string container_instance_arn = 4[json_name = "containerInstanceArn"];</code>
+   * @return The bytes for containerInstanceArn.
    */
   public com.google.protobuf.ByteString getContainerInstanceArnBytes() {
     java.lang.Object ref = containerInstanceArn_;
@@ -257,7 +271,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
   public static final int LAUNCH_TYPE_FIELD_NUMBER = 5;
   private volatile java.lang.Object launchType_;
   /**
-   * <code>string launch_type = 5;</code>
+   * <code>string launch_type = 5[json_name = "launchType"];</code>
+   * @return The launchType.
    */
   public java.lang.String getLaunchType() {
     java.lang.Object ref = launchType_;
@@ -271,7 +286,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string launch_type = 5;</code>
+   * <code>string launch_type = 5[json_name = "launchType"];</code>
+   * @return The bytes for launchType.
    */
   public com.google.protobuf.ByteString getLaunchTypeBytes() {
     java.lang.Object ref = launchType_;
@@ -287,7 +303,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
   public static final int DESIRED_STATUS_FIELD_NUMBER = 6;
   private volatile java.lang.Object desiredStatus_;
   /**
-   * <code>string desired_status = 6;</code>
+   * <code>string desired_status = 6[json_name = "desiredStatus"];</code>
+   * @return The desiredStatus.
    */
   public java.lang.String getDesiredStatus() {
     java.lang.Object ref = desiredStatus_;
@@ -301,7 +318,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string desired_status = 6;</code>
+   * <code>string desired_status = 6[json_name = "desiredStatus"];</code>
+   * @return The bytes for desiredStatus.
    */
   public com.google.protobuf.ByteString getDesiredStatusBytes() {
     java.lang.Object ref = desiredStatus_;
@@ -317,7 +335,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
   public static final int REGION_FIELD_NUMBER = 7;
   private volatile java.lang.Object region_;
   /**
-   * <code>string region = 7;</code>
+   * <code>string region = 7[json_name = "region"];</code>
+   * @return The region.
    */
   public java.lang.String getRegion() {
     java.lang.Object ref = region_;
@@ -331,7 +350,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string region = 7;</code>
+   * <code>string region = 7[json_name = "region"];</code>
+   * @return The bytes for region.
    */
   public com.google.protobuf.ByteString getRegionBytes() {
     java.lang.Object ref = region_;
@@ -347,7 +367,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
   public static final int CLUSTER_ID_FIELD_NUMBER = 8;
   private volatile java.lang.Object clusterId_;
   /**
-   * <code>string cluster_id = 8;</code>
+   * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -361,7 +382,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string cluster_id = 8;</code>
+   * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -377,7 +399,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
   public static final int SETTING_ID_FIELD_NUMBER = 9;
   private volatile java.lang.Object settingId_;
   /**
-   * <code>string setting_id = 9;</code>
+   * <code>string setting_id = 9[json_name = "settingId"];</code>
+   * @return The settingId.
    */
   public java.lang.String getSettingId() {
     java.lang.Object ref = settingId_;
@@ -391,7 +414,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string setting_id = 9;</code>
+   * <code>string setting_id = 9[json_name = "settingId"];</code>
+   * @return The bytes for settingId.
    */
   public com.google.protobuf.ByteString getSettingIdBytes() {
     java.lang.Object ref = settingId_;
@@ -823,7 +847,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object taskArn_ = "";
     /**
-     * <code>string task_arn = 1;</code>
+     * <code>string task_arn = 1[json_name = "taskArn"];</code>
+     * @return The taskArn.
      */
     public java.lang.String getTaskArn() {
       java.lang.Object ref = taskArn_;
@@ -837,7 +862,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string task_arn = 1;</code>
+     * <code>string task_arn = 1[json_name = "taskArn"];</code>
+     * @return The bytes for taskArn.
      */
     public com.google.protobuf.ByteString getTaskArnBytes() {
       java.lang.Object ref = taskArn_;
@@ -850,7 +876,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string task_arn = 1;</code>
+     * <code>string task_arn = 1[json_name = "taskArn"];</code>
+     * @param value The taskArn to set.
+     * @return This builder for chaining.
      */
     public Builder setTaskArn(java.lang.String value) {
       if (value == null) {
@@ -862,7 +890,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string task_arn = 1;</code>
+     * <code>string task_arn = 1[json_name = "taskArn"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearTaskArn() {
       taskArn_ = getDefaultInstance().getTaskArn();
@@ -870,7 +899,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string task_arn = 1;</code>
+     * <code>string task_arn = 1[json_name = "taskArn"];</code>
+     * @param value The bytes for taskArn to set.
+     * @return This builder for chaining.
      */
     public Builder setTaskArnBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -885,7 +916,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object clusterArn_ = "";
     /**
-     * <code>string cluster_arn = 2;</code>
+     * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+     * @return The clusterArn.
      */
     public java.lang.String getClusterArn() {
       java.lang.Object ref = clusterArn_;
@@ -899,7 +931,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cluster_arn = 2;</code>
+     * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+     * @return The bytes for clusterArn.
      */
     public com.google.protobuf.ByteString getClusterArnBytes() {
       java.lang.Object ref = clusterArn_;
@@ -912,7 +945,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cluster_arn = 2;</code>
+     * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+     * @param value The clusterArn to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterArn(java.lang.String value) {
       if (value == null) {
@@ -924,7 +959,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cluster_arn = 2;</code>
+     * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterArn() {
       clusterArn_ = getDefaultInstance().getClusterArn();
@@ -932,7 +968,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cluster_arn = 2;</code>
+     * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+     * @param value The bytes for clusterArn to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterArnBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -947,7 +985,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object serviceName_ = "";
     /**
-     * <code>string service_name = 3;</code>
+     * <code>string service_name = 3[json_name = "serviceName"];</code>
+     * @return The serviceName.
      */
     public java.lang.String getServiceName() {
       java.lang.Object ref = serviceName_;
@@ -961,7 +1000,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string service_name = 3;</code>
+     * <code>string service_name = 3[json_name = "serviceName"];</code>
+     * @return The bytes for serviceName.
      */
     public com.google.protobuf.ByteString getServiceNameBytes() {
       java.lang.Object ref = serviceName_;
@@ -974,7 +1014,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string service_name = 3;</code>
+     * <code>string service_name = 3[json_name = "serviceName"];</code>
+     * @param value The serviceName to set.
+     * @return This builder for chaining.
      */
     public Builder setServiceName(java.lang.String value) {
       if (value == null) {
@@ -986,7 +1028,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string service_name = 3;</code>
+     * <code>string service_name = 3[json_name = "serviceName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearServiceName() {
       serviceName_ = getDefaultInstance().getServiceName();
@@ -994,7 +1037,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string service_name = 3;</code>
+     * <code>string service_name = 3[json_name = "serviceName"];</code>
+     * @param value The bytes for serviceName to set.
+     * @return This builder for chaining.
      */
     public Builder setServiceNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1009,7 +1054,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object containerInstanceArn_ = "";
     /**
-     * <code>string container_instance_arn = 4;</code>
+     * <code>string container_instance_arn = 4[json_name = "containerInstanceArn"];</code>
+     * @return The containerInstanceArn.
      */
     public java.lang.String getContainerInstanceArn() {
       java.lang.Object ref = containerInstanceArn_;
@@ -1023,7 +1069,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string container_instance_arn = 4;</code>
+     * <code>string container_instance_arn = 4[json_name = "containerInstanceArn"];</code>
+     * @return The bytes for containerInstanceArn.
      */
     public com.google.protobuf.ByteString getContainerInstanceArnBytes() {
       java.lang.Object ref = containerInstanceArn_;
@@ -1036,7 +1083,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string container_instance_arn = 4;</code>
+     * <code>string container_instance_arn = 4[json_name = "containerInstanceArn"];</code>
+     * @param value The containerInstanceArn to set.
+     * @return This builder for chaining.
      */
     public Builder setContainerInstanceArn(java.lang.String value) {
       if (value == null) {
@@ -1048,7 +1097,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string container_instance_arn = 4;</code>
+     * <code>string container_instance_arn = 4[json_name = "containerInstanceArn"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearContainerInstanceArn() {
       containerInstanceArn_ = getDefaultInstance().getContainerInstanceArn();
@@ -1056,7 +1106,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string container_instance_arn = 4;</code>
+     * <code>string container_instance_arn = 4[json_name = "containerInstanceArn"];</code>
+     * @param value The bytes for containerInstanceArn to set.
+     * @return This builder for chaining.
      */
     public Builder setContainerInstanceArnBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1071,7 +1123,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object launchType_ = "";
     /**
-     * <code>string launch_type = 5;</code>
+     * <code>string launch_type = 5[json_name = "launchType"];</code>
+     * @return The launchType.
      */
     public java.lang.String getLaunchType() {
       java.lang.Object ref = launchType_;
@@ -1085,7 +1138,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string launch_type = 5;</code>
+     * <code>string launch_type = 5[json_name = "launchType"];</code>
+     * @return The bytes for launchType.
      */
     public com.google.protobuf.ByteString getLaunchTypeBytes() {
       java.lang.Object ref = launchType_;
@@ -1098,7 +1152,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string launch_type = 5;</code>
+     * <code>string launch_type = 5[json_name = "launchType"];</code>
+     * @param value The launchType to set.
+     * @return This builder for chaining.
      */
     public Builder setLaunchType(java.lang.String value) {
       if (value == null) {
@@ -1110,7 +1166,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string launch_type = 5;</code>
+     * <code>string launch_type = 5[json_name = "launchType"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearLaunchType() {
       launchType_ = getDefaultInstance().getLaunchType();
@@ -1118,7 +1175,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string launch_type = 5;</code>
+     * <code>string launch_type = 5[json_name = "launchType"];</code>
+     * @param value The bytes for launchType to set.
+     * @return This builder for chaining.
      */
     public Builder setLaunchTypeBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1133,7 +1192,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object desiredStatus_ = "";
     /**
-     * <code>string desired_status = 6;</code>
+     * <code>string desired_status = 6[json_name = "desiredStatus"];</code>
+     * @return The desiredStatus.
      */
     public java.lang.String getDesiredStatus() {
       java.lang.Object ref = desiredStatus_;
@@ -1147,7 +1207,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string desired_status = 6;</code>
+     * <code>string desired_status = 6[json_name = "desiredStatus"];</code>
+     * @return The bytes for desiredStatus.
      */
     public com.google.protobuf.ByteString getDesiredStatusBytes() {
       java.lang.Object ref = desiredStatus_;
@@ -1160,7 +1221,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string desired_status = 6;</code>
+     * <code>string desired_status = 6[json_name = "desiredStatus"];</code>
+     * @param value The desiredStatus to set.
+     * @return This builder for chaining.
      */
     public Builder setDesiredStatus(java.lang.String value) {
       if (value == null) {
@@ -1172,7 +1235,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string desired_status = 6;</code>
+     * <code>string desired_status = 6[json_name = "desiredStatus"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearDesiredStatus() {
       desiredStatus_ = getDefaultInstance().getDesiredStatus();
@@ -1180,7 +1244,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string desired_status = 6;</code>
+     * <code>string desired_status = 6[json_name = "desiredStatus"];</code>
+     * @param value The bytes for desiredStatus to set.
+     * @return This builder for chaining.
      */
     public Builder setDesiredStatusBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1195,7 +1261,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object region_ = "";
     /**
-     * <code>string region = 7;</code>
+     * <code>string region = 7[json_name = "region"];</code>
+     * @return The region.
      */
     public java.lang.String getRegion() {
       java.lang.Object ref = region_;
@@ -1209,7 +1276,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string region = 7;</code>
+     * <code>string region = 7[json_name = "region"];</code>
+     * @return The bytes for region.
      */
     public com.google.protobuf.ByteString getRegionBytes() {
       java.lang.Object ref = region_;
@@ -1222,7 +1290,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string region = 7;</code>
+     * <code>string region = 7[json_name = "region"];</code>
+     * @param value The region to set.
+     * @return This builder for chaining.
      */
     public Builder setRegion(java.lang.String value) {
       if (value == null) {
@@ -1234,7 +1304,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string region = 7;</code>
+     * <code>string region = 7[json_name = "region"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearRegion() {
       region_ = getDefaultInstance().getRegion();
@@ -1242,7 +1313,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string region = 7;</code>
+     * <code>string region = 7[json_name = "region"];</code>
+     * @param value The bytes for region to set.
+     * @return This builder for chaining.
      */
     public Builder setRegionBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1257,7 +1330,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <code>string cluster_id = 8;</code>
+     * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -1271,7 +1345,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cluster_id = 8;</code>
+     * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -1284,7 +1359,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cluster_id = 8;</code>
+     * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -1296,7 +1373,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cluster_id = 8;</code>
+     * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -1304,7 +1382,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cluster_id = 8;</code>
+     * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1319,7 +1399,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object settingId_ = "";
     /**
-     * <code>string setting_id = 9;</code>
+     * <code>string setting_id = 9[json_name = "settingId"];</code>
+     * @return The settingId.
      */
     public java.lang.String getSettingId() {
       java.lang.Object ref = settingId_;
@@ -1333,7 +1414,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string setting_id = 9;</code>
+     * <code>string setting_id = 9[json_name = "settingId"];</code>
+     * @return The bytes for settingId.
      */
     public com.google.protobuf.ByteString getSettingIdBytes() {
       java.lang.Object ref = settingId_;
@@ -1346,7 +1428,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string setting_id = 9;</code>
+     * <code>string setting_id = 9[json_name = "settingId"];</code>
+     * @param value The settingId to set.
+     * @return This builder for chaining.
      */
     public Builder setSettingId(java.lang.String value) {
       if (value == null) {
@@ -1358,7 +1442,8 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string setting_id = 9;</code>
+     * <code>string setting_id = 9[json_name = "settingId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearSettingId() {
       settingId_ = getDefaultInstance().getSettingId();
@@ -1366,7 +1451,9 @@ public final class EcsTaskDescription extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string setting_id = 9;</code>
+     * <code>string setting_id = 9[json_name = "settingId"];</code>
+     * @param value The bytes for settingId to set.
+     * @return This builder for chaining.
      */
     public Builder setSettingIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

@@ -19,6 +19,13 @@ public final class ReservedResource extends com.google.protobuf.GeneratedMessage
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new ReservedResource();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -29,7 +36,6 @@ public final class ReservedResource extends com.google.protobuf.GeneratedMessage
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -79,7 +85,8 @@ public final class ReservedResource extends com.google.protobuf.GeneratedMessage
   public static final int CPU_FIELD_NUMBER = 1;
   private double cpu_;
   /**
-   * <code>double cpu = 1;</code>
+   * <code>double cpu = 1[json_name = "cpu"];</code>
+   * @return The cpu.
    */
   public double getCpu() {
     return cpu_;
@@ -88,7 +95,8 @@ public final class ReservedResource extends com.google.protobuf.GeneratedMessage
   public static final int MEMORY_FIELD_NUMBER = 2;
   private double memory_;
   /**
-   * <code>double memory = 2;</code>
+   * <code>double memory = 2[json_name = "memory"];</code>
+   * @return The memory.
    */
   public double getMemory() {
     return memory_;
@@ -392,13 +400,16 @@ public final class ReservedResource extends com.google.protobuf.GeneratedMessage
 
     private double cpu_;
     /**
-     * <code>double cpu = 1;</code>
+     * <code>double cpu = 1[json_name = "cpu"];</code>
+     * @return The cpu.
      */
     public double getCpu() {
       return cpu_;
     }
     /**
-     * <code>double cpu = 1;</code>
+     * <code>double cpu = 1[json_name = "cpu"];</code>
+     * @param value The cpu to set.
+     * @return This builder for chaining.
      */
     public Builder setCpu(double value) {
       cpu_ = value;
@@ -406,7 +417,8 @@ public final class ReservedResource extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>double cpu = 1;</code>
+     * <code>double cpu = 1[json_name = "cpu"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCpu() {
       cpu_ = 0D;
@@ -416,13 +428,16 @@ public final class ReservedResource extends com.google.protobuf.GeneratedMessage
 
     private double memory_;
     /**
-     * <code>double memory = 2;</code>
+     * <code>double memory = 2[json_name = "memory"];</code>
+     * @return The memory.
      */
     public double getMemory() {
       return memory_;
     }
     /**
-     * <code>double memory = 2;</code>
+     * <code>double memory = 2[json_name = "memory"];</code>
+     * @param value The memory to set.
+     * @return This builder for chaining.
      */
     public Builder setMemory(double value) {
       memory_ = value;
@@ -430,7 +445,8 @@ public final class ReservedResource extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>double memory = 2;</code>
+     * <code>double memory = 2[json_name = "memory"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearMemory() {
       memory_ = 0D;

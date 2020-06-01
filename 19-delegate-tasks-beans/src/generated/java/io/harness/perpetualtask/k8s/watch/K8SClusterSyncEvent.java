@@ -26,6 +26,13 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new K8SClusterSyncEvent();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -66,18 +73,18 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
           }
           case 34: {
             java.lang.String s = input.readStringRequireUtf8();
-            if (!((mutable_bitField0_ & 0x00000008) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
               activePodUids_ = new com.google.protobuf.LazyStringArrayList();
-              mutable_bitField0_ |= 0x00000008;
+              mutable_bitField0_ |= 0x00000001;
             }
             activePodUids_.add(s);
             break;
           }
           case 42: {
             java.lang.String s = input.readStringRequireUtf8();
-            if (!((mutable_bitField0_ & 0x00000010) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
               activeNodeUids_ = new com.google.protobuf.LazyStringArrayList();
-              mutable_bitField0_ |= 0x00000010;
+              mutable_bitField0_ |= 0x00000002;
             }
             activeNodeUids_.add(s);
             break;
@@ -114,10 +121,10 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
     } catch (java.io.IOException e) {
       throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
     } finally {
-      if (((mutable_bitField0_ & 0x00000008) != 0)) {
+      if (((mutable_bitField0_ & 0x00000001) != 0)) {
         activePodUids_ = activePodUids_.getUnmodifiableView();
       }
-      if (((mutable_bitField0_ & 0x00000010) != 0)) {
+      if (((mutable_bitField0_ & 0x00000002) != 0)) {
         activeNodeUids_ = activeNodeUids_.getUnmodifiableView();
       }
       this.unknownFields = unknownFields.build();
@@ -138,11 +145,11 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
             io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent.Builder.class);
   }
 
-  private int bitField0_;
   public static final int CLUSTER_ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object clusterId_;
   /**
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -156,7 +163,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
     }
   }
   /**
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -172,7 +180,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
   public static final int CLUSTER_NAME_FIELD_NUMBER = 2;
   private volatile java.lang.Object clusterName_;
   /**
-   * <code>string cluster_name = 2;</code>
+   * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   public java.lang.String getClusterName() {
     java.lang.Object ref = clusterName_;
@@ -186,7 +195,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
     }
   }
   /**
-   * <code>string cluster_name = 2;</code>
+   * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   public com.google.protobuf.ByteString getClusterNameBytes() {
     java.lang.Object ref = clusterName_;
@@ -202,7 +212,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
   public static final int CLOUD_PROVIDER_ID_FIELD_NUMBER = 3;
   private volatile java.lang.Object cloudProviderId_;
   /**
-   * <code>string cloud_provider_id = 3;</code>
+   * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   public java.lang.String getCloudProviderId() {
     java.lang.Object ref = cloudProviderId_;
@@ -216,7 +227,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
     }
   }
   /**
-   * <code>string cloud_provider_id = 3;</code>
+   * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   public com.google.protobuf.ByteString getCloudProviderIdBytes() {
     java.lang.Object ref = cloudProviderId_;
@@ -232,25 +244,31 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
   public static final int ACTIVE_POD_UIDS_FIELD_NUMBER = 4;
   private com.google.protobuf.LazyStringList activePodUids_;
   /**
-   * <code>repeated string active_pod_uids = 4;</code>
+   * <code>repeated string active_pod_uids = 4[json_name = "activePodUids"];</code>
+   * @return A list containing the activePodUids.
    */
   public com.google.protobuf.ProtocolStringList getActivePodUidsList() {
     return activePodUids_;
   }
   /**
-   * <code>repeated string active_pod_uids = 4;</code>
+   * <code>repeated string active_pod_uids = 4[json_name = "activePodUids"];</code>
+   * @return The count of activePodUids.
    */
   public int getActivePodUidsCount() {
     return activePodUids_.size();
   }
   /**
-   * <code>repeated string active_pod_uids = 4;</code>
+   * <code>repeated string active_pod_uids = 4[json_name = "activePodUids"];</code>
+   * @param index The index of the element to return.
+   * @return The activePodUids at the given index.
    */
   public java.lang.String getActivePodUids(int index) {
     return activePodUids_.get(index);
   }
   /**
-   * <code>repeated string active_pod_uids = 4;</code>
+   * <code>repeated string active_pod_uids = 4[json_name = "activePodUids"];</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the activePodUids at the given index.
    */
   public com.google.protobuf.ByteString getActivePodUidsBytes(int index) {
     return activePodUids_.getByteString(index);
@@ -259,25 +277,31 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
   public static final int ACTIVE_NODE_UIDS_FIELD_NUMBER = 5;
   private com.google.protobuf.LazyStringList activeNodeUids_;
   /**
-   * <code>repeated string active_node_uids = 5;</code>
+   * <code>repeated string active_node_uids = 5[json_name = "activeNodeUids"];</code>
+   * @return A list containing the activeNodeUids.
    */
   public com.google.protobuf.ProtocolStringList getActiveNodeUidsList() {
     return activeNodeUids_;
   }
   /**
-   * <code>repeated string active_node_uids = 5;</code>
+   * <code>repeated string active_node_uids = 5[json_name = "activeNodeUids"];</code>
+   * @return The count of activeNodeUids.
    */
   public int getActiveNodeUidsCount() {
     return activeNodeUids_.size();
   }
   /**
-   * <code>repeated string active_node_uids = 5;</code>
+   * <code>repeated string active_node_uids = 5[json_name = "activeNodeUids"];</code>
+   * @param index The index of the element to return.
+   * @return The activeNodeUids at the given index.
    */
   public java.lang.String getActiveNodeUids(int index) {
     return activeNodeUids_.get(index);
   }
   /**
-   * <code>repeated string active_node_uids = 5;</code>
+   * <code>repeated string active_node_uids = 5[json_name = "activeNodeUids"];</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the activeNodeUids at the given index.
    */
   public com.google.protobuf.ByteString getActiveNodeUidsBytes(int index) {
     return activeNodeUids_.getByteString(index);
@@ -286,20 +310,22 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
   public static final int LAST_PROCESSED_TIMESTAMP_FIELD_NUMBER = 6;
   private com.google.protobuf.Timestamp lastProcessedTimestamp_;
   /**
-   * <code>.google.protobuf.Timestamp last_processed_timestamp = 6;</code>
+   * <code>.google.protobuf.Timestamp last_processed_timestamp = 6[json_name = "lastProcessedTimestamp"];</code>
+   * @return Whether the lastProcessedTimestamp field is set.
    */
   public boolean hasLastProcessedTimestamp() {
     return lastProcessedTimestamp_ != null;
   }
   /**
-   * <code>.google.protobuf.Timestamp last_processed_timestamp = 6;</code>
+   * <code>.google.protobuf.Timestamp last_processed_timestamp = 6[json_name = "lastProcessedTimestamp"];</code>
+   * @return The lastProcessedTimestamp.
    */
   public com.google.protobuf.Timestamp getLastProcessedTimestamp() {
     return lastProcessedTimestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance()
                                            : lastProcessedTimestamp_;
   }
   /**
-   * <code>.google.protobuf.Timestamp last_processed_timestamp = 6;</code>
+   * <code>.google.protobuf.Timestamp last_processed_timestamp = 6[json_name = "lastProcessedTimestamp"];</code>
    */
   public com.google.protobuf.TimestampOrBuilder getLastProcessedTimestampOrBuilder() {
     return getLastProcessedTimestamp();
@@ -308,7 +334,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
   public static final int KUBE_SYSTEM_UID_FIELD_NUMBER = 7;
   private volatile java.lang.Object kubeSystemUid_;
   /**
-   * <code>string kube_system_uid = 7;</code>
+   * <code>string kube_system_uid = 7[json_name = "kubeSystemUid"];</code>
+   * @return The kubeSystemUid.
    */
   public java.lang.String getKubeSystemUid() {
     java.lang.Object ref = kubeSystemUid_;
@@ -322,7 +349,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
     }
   }
   /**
-   * <code>string kube_system_uid = 7;</code>
+   * <code>string kube_system_uid = 7[json_name = "kubeSystemUid"];</code>
+   * @return The bytes for kubeSystemUid.
    */
   public com.google.protobuf.ByteString getKubeSystemUidBytes() {
     java.lang.Object ref = kubeSystemUid_;
@@ -599,9 +627,9 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       cloudProviderId_ = "";
 
       activePodUids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000008);
+      bitField0_ = (bitField0_ & ~0x00000001);
       activeNodeUids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000010);
+      bitField0_ = (bitField0_ & ~0x00000002);
       if (lastProcessedTimestampBuilder_ == null) {
         lastProcessedTimestamp_ = null;
       } else {
@@ -642,18 +670,17 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent result =
           new io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent(this);
       int from_bitField0_ = bitField0_;
-      int to_bitField0_ = 0;
       result.clusterId_ = clusterId_;
       result.clusterName_ = clusterName_;
       result.cloudProviderId_ = cloudProviderId_;
-      if (((bitField0_ & 0x00000008) != 0)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         activePodUids_ = activePodUids_.getUnmodifiableView();
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000001);
       }
       result.activePodUids_ = activePodUids_;
-      if (((bitField0_ & 0x00000010) != 0)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         activeNodeUids_ = activeNodeUids_.getUnmodifiableView();
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000002);
       }
       result.activeNodeUids_ = activeNodeUids_;
       if (lastProcessedTimestampBuilder_ == null) {
@@ -662,7 +689,6 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
         result.lastProcessedTimestamp_ = lastProcessedTimestampBuilder_.build();
       }
       result.kubeSystemUid_ = kubeSystemUid_;
-      result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
     }
@@ -720,7 +746,7 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       if (!other.activePodUids_.isEmpty()) {
         if (activePodUids_.isEmpty()) {
           activePodUids_ = other.activePodUids_;
-          bitField0_ = (bitField0_ & ~0x00000008);
+          bitField0_ = (bitField0_ & ~0x00000001);
         } else {
           ensureActivePodUidsIsMutable();
           activePodUids_.addAll(other.activePodUids_);
@@ -730,7 +756,7 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       if (!other.activeNodeUids_.isEmpty()) {
         if (activeNodeUids_.isEmpty()) {
           activeNodeUids_ = other.activeNodeUids_;
-          bitField0_ = (bitField0_ & ~0x00000010);
+          bitField0_ = (bitField0_ & ~0x00000002);
         } else {
           ensureActiveNodeUidsIsMutable();
           activeNodeUids_.addAll(other.activeNodeUids_);
@@ -774,7 +800,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -788,7 +815,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       }
     }
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -801,7 +829,9 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       }
     }
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -813,7 +843,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -821,7 +852,9 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -836,7 +869,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
 
     private java.lang.Object clusterName_ = "";
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @return The clusterName.
      */
     public java.lang.String getClusterName() {
       java.lang.Object ref = clusterName_;
@@ -850,7 +884,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       }
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @return The bytes for clusterName.
      */
     public com.google.protobuf.ByteString getClusterNameBytes() {
       java.lang.Object ref = clusterName_;
@@ -863,7 +898,9 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       }
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @param value The clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterName(java.lang.String value) {
       if (value == null) {
@@ -875,7 +912,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterName() {
       clusterName_ = getDefaultInstance().getClusterName();
@@ -883,7 +921,9 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @param value The bytes for clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -898,7 +938,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
 
     private java.lang.Object cloudProviderId_ = "";
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @return The cloudProviderId.
      */
     public java.lang.String getCloudProviderId() {
       java.lang.Object ref = cloudProviderId_;
@@ -912,7 +953,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       }
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @return The bytes for cloudProviderId.
      */
     public com.google.protobuf.ByteString getCloudProviderIdBytes() {
       java.lang.Object ref = cloudProviderId_;
@@ -925,7 +967,9 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       }
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @param value The cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderId(java.lang.String value) {
       if (value == null) {
@@ -937,7 +981,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCloudProviderId() {
       cloudProviderId_ = getDefaultInstance().getCloudProviderId();
@@ -945,7 +990,9 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @param value The bytes for cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -960,37 +1007,46 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
 
     private com.google.protobuf.LazyStringList activePodUids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     private void ensureActivePodUidsIsMutable() {
-      if (!((bitField0_ & 0x00000008) != 0)) {
+      if (!((bitField0_ & 0x00000001) != 0)) {
         activePodUids_ = new com.google.protobuf.LazyStringArrayList(activePodUids_);
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000001;
       }
     }
     /**
-     * <code>repeated string active_pod_uids = 4;</code>
+     * <code>repeated string active_pod_uids = 4[json_name = "activePodUids"];</code>
+     * @return A list containing the activePodUids.
      */
     public com.google.protobuf.ProtocolStringList getActivePodUidsList() {
       return activePodUids_.getUnmodifiableView();
     }
     /**
-     * <code>repeated string active_pod_uids = 4;</code>
+     * <code>repeated string active_pod_uids = 4[json_name = "activePodUids"];</code>
+     * @return The count of activePodUids.
      */
     public int getActivePodUidsCount() {
       return activePodUids_.size();
     }
     /**
-     * <code>repeated string active_pod_uids = 4;</code>
+     * <code>repeated string active_pod_uids = 4[json_name = "activePodUids"];</code>
+     * @param index The index of the element to return.
+     * @return The activePodUids at the given index.
      */
     public java.lang.String getActivePodUids(int index) {
       return activePodUids_.get(index);
     }
     /**
-     * <code>repeated string active_pod_uids = 4;</code>
+     * <code>repeated string active_pod_uids = 4[json_name = "activePodUids"];</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the activePodUids at the given index.
      */
     public com.google.protobuf.ByteString getActivePodUidsBytes(int index) {
       return activePodUids_.getByteString(index);
     }
     /**
-     * <code>repeated string active_pod_uids = 4;</code>
+     * <code>repeated string active_pod_uids = 4[json_name = "activePodUids"];</code>
+     * @param index The index to set the value at.
+     * @param value The activePodUids to set.
+     * @return This builder for chaining.
      */
     public Builder setActivePodUids(int index, java.lang.String value) {
       if (value == null) {
@@ -1002,7 +1058,9 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>repeated string active_pod_uids = 4;</code>
+     * <code>repeated string active_pod_uids = 4[json_name = "activePodUids"];</code>
+     * @param value The activePodUids to add.
+     * @return This builder for chaining.
      */
     public Builder addActivePodUids(java.lang.String value) {
       if (value == null) {
@@ -1014,7 +1072,9 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>repeated string active_pod_uids = 4;</code>
+     * <code>repeated string active_pod_uids = 4[json_name = "activePodUids"];</code>
+     * @param values The activePodUids to add.
+     * @return This builder for chaining.
      */
     public Builder addAllActivePodUids(java.lang.Iterable<java.lang.String> values) {
       ensureActivePodUidsIsMutable();
@@ -1023,16 +1083,19 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>repeated string active_pod_uids = 4;</code>
+     * <code>repeated string active_pod_uids = 4[json_name = "activePodUids"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearActivePodUids() {
       activePodUids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000008);
+      bitField0_ = (bitField0_ & ~0x00000001);
       onChanged();
       return this;
     }
     /**
-     * <code>repeated string active_pod_uids = 4;</code>
+     * <code>repeated string active_pod_uids = 4[json_name = "activePodUids"];</code>
+     * @param value The bytes of the activePodUids to add.
+     * @return This builder for chaining.
      */
     public Builder addActivePodUidsBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1047,37 +1110,46 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
 
     private com.google.protobuf.LazyStringList activeNodeUids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     private void ensureActiveNodeUidsIsMutable() {
-      if (!((bitField0_ & 0x00000010) != 0)) {
+      if (!((bitField0_ & 0x00000002) != 0)) {
         activeNodeUids_ = new com.google.protobuf.LazyStringArrayList(activeNodeUids_);
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000002;
       }
     }
     /**
-     * <code>repeated string active_node_uids = 5;</code>
+     * <code>repeated string active_node_uids = 5[json_name = "activeNodeUids"];</code>
+     * @return A list containing the activeNodeUids.
      */
     public com.google.protobuf.ProtocolStringList getActiveNodeUidsList() {
       return activeNodeUids_.getUnmodifiableView();
     }
     /**
-     * <code>repeated string active_node_uids = 5;</code>
+     * <code>repeated string active_node_uids = 5[json_name = "activeNodeUids"];</code>
+     * @return The count of activeNodeUids.
      */
     public int getActiveNodeUidsCount() {
       return activeNodeUids_.size();
     }
     /**
-     * <code>repeated string active_node_uids = 5;</code>
+     * <code>repeated string active_node_uids = 5[json_name = "activeNodeUids"];</code>
+     * @param index The index of the element to return.
+     * @return The activeNodeUids at the given index.
      */
     public java.lang.String getActiveNodeUids(int index) {
       return activeNodeUids_.get(index);
     }
     /**
-     * <code>repeated string active_node_uids = 5;</code>
+     * <code>repeated string active_node_uids = 5[json_name = "activeNodeUids"];</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the activeNodeUids at the given index.
      */
     public com.google.protobuf.ByteString getActiveNodeUidsBytes(int index) {
       return activeNodeUids_.getByteString(index);
     }
     /**
-     * <code>repeated string active_node_uids = 5;</code>
+     * <code>repeated string active_node_uids = 5[json_name = "activeNodeUids"];</code>
+     * @param index The index to set the value at.
+     * @param value The activeNodeUids to set.
+     * @return This builder for chaining.
      */
     public Builder setActiveNodeUids(int index, java.lang.String value) {
       if (value == null) {
@@ -1089,7 +1161,9 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>repeated string active_node_uids = 5;</code>
+     * <code>repeated string active_node_uids = 5[json_name = "activeNodeUids"];</code>
+     * @param value The activeNodeUids to add.
+     * @return This builder for chaining.
      */
     public Builder addActiveNodeUids(java.lang.String value) {
       if (value == null) {
@@ -1101,7 +1175,9 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>repeated string active_node_uids = 5;</code>
+     * <code>repeated string active_node_uids = 5[json_name = "activeNodeUids"];</code>
+     * @param values The activeNodeUids to add.
+     * @return This builder for chaining.
      */
     public Builder addAllActiveNodeUids(java.lang.Iterable<java.lang.String> values) {
       ensureActiveNodeUidsIsMutable();
@@ -1110,16 +1186,19 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>repeated string active_node_uids = 5;</code>
+     * <code>repeated string active_node_uids = 5[json_name = "activeNodeUids"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearActiveNodeUids() {
       activeNodeUids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000010);
+      bitField0_ = (bitField0_ & ~0x00000002);
       onChanged();
       return this;
     }
     /**
-     * <code>repeated string active_node_uids = 5;</code>
+     * <code>repeated string active_node_uids = 5[json_name = "activeNodeUids"];</code>
+     * @param value The bytes of the activeNodeUids to add.
+     * @return This builder for chaining.
      */
     public Builder addActiveNodeUidsBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1136,13 +1215,15 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> lastProcessedTimestampBuilder_;
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6[json_name = "lastProcessedTimestamp"];</code>
+     * @return Whether the lastProcessedTimestamp field is set.
      */
     public boolean hasLastProcessedTimestamp() {
       return lastProcessedTimestampBuilder_ != null || lastProcessedTimestamp_ != null;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6[json_name = "lastProcessedTimestamp"];</code>
+     * @return The lastProcessedTimestamp.
      */
     public com.google.protobuf.Timestamp getLastProcessedTimestamp() {
       if (lastProcessedTimestampBuilder_ == null) {
@@ -1153,7 +1234,7 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6[json_name = "lastProcessedTimestamp"];</code>
      */
     public Builder setLastProcessedTimestamp(com.google.protobuf.Timestamp value) {
       if (lastProcessedTimestampBuilder_ == null) {
@@ -1169,7 +1250,7 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6[json_name = "lastProcessedTimestamp"];</code>
      */
     public Builder setLastProcessedTimestamp(com.google.protobuf.Timestamp.Builder builderForValue) {
       if (lastProcessedTimestampBuilder_ == null) {
@@ -1182,7 +1263,7 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6[json_name = "lastProcessedTimestamp"];</code>
      */
     public Builder mergeLastProcessedTimestamp(com.google.protobuf.Timestamp value) {
       if (lastProcessedTimestampBuilder_ == null) {
@@ -1200,7 +1281,7 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6[json_name = "lastProcessedTimestamp"];</code>
      */
     public Builder clearLastProcessedTimestamp() {
       if (lastProcessedTimestampBuilder_ == null) {
@@ -1214,14 +1295,14 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6[json_name = "lastProcessedTimestamp"];</code>
      */
     public com.google.protobuf.Timestamp.Builder getLastProcessedTimestampBuilder() {
       onChanged();
       return getLastProcessedTimestampFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6[json_name = "lastProcessedTimestamp"];</code>
      */
     public com.google.protobuf.TimestampOrBuilder getLastProcessedTimestampOrBuilder() {
       if (lastProcessedTimestampBuilder_ != null) {
@@ -1232,7 +1313,7 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 6[json_name = "lastProcessedTimestamp"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>
@@ -1248,7 +1329,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
 
     private java.lang.Object kubeSystemUid_ = "";
     /**
-     * <code>string kube_system_uid = 7;</code>
+     * <code>string kube_system_uid = 7[json_name = "kubeSystemUid"];</code>
+     * @return The kubeSystemUid.
      */
     public java.lang.String getKubeSystemUid() {
       java.lang.Object ref = kubeSystemUid_;
@@ -1262,7 +1344,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       }
     }
     /**
-     * <code>string kube_system_uid = 7;</code>
+     * <code>string kube_system_uid = 7[json_name = "kubeSystemUid"];</code>
+     * @return The bytes for kubeSystemUid.
      */
     public com.google.protobuf.ByteString getKubeSystemUidBytes() {
       java.lang.Object ref = kubeSystemUid_;
@@ -1275,7 +1358,9 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       }
     }
     /**
-     * <code>string kube_system_uid = 7;</code>
+     * <code>string kube_system_uid = 7[json_name = "kubeSystemUid"];</code>
+     * @param value The kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUid(java.lang.String value) {
       if (value == null) {
@@ -1287,7 +1372,8 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>string kube_system_uid = 7;</code>
+     * <code>string kube_system_uid = 7[json_name = "kubeSystemUid"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearKubeSystemUid() {
       kubeSystemUid_ = getDefaultInstance().getKubeSystemUid();
@@ -1295,7 +1381,9 @@ public final class K8SClusterSyncEvent extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>string kube_system_uid = 7;</code>
+     * <code>string kube_system_uid = 7[json_name = "kubeSystemUid"];</code>
+     * @param value The bytes for kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUidBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

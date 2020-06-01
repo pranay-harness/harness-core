@@ -9,43 +9,52 @@ public interface K8sContainerInstanceSyncPerpetualTaskParamsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string account_id = 1;</code>
+   * <code>string account_id = 1[json_name = "accountId"];</code>
+   * @return The accountId.
    */
   java.lang.String getAccountId();
   /**
-   * <code>string account_id = 1;</code>
+   * <code>string account_id = 1[json_name = "accountId"];</code>
+   * @return The bytes for accountId.
    */
   com.google.protobuf.ByteString getAccountIdBytes();
 
   /**
-   * <code>string app_id = 2;</code>
+   * <code>string app_id = 2[json_name = "appId"];</code>
+   * @return The appId.
    */
   java.lang.String getAppId();
   /**
-   * <code>string app_id = 2;</code>
+   * <code>string app_id = 2[json_name = "appId"];</code>
+   * @return The bytes for appId.
    */
   com.google.protobuf.ByteString getAppIdBytes();
 
   /**
-   * <code>bytes k8s_cluster_config = 3;</code>
+   * <code>bytes k8s_cluster_config = 3[json_name = "k8sClusterConfig"];</code>
+   * @return The k8sClusterConfig.
    */
   com.google.protobuf.ByteString getK8SClusterConfig();
 
   /**
-   * <code>string namespace = 4;</code>
+   * <code>string namespace = 4[json_name = "namespace"];</code>
+   * @return The namespace.
    */
   java.lang.String getNamespace();
   /**
-   * <code>string namespace = 4;</code>
+   * <code>string namespace = 4[json_name = "namespace"];</code>
+   * @return The bytes for namespace.
    */
   com.google.protobuf.ByteString getNamespaceBytes();
 
   /**
-   * <code>string release_name = 5;</code>
+   * <code>string release_name = 5[json_name = "releaseName"];</code>
+   * @return The releaseName.
    */
   java.lang.String getReleaseName();
   /**
-   * <code>string release_name = 5;</code>
+   * <code>string release_name = 5[json_name = "releaseName"];</code>
+   * @return The bytes for releaseName.
    */
   com.google.protobuf.ByteString getReleaseNameBytes();
 }

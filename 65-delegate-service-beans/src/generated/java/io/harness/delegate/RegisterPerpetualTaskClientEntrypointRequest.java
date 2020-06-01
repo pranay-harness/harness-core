@@ -23,6 +23,13 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new RegisterPerpetualTaskClientEntrypointRequest();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -33,7 +40,6 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -97,7 +103,8 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
   public static final int TYPE_FIELD_NUMBER = 1;
   private volatile java.lang.Object type_;
   /**
-   * <code>string type = 1;</code>
+   * <code>string type = 1[json_name = "type"];</code>
+   * @return The type.
    */
   public java.lang.String getType() {
     java.lang.Object ref = type_;
@@ -111,7 +118,8 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
     }
   }
   /**
-   * <code>string type = 1;</code>
+   * <code>string type = 1[json_name = "type"];</code>
+   * @return The bytes for type.
    */
   public com.google.protobuf.ByteString getTypeBytes() {
     java.lang.Object ref = type_;
@@ -127,13 +135,17 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
   public static final int PERPETUAL_TASK_CLIENT_ENTRYPOINT_FIELD_NUMBER = 2;
   private io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetualTaskClientEntrypoint_;
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+   * "perpetualTaskClientEntrypoint"];</code>
+   * @return Whether the perpetualTaskClientEntrypoint field is set.
    */
   public boolean hasPerpetualTaskClientEntrypoint() {
     return perpetualTaskClientEntrypoint_ != null;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+   * "perpetualTaskClientEntrypoint"];</code>
+   * @return The perpetualTaskClientEntrypoint.
    */
   public io.harness.perpetualtask.PerpetualTaskClientEntrypoint getPerpetualTaskClientEntrypoint() {
     return perpetualTaskClientEntrypoint_ == null
@@ -141,7 +153,8 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
         : perpetualTaskClientEntrypoint_;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+   * "perpetualTaskClientEntrypoint"];</code>
    */
   public io.harness.perpetualtask.PerpetualTaskClientEntrypointOrBuilder getPerpetualTaskClientEntrypointOrBuilder() {
     return getPerpetualTaskClientEntrypoint();
@@ -464,7 +477,8 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
 
     private java.lang.Object type_ = "";
     /**
-     * <code>string type = 1;</code>
+     * <code>string type = 1[json_name = "type"];</code>
+     * @return The type.
      */
     public java.lang.String getType() {
       java.lang.Object ref = type_;
@@ -478,7 +492,8 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
       }
     }
     /**
-     * <code>string type = 1;</code>
+     * <code>string type = 1[json_name = "type"];</code>
+     * @return The bytes for type.
      */
     public com.google.protobuf.ByteString getTypeBytes() {
       java.lang.Object ref = type_;
@@ -491,7 +506,9 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
       }
     }
     /**
-     * <code>string type = 1;</code>
+     * <code>string type = 1[json_name = "type"];</code>
+     * @param value The type to set.
+     * @return This builder for chaining.
      */
     public Builder setType(java.lang.String value) {
       if (value == null) {
@@ -503,7 +520,8 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
       return this;
     }
     /**
-     * <code>string type = 1;</code>
+     * <code>string type = 1[json_name = "type"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearType() {
       type_ = getDefaultInstance().getType();
@@ -511,7 +529,9 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
       return this;
     }
     /**
-     * <code>string type = 1;</code>
+     * <code>string type = 1[json_name = "type"];</code>
+     * @param value The bytes for type to set.
+     * @return This builder for chaining.
      */
     public Builder setTypeBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -529,13 +549,17 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
         io.harness.perpetualtask.PerpetualTaskClientEntrypoint.Builder,
         io.harness.perpetualtask.PerpetualTaskClientEntrypointOrBuilder> perpetualTaskClientEntrypointBuilder_;
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+     * "perpetualTaskClientEntrypoint"];</code>
+     * @return Whether the perpetualTaskClientEntrypoint field is set.
      */
     public boolean hasPerpetualTaskClientEntrypoint() {
       return perpetualTaskClientEntrypointBuilder_ != null || perpetualTaskClientEntrypoint_ != null;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+     * "perpetualTaskClientEntrypoint"];</code>
+     * @return The perpetualTaskClientEntrypoint.
      */
     public io.harness.perpetualtask.PerpetualTaskClientEntrypoint getPerpetualTaskClientEntrypoint() {
       if (perpetualTaskClientEntrypointBuilder_ == null) {
@@ -547,7 +571,8 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+     * "perpetualTaskClientEntrypoint"];</code>
      */
     public Builder setPerpetualTaskClientEntrypoint(io.harness.perpetualtask.PerpetualTaskClientEntrypoint value) {
       if (perpetualTaskClientEntrypointBuilder_ == null) {
@@ -563,7 +588,8 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+     * "perpetualTaskClientEntrypoint"];</code>
      */
     public Builder setPerpetualTaskClientEntrypoint(
         io.harness.perpetualtask.PerpetualTaskClientEntrypoint.Builder builderForValue) {
@@ -577,7 +603,8 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+     * "perpetualTaskClientEntrypoint"];</code>
      */
     public Builder mergePerpetualTaskClientEntrypoint(io.harness.perpetualtask.PerpetualTaskClientEntrypoint value) {
       if (perpetualTaskClientEntrypointBuilder_ == null) {
@@ -597,7 +624,8 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+     * "perpetualTaskClientEntrypoint"];</code>
      */
     public Builder clearPerpetualTaskClientEntrypoint() {
       if (perpetualTaskClientEntrypointBuilder_ == null) {
@@ -611,14 +639,16 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+     * "perpetualTaskClientEntrypoint"];</code>
      */
     public io.harness.perpetualtask.PerpetualTaskClientEntrypoint.Builder getPerpetualTaskClientEntrypointBuilder() {
       onChanged();
       return getPerpetualTaskClientEntrypointFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+     * "perpetualTaskClientEntrypoint"];</code>
      */
     public io.harness.perpetualtask.PerpetualTaskClientEntrypointOrBuilder getPerpetualTaskClientEntrypointOrBuilder() {
       if (perpetualTaskClientEntrypointBuilder_ != null) {
@@ -630,7 +660,8 @@ public final class RegisterPerpetualTaskClientEntrypointRequest
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+     * "perpetualTaskClientEntrypoint"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskClientEntrypoint,
         io.harness.perpetualtask.PerpetualTaskClientEntrypoint.Builder,

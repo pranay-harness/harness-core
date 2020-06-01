@@ -8,42 +8,50 @@ public interface PingOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.Ping)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string delegate_id = 1;</code>
+   * <code>string delegate_id = 1[json_name = "delegateId"];</code>
+   * @return The delegateId.
    */
   java.lang.String getDelegateId();
   /**
-   * <code>string delegate_id = 1;</code>
+   * <code>string delegate_id = 1[json_name = "delegateId"];</code>
+   * @return The bytes for delegateId.
    */
   com.google.protobuf.ByteString getDelegateIdBytes();
 
   /**
-   * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+   * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
+   * @return Whether the pingTimestamp field is set.
    */
   boolean hasPingTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+   * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
+   * @return The pingTimestamp.
    */
   com.google.protobuf.Timestamp getPingTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+   * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
    */
   com.google.protobuf.TimestampOrBuilder getPingTimestampOrBuilder();
 
   /**
-   * <code>string process_id = 3;</code>
+   * <code>string process_id = 3[json_name = "processId"];</code>
+   * @return The processId.
    */
   java.lang.String getProcessId();
   /**
-   * <code>string process_id = 3;</code>
+   * <code>string process_id = 3[json_name = "processId"];</code>
+   * @return The bytes for processId.
    */
   com.google.protobuf.ByteString getProcessIdBytes();
 
   /**
-   * <code>string version = 4;</code>
+   * <code>string version = 4[json_name = "version"];</code>
+   * @return The version.
    */
   java.lang.String getVersion();
   /**
-   * <code>string version = 4;</code>
+   * <code>string version = 4[json_name = "version"];</code>
+   * @return The bytes for version.
    */
   com.google.protobuf.ByteString getVersionBytes();
 }

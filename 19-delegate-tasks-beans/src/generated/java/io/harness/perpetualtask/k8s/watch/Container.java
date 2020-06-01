@@ -22,6 +22,13 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new Container();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -32,7 +39,6 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -101,7 +107,8 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int NAME_FIELD_NUMBER = 1;
   private volatile java.lang.Object name_;
   /**
-   * <code>string name = 1;</code>
+   * <code>string name = 1[json_name = "name"];</code>
+   * @return The name.
    */
   public java.lang.String getName() {
     java.lang.Object ref = name_;
@@ -115,7 +122,8 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
     }
   }
   /**
-   * <code>string name = 1;</code>
+   * <code>string name = 1[json_name = "name"];</code>
+   * @return The bytes for name.
    */
   public com.google.protobuf.ByteString getNameBytes() {
     java.lang.Object ref = name_;
@@ -131,7 +139,8 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int IMAGE_FIELD_NUMBER = 2;
   private volatile java.lang.Object image_;
   /**
-   * <code>string image = 2;</code>
+   * <code>string image = 2[json_name = "image"];</code>
+   * @return The image.
    */
   public java.lang.String getImage() {
     java.lang.Object ref = image_;
@@ -145,7 +154,8 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
     }
   }
   /**
-   * <code>string image = 2;</code>
+   * <code>string image = 2[json_name = "image"];</code>
+   * @return The bytes for image.
    */
   public com.google.protobuf.ByteString getImageBytes() {
     java.lang.Object ref = image_;
@@ -161,19 +171,21 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
   public static final int RESOURCE_FIELD_NUMBER = 3;
   private io.harness.perpetualtask.k8s.watch.Resource resource_;
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
+   * @return Whether the resource field is set.
    */
   public boolean hasResource() {
     return resource_ != null;
   }
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
+   * @return The resource.
    */
   public io.harness.perpetualtask.k8s.watch.Resource getResource() {
     return resource_ == null ? io.harness.perpetualtask.k8s.watch.Resource.getDefaultInstance() : resource_;
   }
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
    */
   public io.harness.perpetualtask.k8s.watch.ResourceOrBuilder getResourceOrBuilder() {
     return getResource();
@@ -509,7 +521,8 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
 
     private java.lang.Object name_ = "";
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 1[json_name = "name"];</code>
+     * @return The name.
      */
     public java.lang.String getName() {
       java.lang.Object ref = name_;
@@ -523,7 +536,8 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 1[json_name = "name"];</code>
+     * @return The bytes for name.
      */
     public com.google.protobuf.ByteString getNameBytes() {
       java.lang.Object ref = name_;
@@ -536,7 +550,9 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 1[json_name = "name"];</code>
+     * @param value The name to set.
+     * @return This builder for chaining.
      */
     public Builder setName(java.lang.String value) {
       if (value == null) {
@@ -548,7 +564,8 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 1[json_name = "name"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearName() {
       name_ = getDefaultInstance().getName();
@@ -556,7 +573,9 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 1[json_name = "name"];</code>
+     * @param value The bytes for name to set.
+     * @return This builder for chaining.
      */
     public Builder setNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -571,7 +590,8 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
 
     private java.lang.Object image_ = "";
     /**
-     * <code>string image = 2;</code>
+     * <code>string image = 2[json_name = "image"];</code>
+     * @return The image.
      */
     public java.lang.String getImage() {
       java.lang.Object ref = image_;
@@ -585,7 +605,8 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string image = 2;</code>
+     * <code>string image = 2[json_name = "image"];</code>
+     * @return The bytes for image.
      */
     public com.google.protobuf.ByteString getImageBytes() {
       java.lang.Object ref = image_;
@@ -598,7 +619,9 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>string image = 2;</code>
+     * <code>string image = 2[json_name = "image"];</code>
+     * @param value The image to set.
+     * @return This builder for chaining.
      */
     public Builder setImage(java.lang.String value) {
       if (value == null) {
@@ -610,7 +633,8 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string image = 2;</code>
+     * <code>string image = 2[json_name = "image"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearImage() {
       image_ = getDefaultInstance().getImage();
@@ -618,7 +642,9 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>string image = 2;</code>
+     * <code>string image = 2[json_name = "image"];</code>
+     * @param value The bytes for image to set.
+     * @return This builder for chaining.
      */
     public Builder setImageBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -636,13 +662,15 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
         io.harness.perpetualtask.k8s.watch.Resource.Builder, io.harness.perpetualtask.k8s.watch.ResourceOrBuilder>
         resourceBuilder_;
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
+     * @return Whether the resource field is set.
      */
     public boolean hasResource() {
       return resourceBuilder_ != null || resource_ != null;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
+     * @return The resource.
      */
     public io.harness.perpetualtask.k8s.watch.Resource getResource() {
       if (resourceBuilder_ == null) {
@@ -652,7 +680,7 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
      */
     public Builder setResource(io.harness.perpetualtask.k8s.watch.Resource value) {
       if (resourceBuilder_ == null) {
@@ -668,7 +696,7 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
      */
     public Builder setResource(io.harness.perpetualtask.k8s.watch.Resource.Builder builderForValue) {
       if (resourceBuilder_ == null) {
@@ -681,7 +709,7 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
      */
     public Builder mergeResource(io.harness.perpetualtask.k8s.watch.Resource value) {
       if (resourceBuilder_ == null) {
@@ -698,7 +726,7 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
      */
     public Builder clearResource() {
       if (resourceBuilder_ == null) {
@@ -712,14 +740,14 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.Resource.Builder getResourceBuilder() {
       onChanged();
       return getResourceFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.ResourceOrBuilder getResourceOrBuilder() {
       if (resourceBuilder_ != null) {
@@ -729,7 +757,7 @@ public final class Container extends com.google.protobuf.GeneratedMessageV3 impl
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Resource,
         io.harness.perpetualtask.k8s.watch.Resource.Builder, io.harness.perpetualtask.k8s.watch.ResourceOrBuilder>

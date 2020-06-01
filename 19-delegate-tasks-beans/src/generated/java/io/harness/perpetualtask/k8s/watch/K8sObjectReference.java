@@ -4,10 +4,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
 /**
- * <pre>
- * uniquely identify a k8s resource within a cluster
- * </pre>
- *
  * Protobuf type {@code io.harness.perpetualtask.k8s.watch.K8sObjectReference}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:K8sObjectReference.java.pb.meta")
@@ -29,6 +25,13 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new K8sObjectReference();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -39,7 +42,6 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -113,7 +115,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
   public static final int KIND_FIELD_NUMBER = 1;
   private volatile java.lang.Object kind_;
   /**
-   * <code>string kind = 1;</code>
+   * <code>string kind = 1[json_name = "kind"];</code>
+   * @return The kind.
    */
   public java.lang.String getKind() {
     java.lang.Object ref = kind_;
@@ -127,7 +130,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string kind = 1;</code>
+   * <code>string kind = 1[json_name = "kind"];</code>
+   * @return The bytes for kind.
    */
   public com.google.protobuf.ByteString getKindBytes() {
     java.lang.Object ref = kind_;
@@ -143,7 +147,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
   public static final int NAME_FIELD_NUMBER = 2;
   private volatile java.lang.Object name_;
   /**
-   * <code>string name = 2;</code>
+   * <code>string name = 2[json_name = "name"];</code>
+   * @return The name.
    */
   public java.lang.String getName() {
     java.lang.Object ref = name_;
@@ -157,7 +162,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string name = 2;</code>
+   * <code>string name = 2[json_name = "name"];</code>
+   * @return The bytes for name.
    */
   public com.google.protobuf.ByteString getNameBytes() {
     java.lang.Object ref = name_;
@@ -173,7 +179,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
   public static final int NAMESPACE_FIELD_NUMBER = 3;
   private volatile java.lang.Object namespace_;
   /**
-   * <code>string namespace = 3;</code>
+   * <code>string namespace = 3[json_name = "namespace"];</code>
+   * @return The namespace.
    */
   public java.lang.String getNamespace() {
     java.lang.Object ref = namespace_;
@@ -187,7 +194,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string namespace = 3;</code>
+   * <code>string namespace = 3[json_name = "namespace"];</code>
+   * @return The bytes for namespace.
    */
   public com.google.protobuf.ByteString getNamespaceBytes() {
     java.lang.Object ref = namespace_;
@@ -203,7 +211,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
   public static final int UID_FIELD_NUMBER = 4;
   private volatile java.lang.Object uid_;
   /**
-   * <code>string uid = 4;</code>
+   * <code>string uid = 4[json_name = "uid"];</code>
+   * @return The uid.
    */
   public java.lang.String getUid() {
     java.lang.Object ref = uid_;
@@ -217,7 +226,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string uid = 4;</code>
+   * <code>string uid = 4[json_name = "uid"];</code>
+   * @return The bytes for uid.
    */
   public com.google.protobuf.ByteString getUidBytes() {
     java.lang.Object ref = uid_;
@@ -233,11 +243,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
   public static final int RESOURCE_VERSION_FIELD_NUMBER = 5;
   private volatile java.lang.Object resourceVersion_;
   /**
-   * <pre>
-   * optional
-   * </pre>
-   *
-   * <code>string resource_version = 5;</code>
+   * <code>string resource_version = 5[json_name = "resourceVersion"];</code>
+   * @return The resourceVersion.
    */
   public java.lang.String getResourceVersion() {
     java.lang.Object ref = resourceVersion_;
@@ -251,11 +258,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <pre>
-   * optional
-   * </pre>
-   *
-   * <code>string resource_version = 5;</code>
+   * <code>string resource_version = 5[json_name = "resourceVersion"];</code>
+   * @return The bytes for resourceVersion.
    */
   public com.google.protobuf.ByteString getResourceVersionBytes() {
     java.lang.Object ref = resourceVersion_;
@@ -450,10 +454,6 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
     return builder;
   }
   /**
-   * <pre>
-   * uniquely identify a k8s resource within a cluster
-   * </pre>
-   *
    * Protobuf type {@code io.harness.perpetualtask.k8s.watch.K8sObjectReference}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
@@ -626,7 +626,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object kind_ = "";
     /**
-     * <code>string kind = 1;</code>
+     * <code>string kind = 1[json_name = "kind"];</code>
+     * @return The kind.
      */
     public java.lang.String getKind() {
       java.lang.Object ref = kind_;
@@ -640,7 +641,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string kind = 1;</code>
+     * <code>string kind = 1[json_name = "kind"];</code>
+     * @return The bytes for kind.
      */
     public com.google.protobuf.ByteString getKindBytes() {
       java.lang.Object ref = kind_;
@@ -653,7 +655,9 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string kind = 1;</code>
+     * <code>string kind = 1[json_name = "kind"];</code>
+     * @param value The kind to set.
+     * @return This builder for chaining.
      */
     public Builder setKind(java.lang.String value) {
       if (value == null) {
@@ -665,7 +669,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string kind = 1;</code>
+     * <code>string kind = 1[json_name = "kind"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearKind() {
       kind_ = getDefaultInstance().getKind();
@@ -673,7 +678,9 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string kind = 1;</code>
+     * <code>string kind = 1[json_name = "kind"];</code>
+     * @param value The bytes for kind to set.
+     * @return This builder for chaining.
      */
     public Builder setKindBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -688,7 +695,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object name_ = "";
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @return The name.
      */
     public java.lang.String getName() {
       java.lang.Object ref = name_;
@@ -702,7 +710,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @return The bytes for name.
      */
     public com.google.protobuf.ByteString getNameBytes() {
       java.lang.Object ref = name_;
@@ -715,7 +724,9 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @param value The name to set.
+     * @return This builder for chaining.
      */
     public Builder setName(java.lang.String value) {
       if (value == null) {
@@ -727,7 +738,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearName() {
       name_ = getDefaultInstance().getName();
@@ -735,7 +747,9 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string name = 2;</code>
+     * <code>string name = 2[json_name = "name"];</code>
+     * @param value The bytes for name to set.
+     * @return This builder for chaining.
      */
     public Builder setNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -750,7 +764,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object namespace_ = "";
     /**
-     * <code>string namespace = 3;</code>
+     * <code>string namespace = 3[json_name = "namespace"];</code>
+     * @return The namespace.
      */
     public java.lang.String getNamespace() {
       java.lang.Object ref = namespace_;
@@ -764,7 +779,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string namespace = 3;</code>
+     * <code>string namespace = 3[json_name = "namespace"];</code>
+     * @return The bytes for namespace.
      */
     public com.google.protobuf.ByteString getNamespaceBytes() {
       java.lang.Object ref = namespace_;
@@ -777,7 +793,9 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string namespace = 3;</code>
+     * <code>string namespace = 3[json_name = "namespace"];</code>
+     * @param value The namespace to set.
+     * @return This builder for chaining.
      */
     public Builder setNamespace(java.lang.String value) {
       if (value == null) {
@@ -789,7 +807,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string namespace = 3;</code>
+     * <code>string namespace = 3[json_name = "namespace"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearNamespace() {
       namespace_ = getDefaultInstance().getNamespace();
@@ -797,7 +816,9 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string namespace = 3;</code>
+     * <code>string namespace = 3[json_name = "namespace"];</code>
+     * @param value The bytes for namespace to set.
+     * @return This builder for chaining.
      */
     public Builder setNamespaceBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -812,7 +833,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object uid_ = "";
     /**
-     * <code>string uid = 4;</code>
+     * <code>string uid = 4[json_name = "uid"];</code>
+     * @return The uid.
      */
     public java.lang.String getUid() {
       java.lang.Object ref = uid_;
@@ -826,7 +848,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string uid = 4;</code>
+     * <code>string uid = 4[json_name = "uid"];</code>
+     * @return The bytes for uid.
      */
     public com.google.protobuf.ByteString getUidBytes() {
       java.lang.Object ref = uid_;
@@ -839,7 +862,9 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string uid = 4;</code>
+     * <code>string uid = 4[json_name = "uid"];</code>
+     * @param value The uid to set.
+     * @return This builder for chaining.
      */
     public Builder setUid(java.lang.String value) {
       if (value == null) {
@@ -851,7 +876,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string uid = 4;</code>
+     * <code>string uid = 4[json_name = "uid"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearUid() {
       uid_ = getDefaultInstance().getUid();
@@ -859,7 +885,9 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string uid = 4;</code>
+     * <code>string uid = 4[json_name = "uid"];</code>
+     * @param value The bytes for uid to set.
+     * @return This builder for chaining.
      */
     public Builder setUidBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -874,11 +902,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object resourceVersion_ = "";
     /**
-     * <pre>
-     * optional
-     * </pre>
-     *
-     * <code>string resource_version = 5;</code>
+     * <code>string resource_version = 5[json_name = "resourceVersion"];</code>
+     * @return The resourceVersion.
      */
     public java.lang.String getResourceVersion() {
       java.lang.Object ref = resourceVersion_;
@@ -892,11 +917,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <pre>
-     * optional
-     * </pre>
-     *
-     * <code>string resource_version = 5;</code>
+     * <code>string resource_version = 5[json_name = "resourceVersion"];</code>
+     * @return The bytes for resourceVersion.
      */
     public com.google.protobuf.ByteString getResourceVersionBytes() {
       java.lang.Object ref = resourceVersion_;
@@ -909,11 +931,9 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <pre>
-     * optional
-     * </pre>
-     *
-     * <code>string resource_version = 5;</code>
+     * <code>string resource_version = 5[json_name = "resourceVersion"];</code>
+     * @param value The resourceVersion to set.
+     * @return This builder for chaining.
      */
     public Builder setResourceVersion(java.lang.String value) {
       if (value == null) {
@@ -925,11 +945,8 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <pre>
-     * optional
-     * </pre>
-     *
-     * <code>string resource_version = 5;</code>
+     * <code>string resource_version = 5[json_name = "resourceVersion"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearResourceVersion() {
       resourceVersion_ = getDefaultInstance().getResourceVersion();
@@ -937,11 +954,9 @@ public final class K8sObjectReference extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <pre>
-     * optional
-     * </pre>
-     *
-     * <code>string resource_version = 5;</code>
+     * <code>string resource_version = 5[json_name = "resourceVersion"];</code>
+     * @param value The bytes for resourceVersion to set.
+     * @return This builder for chaining.
      */
     public Builder setResourceVersionBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

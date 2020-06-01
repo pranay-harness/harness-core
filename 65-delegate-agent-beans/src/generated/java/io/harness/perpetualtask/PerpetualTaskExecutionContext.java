@@ -19,6 +19,13 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new PerpetualTaskExecutionContext();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -29,7 +36,6 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -114,20 +120,22 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
   public static final int TASK_PARAMS_FIELD_NUMBER = 1;
   private io.harness.perpetualtask.PerpetualTaskExecutionParams taskParams_;
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
+   * @return Whether the taskParams field is set.
    */
   public boolean hasTaskParams() {
     return taskParams_ != null;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
+   * @return The taskParams.
    */
   public io.harness.perpetualtask.PerpetualTaskExecutionParams getTaskParams() {
     return taskParams_ == null ? io.harness.perpetualtask.PerpetualTaskExecutionParams.getDefaultInstance()
                                : taskParams_;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
    */
   public io.harness.perpetualtask.PerpetualTaskExecutionParamsOrBuilder getTaskParamsOrBuilder() {
     return getTaskParams();
@@ -136,19 +144,21 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
   public static final int TASK_SCHEDULE_FIELD_NUMBER = 2;
   private io.harness.perpetualtask.PerpetualTaskSchedule taskSchedule_;
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
+   * @return Whether the taskSchedule field is set.
    */
   public boolean hasTaskSchedule() {
     return taskSchedule_ != null;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
+   * @return The taskSchedule.
    */
   public io.harness.perpetualtask.PerpetualTaskSchedule getTaskSchedule() {
     return taskSchedule_ == null ? io.harness.perpetualtask.PerpetualTaskSchedule.getDefaultInstance() : taskSchedule_;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
    */
   public io.harness.perpetualtask.PerpetualTaskScheduleOrBuilder getTaskScheduleOrBuilder() {
     return getTaskSchedule();
@@ -157,19 +167,21 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
   public static final int HEARTBEAT_TIMESTAMP_FIELD_NUMBER = 3;
   private com.google.protobuf.Timestamp heartbeatTimestamp_;
   /**
-   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
+   * @return Whether the heartbeatTimestamp field is set.
    */
   public boolean hasHeartbeatTimestamp() {
     return heartbeatTimestamp_ != null;
   }
   /**
-   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
+   * @return The heartbeatTimestamp.
    */
   public com.google.protobuf.Timestamp getHeartbeatTimestamp() {
     return heartbeatTimestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : heartbeatTimestamp_;
   }
   /**
-   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
    */
   public com.google.protobuf.TimestampOrBuilder getHeartbeatTimestampOrBuilder() {
     return getHeartbeatTimestamp();
@@ -537,13 +549,15 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
         io.harness.perpetualtask.PerpetualTaskExecutionParams.Builder,
         io.harness.perpetualtask.PerpetualTaskExecutionParamsOrBuilder> taskParamsBuilder_;
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
+     * @return Whether the taskParams field is set.
      */
     public boolean hasTaskParams() {
       return taskParamsBuilder_ != null || taskParams_ != null;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
+     * @return The taskParams.
      */
     public io.harness.perpetualtask.PerpetualTaskExecutionParams getTaskParams() {
       if (taskParamsBuilder_ == null) {
@@ -554,7 +568,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
      */
     public Builder setTaskParams(io.harness.perpetualtask.PerpetualTaskExecutionParams value) {
       if (taskParamsBuilder_ == null) {
@@ -570,7 +584,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
      */
     public Builder setTaskParams(io.harness.perpetualtask.PerpetualTaskExecutionParams.Builder builderForValue) {
       if (taskParamsBuilder_ == null) {
@@ -583,7 +597,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
      */
     public Builder mergeTaskParams(io.harness.perpetualtask.PerpetualTaskExecutionParams value) {
       if (taskParamsBuilder_ == null) {
@@ -602,7 +616,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
      */
     public Builder clearTaskParams() {
       if (taskParamsBuilder_ == null) {
@@ -616,14 +630,14 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
      */
     public io.harness.perpetualtask.PerpetualTaskExecutionParams.Builder getTaskParamsBuilder() {
       onChanged();
       return getTaskParamsFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
      */
     public io.harness.perpetualtask.PerpetualTaskExecutionParamsOrBuilder getTaskParamsOrBuilder() {
       if (taskParamsBuilder_ != null) {
@@ -634,7 +648,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskExecutionParams,
         io.harness.perpetualtask.PerpetualTaskExecutionParams.Builder,
@@ -656,13 +670,15 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
         io.harness.perpetualtask.PerpetualTaskSchedule.Builder, io.harness.perpetualtask.PerpetualTaskScheduleOrBuilder>
         taskScheduleBuilder_;
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
+     * @return Whether the taskSchedule field is set.
      */
     public boolean hasTaskSchedule() {
       return taskScheduleBuilder_ != null || taskSchedule_ != null;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
+     * @return The taskSchedule.
      */
     public io.harness.perpetualtask.PerpetualTaskSchedule getTaskSchedule() {
       if (taskScheduleBuilder_ == null) {
@@ -673,7 +689,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
      */
     public Builder setTaskSchedule(io.harness.perpetualtask.PerpetualTaskSchedule value) {
       if (taskScheduleBuilder_ == null) {
@@ -689,7 +705,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
      */
     public Builder setTaskSchedule(io.harness.perpetualtask.PerpetualTaskSchedule.Builder builderForValue) {
       if (taskScheduleBuilder_ == null) {
@@ -702,7 +718,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
      */
     public Builder mergeTaskSchedule(io.harness.perpetualtask.PerpetualTaskSchedule value) {
       if (taskScheduleBuilder_ == null) {
@@ -720,7 +736,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
      */
     public Builder clearTaskSchedule() {
       if (taskScheduleBuilder_ == null) {
@@ -734,14 +750,14 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
      */
     public io.harness.perpetualtask.PerpetualTaskSchedule.Builder getTaskScheduleBuilder() {
       onChanged();
       return getTaskScheduleFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
      */
     public io.harness.perpetualtask.PerpetualTaskScheduleOrBuilder getTaskScheduleOrBuilder() {
       if (taskScheduleBuilder_ != null) {
@@ -752,7 +768,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskSchedule,
         io.harness.perpetualtask.PerpetualTaskSchedule.Builder, io.harness.perpetualtask.PerpetualTaskScheduleOrBuilder>
@@ -772,13 +788,15 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> heartbeatTimestampBuilder_;
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
+     * @return Whether the heartbeatTimestamp field is set.
      */
     public boolean hasHeartbeatTimestamp() {
       return heartbeatTimestampBuilder_ != null || heartbeatTimestamp_ != null;
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
+     * @return The heartbeatTimestamp.
      */
     public com.google.protobuf.Timestamp getHeartbeatTimestamp() {
       if (heartbeatTimestampBuilder_ == null) {
@@ -788,7 +806,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
      */
     public Builder setHeartbeatTimestamp(com.google.protobuf.Timestamp value) {
       if (heartbeatTimestampBuilder_ == null) {
@@ -804,7 +822,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
      */
     public Builder setHeartbeatTimestamp(com.google.protobuf.Timestamp.Builder builderForValue) {
       if (heartbeatTimestampBuilder_ == null) {
@@ -817,7 +835,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
      */
     public Builder mergeHeartbeatTimestamp(com.google.protobuf.Timestamp value) {
       if (heartbeatTimestampBuilder_ == null) {
@@ -835,7 +853,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
      */
     public Builder clearHeartbeatTimestamp() {
       if (heartbeatTimestampBuilder_ == null) {
@@ -849,14 +867,14 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
      */
     public com.google.protobuf.Timestamp.Builder getHeartbeatTimestampBuilder() {
       onChanged();
       return getHeartbeatTimestampFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
      */
     public com.google.protobuf.TimestampOrBuilder getHeartbeatTimestampOrBuilder() {
       if (heartbeatTimestampBuilder_ != null) {
@@ -866,7 +884,7 @@ public final class PerpetualTaskExecutionContext extends com.google.protobuf.Gen
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>

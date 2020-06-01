@@ -9,11 +9,13 @@ public interface TaskProgressUpdatesResponseOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.TaskProgressUpdatesResponse)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1;</code>
+   * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1[json_name = "currentlyAtStage"];</code>
+   * @return The enum numeric value on the wire for currentlyAtStage.
    */
   int getCurrentlyAtStageValue();
   /**
-   * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1;</code>
+   * <code>.io.harness.delegate.TaskExecutionStage currently_at_stage = 1[json_name = "currentlyAtStage"];</code>
+   * @return The currentlyAtStage.
    */
   io.harness.delegate.TaskExecutionStage getCurrentlyAtStage();
 }

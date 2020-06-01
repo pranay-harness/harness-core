@@ -9,30 +9,36 @@ public interface AwsAmiInstanceSyncPerpetualTaskParamsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskParams)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string region = 1;</code>
+   * <code>string region = 1[json_name = "region"];</code>
+   * @return The region.
    */
   java.lang.String getRegion();
   /**
-   * <code>string region = 1;</code>
+   * <code>string region = 1[json_name = "region"];</code>
+   * @return The bytes for region.
    */
   com.google.protobuf.ByteString getRegionBytes();
 
   /**
-   * <code>bytes aws_config = 2;</code>
+   * <code>bytes aws_config = 2[json_name = "awsConfig"];</code>
+   * @return The awsConfig.
    */
   com.google.protobuf.ByteString getAwsConfig();
 
   /**
-   * <code>string asg_name = 3;</code>
+   * <code>string asg_name = 3[json_name = "asgName"];</code>
+   * @return The asgName.
    */
   java.lang.String getAsgName();
   /**
-   * <code>string asg_name = 3;</code>
+   * <code>string asg_name = 3[json_name = "asgName"];</code>
+   * @return The bytes for asgName.
    */
   com.google.protobuf.ByteString getAsgNameBytes();
 
   /**
-   * <code>bytes encrypted_data = 4;</code>
+   * <code>bytes encrypted_data = 4[json_name = "encryptedData"];</code>
+   * @return The encryptedData.
    */
   com.google.protobuf.ByteString getEncryptedData();
 }

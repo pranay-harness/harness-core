@@ -19,6 +19,13 @@ public final class AggregatedUsage extends com.google.protobuf.GeneratedMessageV
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new AggregatedUsage();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -29,7 +36,6 @@ public final class AggregatedUsage extends com.google.protobuf.GeneratedMessageV
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -88,7 +94,8 @@ public final class AggregatedUsage extends com.google.protobuf.GeneratedMessageV
   public static final int AVG_CPU_NANO_FIELD_NUMBER = 1;
   private long avgCpuNano_;
   /**
-   * <code>int64 avg_cpu_nano = 1;</code>
+   * <code>int64 avg_cpu_nano = 1[json_name = "avgCpuNano"];</code>
+   * @return The avgCpuNano.
    */
   public long getAvgCpuNano() {
     return avgCpuNano_;
@@ -97,7 +104,8 @@ public final class AggregatedUsage extends com.google.protobuf.GeneratedMessageV
   public static final int MAX_CPU_NANO_FIELD_NUMBER = 2;
   private long maxCpuNano_;
   /**
-   * <code>int64 max_cpu_nano = 2;</code>
+   * <code>int64 max_cpu_nano = 2[json_name = "maxCpuNano"];</code>
+   * @return The maxCpuNano.
    */
   public long getMaxCpuNano() {
     return maxCpuNano_;
@@ -106,7 +114,8 @@ public final class AggregatedUsage extends com.google.protobuf.GeneratedMessageV
   public static final int AVG_MEMORY_BYTE_FIELD_NUMBER = 3;
   private long avgMemoryByte_;
   /**
-   * <code>int64 avg_memory_byte = 3;</code>
+   * <code>int64 avg_memory_byte = 3[json_name = "avgMemoryByte"];</code>
+   * @return The avgMemoryByte.
    */
   public long getAvgMemoryByte() {
     return avgMemoryByte_;
@@ -115,7 +124,8 @@ public final class AggregatedUsage extends com.google.protobuf.GeneratedMessageV
   public static final int MAX_MEMORY_BYTE_FIELD_NUMBER = 4;
   private long maxMemoryByte_;
   /**
-   * <code>int64 max_memory_byte = 4;</code>
+   * <code>int64 max_memory_byte = 4[json_name = "maxMemoryByte"];</code>
+   * @return The maxMemoryByte.
    */
   public long getMaxMemoryByte() {
     return maxMemoryByte_;
@@ -450,13 +460,16 @@ public final class AggregatedUsage extends com.google.protobuf.GeneratedMessageV
 
     private long avgCpuNano_;
     /**
-     * <code>int64 avg_cpu_nano = 1;</code>
+     * <code>int64 avg_cpu_nano = 1[json_name = "avgCpuNano"];</code>
+     * @return The avgCpuNano.
      */
     public long getAvgCpuNano() {
       return avgCpuNano_;
     }
     /**
-     * <code>int64 avg_cpu_nano = 1;</code>
+     * <code>int64 avg_cpu_nano = 1[json_name = "avgCpuNano"];</code>
+     * @param value The avgCpuNano to set.
+     * @return This builder for chaining.
      */
     public Builder setAvgCpuNano(long value) {
       avgCpuNano_ = value;
@@ -464,7 +477,8 @@ public final class AggregatedUsage extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>int64 avg_cpu_nano = 1;</code>
+     * <code>int64 avg_cpu_nano = 1[json_name = "avgCpuNano"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearAvgCpuNano() {
       avgCpuNano_ = 0L;
@@ -474,13 +488,16 @@ public final class AggregatedUsage extends com.google.protobuf.GeneratedMessageV
 
     private long maxCpuNano_;
     /**
-     * <code>int64 max_cpu_nano = 2;</code>
+     * <code>int64 max_cpu_nano = 2[json_name = "maxCpuNano"];</code>
+     * @return The maxCpuNano.
      */
     public long getMaxCpuNano() {
       return maxCpuNano_;
     }
     /**
-     * <code>int64 max_cpu_nano = 2;</code>
+     * <code>int64 max_cpu_nano = 2[json_name = "maxCpuNano"];</code>
+     * @param value The maxCpuNano to set.
+     * @return This builder for chaining.
      */
     public Builder setMaxCpuNano(long value) {
       maxCpuNano_ = value;
@@ -488,7 +505,8 @@ public final class AggregatedUsage extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>int64 max_cpu_nano = 2;</code>
+     * <code>int64 max_cpu_nano = 2[json_name = "maxCpuNano"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearMaxCpuNano() {
       maxCpuNano_ = 0L;
@@ -498,13 +516,16 @@ public final class AggregatedUsage extends com.google.protobuf.GeneratedMessageV
 
     private long avgMemoryByte_;
     /**
-     * <code>int64 avg_memory_byte = 3;</code>
+     * <code>int64 avg_memory_byte = 3[json_name = "avgMemoryByte"];</code>
+     * @return The avgMemoryByte.
      */
     public long getAvgMemoryByte() {
       return avgMemoryByte_;
     }
     /**
-     * <code>int64 avg_memory_byte = 3;</code>
+     * <code>int64 avg_memory_byte = 3[json_name = "avgMemoryByte"];</code>
+     * @param value The avgMemoryByte to set.
+     * @return This builder for chaining.
      */
     public Builder setAvgMemoryByte(long value) {
       avgMemoryByte_ = value;
@@ -512,7 +533,8 @@ public final class AggregatedUsage extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>int64 avg_memory_byte = 3;</code>
+     * <code>int64 avg_memory_byte = 3[json_name = "avgMemoryByte"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearAvgMemoryByte() {
       avgMemoryByte_ = 0L;
@@ -522,13 +544,16 @@ public final class AggregatedUsage extends com.google.protobuf.GeneratedMessageV
 
     private long maxMemoryByte_;
     /**
-     * <code>int64 max_memory_byte = 4;</code>
+     * <code>int64 max_memory_byte = 4[json_name = "maxMemoryByte"];</code>
+     * @return The maxMemoryByte.
      */
     public long getMaxMemoryByte() {
       return maxMemoryByte_;
     }
     /**
-     * <code>int64 max_memory_byte = 4;</code>
+     * <code>int64 max_memory_byte = 4[json_name = "maxMemoryByte"];</code>
+     * @param value The maxMemoryByte to set.
+     * @return This builder for chaining.
      */
     public Builder setMaxMemoryByte(long value) {
       maxMemoryByte_ = value;
@@ -536,7 +561,8 @@ public final class AggregatedUsage extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>int64 max_memory_byte = 4;</code>
+     * <code>int64 max_memory_byte = 4[json_name = "maxMemoryByte"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearMaxMemoryByte() {
       maxMemoryByte_ = 0L;

@@ -21,6 +21,13 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new SamplePerpetualTaskParams();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -31,7 +38,6 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -81,7 +87,8 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
   public static final int COUNTRY_FIELD_NUMBER = 1;
   private volatile java.lang.Object country_;
   /**
-   * <code>string country = 1;</code>
+   * <code>string country = 1[json_name = "country"];</code>
+   * @return The country.
    */
   public java.lang.String getCountry() {
     java.lang.Object ref = country_;
@@ -95,7 +102,8 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
     }
   }
   /**
-   * <code>string country = 1;</code>
+   * <code>string country = 1[json_name = "country"];</code>
+   * @return The bytes for country.
    */
   public com.google.protobuf.ByteString getCountryBytes() {
     java.lang.Object ref = country_;
@@ -394,7 +402,8 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
 
     private java.lang.Object country_ = "";
     /**
-     * <code>string country = 1;</code>
+     * <code>string country = 1[json_name = "country"];</code>
+     * @return The country.
      */
     public java.lang.String getCountry() {
       java.lang.Object ref = country_;
@@ -408,7 +417,8 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
       }
     }
     /**
-     * <code>string country = 1;</code>
+     * <code>string country = 1[json_name = "country"];</code>
+     * @return The bytes for country.
      */
     public com.google.protobuf.ByteString getCountryBytes() {
       java.lang.Object ref = country_;
@@ -421,7 +431,9 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
       }
     }
     /**
-     * <code>string country = 1;</code>
+     * <code>string country = 1[json_name = "country"];</code>
+     * @param value The country to set.
+     * @return This builder for chaining.
      */
     public Builder setCountry(java.lang.String value) {
       if (value == null) {
@@ -433,7 +445,8 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
       return this;
     }
     /**
-     * <code>string country = 1;</code>
+     * <code>string country = 1[json_name = "country"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCountry() {
       country_ = getDefaultInstance().getCountry();
@@ -441,7 +454,9 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
       return this;
     }
     /**
-     * <code>string country = 1;</code>
+     * <code>string country = 1[json_name = "country"];</code>
+     * @param value The bytes for country to set.
+     * @return This builder for chaining.
      */
     public Builder setCountryBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

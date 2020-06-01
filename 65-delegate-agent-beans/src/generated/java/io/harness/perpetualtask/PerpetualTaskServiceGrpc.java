@@ -17,8 +17,8 @@ import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
 
 /**
  */
-@javax.annotation.Generated(value = "by gRPC proto compiler (version 1.21.0)",
-    comments = "Source: io/harness/perpetualtask/perpetual_task_service.proto")
+@javax.annotation.
+Generated(value = "by gRPC proto compiler", comments = "Source: io/harness/perpetualtask/perpetual_task_service.proto")
 public final class PerpetualTaskServiceGrpc {
   private PerpetualTaskServiceGrpc() {}
 
@@ -46,8 +46,7 @@ public final class PerpetualTaskServiceGrpc {
                   .<io.harness.perpetualtask.PerpetualTaskListRequest,
                       io.harness.perpetualtask.PerpetualTaskListResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                  .setFullMethodName(
-                      generateFullMethodName("io.harness.perpetualtask.PerpetualTaskService", "PerpetualTaskList"))
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "PerpetualTaskList"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                       io.harness.perpetualtask.PerpetualTaskListRequest.getDefaultInstance()))
@@ -82,8 +81,7 @@ public final class PerpetualTaskServiceGrpc {
                   .<io.harness.perpetualtask.PerpetualTaskContextRequest,
                       io.harness.perpetualtask.PerpetualTaskContextResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                  .setFullMethodName(
-                      generateFullMethodName("io.harness.perpetualtask.PerpetualTaskService", "PerpetualTaskContext"))
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "PerpetualTaskContext"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                       io.harness.perpetualtask.PerpetualTaskContextRequest.getDefaultInstance()))
@@ -117,8 +115,7 @@ public final class PerpetualTaskServiceGrpc {
               io.grpc.MethodDescriptor
                   .<io.harness.perpetualtask.HeartbeatRequest, io.harness.perpetualtask.HeartbeatResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                  .setFullMethodName(
-                      generateFullMethodName("io.harness.perpetualtask.PerpetualTaskService", "Heartbeat"))
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "Heartbeat"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                       io.harness.perpetualtask.HeartbeatRequest.getDefaultInstance()))

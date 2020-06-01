@@ -8,22 +8,26 @@ public interface AggregatedUsageOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.payloads.AggregatedUsage)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>int64 avg_cpu_nano = 1;</code>
+   * <code>int64 avg_cpu_nano = 1[json_name = "avgCpuNano"];</code>
+   * @return The avgCpuNano.
    */
   long getAvgCpuNano();
 
   /**
-   * <code>int64 max_cpu_nano = 2;</code>
+   * <code>int64 max_cpu_nano = 2[json_name = "maxCpuNano"];</code>
+   * @return The maxCpuNano.
    */
   long getMaxCpuNano();
 
   /**
-   * <code>int64 avg_memory_byte = 3;</code>
+   * <code>int64 avg_memory_byte = 3[json_name = "avgMemoryByte"];</code>
+   * @return The avgMemoryByte.
    */
   long getAvgMemoryByte();
 
   /**
-   * <code>int64 max_memory_byte = 4;</code>
+   * <code>int64 max_memory_byte = 4[json_name = "maxMemoryByte"];</code>
+   * @return The maxMemoryByte.
    */
   long getMaxMemoryByte();
 }

@@ -25,25 +25,17 @@ public final class PingPongServiceOuterClass {
   static {
     java.lang.String[] descriptorData = {"\n+io/harness/pingpong/ping_pong_service."
         + "proto\022\020io.harness.event\032\037google/protobuf"
-        + "/timestamp.proto\"t\n\004Ping\022\023\n\013delegate_id\030"
-        + "\001 \001(\t\0222\n\016ping_timestamp\030\002 \001(\0132\032.google.p"
-        + "rotobuf.Timestamp\022\022\n\nprocess_id\030\003 \001(\t\022\017\n"
-        + "\007version\030\004 \001(\t\"\006\n\004Pong2L\n\017PingPongServic"
-        + "e\0229\n\007TryPing\022\026.io.harness.event.Ping\032\026.i"
-        + "o.harness.event.PongB\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
+        + "/timestamp.proto\"\243\001\n\004Ping\022\037\n\013delegate_id"
+        + "\030\001 \001(\tR\ndelegateId\022A\n\016ping_timestamp\030\002 \001"
+        + "(\0132\032.google.protobuf.TimestampR\rpingTime"
+        + "stamp\022\035\n\nprocess_id\030\003 \001(\tR\tprocessId\022\030\n\007"
+        + "version\030\004 \001(\tR\007version\"\006\n\004Pong2L\n\017PingPo"
+        + "ngService\0229\n\007TryPing\022\026.io.harness.event."
+        + "Ping\032\026.io.harness.event.PongB\002P\001b\006proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.TimestampProto.getDescriptor(),
-        },
-        assigner);
+        });
     internal_static_io_harness_event_Ping_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_event_Ping_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(internal_static_io_harness_event_Ping_descriptor,

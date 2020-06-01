@@ -9,23 +9,23 @@ public interface ObtainTaskCapabilitiesResponseOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.ObtainTaskCapabilitiesResponse)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
    */
   java.util.List<io.harness.delegate.Capability> getCapabilitiesList();
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
    */
   io.harness.delegate.Capability getCapabilities(int index);
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
    */
   int getCapabilitiesCount();
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
    */
   java.util.List<? extends io.harness.delegate.CapabilityOrBuilder> getCapabilitiesOrBuilderList();
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
    */
   io.harness.delegate.CapabilityOrBuilder getCapabilitiesOrBuilder(int index);
 }

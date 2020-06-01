@@ -26,6 +26,13 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new PcfInstanceSyncPerpetualTaskParams();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -36,7 +43,6 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -112,7 +118,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
   public static final int INFRA_MAPPING_ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object infraMappingId_;
   /**
-   * <code>string infra_mapping_id = 1;</code>
+   * <code>string infra_mapping_id = 1[json_name = "infraMappingId"];</code>
+   * @return The infraMappingId.
    */
   public java.lang.String getInfraMappingId() {
     java.lang.Object ref = infraMappingId_;
@@ -126,7 +133,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
     }
   }
   /**
-   * <code>string infra_mapping_id = 1;</code>
+   * <code>string infra_mapping_id = 1[json_name = "infraMappingId"];</code>
+   * @return The bytes for infraMappingId.
    */
   public com.google.protobuf.ByteString getInfraMappingIdBytes() {
     java.lang.Object ref = infraMappingId_;
@@ -142,7 +150,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
   public static final int APPLICATION_NAME_FIELD_NUMBER = 2;
   private volatile java.lang.Object applicationName_;
   /**
-   * <code>string application_name = 2;</code>
+   * <code>string application_name = 2[json_name = "applicationName"];</code>
+   * @return The applicationName.
    */
   public java.lang.String getApplicationName() {
     java.lang.Object ref = applicationName_;
@@ -156,7 +165,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
     }
   }
   /**
-   * <code>string application_name = 2;</code>
+   * <code>string application_name = 2[json_name = "applicationName"];</code>
+   * @return The bytes for applicationName.
    */
   public com.google.protobuf.ByteString getApplicationNameBytes() {
     java.lang.Object ref = applicationName_;
@@ -172,7 +182,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
   public static final int ORG_NAME_FIELD_NUMBER = 3;
   private volatile java.lang.Object orgName_;
   /**
-   * <code>string org_name = 3;</code>
+   * <code>string org_name = 3[json_name = "orgName"];</code>
+   * @return The orgName.
    */
   public java.lang.String getOrgName() {
     java.lang.Object ref = orgName_;
@@ -186,7 +197,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
     }
   }
   /**
-   * <code>string org_name = 3;</code>
+   * <code>string org_name = 3[json_name = "orgName"];</code>
+   * @return The bytes for orgName.
    */
   public com.google.protobuf.ByteString getOrgNameBytes() {
     java.lang.Object ref = orgName_;
@@ -202,7 +214,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
   public static final int SPACE_FIELD_NUMBER = 4;
   private volatile java.lang.Object space_;
   /**
-   * <code>string space = 4;</code>
+   * <code>string space = 4[json_name = "space"];</code>
+   * @return The space.
    */
   public java.lang.String getSpace() {
     java.lang.Object ref = space_;
@@ -216,7 +229,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
     }
   }
   /**
-   * <code>string space = 4;</code>
+   * <code>string space = 4[json_name = "space"];</code>
+   * @return The bytes for space.
    */
   public com.google.protobuf.ByteString getSpaceBytes() {
     java.lang.Object ref = space_;
@@ -232,7 +246,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
   public static final int PCF_CONFIG_FIELD_NUMBER = 5;
   private com.google.protobuf.ByteString pcfConfig_;
   /**
-   * <code>bytes pcf_config = 5;</code>
+   * <code>bytes pcf_config = 5[json_name = "pcfConfig"];</code>
+   * @return The pcfConfig.
    */
   public com.google.protobuf.ByteString getPcfConfig() {
     return pcfConfig_;
@@ -241,7 +256,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
   public static final int ENCRYPTED_DATA_FIELD_NUMBER = 6;
   private com.google.protobuf.ByteString encryptedData_;
   /**
-   * <code>bytes encrypted_data = 6;</code>
+   * <code>bytes encrypted_data = 6[json_name = "encryptedData"];</code>
+   * @return The encryptedData.
    */
   public com.google.protobuf.ByteString getEncryptedData() {
     return encryptedData_;
@@ -620,7 +636,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
 
     private java.lang.Object infraMappingId_ = "";
     /**
-     * <code>string infra_mapping_id = 1;</code>
+     * <code>string infra_mapping_id = 1[json_name = "infraMappingId"];</code>
+     * @return The infraMappingId.
      */
     public java.lang.String getInfraMappingId() {
       java.lang.Object ref = infraMappingId_;
@@ -634,7 +651,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       }
     }
     /**
-     * <code>string infra_mapping_id = 1;</code>
+     * <code>string infra_mapping_id = 1[json_name = "infraMappingId"];</code>
+     * @return The bytes for infraMappingId.
      */
     public com.google.protobuf.ByteString getInfraMappingIdBytes() {
       java.lang.Object ref = infraMappingId_;
@@ -647,7 +665,9 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       }
     }
     /**
-     * <code>string infra_mapping_id = 1;</code>
+     * <code>string infra_mapping_id = 1[json_name = "infraMappingId"];</code>
+     * @param value The infraMappingId to set.
+     * @return This builder for chaining.
      */
     public Builder setInfraMappingId(java.lang.String value) {
       if (value == null) {
@@ -659,7 +679,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       return this;
     }
     /**
-     * <code>string infra_mapping_id = 1;</code>
+     * <code>string infra_mapping_id = 1[json_name = "infraMappingId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearInfraMappingId() {
       infraMappingId_ = getDefaultInstance().getInfraMappingId();
@@ -667,7 +688,9 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       return this;
     }
     /**
-     * <code>string infra_mapping_id = 1;</code>
+     * <code>string infra_mapping_id = 1[json_name = "infraMappingId"];</code>
+     * @param value The bytes for infraMappingId to set.
+     * @return This builder for chaining.
      */
     public Builder setInfraMappingIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -682,7 +705,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
 
     private java.lang.Object applicationName_ = "";
     /**
-     * <code>string application_name = 2;</code>
+     * <code>string application_name = 2[json_name = "applicationName"];</code>
+     * @return The applicationName.
      */
     public java.lang.String getApplicationName() {
       java.lang.Object ref = applicationName_;
@@ -696,7 +720,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       }
     }
     /**
-     * <code>string application_name = 2;</code>
+     * <code>string application_name = 2[json_name = "applicationName"];</code>
+     * @return The bytes for applicationName.
      */
     public com.google.protobuf.ByteString getApplicationNameBytes() {
       java.lang.Object ref = applicationName_;
@@ -709,7 +734,9 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       }
     }
     /**
-     * <code>string application_name = 2;</code>
+     * <code>string application_name = 2[json_name = "applicationName"];</code>
+     * @param value The applicationName to set.
+     * @return This builder for chaining.
      */
     public Builder setApplicationName(java.lang.String value) {
       if (value == null) {
@@ -721,7 +748,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       return this;
     }
     /**
-     * <code>string application_name = 2;</code>
+     * <code>string application_name = 2[json_name = "applicationName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearApplicationName() {
       applicationName_ = getDefaultInstance().getApplicationName();
@@ -729,7 +757,9 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       return this;
     }
     /**
-     * <code>string application_name = 2;</code>
+     * <code>string application_name = 2[json_name = "applicationName"];</code>
+     * @param value The bytes for applicationName to set.
+     * @return This builder for chaining.
      */
     public Builder setApplicationNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -744,7 +774,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
 
     private java.lang.Object orgName_ = "";
     /**
-     * <code>string org_name = 3;</code>
+     * <code>string org_name = 3[json_name = "orgName"];</code>
+     * @return The orgName.
      */
     public java.lang.String getOrgName() {
       java.lang.Object ref = orgName_;
@@ -758,7 +789,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       }
     }
     /**
-     * <code>string org_name = 3;</code>
+     * <code>string org_name = 3[json_name = "orgName"];</code>
+     * @return The bytes for orgName.
      */
     public com.google.protobuf.ByteString getOrgNameBytes() {
       java.lang.Object ref = orgName_;
@@ -771,7 +803,9 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       }
     }
     /**
-     * <code>string org_name = 3;</code>
+     * <code>string org_name = 3[json_name = "orgName"];</code>
+     * @param value The orgName to set.
+     * @return This builder for chaining.
      */
     public Builder setOrgName(java.lang.String value) {
       if (value == null) {
@@ -783,7 +817,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       return this;
     }
     /**
-     * <code>string org_name = 3;</code>
+     * <code>string org_name = 3[json_name = "orgName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearOrgName() {
       orgName_ = getDefaultInstance().getOrgName();
@@ -791,7 +826,9 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       return this;
     }
     /**
-     * <code>string org_name = 3;</code>
+     * <code>string org_name = 3[json_name = "orgName"];</code>
+     * @param value The bytes for orgName to set.
+     * @return This builder for chaining.
      */
     public Builder setOrgNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -806,7 +843,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
 
     private java.lang.Object space_ = "";
     /**
-     * <code>string space = 4;</code>
+     * <code>string space = 4[json_name = "space"];</code>
+     * @return The space.
      */
     public java.lang.String getSpace() {
       java.lang.Object ref = space_;
@@ -820,7 +858,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       }
     }
     /**
-     * <code>string space = 4;</code>
+     * <code>string space = 4[json_name = "space"];</code>
+     * @return The bytes for space.
      */
     public com.google.protobuf.ByteString getSpaceBytes() {
       java.lang.Object ref = space_;
@@ -833,7 +872,9 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       }
     }
     /**
-     * <code>string space = 4;</code>
+     * <code>string space = 4[json_name = "space"];</code>
+     * @param value The space to set.
+     * @return This builder for chaining.
      */
     public Builder setSpace(java.lang.String value) {
       if (value == null) {
@@ -845,7 +886,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       return this;
     }
     /**
-     * <code>string space = 4;</code>
+     * <code>string space = 4[json_name = "space"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearSpace() {
       space_ = getDefaultInstance().getSpace();
@@ -853,7 +895,9 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       return this;
     }
     /**
-     * <code>string space = 4;</code>
+     * <code>string space = 4[json_name = "space"];</code>
+     * @param value The bytes for space to set.
+     * @return This builder for chaining.
      */
     public Builder setSpaceBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -868,13 +912,16 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
 
     private com.google.protobuf.ByteString pcfConfig_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes pcf_config = 5;</code>
+     * <code>bytes pcf_config = 5[json_name = "pcfConfig"];</code>
+     * @return The pcfConfig.
      */
     public com.google.protobuf.ByteString getPcfConfig() {
       return pcfConfig_;
     }
     /**
-     * <code>bytes pcf_config = 5;</code>
+     * <code>bytes pcf_config = 5[json_name = "pcfConfig"];</code>
+     * @param value The pcfConfig to set.
+     * @return This builder for chaining.
      */
     public Builder setPcfConfig(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -886,7 +933,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       return this;
     }
     /**
-     * <code>bytes pcf_config = 5;</code>
+     * <code>bytes pcf_config = 5[json_name = "pcfConfig"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearPcfConfig() {
       pcfConfig_ = getDefaultInstance().getPcfConfig();
@@ -896,13 +944,16 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
 
     private com.google.protobuf.ByteString encryptedData_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes encrypted_data = 6;</code>
+     * <code>bytes encrypted_data = 6[json_name = "encryptedData"];</code>
+     * @return The encryptedData.
      */
     public com.google.protobuf.ByteString getEncryptedData() {
       return encryptedData_;
     }
     /**
-     * <code>bytes encrypted_data = 6;</code>
+     * <code>bytes encrypted_data = 6[json_name = "encryptedData"];</code>
+     * @param value The encryptedData to set.
+     * @return This builder for chaining.
      */
     public Builder setEncryptedData(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -914,7 +965,8 @@ public final class PcfInstanceSyncPerpetualTaskParams extends com.google.protobu
       return this;
     }
     /**
-     * <code>bytes encrypted_data = 6;</code>
+     * <code>bytes encrypted_data = 6[json_name = "encryptedData"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearEncryptedData() {
       encryptedData_ = getDefaultInstance().getEncryptedData();

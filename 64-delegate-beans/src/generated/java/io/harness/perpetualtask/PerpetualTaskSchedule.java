@@ -4,10 +4,6 @@
 package io.harness.perpetualtask;
 
 /**
- * <pre>
- * schedule persists in mongodb
- * </pre>
- *
  * Protobuf type {@code io.harness.perpetualtask.PerpetualTaskSchedule}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:PerpetualTaskSchedule.java.pb.meta")
@@ -23,6 +19,13 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new PerpetualTaskSchedule();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -33,7 +36,6 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -103,31 +105,21 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
   public static final int INTERVAL_FIELD_NUMBER = 1;
   private com.google.protobuf.Duration interval_;
   /**
-   * <pre>
-   * Interval between successive iterations
-   * </pre>
-   *
-   * <code>.google.protobuf.Duration interval = 1;</code>
+   * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
+   * @return Whether the interval field is set.
    */
   public boolean hasInterval() {
     return interval_ != null;
   }
   /**
-   * <pre>
-   * Interval between successive iterations
-   * </pre>
-   *
-   * <code>.google.protobuf.Duration interval = 1;</code>
+   * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
+   * @return The interval.
    */
   public com.google.protobuf.Duration getInterval() {
     return interval_ == null ? com.google.protobuf.Duration.getDefaultInstance() : interval_;
   }
   /**
-   * <pre>
-   * Interval between successive iterations
-   * </pre>
-   *
-   * <code>.google.protobuf.Duration interval = 1;</code>
+   * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
    */
   public com.google.protobuf.DurationOrBuilder getIntervalOrBuilder() {
     return getInterval();
@@ -136,31 +128,21 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
   public static final int TIMEOUT_FIELD_NUMBER = 2;
   private com.google.protobuf.Duration timeout_;
   /**
-   * <pre>
-   * Timeout for one iteration of the task
-   * </pre>
-   *
-   * <code>.google.protobuf.Duration timeout = 2;</code>
+   * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
+   * @return Whether the timeout field is set.
    */
   public boolean hasTimeout() {
     return timeout_ != null;
   }
   /**
-   * <pre>
-   * Timeout for one iteration of the task
-   * </pre>
-   *
-   * <code>.google.protobuf.Duration timeout = 2;</code>
+   * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
+   * @return The timeout.
    */
   public com.google.protobuf.Duration getTimeout() {
     return timeout_ == null ? com.google.protobuf.Duration.getDefaultInstance() : timeout_;
   }
   /**
-   * <pre>
-   * Timeout for one iteration of the task
-   * </pre>
-   *
-   * <code>.google.protobuf.Duration timeout = 2;</code>
+   * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
    */
   public com.google.protobuf.DurationOrBuilder getTimeoutOrBuilder() {
     return getTimeout();
@@ -328,10 +310,6 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
     return builder;
   }
   /**
-   * <pre>
-   * schedule persists in mongodb
-   * </pre>
-   *
    * Protobuf type {@code io.harness.perpetualtask.PerpetualTaskSchedule}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
@@ -498,21 +476,15 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Duration, com.google.protobuf.Duration.Builder,
         com.google.protobuf.DurationOrBuilder> intervalBuilder_;
     /**
-     * <pre>
-     * Interval between successive iterations
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration interval = 1;</code>
+     * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
+     * @return Whether the interval field is set.
      */
     public boolean hasInterval() {
       return intervalBuilder_ != null || interval_ != null;
     }
     /**
-     * <pre>
-     * Interval between successive iterations
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration interval = 1;</code>
+     * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
+     * @return The interval.
      */
     public com.google.protobuf.Duration getInterval() {
       if (intervalBuilder_ == null) {
@@ -522,11 +494,7 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       }
     }
     /**
-     * <pre>
-     * Interval between successive iterations
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration interval = 1;</code>
+     * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
      */
     public Builder setInterval(com.google.protobuf.Duration value) {
       if (intervalBuilder_ == null) {
@@ -542,11 +510,7 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
-     * <pre>
-     * Interval between successive iterations
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration interval = 1;</code>
+     * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
      */
     public Builder setInterval(com.google.protobuf.Duration.Builder builderForValue) {
       if (intervalBuilder_ == null) {
@@ -559,11 +523,7 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
-     * <pre>
-     * Interval between successive iterations
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration interval = 1;</code>
+     * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
      */
     public Builder mergeInterval(com.google.protobuf.Duration value) {
       if (intervalBuilder_ == null) {
@@ -580,11 +540,7 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
-     * <pre>
-     * Interval between successive iterations
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration interval = 1;</code>
+     * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
      */
     public Builder clearInterval() {
       if (intervalBuilder_ == null) {
@@ -598,22 +554,14 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
-     * <pre>
-     * Interval between successive iterations
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration interval = 1;</code>
+     * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
      */
     public com.google.protobuf.Duration.Builder getIntervalBuilder() {
       onChanged();
       return getIntervalFieldBuilder().getBuilder();
     }
     /**
-     * <pre>
-     * Interval between successive iterations
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration interval = 1;</code>
+     * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
      */
     public com.google.protobuf.DurationOrBuilder getIntervalOrBuilder() {
       if (intervalBuilder_ != null) {
@@ -623,11 +571,7 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       }
     }
     /**
-     * <pre>
-     * Interval between successive iterations
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration interval = 1;</code>
+     * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Duration, com.google.protobuf.Duration.Builder,
         com.google.protobuf.DurationOrBuilder>
@@ -645,21 +589,15 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Duration, com.google.protobuf.Duration.Builder,
         com.google.protobuf.DurationOrBuilder> timeoutBuilder_;
     /**
-     * <pre>
-     * Timeout for one iteration of the task
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration timeout = 2;</code>
+     * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
+     * @return Whether the timeout field is set.
      */
     public boolean hasTimeout() {
       return timeoutBuilder_ != null || timeout_ != null;
     }
     /**
-     * <pre>
-     * Timeout for one iteration of the task
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration timeout = 2;</code>
+     * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
+     * @return The timeout.
      */
     public com.google.protobuf.Duration getTimeout() {
       if (timeoutBuilder_ == null) {
@@ -669,11 +607,7 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       }
     }
     /**
-     * <pre>
-     * Timeout for one iteration of the task
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration timeout = 2;</code>
+     * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
      */
     public Builder setTimeout(com.google.protobuf.Duration value) {
       if (timeoutBuilder_ == null) {
@@ -689,11 +623,7 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
-     * <pre>
-     * Timeout for one iteration of the task
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration timeout = 2;</code>
+     * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
      */
     public Builder setTimeout(com.google.protobuf.Duration.Builder builderForValue) {
       if (timeoutBuilder_ == null) {
@@ -706,11 +636,7 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
-     * <pre>
-     * Timeout for one iteration of the task
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration timeout = 2;</code>
+     * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
      */
     public Builder mergeTimeout(com.google.protobuf.Duration value) {
       if (timeoutBuilder_ == null) {
@@ -727,11 +653,7 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
-     * <pre>
-     * Timeout for one iteration of the task
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration timeout = 2;</code>
+     * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
      */
     public Builder clearTimeout() {
       if (timeoutBuilder_ == null) {
@@ -745,22 +667,14 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
-     * <pre>
-     * Timeout for one iteration of the task
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration timeout = 2;</code>
+     * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
      */
     public com.google.protobuf.Duration.Builder getTimeoutBuilder() {
       onChanged();
       return getTimeoutFieldBuilder().getBuilder();
     }
     /**
-     * <pre>
-     * Timeout for one iteration of the task
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration timeout = 2;</code>
+     * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
      */
     public com.google.protobuf.DurationOrBuilder getTimeoutOrBuilder() {
       if (timeoutBuilder_ != null) {
@@ -770,11 +684,7 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       }
     }
     /**
-     * <pre>
-     * Timeout for one iteration of the task
-     * </pre>
-     *
-     * <code>.google.protobuf.Duration timeout = 2;</code>
+     * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Duration, com.google.protobuf.Duration.Builder,
         com.google.protobuf.DurationOrBuilder>

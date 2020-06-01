@@ -21,6 +21,13 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new ObtainTaskCapabilitiesResponse();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -86,31 +93,31 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
   public static final int CAPABILITIES_FIELD_NUMBER = 1;
   private java.util.List<io.harness.delegate.Capability> capabilities_;
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
    */
   public java.util.List<io.harness.delegate.Capability> getCapabilitiesList() {
     return capabilities_;
   }
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
    */
   public java.util.List<? extends io.harness.delegate.CapabilityOrBuilder> getCapabilitiesOrBuilderList() {
     return capabilities_;
   }
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
    */
   public int getCapabilitiesCount() {
     return capabilities_.size();
   }
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
    */
   public io.harness.delegate.Capability getCapabilities(int index) {
     return capabilities_.get(index);
   }
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
    */
   public io.harness.delegate.CapabilityOrBuilder getCapabilitiesOrBuilder(int index) {
     return capabilities_.get(index);
@@ -450,7 +457,7 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
         io.harness.delegate.Capability.Builder, io.harness.delegate.CapabilityOrBuilder> capabilitiesBuilder_;
 
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public java.util.List<io.harness.delegate.Capability> getCapabilitiesList() {
       if (capabilitiesBuilder_ == null) {
@@ -460,7 +467,7 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
       }
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public int getCapabilitiesCount() {
       if (capabilitiesBuilder_ == null) {
@@ -470,7 +477,7 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
       }
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public io.harness.delegate.Capability getCapabilities(int index) {
       if (capabilitiesBuilder_ == null) {
@@ -480,7 +487,7 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
       }
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public Builder setCapabilities(int index, io.harness.delegate.Capability value) {
       if (capabilitiesBuilder_ == null) {
@@ -496,7 +503,7 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public Builder setCapabilities(int index, io.harness.delegate.Capability.Builder builderForValue) {
       if (capabilitiesBuilder_ == null) {
@@ -509,7 +516,7 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public Builder addCapabilities(io.harness.delegate.Capability value) {
       if (capabilitiesBuilder_ == null) {
@@ -525,7 +532,7 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public Builder addCapabilities(int index, io.harness.delegate.Capability value) {
       if (capabilitiesBuilder_ == null) {
@@ -541,7 +548,7 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public Builder addCapabilities(io.harness.delegate.Capability.Builder builderForValue) {
       if (capabilitiesBuilder_ == null) {
@@ -554,7 +561,7 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public Builder addCapabilities(int index, io.harness.delegate.Capability.Builder builderForValue) {
       if (capabilitiesBuilder_ == null) {
@@ -567,7 +574,7 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public Builder addAllCapabilities(java.lang.Iterable<? extends io.harness.delegate.Capability> values) {
       if (capabilitiesBuilder_ == null) {
@@ -580,7 +587,7 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public Builder clearCapabilities() {
       if (capabilitiesBuilder_ == null) {
@@ -593,7 +600,7 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public Builder removeCapabilities(int index) {
       if (capabilitiesBuilder_ == null) {
@@ -606,13 +613,13 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
       return this;
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public io.harness.delegate.Capability.Builder getCapabilitiesBuilder(int index) {
       return getCapabilitiesFieldBuilder().getBuilder(index);
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public io.harness.delegate.CapabilityOrBuilder getCapabilitiesOrBuilder(int index) {
       if (capabilitiesBuilder_ == null) {
@@ -622,7 +629,7 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
       }
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public java.util.List<? extends io.harness.delegate.CapabilityOrBuilder> getCapabilitiesOrBuilderList() {
       if (capabilitiesBuilder_ != null) {
@@ -632,19 +639,19 @@ public final class ObtainTaskCapabilitiesResponse extends com.google.protobuf.Ge
       }
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public io.harness.delegate.Capability.Builder addCapabilitiesBuilder() {
       return getCapabilitiesFieldBuilder().addBuilder(io.harness.delegate.Capability.getDefaultInstance());
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public io.harness.delegate.Capability.Builder addCapabilitiesBuilder(int index) {
       return getCapabilitiesFieldBuilder().addBuilder(index, io.harness.delegate.Capability.getDefaultInstance());
     }
     /**
-     * <code>repeated .io.harness.delegate.Capability capabilities = 1;</code>
+     * <code>repeated .io.harness.delegate.Capability capabilities = 1[json_name = "capabilities"];</code>
      */
     public java.util.List<io.harness.delegate.Capability.Builder> getCapabilitiesBuilderList() {
       return getCapabilitiesFieldBuilder().getBuilderList();

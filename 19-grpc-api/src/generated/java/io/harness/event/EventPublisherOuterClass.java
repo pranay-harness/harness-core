@@ -32,33 +32,26 @@ public final class EventPublisherOuterClass {
   static {
     java.lang.String[] descriptorData = {"\n&io/harness/event/event_publisher.proto"
         + "\022\020io.harness.event\032\031google/protobuf/any."
-        + "proto\032\037google/protobuf/timestamp.proto\"D"
-        + "\n\016PublishRequest\0222\n\010messages\030\001 \003(\0132 .io."
-        + "harness.event.PublishMessage\"\207\002\n\016Publish"
-        + "Message\022%\n\007payload\030\001 \001(\0132\024.google.protob"
-        + "uf.Any\022D\n\nattributes\030\002 \003(\01320.io.harness."
-        + "event.PublishMessage.AttributesEntry\022/\n\013"
-        + "occurred_at\030\003 \001(\0132\032.google.protobuf.Time"
-        + "stamp\022\022\n\nmessage_id\030\004 \001(\t\022\020\n\010category\030\005 "
-        + "\001(\t\0321\n\017AttributesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005v"
-        + "alue\030\002 \001(\t:\0028\001\"\021\n\017PublishResponse2`\n\016Eve"
-        + "ntPublisher\022N\n\007Publish\022 .io.harness.even"
-        + "t.PublishRequest\032!.io.harness.event.Publ"
-        + "ishResponseB\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
+        + "proto\032\037google/protobuf/timestamp.proto\"N"
+        + "\n\016PublishRequest\022<\n\010messages\030\001 \003(\0132 .io."
+        + "harness.event.PublishMessageR\010messages\"\311"
+        + "\002\n\016PublishMessage\022.\n\007payload\030\001 \001(\0132\024.goo"
+        + "gle.protobuf.AnyR\007payload\022P\n\nattributes\030"
+        + "\002 \003(\01320.io.harness.event.PublishMessage."
+        + "AttributesEntryR\nattributes\022;\n\013occurred_"
+        + "at\030\003 \001(\0132\032.google.protobuf.TimestampR\noc"
+        + "curredAt\022\035\n\nmessage_id\030\004 \001(\tR\tmessageId\022"
+        + "\032\n\010category\030\005 \001(\tR\010category\032=\n\017Attribute"
+        + "sEntry\022\020\n\003key\030\001 \001(\tR\003key\022\024\n\005value\030\002 \001(\tR"
+        + "\005value:\0028\001\"\021\n\017PublishResponse2`\n\016EventPu"
+        + "blisher\022N\n\007Publish\022 .io.harness.event.Pu"
+        + "blishRequest\032!.io.harness.event.PublishR"
+        + "esponseB\002P\001b\006proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.AnyProto.getDescriptor(),
             com.google.protobuf.TimestampProto.getDescriptor(),
-        },
-        assigner);
+        });
     internal_static_io_harness_event_PublishRequest_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_event_PublishRequest_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(

@@ -8,93 +8,119 @@ public interface EcsSyncEventOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.payloads.EcsSyncEvent)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string cluster_arn = 1;</code>
+   * <code>string cluster_arn = 1[json_name = "clusterArn"];</code>
+   * @return The clusterArn.
    */
   java.lang.String getClusterArn();
   /**
-   * <code>string cluster_arn = 1;</code>
+   * <code>string cluster_arn = 1[json_name = "clusterArn"];</code>
+   * @return The bytes for clusterArn.
    */
   com.google.protobuf.ByteString getClusterArnBytes();
 
   /**
-   * <code>repeated string active_ec2_instance_arns = 2;</code>
+   * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+   * @return A list containing the activeEc2InstanceArns.
    */
   java.util.List<java.lang.String> getActiveEc2InstanceArnsList();
   /**
-   * <code>repeated string active_ec2_instance_arns = 2;</code>
+   * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+   * @return The count of activeEc2InstanceArns.
    */
   int getActiveEc2InstanceArnsCount();
   /**
-   * <code>repeated string active_ec2_instance_arns = 2;</code>
+   * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+   * @param index The index of the element to return.
+   * @return The activeEc2InstanceArns at the given index.
    */
   java.lang.String getActiveEc2InstanceArns(int index);
   /**
-   * <code>repeated string active_ec2_instance_arns = 2;</code>
+   * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the activeEc2InstanceArns at the given index.
    */
   com.google.protobuf.ByteString getActiveEc2InstanceArnsBytes(int index);
 
   /**
-   * <code>repeated string active_container_instance_arns = 3;</code>
+   * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+   * @return A list containing the activeContainerInstanceArns.
    */
   java.util.List<java.lang.String> getActiveContainerInstanceArnsList();
   /**
-   * <code>repeated string active_container_instance_arns = 3;</code>
+   * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+   * @return The count of activeContainerInstanceArns.
    */
   int getActiveContainerInstanceArnsCount();
   /**
-   * <code>repeated string active_container_instance_arns = 3;</code>
+   * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+   * @param index The index of the element to return.
+   * @return The activeContainerInstanceArns at the given index.
    */
   java.lang.String getActiveContainerInstanceArns(int index);
   /**
-   * <code>repeated string active_container_instance_arns = 3;</code>
+   * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the activeContainerInstanceArns at the given index.
    */
   com.google.protobuf.ByteString getActiveContainerInstanceArnsBytes(int index);
 
   /**
-   * <code>repeated string active_task_arns = 4;</code>
+   * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+   * @return A list containing the activeTaskArns.
    */
   java.util.List<java.lang.String> getActiveTaskArnsList();
   /**
-   * <code>repeated string active_task_arns = 4;</code>
+   * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+   * @return The count of activeTaskArns.
    */
   int getActiveTaskArnsCount();
   /**
-   * <code>repeated string active_task_arns = 4;</code>
+   * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+   * @param index The index of the element to return.
+   * @return The activeTaskArns at the given index.
    */
   java.lang.String getActiveTaskArns(int index);
   /**
-   * <code>repeated string active_task_arns = 4;</code>
+   * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the activeTaskArns at the given index.
    */
   com.google.protobuf.ByteString getActiveTaskArnsBytes(int index);
 
   /**
-   * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+   * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
+   * @return Whether the lastProcessedTimestamp field is set.
    */
   boolean hasLastProcessedTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+   * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
+   * @return The lastProcessedTimestamp.
    */
   com.google.protobuf.Timestamp getLastProcessedTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+   * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
    */
   com.google.protobuf.TimestampOrBuilder getLastProcessedTimestampOrBuilder();
 
   /**
-   * <code>string cluster_id = 6;</code>
+   * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   java.lang.String getClusterId();
   /**
-   * <code>string cluster_id = 6;</code>
+   * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   com.google.protobuf.ByteString getClusterIdBytes();
 
   /**
-   * <code>string setting_id = 7;</code>
+   * <code>string setting_id = 7[json_name = "settingId"];</code>
+   * @return The settingId.
    */
   java.lang.String getSettingId();
   /**
-   * <code>string setting_id = 7;</code>
+   * <code>string setting_id = 7[json_name = "settingId"];</code>
+   * @return The bytes for settingId.
    */
   com.google.protobuf.ByteString getSettingIdBytes();
 }

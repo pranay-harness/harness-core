@@ -8,62 +8,68 @@ public interface SubmitTaskRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.SubmitTaskRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+   * @return Whether the accountId field is set.
    */
   boolean hasAccountId();
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+   * @return The accountId.
    */
   io.harness.delegate.AccountId getAccountId();
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1;</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
    */
   io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder();
 
   /**
-   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 2;</code>
+   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 2[json_name = "setupAbstractions"];</code>
+   * @return Whether the setupAbstractions field is set.
    */
   boolean hasSetupAbstractions();
   /**
-   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 2;</code>
+   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 2[json_name = "setupAbstractions"];</code>
+   * @return The setupAbstractions.
    */
   io.harness.delegate.TaskSetupAbstractions getSetupAbstractions();
   /**
-   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 2;</code>
+   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 2[json_name = "setupAbstractions"];</code>
    */
   io.harness.delegate.TaskSetupAbstractionsOrBuilder getSetupAbstractionsOrBuilder();
 
   /**
-   * <code>.io.harness.delegate.TaskDetails details = 3;</code>
+   * <code>.io.harness.delegate.TaskDetails details = 3[json_name = "details"];</code>
+   * @return Whether the details field is set.
    */
   boolean hasDetails();
   /**
-   * <code>.io.harness.delegate.TaskDetails details = 3;</code>
+   * <code>.io.harness.delegate.TaskDetails details = 3[json_name = "details"];</code>
+   * @return The details.
    */
   io.harness.delegate.TaskDetails getDetails();
   /**
-   * <code>.io.harness.delegate.TaskDetails details = 3;</code>
+   * <code>.io.harness.delegate.TaskDetails details = 3[json_name = "details"];</code>
    */
   io.harness.delegate.TaskDetailsOrBuilder getDetailsOrBuilder();
 
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4[json_name = "capabilities"];</code>
    */
   java.util.List<io.harness.delegate.Capability> getCapabilitiesList();
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4[json_name = "capabilities"];</code>
    */
   io.harness.delegate.Capability getCapabilities(int index);
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4[json_name = "capabilities"];</code>
    */
   int getCapabilitiesCount();
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4[json_name = "capabilities"];</code>
    */
   java.util.List<? extends io.harness.delegate.CapabilityOrBuilder> getCapabilitiesOrBuilderList();
   /**
-   * <code>repeated .io.harness.delegate.Capability capabilities = 4;</code>
+   * <code>repeated .io.harness.delegate.Capability capabilities = 4[json_name = "capabilities"];</code>
    */
   io.harness.delegate.CapabilityOrBuilder getCapabilitiesOrBuilder(int index);
 }

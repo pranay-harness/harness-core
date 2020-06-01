@@ -8,52 +8,32 @@ public interface PerpetualTaskScheduleOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.PerpetualTaskSchedule)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <pre>
-   * Interval between successive iterations
-   * </pre>
-   *
-   * <code>.google.protobuf.Duration interval = 1;</code>
+   * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
+   * @return Whether the interval field is set.
    */
   boolean hasInterval();
   /**
-   * <pre>
-   * Interval between successive iterations
-   * </pre>
-   *
-   * <code>.google.protobuf.Duration interval = 1;</code>
+   * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
+   * @return The interval.
    */
   com.google.protobuf.Duration getInterval();
   /**
-   * <pre>
-   * Interval between successive iterations
-   * </pre>
-   *
-   * <code>.google.protobuf.Duration interval = 1;</code>
+   * <code>.google.protobuf.Duration interval = 1[json_name = "interval"];</code>
    */
   com.google.protobuf.DurationOrBuilder getIntervalOrBuilder();
 
   /**
-   * <pre>
-   * Timeout for one iteration of the task
-   * </pre>
-   *
-   * <code>.google.protobuf.Duration timeout = 2;</code>
+   * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
+   * @return Whether the timeout field is set.
    */
   boolean hasTimeout();
   /**
-   * <pre>
-   * Timeout for one iteration of the task
-   * </pre>
-   *
-   * <code>.google.protobuf.Duration timeout = 2;</code>
+   * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
+   * @return The timeout.
    */
   com.google.protobuf.Duration getTimeout();
   /**
-   * <pre>
-   * Timeout for one iteration of the task
-   * </pre>
-   *
-   * <code>.google.protobuf.Duration timeout = 2;</code>
+   * <code>.google.protobuf.Duration timeout = 2[json_name = "timeout"];</code>
    */
   com.google.protobuf.DurationOrBuilder getTimeoutOrBuilder();
 }

@@ -25,6 +25,13 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new AwsAmiInstanceSyncPerpetualTaskParams();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -35,7 +42,6 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -100,7 +106,8 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
   public static final int REGION_FIELD_NUMBER = 1;
   private volatile java.lang.Object region_;
   /**
-   * <code>string region = 1;</code>
+   * <code>string region = 1[json_name = "region"];</code>
+   * @return The region.
    */
   public java.lang.String getRegion() {
     java.lang.Object ref = region_;
@@ -114,7 +121,8 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
     }
   }
   /**
-   * <code>string region = 1;</code>
+   * <code>string region = 1[json_name = "region"];</code>
+   * @return The bytes for region.
    */
   public com.google.protobuf.ByteString getRegionBytes() {
     java.lang.Object ref = region_;
@@ -130,7 +138,8 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
   public static final int AWS_CONFIG_FIELD_NUMBER = 2;
   private com.google.protobuf.ByteString awsConfig_;
   /**
-   * <code>bytes aws_config = 2;</code>
+   * <code>bytes aws_config = 2[json_name = "awsConfig"];</code>
+   * @return The awsConfig.
    */
   public com.google.protobuf.ByteString getAwsConfig() {
     return awsConfig_;
@@ -139,7 +148,8 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
   public static final int ASG_NAME_FIELD_NUMBER = 3;
   private volatile java.lang.Object asgName_;
   /**
-   * <code>string asg_name = 3;</code>
+   * <code>string asg_name = 3[json_name = "asgName"];</code>
+   * @return The asgName.
    */
   public java.lang.String getAsgName() {
     java.lang.Object ref = asgName_;
@@ -153,7 +163,8 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
     }
   }
   /**
-   * <code>string asg_name = 3;</code>
+   * <code>string asg_name = 3[json_name = "asgName"];</code>
+   * @return The bytes for asgName.
    */
   public com.google.protobuf.ByteString getAsgNameBytes() {
     java.lang.Object ref = asgName_;
@@ -169,7 +180,8 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
   public static final int ENCRYPTED_DATA_FIELD_NUMBER = 4;
   private com.google.protobuf.ByteString encryptedData_;
   /**
-   * <code>bytes encrypted_data = 4;</code>
+   * <code>bytes encrypted_data = 4[json_name = "encryptedData"];</code>
+   * @return The encryptedData.
    */
   public com.google.protobuf.ByteString getEncryptedData() {
     return encryptedData_;
@@ -515,7 +527,8 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
 
     private java.lang.Object region_ = "";
     /**
-     * <code>string region = 1;</code>
+     * <code>string region = 1[json_name = "region"];</code>
+     * @return The region.
      */
     public java.lang.String getRegion() {
       java.lang.Object ref = region_;
@@ -529,7 +542,8 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       }
     }
     /**
-     * <code>string region = 1;</code>
+     * <code>string region = 1[json_name = "region"];</code>
+     * @return The bytes for region.
      */
     public com.google.protobuf.ByteString getRegionBytes() {
       java.lang.Object ref = region_;
@@ -542,7 +556,9 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       }
     }
     /**
-     * <code>string region = 1;</code>
+     * <code>string region = 1[json_name = "region"];</code>
+     * @param value The region to set.
+     * @return This builder for chaining.
      */
     public Builder setRegion(java.lang.String value) {
       if (value == null) {
@@ -554,7 +570,8 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       return this;
     }
     /**
-     * <code>string region = 1;</code>
+     * <code>string region = 1[json_name = "region"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearRegion() {
       region_ = getDefaultInstance().getRegion();
@@ -562,7 +579,9 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       return this;
     }
     /**
-     * <code>string region = 1;</code>
+     * <code>string region = 1[json_name = "region"];</code>
+     * @param value The bytes for region to set.
+     * @return This builder for chaining.
      */
     public Builder setRegionBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -577,13 +596,16 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
 
     private com.google.protobuf.ByteString awsConfig_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes aws_config = 2;</code>
+     * <code>bytes aws_config = 2[json_name = "awsConfig"];</code>
+     * @return The awsConfig.
      */
     public com.google.protobuf.ByteString getAwsConfig() {
       return awsConfig_;
     }
     /**
-     * <code>bytes aws_config = 2;</code>
+     * <code>bytes aws_config = 2[json_name = "awsConfig"];</code>
+     * @param value The awsConfig to set.
+     * @return This builder for chaining.
      */
     public Builder setAwsConfig(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -595,7 +617,8 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       return this;
     }
     /**
-     * <code>bytes aws_config = 2;</code>
+     * <code>bytes aws_config = 2[json_name = "awsConfig"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearAwsConfig() {
       awsConfig_ = getDefaultInstance().getAwsConfig();
@@ -605,7 +628,8 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
 
     private java.lang.Object asgName_ = "";
     /**
-     * <code>string asg_name = 3;</code>
+     * <code>string asg_name = 3[json_name = "asgName"];</code>
+     * @return The asgName.
      */
     public java.lang.String getAsgName() {
       java.lang.Object ref = asgName_;
@@ -619,7 +643,8 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       }
     }
     /**
-     * <code>string asg_name = 3;</code>
+     * <code>string asg_name = 3[json_name = "asgName"];</code>
+     * @return The bytes for asgName.
      */
     public com.google.protobuf.ByteString getAsgNameBytes() {
       java.lang.Object ref = asgName_;
@@ -632,7 +657,9 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       }
     }
     /**
-     * <code>string asg_name = 3;</code>
+     * <code>string asg_name = 3[json_name = "asgName"];</code>
+     * @param value The asgName to set.
+     * @return This builder for chaining.
      */
     public Builder setAsgName(java.lang.String value) {
       if (value == null) {
@@ -644,7 +671,8 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       return this;
     }
     /**
-     * <code>string asg_name = 3;</code>
+     * <code>string asg_name = 3[json_name = "asgName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearAsgName() {
       asgName_ = getDefaultInstance().getAsgName();
@@ -652,7 +680,9 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       return this;
     }
     /**
-     * <code>string asg_name = 3;</code>
+     * <code>string asg_name = 3[json_name = "asgName"];</code>
+     * @param value The bytes for asgName to set.
+     * @return This builder for chaining.
      */
     public Builder setAsgNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -667,13 +697,16 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
 
     private com.google.protobuf.ByteString encryptedData_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes encrypted_data = 4;</code>
+     * <code>bytes encrypted_data = 4[json_name = "encryptedData"];</code>
+     * @return The encryptedData.
      */
     public com.google.protobuf.ByteString getEncryptedData() {
       return encryptedData_;
     }
     /**
-     * <code>bytes encrypted_data = 4;</code>
+     * <code>bytes encrypted_data = 4[json_name = "encryptedData"];</code>
+     * @param value The encryptedData to set.
+     * @return This builder for chaining.
      */
     public Builder setEncryptedData(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -685,7 +718,8 @@ public final class AwsAmiInstanceSyncPerpetualTaskParams extends com.google.prot
       return this;
     }
     /**
-     * <code>bytes encrypted_data = 4;</code>
+     * <code>bytes encrypted_data = 4[json_name = "encryptedData"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearEncryptedData() {
       encryptedData_ = getDefaultInstance().getEncryptedData();

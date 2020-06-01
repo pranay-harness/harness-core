@@ -47,48 +47,43 @@ public final class PerpetualTaskServiceOuterClass {
         + "arness/delegate/delegate.proto\032-io/harne"
         + "ss/perpetualtask/perpetual_task.proto\0327i"
         + "o/harness/perpetualtask/perpetual_task_e"
-        + "xecution.proto\"P\n\030PerpetualTaskListReque"
-        + "st\0224\n\013delegate_id\030\001 \001(\0132\037.io.harness.del"
-        + "egate.DelegateId\"x\n\031PerpetualTaskListRes"
-        + "ponse\022[\n\035perpetual_task_assign_details\030\001"
-        + " \003(\01324.io.harness.perpetualtask.Perpetua"
-        + "lTaskAssignDetails\"c\n\033PerpetualTaskConte"
-        + "xtRequest\022D\n\021perpetual_task_id\030\001 \001(\0132).i"
-        + "o.harness.perpetualtask.PerpetualTaskId\""
-        + "w\n\034PerpetualTaskContextResponse\022W\n\026perpe"
-        + "tual_task_context\030\001 \001(\01327.io.harness.per"
-        + "petualtask.PerpetualTaskExecutionContext"
-        + "\"\234\001\n\020HeartbeatRequest\022\n\n\002id\030\001 \001(\t\0227\n\023hea"
-        + "rtbeat_timestamp\030\002 \001(\0132\032.google.protobuf"
-        + ".Timestamp\022\022\n\ntask_state\030\003 \001(\t\022\025\n\rrespon"
-        + "se_code\030\004 \001(\005\022\030\n\020response_message\030\005 \001(\t\""
-        + "\023\n\021HeartbeatResponse2\202\003\n\024PerpetualTaskSe"
-        + "rvice\022|\n\021PerpetualTaskList\0222.io.harness."
-        + "perpetualtask.PerpetualTaskListRequest\0323"
-        + ".io.harness.perpetualtask.PerpetualTaskL"
-        + "istResponse\022\205\001\n\024PerpetualTaskContext\0225.i"
-        + "o.harness.perpetualtask.PerpetualTaskCon"
-        + "textRequest\0326.io.harness.perpetualtask.P"
-        + "erpetualTaskContextResponse\022d\n\tHeartbeat"
-        + "\022*.io.harness.perpetualtask.HeartbeatReq"
-        + "uest\032+.io.harness.perpetualtask.Heartbea"
-        + "tResponseB\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
+        + "xecution.proto\"\\\n\030PerpetualTaskListReque"
+        + "st\022@\n\013delegate_id\030\001 \001(\0132\037.io.harness.del"
+        + "egate.DelegateIdR\ndelegateId\"\224\001\n\031Perpetu"
+        + "alTaskListResponse\022w\n\035perpetual_task_ass"
+        + "ign_details\030\001 \003(\01324.io.harness.perpetual"
+        + "task.PerpetualTaskAssignDetailsR\032perpetu"
+        + "alTaskAssignDetails\"t\n\033PerpetualTaskCont"
+        + "extRequest\022U\n\021perpetual_task_id\030\001 \001(\0132)."
+        + "io.harness.perpetualtask.PerpetualTaskId"
+        + "R\017perpetualTaskId\"\215\001\n\034PerpetualTaskConte"
+        + "xtResponse\022m\n\026perpetual_task_context\030\001 \001"
+        + "(\01327.io.harness.perpetualtask.PerpetualT"
+        + "askExecutionContextR\024perpetualTaskContex"
+        + "t\"\336\001\n\020HeartbeatRequest\022\016\n\002id\030\001 \001(\tR\002id\022K"
+        + "\n\023heartbeat_timestamp\030\002 \001(\0132\032.google.pro"
+        + "tobuf.TimestampR\022heartbeatTimestamp\022\035\n\nt"
+        + "ask_state\030\003 \001(\tR\ttaskState\022#\n\rresponse_c"
+        + "ode\030\004 \001(\005R\014responseCode\022)\n\020response_mess"
+        + "age\030\005 \001(\tR\017responseMessage\"\023\n\021HeartbeatR"
+        + "esponse2\202\003\n\024PerpetualTaskService\022|\n\021Perp"
+        + "etualTaskList\0222.io.harness.perpetualtask"
+        + ".PerpetualTaskListRequest\0323.io.harness.p"
+        + "erpetualtask.PerpetualTaskListResponse\022\205"
+        + "\001\n\024PerpetualTaskContext\0225.io.harness.per"
+        + "petualtask.PerpetualTaskContextRequest\0326"
+        + ".io.harness.perpetualtask.PerpetualTaskC"
+        + "ontextResponse\022d\n\tHeartbeat\022*.io.harness"
+        + ".perpetualtask.HeartbeatRequest\032+.io.har"
+        + "ness.perpetualtask.HeartbeatResponseB\002P\001"
+        + "b\006proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.TimestampProto.getDescriptor(),
             io.harness.delegate.Delegate.getDescriptor(),
             io.harness.perpetualtask.PerpetualTask.getDescriptor(),
             io.harness.perpetualtask.PerpetualTaskExecution.getDescriptor(),
-        },
-        assigner);
+        });
     internal_static_io_harness_perpetualtask_PerpetualTaskListRequest_descriptor =
         getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_perpetualtask_PerpetualTaskListRequest_fieldAccessorTable =

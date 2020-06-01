@@ -17,8 +17,8 @@ import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
 
 /**
  */
-@javax.annotation.Generated(
-    value = "by gRPC proto compiler (version 1.21.0)", comments = "Source: io/harness/delegate/delegate_service.proto")
+@javax.annotation.
+Generated(value = "by gRPC proto compiler", comments = "Source: io/harness/delegate/delegate_service.proto")
 public final class DelegateServiceGrpc {
   private DelegateServiceGrpc() {}
 
@@ -45,7 +45,7 @@ public final class DelegateServiceGrpc {
               io.grpc.MethodDescriptor
                   .<io.harness.delegate.SubmitTaskRequest, io.harness.delegate.SubmitTaskResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                  .setFullMethodName(generateFullMethodName("io.harness.delegate.DelegateService", "SubmitTask"))
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "SubmitTask"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                       io.harness.delegate.SubmitTaskRequest.getDefaultInstance()))
@@ -79,7 +79,7 @@ public final class DelegateServiceGrpc {
               io.grpc.MethodDescriptor
                   .<io.harness.delegate.CancelTaskRequest, io.harness.delegate.CancelTaskResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                  .setFullMethodName(generateFullMethodName("io.harness.delegate.DelegateService", "CancelTask"))
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "CancelTask"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                       io.harness.delegate.CancelTaskRequest.getDefaultInstance()))
@@ -113,7 +113,7 @@ public final class DelegateServiceGrpc {
               io.grpc.MethodDescriptor
                   .<io.harness.delegate.TaskProgressRequest, io.harness.delegate.TaskProgressResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                  .setFullMethodName(generateFullMethodName("io.harness.delegate.DelegateService", "TaskProgress"))
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "TaskProgress"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                       io.harness.delegate.TaskProgressRequest.getDefaultInstance()))
@@ -148,8 +148,7 @@ public final class DelegateServiceGrpc {
                   .<io.harness.delegate.TaskProgressUpdatesRequest,
                       io.harness.delegate.TaskProgressUpdatesResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING)
-                  .setFullMethodName(
-                      generateFullMethodName("io.harness.delegate.DelegateService", "TaskProgressUpdates"))
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "TaskProgressUpdates"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                       io.harness.delegate.TaskProgressUpdatesRequest.getDefaultInstance()))
@@ -190,8 +189,7 @@ public final class DelegateServiceGrpc {
                       .<io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest,
                           io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse>newBuilder()
                       .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                      .setFullMethodName(generateFullMethodName(
-                          "io.harness.delegate.DelegateService", "RegisterPerpetualTaskClientEntrypoint"))
+                      .setFullMethodName(generateFullMethodName(SERVICE_NAME, "RegisterPerpetualTaskClientEntrypoint"))
                       .setSampledToLocalTracing(true)
                       .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                           io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest.getDefaultInstance()))
@@ -227,8 +225,7 @@ public final class DelegateServiceGrpc {
                   .<io.harness.delegate.CreatePerpetualTaskRequest,
                       io.harness.delegate.CreatePerpetualTaskResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                  .setFullMethodName(
-                      generateFullMethodName("io.harness.delegate.DelegateService", "CreatePerpetualTask"))
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "CreatePerpetualTask"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                       io.harness.delegate.CreatePerpetualTaskRequest.getDefaultInstance()))
@@ -263,8 +260,7 @@ public final class DelegateServiceGrpc {
                   .<io.harness.delegate.DeletePerpetualTaskRequest,
                       io.harness.delegate.DeletePerpetualTaskResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                  .setFullMethodName(
-                      generateFullMethodName("io.harness.delegate.DelegateService", "DeletePerpetualTask"))
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "DeletePerpetualTask"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                       io.harness.delegate.DeletePerpetualTaskRequest.getDefaultInstance()))
@@ -299,8 +295,7 @@ public final class DelegateServiceGrpc {
                   .<io.harness.delegate.ResetPerpetualTaskRequest,
                       io.harness.delegate.ResetPerpetualTaskResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                  .setFullMethodName(
-                      generateFullMethodName("io.harness.delegate.DelegateService", "ResetPerpetualTask"))
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "ResetPerpetualTask"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                       io.harness.delegate.ResetPerpetualTaskRequest.getDefaultInstance()))

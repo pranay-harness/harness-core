@@ -23,6 +23,13 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new HeartbeatRequest();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -33,7 +40,6 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -111,7 +117,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
   public static final int ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object id_;
   /**
-   * <code>string id = 1;</code>
+   * <code>string id = 1[json_name = "id"];</code>
+   * @return The id.
    */
   public java.lang.String getId() {
     java.lang.Object ref = id_;
@@ -125,7 +132,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
     }
   }
   /**
-   * <code>string id = 1;</code>
+   * <code>string id = 1[json_name = "id"];</code>
+   * @return The bytes for id.
    */
   public com.google.protobuf.ByteString getIdBytes() {
     java.lang.Object ref = id_;
@@ -141,19 +149,21 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
   public static final int HEARTBEAT_TIMESTAMP_FIELD_NUMBER = 2;
   private com.google.protobuf.Timestamp heartbeatTimestamp_;
   /**
-   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
+   * @return Whether the heartbeatTimestamp field is set.
    */
   public boolean hasHeartbeatTimestamp() {
     return heartbeatTimestamp_ != null;
   }
   /**
-   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
+   * @return The heartbeatTimestamp.
    */
   public com.google.protobuf.Timestamp getHeartbeatTimestamp() {
     return heartbeatTimestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : heartbeatTimestamp_;
   }
   /**
-   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
    */
   public com.google.protobuf.TimestampOrBuilder getHeartbeatTimestampOrBuilder() {
     return getHeartbeatTimestamp();
@@ -162,7 +172,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
   public static final int TASK_STATE_FIELD_NUMBER = 3;
   private volatile java.lang.Object taskState_;
   /**
-   * <code>string task_state = 3;</code>
+   * <code>string task_state = 3[json_name = "taskState"];</code>
+   * @return The taskState.
    */
   public java.lang.String getTaskState() {
     java.lang.Object ref = taskState_;
@@ -176,7 +187,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
     }
   }
   /**
-   * <code>string task_state = 3;</code>
+   * <code>string task_state = 3[json_name = "taskState"];</code>
+   * @return The bytes for taskState.
    */
   public com.google.protobuf.ByteString getTaskStateBytes() {
     java.lang.Object ref = taskState_;
@@ -192,7 +204,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
   public static final int RESPONSE_CODE_FIELD_NUMBER = 4;
   private int responseCode_;
   /**
-   * <code>int32 response_code = 4;</code>
+   * <code>int32 response_code = 4[json_name = "responseCode"];</code>
+   * @return The responseCode.
    */
   public int getResponseCode() {
     return responseCode_;
@@ -201,7 +214,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
   public static final int RESPONSE_MESSAGE_FIELD_NUMBER = 5;
   private volatile java.lang.Object responseMessage_;
   /**
-   * <code>string response_message = 5;</code>
+   * <code>string response_message = 5[json_name = "responseMessage"];</code>
+   * @return The responseMessage.
    */
   public java.lang.String getResponseMessage() {
     java.lang.Object ref = responseMessage_;
@@ -215,7 +229,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
     }
   }
   /**
-   * <code>string response_message = 5;</code>
+   * <code>string response_message = 5[json_name = "responseMessage"];</code>
+   * @return The bytes for responseMessage.
    */
   public com.google.protobuf.ByteString getResponseMessageBytes() {
     java.lang.Object ref = responseMessage_;
@@ -590,7 +605,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
 
     private java.lang.Object id_ = "";
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @return The id.
      */
     public java.lang.String getId() {
       java.lang.Object ref = id_;
@@ -604,7 +620,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       }
     }
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @return The bytes for id.
      */
     public com.google.protobuf.ByteString getIdBytes() {
       java.lang.Object ref = id_;
@@ -617,7 +634,9 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       }
     }
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @param value The id to set.
+     * @return This builder for chaining.
      */
     public Builder setId(java.lang.String value) {
       if (value == null) {
@@ -629,7 +648,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearId() {
       id_ = getDefaultInstance().getId();
@@ -637,7 +657,9 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @param value The bytes for id to set.
+     * @return This builder for chaining.
      */
     public Builder setIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -654,13 +676,15 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> heartbeatTimestampBuilder_;
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
+     * @return Whether the heartbeatTimestamp field is set.
      */
     public boolean hasHeartbeatTimestamp() {
       return heartbeatTimestampBuilder_ != null || heartbeatTimestamp_ != null;
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
+     * @return The heartbeatTimestamp.
      */
     public com.google.protobuf.Timestamp getHeartbeatTimestamp() {
       if (heartbeatTimestampBuilder_ == null) {
@@ -670,7 +694,7 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
      */
     public Builder setHeartbeatTimestamp(com.google.protobuf.Timestamp value) {
       if (heartbeatTimestampBuilder_ == null) {
@@ -686,7 +710,7 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
      */
     public Builder setHeartbeatTimestamp(com.google.protobuf.Timestamp.Builder builderForValue) {
       if (heartbeatTimestampBuilder_ == null) {
@@ -699,7 +723,7 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
      */
     public Builder mergeHeartbeatTimestamp(com.google.protobuf.Timestamp value) {
       if (heartbeatTimestampBuilder_ == null) {
@@ -717,7 +741,7 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
      */
     public Builder clearHeartbeatTimestamp() {
       if (heartbeatTimestampBuilder_ == null) {
@@ -731,14 +755,14 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
      */
     public com.google.protobuf.Timestamp.Builder getHeartbeatTimestampBuilder() {
       onChanged();
       return getHeartbeatTimestampFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
      */
     public com.google.protobuf.TimestampOrBuilder getHeartbeatTimestampOrBuilder() {
       if (heartbeatTimestampBuilder_ != null) {
@@ -748,7 +772,7 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp heartbeat_timestamp = 2[json_name = "heartbeatTimestamp"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>
@@ -764,7 +788,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
 
     private java.lang.Object taskState_ = "";
     /**
-     * <code>string task_state = 3;</code>
+     * <code>string task_state = 3[json_name = "taskState"];</code>
+     * @return The taskState.
      */
     public java.lang.String getTaskState() {
       java.lang.Object ref = taskState_;
@@ -778,7 +803,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       }
     }
     /**
-     * <code>string task_state = 3;</code>
+     * <code>string task_state = 3[json_name = "taskState"];</code>
+     * @return The bytes for taskState.
      */
     public com.google.protobuf.ByteString getTaskStateBytes() {
       java.lang.Object ref = taskState_;
@@ -791,7 +817,9 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       }
     }
     /**
-     * <code>string task_state = 3;</code>
+     * <code>string task_state = 3[json_name = "taskState"];</code>
+     * @param value The taskState to set.
+     * @return This builder for chaining.
      */
     public Builder setTaskState(java.lang.String value) {
       if (value == null) {
@@ -803,7 +831,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>string task_state = 3;</code>
+     * <code>string task_state = 3[json_name = "taskState"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearTaskState() {
       taskState_ = getDefaultInstance().getTaskState();
@@ -811,7 +840,9 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>string task_state = 3;</code>
+     * <code>string task_state = 3[json_name = "taskState"];</code>
+     * @param value The bytes for taskState to set.
+     * @return This builder for chaining.
      */
     public Builder setTaskStateBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -826,13 +857,16 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
 
     private int responseCode_;
     /**
-     * <code>int32 response_code = 4;</code>
+     * <code>int32 response_code = 4[json_name = "responseCode"];</code>
+     * @return The responseCode.
      */
     public int getResponseCode() {
       return responseCode_;
     }
     /**
-     * <code>int32 response_code = 4;</code>
+     * <code>int32 response_code = 4[json_name = "responseCode"];</code>
+     * @param value The responseCode to set.
+     * @return This builder for chaining.
      */
     public Builder setResponseCode(int value) {
       responseCode_ = value;
@@ -840,7 +874,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>int32 response_code = 4;</code>
+     * <code>int32 response_code = 4[json_name = "responseCode"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearResponseCode() {
       responseCode_ = 0;
@@ -850,7 +885,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
 
     private java.lang.Object responseMessage_ = "";
     /**
-     * <code>string response_message = 5;</code>
+     * <code>string response_message = 5[json_name = "responseMessage"];</code>
+     * @return The responseMessage.
      */
     public java.lang.String getResponseMessage() {
       java.lang.Object ref = responseMessage_;
@@ -864,7 +900,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       }
     }
     /**
-     * <code>string response_message = 5;</code>
+     * <code>string response_message = 5[json_name = "responseMessage"];</code>
+     * @return The bytes for responseMessage.
      */
     public com.google.protobuf.ByteString getResponseMessageBytes() {
       java.lang.Object ref = responseMessage_;
@@ -877,7 +914,9 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       }
     }
     /**
-     * <code>string response_message = 5;</code>
+     * <code>string response_message = 5[json_name = "responseMessage"];</code>
+     * @param value The responseMessage to set.
+     * @return This builder for chaining.
      */
     public Builder setResponseMessage(java.lang.String value) {
       if (value == null) {
@@ -889,7 +928,8 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>string response_message = 5;</code>
+     * <code>string response_message = 5[json_name = "responseMessage"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearResponseMessage() {
       responseMessage_ = getDefaultInstance().getResponseMessage();
@@ -897,7 +937,9 @@ public final class HeartbeatRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>string response_message = 5;</code>
+     * <code>string response_message = 5[json_name = "responseMessage"];</code>
+     * @param value The bytes for responseMessage to set.
+     * @return This builder for chaining.
      */
     public Builder setResponseMessageBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

@@ -26,6 +26,13 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new K8sContainerInstanceSyncPerpetualTaskParams();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -36,7 +43,6 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -109,7 +115,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
   public static final int ACCOUNT_ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object accountId_;
   /**
-   * <code>string account_id = 1;</code>
+   * <code>string account_id = 1[json_name = "accountId"];</code>
+   * @return The accountId.
    */
   public java.lang.String getAccountId() {
     java.lang.Object ref = accountId_;
@@ -123,7 +130,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
     }
   }
   /**
-   * <code>string account_id = 1;</code>
+   * <code>string account_id = 1[json_name = "accountId"];</code>
+   * @return The bytes for accountId.
    */
   public com.google.protobuf.ByteString getAccountIdBytes() {
     java.lang.Object ref = accountId_;
@@ -139,7 +147,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
   public static final int APP_ID_FIELD_NUMBER = 2;
   private volatile java.lang.Object appId_;
   /**
-   * <code>string app_id = 2;</code>
+   * <code>string app_id = 2[json_name = "appId"];</code>
+   * @return The appId.
    */
   public java.lang.String getAppId() {
     java.lang.Object ref = appId_;
@@ -153,7 +162,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
     }
   }
   /**
-   * <code>string app_id = 2;</code>
+   * <code>string app_id = 2[json_name = "appId"];</code>
+   * @return The bytes for appId.
    */
   public com.google.protobuf.ByteString getAppIdBytes() {
     java.lang.Object ref = appId_;
@@ -169,7 +179,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
   public static final int K8S_CLUSTER_CONFIG_FIELD_NUMBER = 3;
   private com.google.protobuf.ByteString k8SClusterConfig_;
   /**
-   * <code>bytes k8s_cluster_config = 3;</code>
+   * <code>bytes k8s_cluster_config = 3[json_name = "k8sClusterConfig"];</code>
+   * @return The k8sClusterConfig.
    */
   public com.google.protobuf.ByteString getK8SClusterConfig() {
     return k8SClusterConfig_;
@@ -178,7 +189,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
   public static final int NAMESPACE_FIELD_NUMBER = 4;
   private volatile java.lang.Object namespace_;
   /**
-   * <code>string namespace = 4;</code>
+   * <code>string namespace = 4[json_name = "namespace"];</code>
+   * @return The namespace.
    */
   public java.lang.String getNamespace() {
     java.lang.Object ref = namespace_;
@@ -192,7 +204,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
     }
   }
   /**
-   * <code>string namespace = 4;</code>
+   * <code>string namespace = 4[json_name = "namespace"];</code>
+   * @return The bytes for namespace.
    */
   public com.google.protobuf.ByteString getNamespaceBytes() {
     java.lang.Object ref = namespace_;
@@ -208,7 +221,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
   public static final int RELEASE_NAME_FIELD_NUMBER = 5;
   private volatile java.lang.Object releaseName_;
   /**
-   * <code>string release_name = 5;</code>
+   * <code>string release_name = 5[json_name = "releaseName"];</code>
+   * @return The releaseName.
    */
   public java.lang.String getReleaseName() {
     java.lang.Object ref = releaseName_;
@@ -222,7 +236,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
     }
   }
   /**
-   * <code>string release_name = 5;</code>
+   * <code>string release_name = 5[json_name = "releaseName"];</code>
+   * @return The bytes for releaseName.
    */
   public com.google.protobuf.ByteString getReleaseNameBytes() {
     java.lang.Object ref = releaseName_;
@@ -595,7 +610,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
 
     private java.lang.Object accountId_ = "";
     /**
-     * <code>string account_id = 1;</code>
+     * <code>string account_id = 1[json_name = "accountId"];</code>
+     * @return The accountId.
      */
     public java.lang.String getAccountId() {
       java.lang.Object ref = accountId_;
@@ -609,7 +625,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       }
     }
     /**
-     * <code>string account_id = 1;</code>
+     * <code>string account_id = 1[json_name = "accountId"];</code>
+     * @return The bytes for accountId.
      */
     public com.google.protobuf.ByteString getAccountIdBytes() {
       java.lang.Object ref = accountId_;
@@ -622,7 +639,9 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       }
     }
     /**
-     * <code>string account_id = 1;</code>
+     * <code>string account_id = 1[json_name = "accountId"];</code>
+     * @param value The accountId to set.
+     * @return This builder for chaining.
      */
     public Builder setAccountId(java.lang.String value) {
       if (value == null) {
@@ -634,7 +653,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       return this;
     }
     /**
-     * <code>string account_id = 1;</code>
+     * <code>string account_id = 1[json_name = "accountId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearAccountId() {
       accountId_ = getDefaultInstance().getAccountId();
@@ -642,7 +662,9 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       return this;
     }
     /**
-     * <code>string account_id = 1;</code>
+     * <code>string account_id = 1[json_name = "accountId"];</code>
+     * @param value The bytes for accountId to set.
+     * @return This builder for chaining.
      */
     public Builder setAccountIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -657,7 +679,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
 
     private java.lang.Object appId_ = "";
     /**
-     * <code>string app_id = 2;</code>
+     * <code>string app_id = 2[json_name = "appId"];</code>
+     * @return The appId.
      */
     public java.lang.String getAppId() {
       java.lang.Object ref = appId_;
@@ -671,7 +694,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       }
     }
     /**
-     * <code>string app_id = 2;</code>
+     * <code>string app_id = 2[json_name = "appId"];</code>
+     * @return The bytes for appId.
      */
     public com.google.protobuf.ByteString getAppIdBytes() {
       java.lang.Object ref = appId_;
@@ -684,7 +708,9 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       }
     }
     /**
-     * <code>string app_id = 2;</code>
+     * <code>string app_id = 2[json_name = "appId"];</code>
+     * @param value The appId to set.
+     * @return This builder for chaining.
      */
     public Builder setAppId(java.lang.String value) {
       if (value == null) {
@@ -696,7 +722,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       return this;
     }
     /**
-     * <code>string app_id = 2;</code>
+     * <code>string app_id = 2[json_name = "appId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearAppId() {
       appId_ = getDefaultInstance().getAppId();
@@ -704,7 +731,9 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       return this;
     }
     /**
-     * <code>string app_id = 2;</code>
+     * <code>string app_id = 2[json_name = "appId"];</code>
+     * @param value The bytes for appId to set.
+     * @return This builder for chaining.
      */
     public Builder setAppIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -719,13 +748,16 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
 
     private com.google.protobuf.ByteString k8SClusterConfig_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes k8s_cluster_config = 3;</code>
+     * <code>bytes k8s_cluster_config = 3[json_name = "k8sClusterConfig"];</code>
+     * @return The k8sClusterConfig.
      */
     public com.google.protobuf.ByteString getK8SClusterConfig() {
       return k8SClusterConfig_;
     }
     /**
-     * <code>bytes k8s_cluster_config = 3;</code>
+     * <code>bytes k8s_cluster_config = 3[json_name = "k8sClusterConfig"];</code>
+     * @param value The k8sClusterConfig to set.
+     * @return This builder for chaining.
      */
     public Builder setK8SClusterConfig(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -737,7 +769,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       return this;
     }
     /**
-     * <code>bytes k8s_cluster_config = 3;</code>
+     * <code>bytes k8s_cluster_config = 3[json_name = "k8sClusterConfig"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearK8SClusterConfig() {
       k8SClusterConfig_ = getDefaultInstance().getK8SClusterConfig();
@@ -747,7 +780,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
 
     private java.lang.Object namespace_ = "";
     /**
-     * <code>string namespace = 4;</code>
+     * <code>string namespace = 4[json_name = "namespace"];</code>
+     * @return The namespace.
      */
     public java.lang.String getNamespace() {
       java.lang.Object ref = namespace_;
@@ -761,7 +795,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       }
     }
     /**
-     * <code>string namespace = 4;</code>
+     * <code>string namespace = 4[json_name = "namespace"];</code>
+     * @return The bytes for namespace.
      */
     public com.google.protobuf.ByteString getNamespaceBytes() {
       java.lang.Object ref = namespace_;
@@ -774,7 +809,9 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       }
     }
     /**
-     * <code>string namespace = 4;</code>
+     * <code>string namespace = 4[json_name = "namespace"];</code>
+     * @param value The namespace to set.
+     * @return This builder for chaining.
      */
     public Builder setNamespace(java.lang.String value) {
       if (value == null) {
@@ -786,7 +823,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       return this;
     }
     /**
-     * <code>string namespace = 4;</code>
+     * <code>string namespace = 4[json_name = "namespace"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearNamespace() {
       namespace_ = getDefaultInstance().getNamespace();
@@ -794,7 +832,9 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       return this;
     }
     /**
-     * <code>string namespace = 4;</code>
+     * <code>string namespace = 4[json_name = "namespace"];</code>
+     * @param value The bytes for namespace to set.
+     * @return This builder for chaining.
      */
     public Builder setNamespaceBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -809,7 +849,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
 
     private java.lang.Object releaseName_ = "";
     /**
-     * <code>string release_name = 5;</code>
+     * <code>string release_name = 5[json_name = "releaseName"];</code>
+     * @return The releaseName.
      */
     public java.lang.String getReleaseName() {
       java.lang.Object ref = releaseName_;
@@ -823,7 +864,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       }
     }
     /**
-     * <code>string release_name = 5;</code>
+     * <code>string release_name = 5[json_name = "releaseName"];</code>
+     * @return The bytes for releaseName.
      */
     public com.google.protobuf.ByteString getReleaseNameBytes() {
       java.lang.Object ref = releaseName_;
@@ -836,7 +878,9 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       }
     }
     /**
-     * <code>string release_name = 5;</code>
+     * <code>string release_name = 5[json_name = "releaseName"];</code>
+     * @param value The releaseName to set.
+     * @return This builder for chaining.
      */
     public Builder setReleaseName(java.lang.String value) {
       if (value == null) {
@@ -848,7 +892,8 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       return this;
     }
     /**
-     * <code>string release_name = 5;</code>
+     * <code>string release_name = 5[json_name = "releaseName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearReleaseName() {
       releaseName_ = getDefaultInstance().getReleaseName();
@@ -856,7 +901,9 @@ public final class K8sContainerInstanceSyncPerpetualTaskParams extends com.googl
       return this;
     }
     /**
-     * <code>string release_name = 5;</code>
+     * <code>string release_name = 5[json_name = "releaseName"];</code>
+     * @param value The bytes for releaseName to set.
+     * @return This builder for chaining.
      */
     public Builder setReleaseNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

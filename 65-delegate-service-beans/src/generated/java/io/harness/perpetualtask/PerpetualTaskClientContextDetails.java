@@ -19,6 +19,13 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new PerpetualTaskClientContextDetails();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -105,7 +112,6 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
             io.harness.perpetualtask.PerpetualTaskClientContextDetails.Builder.class);
   }
 
-  private int bitField0_;
   public static final int TASK_CLIENT_PARAMS_FIELD_NUMBER = 1;
   private static final class TaskClientParamsDefaultEntryHolder {
     static final com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
@@ -126,7 +132,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
     return internalGetTaskClientParams().getMap().size();
   }
   /**
-   * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
    */
 
   public boolean containsTaskClientParams(java.lang.String key) {
@@ -144,14 +150,14 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
     return getTaskClientParamsMap();
   }
   /**
-   * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
    */
 
   public java.util.Map<java.lang.String, java.lang.String> getTaskClientParamsMap() {
     return internalGetTaskClientParams().getMap();
   }
   /**
-   * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
    */
 
   public java.lang.String getTaskClientParamsOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -162,7 +168,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
   /**
-   * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
    */
 
   public java.lang.String getTaskClientParamsOrThrow(java.lang.String key) {
@@ -179,19 +185,21 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
   public static final int LAST_CONTEXT_UPDATED_FIELD_NUMBER = 2;
   private com.google.protobuf.Timestamp lastContextUpdated_;
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+   * @return Whether the lastContextUpdated field is set.
    */
   public boolean hasLastContextUpdated() {
     return lastContextUpdated_ != null;
   }
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+   * @return The lastContextUpdated.
    */
   public com.google.protobuf.Timestamp getLastContextUpdated() {
     return lastContextUpdated_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : lastContextUpdated_;
   }
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
    */
   public com.google.protobuf.TimestampOrBuilder getLastContextUpdatedOrBuilder() {
     return getLastContextUpdated();
@@ -454,7 +462,6 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       io.harness.perpetualtask.PerpetualTaskClientContextDetails result =
           new io.harness.perpetualtask.PerpetualTaskClientContextDetails(this);
       int from_bitField0_ = bitField0_;
-      int to_bitField0_ = 0;
       result.taskClientParams_ = internalGetTaskClientParams();
       result.taskClientParams_.makeImmutable();
       if (lastContextUpdatedBuilder_ == null) {
@@ -462,7 +469,6 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       } else {
         result.lastContextUpdated_ = lastContextUpdatedBuilder_.build();
       }
-      result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
     }
@@ -560,7 +566,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return internalGetTaskClientParams().getMap().size();
     }
     /**
-     * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+     * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
      */
 
     public boolean containsTaskClientParams(java.lang.String key) {
@@ -578,14 +584,14 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return getTaskClientParamsMap();
     }
     /**
-     * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+     * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
      */
 
     public java.util.Map<java.lang.String, java.lang.String> getTaskClientParamsMap() {
       return internalGetTaskClientParams().getMap();
     }
     /**
-     * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+     * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
      */
 
     public java.lang.String getTaskClientParamsOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -596,7 +602,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+     * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
      */
 
     public java.lang.String getTaskClientParamsOrThrow(java.lang.String key) {
@@ -615,7 +621,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return this;
     }
     /**
-     * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+     * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
      */
 
     public Builder removeTaskClientParams(java.lang.String key) {
@@ -634,7 +640,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return internalGetMutableTaskClientParams().getMutableMap();
     }
     /**
-     * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+     * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
      */
     public Builder putTaskClientParams(java.lang.String key, java.lang.String value) {
       if (key == null) {
@@ -647,7 +653,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return this;
     }
     /**
-     * <code>map&lt;string, string&gt; task_client_params = 1;</code>
+     * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
      */
 
     public Builder putAllTaskClientParams(java.util.Map<java.lang.String, java.lang.String> values) {
@@ -659,13 +665,15 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> lastContextUpdatedBuilder_;
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+     * @return Whether the lastContextUpdated field is set.
      */
     public boolean hasLastContextUpdated() {
       return lastContextUpdatedBuilder_ != null || lastContextUpdated_ != null;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+     * @return The lastContextUpdated.
      */
     public com.google.protobuf.Timestamp getLastContextUpdated() {
       if (lastContextUpdatedBuilder_ == null) {
@@ -675,7 +683,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
      */
     public Builder setLastContextUpdated(com.google.protobuf.Timestamp value) {
       if (lastContextUpdatedBuilder_ == null) {
@@ -691,7 +699,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
      */
     public Builder setLastContextUpdated(com.google.protobuf.Timestamp.Builder builderForValue) {
       if (lastContextUpdatedBuilder_ == null) {
@@ -704,7 +712,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
      */
     public Builder mergeLastContextUpdated(com.google.protobuf.Timestamp value) {
       if (lastContextUpdatedBuilder_ == null) {
@@ -722,7 +730,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
      */
     public Builder clearLastContextUpdated() {
       if (lastContextUpdatedBuilder_ == null) {
@@ -736,14 +744,14 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
      */
     public com.google.protobuf.Timestamp.Builder getLastContextUpdatedBuilder() {
       onChanged();
       return getLastContextUpdatedFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
      */
     public com.google.protobuf.TimestampOrBuilder getLastContextUpdatedOrBuilder() {
       if (lastContextUpdatedBuilder_ != null) {
@@ -753,7 +761,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>

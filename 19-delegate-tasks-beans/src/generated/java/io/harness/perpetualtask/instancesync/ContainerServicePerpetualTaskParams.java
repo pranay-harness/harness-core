@@ -29,6 +29,13 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new ContainerServicePerpetualTaskParams();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -39,7 +46,6 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -134,7 +140,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
   public static final int SETTING_ATTRIBUTE_FIELD_NUMBER = 1;
   private com.google.protobuf.ByteString settingAttribute_;
   /**
-   * <code>bytes setting_attribute = 1;</code>
+   * <code>bytes setting_attribute = 1[json_name = "settingAttribute"];</code>
+   * @return The settingAttribute.
    */
   public com.google.protobuf.ByteString getSettingAttribute() {
     return settingAttribute_;
@@ -143,7 +150,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
   public static final int CONTAINER_SVC_NAME_FIELD_NUMBER = 2;
   private volatile java.lang.Object containerSvcName_;
   /**
-   * <code>string container_svc_name = 2;</code>
+   * <code>string container_svc_name = 2[json_name = "containerSvcName"];</code>
+   * @return The containerSvcName.
    */
   public java.lang.String getContainerSvcName() {
     java.lang.Object ref = containerSvcName_;
@@ -157,7 +165,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
     }
   }
   /**
-   * <code>string container_svc_name = 2;</code>
+   * <code>string container_svc_name = 2[json_name = "containerSvcName"];</code>
+   * @return The bytes for containerSvcName.
    */
   public com.google.protobuf.ByteString getContainerSvcNameBytes() {
     java.lang.Object ref = containerSvcName_;
@@ -173,7 +182,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
   public static final int ENCRYPTION_DETAILS_FIELD_NUMBER = 3;
   private com.google.protobuf.ByteString encryptionDetails_;
   /**
-   * <code>bytes encryption_details = 3;</code>
+   * <code>bytes encryption_details = 3[json_name = "encryptionDetails"];</code>
+   * @return The encryptionDetails.
    */
   public com.google.protobuf.ByteString getEncryptionDetails() {
     return encryptionDetails_;
@@ -182,7 +192,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
   public static final int CLUSTER_NAME_FIELD_NUMBER = 4;
   private volatile java.lang.Object clusterName_;
   /**
-   * <code>string cluster_name = 4;</code>
+   * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   public java.lang.String getClusterName() {
     java.lang.Object ref = clusterName_;
@@ -196,7 +207,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
     }
   }
   /**
-   * <code>string cluster_name = 4;</code>
+   * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   public com.google.protobuf.ByteString getClusterNameBytes() {
     java.lang.Object ref = clusterName_;
@@ -212,7 +224,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
   public static final int NAMESPACE_FIELD_NUMBER = 5;
   private volatile java.lang.Object namespace_;
   /**
-   * <code>string namespace = 5;</code>
+   * <code>string namespace = 5[json_name = "namespace"];</code>
+   * @return The namespace.
    */
   public java.lang.String getNamespace() {
     java.lang.Object ref = namespace_;
@@ -226,7 +239,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
     }
   }
   /**
-   * <code>string namespace = 5;</code>
+   * <code>string namespace = 5[json_name = "namespace"];</code>
+   * @return The bytes for namespace.
    */
   public com.google.protobuf.ByteString getNamespaceBytes() {
     java.lang.Object ref = namespace_;
@@ -242,7 +256,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
   public static final int REGION_FIELD_NUMBER = 6;
   private volatile java.lang.Object region_;
   /**
-   * <code>string region = 6;</code>
+   * <code>string region = 6[json_name = "region"];</code>
+   * @return The region.
    */
   public java.lang.String getRegion() {
     java.lang.Object ref = region_;
@@ -256,7 +271,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
     }
   }
   /**
-   * <code>string region = 6;</code>
+   * <code>string region = 6[json_name = "region"];</code>
+   * @return The bytes for region.
    */
   public com.google.protobuf.ByteString getRegionBytes() {
     java.lang.Object ref = region_;
@@ -272,7 +288,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
   public static final int SUBSCRIPTION_ID_FIELD_NUMBER = 7;
   private volatile java.lang.Object subscriptionId_;
   /**
-   * <code>string subscription_id = 7;</code>
+   * <code>string subscription_id = 7[json_name = "subscriptionId"];</code>
+   * @return The subscriptionId.
    */
   public java.lang.String getSubscriptionId() {
     java.lang.Object ref = subscriptionId_;
@@ -286,7 +303,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
     }
   }
   /**
-   * <code>string subscription_id = 7;</code>
+   * <code>string subscription_id = 7[json_name = "subscriptionId"];</code>
+   * @return The bytes for subscriptionId.
    */
   public com.google.protobuf.ByteString getSubscriptionIdBytes() {
     java.lang.Object ref = subscriptionId_;
@@ -302,7 +320,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
   public static final int RESOURCE_GROUP_FIELD_NUMBER = 8;
   private volatile java.lang.Object resourceGroup_;
   /**
-   * <code>string resource_group = 8;</code>
+   * <code>string resource_group = 8[json_name = "resourceGroup"];</code>
+   * @return The resourceGroup.
    */
   public java.lang.String getResourceGroup() {
     java.lang.Object ref = resourceGroup_;
@@ -316,7 +335,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
     }
   }
   /**
-   * <code>string resource_group = 8;</code>
+   * <code>string resource_group = 8[json_name = "resourceGroup"];</code>
+   * @return The bytes for resourceGroup.
    */
   public com.google.protobuf.ByteString getResourceGroupBytes() {
     java.lang.Object ref = resourceGroup_;
@@ -332,7 +352,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
   public static final int MASTER_URL_FIELD_NUMBER = 9;
   private volatile java.lang.Object masterUrl_;
   /**
-   * <code>string master_url = 9;</code>
+   * <code>string master_url = 9[json_name = "masterUrl"];</code>
+   * @return The masterUrl.
    */
   public java.lang.String getMasterUrl() {
     java.lang.Object ref = masterUrl_;
@@ -346,7 +367,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
     }
   }
   /**
-   * <code>string master_url = 9;</code>
+   * <code>string master_url = 9[json_name = "masterUrl"];</code>
+   * @return The bytes for masterUrl.
    */
   public com.google.protobuf.ByteString getMasterUrlBytes() {
     java.lang.Object ref = masterUrl_;
@@ -784,13 +806,16 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
 
     private com.google.protobuf.ByteString settingAttribute_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes setting_attribute = 1;</code>
+     * <code>bytes setting_attribute = 1[json_name = "settingAttribute"];</code>
+     * @return The settingAttribute.
      */
     public com.google.protobuf.ByteString getSettingAttribute() {
       return settingAttribute_;
     }
     /**
-     * <code>bytes setting_attribute = 1;</code>
+     * <code>bytes setting_attribute = 1[json_name = "settingAttribute"];</code>
+     * @param value The settingAttribute to set.
+     * @return This builder for chaining.
      */
     public Builder setSettingAttribute(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -802,7 +827,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>bytes setting_attribute = 1;</code>
+     * <code>bytes setting_attribute = 1[json_name = "settingAttribute"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearSettingAttribute() {
       settingAttribute_ = getDefaultInstance().getSettingAttribute();
@@ -812,7 +838,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
 
     private java.lang.Object containerSvcName_ = "";
     /**
-     * <code>string container_svc_name = 2;</code>
+     * <code>string container_svc_name = 2[json_name = "containerSvcName"];</code>
+     * @return The containerSvcName.
      */
     public java.lang.String getContainerSvcName() {
       java.lang.Object ref = containerSvcName_;
@@ -826,7 +853,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
     }
     /**
-     * <code>string container_svc_name = 2;</code>
+     * <code>string container_svc_name = 2[json_name = "containerSvcName"];</code>
+     * @return The bytes for containerSvcName.
      */
     public com.google.protobuf.ByteString getContainerSvcNameBytes() {
       java.lang.Object ref = containerSvcName_;
@@ -839,7 +867,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
     }
     /**
-     * <code>string container_svc_name = 2;</code>
+     * <code>string container_svc_name = 2[json_name = "containerSvcName"];</code>
+     * @param value The containerSvcName to set.
+     * @return This builder for chaining.
      */
     public Builder setContainerSvcName(java.lang.String value) {
       if (value == null) {
@@ -851,7 +881,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>string container_svc_name = 2;</code>
+     * <code>string container_svc_name = 2[json_name = "containerSvcName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearContainerSvcName() {
       containerSvcName_ = getDefaultInstance().getContainerSvcName();
@@ -859,7 +890,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>string container_svc_name = 2;</code>
+     * <code>string container_svc_name = 2[json_name = "containerSvcName"];</code>
+     * @param value The bytes for containerSvcName to set.
+     * @return This builder for chaining.
      */
     public Builder setContainerSvcNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -874,13 +907,16 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
 
     private com.google.protobuf.ByteString encryptionDetails_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes encryption_details = 3;</code>
+     * <code>bytes encryption_details = 3[json_name = "encryptionDetails"];</code>
+     * @return The encryptionDetails.
      */
     public com.google.protobuf.ByteString getEncryptionDetails() {
       return encryptionDetails_;
     }
     /**
-     * <code>bytes encryption_details = 3;</code>
+     * <code>bytes encryption_details = 3[json_name = "encryptionDetails"];</code>
+     * @param value The encryptionDetails to set.
+     * @return This builder for chaining.
      */
     public Builder setEncryptionDetails(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -892,7 +928,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>bytes encryption_details = 3;</code>
+     * <code>bytes encryption_details = 3[json_name = "encryptionDetails"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearEncryptionDetails() {
       encryptionDetails_ = getDefaultInstance().getEncryptionDetails();
@@ -902,7 +939,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
 
     private java.lang.Object clusterName_ = "";
     /**
-     * <code>string cluster_name = 4;</code>
+     * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+     * @return The clusterName.
      */
     public java.lang.String getClusterName() {
       java.lang.Object ref = clusterName_;
@@ -916,7 +954,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
     }
     /**
-     * <code>string cluster_name = 4;</code>
+     * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+     * @return The bytes for clusterName.
      */
     public com.google.protobuf.ByteString getClusterNameBytes() {
       java.lang.Object ref = clusterName_;
@@ -929,7 +968,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
     }
     /**
-     * <code>string cluster_name = 4;</code>
+     * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+     * @param value The clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterName(java.lang.String value) {
       if (value == null) {
@@ -941,7 +982,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>string cluster_name = 4;</code>
+     * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterName() {
       clusterName_ = getDefaultInstance().getClusterName();
@@ -949,7 +991,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>string cluster_name = 4;</code>
+     * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+     * @param value The bytes for clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -964,7 +1008,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
 
     private java.lang.Object namespace_ = "";
     /**
-     * <code>string namespace = 5;</code>
+     * <code>string namespace = 5[json_name = "namespace"];</code>
+     * @return The namespace.
      */
     public java.lang.String getNamespace() {
       java.lang.Object ref = namespace_;
@@ -978,7 +1023,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
     }
     /**
-     * <code>string namespace = 5;</code>
+     * <code>string namespace = 5[json_name = "namespace"];</code>
+     * @return The bytes for namespace.
      */
     public com.google.protobuf.ByteString getNamespaceBytes() {
       java.lang.Object ref = namespace_;
@@ -991,7 +1037,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
     }
     /**
-     * <code>string namespace = 5;</code>
+     * <code>string namespace = 5[json_name = "namespace"];</code>
+     * @param value The namespace to set.
+     * @return This builder for chaining.
      */
     public Builder setNamespace(java.lang.String value) {
       if (value == null) {
@@ -1003,7 +1051,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>string namespace = 5;</code>
+     * <code>string namespace = 5[json_name = "namespace"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearNamespace() {
       namespace_ = getDefaultInstance().getNamespace();
@@ -1011,7 +1060,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>string namespace = 5;</code>
+     * <code>string namespace = 5[json_name = "namespace"];</code>
+     * @param value The bytes for namespace to set.
+     * @return This builder for chaining.
      */
     public Builder setNamespaceBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1026,7 +1077,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
 
     private java.lang.Object region_ = "";
     /**
-     * <code>string region = 6;</code>
+     * <code>string region = 6[json_name = "region"];</code>
+     * @return The region.
      */
     public java.lang.String getRegion() {
       java.lang.Object ref = region_;
@@ -1040,7 +1092,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
     }
     /**
-     * <code>string region = 6;</code>
+     * <code>string region = 6[json_name = "region"];</code>
+     * @return The bytes for region.
      */
     public com.google.protobuf.ByteString getRegionBytes() {
       java.lang.Object ref = region_;
@@ -1053,7 +1106,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
     }
     /**
-     * <code>string region = 6;</code>
+     * <code>string region = 6[json_name = "region"];</code>
+     * @param value The region to set.
+     * @return This builder for chaining.
      */
     public Builder setRegion(java.lang.String value) {
       if (value == null) {
@@ -1065,7 +1120,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>string region = 6;</code>
+     * <code>string region = 6[json_name = "region"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearRegion() {
       region_ = getDefaultInstance().getRegion();
@@ -1073,7 +1129,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>string region = 6;</code>
+     * <code>string region = 6[json_name = "region"];</code>
+     * @param value The bytes for region to set.
+     * @return This builder for chaining.
      */
     public Builder setRegionBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1088,7 +1146,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
 
     private java.lang.Object subscriptionId_ = "";
     /**
-     * <code>string subscription_id = 7;</code>
+     * <code>string subscription_id = 7[json_name = "subscriptionId"];</code>
+     * @return The subscriptionId.
      */
     public java.lang.String getSubscriptionId() {
       java.lang.Object ref = subscriptionId_;
@@ -1102,7 +1161,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
     }
     /**
-     * <code>string subscription_id = 7;</code>
+     * <code>string subscription_id = 7[json_name = "subscriptionId"];</code>
+     * @return The bytes for subscriptionId.
      */
     public com.google.protobuf.ByteString getSubscriptionIdBytes() {
       java.lang.Object ref = subscriptionId_;
@@ -1115,7 +1175,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
     }
     /**
-     * <code>string subscription_id = 7;</code>
+     * <code>string subscription_id = 7[json_name = "subscriptionId"];</code>
+     * @param value The subscriptionId to set.
+     * @return This builder for chaining.
      */
     public Builder setSubscriptionId(java.lang.String value) {
       if (value == null) {
@@ -1127,7 +1189,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>string subscription_id = 7;</code>
+     * <code>string subscription_id = 7[json_name = "subscriptionId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearSubscriptionId() {
       subscriptionId_ = getDefaultInstance().getSubscriptionId();
@@ -1135,7 +1198,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>string subscription_id = 7;</code>
+     * <code>string subscription_id = 7[json_name = "subscriptionId"];</code>
+     * @param value The bytes for subscriptionId to set.
+     * @return This builder for chaining.
      */
     public Builder setSubscriptionIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1150,7 +1215,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
 
     private java.lang.Object resourceGroup_ = "";
     /**
-     * <code>string resource_group = 8;</code>
+     * <code>string resource_group = 8[json_name = "resourceGroup"];</code>
+     * @return The resourceGroup.
      */
     public java.lang.String getResourceGroup() {
       java.lang.Object ref = resourceGroup_;
@@ -1164,7 +1230,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
     }
     /**
-     * <code>string resource_group = 8;</code>
+     * <code>string resource_group = 8[json_name = "resourceGroup"];</code>
+     * @return The bytes for resourceGroup.
      */
     public com.google.protobuf.ByteString getResourceGroupBytes() {
       java.lang.Object ref = resourceGroup_;
@@ -1177,7 +1244,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
     }
     /**
-     * <code>string resource_group = 8;</code>
+     * <code>string resource_group = 8[json_name = "resourceGroup"];</code>
+     * @param value The resourceGroup to set.
+     * @return This builder for chaining.
      */
     public Builder setResourceGroup(java.lang.String value) {
       if (value == null) {
@@ -1189,7 +1258,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>string resource_group = 8;</code>
+     * <code>string resource_group = 8[json_name = "resourceGroup"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearResourceGroup() {
       resourceGroup_ = getDefaultInstance().getResourceGroup();
@@ -1197,7 +1267,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>string resource_group = 8;</code>
+     * <code>string resource_group = 8[json_name = "resourceGroup"];</code>
+     * @param value The bytes for resourceGroup to set.
+     * @return This builder for chaining.
      */
     public Builder setResourceGroupBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1212,7 +1284,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
 
     private java.lang.Object masterUrl_ = "";
     /**
-     * <code>string master_url = 9;</code>
+     * <code>string master_url = 9[json_name = "masterUrl"];</code>
+     * @return The masterUrl.
      */
     public java.lang.String getMasterUrl() {
       java.lang.Object ref = masterUrl_;
@@ -1226,7 +1299,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
     }
     /**
-     * <code>string master_url = 9;</code>
+     * <code>string master_url = 9[json_name = "masterUrl"];</code>
+     * @return The bytes for masterUrl.
      */
     public com.google.protobuf.ByteString getMasterUrlBytes() {
       java.lang.Object ref = masterUrl_;
@@ -1239,7 +1313,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
     }
     /**
-     * <code>string master_url = 9;</code>
+     * <code>string master_url = 9[json_name = "masterUrl"];</code>
+     * @param value The masterUrl to set.
+     * @return This builder for chaining.
      */
     public Builder setMasterUrl(java.lang.String value) {
       if (value == null) {
@@ -1251,7 +1327,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>string master_url = 9;</code>
+     * <code>string master_url = 9[json_name = "masterUrl"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearMasterUrl() {
       masterUrl_ = getDefaultInstance().getMasterUrl();
@@ -1259,7 +1336,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return this;
     }
     /**
-     * <code>string master_url = 9;</code>
+     * <code>string master_url = 9[json_name = "masterUrl"];</code>
+     * @param value The bytes for masterUrl to set.
+     * @return This builder for chaining.
      */
     public Builder setMasterUrlBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

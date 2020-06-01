@@ -8,12 +8,14 @@ public interface ReservedResourceOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.payloads.ReservedResource)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>double cpu = 1;</code>
+   * <code>double cpu = 1[json_name = "cpu"];</code>
+   * @return The cpu.
    */
   double getCpu();
 
   /**
-   * <code>double memory = 2;</code>
+   * <code>double memory = 2[json_name = "memory"];</code>
+   * @return The memory.
    */
   double getMemory();
 }
