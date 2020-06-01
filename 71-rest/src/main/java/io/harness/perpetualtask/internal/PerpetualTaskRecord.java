@@ -76,5 +76,6 @@ public class PerpetualTaskRecord
   public static final class PerpetualTaskRecordKeys {
     public static final String client_context_last_updated =
         clientContext + "." + PerpetualTaskClientContextKeys.lastContextUpdated;
+    public static final String client_params = clientContext + "." + PerpetualTaskClientContextKeys.clientParams;
   }
 }
