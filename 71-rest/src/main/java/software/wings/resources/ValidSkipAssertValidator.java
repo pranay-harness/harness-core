@@ -12,7 +12,7 @@ import javax.validation.ConstraintValidatorContext;
 @Slf4j
 @Singleton
 public class ValidSkipAssertValidator implements ConstraintValidator<ValidSkipAssert, String> {
-  public static final String VARIABLE_PATTERN = "\\$\\{(.+)}";
+  public static final String VARIABLE_PATTERN = "\\$\\{([^{}]+)}";
   public static final String GROUP_1 = "$1";
   private final JexlEngine engine = new JexlBuilder().create();
 
