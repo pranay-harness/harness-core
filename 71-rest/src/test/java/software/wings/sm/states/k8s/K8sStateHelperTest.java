@@ -9,6 +9,8 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -69,16 +71,19 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.K8sPodSyncException;
 import io.harness.exception.WingsException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.k8s.model.K8sPod;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoUtils;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -93,6 +98,7 @@ import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Account;
@@ -120,6 +126,7 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.common.VariableProcessor;
+import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.helm.HelmConstants;
@@ -162,6 +169,7 @@ import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -381,19 +389,8 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testDoManifestsUseArtifact() {
-    ApplicationManifest applicationManifest = ApplicationManifest.builder()
-                                                  .kind(AppManifestKind.K8S_MANIFEST)
-                                                  .storeType(StoreType.Local)
-                                                  .serviceId(SERVICE_ID)
-                                                  .build();
-    applicationManifest.setAppId(APP_ID);
-    applicationManifest.setUuid(APPLICATION_MANIFEST_ID);
-
-    ManifestFile manifestFile = ManifestFile.builder()
-                                    .applicationManifestId(APPLICATION_MANIFEST_ID)
-                                    .fileName(values_filename)
-                                    .fileContent(VALUES_YAML_WITH_ARTIFACT_REFERENCE)
-                                    .build();
+    ApplicationManifest applicationManifest = createApplicationManifest();
+    ManifestFile manifestFile = createManifestFile();
 
     wingsPersistence.save(applicationManifest);
     wingsPersistence.save(manifestFile);
@@ -498,6 +495,26 @@ public class K8sStateHelperTest extends WingsBaseTest {
       assertThat(e.getMessage())
           .isEqualTo("Infra definition not found for appId APP_ID infraDefinitionId INFRA_DEFINITION_ID");
     }
+  }
+
+  private ManifestFile createManifestFile() {
+    return ManifestFile.builder()
+        .applicationManifestId(APPLICATION_MANIFEST_ID)
+        .fileName(values_filename)
+        .fileContent(VALUES_YAML_WITH_ARTIFACT_REFERENCE)
+        .build();
+  }
+
+  @NotNull
+  private ApplicationManifest createApplicationManifest() {
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .kind(AppManifestKind.K8S_MANIFEST)
+                                                  .storeType(StoreType.Local)
+                                                  .serviceId(SERVICE_ID)
+                                                  .build();
+    applicationManifest.setAppId(APP_ID);
+    applicationManifest.setUuid(APPLICATION_MANIFEST_ID);
+    return applicationManifest;
   }
 
   private InfrastructureMapping createGCPInfraMapping() {
@@ -630,6 +647,39 @@ public class K8sStateHelperTest extends WingsBaseTest {
     response.setCommandExecutionStatus(FAILURE);
     k8sPods = k8sStateHelper.tryGetPodList(infrastructureMapping, "default", "releaseName");
     assertThat(k8sPods).isNull();
+
+    when(delegateService.executeTask(any()))
+        .thenReturn(ErrorNotifyResponseData.builder().errorMessage("ErrorMessage").build());
+    try {
+      k8sStateHelper.getPodList(infrastructureMapping, "default", "releaseName");
+    } catch (Exception ex) {
+      assertThatExceptionOfType(K8sPodSyncException.class);
+      assertThat(ex.getMessage()).isEqualTo("Failed to fetch PodList for release releaseName. Error: ErrorMessage");
+    }
+
+    when(delegateService.executeTask(any()))
+        .thenReturn(RemoteMethodReturnValueData.builder()
+                        .returnValue("returnValue")
+                        .exception(new K8sPodSyncException("k8sPodSyncException"))
+                        .build());
+    try {
+      k8sStateHelper.getPodList(infrastructureMapping, "default", "releaseName");
+    } catch (Exception ex) {
+      assertThatExceptionOfType(K8sPodSyncException.class);
+      assertThat(ex.getMessage())
+          .isEqualTo(
+              "Failed to fetch PodList for release releaseName. Exception: RemoteMethodReturnValueData(returnValue=returnValue, exception=io.harness.exception.K8sPodSyncException: k8sPodSyncException)");
+    }
+
+    when(delegateService.executeTask(any())).thenReturn(HelmValuesFetchTaskResponse.builder().build());
+    try {
+      k8sStateHelper.getPodList(infrastructureMapping, "default", "releaseName");
+    } catch (Exception ex) {
+      assertThatExceptionOfType(K8sPodSyncException.class);
+      assertThat(ex.getMessage())
+          .isEqualTo(
+              "Failed to fetch PodList for release releaseName. Unknown return type software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse");
+    }
   }
 
   @Test
@@ -668,6 +718,13 @@ public class K8sStateHelperTest extends WingsBaseTest {
     verify(delegateService, times(2)).queueTask(captor.capture());
     delegateTask = captor.getValue();
     assertThat(delegateTask.getData().getTimeout()).isEqualTo(300 * 60 * 1000);
+
+    taskParameters.setTimeoutIntervalInMin(0);
+    k8sStateHelper.queueK8sDelegateTask(context, taskParameters);
+    captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(3)).queueTask(captor.capture());
+    delegateTask = captor.getValue();
+    assertThat(delegateTask.getData().getTimeout()).isEqualTo(60 * 1000);
   }
 
   @Test
@@ -1021,6 +1078,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
     K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     k8sStateExecutionData.setValuesFiles(new HashMap<>());
     GitFetchFilesTaskParams fetchFilesTaskParams = GitFetchFilesTaskParams.builder().build();
+    fetchFilesTaskParams.setBindTaskFeatureSet(true);
 
     DirectKubernetesInfrastructureMapping infrastructureMapping =
         DirectKubernetesInfrastructureMapping.builder().build();
@@ -1201,5 +1259,133 @@ public class K8sStateHelperTest extends WingsBaseTest {
     savedK8sElement = k8sStateHelper.getK8sElement(context);
     assertThat(savedK8sElement.getReleaseName()).isEqualTo("releaseName");
     assertThat(savedK8sElement.getReleaseNumber()).isEqualTo(12);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testUpdateManifestsArtifactVariableNames() {
+    try {
+      k8sStateHelper.updateManifestsArtifactVariableNames(APP_ID, INFRA_MAPPING_ID, emptySet());
+    } catch (Exception ex) {
+      assertThatExceptionOfType(InvalidRequestException.class);
+      assertThat(ex.getMessage()).isEqualTo("Infra mapping not found for appId APP_ID infraMappingId INFRA_MAPPING_ID");
+    }
+
+    ApplicationManifest applicationManifest = createApplicationManifest();
+    ManifestFile manifestFile = createManifestFile();
+    wingsPersistence.save(applicationManifest);
+    wingsPersistence.save(manifestFile);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(createGCPInfraMapping());
+
+    Set<String> serviceArtifactVariableNames = new HashSet<>();
+    k8sStateHelper.updateManifestsArtifactVariableNames(APP_ID, INFRA_MAPPING_ID, serviceArtifactVariableNames);
+    assertThat(serviceArtifactVariableNames).contains("artifact");
+
+    try {
+      k8sStateHelper.updateManifestsArtifactVariableNamesInfraDefinition(
+          APP_ID, INFRA_DEFINITION_ID, emptySet(), SERVICE_ID);
+    } catch (Exception ex) {
+      assertThatExceptionOfType(InvalidRequestException.class);
+      assertThat(ex.getMessage())
+          .isEqualTo("Infra Definition not found for appId APP_ID infraDefinitionId INFRA_DEFINITION_ID");
+    }
+
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(InfrastructureDefinition.builder().envId(ENV_ID).build());
+    serviceArtifactVariableNames = new HashSet<>();
+    k8sStateHelper.updateManifestsArtifactVariableNamesInfraDefinition(
+        APP_ID, INFRA_DEFINITION_ID, serviceArtifactVariableNames, SERVICE_ID);
+    assertThat(serviceArtifactVariableNames).contains("artifact");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testExecuteWrapperWithManifest() {
+    K8sStateExecutor k8sStateExecutor = mock(K8sStateExecutor.class);
+    K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    k8sStateExecutionData.setValuesFiles(new HashMap<>());
+
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    appManifestMap.put(K8sValuesLocation.Service,
+        ApplicationManifest.builder().storeType(Remote).kind(AppManifestKind.K8S_MANIFEST).build());
+    when(applicationManifestUtils.getOverrideApplicationManifests(context, AppManifestKind.OC_PARAMS))
+        .thenReturn(appManifestMap);
+    when(openShiftManagerService.isOpenShiftManifestConfig(context)).thenReturn(true);
+    when(activityService.save(any(Activity.class))).thenReturn(Activity.builder().uuid(ACTIVITY_ID).build());
+    when(applicationManifestUtils.createGitFetchFilesTaskParams(context, application, appManifestMap))
+        .thenReturn(GitFetchFilesTaskParams.builder().build());
+    ExecutionResponse executionResponse = k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context);
+    assertThat(((K8sStateExecutionData) executionResponse.getStateExecutionData()).getCurrentTaskType())
+        .isEqualTo(TaskType.GIT_COMMAND);
+
+    when(applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context))
+        .thenReturn(ApplicationManifest.builder().storeType(HelmChartRepo).kind(AppManifestKind.K8S_MANIFEST).build());
+    when(applicationManifestUtils.isValuesInHelmChartRepo(context)).thenReturn(true);
+    when(openShiftManagerService.isOpenShiftManifestConfig(context)).thenReturn(false);
+    executionResponse = k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context);
+    assertThat(((K8sStateExecutionData) executionResponse.getStateExecutionData()).getCurrentTaskType())
+        .isEqualTo(TaskType.HELM_VALUES_FETCH);
+
+    appManifestMap.put(K8sValuesLocation.Service,
+        ApplicationManifest.builder().storeType(HelmSourceRepo).kind(AppManifestKind.K8S_MANIFEST).build());
+    when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(appManifestMap);
+    when(openShiftManagerService.isOpenShiftManifestConfig(context)).thenReturn(false);
+    when(applicationManifestUtils.isValuesInHelmChartRepo(context)).thenReturn(false);
+    executionResponse = k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context);
+    assertThat(((K8sStateExecutionData) executionResponse.getStateExecutionData()).getCurrentTaskType())
+        .isEqualTo(TaskType.GIT_COMMAND);
+
+    when(k8sStateExecutor.executeK8sTask(context, ACTIVITY_ID))
+        .thenThrow(new InvalidRequestException("App not found"))
+        .thenThrow(new UnsupportedOperationException("asd"));
+    when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(emptyMap());
+    try {
+      k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context);
+    } catch (Exception ex) {
+      assertThatExceptionOfType(InvalidRequestException.class);
+      assertThat(ex.getMessage()).isEqualTo("App not found");
+    }
+
+    when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(emptyMap());
+    try {
+      k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context);
+    } catch (Exception ex) {
+      assertThatExceptionOfType(InvalidRequestException.class);
+      assertThat(ex.getCause()).isInstanceOf(UnsupportedOperationException.class);
+    }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetApplicationManifests() {
+    when(openShiftManagerService.isOpenShiftManifestConfig(context)).thenReturn(true);
+    k8sStateHelper.getApplicationManifests(context);
+    ArgumentCaptor<AppManifestKind> argumentCaptor = ArgumentCaptor.forClass(AppManifestKind.class);
+    verify(applicationManifestUtils, times(1)).getApplicationManifests(any(), argumentCaptor.capture());
+    assertThat(argumentCaptor.getValue()).isEqualTo(AppManifestKind.OC_PARAMS);
+
+    when(openShiftManagerService.isOpenShiftManifestConfig(context)).thenReturn(false);
+    k8sStateHelper.getApplicationManifests(context);
+    argumentCaptor = ArgumentCaptor.forClass(AppManifestKind.class);
+    verify(applicationManifestUtils, times(2)).getApplicationManifests(any(), argumentCaptor.capture());
+    assertThat(argumentCaptor.getValue()).isEqualTo(AppManifestKind.VALUES);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testSaveInstanceInfoToSweepingOutput() {
+    k8sStateHelper.saveInstanceInfoToSweepingOutput(context, asList(anInstanceElement().dockerId("dockerId").build()),
+        asList(InstanceDetails.builder().hostName("hostName").build()));
+
+    ArgumentCaptor<SweepingOutputInstance> argumentCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(1)).save(argumentCaptor.capture());
+
+    InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) argumentCaptor.getValue().getValue();
+    assertThat(instanceInfoVariables.getInstanceDetails().get(0).getHostName()).isEqualTo("hostName");
+    assertThat(instanceInfoVariables.getInstanceElements().get(0).getDockerId()).isEqualTo("dockerId");
   }
 }

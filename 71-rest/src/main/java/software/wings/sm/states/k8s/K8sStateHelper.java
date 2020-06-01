@@ -23,6 +23,7 @@ import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TAS
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -1020,6 +1021,7 @@ public class K8sStateHelper {
         .collect(Collectors.toList());
   }
 
+  @VisibleForTesting
   void saveInstanceInfoToSweepingOutput(
       ExecutionContext context, List<InstanceElement> instanceElements, List<InstanceDetails> instanceDetails) {
     sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
