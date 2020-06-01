@@ -12,3 +12,11 @@ load("@bazel_gazelle//:def.bzl", "gazelle")
 
 # gazelle:prefix github.com/wings-software/portal
 gazelle(name = "gazelle")
+
+load("@io_bazel_rules_go//go:def.bzl", "nogo")
+
+nogo(
+    name = "nogo_vet",
+    vet = True,
+    visibility = ["//visibility:public"],
+)
