@@ -563,7 +563,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   private String updateSecret(@NonNull String accountId, @NonNull EncryptedData encryptedData, @NonNull char[] secret,
       @NonNull String fieldName) {
     EncryptedData updatedEncryptedData = secretManager.encrypt(accountId, encryptedData.getType(), secret,
-        encryptedData.getPath(), encryptedData.getSecretVariables(), encryptedData, encryptedData.getName(),
+        encryptedData.getPath(), encryptedData.getParameters(), encryptedData, encryptedData.getName(),
         encryptedData.getUsageRestrictions());
     encryptedData.setEncryptionKey(updatedEncryptedData.getEncryptionKey());
     encryptedData.setEncryptedValue(updatedEncryptedData.getEncryptedValue());

@@ -1,7 +1,7 @@
 package software.wings.service.impl.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.security.encryption.SecretVariable;
+import io.harness.security.encryption.EncryptedDataParams;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.settings.UsageRestrictions;
@@ -18,7 +18,7 @@ public class SecretText {
   private String name;
   private String value;
   private String path;
-  private Set<SecretVariable> variables;
+  private Set<EncryptedDataParams> parameters;
   private UsageRestrictions usageRestrictions;
   private String kmsId;
 }

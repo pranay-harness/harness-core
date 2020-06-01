@@ -14,4 +14,6 @@ public interface ManagerDecryptionService {
 
   void decrypt(
       String accountId, List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList);
+
+  char[] fetchSecretValue(String accountId, EncryptedDataDetail encryptedDataDetail);
 }

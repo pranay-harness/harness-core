@@ -3,8 +3,8 @@ package software.wings.service.impl.security;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.security.encryption.SecretVariable;
 import io.harness.stream.BoundedInputStream;
 import lombok.NonNull;
 import software.wings.annotation.EncryptableSetting;
@@ -86,7 +86,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret, String path,
-      Set<SecretVariable> secretVariables, EncryptedData encryptedData, String secretName,
+      Set<EncryptedDataParams> parameters, EncryptedData encryptedData, String secretName,
       UsageRestrictions usageRestrictions) {
     throw new UnsupportedOperationException();
   }

@@ -23,6 +23,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
@@ -128,6 +129,17 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
+      throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, ExceptionUtils.getMessage(e), e, USER);
+    }
+  }
+
+  @Override
+  public char[] fetchSecretValue(String accountId, EncryptedDataDetail encryptedDataDetail) {
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build();
+    try {
+      return delegateProxyFactory.get(EncryptionService.class, syncTaskContext).getDecryptedValue(encryptedDataDetail);
+    } catch (IOException e) {
       throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, ExceptionUtils.getMessage(e), e, USER);
     }
   }

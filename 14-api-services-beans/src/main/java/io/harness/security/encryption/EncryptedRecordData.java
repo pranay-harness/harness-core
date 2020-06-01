@@ -18,7 +18,7 @@ public class EncryptedRecordData implements EncryptedRecord {
   private String uuid;
   private String name;
   private String path;
-  private Set<SecretVariable> secretVariables;
+  private Set<EncryptedDataParams> parameters;
   private String encryptionKey;
   private char[] encryptedValue;
   private String kmsId;

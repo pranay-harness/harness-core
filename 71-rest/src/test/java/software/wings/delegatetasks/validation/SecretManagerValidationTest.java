@@ -1,9 +1,11 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.security.encryption.EncryptionType.CUSTOM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
@@ -19,6 +21,10 @@ import net.openhft.chronicle.core.util.Time;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
+import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +35,8 @@ import java.util.function.Consumer;
  * @author marklu on 2019-06-12
  */
 public class SecretManagerValidationTest extends CategoryTest {
+  @Mock CustomSecretsManagerDelegateService customSecretsManagerDelegateService;
+
   @Data
   public static class TestSecretManagerValidation extends AbstractSecretManagerValidation {
     Object[] parameters;
@@ -39,15 +47,15 @@ public class SecretManagerValidationTest extends CategoryTest {
     }
   }
 
-  private TestSecretManagerValidation validation;
+  @InjectMocks private TestSecretManagerValidation validation;
 
   @Before
   public void setUp() {
     TaskData taskData = mock(TaskData.class);
     DelegateTask delegateTask = mock(DelegateTask.class);
     when(delegateTask.getData()).thenReturn(taskData);
-
     validation = new TestSecretManagerValidation(UUIDGenerator.generateUuid(), delegateTask, null);
+    initMocks(this);
   }
 
   @Test
@@ -127,5 +135,35 @@ public class SecretManagerValidationTest extends CategoryTest {
     DelegateConnectionResult result = validation.validateSecretManager();
     assertThat(result).isNotNull();
     assertThat(result.isValidated()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testValidationWithCustomEncryptionConfig_shouldReturnTrue() {
+    CustomSecretsManagerConfig encryptionConfig = mock(CustomSecretsManagerConfig.class);
+    when(encryptionConfig.getEncryptionType()).thenReturn(CUSTOM);
+    when(encryptionConfig.getValidationCriteria()).thenReturn("localhost");
+    validation.setParameters(new Object[] {encryptionConfig});
+    when(customSecretsManagerDelegateService.isExecutableOnDelegate(encryptionConfig)).thenReturn(true);
+    DelegateConnectionResult result = validation.validateSecretManager();
+    assertThat(result).isNotNull();
+    assertThat(result.isValidated()).isTrue();
+    assertThat(result.getCriteria()).isEqualTo("localhost");
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testValidationWithCustomEncryptionConfig_shouldReturnFalse() {
+    CustomSecretsManagerConfig encryptionConfig = mock(CustomSecretsManagerConfig.class);
+    when(encryptionConfig.getEncryptionType()).thenReturn(CUSTOM);
+    when(encryptionConfig.getValidationCriteria()).thenReturn("localhost");
+    validation.setParameters(new Object[] {encryptionConfig});
+    when(customSecretsManagerDelegateService.isExecutableOnDelegate(encryptionConfig)).thenReturn(false);
+    DelegateConnectionResult result = validation.validateSecretManager();
+    assertThat(result).isNotNull();
+    assertThat(result.isValidated()).isFalse();
+    assertThat(result.getCriteria()).isEqualTo("localhost");
   }
 }

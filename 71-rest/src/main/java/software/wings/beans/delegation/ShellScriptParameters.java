@@ -106,35 +106,12 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
         .withKeyName(keyName)
         .withAccessType(accessType)
         .withAuthenticationScheme(authenticationScheme)
-        .withKerberosConfig(kerberosConfig);
-    EncryptedDataDetail encryptedDataDetailKey =
-        fetchEncryptedDataDetail(keyEncryptedDataDetails, HostConnectionAttributes.KEY_KEY);
-    if (encryptedDataDetailKey != null) {
-      sshSessionConfigBuilder.withKey(encryptionService.getDecryptedValue(encryptedDataDetailKey));
-    }
-    EncryptedDataDetail encryptedDataDetailPassPhrase =
-        fetchEncryptedDataDetail(keyEncryptedDataDetails, HostConnectionAttributes.KEY_PASSPHRASE);
-    if (encryptedDataDetailPassPhrase != null) {
-      sshSessionConfigBuilder.withKeyPassphrase(encryptionService.getDecryptedValue(encryptedDataDetailPassPhrase));
-    }
-    EncryptedDataDetail encryptedSshPassword =
-        fetchEncryptedDataDetail(keyEncryptedDataDetails, HostConnectionAttributes.KEY_SSH_PASSWORD);
-    if (encryptedSshPassword != null) {
-      sshSessionConfigBuilder.withSshPassword(encryptionService.getDecryptedValue(encryptedSshPassword));
-    }
-    EncryptedDataDetail encryptedKerberosPassword =
-        fetchEncryptedDataDetail(keyEncryptedDataDetails, HostConnectionAttributes.KEY_KERBEROS_PASSWORD);
-    if (encryptedKerberosPassword != null) {
-      sshSessionConfigBuilder.withPassword(encryptionService.getDecryptedValue(encryptedKerberosPassword));
-    }
+        .withKerberosConfig(kerberosConfig)
+        .withKey(hostConnectionAttributes.getKey())
+        .withKeyPassphrase(hostConnectionAttributes.getPassphrase())
+        .withSshPassword(hostConnectionAttributes.getSshPassword())
+        .withPassword(hostConnectionAttributes.getKerberosPassword());
     return sshSessionConfigBuilder.build();
-  }
-
-  private EncryptedDataDetail fetchEncryptedDataDetail(List<EncryptedDataDetail> encryptedDataDetails, String key) {
-    return encryptedDataDetails.stream()
-        .filter(encryptedDataDetail -> encryptedDataDetail.getFieldName().equals(key))
-        .findFirst()
-        .orElse(null);
   }
 
   public WinRmSessionConfig winrmSessionConfig(EncryptionService encryptionService) throws IOException {

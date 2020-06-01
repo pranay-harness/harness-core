@@ -17,18 +17,15 @@ import io.harness.eraro.Level;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.NoResultFoundException;
 import io.harness.exception.UnexpectedException;
-import io.harness.security.encryption.SecretVariable;
+import io.harness.security.encryption.EncryptedDataParams;
 import lombok.NonNull;
 import org.mongodb.morphia.query.Query;
-import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
-import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig.CustomSecretsManagerConfigKeys;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
-import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType;
 import software.wings.service.impl.security.AbstractSecretServiceImpl;
 import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
@@ -59,7 +56,7 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
   public void setAdditionalDetails(@NonNull CustomSecretsManagerConfig customSecretsManagerConfig) {
     setShellScriptInConfig(customSecretsManagerConfig);
     if (!(customSecretsManagerConfig.isExecuteOnDelegate() || customSecretsManagerConfig.isConnectorTemplatized())) {
-      setConnectorInConfig(customSecretsManagerConfig, new HashSet<>());
+      customSecretsManagerConnectorHelper.setConnectorInConfig(customSecretsManagerConfig, new HashSet<>());
     }
   }
 
@@ -69,9 +66,9 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
     secretsManagerConfig.setAccountId(accountId);
     setShellScriptInConfig(secretsManagerConfig);
     setCommandPathInConfig(secretsManagerConfig);
-    Set<SecretVariable> testVariables = secretsManagerConfig.getTestVariables();
+    Set<EncryptedDataParams> testVariables = secretsManagerConfig.getTestVariables();
     if (!secretsManagerConfig.isExecuteOnDelegate()) {
-      setConnectorInConfig(secretsManagerConfig, testVariables);
+      customSecretsManagerConnectorHelper.setConnectorInConfig(secretsManagerConfig, testVariables);
     }
     validateInternal(secretsManagerConfig, testVariables);
     return true;
@@ -123,9 +120,9 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
   private void upsertSecretsManagerInternal(@NonNull CustomSecretsManagerConfig secretsManagerConfig) {
     secretsManagerConfig.setEncryptionType(CUSTOM);
     setShellScriptInConfig(secretsManagerConfig);
-    Set<SecretVariable> testVariables = secretsManagerConfig.getTestVariables();
+    Set<EncryptedDataParams> testVariables = secretsManagerConfig.getTestVariables();
     if (!secretsManagerConfig.isExecuteOnDelegate()) {
-      setConnectorInConfig(secretsManagerConfig, testVariables);
+      customSecretsManagerConnectorHelper.setConnectorInConfig(secretsManagerConfig, testVariables);
     }
     setCommandPathInConfig(secretsManagerConfig);
     validateInternal(secretsManagerConfig, testVariables);
@@ -167,7 +164,8 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
     });
   }
 
-  private void validateInternal(CustomSecretsManagerConfig secretsManagerConfig, Set<SecretVariable> testVariables) {
+  private void validateInternal(
+      CustomSecretsManagerConfig secretsManagerConfig, Set<EncryptedDataParams> testVariables) {
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(secretsManagerConfig.getAccountId());
     if (secretsManagerConfig.isDefault()) {
       throw new InvalidArgumentsException("Custom secret manager cannot be set as default secret manager", USER);
@@ -179,7 +177,7 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
   }
 
   private void validateConnectivity(
-      CustomSecretsManagerConfig customSecretsManagerConfig, Set<SecretVariable> testVariables) {
+      CustomSecretsManagerConfig customSecretsManagerConfig, Set<EncryptedDataParams> testVariables) {
     // To be implemented
   }
 
@@ -188,30 +186,5 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
         customSecretsManagerShellScriptHelper.getShellScript(
             customSecretsManagerConfig.getAccountId(), customSecretsManagerConfig.getTemplateId());
     customSecretsManagerConfig.setCustomSecretsManagerShellScript(customSecretsManagerShellScript);
-  }
-
-  private void setConnectorInConfig(
-      CustomSecretsManagerConfig customSecretsManagerConfig, Set<SecretVariable> testVariables) {
-    String accountId = customSecretsManagerConfig.getAccountId();
-    String connectorId = customSecretsManagerConfig.getConnectorId();
-    ScriptType scriptType = customSecretsManagerConfig.getCustomSecretsManagerShellScript().getScriptType();
-
-    if (customSecretsManagerConfig.isConnectorTemplatized()) {
-      connectorId = getConnectorIdFromTestVariables(testVariables);
-    }
-    EncryptableSetting remoteHostConnector =
-        customSecretsManagerConnectorHelper.getConnector(accountId, connectorId, scriptType);
-    customSecretsManagerConfig.setRemoteHostConnector(remoteHostConnector);
-  }
-
-  private static String getConnectorIdFromTestVariables(Set<SecretVariable> testVariables) {
-    return testVariables.stream()
-        .filter(secretVariable -> secretVariable.getName().equals(CustomSecretsManagerConfigKeys.connectorId))
-        .findFirst()
-        .<InvalidArgumentsException>orElseThrow(() -> {
-          String errorMessage = "There is no connector supplied as a variable although the connector was templatized";
-          throw new InvalidArgumentsException(errorMessage, USER);
-        })
-        .getValue();
   }
 }

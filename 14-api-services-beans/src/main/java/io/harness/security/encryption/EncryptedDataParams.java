@@ -8,7 +8,7 @@ import lombok.Value;
 @Value
 @Builder
 @EqualsAndHashCode
-public class SecretVariable {
+public class EncryptedDataParams {
   @NonNull private String name;
   @NonNull private String value;
 }

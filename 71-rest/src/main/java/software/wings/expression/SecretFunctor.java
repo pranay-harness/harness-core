@@ -1,12 +1,11 @@
 package software.wings.expression;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.InvalidRequestException;
+import io.harness.exception.FunctorException;
 import io.harness.expression.LateBindingMap;
 import io.harness.expression.SecretString;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -57,7 +56,8 @@ public class SecretFunctor extends LateBindingMap {
       }
     }
     if (encryptedData == null) {
-      throw new InvalidRequestException("No secret found with name + [" + secretName + "]", USER);
+      throw new FunctorException("No secret found with name [" + secretName
+          + "]. Either the secret is being attempted to be used out of its scope or the secret does not exist.");
     }
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .accountId(accountId)

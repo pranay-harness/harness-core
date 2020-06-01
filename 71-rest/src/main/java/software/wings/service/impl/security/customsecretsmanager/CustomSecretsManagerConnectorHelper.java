@@ -9,12 +9,16 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.WINRM_CO
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.security.encryption.EncryptedDataParams;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig.CustomSecretsManagerConfigKeys;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.Optional;
+import java.util.Set;
 
 class CustomSecretsManagerConnectorHelper {
   private SettingsService settingsService;
@@ -24,7 +28,20 @@ class CustomSecretsManagerConnectorHelper {
     this.settingsService = settingsService;
   }
 
-  EncryptableSetting getConnector(
+  void setConnectorInConfig(
+      CustomSecretsManagerConfig customSecretsManagerConfig, Set<EncryptedDataParams> testVariables) {
+    String accountId = customSecretsManagerConfig.getAccountId();
+    String connectorId = customSecretsManagerConfig.getConnectorId();
+    ScriptType scriptType = customSecretsManagerConfig.getCustomSecretsManagerShellScript().getScriptType();
+
+    if (customSecretsManagerConfig.isConnectorTemplatized()) {
+      connectorId = getConnectorIdFromTestVariables(testVariables);
+    }
+    EncryptableSetting remoteHostConnector = getConnector(accountId, connectorId, scriptType);
+    customSecretsManagerConfig.setRemoteHostConnector(remoteHostConnector);
+  }
+
+  private EncryptableSetting getConnector(
       @NotEmpty String accountId, @NotEmpty String connectorId, @NotEmpty ScriptType scriptType) {
     EncryptableSetting encryptableSetting =
         (EncryptableSetting) Optional.ofNullable(settingsService.getSettingValueById(accountId, connectorId))
@@ -39,5 +56,16 @@ class CustomSecretsManagerConnectorHelper {
       throw new InvalidArgumentsException(errorMessage, USER);
     }
     return encryptableSetting;
+  }
+
+  private static String getConnectorIdFromTestVariables(Set<EncryptedDataParams> testVariables) {
+    return testVariables.stream()
+        .filter(secretVariable -> secretVariable.getName().equals(CustomSecretsManagerConfigKeys.connectorId))
+        .findFirst()
+        .<InvalidArgumentsException>orElseThrow(() -> {
+          String errorMessage = "There is no connector supplied as a variable although the connector was templatized";
+          throw new InvalidArgumentsException(errorMessage, USER);
+        })
+        .getValue();
   }
 }

@@ -69,10 +69,10 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.UuidAware;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.security.encryption.SecretVariable;
 import io.harness.serializer.KryoUtils;
 import io.harness.stream.BoundedInputStream;
 import lombok.Builder;
@@ -225,7 +225,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret, String path,
-      Set<SecretVariable> secretVariables, EncryptedData encryptedData, String secretName,
+      Set<EncryptedDataParams> parameters, EncryptedData encryptedData, String secretName,
       UsageRestrictions usageRestrictions) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       logger.info("Encrypting a secret");
@@ -235,7 +235,7 @@ public class SecretManagerImpl implements SecretManager {
         encryptedData = EncryptedData.builder()
                             .name(secretName)
                             .path(path)
-                            .secretVariables(secretVariables)
+                            .parameters(parameters)
                             .accountId(accountId)
                             .type(settingType)
                             .enabled(true)
@@ -383,12 +383,19 @@ public class SecretManagerImpl implements SecretManager {
     }
     EncryptionConfig encryptionConfig =
         getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
-
-    return Optional.of(EncryptedDataDetail.builder()
-                           .encryptedData(SecretManager.buildRecordData(encryptedData))
-                           .encryptionConfig(encryptionConfig)
-                           .fieldName(fieldName)
-                           .build());
+    EncryptedDataDetail encryptedDataDetail;
+    if (encryptionConfig.getEncryptionType() == CUSTOM) {
+      encryptedDataDetail = customSecretsManagerEncryptionService.buildEncryptedDataDetail(
+          encryptedData, (CustomSecretsManagerConfig) encryptionConfig);
+      encryptedDataDetail.setFieldName(fieldName);
+    } else {
+      encryptedDataDetail = EncryptedDataDetail.builder()
+                                .encryptedData(SecretManager.buildRecordData(encryptedData))
+                                .encryptionConfig(encryptionConfig)
+                                .fieldName(fieldName)
+                                .build();
+    }
+    return Optional.of(encryptedDataDetail);
   }
 
   @Override
@@ -462,12 +469,18 @@ public class SecretManagerImpl implements SecretManager {
             encryptedRecordData = SecretManager.buildRecordData(encryptedData);
           }
 
-          EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder()
-                                                        .encryptedData(encryptedRecordData)
-                                                        .encryptionConfig(encryptionConfig)
-                                                        .fieldName(f.getName())
-                                                        .build();
-
+          EncryptedDataDetail encryptedDataDetail;
+          if (encryptionConfig.getEncryptionType() == CUSTOM) {
+            encryptedDataDetail = customSecretsManagerEncryptionService.buildEncryptedDataDetail(
+                encryptedData, (CustomSecretsManagerConfig) encryptionConfig);
+            encryptedDataDetail.setFieldName(f.getName());
+          } else {
+            encryptedDataDetail = EncryptedDataDetail.builder()
+                                      .encryptedData(encryptedRecordData)
+                                      .encryptionConfig(encryptionConfig)
+                                      .fieldName(f.getName())
+                                      .build();
+          }
           encryptedDataDetails.add(encryptedDataDetail);
 
           if (isNotEmpty(workflowExecutionId)) {
@@ -1427,7 +1440,7 @@ public class SecretManagerImpl implements SecretManager {
     boolean nameChanged = !Objects.equals(secretText.getName(), savedData.getName());
     boolean valueChanged = isNotEmpty(secretText.getValue()) && !secretText.getValue().equals(SECRET_MASK);
     boolean pathChanged = !Objects.equals(secretText.getPath(), savedData.getPath());
-    boolean variablesChanged = !Objects.equals(secretText.getVariables(), savedData.getSecretVariables());
+    boolean variablesChanged = !Objects.equals(secretText.getParameters(), savedData.getParameters());
 
     boolean needReencryption = false;
 
@@ -1490,7 +1503,7 @@ public class SecretManagerImpl implements SecretManager {
     if (variablesChanged) {
       needReencryption = true;
       builder.append(builder.length() > 0 ? " & secret variables" : " Changed secret variables");
-      savedData.setSecretVariables(secretText.getVariables());
+      savedData.setParameters(secretText.getParameters());
     }
     if (secretText.getUsageRestrictions() != null) {
       builder.append(builder.length() > 0 ? " & usage restrictions" : "Changed usage restrictions");
@@ -1502,7 +1515,7 @@ public class SecretManagerImpl implements SecretManager {
     if (needReencryption) {
       EncryptedData encryptedData =
           encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue, secretText.getPath(),
-              secretText.getVariables(), savedData, secretText.getName(), secretText.getUsageRestrictions());
+              secretText.getParameters(), savedData, secretText.getName(), secretText.getUsageRestrictions());
       savedData.setEncryptionKey(encryptedData.getEncryptionKey());
       savedData.setEncryptedValue(encryptedData.getEncryptedValue());
       savedData.setEncryptionType(encryptedData.getEncryptionType());
@@ -1538,7 +1551,7 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encrypted = EncryptedData.builder()
                                   .name(secretText.getName())
                                   .path(secretText.getPath())
-                                  .secretVariables(secretText.getVariables())
+                                  .parameters(secretText.getParameters())
                                   .accountId(accountId)
                                   .type(SettingVariableTypes.SECRET_TEXT)
                                   .encryptionType(encryptionType)
@@ -1547,7 +1560,7 @@ public class SecretManagerImpl implements SecretManager {
                                   .build();
     EncryptedData encryptedData =
         encrypt(accountId, SettingVariableTypes.SECRET_TEXT, secretValue, secretText.getPath(),
-            secretText.getVariables(), encrypted, secretText.getName(), secretText.getUsageRestrictions());
+            secretText.getParameters(), encrypted, secretText.getName(), secretText.getUsageRestrictions());
     encryptedData.addSearchTag(secretText.getName());
     String encryptedDataId;
     try {
