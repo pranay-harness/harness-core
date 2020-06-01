@@ -33,11 +33,13 @@ public class PlanNode {
   @Singular @Getter List<AdviserObtainment> adviserObtainments;
   @Singular @Getter List<FacilitatorObtainment> facilitatorObtainments;
 
+  boolean skipExpressionChain;
+
   @Builder
   public PlanNode(@NonNull String uuid, @NonNull String name, @NonNull StepType stepType, @NonNull String identifier,
       StepParameters stepParameters, @Singular List<RefObject> refObjects,
       @Singular List<AdviserObtainment> adviserObtainments,
-      @Singular List<FacilitatorObtainment> facilitatorObtainments) {
+      @Singular List<FacilitatorObtainment> facilitatorObtainments, boolean skipExpressionChain) {
     this.uuid = uuid;
     this.name = name;
     this.stepType = stepType;
@@ -46,6 +48,7 @@ public class PlanNode {
     this.refObjects = refObjects;
     this.adviserObtainments = adviserObtainments;
     this.facilitatorObtainments = facilitatorObtainments;
+    this.skipExpressionChain = skipExpressionChain;
   }
 
   PlanNode(String uuid) {

@@ -13,7 +13,6 @@ import io.harness.adviser.NextStepAdvise;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.state.io.StepResponse;
 
 @OwnedBy(CDC)
 @Redesign
@@ -23,8 +22,7 @@ public class OnSuccessAdviser implements Adviser {
 
   @Override
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
-    StepResponse stateResponse = advisingEvent.getStepResponse();
-    if (!positiveStatuses().contains(stateResponse.getStatus())) {
+    if (!positiveStatuses().contains(advisingEvent.getStatus())) {
       return null;
     }
     OnSuccessAdviserParameters parameters =

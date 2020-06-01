@@ -288,7 +288,8 @@ public class ShellScriptStep implements Step, TaskExecutable {
         scriptStateExecutionData.setSweepingOutputEnvVariables(sweepingOutputEnvVariables);
         saveSweepingOutputToContext = true;
       }
-      stepResponseBuilder.outcome("data", scriptStateExecutionData);
+      stepResponseBuilder.stepOutcome(
+          StepResponse.StepOutcome.builder().name("data").outcome(scriptStateExecutionData).build());
     } else if (data instanceof ErrorNotifyResponseData) {
       stepResponseBuilder.status(NodeExecutionStatus.FAILED);
       stepResponseBuilder.failureInfo(

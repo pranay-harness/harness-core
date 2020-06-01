@@ -9,7 +9,6 @@ import com.google.inject.Inject;
 import io.harness.OrchestrationBeansTest;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
-import io.harness.adviser.AdviserParameters;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.category.element.UnitTests;
@@ -17,8 +16,6 @@ import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
-import lombok.Builder;
-import lombok.Value;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -46,12 +43,6 @@ public class AdviserRegistryTest extends OrchestrationBeansTest {
   @Category(UnitTests.class)
   public void shouldTestGetType() {
     assertThat(adviserRegistry.getType()).isEqualTo(RegistryType.ADVISER);
-  }
-
-  @Value
-  @Builder
-  private static class Type1AdviserParameters implements AdviserParameters {
-    String name;
   }
 
   private static class Type1Adviser implements Adviser {

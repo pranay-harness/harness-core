@@ -9,6 +9,7 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepTransput;
 
 import java.util.List;
@@ -22,9 +23,15 @@ public class PipelineSetupStep implements Step, SyncExecutable {
     CDPipelineSetupParameters parameters = (CDPipelineSetupParameters) stepParameters;
     return StepResponse.builder()
         .status(NodeExecutionStatus.SUCCEEDED)
-        .outcome("service", parameters.getCdPipeline().getStages().get(0).getService())
-        .outcome(
-            "infraDefinition", parameters.getCdPipeline().getStages().get(0).getInfrastructure().getInfraDefinition())
+        .stepOutcome(StepOutcome.builder()
+                         .name("service")
+                         .outcome(parameters.getCdPipeline().getStages().get(0).getService())
+                         .build())
+        .stepOutcome(
+            StepOutcome.builder()
+                .name("infraDefinition")
+                .outcome(parameters.getCdPipeline().getStages().get(0).getInfrastructure().getInfraDefinition())
+                .build())
         .build();
   }
 }

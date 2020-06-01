@@ -21,6 +21,7 @@ import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.FailureInfo;
+import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepTransput;
 import lombok.extern.slf4j.Slf4j;
@@ -95,8 +96,7 @@ public class BasicHttpStep implements Step, TaskExecutable {
       } else {
         responseBuilder.status(NodeExecutionStatus.SUCCEEDED);
       }
-
-      responseBuilder.outcome("http", executionData);
+      responseBuilder.stepOutcome(StepOutcome.builder().name("http").outcome(executionData).build());
     }
     return responseBuilder.build();
   }
