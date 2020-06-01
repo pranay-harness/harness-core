@@ -121,8 +121,8 @@ public class AbortAllHandler implements InterruptHandler {
       Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
       PlanNode node = nodeExecution.getNode();
       Step currentState = Preconditions.checkNotNull(stepRegistry.obtain(node.getStepType()));
-      ExecutableResponse executableResponse = nodeExecution.getExecutableResponse();
-      if (nodeExecution.isTaskSpawningMode()) {
+      ExecutableResponse executableResponse = nodeExecution.obtainLatestExecutableResponse();
+      if (executableResponse != null && nodeExecution.isTaskSpawningMode()) {
         TaskSpawningExecutableResponse taskExecutableResponse = (TaskSpawningExecutableResponse) executableResponse;
         TaskExecutor executor = taskExecutorMap.get(taskExecutableResponse.getTaskIdentifier());
         executor.abortTask(ambiance, taskExecutableResponse.getTaskId());

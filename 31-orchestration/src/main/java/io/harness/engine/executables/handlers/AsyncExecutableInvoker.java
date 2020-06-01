@@ -55,6 +55,6 @@ public class AsyncExecutableInvoker implements ExecutableInvoker {
 
     // Update Execution Node Instance state to TASK_WAITING
     nodeExecutionService.update(
-        nodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.executableResponse, response));
+        nodeExecution.getUuid(), ops -> ops.addToSet(NodeExecutionKeys.executableResponses, response));
   }
 }

@@ -45,10 +45,8 @@ import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorResponse;
+import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.ExecutionMode;
-import io.harness.facilitator.modes.chain.TaskChainExecutable;
-import io.harness.facilitator.modes.child.ChildExecutableResponse;
-import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
@@ -68,7 +66,6 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -325,37 +322,19 @@ public class ExecutionEngine implements Engine {
                                 .build());
   }
 
-  public void triggerLink(TaskChainExecutable taskChainExecutable, Ambiance ambiance, NodeExecution nodeExecution,
+  public void triggerLink(Step step, Ambiance ambiance, NodeExecution nodeExecution, PassThroughData passThroughData,
       Map<String, ResponseData> response) {
     PlanNode node = nodeExecution.getNode();
-    List<StepTransput> additionalInputs = new ArrayList<>();
-    if (nodeExecution.getParentId() != null) {
-      NodeExecution parent = nodeExecutionService.get(nodeExecution.getParentId());
-      if (parent.getMode() == ExecutionMode.CHILD) {
-        ChildExecutableResponse parentResponse = (ChildExecutableResponse) parent.getExecutableResponse();
-        if (parentResponse.getAdditionalInputs() != null) {
-          additionalInputs.addAll(parentResponse.getAdditionalInputs());
-        }
-      } else if (parent.getMode() == ExecutionMode.CHILDREN) {
-        ChildrenExecutableResponse parentResponse = (ChildrenExecutableResponse) parent.getExecutableResponse();
-        ChildrenExecutableResponse.Child child = parentResponse.getChildren()
-                                                     .stream()
-                                                     .filter(child1 -> child1.getChildNodeId().equals(node.getUuid()))
-                                                     .findFirst()
-                                                     .orElse(null);
-        if (child != null && child.getAdditionalInputs() != null) {
-          additionalInputs.addAll(child.getAdditionalInputs());
-        }
-      }
-    }
+    List<StepTransput> additionalInputs = engineObtainmentHelper.fetchAdditionalInputs(nodeExecution, node);
     List<StepTransput> inputs = engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), additionalInputs);
-    ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(ExecutionMode.TASK_CHAIN);
+    ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(nodeExecution.getMode());
     invoker.invokeExecutable(InvokerPackage.builder()
-                                 .step((Step) taskChainExecutable)
+                                 .step(step)
                                  .ambiance(ambiance)
                                  .inputs(inputs)
                                  .parameters(nodeExecution.getResolvedStepParameters())
                                  .responseDataMap(response)
+                                 .passThroughData(passThroughData)
                                  .start(false)
                                  .build());
   }

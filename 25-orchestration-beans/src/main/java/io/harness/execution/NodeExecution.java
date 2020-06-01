@@ -1,6 +1,7 @@
 package io.harness.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.ambiance.Level;
@@ -66,7 +67,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   NodeExecutionStatus status;
   private Long expiryTs;
 
-  ExecutableResponse executableResponse;
+  @Singular List<ExecutableResponse> executableResponses;
 
   @Singular List<String> retryIds;
 
@@ -88,6 +89,13 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   }
   public boolean isTaskSpawningMode() {
     return mode == ExecutionMode.TASK || mode == ExecutionMode.TASK_CHAIN;
+  }
+
+  public ExecutableResponse obtainLatestExecutableResponse() {
+    if (isEmpty(executableResponses)) {
+      return null;
+    }
+    return executableResponses.get(executableResponses.size() - 1);
   }
 
   public NodeExecution deepCopy() {

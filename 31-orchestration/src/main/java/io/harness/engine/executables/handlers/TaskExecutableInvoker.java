@@ -47,7 +47,7 @@ public class TaskExecutableInvoker implements ExecutableInvoker {
     // Update Execution Node Instance state to TASK_WAITING
     nodeExecutionService.update(nodeExecution.getUuid(),
         ops
-        -> ops.set(NodeExecutionKeys.executableResponse,
+        -> ops.addToSet(NodeExecutionKeys.executableResponses,
             TaskExecutableResponse.builder().taskId(taskId).taskIdentifier(task.getTaskIdentifier()).build()));
   }
 }

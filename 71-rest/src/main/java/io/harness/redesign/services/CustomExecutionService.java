@@ -24,6 +24,8 @@ public interface CustomExecutionService {
 
   PlanExecution executeTaskChainPlan();
 
+  PlanExecution executeSectionChainPlan();
+
   PlanExecution testInfraState();
 
   // Interrupts

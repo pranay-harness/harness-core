@@ -1,9 +1,10 @@
-package io.harness.facilitator.modes.chain;
+package io.harness.facilitator.modes.chain.task;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.TaskSpawningExecutableResponse;
 import lombok.Builder;
 import lombok.NonNull;
@@ -18,4 +19,5 @@ public class TaskChainExecutableResponse implements TaskSpawningExecutableRespon
   @NonNull String taskIdentifier;
   @NonNull String taskType;
   boolean chainEnd;
+  PassThroughData passThroughData;
 }

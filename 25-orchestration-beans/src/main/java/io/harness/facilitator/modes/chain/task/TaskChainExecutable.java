@@ -1,4 +1,4 @@
-package io.harness.facilitator.modes.chain;
+package io.harness.facilitator.modes.chain.task;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
