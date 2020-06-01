@@ -3,6 +3,7 @@ package io.harness.perpetualtask.ecs;
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
+
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Function.identity;
@@ -27,6 +28,7 @@ import com.amazonaws.services.ecs.model.Task;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.event.client.EventPublisher;
+import io.harness.event.payloads.CeExceptionMessage;
 import io.harness.event.payloads.Ec2InstanceInfo;
 import io.harness.event.payloads.Ec2Lifecycle;
 import io.harness.event.payloads.EcsContainerInstanceDescription;
@@ -40,7 +42,6 @@ import io.harness.event.payloads.InstanceState;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.event.payloads.ReservedResource;
-import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
@@ -64,6 +65,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -75,6 +77,7 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
+  private static final String MESSAGE_PROCESSOR_TYPE = "EXCEPTION";
   private static final String INSTANCE_TERMINATED_NAME = "terminated";
   private static final String ECS_OS_TYPE = "ecs.os-type";
 
@@ -100,8 +103,8 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Override
   public PerpetualTaskResponse runOnce(
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
+    EcsPerpetualTaskParams ecsPerpetualTaskParams = getTaskParams(params);
     try {
-      EcsPerpetualTaskParams ecsPerpetualTaskParams = getTaskParams(params);
       String clusterName = ecsPerpetualTaskParams.getClusterName();
       String region = ecsPerpetualTaskParams.getRegion();
       String clusterId = ecsPerpetualTaskParams.getClusterId();
@@ -134,8 +137,18 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
       publishEcsClusterSyncEvent(clusterId, settingId, clusterName, currentActiveEc2InstanceIds,
           currentActiveContainerInstanceArns, currentActiveTaskArns, now);
       publishUtilizationMetrics(ecsPerpetualTaskParams, awsConfig, encryptionDetails, clusterName, now, heartbeatTime);
-    } catch (Exception ex) {
-      throw new InvalidRequestException("Exception while executing task: ", ex);
+    } catch (Exception e) {
+      logger.error(String.format("Encountered exceptions when executing perpetual task with id=%s", taskId), e);
+      try {
+        String message = e.getMessage().substring(0, Math.min(e.getMessage().length(), 280));
+        eventPublisher.publishMessage(CeExceptionMessage.newBuilder()
+                                          .setClusterId(ecsPerpetualTaskParams.getClusterId())
+                                          .setMessage(message)
+                                          .build(),
+            HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(), MESSAGE_PROCESSOR_TYPE);
+      } catch (Exception ex) {
+        logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
+      }
     }
     return PerpetualTaskResponse.builder()
         .responseCode(200)
