@@ -11,6 +11,7 @@ import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Singular;
 
@@ -18,6 +19,7 @@ import java.util.List;
 
 @OwnedBy(CDC)
 @Redesign
+@NoArgsConstructor
 public class PlanNode {
   // Identifiers
   @NonNull @Getter String uuid;
