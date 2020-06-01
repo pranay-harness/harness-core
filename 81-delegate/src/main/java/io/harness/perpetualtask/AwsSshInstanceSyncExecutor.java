@@ -8,7 +8,7 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.ExecutionStatus;
 import io.harness.grpc.utils.AnyUtils;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
@@ -24,7 +24,7 @@ import java.util.List;
 @Slf4j
 public class AwsSshInstanceSyncExecutor implements PerpetualTaskExecutor {
   @Inject private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
-  @Inject private ManagerClient managerClient;
+  @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
 
   @Override
   public PerpetualTaskResponse runOnce(
@@ -41,7 +41,8 @@ public class AwsSshInstanceSyncExecutor implements PerpetualTaskExecutor {
 
     final AwsEc2ListInstancesResponse awsResponse = getInstances(region, awsConfig, encryptedDataDetails, filters);
     try {
-      execute(managerClient.publishInstanceSyncResult(taskId.getId(), awsConfig.getAccountId(), awsResponse));
+      execute(
+          delegateAgentManagerClient.publishInstanceSyncResult(taskId.getId(), awsConfig.getAccountId(), awsResponse));
     } catch (Exception e) {
       logger.error(
           String.format("Failed to publish the instance collection result to manager for aws ssh for taskId [%s]",

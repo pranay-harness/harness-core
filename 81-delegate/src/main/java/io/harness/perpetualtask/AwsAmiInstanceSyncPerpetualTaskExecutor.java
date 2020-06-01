@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.ExecutionStatus;
 import io.harness.grpc.utils.AnyUtils;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
@@ -23,7 +23,7 @@ import java.util.List;
 @Slf4j
 public class AwsAmiInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Inject private AwsAsgHelperServiceDelegate awsAsgHelperServiceDelegate;
-  @Inject private ManagerClient managerClient;
+  @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
 
   @Override
   public PerpetualTaskResponse runOnce(
@@ -42,7 +42,8 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExe
     final AwsAsgListInstancesResponse awsResponse = getAwsResponse(taskParams, awsConfig, encryptedDataDetails);
 
     try {
-      execute(managerClient.publishInstanceSyncResult(taskId.getId(), awsConfig.getAccountId(), awsResponse));
+      execute(
+          delegateAgentManagerClient.publishInstanceSyncResult(taskId.getId(), awsConfig.getAccountId(), awsResponse));
     } catch (Exception e) {
       logger.error(
           String.format("Failed to publish instance sync result for aws ami. asgName [%s] and PerpetualTaskId [%s]",

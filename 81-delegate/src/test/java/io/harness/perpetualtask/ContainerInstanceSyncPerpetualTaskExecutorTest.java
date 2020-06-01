@@ -17,7 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.k8s.model.K8sPod;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams;
@@ -54,7 +54,7 @@ import java.util.Arrays;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest {
-  @Mock private ManagerClient managerClient;
+  @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private transient K8sTaskHelper k8sTaskHelper;
   @Mock private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private transient ContainerService containerService;
@@ -81,14 +81,16 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
     doReturn(Arrays.asList(pod))
         .when(k8sTaskHelper)
         .getPodDetails(any(KubernetesConfig.class), eq("namespace"), eq("release"));
-    doReturn(call).when(managerClient).publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+    doReturn(call)
+        .when(delegateAgentManagerClient)
+        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;
     perpetualTaskResponse =
         executor.runOnce(PerpetualTaskId.newBuilder().setId("id").build(), getK8sPerpetualTaskParams(), Instant.now());
 
-    verify(managerClient, times(1))
+    verify(delegateAgentManagerClient, times(1))
         .publishInstanceSyncResult(eq("id"), eq("accountId"), k8TaskResponseCaptor.capture());
 
     final K8sTaskExecutionResponse k8sTaskExecutionResponse = k8TaskResponseCaptor.getValue();
@@ -127,14 +129,16 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
     doThrow(new RuntimeException("Failed to retrieve pod list"))
         .when(k8sTaskHelper)
         .getPodDetails(any(KubernetesConfig.class), eq("namespace"), eq("release"));
-    doReturn(call).when(managerClient).publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+    doReturn(call)
+        .when(delegateAgentManagerClient)
+        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;
     perpetualTaskResponse =
         executor.runOnce(PerpetualTaskId.newBuilder().setId("id").build(), getK8sPerpetualTaskParams(), Instant.now());
 
-    verify(managerClient, times(1))
+    verify(delegateAgentManagerClient, times(1))
         .publishInstanceSyncResult(eq("id"), eq("accountId"), k8TaskResponseCaptor.capture());
 
     final K8sTaskExecutionResponse k8sTaskExecutionResponse = k8TaskResponseCaptor.getValue();
@@ -167,14 +171,16 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
     final KubernetesContainerInfo containerInfo =
         KubernetesContainerInfo.builder().namespace("namespace").serviceName("service").build();
     doReturn(Arrays.asList(containerInfo)).when(containerService).getContainerInfos(any(ContainerServiceParams.class));
-    doReturn(call).when(managerClient).publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+    doReturn(call)
+        .when(delegateAgentManagerClient)
+        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;
     perpetualTaskResponse = executor.runOnce(
         PerpetualTaskId.newBuilder().setId("id").build(), getContainerInstancePerpetualTaskParams(), Instant.now());
 
-    verify(managerClient, times(1))
+    verify(delegateAgentManagerClient, times(1))
         .publishInstanceSyncResult(eq("id"), eq("accountId"), containerSyncResponseCaptor.capture());
 
     final ContainerSyncResponse containerSyncResponse = containerSyncResponseCaptor.getValue();
@@ -208,14 +214,16 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
     doThrow(new RuntimeException("Failed to retrieve container info"))
         .when(containerService)
         .getContainerInfos(any(ContainerServiceParams.class));
-    doReturn(call).when(managerClient).publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+    doReturn(call)
+        .when(delegateAgentManagerClient)
+        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;
     perpetualTaskResponse = executor.runOnce(
         PerpetualTaskId.newBuilder().setId("id").build(), getContainerInstancePerpetualTaskParams(), Instant.now());
 
-    verify(managerClient, times(1))
+    verify(delegateAgentManagerClient, times(1))
         .publishInstanceSyncResult(eq("id"), eq("accountId"), containerSyncResponseCaptor.capture());
 
     final ContainerSyncResponse containerSyncResponse = containerSyncResponseCaptor.getValue();
