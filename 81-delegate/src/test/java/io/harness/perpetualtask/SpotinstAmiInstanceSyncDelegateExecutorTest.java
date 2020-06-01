@@ -24,7 +24,7 @@ import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupInstancesResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskParams;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -53,14 +53,15 @@ import java.util.ArrayList;
 public class SpotinstAmiInstanceSyncDelegateExecutorTest extends CategoryTest {
   @Mock private EncryptionService encryptionService;
   @Mock private SpotInstSyncTaskHandler taskHandler;
-  @Mock private ManagerClient managerClient;
+  @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private Call<RestResponse<Boolean>> call;
 
   @InjectMocks @Inject private SpotinstAmiInstanceSyncDelegateExecutor executor;
 
   @Before
   public void setUp() {
-    when(managerClient.publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class))).thenReturn(call);
+    when(delegateAgentManagerClient.publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class)))
+        .thenReturn(call);
   }
 
   @Test
@@ -86,7 +87,8 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends CategoryTest {
     verify(encryptionService, times(2)).decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class));
     verify(taskHandler, times(1))
         .executeTask(any(SpotInstTaskParameters.class), any(SpotInstConfig.class), any(AwsConfig.class));
-    verify(managerClient, times(1)).publishInstanceSyncResult(eq("task-id"), eq("accountId"), argumentCaptor.capture());
+    verify(delegateAgentManagerClient, times(1))
+        .publishInstanceSyncResult(eq("task-id"), eq("accountId"), argumentCaptor.capture());
     SpotInstTaskExecutionResponse sentTaskExecutionResponse = argumentCaptor.getValue();
 
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(Response.SC_OK);
@@ -120,7 +122,8 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends CategoryTest {
     verify(encryptionService, times(2)).decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class));
     verify(taskHandler, times(1))
         .executeTask(any(SpotInstTaskParameters.class), any(SpotInstConfig.class), any(AwsConfig.class));
-    verify(managerClient, times(1)).publishInstanceSyncResult(eq("task-id"), eq("accountId"), argumentCaptor.capture());
+    verify(delegateAgentManagerClient, times(1))
+        .publishInstanceSyncResult(eq("task-id"), eq("accountId"), argumentCaptor.capture());
     SpotInstTaskExecutionResponse sentTaskExecutionResponse = argumentCaptor.getValue();
 
     assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_FAILED);
@@ -145,7 +148,8 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends CategoryTest {
     verify(encryptionService, times(2)).decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class));
     verify(taskHandler, times(1))
         .executeTask(any(SpotInstTaskParameters.class), any(SpotInstConfig.class), any(AwsConfig.class));
-    verify(managerClient, times(1)).publishInstanceSyncResult(eq("task-id"), eq("accountId"), argumentCaptor.capture());
+    verify(delegateAgentManagerClient, times(1))
+        .publishInstanceSyncResult(eq("task-id"), eq("accountId"), argumentCaptor.capture());
     SpotInstTaskExecutionResponse sentTaskExecutionResponse = argumentCaptor.getValue();
 
     assertThat(perpetualTaskResponse.getPerpetualTaskState()).isEqualTo(PerpetualTaskState.TASK_RUN_FAILED);

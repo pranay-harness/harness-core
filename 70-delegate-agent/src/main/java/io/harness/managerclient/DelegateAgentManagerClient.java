@@ -7,6 +7,7 @@ import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
 import okhttp3.ResponseBody;
@@ -59,4 +60,8 @@ public interface DelegateAgentManagerClient {
   @GET("agent/delegates/{delegateId}/task-events")
   Call<List<DelegateTaskEvent>> pollTaskEvents(
       @Path("delegateId") String delegateId, @Query("accountId") String accountId);
+
+  @POST("agent/delegates/instance-sync/{perpetualTaskId}")
+  Call<RestResponse<Boolean>> publishInstanceSyncResult(@Path("perpetualTaskId") String perpetualTaskId,
+      @Query("accountId") String accountId, @Body ResponseData responseData);
 }

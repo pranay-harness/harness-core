@@ -18,7 +18,7 @@ import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskParams;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -45,7 +45,7 @@ import java.util.Arrays;
 @RunWith(MockitoJUnitRunner.class)
 public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends CategoryTest {
   @Mock private AwsAsgHelperServiceDelegate awsAsgHelperServiceDelegate;
-  @Mock private ManagerClient managerClient;
+  @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private Call<RestResponse<Boolean>> call;
 
   private ArgumentCaptor<AwsAsgListInstancesResponse> captor =
@@ -61,14 +61,16 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends CategoryTest {
     doReturn(Arrays.asList(instance))
         .when(awsAsgHelperServiceDelegate)
         .listAutoScalingGroupInstances(any(AwsConfig.class), anyList(), eq("us-east-1"), eq("asg-1"));
-    doReturn(call).when(managerClient).publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+    doReturn(call)
+        .when(delegateAgentManagerClient)
+        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;
     perpetualTaskResponse =
         executor.runOnce(PerpetualTaskId.newBuilder().setId("id").build(), getPerpetualTaskParams(), Instant.now());
 
-    verify(managerClient, times(1)).publishInstanceSyncResult(eq("id"), eq("accountId"), captor.capture());
+    verify(delegateAgentManagerClient, times(1)).publishInstanceSyncResult(eq("id"), eq("accountId"), captor.capture());
 
     final AwsAsgListInstancesResponse awsResponse = captor.getValue();
 
@@ -100,14 +102,16 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends CategoryTest {
     doThrow(new RuntimeException("exception message"))
         .when(awsAsgHelperServiceDelegate)
         .listAutoScalingGroupInstances(any(AwsConfig.class), anyList(), eq("us-east-1"), eq("asg-1"));
-    doReturn(call).when(managerClient).publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+    doReturn(call)
+        .when(delegateAgentManagerClient)
+        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     PerpetualTaskResponse perpetualTaskResponse;
     perpetualTaskResponse =
         executor.runOnce(PerpetualTaskId.newBuilder().setId("id").build(), getPerpetualTaskParams(), Instant.now());
 
-    verify(managerClient, times(1)).publishInstanceSyncResult(eq("id"), eq("accountId"), captor.capture());
+    verify(delegateAgentManagerClient, times(1)).publishInstanceSyncResult(eq("id"), eq("accountId"), captor.capture());
 
     final AwsAsgListInstancesResponse awsResponse = captor.getValue();
 

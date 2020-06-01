@@ -8,7 +8,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.grpc.utils.AnyUtils;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
@@ -26,7 +26,7 @@ import java.util.List;
 public class SpotinstAmiInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
   @Inject private EncryptionService encryptionService;
   @Inject private SpotInstSyncTaskHandler taskHandler;
-  @Inject private ManagerClient managerClient;
+  @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
 
   @Override
   public PerpetualTaskResponse runOnce(
@@ -44,8 +44,8 @@ public class SpotinstAmiInstanceSyncDelegateExecutor implements PerpetualTaskExe
     try {
       logger.info("Publish instance sync result to manager for elastigroup id {} and perpetual task {}",
           taskParams.getElastigroupId(), taskId.getId());
-      execute(
-          managerClient.publishInstanceSyncResult(taskId.getId(), spotInstConfig.getAccountId(), instanceSyncResponse));
+      execute(delegateAgentManagerClient.publishInstanceSyncResult(
+          taskId.getId(), spotInstConfig.getAccountId(), instanceSyncResponse));
     } catch (Exception ex) {
       logger.error(
           "Failed to publish the instance sync collection result to manager for elastigroup id {} and perpetual task {}",

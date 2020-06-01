@@ -1,6 +1,5 @@
 package io.harness.managerclient;
 
-import io.harness.delegate.beans.ResponseData;
 import io.harness.rest.RestResponse;
 import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
@@ -88,8 +87,4 @@ public interface ManagerClient {
   @POST("agent/delegates/artifact-collection/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishArtifactCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body BuildSourceExecutionResponse buildSourceExecutionResponse);
-
-  @POST("agent/delegates/instance-sync/{perpetualTaskId}")
-  Call<RestResponse<Boolean>> publishInstanceSyncResult(@Path("perpetualTaskId") String perpetualTaskId,
-      @Query("accountId") String accountId, @Body ResponseData responseData);
 }

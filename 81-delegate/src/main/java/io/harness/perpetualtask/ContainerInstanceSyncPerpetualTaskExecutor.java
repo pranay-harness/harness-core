@@ -12,7 +12,7 @@ import com.google.inject.Inject;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.k8s.model.K8sPod;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams;
@@ -37,7 +37,7 @@ import java.util.List;
 
 @Slf4j
 public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExecutor {
-  @Inject private ManagerClient managerClient;
+  @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
   @Inject private transient K8sTaskHelper k8sTaskHelper;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private transient ContainerService containerService;
@@ -157,7 +157,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
   private void publishInstanceSyncResult(
       PerpetualTaskId taskId, String accountId, String namespace, ResponseData responseData) {
     try {
-      execute(managerClient.publishInstanceSyncResult(taskId.getId(), accountId, responseData));
+      execute(delegateAgentManagerClient.publishInstanceSyncResult(taskId.getId(), accountId, responseData));
     } catch (Exception e) {
       logger.error(
           String.format("Failed to publish container instance sync result. namespace [%s] and PerpetualTaskId [%s]",

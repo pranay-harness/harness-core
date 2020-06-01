@@ -23,7 +23,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.AwsCodeDeployInstanceSyncPerpetualTaskParams;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -50,7 +50,7 @@ import java.util.ArrayList;
 @RunWith(MockitoJUnitRunner.class)
 public class AwsCodeDeployInstanceSyncExecutorTest extends CategoryTest {
   @Mock private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
-  @Mock private ManagerClient managerClient;
+  @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private Call<RestResponse<Boolean>> call;
 
   @InjectMocks @Inject private AwsCodeDeployInstanceSyncExecutor executor;
@@ -73,14 +73,16 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends CategoryTest {
     ArgumentCaptor<AwsCodeDeployListDeploymentInstancesResponse> captor =
         ArgumentCaptor.forClass(AwsCodeDeployListDeploymentInstancesResponse.class);
 
-    doReturn(call).when(managerClient).publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+    doReturn(call)
+        .when(delegateAgentManagerClient)
+        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
     PerpetualTaskResponse perpetualTaskResponse =
         executor.runOnce(PerpetualTaskId.newBuilder().setId("id").build(), perpetualTaskParams, Instant.now());
 
     verify(ec2ServiceDelegate, times(1))
         .listEc2Instances(
             any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), eq("us-east-1"), anyListOf(Filter.class));
-    verify(managerClient, times(1)).publishInstanceSyncResult(eq("id"), eq("accountId"), captor.capture());
+    verify(delegateAgentManagerClient, times(1)).publishInstanceSyncResult(eq("id"), eq("accountId"), captor.capture());
     verifySuccessResponse(perpetualTaskResponse, captor.getValue());
 
     doThrow(new RuntimeException()).when(call).execute();
@@ -108,7 +110,9 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends CategoryTest {
     ArgumentCaptor<AwsCodeDeployListDeploymentInstancesResponse> captor =
         ArgumentCaptor.forClass(AwsCodeDeployListDeploymentInstancesResponse.class);
 
-    doReturn(call).when(managerClient).publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+    doReturn(call)
+        .when(delegateAgentManagerClient)
+        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
     doThrow(new InvalidRequestException("Invalid deployment id"))
         .when(ec2ServiceDelegate)
         .listEc2Instances(
@@ -119,7 +123,7 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends CategoryTest {
     verify(ec2ServiceDelegate, times(1))
         .listEc2Instances(
             any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), anyString(), anyListOf(Filter.class));
-    verify(managerClient, times(1)).publishInstanceSyncResult(eq("id"), eq("accountId"), captor.capture());
+    verify(delegateAgentManagerClient, times(1)).publishInstanceSyncResult(eq("id"), eq("accountId"), captor.capture());
     verifyFailureResponse(perpetualTaskResponse, captor.getValue());
   }
 

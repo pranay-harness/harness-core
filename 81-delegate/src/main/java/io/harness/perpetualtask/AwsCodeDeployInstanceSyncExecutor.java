@@ -8,7 +8,7 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.ExecutionStatus;
 import io.harness.grpc.utils.AnyUtils;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.AwsCodeDeployInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
@@ -25,7 +25,7 @@ import java.util.List;
 @Slf4j
 public class AwsCodeDeployInstanceSyncExecutor implements PerpetualTaskExecutor {
   @Inject private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
-  @Inject private ManagerClient managerClient;
+  @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
 
   @Override
   public PerpetualTaskResponse runOnce(
@@ -41,7 +41,8 @@ public class AwsCodeDeployInstanceSyncExecutor implements PerpetualTaskExecutor 
         getCodeDeployResponse(taskParams.getRegion(), filters, awsConfig, encryptedDataDetails);
 
     try {
-      execute(managerClient.publishInstanceSyncResult(taskId.getId(), awsConfig.getAccountId(), instancesListResponse));
+      execute(delegateAgentManagerClient.publishInstanceSyncResult(
+          taskId.getId(), awsConfig.getAccountId(), instancesListResponse));
     } catch (Exception ex) {
       logger.error("Failed to publish instance sync result for task {}", taskId.getId(), ex);
     }

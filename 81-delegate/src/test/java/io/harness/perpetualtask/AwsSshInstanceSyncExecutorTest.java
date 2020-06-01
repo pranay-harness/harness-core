@@ -19,7 +19,7 @@ import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.managerclient.ManagerClient;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPerpetualTaskParams;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -50,7 +50,7 @@ import java.util.Arrays;
 @RunWith(MockitoJUnitRunner.class)
 public class AwsSshInstanceSyncExecutorTest extends CategoryTest {
   @Mock private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
-  @Mock private ManagerClient managerClient;
+  @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private Call<RestResponse<Boolean>> call;
   @InjectMocks private AwsSshInstanceSyncExecutor executor = new AwsSshInstanceSyncExecutor();
 
@@ -72,7 +72,9 @@ public class AwsSshInstanceSyncExecutorTest extends CategoryTest {
     doReturn(Arrays.asList(instance))
         .when(ec2ServiceDelegate)
         .listEc2Instances(any(AwsConfig.class), anyList(), anyString(), anyList());
-    doReturn(call).when(managerClient).publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+    doReturn(call)
+        .when(delegateAgentManagerClient)
+        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     perpetualTaskResponse =
@@ -81,7 +83,7 @@ public class AwsSshInstanceSyncExecutorTest extends CategoryTest {
     verify(ec2ServiceDelegate, Mockito.times(1))
         .listEc2Instances(any(AwsConfig.class), anyList(), Matchers.eq("us-east-1"), anyList());
 
-    verify(managerClient, times(1)).publishInstanceSyncResult(eq("id"), eq("accountId"), captor.capture());
+    verify(delegateAgentManagerClient, times(1)).publishInstanceSyncResult(eq("id"), eq("accountId"), captor.capture());
 
     AwsEc2ListInstancesResponse response = captor.getValue();
     verifySuccessResponse(instance, perpetualTaskResponse, response);
@@ -113,7 +115,9 @@ public class AwsSshInstanceSyncExecutorTest extends CategoryTest {
     doThrow(new RuntimeException("invalid credentials"))
         .when(ec2ServiceDelegate)
         .listEc2Instances(any(AwsConfig.class), anyList(), anyString(), anyList());
-    doReturn(call).when(managerClient).publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
+    doReturn(call)
+        .when(delegateAgentManagerClient)
+        .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
     doReturn(retrofit2.Response.success("success")).when(call).execute();
 
     perpetualTaskResponse =
@@ -122,7 +126,7 @@ public class AwsSshInstanceSyncExecutorTest extends CategoryTest {
     verify(ec2ServiceDelegate, Mockito.times(1))
         .listEc2Instances(any(AwsConfig.class), anyList(), Matchers.eq("us-east-1"), anyList());
 
-    verify(managerClient, times(1)).publishInstanceSyncResult(eq("id"), eq("accountId"), captor.capture());
+    verify(delegateAgentManagerClient, times(1)).publishInstanceSyncResult(eq("id"), eq("accountId"), captor.capture());
 
     AwsEc2ListInstancesResponse response = captor.getValue();
     verifyFailureResponse(perpetualTaskResponse, response);
