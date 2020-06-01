@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.esotericsoftware.kryo.Kryo;
 import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
@@ -17,10 +18,11 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.persistence.converters.DurationConverter;
 import io.harness.plan.PlanNode;
-import io.harness.serializer.KryoUtils;
 import io.harness.state.io.StepParameters;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Converters;
@@ -37,8 +39,10 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Redesign
 @FieldNameConstants(innerTypeName = "NodeExecutionKeys")
-@Entity(value = "nodeExecutions")
 @Converters({DurationConverter.class})
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity(value = "nodeExecutions")
 public final class NodeExecution implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   // Immutable
   @Id String uuid;
@@ -99,6 +103,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   }
 
   public NodeExecution deepCopy() {
-    return KryoUtils.clone(this);
+    Kryo kryo = new Kryo();
+    return kryo.copy(this);
   }
 }

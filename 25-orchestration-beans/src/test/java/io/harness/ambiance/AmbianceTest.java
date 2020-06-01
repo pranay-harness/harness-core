@@ -11,6 +11,7 @@ import io.harness.OrchestrationBeansTest;
 import io.harness.category.element.UnitTests;
 import io.harness.plan.input.InputArgs;
 import io.harness.rule.Owner;
+import io.harness.state.StepType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -117,8 +118,16 @@ public class AmbianceTest extends OrchestrationBeansTest {
   }
 
   private Ambiance buildAmbiance() {
-    Level phaseLevel = Level.builder().runtimeId(PHASE_RUNTIME_ID).setupId(PHASE_SETUP_ID).build();
-    Level sectionLevel = Level.builder().runtimeId(SECTION_RUNTIME_ID).setupId(SECTION_SETUP_ID).build();
+    Level phaseLevel = Level.builder()
+                           .runtimeId(PHASE_RUNTIME_ID)
+                           .setupId(PHASE_SETUP_ID)
+                           .stepType(StepType.builder().type("PHASE").build())
+                           .build();
+    Level sectionLevel = Level.builder()
+                             .runtimeId(SECTION_RUNTIME_ID)
+                             .setupId(SECTION_SETUP_ID)
+                             .stepType(StepType.builder().type("SECTION").build())
+                             .build();
     List<Level> levels = new ArrayList<>();
     levels.add(phaseLevel);
     levels.add(sectionLevel);

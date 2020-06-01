@@ -6,15 +6,17 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import com.esotericsoftware.kryo.Kryo;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.logging.AutoLogContext;
 import io.harness.plan.input.InputArgs;
-import io.harness.serializer.KryoUtils;
 import lombok.Builder;
-import lombok.Value;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
 
@@ -27,17 +29,20 @@ import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Redesign
-@Value
-@Builder
+@NoArgsConstructor
 @FieldNameConstants(innerTypeName = "AmbianceKeys")
+@EqualsAndHashCode
 public class Ambiance {
-  // Setup details including accountId, projectId and other input objects
-  @NotNull InputArgs inputArgs;
+  @Getter @NotNull InputArgs inputArgs;
+  @Getter @NonFinal List<Level> levels;
+  @Getter @NotNull String planExecutionId;
 
-  // This is a combination of setup/execution Id for a particular level
-  @Builder.Default @NonFinal List<Level> levels = new ArrayList<>();
-
-  @NotNull String planExecutionId;
+  @Builder
+  public Ambiance(InputArgs inputArgs, List<Level> levels, String planExecutionId) {
+    this.inputArgs = inputArgs;
+    this.levels = levels == null ? new ArrayList<>() : levels;
+    this.planExecutionId = planExecutionId;
+  }
 
   public AutoLogContext autoLogContext() {
     Map<String, String> logContext = inputArgs == null ? new HashMap<>() : new HashMap<>(inputArgs.strMap());
@@ -86,7 +91,8 @@ public class Ambiance {
 
   @VisibleForTesting
   Ambiance deepCopy() {
-    return KryoUtils.clone(this);
+    Kryo kryo = new Kryo();
+    return kryo.copy(this);
   }
 
   public static Ambiance fromExecutionInstances(

@@ -6,6 +6,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.registries.RegistryKey;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -13,6 +14,7 @@ import lombok.Value;
 @Value
 @Builder
 @Redesign
+@EqualsAndHashCode
 public class AdviserType implements RegistryKey {
   // Provided From the orchestration layer system advisers
 

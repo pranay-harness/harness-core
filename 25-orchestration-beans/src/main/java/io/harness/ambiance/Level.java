@@ -6,7 +6,9 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.state.StepType;
 import lombok.Builder;
-import lombok.Value;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
 /**
@@ -17,12 +19,20 @@ import lombok.experimental.FieldNameConstants;
  */
 @OwnedBy(CDC)
 @Redesign
-@Value
-@Builder
+@NoArgsConstructor
 @FieldNameConstants(innerTypeName = "LevelKeys")
+@EqualsAndHashCode
 public class Level {
-  String setupId;
-  String runtimeId;
-  String identifier;
-  StepType stepType;
+  @Getter String setupId;
+  @Getter String runtimeId;
+  @Getter String identifier;
+  @Getter StepType stepType;
+
+  @Builder
+  public Level(String setupId, String runtimeId, String identifier, StepType stepType) {
+    this.setupId = setupId;
+    this.runtimeId = runtimeId;
+    this.identifier = identifier;
+    this.stepType = stepType;
+  }
 }

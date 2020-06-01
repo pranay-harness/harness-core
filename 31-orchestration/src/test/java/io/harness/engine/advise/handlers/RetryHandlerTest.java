@@ -36,7 +36,6 @@ public class RetryHandlerTest extends OrchestrationTest {
 
   private Ambiance ambiance;
   private RetryAdvise advise;
-  private NodeExecution nodeExecution;
 
   @Before
   public void setup() {
