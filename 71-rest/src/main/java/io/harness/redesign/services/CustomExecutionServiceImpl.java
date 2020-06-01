@@ -28,7 +28,7 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Inject private GraphGenerator graphGenerator;
 
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
-  private static final String APP_ID = "XEsfW6D_RJm1IaGpDidD3g";
+  private static final String APP_ID = "d9cTupsyQjWqbhUmZ8XPdQ";
 
   @Override
   public PlanExecution executeHttpSwitch() {

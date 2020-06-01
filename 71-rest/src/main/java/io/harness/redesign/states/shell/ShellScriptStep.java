@@ -303,7 +303,7 @@ public class ShellScriptStep implements Step, TaskExecutable {
 
     updateActivityStatus(activityId, getAppId(ambiance), executionStatus);
 
-    if (saveSweepingOutputToContext) {
+    if (saveSweepingOutputToContext && shellScriptStateParameters.getSweepingOutputName() != null) {
       executionSweepingOutputResolver.save(ambiance, shellScriptStateParameters.getSweepingOutputName(),
           ShellScriptVariablesSweepingOutput.builder()
               .variables(((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())

@@ -143,6 +143,6 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
 
   private SweepingOutput resolve(Ambiance ambiance, String outputName) {
     return executionSweepingOutputResolver.resolve(
-        ambiance, SweepingOutputRefObject.builder().name(outputName).producerId("producer_id").build());
+        ambiance, SweepingOutputRefObject.builder().name(outputName).build());
   }
 }

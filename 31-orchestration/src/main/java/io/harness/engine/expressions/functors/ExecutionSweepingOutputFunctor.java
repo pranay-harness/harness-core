@@ -26,6 +26,6 @@ public class ExecutionSweepingOutputFunctor extends LateBindingMap {
   @Override
   public synchronized Object get(Object key) {
     return executionSweepingOutputResolver.resolve(
-        ambiance, SweepingOutputRefObject.builder().producerId("producer_id").name((String) key).build());
+        ambiance, SweepingOutputRefObject.builder().name((String) key).build());
   }
 }

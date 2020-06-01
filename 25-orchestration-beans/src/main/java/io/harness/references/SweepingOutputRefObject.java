@@ -13,8 +13,10 @@ import lombok.Value;
 @Builder
 @Redesign
 public class SweepingOutputRefObject implements RefObject {
+  private static final String PRODUCER_ID = "__PRODUCER_ID__";
+
   @NonNull String name;
-  @NonNull String producerId;
+  @NonNull @Builder.Default String producerId = PRODUCER_ID;
 
   @Override
   public RefType getRefType() {

@@ -114,7 +114,7 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
     }
 
     EngineJexlContext ctx = prepareContext();
-    return evaluateExpressionInternal(expression, ctx, 0);
+    return evaluateExpressionRecursive(expression, ctx, 0);
   }
 
   public Optional<Object> evaluateExpressionOptional(String expression) {
@@ -125,7 +125,7 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
     return Optional.of(value);
   }
 
-  private Object evaluateExpressionInternal(String expression, EngineJexlContext ctx, int depth) {
+  private Object evaluateExpressionRecursive(String expression, EngineJexlContext ctx, int depth) {
     String normalizedExpression = stripDelimiters(expression);
     if (EmptyPredicate.isEmpty(normalizedExpression)) {
       return normalizedExpression;
@@ -147,7 +147,7 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
     }
 
     if (value instanceof String && hasExpressions((String) value)) {
-      return evaluateExpressionInternal((String) value, ctx, depth + 1);
+      return evaluateExpressionRecursive((String) value, ctx, depth + 1);
     }
     return value;
   }

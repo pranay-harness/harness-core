@@ -2,6 +2,7 @@ package io.harness.redesign.services;
 
 import static io.harness.execution.status.Status.RUNNING;
 import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -12,6 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.GraphGenerator;
 import io.harness.execution.PlanExecution;
+import io.harness.execution.status.Status;
 import io.harness.plan.Plan;
 import io.harness.resource.Graph;
 import io.harness.resource.GraphVertex;
@@ -96,6 +98,20 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(planExecutionResponse.getPlan()).isEqualTo(expectedRetryPlan);
     assertThat(planExecutionResponse.getStatus()).isEqualTo(RUNNING);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldExecuteSimpleShellScriptPlan() {
+    UserThreadLocal.set(user);
+    Plan expectedShellScriptPlan = CustomExecutionUtils.provideSimpleShellScriptPlan();
+    when(executionEngine.startExecution(any(), any(), any()))
+        .thenReturn(PlanExecution.builder().status(Status.RUNNING).plan(expectedShellScriptPlan).build());
+    PlanExecution planExecutionResponse = customExecutionService.executeSimpleShellScriptPlan();
+
+    assertThat(planExecutionResponse.getPlan()).isEqualTo(expectedShellScriptPlan);
+    assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.RUNNING);
   }
 
   @Test

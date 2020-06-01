@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.execution.status.Status.resumableStatuses;
+import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.common.base.Preconditions;
@@ -138,7 +139,9 @@ public class ExecutionEngine implements Engine {
     List<StepTransput> inputs = engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), additionalInputs);
     StepParameters resolvedStepParameters =
         (StepParameters) engineExpressionService.resolve(ambiance, node.getStepParameters());
-    nodeExecutionService.updateResolvedStepParameters(nodeExecution.getUuid(), resolvedStepParameters);
+    nodeExecution = Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),
+        ops -> setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters)));
+    nodeExecution.setResolvedStepParameters(resolvedStepParameters);
     facilitateExecution(ambiance, nodeExecution, inputs);
   }
 
@@ -314,9 +317,14 @@ public class ExecutionEngine implements Engine {
           nodeExecution.getStatus());
       return;
     }
-    NodeExecution updatedNodeExecution = Preconditions.checkNotNull(
-        nodeExecutionService.update(nodeInstanceId, ops -> ops.set(NodeExecutionKeys.status, Status.RUNNING)));
-    Ambiance ambiance = ambianceHelper.fetchAmbiance(updatedNodeExecution);
+
+    Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
+    StepParameters resolvedStepParameters =
+        (StepParameters) engineExpressionService.resolve(ambiance, nodeExecution.getResolvedStepParameters());
+    NodeExecution updatedNodeExecution = Preconditions.checkNotNull(nodeExecutionService.update(nodeInstanceId, ops -> {
+      ops.set(NodeExecutionKeys.status, Status.RUNNING);
+      setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters);
+    }));
     executorService.execute(EngineResumeExecutor.builder()
                                 .nodeExecution(updatedNodeExecution)
                                 .ambiance(ambiance)

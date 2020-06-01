@@ -36,8 +36,19 @@ public class EngineExpressionServiceImplTest extends OrchestrationTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRenderExpression() {
-    String resolvedExpression = engineExpressionService.renderExpression(ambiance, "${dummyOutcome.test}");
+    String resolvedExpression =
+        engineExpressionService.renderExpression(ambiance, "${dummyOutcome.test} == \"harness\"");
     assertThat(resolvedExpression).isNotNull();
-    assertThat(resolvedExpression).isEqualTo("harness");
+    assertThat(resolvedExpression).isEqualTo("harness == \"harness\"");
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestEvaluateExpression() {
+    Object value = engineExpressionService.evaluateExpression(ambiance, "${dummyOutcome.test} == \"harness\"");
+    assertThat(value).isNotNull();
+    assertThat(value).isEqualTo(true);
   }
 }
