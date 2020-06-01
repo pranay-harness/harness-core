@@ -389,7 +389,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
         .describe(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     final K8sCanaryDeployResponse canaryDeployResponse = (K8sCanaryDeployResponse) response.getK8sTaskResponse();
     assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);
-    assertThat(canaryDeployResponse.getCanaryWorkload()).isEqualTo("default/Deployment/nginx-deployment");
+    assertThat(canaryDeployResponse.getCanaryWorkload()).isEqualTo("Deployment/nginx-deployment");
     assertThat(canaryDeployResponse.getCurrentInstances()).isEqualTo(3);
     assertThat(canaryDeployResponse.getReleaseNumber()).isEqualTo(2);
     assertThat(canaryDeployResponse.getK8sPodList()).hasSize(1);
