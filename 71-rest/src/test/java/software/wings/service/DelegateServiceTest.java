@@ -38,7 +38,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateConnection.DEFAULT_EXPIRY_TIME_IN_MINUTES;
 import static software.wings.beans.DelegateProfile.DelegateProfileBuilder;
 import static software.wings.beans.DelegateProfile.builder;
 import static software.wings.beans.Event.Builder.anEvent;
@@ -159,10 +158,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -1553,21 +1550,21 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void shouldRemoveDelegateConnection() {
-    DelegateConnection connection =
-        DelegateConnection.builder()
-            .accountId(ACCOUNT_ID)
-            .delegateId(DELEGATE_ID)
-            .version("1.0.1")
-            .lastHeartbeat(System.currentTimeMillis())
-            .validUntil(Date.from(OffsetDateTime.now().plusMinutes(DEFAULT_EXPIRY_TIME_IN_MINUTES).toInstant()))
-            .build();
-    wingsPersistence.save(connection);
+  public void testDelegateConnectionLost() {
+    String delegateConnectionId = generateUuid();
+    delegateService.doConnectionHeartbeat(ACCOUNT_ID, DELEGATE_ID,
+        DelegateConnectionHeartbeat.builder()
+            .delegateConnectionId(delegateConnectionId)
+            .version(versionInfoManager.getVersionInfo().getVersion())
+            .build());
 
-    delegateService.removeDelegateConnection(ACCOUNT_ID, connection.getUuid());
-    assertThat(wingsPersistence.createQuery(DelegateConnection.class).get()).isNull();
+    assertThat(delegateService.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isTrue();
+
+    delegateService.delegateConnectionLost(ACCOUNT_ID, delegateConnectionId);
+
+    assertThat(delegateService.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isFalse();
   }
 
   @Test
