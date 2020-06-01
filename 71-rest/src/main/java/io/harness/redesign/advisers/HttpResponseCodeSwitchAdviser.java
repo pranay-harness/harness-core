@@ -14,7 +14,6 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.state.io.StepResponse;
 import software.wings.api.HttpStateExecutionData;
 
 import java.util.Map;
@@ -30,10 +29,9 @@ public class HttpResponseCodeSwitchAdviser implements Adviser {
   public Advise onAdviseEvent(AdvisingEvent adviseEvent) {
     HttpResponseCodeSwitchAdviserParameters parameters =
         (HttpResponseCodeSwitchAdviserParameters) Preconditions.checkNotNull(adviseEvent.getAdviserParameters());
-    StepResponse stepResponse = adviseEvent.getStepResponse();
     // This will be changed to obtain via output type
     HttpStateExecutionData httpStateExecutionData = (HttpStateExecutionData) Preconditions.checkNotNull(
-        stepResponse.getOutcomes()
+        adviseEvent.getOutcomes()
             .values()
             .stream()
             // TODO => Find a better way to do this

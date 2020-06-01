@@ -21,6 +21,7 @@ import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.Outcome;
 import io.harness.delay.DelayEventHelper;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.advise.AdviseHandler;
@@ -241,7 +242,7 @@ public class ExecutionEngine implements Engine {
                .set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
     // TODO => handle before node execution update
     Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
-    handleOutcomes(ambiance, stepResponse.getOutcomes());
+    handleOutcomes(ambiance, stepResponse.outcomeMap());
 
     // TODO handle Failure
     PlanNode node = nodeExecution.getNode();
@@ -255,8 +256,10 @@ public class ExecutionEngine implements Engine {
       injector.injectMembers(adviser);
       advise = adviser.onAdviseEvent(AdvisingEvent.builder()
                                          .ambiance(ambiance)
-                                         .stepResponse(stepResponse)
+                                         .outcomes(stepResponse.outcomeMap())
+                                         .status(stepResponse.getStatus())
                                          .adviserParameters(obtainment.getParameters())
+                                         .failureInfo(stepResponse.getFailureInfo())
                                          .build());
       if (advise != null) {
         break;
@@ -270,7 +273,7 @@ public class ExecutionEngine implements Engine {
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private void handleOutcomes(Ambiance ambiance, Map<String, StepTransput> outcomes) {
+  private void handleOutcomes(Ambiance ambiance, Map<String, Outcome> outcomes) {
     if (outcomes == null) {
       return;
     }

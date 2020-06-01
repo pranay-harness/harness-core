@@ -21,6 +21,7 @@ import io.harness.state.StepType;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
@@ -61,7 +62,7 @@ public class WaitStep implements Step, AsyncExecutable {
     waitStateExecutionData.setWakeupTs(System.currentTimeMillis());
     return StepResponse.builder()
         .status(NodeExecutionStatus.SUCCEEDED)
-        .outcome("waitData", waitStateExecutionData)
+        .stepOutcome(StepOutcome.builder().name("waitData").outcome(waitStateExecutionData).build())
         .build();
   }
 

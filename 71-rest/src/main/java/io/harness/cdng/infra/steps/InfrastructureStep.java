@@ -11,6 +11,7 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepTransput;
 import io.harness.utils.Utils;
 import io.harness.validation.Validator;
@@ -39,7 +40,7 @@ public class InfrastructureStep implements Step, SyncExecutable {
 
     return StepResponse.builder()
         .status(NodeExecutionStatus.SUCCEEDED)
-        .outcome("infrastructureMapping", infraMapping)
+        .stepOutcome(StepOutcome.builder().outcome(infraMapping).name("infrastructureMapping").build())
         .build();
   }
 }

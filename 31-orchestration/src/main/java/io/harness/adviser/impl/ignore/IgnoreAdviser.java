@@ -13,7 +13,7 @@ import io.harness.adviser.NextStepAdvise;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponse.FailureInfo;
 
 @OwnedBy(CDC)
 @Redesign
@@ -25,8 +25,7 @@ public class IgnoreAdviser implements Adviser {
   public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
     IgnoreAdviserParameters parameters =
         (IgnoreAdviserParameters) Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
-    StepResponse stepResponse = advisingEvent.getStepResponse();
-    StepResponse.FailureInfo failureInfo = stepResponse.getFailureInfo();
+    FailureInfo failureInfo = advisingEvent.getFailureInfo();
     if (failureInfo == null) {
       return null;
     }
