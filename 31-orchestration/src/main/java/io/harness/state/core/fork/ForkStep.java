@@ -14,10 +14,10 @@ import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.ChildrenExecutableResponseBuilder;
 import io.harness.state.Step;
 import io.harness.state.StepType;
-import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
+import io.harness.state.io.StepResponseNotifyData;
 import io.harness.state.io.StepTransput;
 
 import java.util.List;
@@ -45,7 +45,7 @@ public class ForkStep implements Step, ChildrenExecutable {
       Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
     for (ResponseData responseData : responseDataMap.values()) {
-      Status executionStatus = ((StatusNotifyResponseData) responseData).getStatus();
+      Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();
       if (executionStatus != Status.SUCCEEDED) {
         responseBuilder.status(executionStatus);
       }
