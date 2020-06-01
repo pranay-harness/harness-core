@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.entities;
 
+import io.harness.cvng.beans.TimeRange;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public abstract class LogCVConfig extends CVConfig {
-  private String baseline;
+  private TimeRange baseline;
   private String query;
 }

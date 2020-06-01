@@ -112,7 +112,7 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
   }
 
   @Override
-  public List<String> getSamples(String accountId, String connectorId, String query) {
+  public SplunkSampleResponse getSamples(String accountId, String connectorId, String query) {
     final SettingAttribute settingAttribute = getSettingAttribute(connectorId);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptionDetails(settingAttribute);
     SyncTaskContext taskContext = getSyncTaskContext(accountId);

@@ -9,6 +9,7 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.splunk.SplunkSampleResponse;
 import software.wings.service.impl.splunk.SplunkSavedSearch;
 import software.wings.service.intfc.splunk.SplunkAnalysisService;
 
@@ -47,7 +48,7 @@ public class SplunkResource {
   @Path("samples")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<String>> getSamples(@QueryParam("accountId") @Valid final String accountId,
+  public RestResponse<SplunkSampleResponse> getSamples(@QueryParam("accountId") @Valid final String accountId,
       @QueryParam("connectorId") String connectorId, @QueryParam("query") String query) {
     return new RestResponse<>(splunkAnalysisService.getSamples(accountId, connectorId, query));
   }

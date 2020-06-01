@@ -11,9 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class AppDynamicsCVConfig extends MetricCVConfig {
-  private String tierId;
-  private String applicationId;
+  private long tierId;
+  private long applicationId;
   private String applicationName;
+  private String tierName;
   @Override
   public DataSourceType getType() {
     return DataSourceType.APP_DYNAMICS;

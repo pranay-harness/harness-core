@@ -8,6 +8,7 @@ import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.LogElement;
+import software.wings.service.impl.splunk.SplunkSampleResponse;
 import software.wings.service.impl.splunk.SplunkSavedSearch;
 
 import java.util.List;
@@ -57,5 +58,6 @@ public interface SplunkDelegateService {
   @DelegateTaskType(TaskType.SPLUNK_GET_HISTOGRAM)
   CVHistogram getHistogram(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query);
   @DelegateTaskType(TaskType.SPLUNK_GET_SAMPLE)
-  List<String> getSamples(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query);
+  SplunkSampleResponse getSamples(
+      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query);
 }
