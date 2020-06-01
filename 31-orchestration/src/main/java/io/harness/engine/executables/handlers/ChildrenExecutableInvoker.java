@@ -90,6 +90,6 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
     NotifyCallback callback = EngineResumeCallback.builder().nodeInstanceId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, callbackIds.toArray(new String[0]));
     nodeExecutionService.update(
-        nodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.executableResponse, response));
+        nodeExecution.getUuid(), ops -> ops.addToSet(NodeExecutionKeys.executableResponses, response));
   }
 }

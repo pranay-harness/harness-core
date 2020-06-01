@@ -6,6 +6,7 @@ import io.harness.state.StepType;
 import io.harness.state.core.dummy.DummyStep;
 import io.harness.state.core.fork.ForkStep;
 import io.harness.state.core.section.SectionStep;
+import io.harness.state.core.section.chain.SectionChainStep;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Set;
@@ -16,5 +17,6 @@ public class OrchestrationStepRegistrar implements StepRegistrar {
     stateClasses.add(Pair.of(ForkStep.STEP_TYPE, ForkStep.class));
     stateClasses.add(Pair.of(SectionStep.STEP_TYPE, SectionStep.class));
     stateClasses.add(Pair.of(DummyStep.STEP_TYPE, DummyStep.class));
+    stateClasses.add(Pair.of(SectionChainStep.STEP_TYPE, SectionChainStep.class));
   }
 }

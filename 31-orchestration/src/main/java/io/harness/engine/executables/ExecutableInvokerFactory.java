@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executables.handlers.AsyncExecutableInvoker;
+import io.harness.engine.executables.handlers.ChildChainExecutableInvoker;
 import io.harness.engine.executables.handlers.ChildExecutableInvoker;
 import io.harness.engine.executables.handlers.ChildrenExecutableInvoker;
 import io.harness.engine.executables.handlers.SyncExecutableInvoker;
@@ -24,6 +25,7 @@ public class ExecutableInvokerFactory {
   @Inject private ChildExecutableInvoker childExecutableInvoker;
   @Inject private TaskExecutableInvoker taskExecutableInvoker;
   @Inject private TaskChainExecutableInvoker taskChainExecutableInvoker;
+  @Inject private ChildChainExecutableInvoker childChainExecutableInvoker;
 
   public ExecutableInvoker obtainInvoker(ExecutionMode mode) {
     switch (mode) {
@@ -39,6 +41,8 @@ public class ExecutableInvokerFactory {
         return taskExecutableInvoker;
       case TASK_CHAIN:
         return taskChainExecutableInvoker;
+      case CHILD_CHAIN:
+        return childChainExecutableInvoker;
       default:
         throw new InvalidRequestException("No Invoker present for execution mode :" + mode);
     }

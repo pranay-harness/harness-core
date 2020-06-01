@@ -10,9 +10,10 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorParameters;
+import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
-import io.harness.facilitator.modes.chain.TaskChainResponse;
+import io.harness.facilitator.modes.chain.task.TaskChainResponse;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.task.TaskExecutableResponse;
@@ -45,6 +46,7 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(RefObject.class);
     set.add(Task.class);
     set.add(ExecutableResponse.class);
+    set.add(PassThroughData.class);
   }
 
   @Override

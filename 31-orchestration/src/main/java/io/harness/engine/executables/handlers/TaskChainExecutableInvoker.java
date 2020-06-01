@@ -13,9 +13,9 @@ import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.facilitator.modes.chain.TaskChainExecutable;
-import io.harness.facilitator.modes.chain.TaskChainExecutableResponse;
-import io.harness.facilitator.modes.chain.TaskChainResponse;
+import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
+import io.harness.facilitator.modes.chain.task.TaskChainExecutableResponse;
+import io.harness.facilitator.modes.chain.task.TaskChainResponse;
 import io.harness.tasks.Task;
 import io.harness.tasks.TaskExecutor;
 import io.harness.waiter.NotifyCallback;
@@ -53,7 +53,7 @@ public class TaskChainExecutableInvoker implements ExecutableInvoker {
     // Update Execution Node Instance state to TASK_WAITING
     nodeExecutionService.update(nodeExecution.getUuid(),
         ops
-        -> ops.set(NodeExecutionKeys.executableResponse,
+        -> ops.addToSet(NodeExecutionKeys.executableResponses,
             TaskChainExecutableResponse.builder()
                 .taskId(taskId)
                 .taskIdentifier(task.getTaskIdentifier())

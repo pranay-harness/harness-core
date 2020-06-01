@@ -16,6 +16,8 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputInstance;
 import io.harness.state.core.fork.ForkStepParameters;
 import io.harness.state.core.section.SectionStepParameters;
+import io.harness.state.core.section.chain.SectionChainPassThroughData;
+import io.harness.state.core.section.chain.SectionChainStepParameters;
 import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspection;
 import io.harness.waiter.ListNotifyResponseData;
@@ -68,5 +70,7 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     // State Related Classes
     h.put("state.core.fork.ForkStepParameters", ForkStepParameters.class);
     h.put("state.core.section.SectionStepParameters", SectionStepParameters.class);
+    h.put("state.core.section.chain.SectionStepParameters", SectionChainStepParameters.class);
+    h.put("state.core.section.chain.SectionChainPassThroughData", SectionChainPassThroughData.class);
   }
 }

@@ -7,6 +7,7 @@ import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.impl.fail.OnFailAdviserParameters;
 import io.harness.adviser.impl.retry.RetryAdviserParameters;
+import io.harness.adviser.impl.success.OnSuccessAdviser;
 import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
@@ -28,6 +29,7 @@ import io.harness.plan.PlanNode;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
 import io.harness.redesign.states.email.EmailStep;
 import io.harness.redesign.states.email.EmailStepParameters;
+import io.harness.redesign.states.http.BasicHttpStep;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.redesign.states.http.chain.BasicHttpChainStep;
 import io.harness.redesign.states.http.chain.BasicHttpChainStepParameters;
@@ -40,6 +42,8 @@ import io.harness.state.StepType;
 import io.harness.state.core.fork.ForkStepParameters;
 import io.harness.state.core.section.SectionStep;
 import io.harness.state.core.section.SectionStepParameters;
+import io.harness.state.core.section.chain.SectionChainStep;
+import io.harness.state.core.section.chain.SectionChainStepParameters;
 import lombok.experimental.UtilityClass;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ShellScriptState;
@@ -553,6 +557,83 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(sectionNodeId)
+        .uuid(generateUuid())
+        .build();
+  }
+
+  public static Plan provideSectionChainPlan() {
+    String sectionChainNodeId = generateUuid();
+    String httpNode1Id = generateUuid();
+    String httpNode2Id = generateUuid();
+    String dummyNode1Id = generateUuid();
+    String dummyNode2Id = generateUuid();
+
+    BasicHttpStepParameters basicHttpStateParameters1 =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+
+    BasicHttpStepParameters basicHttpStateParameters2 =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_404).method("GET").build();
+    return Plan.builder()
+        .node(PlanNode.builder()
+                  .uuid(sectionChainNodeId)
+                  .name("Section Chain")
+                  .stepType(SectionChainStep.STEP_TYPE)
+                  .identifier("section_chain")
+                  .stepParameters(
+                      SectionChainStepParameters.builder().childNodeId(httpNode1Id).childNodeId(httpNode2Id).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(httpNode1Id)
+                  .name("HTTP 1")
+                  .stepType(BasicHttpStep.STEP_TYPE)
+                  .identifier("http1")
+                  .stepParameters(basicHttpStateParameters1)
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(OnSuccessAdviser.ADVISER_TYPE)
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNode1Id).build())
+                          .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(httpNode2Id)
+                  .name("HTTP 2")
+                  .stepType(BasicHttpStep.STEP_TYPE)
+                  .identifier("http2")
+                  .stepParameters(basicHttpStateParameters2)
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(OnSuccessAdviser.ADVISER_TYPE)
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNode2Id).build())
+                          .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNode1Id)
+                  .name("Dummy Node 1")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .identifier("dummy1")
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNode2Id)
+                  .name("Dummy Node 2")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .identifier("dummy2")
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .startingNodeId(sectionChainNodeId)
         .uuid(generateUuid())
         .build();
   }

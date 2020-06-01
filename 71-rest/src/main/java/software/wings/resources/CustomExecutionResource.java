@@ -73,6 +73,13 @@ public class CustomExecutionResource {
   }
 
   @GET
+  @Path("/section-chain")
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<PlanExecution> executeSectionChainPlan() {
+    return new RestResponse<>(customExecutionService.executeSectionChainPlan());
+  }
+
+  @GET
   @Path("/abort-plan")
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<Interrupt> abortPlan(
