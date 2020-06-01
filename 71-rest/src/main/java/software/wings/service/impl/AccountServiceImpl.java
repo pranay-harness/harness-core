@@ -10,12 +10,14 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.lang.reflect.Modifier.isAbstract;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.Role.Builder.aRole;
@@ -59,6 +61,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.network.Http;
 import io.harness.observer.Subject;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.PersistentEntity;
@@ -74,6 +77,7 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
+import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -468,10 +472,24 @@ public class AccountServiceImpl implements AccountService {
 
     dbCache.invalidate(Account.class, accountId);
     deleteQuartzJobs(accountId);
-    List<OwnedByAccount> services = serviceClassLocator.descendingServicesForInterface(OwnedByAccount.class);
-    services.forEach(service -> service.deleteByAccountId(accountId));
+    deleteAllEntities(accountId);
     logger.info("Successfully deleted account {}", accountId);
     return wingsPersistence.delete(account);
+  }
+
+  private void deleteAllEntities(String accountId) {
+    Reflections reflections = new Reflections("software.wings", "io.harness");
+    Set<Class<? extends AccountAccess>> entities = reflections.getSubTypesOf(AccountAccess.class);
+    for (Class entity : entities) {
+      if (!isAbstract(entity.getModifiers())) {
+        deleteAppLevelDocuments(accountId, entity);
+        logger.info("Deleting account level entity {}", entity.getName());
+        wingsPersistence.delete(
+            wingsPersistence.createQuery(entity, excludeAuthority).filter(ACCOUNT_ID_KEY, accountId));
+      }
+    }
+    List<OwnedByAccount> services = serviceClassLocator.descendingServicesForInterface(OwnedByAccount.class);
+    services.forEach(service -> service.deleteByAccountId(accountId));
   }
 
   private boolean isAnnotatedExportable(Class<? extends PersistentEntity> clazz) {
