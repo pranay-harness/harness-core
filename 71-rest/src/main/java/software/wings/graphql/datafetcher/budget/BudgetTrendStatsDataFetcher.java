@@ -39,10 +39,13 @@ public class BudgetTrendStatsDataFetcher
     if (budget == null) {
       throw new InvalidRequestException(BUDGET_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
+    Double actualCost = budgetService.getActualCost(budget);
+    double forecastCostOffset = budgetService.isStartOfMonth() ? 0.0 : actualCost;
+
     return QLBudgetTrendStats.builder()
-        .totalCost(getCostStats(ACTUAL_COST_LABEL, budgetService.getActualCost(budget), budget.getBudgetAmount()))
-        .forecastCost(
-            getCostStats(FORECASTED_COST_LABEL, budgetService.getForecastCost(budget), budget.getBudgetAmount()))
+        .totalCost(getCostStats(ACTUAL_COST_LABEL, actualCost, budget.getBudgetAmount()))
+        .forecastCost(getCostStats(FORECASTED_COST_LABEL, forecastCostOffset + budgetService.getForecastCost(budget),
+            budget.getBudgetAmount()))
         .budgetDetails(budgetService.getBudgetDetails(budget))
         .build();
   }

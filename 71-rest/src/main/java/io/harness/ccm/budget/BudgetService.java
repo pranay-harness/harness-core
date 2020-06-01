@@ -28,4 +28,6 @@ public interface BudgetService {
   QLBudgetDataList getBudgetData(Budget budget);
 
   QLBudgetTableData getBudgetDetails(Budget budget);
+
+  boolean isStartOfMonth();
 }
