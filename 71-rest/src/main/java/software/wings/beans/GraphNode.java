@@ -64,6 +64,7 @@ public class GraphNode {
   private GraphGroup group;
 
   private String delegateTaskId;
+  private boolean selectionLogsTrackingForTaskEnabled;
 
   public GraphNode cloneInternal() {
     GraphNode clonedNode = GraphNode.builder()
