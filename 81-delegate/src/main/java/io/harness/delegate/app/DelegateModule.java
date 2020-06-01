@@ -115,6 +115,8 @@ import software.wings.helpers.ext.ecr.EcrClassicServiceImpl;
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.helpers.ext.ecr.EcrServiceImpl;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsCommandType;
+import software.wings.helpers.ext.gcb.GcbService;
+import software.wings.helpers.ext.gcb.GcbServiceImpl;
 import software.wings.helpers.ext.gcr.GcrService;
 import software.wings.helpers.ext.gcr.GcrServiceImpl;
 import software.wings.helpers.ext.gcs.GcsService;
@@ -522,6 +524,7 @@ public class DelegateModule extends DependencyModule {
     bind(ChartMuseumClient.class).to(ChartMuseumClientImpl.class);
     bind(SpotInstHelperServiceDelegate.class).to(SpotInstHelperServiceDelegateImpl.class);
     bind(AwsS3HelperServiceDelegate.class).to(AwsS3HelperServiceDelegateImpl.class);
+    bind(GcbService.class).to(GcbServiceImpl.class);
     bind(CustomSecretsManagerDelegateService.class).to(CustomSecretsManagerDelegateServiceImpl.class);
 
     bind(SlackMessageSender.class).to(SlackMessageSenderImpl.class);
