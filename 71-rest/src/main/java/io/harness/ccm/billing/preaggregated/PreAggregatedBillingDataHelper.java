@@ -381,9 +381,13 @@ public class PreAggregatedBillingDataHelper {
 
   private double getCostTrend(PreAggregatedCostData preAggregatedCostData,
       PreAggregatedCostData prevPreAggregatedCostData, List<CloudBillingFilter> filters, Instant trendFilterStartTime) {
-    BigDecimal forecastCost = billingDataHelper.getForecastCost(
-        QLBillingAmountData.builder().cost(BigDecimal.valueOf(preAggregatedCostData.getCost())).build(),
-        Instant.ofEpochMilli(getEndTimeFilter(filters).getValue().longValue()));
+    BigDecimal forecastCost =
+        billingDataHelper.getForecastCost(QLBillingAmountData.builder()
+                                              .cost(BigDecimal.valueOf(preAggregatedCostData.getCost()))
+                                              .minStartTime(preAggregatedCostData.getMinStartTime() / 1000)
+                                              .maxStartTime(preAggregatedCostData.getMaxStartTime() / 1000)
+                                              .build(),
+            Instant.ofEpochMilli(getEndTimeFilter(filters).getValue().longValue()));
     return getBillingTrend(BigDecimal.valueOf(preAggregatedCostData.getCost()), forecastCost, prevPreAggregatedCostData,
         trendFilterStartTime);
   }
@@ -455,8 +459,11 @@ public class PreAggregatedBillingDataHelper {
     String totalCostValue = String.format(
         COST_VALUE, billingDataHelper.formatNumber(billingDataHelper.getRoundedDoubleValue(costData.getCost())));
 
-    BigDecimal forecastCost = billingDataHelper.getForecastCost(
-        QLBillingAmountData.builder().cost(BigDecimal.valueOf(costData.getCost())).build(),
+    BigDecimal forecastCost = billingDataHelper.getForecastCost(QLBillingAmountData.builder()
+                                                                    .cost(BigDecimal.valueOf(costData.getCost()))
+                                                                    .minStartTime(costData.getMinStartTime() / 1000)
+                                                                    .maxStartTime(costData.getMaxStartTime() / 1000)
+                                                                    .build(),
         Instant.ofEpochMilli(getEndTimeFilter(filters).getValue().longValue()));
 
     return QLBillingStatsInfo.builder()
