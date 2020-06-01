@@ -45,9 +45,15 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String DISCONNECTED = "Disconnected";
   private static final String REJECTED = "Rejected";
   private static final String SELECTED = "Selected";
-  private static final String MISSING_SELECTOR_GROUP_ID = "missingSelectorGroupId";
+
+  private static final String CAN_ASSIGN_GROUP_ID = "CAN_ASSIGN_GROUP_ID";
+  private static final String NO_INCLUDE_SCOPE_MATCHED_GROUP_ID = "NO_INCLUDE_SCOPE_MATCHED_GROUP_ID";
+  private static final String EXCLUDE_SCOPE_MATCHED_GROUP_ID = "EXCLUDE_SCOPE_MATCHED_GROUP_ID";
+  private static final String MISSING_SELECTOR_GROUP_ID = "MISSING_SELECTOR_GROUP_ID";
+  private static final String MISSING_ALL_SELECTORS_GROUP_ID = "MISSING_ALL_SELECTORS_GROUP_ID";
+  private static final String DISCONNECTED_GROUP_ID = "DISCONNECTED_GROUP_ID";
+  private static final String WAITING_ON_APPROVAL_GROUP_ID = "WAITING_ON_APPROVAL_GROUP_ID";
   private static final String MISSING_SELECTOR_MESSAGE = "missing selector";
-  private static final String DISCONNECTED_MESSAGE = "disconnected";
 
   @Mock private FeatureFlagService featureFlagService;
   @Inject protected WingsPersistence wingsPersistence;
@@ -115,7 +121,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
                    .filter(DelegateSelectionLogKeys.taskId, taskId)
                    .filter(DelegateSelectionLogKeys.accountId, accountId)
                    .count())
-        .isEqualTo(11L);
+        .isEqualTo(1L);
   }
 
   @Test
@@ -174,7 +180,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
         .isEqualTo("Successfully matched scopes and selectors");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isNotBlank();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(CAN_ASSIGN_GROUP_ID);
   }
 
   @Test
@@ -205,7 +211,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("No matching include scope");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isNotBlank();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(NO_INCLUDE_SCOPE_MATCHED_GROUP_ID);
 
     delegateSelectionLogsService.logNoIncludeScopeMatched(batch, accountId, delegate2Id);
 
@@ -216,7 +222,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("No matching include scope");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isNotBlank();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(NO_INCLUDE_SCOPE_MATCHED_GROUP_ID);
   }
 
   @Test
@@ -248,7 +254,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Matched exclude scope testScope");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isNotBlank();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(EXCLUDE_SCOPE_MATCHED_GROUP_ID);
 
     delegateSelectionLogsService.logExcludeScopeMatched(batch, accountId, delegate2Id, scope);
 
@@ -259,7 +265,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Matched exclude scope testScope");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isNotBlank();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(EXCLUDE_SCOPE_MATCHED_GROUP_ID);
   }
 
   @Test
@@ -292,7 +298,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Missing all selectors");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isNotBlank();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(MISSING_ALL_SELECTORS_GROUP_ID);
 
     delegateSelectionLogsService.logMissingAllSelectors(batch, accountId, delegate2Id);
 
@@ -303,7 +309,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Missing all selectors");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isNotBlank();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(MISSING_ALL_SELECTORS_GROUP_ID);
   }
 
   @Test
@@ -335,7 +341,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Missing selector " + selector);
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isNotBlank();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(MISSING_SELECTOR_GROUP_ID);
 
     delegateSelectionLogsService.logMissingSelector(batch, accountId, delegate2Id, selector);
 
@@ -346,7 +352,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Missing selector " + selector);
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isNotBlank();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(MISSING_SELECTOR_GROUP_ID);
   }
 
   @Test
@@ -375,7 +381,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(DISCONNECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Delegate was disconnected");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isNotBlank();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(DISCONNECTED_GROUP_ID);
   }
 
   @Test
@@ -404,7 +410,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(WAITING_FOR_APPROVAL);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("Delegate was waiting for approval");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
-    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isNotBlank();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(WAITING_ON_APPROVAL_GROUP_ID);
   }
 
   @Test
@@ -582,29 +588,19 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
 
   private List<DelegateSelectionLog> createDelegateSelectionLogs(String taskId, String accountId) {
     DelegateSelectionLog selectionLog1 = createDelegateSelectionLogBuilder()
-                                             //.uuid(generateUuid())
                                              .taskId(taskId)
                                              .accountId(accountId)
-                                             .message(DISCONNECTED_MESSAGE)
-                                             .groupId(generateUuid())
+                                             .message(MISSING_SELECTOR_MESSAGE)
+                                             .groupId(MISSING_SELECTOR_GROUP_ID)
                                              .build();
 
     DelegateSelectionLog selectionLog2 = createDelegateSelectionLogBuilder()
-                                             //.uuid(generateUuid())
                                              .taskId(taskId)
                                              .accountId(accountId)
                                              .message(MISSING_SELECTOR_MESSAGE)
                                              .groupId(MISSING_SELECTOR_GROUP_ID)
                                              .build();
 
-    DelegateSelectionLog selectionLog3 = createDelegateSelectionLogBuilder()
-                                             //.uuid(generateUuid())
-                                             .taskId(taskId)
-                                             .accountId(accountId)
-                                             .message(MISSING_SELECTOR_MESSAGE)
-                                             .groupId(MISSING_SELECTOR_GROUP_ID)
-                                             .build();
-
-    return Arrays.asList(selectionLog1, selectionLog2, selectionLog3);
+    return Arrays.asList(selectionLog1, selectionLog2);
   }
 }

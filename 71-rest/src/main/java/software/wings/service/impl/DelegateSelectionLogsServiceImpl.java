@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.FeatureName.DELEGATE_SELECTION_LOG;
 
 import com.google.inject.Inject;
@@ -44,6 +43,8 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private static final String EXCLUDE_SCOPE_MATCHED_GROUP_ID = "EXCLUDE_SCOPE_MATCHED_GROUP_ID";
   private static final String MISSING_SELECTOR_GROUP_ID = "MISSING_SELECTOR_GROUP_ID";
   private static final String MISSING_ALL_SELECTORS_GROUP_ID = "MISSING_ALL_SELECTORS_GROUP_ID";
+  private static final String DISCONNECTED_GROUP_ID = "DISCONNECTED_GROUP_ID";
+  private static final String WAITING_ON_APPROVAL_GROUP_ID = "WAITING_ON_APPROVAL_GROUP_ID";
 
   @Override
   public void save(BatchDelegateSelectionLog batch) {
@@ -217,7 +218,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     batch.append(delegateSelectionLogBuilder.conclusion(DISCONNECTED)
                      .message("Delegate was disconnected")
                      .eventTimestamp(System.currentTimeMillis())
-                     .groupId(generateUuid())
+                     .groupId(DISCONNECTED_GROUP_ID)
                      .build());
   }
 
@@ -234,7 +235,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     batch.append(delegateSelectionLogBuilder.conclusion(WAITING_FOR_APPROVAL)
                      .message("Delegate was waiting for approval")
                      .eventTimestamp(System.currentTimeMillis())
-                     .groupId(generateUuid())
+                     .groupId(WAITING_ON_APPROVAL_GROUP_ID)
                      .build());
   }
 }
