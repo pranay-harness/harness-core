@@ -199,6 +199,7 @@ import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.security.DelegateDecryptionServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
+import software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerDelegateServiceImpl;
 import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
@@ -252,6 +253,7 @@ import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
+import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.servicenow.ServiceNowDelegateService;
@@ -520,6 +522,7 @@ public class DelegateModule extends DependencyModule {
     bind(ChartMuseumClient.class).to(ChartMuseumClientImpl.class);
     bind(SpotInstHelperServiceDelegate.class).to(SpotInstHelperServiceDelegateImpl.class);
     bind(AwsS3HelperServiceDelegate.class).to(AwsS3HelperServiceDelegateImpl.class);
+    bind(CustomSecretsManagerDelegateService.class).to(CustomSecretsManagerDelegateServiceImpl.class);
 
     bind(SlackMessageSender.class).to(SlackMessageSenderImpl.class);
 

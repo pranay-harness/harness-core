@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.CYBERARK_OPERATION_ERROR;
+import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
@@ -61,6 +62,7 @@ import software.wings.helpers.ext.vault.VaultRestClientFactory;
 import software.wings.helpers.ext.vault.VaultSysAuthRestClient;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.impl.security.cyberark.CyberArkReadResponse;
 import software.wings.service.impl.security.gcpkms.GcpKmsEncryptDecryptClient;
 import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
@@ -72,6 +74,7 @@ import software.wings.service.impl.security.vault.VaultAppRoleLoginResponse;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.service.impl.security.vault.VaultSecretMetadata;
 import software.wings.service.impl.security.vault.VaultSecretMetadata.VersionMetadata;
+import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -94,13 +97,16 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   private TimeLimiter timeLimiter;
   private KmsEncryptDecryptClient kmsEncryptDecryptClient;
   private GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient;
+  private CustomSecretsManagerDelegateService customSecretsManagerDelegateService;
 
   @Inject
   public SecretManagementDelegateServiceImpl(TimeLimiter timeLimiter, KmsEncryptDecryptClient kmsEncryptDecryptClient,
-      GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient) {
+      GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient,
+      CustomSecretsManagerDelegateService customSecretsManagerDelegateService) {
     this.timeLimiter = timeLimiter;
     this.kmsEncryptDecryptClient = kmsEncryptDecryptClient;
     this.gcpKmsEncryptDecryptClient = gcpKmsEncryptDecryptClient;
+    this.customSecretsManagerDelegateService = customSecretsManagerDelegateService;
   }
 
   public static boolean isRetryable(Exception e) {
@@ -840,6 +846,33 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         } else {
           String message = "Failed to decrypt CyberArk secret " + data.getName();
           throw new SecretManagementDelegateException(CYBERARK_OPERATION_ERROR, message, e, USER);
+        }
+      }
+    }
+  }
+
+  @Override
+  public char[] decrypt(EncryptedRecord data, CustomSecretsManagerConfig customSecretsManagerConfig) {
+    int failedAttempts = 0;
+    while (true) {
+      try {
+        return timeLimiter.callWithTimeout(
+            ()
+                -> customSecretsManagerDelegateService.fetchSecret(data, customSecretsManagerConfig),
+            10, TimeUnit.SECONDS, true);
+      } catch (SecretManagementDelegateException e) {
+        throw e;
+      } catch (Exception e) {
+        failedAttempts++;
+        if (isRetryable(e)) {
+          if (failedAttempts == NUM_OF_RETRIES) {
+            String message = "Decryption failed after " + NUM_OF_RETRIES + " retries";
+            throw new SecretManagementDelegateException(SECRET_MANAGEMENT_ERROR, message, e, USER);
+          }
+          sleep(ofMillis(1000));
+        } else {
+          String message = "Failed to decrypt Custom Secret Manager secret " + data.getName();
+          throw new SecretManagementDelegateException(SECRET_MANAGEMENT_ERROR, message, e, USER);
         }
       }
     }

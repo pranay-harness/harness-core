@@ -1,6 +1,5 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.security.encryption.EncryptionType.CUSTOM;
@@ -9,19 +8,14 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.Variable.VariableBuilder.aVariable;
-import static software.wings.beans.VariableType.TEXT;
-import static software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme.NTLM;
 import static software.wings.beans.command.CommandType.START;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
+import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerUtils.obtainSSHSettingAttributeConfig;
+import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerUtils.obtainTestVariables;
+import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerUtils.obtainWinRmSettingAttributeConfig;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_CUSTOM_KEYWORD;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC;
-import static software.wings.utils.WingsTestConstants.DOMAIN;
-import static software.wings.utils.WingsTestConstants.PASSWORD;
-import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
@@ -33,7 +27,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.NoResultFoundException;
 import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
-import io.harness.security.encryption.SecretVariable;
+import io.harness.security.encryption.EncryptedDataParams;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,11 +36,8 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.template.Template;
-import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
@@ -79,23 +70,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   }
 
   private String obtainTemplate(ScriptType scriptType) {
-    ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
-                                                  .scriptType(scriptType.name())
-                                                  .scriptString("echo ${var1}\n"
-                                                      + "export A=\"aaa\"\n"
-                                                      + "export B=\"bbb\"")
-                                                  .outputVars("A,B")
-                                                  .build();
-    Template template =
-        Template.builder()
-            .templateObject(shellScriptTemplate)
-            .folderPath("Harness/Tomcat Commands")
-            .gallery(HARNESS_GALLERY)
-            .appId(GLOBAL_APP_ID)
-            .accountId(GLOBAL_ACCOUNT_ID)
-            .name("Sample Script")
-            .variables(Collections.singletonList(aVariable().type(TEXT).name("var1").mandatory(true).build()))
-            .build();
+    Template template = CustomSecretsManagerUtils.obtainTemplateConfig(scriptType);
     return templateService.save(template).getUuid();
   }
 
@@ -124,45 +99,13 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   }
 
   private String obtainSshSettingAttribute() {
-    SettingAttribute settingAttribute =
-        aSettingAttribute()
-            .withCategory(SettingAttribute.SettingCategory.SETTING)
-            .withName("hostConnectionAttrs")
-            .withAccountId(GLOBAL_ACCOUNT_ID)
-            .withValue(aHostConnectionAttributes()
-                           .withAccessType(HostConnectionAttributes.AccessType.USER_PASSWORD)
-                           .withAccountId(GLOBAL_ACCOUNT_ID)
-                           .build())
-            .build();
+    SettingAttribute settingAttribute = obtainSSHSettingAttributeConfig();
     return wingsPersistence.save(settingAttribute);
   }
 
   private String obtainWinrmSettingAttribute() {
-    SettingAttribute settingAttribute = aSettingAttribute()
-                                            .withCategory(SettingAttribute.SettingCategory.SETTING)
-                                            .withName("winrmConnectionAttr")
-                                            .withAccountId(GLOBAL_ACCOUNT_ID)
-                                            .withValue(WinRmConnectionAttributes.builder()
-                                                           .accountId(GLOBAL_ACCOUNT_ID)
-                                                           .authenticationScheme(NTLM)
-                                                           .username(USER_NAME)
-                                                           .password(PASSWORD)
-                                                           .domain(DOMAIN)
-                                                           .port(22)
-                                                           .useSSL(true)
-                                                           .skipCertChecks(true)
-                                                           .build())
-                                            .build();
+    SettingAttribute settingAttribute = obtainWinRmSettingAttributeConfig();
     return wingsPersistence.save(settingAttribute);
-  }
-
-  private Set<SecretVariable> obtainTestVariables(String connectorId) {
-    Set<SecretVariable> testVariables = new HashSet<>();
-    testVariables.add(SecretVariable.builder().name("var1").value("value").build());
-    if (!isEmpty(connectorId)) {
-      testVariables.add(SecretVariable.builder().name("connectorId").value(connectorId).build());
-    }
-    return testVariables;
   }
 
   private List<String> obtainDelegateSelectors() {
@@ -174,7 +117,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveSecretsManagerExecuteOnDelegate_shouldPass() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -207,7 +150,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveSecretsManagerExecuteOnDelegate_shouldFail_TestParamsMissing() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = new HashSet<>();
+    Set<EncryptedDataParams> testVariables = new HashSet<>();
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -225,7 +168,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void saveSecretsManagerExecuteOnDelegate_shouldFail_MissingTemplate() {
-    Set<SecretVariable> testVariables = new HashSet<>();
+    Set<EncryptedDataParams> testVariables = new HashSet<>();
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -244,7 +187,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveSecretsManagerExecuteOnDelegate_shouldFail_IncorrectTemplate() {
     String templateId = obtainCommandTemplate();
-    Set<SecretVariable> testVariables = new HashSet<>();
+    Set<EncryptedDataParams> testVariables = new HashSet<>();
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -263,8 +206,8 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveSecretsManagerExecuteOnDelegate_shouldFail_IncorrectVariables() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = new HashSet<>();
-    testVariables.add(SecretVariable.builder().name("incorrectKey").value("value").build());
+    Set<EncryptedDataParams> testVariables = new HashSet<>();
+    testVariables.add(EncryptedDataParams.builder().name("incorrectKey").value("value").build());
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -283,7 +226,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveSecretsManagerExecuteOnDelegate_shouldFail_IncorrectName() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager@")
@@ -303,7 +246,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   public void saveSecretsManagerWithSSHConnectorNotTemplatized_shouldSucceed() {
     String connectorId = obtainSshSettingAttribute();
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -339,7 +282,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   public void saveSecretsManagerWithWinRMConnectorNotTemplatized_shouldSucceed() {
     String connectorId = obtainWinrmSettingAttribute();
     String templateId = obtainTemplate(ScriptType.POWERSHELL);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -374,7 +317,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveSecretsManagerWithConnectorNotTemplatized_shouldFail_ConnectorNotFound() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -396,7 +339,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   public void saveSecretsManagerWithConnectorNotTemplatized_shouldFail_WrongConnectorType1() {
     String connectorId = obtainWinrmSettingAttribute();
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -418,7 +361,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   public void saveSecretsManagerWithConnectorNotTemplatized_shouldFail_WrongConnectorType2() {
     String connectorId = obtainSshSettingAttribute();
     String templateId = obtainTemplate(ScriptType.POWERSHELL);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -440,7 +383,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   public void saveSecretsManagerWithConnectorNotTemplatized_shouldFail_MissingTargetHost() {
     String connectorId = obtainSshSettingAttribute();
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -461,7 +404,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   public void saveSecretsManagerWithConnectorTemplatized_shouldSucceed() {
     String connectorId = obtainWinrmSettingAttribute();
     String templateId = obtainTemplate(ScriptType.POWERSHELL);
-    Set<SecretVariable> testVariables = obtainTestVariables(connectorId);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(connectorId);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -495,7 +438,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveSecretsManagerWithConnectorTemplatized_shouldFail_missingConnectorInParams() {
     String templateId = obtainTemplate(ScriptType.POWERSHELL);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -529,7 +472,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void updateSecretsManager_shouldSucceed() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -581,7 +524,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void updateSecretsManager_shouldFail_ConfigNotFound() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -601,7 +544,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void updateSecretsManager_shouldFail_IdisNull() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -620,7 +563,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void getSecretsManager_shouldPass() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -654,7 +597,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void deleteSecretsManager_shouldPass() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -677,7 +620,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void deleteSecretsManager_shouldFail_SecretsFound() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -706,7 +649,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void validateSecretsManagerExecuteOnDelegate_shouldPass() {
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
@@ -727,7 +670,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   public void validateSecretsManagerWithConnector_shouldPass() {
     String connectorId = obtainSshSettingAttribute();
     String templateId = obtainTemplate(ScriptType.BASH);
-    Set<SecretVariable> testVariables = obtainTestVariables(null);
+    Set<EncryptedDataParams> testVariables = obtainTestVariables(null);
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")

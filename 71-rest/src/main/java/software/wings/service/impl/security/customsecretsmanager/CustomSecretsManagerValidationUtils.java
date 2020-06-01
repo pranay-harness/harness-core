@@ -6,7 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import com.google.common.collect.Sets;
 
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.security.encryption.SecretVariable;
+import io.harness.security.encryption.EncryptedDataParams;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -30,10 +30,11 @@ class CustomSecretsManagerValidationUtils {
   }
 
   void validateVariables(
-      @NonNull CustomSecretsManagerConfig customSecretsManagerConfig, @NonNull Set<SecretVariable> testVariables) {
+      @NonNull CustomSecretsManagerConfig customSecretsManagerConfig, @NonNull Set<EncryptedDataParams> testVariables) {
     Set<String> shellScriptVariables =
         new HashSet<>(customSecretsManagerConfig.getCustomSecretsManagerShellScript().getVariables());
-    Set<String> receivedVariables = testVariables.stream().map(SecretVariable::getName).collect(Collectors.toSet());
+    Set<String> receivedVariables =
+        testVariables.stream().map(EncryptedDataParams::getName).collect(Collectors.toSet());
     Set<String> diff = Sets.difference(shellScriptVariables, receivedVariables);
     if (!diff.isEmpty()) {
       String message = String.format(

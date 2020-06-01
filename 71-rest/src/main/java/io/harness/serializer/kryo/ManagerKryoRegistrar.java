@@ -513,6 +513,7 @@ import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.MasterUrlFetchTaskParameter;
 import software.wings.service.impl.SlackMessageSenderImpl;
@@ -1616,5 +1617,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SplunkSavedSearch.class, 7381);
     kryo.register(ContainerSyncResponse.class, 7384);
     kryo.register(BasicHttpChainStepParameters.class, 7385);
+    kryo.register(ScriptType.class, 7386);
   }
 }

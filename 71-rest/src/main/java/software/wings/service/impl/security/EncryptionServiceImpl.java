@@ -24,6 +24,7 @@ import software.wings.beans.CyberArkConfig;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
@@ -132,6 +133,7 @@ public class EncryptionServiceImpl implements EncryptionService {
       case AWS_SECRETS_MANAGER:
         return secretManagementDelegateService.decrypt(encryptedDataDetail.getEncryptedData(),
             (AwsSecretsManagerConfig) encryptedDataDetail.getEncryptionConfig());
+
       case AZURE_VAULT:
         return secretManagementDelegateService.decrypt(
             encryptedDataDetail.getEncryptedData(), (AzureVaultConfig) encryptedDataDetail.getEncryptionConfig());
@@ -139,6 +141,10 @@ public class EncryptionServiceImpl implements EncryptionService {
       case CYBERARK:
         return secretManagementDelegateService.decrypt(
             encryptedDataDetail.getEncryptedData(), (CyberArkConfig) encryptedDataDetail.getEncryptionConfig());
+
+      case CUSTOM:
+        return secretManagementDelegateService.decrypt(encryptedDataDetail.getEncryptedData(),
+            (CustomSecretsManagerConfig) encryptedDataDetail.getEncryptionConfig());
 
       default:
         throw new IllegalStateException(

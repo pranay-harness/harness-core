@@ -11,7 +11,7 @@ public interface EncryptedRecord {
   String getUuid();
   String getName();
   String getPath(); // Only relevant if this is a record encrypted by Vault.
-  Set<SecretVariable> getSecretVariables();
+  Set<EncryptedDataParams> getParameters();
   String getEncryptionKey();
   char[] getEncryptedValue();
   String getKmsId();

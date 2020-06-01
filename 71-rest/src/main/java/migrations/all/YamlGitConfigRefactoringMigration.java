@@ -8,10 +8,8 @@ import com.google.inject.Inject;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.persistence.HIterator;
-import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Account;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
@@ -23,9 +21,6 @@ import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UsageRestrictionsService;
-import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -36,8 +31,6 @@ import java.util.List;
 public class YamlGitConfigRefactoringMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
-  @Inject private SecretManager secretManager;
-  @Inject private EncryptionService encryptionService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   private String jsonUsageRestrictionString = "{\"appEnvRestrictions\":"
       + "[{\"appFilter\":{\"type\":\"GenericEntityFilter\",\"ids\":null,\"filterType\":\"ALL\"},"
@@ -129,11 +122,5 @@ public class YamlGitConfigRefactoringMigration implements Migration {
     }
 
     return gitConfig;
-  }
-
-  private void decrypt(SettingValue settingValue) {
-    List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((EncryptableSetting) settingValue, null, null);
-    encryptionService.decrypt((EncryptableSetting) settingValue, encryptedDataDetails);
   }
 }

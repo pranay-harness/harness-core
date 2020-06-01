@@ -10,6 +10,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.VaultConfig;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.SecretChangeLog;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -137,4 +138,6 @@ public interface SecretManagementDelegateService {
       String value, String accountId, GcpKmsConfig gcpKmsConfig, EncryptedRecord savedEncryptedData);
 
   @DelegateTaskType(TaskType.GCP_KMS_DECRYPT) char[] decrypt(EncryptedRecord data, GcpKmsConfig gcpKmsConfig);
+
+  char[] decrypt(EncryptedRecord data, CustomSecretsManagerConfig customSecretsManagerConfig);
 }
