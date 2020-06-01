@@ -22,7 +22,7 @@ import io.harness.engine.services.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
@@ -76,7 +76,7 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
                                              .node(node)
                                              .planExecutionId(clonedAmbiance.getPlanExecutionId())
                                              .levels(clonedAmbiance.getLevels())
-                                             .status(NodeExecutionStatus.QUEUED)
+                                             .status(Status.QUEUED)
                                              .notifyId(uuid)
                                              .parentId(nodeExecution.getUuid())
                                              .build();

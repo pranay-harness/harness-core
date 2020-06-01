@@ -4,7 +4,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.cdng.infra.beans.InfraDefinition;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.service.Service;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.Step;
@@ -39,7 +39,7 @@ public class InfrastructureStep implements Step, SyncExecutable {
     InfraMapping infraMapping = createInfraMappingObject(service.getIdentifier(), infraDefinition);
 
     return StepResponse.builder()
-        .status(NodeExecutionStatus.SUCCEEDED)
+        .status(Status.SUCCEEDED)
         .stepOutcome(StepOutcome.builder().outcome(infraMapping).name("infrastructureMapping").build())
         .build();
   }

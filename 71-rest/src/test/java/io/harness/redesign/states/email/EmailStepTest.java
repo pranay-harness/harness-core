@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.plan.input.InputArgs;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepParameters;
@@ -39,7 +39,7 @@ public class EmailStepTest extends WingsBaseTest {
   @Category({UnitTests.class})
   public void shouldSendEmail() {
     when(emailNotificationService.send(any())).thenReturn(true);
-    testEmailState(false, NodeExecutionStatus.SUCCEEDED);
+    testEmailState(false, Status.SUCCEEDED);
   }
 
   @Test
@@ -47,7 +47,7 @@ public class EmailStepTest extends WingsBaseTest {
   @Category({UnitTests.class})
   public void shouldThrowErrorOnSendEmail() {
     when(emailNotificationService.send(any())).thenThrow(new RuntimeException("Something went wrong"));
-    testEmailState(false, NodeExecutionStatus.FAILED);
+    testEmailState(false, Status.FAILED);
   }
 
   @Test
@@ -55,10 +55,10 @@ public class EmailStepTest extends WingsBaseTest {
   @Category({UnitTests.class})
   public void shouldSkipErrorOnSendEmail() {
     when(emailNotificationService.send(any())).thenThrow(new RuntimeException("Something went wrong"));
-    testEmailState(true, NodeExecutionStatus.SUCCEEDED);
+    testEmailState(true, Status.SUCCEEDED);
   }
 
-  private void testEmailState(boolean ignoreDeliveryFailure, NodeExecutionStatus expectedStatus) {
+  private void testEmailState(boolean ignoreDeliveryFailure, Status expectedStatus) {
     Ambiance ambiance =
         Ambiance.builder().inputArgs(InputArgs.builder().put("accountId", "accountIdValue").build()).build();
     StepParameters emailStepParameters = EmailStepParameters.builder()

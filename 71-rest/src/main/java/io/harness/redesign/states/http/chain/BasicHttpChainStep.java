@@ -14,7 +14,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.exception.InvalidRequestException;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
 import io.harness.facilitator.modes.chain.task.TaskChainResponse;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
@@ -58,7 +58,7 @@ public class BasicHttpChainStep implements Step, TaskChainExecutable {
   @Override
   public StepResponse finalizeExecution(
       Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
+    return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 
   private Task buildTask(Ambiance ambiance, BasicHttpStepParameters linkParam) {

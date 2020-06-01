@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.managerclient.ManagerCIResource;
@@ -38,10 +38,10 @@ public class BuildEnvSetupStep implements Step, SyncExecutable {
       BuildEnvSetupStepInfo envSetupStepInfo = (BuildEnvSetupStepInfo) stepParameters;
       // TODO Handle response and fetch cluster from input element
       buildSetupUtils.executeCISetupTask(envSetupStepInfo, ambiance);
-      return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
+      return StepResponse.builder().status(Status.SUCCEEDED).build();
     } catch (Exception e) {
       logger.error("state execution failed", e);
     }
-    return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
+    return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }

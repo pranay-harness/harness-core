@@ -14,7 +14,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
@@ -73,7 +73,7 @@ public class BasicHttpStep implements Step, TaskExecutable {
     ResponseData notifyResponseData = responseDataMap.values().iterator().next();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) notifyResponseData;
-      responseBuilder.status(NodeExecutionStatus.FAILED);
+      responseBuilder.status(Status.FAILED);
       responseBuilder
           .failureInfo(FailureInfo.builder()
                            .errorMessage(errorNotifyResponseData.getErrorMessage())
@@ -92,9 +92,9 @@ public class BasicHttpStep implements Step, TaskExecutable {
                                                  .build();
       // Just Place holder for now till we have assertions
       if (httpStateExecutionResponse.getHttpResponseCode() == 500) {
-        responseBuilder.status(NodeExecutionStatus.FAILED);
+        responseBuilder.status(Status.FAILED);
       } else {
-        responseBuilder.status(NodeExecutionStatus.SUCCEEDED);
+        responseBuilder.status(Status.SUCCEEDED);
       }
       responseBuilder.stepOutcome(StepOutcome.builder().name("http").outcome(executionData).build());
     }

@@ -7,7 +7,7 @@ import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
@@ -43,10 +43,10 @@ public class ForkStep implements Step, ChildrenExecutable {
   @Override
   public StepResponse handleChildrenResponse(
       Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    StepResponseBuilder responseBuilder = StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED);
+    StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
     for (ResponseData responseData : responseDataMap.values()) {
-      NodeExecutionStatus executionStatus = ((StatusNotifyResponseData) responseData).getStatus();
-      if (executionStatus != NodeExecutionStatus.SUCCEEDED) {
+      Status executionStatus = ((StatusNotifyResponseData) responseData).getStatus();
+      if (executionStatus != Status.SUCCEEDED) {
         responseBuilder.status(executionStatus);
       }
     }

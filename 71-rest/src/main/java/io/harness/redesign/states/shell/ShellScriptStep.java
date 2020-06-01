@@ -33,7 +33,7 @@ import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputResolver;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -256,19 +256,19 @@ public class ShellScriptStep implements Step, TaskExecutable {
       switch (commandExecutionResult.getStatus()) {
         case SUCCESS:
           executionStatus = ExecutionStatus.SUCCESS;
-          stepResponseBuilder.status(NodeExecutionStatus.SUCCEEDED);
+          stepResponseBuilder.status(Status.SUCCEEDED);
           break;
         case FAILURE:
           executionStatus = ExecutionStatus.FAILED;
-          stepResponseBuilder.status(NodeExecutionStatus.FAILED);
+          stepResponseBuilder.status(Status.FAILED);
           break;
         case RUNNING:
           executionStatus = ExecutionStatus.RUNNING;
-          stepResponseBuilder.status(NodeExecutionStatus.RUNNING);
+          stepResponseBuilder.status(Status.RUNNING);
           break;
         case QUEUED:
           executionStatus = ExecutionStatus.QUEUED;
-          stepResponseBuilder.status(NodeExecutionStatus.QUEUED);
+          stepResponseBuilder.status(Status.QUEUED);
           break;
         default:
           throw new ShellScriptException(
@@ -291,7 +291,7 @@ public class ShellScriptStep implements Step, TaskExecutable {
       stepResponseBuilder.stepOutcome(
           StepResponse.StepOutcome.builder().name("data").outcome(scriptStateExecutionData).build());
     } else if (data instanceof ErrorNotifyResponseData) {
-      stepResponseBuilder.status(NodeExecutionStatus.FAILED);
+      stepResponseBuilder.status(Status.FAILED);
       stepResponseBuilder.failureInfo(
           StepResponse.FailureInfo.builder().errorMessage(((ErrorNotifyResponseData) data).getErrorMessage()).build());
       return stepResponseBuilder.build();

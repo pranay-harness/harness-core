@@ -24,7 +24,7 @@ import io.harness.engine.status.PausedStepStatusUpdate;
 import io.harness.engine.status.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.persistence.HPersistence;
@@ -72,7 +72,7 @@ public class PauseAllHandler implements InterruptHandler {
                                                   .planExecutionId(interrupt.getPlanExecutionId())
                                                   .nodeExecutionId(nodeExecutionId)
                                                   .interruptId(interrupt.getUuid())
-                                                  .status(NodeExecutionStatus.PAUSED)
+                                                  .status(Status.PAUSED)
                                                   .build());
     waitNotifyEngine.waitForAllOn(ORCHESTRATION,
         EngineResumeAllCallback.builder().ambiance(ambiance).additionalInputs(additionalInputs).build(),

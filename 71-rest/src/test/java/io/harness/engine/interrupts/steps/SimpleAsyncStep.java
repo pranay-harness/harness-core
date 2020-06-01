@@ -8,7 +8,7 @@ import com.google.inject.name.Named;
 import io.harness.ambiance.Ambiance;
 import io.harness.delay.SimpleNotifier;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse.AsyncExecutableResponseBuilder;
@@ -55,10 +55,10 @@ public class SimpleAsyncStep implements Step, AsyncExecutable {
   @Override
   public StepResponse handleAsyncResponse(
       Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    StepResponseBuilder stepResponseBuilder = StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED);
+    StepResponseBuilder stepResponseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
     for (Object response : responseDataMap.values()) {
       if (!"SUCCESS".equals(((StringNotifyResponseData) response).getData())) {
-        stepResponseBuilder.status(NodeExecutionStatus.FAILED);
+        stepResponseBuilder.status(Status.FAILED);
       }
     }
     return stepResponseBuilder.build();

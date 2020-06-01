@@ -1,6 +1,9 @@
 package io.harness.engine.interrupts.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.execution.status.Status.PAUSED;
+import static io.harness.execution.status.Status.RUNNING;
+import static io.harness.execution.status.Status.SUCCEEDED;
 import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
 import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
@@ -19,7 +22,6 @@ import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptTestHelper;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.status.ExecutionInstanceStatus;
 import io.harness.interrupts.Interrupt;
 import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
@@ -55,7 +57,7 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
   public void shouldTestRegisterAndHandleInterrupt() {
     // Execute Plan And wait it to be in RUNNING status
     PlanExecution execution = executionEngine.startExecution(PlanRepo.planWithBigWait(), EMBEDDED_USER);
-    interruptTestHelper.waitForPlanStatus(execution.getUuid(), ExecutionInstanceStatus.RUNNING);
+    interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 
     // Issue Pause Interrupt
     Interrupt handledPauseInterrupt = interruptManager.register(execution.getUuid(), PAUSE_ALL, EMBEDDED_USER, null);
@@ -67,7 +69,7 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
 
     PlanExecution pausedPlanExecution = interruptTestHelper.fetchPlanExecutionStatus(execution.getUuid());
     assertThat(pausedPlanExecution).isNotNull();
-    assertThat(pausedPlanExecution.getStatus()).isEqualTo(ExecutionInstanceStatus.PAUSED);
+    assertThat(pausedPlanExecution.getStatus()).isEqualTo(PAUSED);
 
     // Issue Resume Interrupt
     Interrupt handledResumeInterrupt = interruptManager.register(execution.getUuid(), RESUME_ALL, EMBEDDED_USER, null);
@@ -84,6 +86,6 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
 
     PlanExecution resumedExecution = interruptTestHelper.fetchPlanExecutionStatus(execution.getUuid());
     assertThat(resumedExecution).isNotNull();
-    assertThat(resumedExecution.getStatus()).isEqualTo(ExecutionInstanceStatus.SUCCEEDED);
+    assertThat(resumedExecution.getStatus()).isEqualTo(SUCCEEDED);
   }
 }

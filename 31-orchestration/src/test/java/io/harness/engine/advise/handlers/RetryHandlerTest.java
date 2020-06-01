@@ -14,7 +14,7 @@ import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
@@ -57,7 +57,7 @@ public class RetryHandlerTest extends OrchestrationTest {
                                                 .stepType(StepType.builder().type("DUMMY").build())
                                                 .build())
                                       .startTs(System.currentTimeMillis())
-                                      .status(NodeExecutionStatus.FAILED)
+                                      .status(Status.FAILED)
                                       .build();
     hPersistence.save(nodeExecution);
     advise = RetryAdvise.builder().waitInterval(0).retryNodeExecutionId(NODE_EXECUTION_ID).build();

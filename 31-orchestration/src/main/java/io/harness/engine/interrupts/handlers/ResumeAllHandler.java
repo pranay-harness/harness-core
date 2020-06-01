@@ -19,7 +19,7 @@ import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.status.ResumeStepStatusUpdate;
 import io.harness.engine.status.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.persistence.HPersistence;
@@ -61,7 +61,7 @@ public class ResumeAllHandler implements InterruptHandler {
     interruptService.markProcessed(
         pauseAllInterrupt.getUuid(), pauseAllInterrupt.getState() == PROCESSING ? PROCESSED_SUCCESSFULLY : DISCARDED);
     waitNotifyEngine.doneWith(
-        pauseAllInterrupt.getUuid(), StatusNotifyResponseData.builder().status(NodeExecutionStatus.SUCCEEDED).build());
+        pauseAllInterrupt.getUuid(), StatusNotifyResponseData.builder().status(Status.SUCCEEDED).build());
     interrupt.setState(PROCESSING);
     return hPersistence.save(interrupt);
   }

@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.state.io.StepParameters;
 import lombok.NonNull;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -21,10 +21,9 @@ public interface NodeExecutionService {
 
   void updateResolvedStepParameters(String nodeExecutionId, StepParameters stepParameters);
 
-  List<NodeExecution> fetchNodeExecutionsByStatus(String planExecutionId, NodeExecutionStatus status);
+  List<NodeExecution> fetchNodeExecutionsByStatus(String planExecutionId, Status status);
 
-  List<NodeExecution> fetchNodeExecutionsByStatuses(
-      @NonNull String planExecutionId, EnumSet<NodeExecutionStatus> statuses);
+  List<NodeExecution> fetchNodeExecutionsByStatuses(@NonNull String planExecutionId, EnumSet<Status> statuses);
 
   NodeExecution update(@NonNull String nodeExecutionId, @NonNull Consumer<UpdateOperations<NodeExecution>> ops);
 }

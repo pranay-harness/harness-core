@@ -11,7 +11,7 @@ import io.harness.OrchestrationTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.rule.Owner;
@@ -62,10 +62,10 @@ public class ForkStateTest extends OrchestrationTest {
 
     Map<String, ResponseData> responseDataMap =
         ImmutableMap.<String, ResponseData>builder()
-            .put(FIRST_CHILD_ID, StatusNotifyResponseData.builder().status(NodeExecutionStatus.SUCCEEDED).build())
-            .put(SECOND_CHILD_ID, StatusNotifyResponseData.builder().status(NodeExecutionStatus.FAILED).build())
+            .put(FIRST_CHILD_ID, StatusNotifyResponseData.builder().status(Status.SUCCEEDED).build())
+            .put(SECOND_CHILD_ID, StatusNotifyResponseData.builder().status(Status.FAILED).build())
             .build();
     StepResponse stepResponse = forkState.handleChildrenResponse(ambiance, stateParameters, responseDataMap);
-    assertThat(stepResponse.getStatus()).isEqualTo(NodeExecutionStatus.FAILED);
+    assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
   }
 }

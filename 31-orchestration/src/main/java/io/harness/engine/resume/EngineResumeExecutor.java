@@ -13,7 +13,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.ExecutionEngine;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
@@ -49,72 +49,76 @@ public class EngineResumeExecutor implements Runnable {
 
   @Override
   public void run() {
-    if (asyncError) {
-      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) response.values().iterator().next();
-      StepResponse stepResponse = StepResponse.builder()
-                                      .status(NodeExecutionStatus.ERRORED)
-                                      .failureInfo(FailureInfo.builder()
-                                                       .failureTypes(errorNotifyResponseData.getFailureTypes())
-                                                       .errorMessage(errorNotifyResponseData.getErrorMessage())
-                                                       .build())
-                                      .build();
-      executionEngine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
-      return;
-    }
+    try {
+      if (asyncError) {
+        ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) response.values().iterator().next();
+        StepResponse stepResponse = StepResponse.builder()
+                                        .status(Status.ERRORED)
+                                        .failureInfo(FailureInfo.builder()
+                                                         .failureTypes(errorNotifyResponseData.getFailureTypes())
+                                                         .errorMessage(errorNotifyResponseData.getErrorMessage())
+                                                         .build())
+                                        .build();
+        executionEngine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+        return;
+      }
 
-    PlanNode node = nodeExecution.getNode();
-    StepResponse stepResponse = null;
-    Step step = stepRegistry.obtain(node.getStepType());
-    switch (nodeExecution.getMode()) {
-      case CHILDREN:
-        ChildrenExecutable childrenExecutable = (ChildrenExecutable) step;
-        stepResponse =
-            childrenExecutable.handleChildrenResponse(ambiance, nodeExecution.getResolvedStepParameters(), response);
-        break;
-      case ASYNC:
-        AsyncExecutable asyncExecutable = (AsyncExecutable) step;
-        stepResponse =
-            asyncExecutable.handleAsyncResponse(ambiance, nodeExecution.getResolvedStepParameters(), response);
-        break;
-      case CHILD:
-        ChildExecutable childExecutable = (ChildExecutable) step;
-        stepResponse =
-            childExecutable.handleChildResponse(ambiance, nodeExecution.getResolvedStepParameters(), response);
-        break;
-      case TASK:
-        TaskExecutable taskExecutable = (TaskExecutable) step;
-        stepResponse = taskExecutable.handleTaskResult(ambiance, nodeExecution.getResolvedStepParameters(), response);
-        break;
-      case TASK_CHAIN:
-        TaskChainExecutable taskChainExecutable = (TaskChainExecutable) step;
-        TaskChainExecutableResponse lastLinkResponse =
-            Preconditions.checkNotNull((TaskChainExecutableResponse) nodeExecution.obtainLatestExecutableResponse());
-        if (lastLinkResponse.isChainEnd()) {
+      PlanNode node = nodeExecution.getNode();
+      StepResponse stepResponse = null;
+      Step step = stepRegistry.obtain(node.getStepType());
+      switch (nodeExecution.getMode()) {
+        case CHILDREN:
+          ChildrenExecutable childrenExecutable = (ChildrenExecutable) step;
           stepResponse =
-              taskChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(), response);
+              childrenExecutable.handleChildrenResponse(ambiance, nodeExecution.getResolvedStepParameters(), response);
           break;
-        } else {
-          executionEngine.triggerLink(step, ambiance, nodeExecution, lastLinkResponse.getPassThroughData(), response);
-          return;
-        }
-      case CHILD_CHAIN:
-        ChildChainExecutable childChainExecutable = (ChildChainExecutable) stepRegistry.obtain(node.getStepType());
-        ChildChainResponse lastChildChainExecutableResponse =
-            Preconditions.checkNotNull((ChildChainResponse) nodeExecution.obtainLatestExecutableResponse());
-        if (lastChildChainExecutableResponse.isChainEnd()) {
+        case ASYNC:
+          AsyncExecutable asyncExecutable = (AsyncExecutable) step;
           stepResponse =
-              childChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(), response);
+              asyncExecutable.handleAsyncResponse(ambiance, nodeExecution.getResolvedStepParameters(), response);
           break;
-        } else {
-          executionEngine.triggerLink(
-              step, ambiance, nodeExecution, lastChildChainExecutableResponse.getPassThroughData(), response);
-          return;
-        }
-      default:
-        throw new InvalidRequestException("Resume not handled for execution Mode : " + nodeExecution.getMode());
+        case CHILD:
+          ChildExecutable childExecutable = (ChildExecutable) step;
+          stepResponse =
+              childExecutable.handleChildResponse(ambiance, nodeExecution.getResolvedStepParameters(), response);
+          break;
+        case TASK:
+          TaskExecutable taskExecutable = (TaskExecutable) step;
+          stepResponse = taskExecutable.handleTaskResult(ambiance, nodeExecution.getResolvedStepParameters(), response);
+          break;
+        case TASK_CHAIN:
+          TaskChainExecutable taskChainExecutable = (TaskChainExecutable) step;
+          TaskChainExecutableResponse lastLinkResponse =
+              Preconditions.checkNotNull((TaskChainExecutableResponse) nodeExecution.obtainLatestExecutableResponse());
+          if (lastLinkResponse.isChainEnd()) {
+            stepResponse =
+                taskChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(), response);
+            break;
+          } else {
+            executionEngine.triggerLink(step, ambiance, nodeExecution, lastLinkResponse.getPassThroughData(), response);
+            return;
+          }
+        case CHILD_CHAIN:
+          ChildChainExecutable childChainExecutable = (ChildChainExecutable) stepRegistry.obtain(node.getStepType());
+          ChildChainResponse lastChildChainExecutableResponse =
+              Preconditions.checkNotNull((ChildChainResponse) nodeExecution.obtainLatestExecutableResponse());
+          if (lastChildChainExecutableResponse.isChainEnd()) {
+            stepResponse =
+                childChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(), response);
+            break;
+          } else {
+            executionEngine.triggerLink(
+                step, ambiance, nodeExecution, lastChildChainExecutableResponse.getPassThroughData(), response);
+            return;
+          }
+        default:
+          throw new InvalidRequestException("Resume not handled for execution Mode : " + nodeExecution.getMode());
+      }
+      Preconditions.checkNotNull(
+          stepResponse, "Step Response Cannot Be null. NodeExecutionId: " + nodeExecution.getUuid());
+      executionEngine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+    } catch (Exception ex) {
+      logger.error(ex.getMessage());
     }
-    Preconditions.checkNotNull(
-        stepResponse, "Step Response Cannot Be null. NodeExecutionId: " + nodeExecution.getUuid());
-    executionEngine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
   }
 }

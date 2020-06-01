@@ -1,6 +1,6 @@
 package io.harness.engine.status;
 
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -11,5 +11,5 @@ public class StepStatusUpdateInfo {
   @NonNull String planExecutionId;
   String nodeExecutionId;
   String interruptId;
-  NodeExecutionStatus status;
+  Status status;
 }

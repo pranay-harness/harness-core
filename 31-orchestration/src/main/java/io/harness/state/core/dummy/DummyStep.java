@@ -6,7 +6,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.Step;
@@ -29,6 +29,6 @@ public class DummyStep implements Step, SyncExecutable {
   public StepResponse executeSync(
       Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
     logger.info("Dummy State getting executed");
-    return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
+    return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }

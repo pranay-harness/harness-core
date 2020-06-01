@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.category.element.UnitTests;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.rule.Owner;
@@ -32,6 +32,6 @@ public class GitCloneStepTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldExecuteGitCloneTask() {
     StepResponse stepResponse = gitCloneStep.executeSync(null, GitCloneStepInfo.builder().build(), null, null);
-    assertThat(stepResponse.getStatus()).isEqualTo(NodeExecutionStatus.SUCCEEDED);
+    assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 }
