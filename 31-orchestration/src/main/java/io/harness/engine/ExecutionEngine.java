@@ -56,15 +56,16 @@ import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.state.Step;
-import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponseNotifyData;
 import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -243,7 +244,7 @@ public class ExecutionEngine implements Engine {
     // TODO handle Failure
     PlanNode node = nodeExecution.getNode();
     if (isEmpty(node.getAdviserObtainments())) {
-      endTransition(nodeExecution);
+      endTransition(nodeExecution, nodeExecution.getStatus(), stepResponse);
       return;
     }
     Advise advise = null;
@@ -262,7 +263,7 @@ public class ExecutionEngine implements Engine {
       }
     }
     if (advise == null) {
-      endTransition(nodeExecution);
+      endTransition(nodeExecution, nodeExecution.getStatus(), stepResponse);
       return;
     }
     handleAdvise(ambiance, advise);
@@ -279,10 +280,18 @@ public class ExecutionEngine implements Engine {
     });
   }
 
-  public void endTransition(NodeExecution nodeExecution) {
+  public void endTransition(NodeExecution nodeExecution, Status status, StepResponse stepResponse) {
     if (isNotEmpty(nodeExecution.getNotifyId())) {
-      StatusNotifyResponseData responseData =
-          StatusNotifyResponseData.builder().status(nodeExecution.getStatus()).build();
+      PlanNode planNode = nodeExecution.getNode();
+      StepResponseNotifyData responseData =
+          StepResponseNotifyData.builder()
+              .nodeUuid(planNode.getUuid())
+              .stepOutcomes(stepResponse != null ? stepResponse.getStepOutcomes() : new ArrayList<>())
+              .failureInfo(stepResponse != null ? stepResponse.getFailureInfo() : null)
+              .identifier(planNode.getIdentifier())
+              .group(planNode.getStepType().getGroup())
+              .status(status)
+              .build();
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
       logger.info("Ending Execution");

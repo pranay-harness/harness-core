@@ -22,6 +22,9 @@ import io.harness.plan.input.InputArgs;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.state.StepType;
 import io.harness.state.io.StatusNotifyResponseData;
+import io.harness.state.io.StepResponse.FailureInfo;
+import io.harness.state.io.StepResponse.StepOutcome;
+import io.harness.state.io.StepResponseNotifyData;
 
 import java.time.Duration;
 
@@ -47,6 +50,9 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(Duration.class, 2516);
     kryo.register(OutcomeInstance.class, 2517);
     kryo.register(InputArgs.class, 2518);
+    kryo.register(StepResponseNotifyData.class, 2519);
+    kryo.register(FailureInfo.class, 2520);
+    kryo.register(StepOutcome.class, 2521);
 
     // Add moved/old classes here
     // Keeping the same id for moved classes

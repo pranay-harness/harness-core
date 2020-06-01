@@ -14,9 +14,8 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.rule.Owner;
-import io.harness.state.StepType;
-import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponseNotifyData;
 import io.harness.state.io.StepTransput;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -25,11 +24,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class SectionStateTest extends OrchestrationTest {
+public class SectionStepTest extends OrchestrationTest {
   @Inject private SectionStep sectionState;
 
   private static final String CHILD_ID = generateUuid();
-  private static final StepType STATE_TYPE = StepType.builder().type("SECTION").build();
 
   @Test
   @Owner(developers = PRASHANT)
@@ -53,7 +51,7 @@ public class SectionStateTest extends OrchestrationTest {
 
     Map<String, ResponseData> responseDataMap =
         ImmutableMap.<String, ResponseData>builder()
-            .put(CHILD_ID, StatusNotifyResponseData.builder().status(Status.FAILED).build())
+            .put(CHILD_ID, StepResponseNotifyData.builder().status(Status.FAILED).build())
             .build();
     StepResponse stepResponse = sectionState.handleChildResponse(ambiance, stateParameters, responseDataMap);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);

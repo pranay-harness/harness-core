@@ -140,7 +140,7 @@ public class AbortAllHandler implements InterruptHandler {
       NodeExecution updatedNodeExecution = hPersistence.findAndModify(query, ops, HPersistence.returnNewOptions);
       if (updatedNodeExecution != null) {
         updated = true;
-        executionEngine.endTransition(updatedNodeExecution);
+        executionEngine.endTransition(updatedNodeExecution, ABORTED, null);
       }
     } catch (Exception e) {
       logger.error("Error in discontinuing", e);

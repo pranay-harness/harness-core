@@ -10,10 +10,10 @@ import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.state.Step;
 import io.harness.state.StepType;
-import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
+import io.harness.state.io.StepResponseNotifyData;
 import io.harness.state.io.StepTransput;
 
 import java.util.List;
@@ -34,9 +34,8 @@ public class SectionStep implements Step, ChildExecutable {
   public StepResponse handleChildResponse(
       Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder();
-    StatusNotifyResponseData statusNotifyResponseData =
-        (StatusNotifyResponseData) responseDataMap.values().iterator().next();
-    responseBuilder.status(statusNotifyResponseData.getStatus());
+    StepResponseNotifyData stepResponseNotifyData = (StepResponseNotifyData) responseDataMap.values().iterator().next();
+    responseBuilder.status(stepResponseNotifyData.getStatus());
     return responseBuilder.build();
   }
 }

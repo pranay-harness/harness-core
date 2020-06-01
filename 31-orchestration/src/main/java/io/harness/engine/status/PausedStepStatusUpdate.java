@@ -49,7 +49,7 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
           ops
           -> ops.set(NodeExecutionKeys.status, PAUSED)
                  .addToSet(NodeExecutionKeys.interruptHistories,
-                     InterruptEffect.builder().interruptId(interruptId).tookEffectAt(new Date())));
+                     InterruptEffect.builder().interruptId(interruptId).tookEffectAt(new Date()).build()));
       return pauseParents(nodeExecution.getParentId(), interruptId);
     } else {
       return false;

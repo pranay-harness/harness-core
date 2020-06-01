@@ -194,7 +194,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     PlanExecution original = startPlanExecution(bearerToken, accountId, appId, planType);
 
     final String finalStatusEnding = "ED";
-    Awaitility.await().atMost(15, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
+    Awaitility.await().atMost(5, TimeUnit.MINUTES).pollInterval(10, TimeUnit.SECONDS).until(() -> {
       final PlanExecution planExecution = getPlanExecution(original.getUuid());
       return planExecution != null && planExecution.getStatus().name().endsWith(finalStatusEnding);
     });

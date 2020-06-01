@@ -15,9 +15,8 @@ import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.rule.Owner;
-import io.harness.state.StepType;
-import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponseNotifyData;
 import io.harness.state.io.StepTransput;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,12 +26,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ForkStateTest extends OrchestrationTest {
+public class ForkStepTest extends OrchestrationTest {
   @Inject private ForkStep forkState;
 
   private static final String FIRST_CHILD_ID = generateUuid();
   private static final String SECOND_CHILD_ID = generateUuid();
-  private static final StepType STATE_TYPE = StepType.builder().type("FORK").build();
 
   @Test
   @Owner(developers = PRASHANT)
@@ -62,8 +60,8 @@ public class ForkStateTest extends OrchestrationTest {
 
     Map<String, ResponseData> responseDataMap =
         ImmutableMap.<String, ResponseData>builder()
-            .put(FIRST_CHILD_ID, StatusNotifyResponseData.builder().status(Status.SUCCEEDED).build())
-            .put(SECOND_CHILD_ID, StatusNotifyResponseData.builder().status(Status.FAILED).build())
+            .put(FIRST_CHILD_ID, StepResponseNotifyData.builder().status(Status.SUCCEEDED).build())
+            .put(SECOND_CHILD_ID, StepResponseNotifyData.builder().status(Status.FAILED).build())
             .build();
     StepResponse stepResponse = forkState.handleChildrenResponse(ambiance, stateParameters, responseDataMap);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
