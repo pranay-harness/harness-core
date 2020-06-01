@@ -1,0 +1,34 @@
+name: Running Unit tests
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  gobuild:
+    if: contains(github.event.pull_request.labels.*.name, 'go')
+    name: Go Build
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: |
+          echo "Building golang code using bazel..."
+          bazel build //...
+
+      - name: Test
+        run: |
+          echo "Testing golang code using bazel..."
+          bazel test //...
+
+      - name: Coverage
+        run: |
+          export GOPATH=$(go env GOPATH)
+          export PATH=$PATH:$GOPATH/bin
+          echo $PATH
+          echo $GOPATH
+          echo "Adding gocovmerge package... "
+          go get -u github.com/wadey/gocovmerge
+          tools/go/generate_coverage.sh func
