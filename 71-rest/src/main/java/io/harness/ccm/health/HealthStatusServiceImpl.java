@@ -134,7 +134,8 @@ public class HealthStatusServiceImpl implements HealthStatusService {
 
       CeExceptionRecord CeExceptionRecord =
           ceExceptionRecordDao.getLatestException(clusterRecord.getAccountId(), clusterRecord.getUuid());
-      if (CeExceptionRecord != null && CeExceptionRecord.getMessage().contains("metrics-server")) {
+      if (CeExceptionRecord != null
+          && CeExceptionRecord.getMessage().contains("/apis/metrics.k8s.io/v1beta1/nodes. Message: 404")) {
         errors.add(METRICS_SERVER_NOT_FOUND);
       }
     }
