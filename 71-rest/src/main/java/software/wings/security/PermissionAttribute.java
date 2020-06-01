@@ -289,9 +289,17 @@ public class PermissionAttribute {
      */
     DELETE,
     /**
-     * Delete action.
+     * Execute action.
      */
     EXECUTE,
+    /**
+     * Execute action.
+     */
+    EXECUTE_WORKFLOW,
+    /**
+     * Execute action.
+     */
+    EXECUTE_PIPELINE,
     /**
      * default action.
      */
