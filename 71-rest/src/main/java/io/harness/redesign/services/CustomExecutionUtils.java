@@ -26,6 +26,7 @@ import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviser;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
 import io.harness.redesign.states.email.EmailStep;
 import io.harness.redesign.states.email.EmailStepParameters;
@@ -39,11 +40,13 @@ import io.harness.redesign.states.wait.WaitStep;
 import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.references.OutcomeRefObject;
 import io.harness.state.StepType;
+import io.harness.state.core.fork.ForkStep;
 import io.harness.state.core.fork.ForkStepParameters;
 import io.harness.state.core.section.SectionStep;
 import io.harness.state.core.section.SectionStepParameters;
 import io.harness.state.core.section.chain.SectionChainStep;
 import io.harness.state.core.section.chain.SectionChainStepParameters;
+import io.harness.state.io.StepParameters;
 import lombok.experimental.UtilityClass;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ShellScriptState;
@@ -732,6 +735,151 @@ public class CustomExecutionUtils {
                   .stepParameters(shellScriptStepParameters)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                             .build())
+                  .build())
+        .build();
+  }
+
+  public Plan provideGraphTestPlan() {
+    String planId = generateUuid();
+    String dummyStartNode = generateUuid();
+    String forkId = generateUuid();
+    String section1Id = generateUuid();
+    String section2Id = generateUuid();
+    String dummuNodeId = generateUuid();
+    String forkId2 = generateUuid();
+    String httpSwitchId = generateUuid();
+    String http1Id = generateUuid();
+    String http2Id = generateUuid();
+    String dummyNode1Id = generateUuid();
+    String dummyNode2Id = generateUuid();
+    StepParameters basicHttpStepParameters1 =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+    return Plan.builder()
+        .uuid(planId)
+        .startingNodeId(dummyStartNode)
+        .node(PlanNode.builder()
+                  .uuid(dummyStartNode)
+                  .identifier("dummy-start")
+                  .name("dummy-start")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .adviserObtainment(AdviserObtainment.builder()
+                                         .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                         .parameters(OnSuccessAdviserParameters.builder().nextNodeId(forkId).build())
+                                         .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .node(
+            PlanNode.builder()
+                .uuid(forkId)
+                .identifier("fork1")
+                .name("fork1")
+                .stepType(ForkStep.STEP_TYPE)
+                .stepParameters(
+                    ForkStepParameters.builder().parallelNodeId(section1Id).parallelNodeId(section2Id).build())
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummuNodeId).build())
+                                       .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
+                                           .build())
+                .build())
+        .node(PlanNode.builder()
+                  .uuid(section1Id)
+                  .identifier("section1")
+                  .name("section1")
+                  .stepType(SectionStep.STEP_TYPE)
+                  .stepParameters(SectionStepParameters.builder().childNodeId(forkId2).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(section2Id)
+                  .identifier("section2")
+                  .name("section2")
+                  .stepType(SectionStep.STEP_TYPE)
+                  .stepParameters(SectionStepParameters.builder().childNodeId(httpSwitchId).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(forkId2)
+                  .identifier("fork2")
+                  .name("fork2")
+                  .stepType(ForkStep.STEP_TYPE)
+                  .stepParameters(ForkStepParameters.builder().parallelNodeId(http1Id).parallelNodeId(http2Id).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(httpSwitchId)
+                  .identifier("http-switch")
+                  .name("http-switch")
+                  .stepType(BASIC_HTTP_STEP_TYPE)
+                  .stepParameters(basicHttpStepParameters1)
+                  .adviserObtainment(AdviserObtainment.builder()
+                                         .type(HttpResponseCodeSwitchAdviser.ADVISER_TYPE)
+                                         .parameters(HttpResponseCodeSwitchAdviserParameters.builder()
+                                                         .responseCodeNodeIdMapping(200, dummyNode1Id)
+                                                         .responseCodeNodeIdMapping(404, dummyNode2Id)
+                                                         .build())
+                                         .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(http1Id)
+                  .identifier("http1")
+                  .name("http1")
+                  .stepType(BASIC_HTTP_STEP_TYPE)
+                  .stepParameters(basicHttpStepParameters1)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(http2Id)
+                  .identifier("http2")
+                  .name("http2")
+                  .stepType(BASIC_HTTP_STEP_TYPE)
+                  .stepParameters(basicHttpStepParameters1)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNode1Id)
+                  .identifier("dummy1")
+                  .name("dummy1")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .refObject(OutcomeRefObject.builder().name("http").producerId(httpSwitchId).build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNode2Id)
+                  .identifier("dummy2")
+                  .name("dummy2")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummuNodeId)
+                  .identifier("dummy-final")
+                  .name("dummy-final")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                              .build())
                   .build())
         .build();

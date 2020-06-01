@@ -6,6 +6,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
+import io.harness.resource.Graph;
 
 @OwnedBy(CDC)
 @Redesign
@@ -27,6 +28,10 @@ public interface CustomExecutionService {
   PlanExecution executeSectionChainPlan();
 
   PlanExecution testInfraState();
+
+  PlanExecution testGraphPlan();
+
+  Graph getGraph(String executionPlanId);
 
   // Interrupts
 

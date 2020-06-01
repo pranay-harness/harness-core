@@ -4,23 +4,28 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.engine.ExecutionEngine;
+import io.harness.engine.GraphGenerator;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.input.InputArgs;
+import io.harness.resource.Graph;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 
 @OwnedBy(CDC)
 @Redesign
+@Singleton
 public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Inject private ExecutionEngine engine;
   @Inject private InterruptManager interruptManager;
+  @Inject private GraphGenerator graphGenerator;
 
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
   private static final String APP_ID = "XEsfW6D_RJm1IaGpDidD3g";
@@ -74,8 +79,18 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
+  public PlanExecution testGraphPlan() {
+    return engine.startExecution(CustomExecutionUtils.provideGraphTestPlan(), getInputArgs(), getEmbeddedUser());
+  }
+
+  @Override
   public Interrupt registerInterrupt(String planExecutionId) {
     return interruptManager.register(planExecutionId, ABORT_ALL, getEmbeddedUser(), null);
+  }
+
+  @Override
+  public Graph getGraph(String planExecutionId) {
+    return Graph.builder().graphVertex(graphGenerator.generateGraphVertex(planExecutionId)).build();
   }
 
   private EmbeddedUser getEmbeddedUser() {

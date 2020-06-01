@@ -10,9 +10,13 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.engine.ExecutionEngine;
+import io.harness.engine.GraphGenerator;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.Plan;
+import io.harness.resource.Graph;
+import io.harness.resource.GraphVertex;
 import io.harness.rule.Owner;
+import io.harness.state.core.dummy.DummyStep;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,6 +31,7 @@ import software.wings.security.UserThreadLocal;
 public class CustomExecutionServiceImplTest extends WingsBaseTest {
   @Inject private TestUtils testUtils;
   @Mock private ExecutionEngine executionEngine;
+  @Mock private GraphGenerator graphGenerator;
   @InjectMocks @Inject private CustomExecutionServiceImpl customExecutionService;
 
   private User user;
@@ -91,5 +96,24 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(planExecutionResponse.getPlan()).isEqualTo(expectedRetryPlan);
     assertThat(planExecutionResponse.getStatus()).isEqualTo(RUNNING);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldReturnGraph() {
+    String planExecutionId = "planExecutionId";
+    GraphVertex graphVertex = GraphVertex.builder()
+                                  .uuid("id")
+                                  .name("node1")
+                                  .stepType(DummyStep.STEP_TYPE.getType())
+                                  .next(null)
+                                  .subgraph(null)
+                                  .build();
+    when(graphGenerator.generateGraphVertex(planExecutionId)).thenReturn(graphVertex);
+    Graph graph = customExecutionService.getGraph(planExecutionId);
+
+    assertThat(graph).isNotNull();
+    assertThat(graph.getGraphVertex().getUuid()).isEqualTo(graphVertex.getUuid());
   }
 }
