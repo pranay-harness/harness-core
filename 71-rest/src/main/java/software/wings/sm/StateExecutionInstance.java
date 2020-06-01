@@ -76,6 +76,7 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
   private boolean contextTransition;
   private boolean rollback;
   private String delegateTaskId;
+  private boolean selectionLogsTrackingForTaskEnabled;
   private String rollbackPhaseName;
 
   private LinkedList<ContextElement> contextElements = new LinkedList<>();

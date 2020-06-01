@@ -505,14 +505,16 @@ public class GraphRenderer {
   }
 
   GraphNode convertToNode(StateExecutionInstance instance) {
-    GraphNodeBuilder builder = GraphNode.builder()
-                                   .id(instance.getUuid())
-                                   .name(instance.getDisplayName())
-                                   .type(instance.getStateType())
-                                   .rollback(instance.isRollback())
-                                   .status(String.valueOf(instance.getStatus()).toUpperCase())
-                                   .hasInspection(instance.isHasInspection())
-                                   .delegateTaskId(instance.getDelegateTaskId());
+    GraphNodeBuilder builder =
+        GraphNode.builder()
+            .id(instance.getUuid())
+            .name(instance.getDisplayName())
+            .type(instance.getStateType())
+            .rollback(instance.isRollback())
+            .status(String.valueOf(instance.getStatus()).toUpperCase())
+            .hasInspection(instance.isHasInspection())
+            .delegateTaskId(instance.getDelegateTaskId())
+            .selectionLogsTrackingForTaskEnabled(instance.isSelectionLogsTrackingForTaskEnabled());
 
     if (instance.getStateExecutionDataHistory() != null) {
       builder.executionHistoryCount(instance.getStateExecutionDataHistory().size());

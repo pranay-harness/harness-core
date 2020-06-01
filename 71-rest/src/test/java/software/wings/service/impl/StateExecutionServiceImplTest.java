@@ -316,6 +316,8 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     assertThat(dbStateExecutionInstance.isHasInspection()).isEqualTo(stateExecutionInstance.isHasInspection());
     assertThat(dbStateExecutionInstance.getAppId()).isEqualTo(stateExecutionInstance.getAppId());
     assertThat(dbStateExecutionInstance.getDelegateTaskId()).isEqualTo(stateExecutionInstance.getDelegateTaskId());
+    assertThat(dbStateExecutionInstance.isSelectionLogsTrackingForTaskEnabled())
+        .isEqualTo(stateExecutionInstance.isSelectionLogsTrackingForTaskEnabled());
   }
 
   private StateExecutionInstance createStateExecutionInstance() {
@@ -347,6 +349,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     stateExecutionInstance.setInterruptHistory(Arrays.asList(ExecutionInterruptEffect.builder().build()));
     stateExecutionInstance.setHasInspection(false);
     stateExecutionInstance.setDelegateTaskId(generateUuid());
+    stateExecutionInstance.setSelectionLogsTrackingForTaskEnabled(true);
 
     return stateExecutionInstance;
   }

@@ -187,6 +187,7 @@ public class GraphRendererTest extends WingsBaseTest {
 
     instance.setStateParams(ImmutableMap.of("key", "value"));
     instance.setDelegateTaskId(generateUuid());
+    instance.setSelectionLogsTrackingForTaskEnabled(true);
 
     GraphNode node = graphRenderer.convertToNode(instance);
 
@@ -197,6 +198,8 @@ public class GraphRendererTest extends WingsBaseTest {
     assertThat(node.getStatus()).isEqualTo(instance.getStatus().name());
     assertThat(node.getProperties()).isEqualTo(instance.getStateParams());
     assertThat(node.getDelegateTaskId()).isEqualTo(instance.getDelegateTaskId());
+    assertThat(node.isSelectionLogsTrackingForTaskEnabled())
+        .isEqualTo(instance.isSelectionLogsTrackingForTaskEnabled());
   }
 
   @Test

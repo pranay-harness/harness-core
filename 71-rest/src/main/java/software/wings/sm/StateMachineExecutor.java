@@ -56,6 +56,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.config.PipelineConfig;
@@ -1298,7 +1299,12 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
 
     if (isNotBlank(delegateTaskId)) {
-      ops.set("delegateTaskId", delegateTaskId);
+      ops.set(StateExecutionInstanceKeys.delegateTaskId, delegateTaskId);
+
+      DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class, delegateTaskId);
+      if (delegateTask != null && delegateTask.isSelectionLogsTrackingEnabled()) {
+        ops.set(StateExecutionInstanceKeys.selectionLogsTrackingForTaskEnabled, Boolean.TRUE);
+      }
     }
 
     Query<StateExecutionInstance> query =

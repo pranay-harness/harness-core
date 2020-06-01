@@ -84,6 +84,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
                                  .project(StateExecutionInstanceKeys.hasInspection, true)
                                  .project(StateExecutionInstanceKeys.appId, true)
                                  .project(StateExecutionInstanceKeys.delegateTaskId, true)
+                                 .project(StateExecutionInstanceKeys.selectionLogsTrackingForTaskEnabled, true)
                                  .fetch())) {
       for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
         stateExecutionInstance.getStateExecutionMap().entrySet().removeIf(
