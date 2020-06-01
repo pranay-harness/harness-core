@@ -1722,7 +1722,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               sleep(ofSeconds(delay));
               try {
                 logger.info("Manager check whether to fail task");
-                execute(managerClient.failIfAllDelegatesFailed(
+                execute(delegateAgentManagerClient.failIfAllDelegatesFailed(
                     delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
               } catch (IOException e) {
                 logger.error("Unable to tell manager to check whether to fail for task", e);
