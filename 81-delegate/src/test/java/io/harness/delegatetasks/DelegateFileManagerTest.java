@@ -17,6 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.service.DelegateFileManagerImpl;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.managerclient.ManagerClient;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
@@ -57,11 +58,12 @@ public class DelegateFileManagerTest extends CategoryTest {
 
   @Mock ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
   @Mock ManagerClient managerClient;
+  @Mock DelegateAgentManagerClient delegateAgentManagerClient;
 
   DelegateConfiguration delegateConfiguration = DelegateConfiguration.builder().maxCachedArtifacts(10).build();
   @InjectMocks
   private DelegateFileManagerImpl delegateFileManager =
-      new DelegateFileManagerImpl(managerClient, delegateConfiguration);
+      new DelegateFileManagerImpl(managerClient, delegateAgentManagerClient, delegateConfiguration);
 
   private static final String ACCESS_KEY = "ACCESS_KEY";
   private static final String ACCOUNT_ID = "ACCOUNT_ID";

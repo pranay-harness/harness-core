@@ -68,10 +68,6 @@ public interface ManagerClient {
   Call<ResponseBody> downloadFile(
       @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
 
-  @GET("agent/delegateFiles/downloadConfig")
-  Call<ResponseBody> downloadFile(@Query("fileId") String fileId, @Query("accountId") String accountId,
-      @Query("appId") String appId, @Query("activityId") String activityId);
-
   @GET("agent/delegateFiles/metainfo")
   Call<RestResponse<DelegateFile>> getMetaInfo(
       @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
