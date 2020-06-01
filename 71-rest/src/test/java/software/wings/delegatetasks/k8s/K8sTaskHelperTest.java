@@ -39,6 +39,7 @@ import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DAEMON_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.STATEFUL_SET_YAML;
+import static software.wings.delegatetasks.k8s.K8sTestHelper.configMap;
 import static software.wings.utils.KubernetesConvention.ReleaseHistoryKeyName;
 
 import com.google.common.base.Charsets;
@@ -596,16 +597,15 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void delete() throws Exception {
     final ReleaseHistory releaseHistory = ReleaseHistory.createNew();
-    releaseHistory.getReleases().add(buildRelease(Status.Succeeded, 0));
-    doReturn(buildProcessResult(0)).when(spyHelper).runK8sExecutable(any(), any(), any());
+    releaseHistory.getReleases().add(K8sTestHelper.buildRelease(Status.Succeeded, 0));
+    doReturn(K8sTestHelper.buildProcessResult(0)).when(spyHelper).runK8sExecutable(any(), any(), any());
     spyHelper.delete(Kubectl.client("kubectl", "kubeconfig"), K8sDelegateTaskParams.builder().build(),
-        asList(K8sTestHelper.configMap().getResourceId()), logCallback);
+        asList(configMap().getResourceId()), logCallback);
     ArgumentCaptor<DeleteCommand> captor = ArgumentCaptor.forClass(DeleteCommand.class);
     verify(spyHelper, times(1)).runK8sExecutable(any(), any(), captor.capture());
     final List<DeleteCommand> deleteCommands = captor.getAllValues();
     assertThat(deleteCommands).hasSize(1);
-    assertThat(deleteCommands.get(0).command())
-        .isEqualTo("kubectl --kubeconfig=kubeconfig delete configMap/config-map --namespace=default");
+    assertThat(deleteCommands.get(0).command()).isEqualTo("kubectl --kubeconfig=kubeconfig delete ConfigMap/configMap");
   }
 
   @Test
@@ -619,46 +619,36 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
   private void cleanUpAllOlderReleases() throws Exception {
     final ReleaseHistory releaseHistory = ReleaseHistory.createNew();
-    releaseHistory.getReleases().add(buildRelease(Status.Succeeded, 3));
-    releaseHistory.getReleases().add(buildRelease(Status.Succeeded, 2));
-    releaseHistory.getReleases().add(buildRelease(Status.Succeeded, 1));
-    releaseHistory.getReleases().add(buildRelease(Status.Succeeded, 0));
-    doReturn(buildProcessResult(0)).when(spyHelper).runK8sExecutable(any(), any(), any());
+    releaseHistory.getReleases().add(K8sTestHelper.buildRelease(Status.Succeeded, 3));
+    releaseHistory.getReleases().add(K8sTestHelper.buildRelease(Status.Succeeded, 2));
+    releaseHistory.getReleases().add(K8sTestHelper.buildRelease(Status.Succeeded, 1));
+    releaseHistory.getReleases().add(K8sTestHelper.buildRelease(Status.Succeeded, 0));
+    doReturn(K8sTestHelper.buildProcessResult(0)).when(spyHelper).runK8sExecutable(any(), any(), any());
     spyHelper.cleanup(
         Kubectl.client("kubectl", "kubeconfig"), K8sDelegateTaskParams.builder().build(), releaseHistory, logCallback);
     ArgumentCaptor<DeleteCommand> captor = ArgumentCaptor.forClass(DeleteCommand.class);
     verify(spyHelper, times(3)).runK8sExecutable(any(), any(), captor.capture());
     final List<DeleteCommand> deleteCommands = captor.getAllValues();
     assertThat(releaseHistory.getReleases()).hasSize(1);
-    assertThat(deleteCommands.get(0).command())
-        .isEqualTo("kubectl --kubeconfig=kubeconfig delete configMap/config-map --namespace=default");
+    assertThat(deleteCommands.get(0).command()).isEqualTo("kubectl --kubeconfig=kubeconfig delete ConfigMap/configMap");
     reset(spyHelper);
   }
 
   private void cleanUpIfMultipleFailedReleases() throws Exception {
     final ReleaseHistory releaseHistory = ReleaseHistory.createNew();
-    releaseHistory.getReleases().add(buildRelease(Status.Failed, 3));
-    releaseHistory.getReleases().add(buildRelease(Status.Failed, 2));
-    releaseHistory.getReleases().add(buildRelease(Status.Succeeded, 1));
-    releaseHistory.getReleases().add(buildRelease(Status.Failed, 0));
-    doReturn(buildProcessResult(0)).when(spyHelper).runK8sExecutable(any(), any(), any());
+    releaseHistory.getReleases().add(K8sTestHelper.buildRelease(Status.Failed, 3));
+    releaseHistory.getReleases().add(K8sTestHelper.buildRelease(Status.Failed, 2));
+    releaseHistory.getReleases().add(K8sTestHelper.buildRelease(Status.Succeeded, 1));
+    releaseHistory.getReleases().add(K8sTestHelper.buildRelease(Status.Failed, 0));
+    doReturn(K8sTestHelper.buildProcessResult(0)).when(spyHelper).runK8sExecutable(any(), any(), any());
     spyHelper.cleanup(
         Kubectl.client("kubectl", "kubeconfig"), K8sDelegateTaskParams.builder().build(), releaseHistory, logCallback);
     ArgumentCaptor<DeleteCommand> captor = ArgumentCaptor.forClass(DeleteCommand.class);
     verify(spyHelper, times(3)).runK8sExecutable(any(), any(), captor.capture());
     final List<DeleteCommand> deleteCommands = captor.getAllValues();
     assertThat(releaseHistory.getReleases()).hasSize(1);
-    assertThat(deleteCommands.get(0).command())
-        .isEqualTo("kubectl --kubeconfig=kubeconfig delete configMap/config-map --namespace=default");
+    assertThat(deleteCommands.get(0).command()).isEqualTo("kubectl --kubeconfig=kubeconfig delete ConfigMap/configMap");
     reset(spyHelper);
-  }
-
-  private Release buildRelease(Status status, int number) throws IOException {
-    return Release.builder()
-        .number(number)
-        .resources(asList(K8sTestHelper.deployment().getResourceId(), K8sTestHelper.configMap().getResourceId()))
-        .status(status)
-        .build();
   }
 
   private void cleanUpIfOnly1FailedRelease() throws Exception {
@@ -672,20 +662,12 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     assertThat(releaseHistory.getReleases()).isEmpty();
   }
 
-  private ProcessResult buildProcessResult(int exitCode) {
-    return new ProcessResult(exitCode, new ProcessOutput(null));
-  }
-
-  private ProcessResult buildProcessResult(int exitCode, String output) {
-    return new ProcessResult(exitCode, new ProcessOutput(output.getBytes()));
-  }
-
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void getCurrentReplicas() throws Exception {
-    doReturn(buildProcessResult(0, "3"))
-        .doReturn(buildProcessResult(1))
+    doReturn(K8sTestHelper.buildProcessResult(0, "3"))
+        .doReturn(K8sTestHelper.buildProcessResult(1))
         .when(spyHelper)
         .runK8sExecutableSilent(any(), any());
     assertThat(spyHelper.getCurrentReplicas(Kubectl.client("kubectl", "kubeconfig"),
@@ -701,7 +683,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void getLatestRevisionForDeploymentConfig() throws Exception {
-    doReturn(buildProcessResult(0,
+    doReturn(K8sTestHelper.buildProcessResult(0,
                  "deploymentconfig.apps.openshift.io/anshul-dc\n"
                      + "REVISION\tSTATUS\t\tCAUSE\n"
                      + "137\t\tComplete\tconfig change\n"
@@ -735,7 +717,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void getLatestRevisionForDeployment() throws Exception {
     doReturn(
-        buildProcessResult(0,
+        K8sTestHelper.buildProcessResult(0,
             "deployments \"nginx-deployment\"\n"
                 + "REVISION    CHANGE-CAUSE\n"
                 + "1           kubectl apply --filename=https://k8s.io/examples/controllers/nginx-deployment.yaml --record=true\n"
@@ -762,7 +744,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
             captor.capture());
     RolloutHistoryCommand rolloutHistoryCommand = captor.getValue();
     assertThat(rolloutHistoryCommand.command())
-        .isEqualTo("kubectl --kubeconfig=kubeconfig rollout history Deployment/nginx-deployment --namespace=default");
+        .isEqualTo("kubectl --kubeconfig=kubeconfig rollout history Deployment/nginx-deployment");
     assertThat(latestRevision).isEqualTo("3");
   }
 
@@ -813,7 +795,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     helper.setNamespaceToKubernetesResourcesIfRequired(emptyList(), "default");
     KubernetesResource deployment = K8sTestHelper.deployment();
     deployment.getResourceId().setNamespace(null);
-    KubernetesResource configMap = K8sTestHelper.configMap();
+    KubernetesResource configMap = configMap();
     configMap.getResourceId().setNamespace("default");
     helper.setNamespaceToKubernetesResourcesIfRequired(asList(deployment, configMap), "harness");
     assertThat(deployment.getResourceId().getNamespace()).isEqualTo("harness");
@@ -825,18 +807,18 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void getResourcesInStringFormat() throws IOException {
     final String resourcesInStringFormat = K8sTaskHelper.getResourcesInStringFormat(
-        asList(K8sTestHelper.deployment().getResourceId(), K8sTestHelper.configMap().getResourceId()));
+        asList(K8sTestHelper.deployment().getResourceId(), configMap().getResourceId()));
     assertThat(resourcesInStringFormat)
         .isEqualTo("\n"
-            + "- default/Deployment/nginx-deployment\n"
-            + "- default/configMap/config-map");
+            + "- Deployment/nginx-deployment\n"
+            + "- ConfigMap/configMap");
   }
 
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void describe() throws Exception {
-    doReturn(buildProcessResult(0)).when(spyHelper).runK8sExecutable(any(), any(), any());
+    doReturn(K8sTestHelper.buildProcessResult(0)).when(spyHelper).runK8sExecutable(any(), any(), any());
     spyHelper.describe(Kubectl.client("kubectl", "kubeconfig"),
         K8sDelegateTaskParams.builder().workingDirectory("./working-dir").build(), logCallback);
     ArgumentCaptor<DescribeCommand> captor = ArgumentCaptor.forClass(DescribeCommand.class);

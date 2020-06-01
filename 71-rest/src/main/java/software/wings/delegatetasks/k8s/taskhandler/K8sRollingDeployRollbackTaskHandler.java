@@ -16,6 +16,7 @@ import static software.wings.delegatetasks.k8s.K8sTaskHelper.getExecutionLogOutp
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.getOcCommandPrefix;
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.ocRolloutUndoCommand;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -231,8 +232,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
              LogOutputStream logErrorStream = getExecutionLogOutputStream(executionLogCallback, ERROR);) {
           printableCommand = new StringBuilder().append("\n").append(printableCommand).append("\n\n").toString();
           logOutputStream.write(printableCommand.getBytes(StandardCharsets.UTF_8));
-          result = Utils.executeScript(
-              k8sDelegateTaskParams.getWorkingDirectory(), rolloutUndoCommand, logOutputStream, logErrorStream);
+          result = executeScript(k8sDelegateTaskParams, rolloutUndoCommand, logOutputStream, logErrorStream);
         }
       } else {
         RolloutUndoCommand rolloutUndoCommand =
@@ -242,8 +242,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
                 .namespace(kubernetesResourceIdRevision.getWorkload().getNamespace())
                 .toRevision(kubernetesResourceIdRevision.getRevision());
 
-        result = K8sTaskHelper.executeCommand(
-            rolloutUndoCommand, k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
+        result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, rolloutUndoCommand);
       }
 
       if (result.getExitValue() != 0) {
@@ -258,6 +257,20 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
     }
 
     return true;
+  }
+
+  @VisibleForTesting
+  ProcessResult executeScript(K8sDelegateTaskParams k8sDelegateTaskParams, String rolloutUndoCommand,
+      LogOutputStream logOutputStream, LogOutputStream logErrorStream) throws Exception {
+    return Utils.executeScript(
+        k8sDelegateTaskParams.getWorkingDirectory(), rolloutUndoCommand, logOutputStream, logErrorStream);
+  }
+
+  @VisibleForTesting
+  ProcessResult runK8sExecutable(K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback,
+      RolloutUndoCommand rolloutUndoCommand) throws Exception {
+    return K8sTaskHelper.executeCommand(
+        rolloutUndoCommand, k8sDelegateTaskParams.getWorkingDirectory(), executionLogCallback);
   }
 
   private String getRolloutUndoCommandForDeploymentConfig(
