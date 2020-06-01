@@ -1,13 +1,12 @@
 package io.harness.utils;
 
-import io.harness.expression.EngineExpressionValue;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import lombok.Getter;
 
-public class ParameterField<T> implements EngineExpressionValue {
+public class ParameterField<T> {
   @Getter private final String expressionValue;
-  @Getter private final boolean isExpression;
-  @Getter private final T value;
+  @Getter private boolean isExpression;
+  @Getter private T value;
 
   private static final ParameterField<?> EMPTY = new ParameterField<>(null, false, null);
 
@@ -24,16 +23,17 @@ public class ParameterField<T> implements EngineExpressionValue {
     this.isExpression = isExpression;
     this.expressionValue = expressionValue;
   }
+
   public static <T> ParameterField<T> ofNull() {
     return (ParameterField<T>) EMPTY;
   }
 
-  @Override
-  public Object fetchConcreteValue() {
-    return isExpression ? expressionValue : value;
-  }
-
   public Object get(String key) {
     return isExpression ? expressionValue : ExpressionEvaluatorUtils.fetchField(value, key).orElse(null);
+  }
+
+  public void updateWithValue(Object newValue) {
+    isExpression = false;
+    value = (T) newValue;
   }
 }

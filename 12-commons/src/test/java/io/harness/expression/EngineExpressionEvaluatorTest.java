@@ -26,7 +26,7 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testWithoutHarnessExpressions() {
     EngineExpressionEvaluator evaluator = prepareEngineExpressionEvaluator(null);
-    assertThat(evaluator.renderExpression(null)).isNull();
+    assertThat(evaluator.renderExpression(null)).isEqualTo(null);
     assertThat(evaluator.renderExpression("")).isEqualTo("");
     assertThat(evaluator.renderExpression("true")).isEqualTo("true");
     assertThat(evaluator.renderExpression("true == false")).isEqualTo("true == false");

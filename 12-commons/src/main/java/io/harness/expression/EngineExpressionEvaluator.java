@@ -5,7 +5,9 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.reflection.ReflectionUtils;
+import io.harness.exception.CriticalExpressionEvaluationException;
+import io.harness.exception.FunctorException;
+import io.harness.utils.ParameterField;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.validation.constraints.NotNull;
@@ -91,7 +94,7 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc {
    * @return the resolved object (this can be the same object or a new one)
    */
   public Object resolve(Object o) {
-    return ReflectionUtils.updateStrings(o, f -> f.isAnnotationPresent(NotExpression.class), this ::renderExpression);
+    return ExpressionEvaluatorUtils.updateExpressions(o, this ::evaluateExpressionOptional);
   }
 
   public String renderExpression(String expression) {
@@ -105,44 +108,64 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc {
 
   public Object evaluateExpression(String expression) {
     // TODO(gpahal): Add support for variable tracking in this method.
-    // NOTE: Don't check for hasExpressions here. Customers might give normal expressions like '"true" != "false"'
-    if (expression == null) {
+    // NOTE: Don't check for hasExpressions here. There might be normal expressions like '"true" != "false"'
+    if (EmptyPredicate.isEmpty(expression)) {
       return null;
     }
 
     EngineJexlContext ctx = prepareContext();
-    return evaluateRecursive(expression, ctx, 0);
+    return evaluateExpressionInternal(expression, ctx, 0);
   }
 
-  private Object evaluateRecursive(String originalExpression, EngineJexlContext ctx, int depth) {
-    String expression = stripDelimiters(originalExpression);
-    if (expression == null || depth > 5) {
-      return null;
+  public Optional<Object> evaluateExpressionOptional(String expression) {
+    Object value = evaluateExpression(expression);
+    if (value instanceof String && hasExpressions((String) value)) {
+      return Optional.empty();
+    }
+    return Optional.of(value);
+  }
+
+  private Object evaluateExpressionInternal(String expression, EngineJexlContext ctx, int depth) {
+    String normalizedExpression = stripDelimiters(expression);
+    if (EmptyPredicate.isEmpty(normalizedExpression)) {
+      return normalizedExpression;
+    }
+    if (depth >= ExpressionEvaluatorUtils.DEPTH_LIMIT) {
+      throw new CriticalExpressionEvaluationException("Exponentially growing interpretation", expression);
     }
 
     Object value;
     try {
-      value = evaluate(expression, ctx);
+      value = evaluate(normalizedExpression, ctx);
     } catch (JexlException ex) {
-      logger.debug(format("Failed to evaluate expression: %s", originalExpression), ex);
-      return originalExpression;
+      if (ex.getCause() instanceof FunctorException) {
+        throw(FunctorException) ex.getCause();
+      }
+
+      logger.debug(format("Failed to evaluate expression: %s", expression), ex);
+      return expression;
     }
+
     if (value instanceof String && hasExpressions((String) value)) {
-      return evaluateRecursive((String) value, ctx, depth + 1);
+      return evaluateExpressionInternal((String) value, ctx, depth + 1);
     }
     return value;
   }
 
+  /**
+   * Evaluate an expression with the given context. This variant is non-recursive.
+   */
   @Override
-  public Object evaluate(String expression, JexlContext jexlContext) {
+  public Object evaluate(String expression, JexlContext ctx) {
     if (expression == null) {
       return null;
     }
 
     JexlExpression jexlExpression = engine.createExpression(expression);
-    Object value = jexlExpression.evaluate(jexlContext);
-    if (value instanceof EngineExpressionValue) {
-      return ((EngineExpressionValue) value).fetchConcreteValue();
+    Object value = jexlExpression.evaluate(ctx);
+    if (value instanceof ParameterField) {
+      ParameterField<?> parameterField = (ParameterField<?>) value;
+      return parameterField.isExpression() ? parameterField.getExpressionValue() : parameterField.getValue();
     }
     return value;
   }
@@ -162,7 +185,7 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc {
 
   private static String stripDelimiters(String str) {
     if (EmptyPredicate.isEmpty(str)) {
-      return "";
+      return str;
     }
 
     StrSubstitutor strSubstitutor = new StrSubstitutor(new IdentityStrLookup());
