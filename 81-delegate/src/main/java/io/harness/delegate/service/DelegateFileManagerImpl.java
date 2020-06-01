@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.managerclient.ManagerClient;
 import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +59,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   private static final long ARTIFACT_FILE_SIZE_LIMIT = 4L * 1024L * 1024L * 1024L; // 4GB
 
   private ManagerClient managerClient;
+  private DelegateAgentManagerClient delegateAgentManagerClient;
   private DelegateConfiguration delegateConfiguration;
 
   private static final LoadingCache<String, Object> fileIdLocks =
@@ -69,8 +71,10 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
   @Inject
-  public DelegateFileManagerImpl(ManagerClient managerClient, DelegateConfiguration delegateConfiguration) {
+  public DelegateFileManagerImpl(ManagerClient managerClient, DelegateAgentManagerClient delegateAgentManagerClient,
+      DelegateConfiguration delegateConfiguration) {
     this.managerClient = managerClient;
+    this.delegateAgentManagerClient = delegateAgentManagerClient;
     this.delegateConfiguration = delegateConfiguration;
     Executors
         .newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("delegate-file-manager").build())
@@ -200,7 +204,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
       throws IOException {
     Response<ResponseBody> response = null;
     try {
-      response = managerClient.downloadFile(fileId, accountId, appId, activityId).execute();
+      response = delegateAgentManagerClient.downloadFile(fileId, accountId, appId, activityId).execute();
       return response.body().byteStream();
     } finally {
       if (response != null && !response.isSuccessful()) {

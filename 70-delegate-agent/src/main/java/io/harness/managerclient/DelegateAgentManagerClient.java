@@ -45,6 +45,10 @@ public interface DelegateAgentManagerClient {
   Call<RestResponse> failIfAllDelegatesFailed(
       @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
 
+  @GET("agent/delegateFiles/downloadConfig")
+  Call<ResponseBody> downloadFile(@Query("fileId") String fileId, @Query("accountId") String accountId,
+      @Query("appId") String appId, @Query("activityId") String activityId);
+
   @GET("agent/delegates/delegateScripts")
   Call<RestResponse<DelegateScripts>> getDelegateScripts(
       @Query("accountId") String accountId, @Query("delegateVersion") String delegateVersion);
