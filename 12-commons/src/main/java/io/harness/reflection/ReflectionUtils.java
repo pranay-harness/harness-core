@@ -6,17 +6,14 @@ import static java.lang.String.format;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -92,119 +89,6 @@ public class ReflectionUtils {
       }
       c = c.getSuperclass();
     }
-  }
-
-  /**
-   * Update string values inside object recursively. The new value is obtained using the functor. If the skipPredicate
-   * returns true for a field, it is skipped.
-   *
-   * @param o             the object to update
-   * @param skipPredicate the predicate which checks if a field should be skipped
-   * @param functor       the functor which provides the new value
-   * @return the new object with updated strings (this can be done in-place or a new object can be returned)
-   */
-  public static Object updateStrings(Object o, Predicate<Field> skipPredicate, Functor functor) {
-    Object updatedObj = updateStringInternal(o, skipPredicate, functor, new HashSet<>());
-    return updatedObj == null ? o : updatedObj;
-  }
-
-  private static Object updateStringInternal(
-      Object obj, Predicate<Field> skipPredicate, Functor functor, Set<Integer> cache) {
-    if (obj == null) {
-      return null;
-    }
-
-    Class<?> c = obj.getClass();
-    if (ClassUtils.isPrimitiveOrWrapper(c)) {
-      return null;
-    }
-
-    if (obj instanceof String) {
-      String oldVal = (String) obj;
-      String newVal = functor.update(oldVal);
-      return oldVal.equals(newVal) ? null : newVal;
-    }
-
-    // In case of array, update in-place and return null.
-    if (c.isArray()) {
-      if (c.getComponentType().isPrimitive()) {
-        return false;
-      }
-
-      int length = Array.getLength(obj);
-      for (int i = 0; i < length; i++) {
-        Object arrObj = Array.get(obj, i);
-        Object newArrObj = updateStringInternal(arrObj, skipPredicate, functor, cache);
-        if (newArrObj != null) {
-          Array.set(obj, i, newArrObj);
-        }
-      }
-
-      return null;
-    }
-
-    // In case of object, iterate over fields and update them in a similar manner.
-    boolean updated = updateStringFields(obj, skipPredicate, functor, cache);
-    if (!updated) {
-      return null;
-    }
-
-    return obj;
-  }
-
-  private static boolean updateStringFields(
-      Object obj, Predicate<Field> skipPredicate, Functor functor, Set<Integer> cache) {
-    if (obj == null) {
-      return false;
-    }
-
-    int hashCode = System.identityHashCode(obj);
-    if (cache.contains(hashCode)) {
-      return false;
-    } else {
-      cache.add(hashCode);
-    }
-
-    Class<?> c = obj.getClass();
-    boolean updated = false;
-    while (c.getSuperclass() != null) {
-      for (Field f : c.getDeclaredFields()) {
-        // Ignore field if skipPredicate returns true or if the field is static.
-        if (skipPredicate.test(f) || Modifier.isStatic(f.getModifiers())) {
-          continue;
-        }
-
-        boolean isAccessible = f.isAccessible();
-        f.setAccessible(true);
-        try {
-          if (updateStringFieldsInternal(obj, f, skipPredicate, functor, cache)) {
-            updated = true;
-          }
-          f.setAccessible(isAccessible);
-        } catch (IllegalAccessException ignored) {
-          logger.error("Field [{}] is not accessible", f.getName());
-        }
-      }
-      c = c.getSuperclass();
-    }
-
-    return updated;
-  }
-
-  private static boolean updateStringFieldsInternal(Object o, Field f, Predicate<Field> skipPredicate, Functor functor,
-      Set<Integer> cache) throws IllegalAccessException {
-    if (f == null) {
-      return false;
-    }
-
-    Object obj = f.get(o);
-    Object updatedObj = updateStringInternal(obj, skipPredicate, functor, cache);
-    if (updatedObj != null) {
-      f.set(o, updatedObj);
-      return true;
-    }
-
-    return false;
   }
 
   public static String getAccessorFieldName(String methodName) {

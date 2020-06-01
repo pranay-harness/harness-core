@@ -3,6 +3,7 @@ package io.harness.expression;
 import static java.lang.String.format;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.FunctorException;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +54,11 @@ public class EngineJexlContext implements JexlContext {
           try {
             object = engineExpressionEvaluator.evaluate(prefixedKey, this);
           } catch (JexlException ex) {
-            logger.debug(format("Failed to evaluate expression: %s", prefixedKey), ex);
+            if (ex.getCause() instanceof FunctorException) {
+              throw(FunctorException) ex.getCause();
+            }
+
+            logger.debug(format("Failed to evaluate prefixed key: %s", prefixedKey), ex);
           } finally {
             recursive = false;
           }

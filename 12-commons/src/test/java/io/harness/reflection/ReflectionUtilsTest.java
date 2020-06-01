@@ -1,7 +1,6 @@
 package io.harness.reflection;
 
 import static io.harness.rule.OwnerRule.AADITI;
-import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -10,16 +9,11 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import lombok.Builder;
-import lombok.Data;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -33,7 +27,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ReflectionUtilsTest extends CategoryTest {
@@ -161,75 +154,6 @@ public class ReflectionUtilsTest extends CategoryTest {
     ReflectionUtils.updateFieldValues(
         dummy, f -> f.isAnnotationPresent(DummyAnnotation.class), value -> value + " hello world");
     assertThat(dummy.annotatedListField).isEqualTo(ImmutableList.of("one hello world", "two hello world"));
-  }
-
-  @Data
-  @Builder
-  private static class DummyObj {
-    List<Pair<String, String>> pairs;
-    Map<String, Object> map;
-    Set<String> set;
-    int intVal;
-    String strVal;
-    @DummyAnnotation String strValIgnored;
-    Object obj;
-    String[][] strArrArr;
-  }
-
-  @Test
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
-  public void testUpdateStringFieldValues() {
-    Object obj = ReflectionUtils.updateStrings(null, f -> false, str -> str);
-    assertThat(obj).isNull();
-
-    String original = "original";
-    String updated = "updated";
-    List<Pair<String, String>> pairs =
-        asList(ImmutablePair.of(original, original), ImmutablePair.of(original, original));
-    Map<String, Object> map = ImmutableMap.of("a", original, "b", 2, "c", ImmutablePair.of(1, original));
-    Set<String> set = ImmutableSet.of("a", original);
-    DummyObj dummyObjInternal = DummyObj.builder().strVal(original).strValIgnored(original).build();
-    String[][] strArrArr = new String[][] {new String[] {"a", original, "b"}, new String[] {"c", original, original}};
-    DummyObj dummyObj = DummyObj.builder()
-                            .pairs(pairs)
-                            .map(map)
-                            .set(set)
-                            .intVal(5)
-                            .strVal(original)
-                            .strValIgnored(original)
-                            .obj(dummyObjInternal)
-                            .strArrArr(strArrArr)
-                            .build();
-    dummyObjInternal.setObj(dummyObj);
-
-    ReflectionUtils.updateStrings(
-        dummyObj, f -> f.isAnnotationPresent(DummyAnnotation.class), str -> str.equals(original) ? updated : str);
-    assertThat(pairs.get(0).getLeft()).isEqualTo(updated);
-    assertThat(pairs.get(0).getRight()).isEqualTo(updated);
-    assertThat(pairs.get(1).getLeft()).isEqualTo(updated);
-    assertThat(pairs.get(1).getRight()).isEqualTo(updated);
-    assertThat(map.get("a")).isEqualTo(updated);
-    assertThat(map.get("b")).isEqualTo(2);
-    assertThat(set).containsExactlyInAnyOrder("a", updated);
-    assertThat(((Pair<Integer, String>) map.get("c")).getLeft()).isEqualTo(1);
-    assertThat(((Pair<Integer, String>) map.get("c")).getRight()).isEqualTo(updated);
-    assertThat(dummyObj.getStrVal()).isEqualTo(updated);
-    assertThat(dummyObj.getStrValIgnored()).isEqualTo(original);
-    assertThat(dummyObj.getObj()).isNotNull();
-    assertThat(dummyObjInternal.getPairs()).isNull();
-    assertThat(dummyObjInternal.getMap()).isNull();
-    assertThat(dummyObjInternal.getIntVal()).isEqualTo(0);
-    assertThat(dummyObjInternal.getStrVal()).isEqualTo(updated);
-    assertThat(dummyObjInternal.getStrValIgnored()).isEqualTo(original);
-    assertThat(dummyObjInternal.getObj()).isEqualTo(dummyObj);
-    assertThat(dummyObjInternal.getStrArrArr()).isNull();
-    assertThat(strArrArr[0][0]).isEqualTo("a");
-    assertThat(strArrArr[0][1]).isEqualTo(updated);
-    assertThat(strArrArr[0][2]).isEqualTo("b");
-    assertThat(strArrArr[1][0]).isEqualTo("c");
-    assertThat(strArrArr[1][1]).isEqualTo(updated);
-    assertThat(strArrArr[1][2]).isEqualTo(updated);
   }
 
   @Test
