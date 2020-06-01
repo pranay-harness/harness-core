@@ -20,7 +20,7 @@ public class AmbianceHelper {
   @Inject private HPersistence hPersistence;
 
   public NodeExecution obtainNodeExecution(Ambiance ambiance) {
-    String nodeInstanceId = ambiance.obtainCurrentRuntimeId();
+    String nodeInstanceId = ambiance == null ? null : ambiance.obtainCurrentRuntimeId();
     if (nodeInstanceId == null) {
       return null;
     }
@@ -28,11 +28,15 @@ public class AmbianceHelper {
   }
 
   public PlanExecution obtainExecutionInstance(Ambiance ambiance) {
-    String executionId = ambiance.getPlanExecutionId();
+    String executionId = ambiance == null ? null : ambiance.getPlanExecutionId();
     return hPersistence.createQuery(PlanExecution.class).filter(PlanExecutionKeys.uuid, executionId).get();
   }
 
   public Ambiance fetchAmbiance(NodeExecution nodeExecution) {
+    if (nodeExecution == null) {
+      return null;
+    }
+
     PlanExecution planExecution = hPersistence.createQuery(PlanExecution.class)
                                       .filter(PlanExecutionKeys.uuid, nodeExecution.getPlanExecutionId())
                                       .get();

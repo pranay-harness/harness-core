@@ -3,6 +3,8 @@ package io.harness.redesign.services;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import com.google.common.collect.ImmutableMap;
+
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.impl.fail.OnFailAdviserParameters;
@@ -40,6 +42,9 @@ import io.harness.redesign.states.wait.WaitStep;
 import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.references.OutcomeRefObject;
 import io.harness.state.StepType;
+import io.harness.state.core.dummy.DummySectionStep;
+import io.harness.state.core.dummy.DummySectionStepParameters;
+import io.harness.state.core.dummy.DummySectionStepTransput;
 import io.harness.state.core.fork.ForkStep;
 import io.harness.state.core.fork.ForkStepParameters;
 import io.harness.state.core.section.SectionStep;
@@ -437,75 +442,189 @@ public class CustomExecutionUtils {
         .build();
   }
 
+  /**
+   * Execution plan hierarchy:
+   *
+   * - section1
+   *   - sectionChild
+   *     - shell (stores to sweeping output with global name shell1)
+   * - section2
+   *   - sectionChild
+   *     - shell
+   */
   public static Plan provideSimpleShellScriptPlan() {
     String section1NodeId = generateUuid();
+    String section11NodeId = generateUuid();
     String section2NodeId = generateUuid();
+    String section21NodeId = generateUuid();
     String shellScript1NodeId = generateUuid();
     String shellScript2NodeId = generateUuid();
+    String dummyNodeId = generateUuid();
     ShellScriptStepParameters shellScript1StepParameters =
         ShellScriptStepParameters.builder()
             .executeOnDelegate(true)
             .connectionType(ShellScriptState.ConnectionType.SSH)
             .scriptType(ScriptType.BASH)
-            .scriptString("echo 'Hello, world, from script 1!'\nexport HELLO='hello!'\nexport HI='hi!'")
+            .scriptString("echo 'Hello, world, from script 1!'\n"
+                + "export HELLO='hello!'\n"
+                + "export HI='hi!'\n"
+                + "echo \"scriptType = ${scriptType}\"\n" // child
+                + "echo \"section1.f1 = ${section1.data.map.f1}\"\n" // qualified
+                + "echo \"section1.f2 = ${section1.data.map.f2}\"\n" // qualified
+                + "echo \"sectionChild.f1 = ${sectionChild.data.map.f1}\"\n" // ancestor
+                + "echo \"sectionChild.f1 = ${section1.sectionChild.data.map.f1}\"\n" // qualified
+                + "echo \"sectionChild.f2 = ${sectionChild.data.map.f2}\"\n" // ancestor
+                + "echo \"sectionChild.f2 = ${section1.sectionChild.data.map.f2}\"\n" // qualified
+                + "echo \"scriptType = ${child.scriptType}\"\n"
+                + "echo \"section1.f1 = ${qualified.section1.data.map.f1}\"\n"
+                + "echo \"section1.f2 = ${qualified.section1.data.map.f2}\"\n"
+                + "echo \"sectionChild.f1 = ${ancestor.sectionChild.data.map.f1}\"\n"
+                + "echo \"sectionChild.f1 = ${qualified.section1.sectionChild.data.map.f1}\"\n"
+                + "echo \"sectionChild.f2 = ${ancestor.sectionChild.data.map.f2}\"\n"
+                + "echo \"sectionChild.f2 = ${qualified.section1.sectionChild.data.map.f2}\"\n")
             .outputVars("HELLO,HI")
-            .sweepingOutputName("shellscript")
+            .sweepingOutputName("shell1")
             .build();
     ShellScriptStepParameters shellScript2StepParameters =
         ShellScriptStepParameters.builder()
             .executeOnDelegate(true)
             .connectionType(ShellScriptState.ConnectionType.SSH)
             .scriptType(ScriptType.BASH)
-            .scriptString(
-                "echo 'Hello, world, from script 2!'\necho \"${output.shellscript.variables.HELLO}\"\necho \"${output.shellscript.variables.HI}\"\necho \"${runtime.section1.shell1.outcome.data.activityId}\"")
+            .scriptString("echo 'Hello, world, from script 2!'\n"
+                + "echo \"shell1.HELLO = ${shell1.variables.HELLO}\"\n" // output
+                + "echo \"shell1.HI = ${shell1.variables.HI}\"\n" // output
+                + "echo \"section1.f1 = ${section1.data.map.f1}\"\n" // qualified
+                + "echo \"section1.f1 = ${section1.outcomeData.map.f1}\"\n" // qualified
+                + "echo \"section11.f1 = ${section1.sectionChild.data.map.f1}\"\n" // qualified
+                + "echo \"section11.f1 = ${section1.sectionChild.outcomeData.map.f1}\"\n" // qualified
+                + "echo \"shell1.scriptType = ${section1.sectionChild.shell.scriptType}\"\n" // qualified
+                + "echo \"shell1.activityId = ${section1.sectionChild.shell.data.activityId}\"\n" // qualified
+                + "echo \"scriptType = ${scriptType}\"\n" // child
+                + "echo \"section2.f1 = ${section2.data.map.f1}\"\n" // qualified
+                + "echo \"section2.f2 = ${section2.data.map.f2}\"\n" // qualified
+                + "echo \"sectionChild.f1 = ${sectionChild.data.map.f1}\"\n" // ancestor
+                + "echo \"sectionChild.f1 = ${section2.sectionChild.data.map.f1}\"\n" // qualified
+                + "echo \"sectionChild.f2 = ${sectionChild.data.map.f2}\"\n" // ancestor
+                + "echo \"sectionChild.f2 = ${section2.sectionChild.data.map.f2}\"\n" // qualified
+                + "echo \"shell1.HELLO = ${output.shell1.variables.HELLO}\"\n"
+                + "echo \"shell1.HI = ${output.shell1.variables.HI}\"\n"
+                + "echo \"section1.f1 = ${qualified.section1.data.map.f1}\"\n"
+                + "echo \"section1.f1 = ${qualified.section1.outcomeData.map.f1}\"\n"
+                + "echo \"section11.f1 = ${qualified.section1.sectionChild.data.map.f1}\"\n"
+                + "echo \"section11.f1 = ${qualified.section1.sectionChild.outcomeData.map.f1}\"\n"
+                + "echo \"shell1.scriptType = ${qualified.section1.sectionChild.shell.scriptType}\"\n"
+                + "echo \"shell1.activityId = ${qualified.section1.sectionChild.shell.data.activityId}\"\n"
+                + "echo \"scriptType = ${child.scriptType}\"\n"
+                + "echo \"section2.f1 = ${qualified.section2.data.map.f1}\"\n"
+                + "echo \"section2.f2 = ${qualified.section2.data.map.f2}\"\n"
+                + "echo \"sectionChild.f1 = ${ancestor.sectionChild.data.map.f1}\"\n"
+                + "echo \"sectionChild.f1 = ${qualified.section2.sectionChild.data.map.f1}\"\n"
+                + "echo \"sectionChild.f2 = ${ancestor.sectionChild.data.map.f2}\"\n"
+                + "echo \"sectionChild.f2 = ${qualified.section2.sectionChild.data.map.f2}\"\n")
             .build();
 
     return Plan.builder()
         .uuid(generateUuid())
         .startingNodeId(section1NodeId)
-        .node(PlanNode.builder()
-                  .uuid(section1NodeId)
-                  .name("Section 1")
-                  .identifier("section1")
-                  .stepType(StepType.builder().type("SECTION").build())
-                  .stepParameters(SectionStepParameters.builder().childNodeId(shellScript1NodeId).build())
-                  .adviserObtainment(
-                      AdviserObtainment.builder()
-                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
-                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(section2NodeId).build())
-                          .build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                             .build())
-                  .build())
-        .node(PlanNode.builder()
-                  .uuid(section2NodeId)
-                  .name("Section 2")
-                  .identifier("section2")
-                  .stepType(StepType.builder().type("SECTION").build())
-                  .stepParameters(SectionStepParameters.builder().childNodeId(shellScript2NodeId).build())
-                  .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                             .build())
-                  .build())
+        .node(
+            PlanNode.builder()
+                .uuid(section1NodeId)
+                .name("Section 1")
+                .identifier("section1")
+                .stepType(DummySectionStep.STEP_TYPE)
+                .stepParameters(
+                    DummySectionStepParameters.builder()
+                        .childNodeId(section11NodeId)
+                        .data(DummySectionStepTransput.builder().map(ImmutableMap.of("f1", "v11", "f2", "v12")).build())
+                        .build())
+                .adviserObtainment(
+                    AdviserObtainment.builder()
+                        .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                        .parameters(OnSuccessAdviserParameters.builder().nextNodeId(section2NodeId).build())
+                        .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                           .build())
+                .build())
+        .node(
+            PlanNode.builder()
+                .uuid(section11NodeId)
+                .name("Section 11")
+                .identifier("sectionChild")
+                .stepType(DummySectionStep.STEP_TYPE)
+                .stepParameters(
+                    DummySectionStepParameters.builder()
+                        .childNodeId(shellScript1NodeId)
+                        .data(
+                            DummySectionStepTransput.builder().map(ImmutableMap.of("f1", "v111", "f2", "v112")).build())
+                        .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                           .build())
+                .build())
+        .node(
+            PlanNode.builder()
+                .uuid(section2NodeId)
+                .name("Section 2")
+                .identifier("section2")
+                .stepType(DummySectionStep.STEP_TYPE)
+                .stepParameters(
+                    DummySectionStepParameters.builder()
+                        .childNodeId(section21NodeId)
+                        .data(DummySectionStepTransput.builder().map(ImmutableMap.of("f1", "v21", "f2", "v22")).build())
+                        .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                           .build())
+                .build())
+        .node(
+            PlanNode.builder()
+                .uuid(section21NodeId)
+                .name("Section 21")
+                .identifier("sectionChild")
+                .stepType(DummySectionStep.STEP_TYPE)
+                .stepParameters(
+                    DummySectionStepParameters.builder()
+                        .childNodeId(shellScript2NodeId)
+                        .data(
+                            DummySectionStepTransput.builder().map(ImmutableMap.of("f1", "v211", "f2", "v212")).build())
+                        .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                           .build())
+                .build())
         .node(PlanNode.builder()
                   .uuid(shellScript1NodeId)
                   .name("Shell Script 1")
-                  .identifier("shell1")
+                  .identifier("shell")
                   .stepType(StepType.builder().type(StateType.SHELL_SCRIPT.name()).build())
                   .stepParameters(shellScript1StepParameters)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
                                              .build())
                   .build())
+        .node(
+            PlanNode.builder()
+                .uuid(shellScript2NodeId)
+                .name("Shell Script 2")
+                .identifier("shell")
+                .stepType(StepType.builder().type(StateType.SHELL_SCRIPT.name()).build())
+                .stepParameters(shellScript2StepParameters)
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                           .build())
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
+                                       .build())
+                .build())
         .node(PlanNode.builder()
-                  .uuid(shellScript2NodeId)
-                  .name("Shell Script 2")
-                  .identifier("shell2")
-                  .stepType(StepType.builder().type(StateType.SHELL_SCRIPT.name()).build())
-                  .stepParameters(shellScript2StepParameters)
+                  .uuid(dummyNodeId)
+                  .name("Dummy Node 1")
+                  .identifier("dummy")
+                  .stepType(DUMMY_STEP_TYPE)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
-                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                              .build())
                   .build())
         .build();

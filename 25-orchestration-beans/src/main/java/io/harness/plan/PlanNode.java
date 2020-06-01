@@ -35,7 +35,7 @@ public class PlanNode {
   @Singular @Getter List<AdviserObtainment> adviserObtainments;
   @Singular @Getter List<FacilitatorObtainment> facilitatorObtainments;
 
-  boolean skipExpressionChain;
+  @Getter boolean skipExpressionChain;
 
   @Builder
   public PlanNode(@NonNull String uuid, @NonNull String name, @NonNull StepType stepType, @NonNull String identifier,
