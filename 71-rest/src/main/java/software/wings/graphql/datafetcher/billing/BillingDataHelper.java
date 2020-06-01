@@ -52,7 +52,7 @@ public class BillingDataHelper {
   private static final String TOTAL_COST_DATE_PATTERN_WITHOUT_YEAR = "MMM dd";
   private static final String DEFAULT_TIME_ZONE = "GMT";
   private static final long ONE_DAY_MILLIS = 86400000;
-  private static final long OBSERVATION_PERIOD = 30 * ONE_DAY_MILLIS;
+  private static final long OBSERVATION_PERIOD = 29 * ONE_DAY_MILLIS;
   private static final int MAX_RETRY = 3;
 
   protected double roundingDoubleFieldValue(BillingDataMetaDataFields field, ResultSet resultSet) throws SQLException {
@@ -242,7 +242,7 @@ public class BillingDataHelper {
       billingTimeDiffMillis =
           billingAmountData.getMaxStartTime() - billingAmountData.getMinStartTime() + ONE_DAY_MILLIS;
     }
-    if (billingTimeDiffMillis != OBSERVATION_PERIOD) {
+    if (billingTimeDiffMillis < OBSERVATION_PERIOD) {
       return null;
     }
 
@@ -420,7 +420,7 @@ public class BillingDataHelper {
     return Instant.ofEpochMilli(getStartOfCurrentDay());
   }
 
-  private long getStartOfCurrentDay() {
+  public long getStartOfCurrentDay() {
     ZoneId zoneId = ZoneId.of(DEFAULT_TIME_ZONE);
     LocalDate today = LocalDate.now(zoneId);
     ZonedDateTime zdtStart = today.atStartOfDay(zoneId);

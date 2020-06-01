@@ -164,7 +164,7 @@ public class BudgetServiceImpl implements BudgetService {
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(budget.getScope().getBudgetScopeFilter());
     addAdditionalFiltersBasedOnScope(budget, filters);
-    filters.add(getStartOfMonthFilterForCurrentBillingCycle());
+    filters.add(getStartTimeFilterForCurrentBillingCycle());
     filters.add(getEndOfMonthFilterForCurrentBillingCycle());
     List<QLCCMAggregationFunction> aggregationFunction = new ArrayList<>();
     aggregationFunction.add(BudgetUtils.makeBillingAmtAggregation());
@@ -172,7 +172,10 @@ public class BudgetServiceImpl implements BudgetService {
         billingTrendStatsDataFetcher.getBillingAmountData(budget.getAccountId(), aggregationFunction, filters)
             .getTotalCostData();
     Instant endInstant = billingDataHelper.getEndInstant(filters);
-    BigDecimal forecastCost = billingDataHelper.getForecastCost(billingAmountData, endInstant);
+    BigDecimal forecastCost = null;
+    if (billingAmountData != null) {
+      forecastCost = billingDataHelper.getNewForecastCost(billingAmountData, endInstant);
+    }
     if (forecastCost == null) {
       return 0L;
     }
@@ -338,11 +341,8 @@ public class BudgetServiceImpl implements BudgetService {
         .build();
   }
 
-  private QLBillingDataFilter getStartOfMonthFilterForCurrentBillingCycle() {
-    ZoneId zoneId = ZoneId.of(DEFAULT_TIMEZONE);
-    LocalDate today = LocalDate.now(zoneId);
-    ZonedDateTime zdtStart = today.withDayOfMonth(1).atStartOfDay(zoneId);
-    long startTime = zdtStart.toEpochSecond() * 1000;
+  private QLBillingDataFilter getStartTimeFilterForCurrentBillingCycle() {
+    long startTime = billingDataHelper.getStartOfCurrentDay() - 30 * ONE_DAY_MILLIS;
     return QLBillingDataFilter.builder()
         .startTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(startTime).build())
         .build();
@@ -439,5 +439,15 @@ public class BudgetServiceImpl implements BudgetService {
       return 0;
     }
     return data.getData().get(data.getData().size() - 1).getActualCost();
+  }
+
+  @Override
+  public boolean isStartOfMonth() {
+    long startOfDay = billingDataHelper.getStartOfCurrentDay();
+    ZoneId zoneId = ZoneId.of(DEFAULT_TIMEZONE);
+    LocalDate today = LocalDate.now(zoneId);
+    ZonedDateTime zdtStart = today.withDayOfMonth(1).atStartOfDay(zoneId);
+    long startOfMonth = zdtStart.toEpochSecond() * 1000;
+    return startOfMonth == startOfDay;
   }
 }
