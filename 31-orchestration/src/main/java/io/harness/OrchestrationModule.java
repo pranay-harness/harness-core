@@ -9,6 +9,7 @@ import com.google.inject.name.Names;
 
 import io.harness.engine.EngineObtainmentHelper;
 import io.harness.engine.ExecutionEngine;
+import io.harness.engine.GraphGenerator;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.expressions.EngineExpressionServiceImpl;
 import io.harness.engine.interrupts.InterruptService;
@@ -55,6 +56,7 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
     bind(OutcomeService.class).to(OutcomeServiceImpl.class);
     bind(HPersistence.class).annotatedWith(Names.named("enginePersistence")).to(MongoPersistence.class);
     bind(ExecutionEngine.class).toInstance(new ExecutionEngine());
+    bind(GraphGenerator.class).toInstance(new GraphGenerator());
     bind(EngineObtainmentHelper.class).toInstance(new EngineObtainmentHelper());
     bind(ExecutorService.class)
         .annotatedWith(Names.named("EngineExecutorService"))
