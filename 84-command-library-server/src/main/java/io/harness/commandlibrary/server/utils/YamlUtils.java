@@ -30,7 +30,7 @@ public class YamlUtils {
     try {
       return getYamlObjectMapper().readValue(yamlString, yamlClass);
     } catch (IOException e) {
-      throw new YamlException("error while converting", e, USER_ADMIN);
+      throw new YamlException("Encountered error" + e.getMessage() + "while parsing YAML.", e, USER_ADMIN);
     }
   }
 }
