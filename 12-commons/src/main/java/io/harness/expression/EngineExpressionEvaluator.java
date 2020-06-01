@@ -29,7 +29,7 @@ import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Slf4j
-public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc {
+public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, ExpressionEvaluatorUtils.ResolveFunctor {
   // TODO(gpahal): Both of these patterns need to be changed later
   private static final Pattern variablePattern = Pattern.compile("\\$\\{[^{}]*}");
   private static final Pattern validVariableNamePattern = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
@@ -94,7 +94,7 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc {
    * @return the resolved object (this can be the same object or a new one)
    */
   public Object resolve(Object o) {
-    return ExpressionEvaluatorUtils.updateExpressions(o, this ::evaluateExpressionOptional);
+    return ExpressionEvaluatorUtils.updateExpressions(o, this);
   }
 
   public String renderExpression(String expression) {

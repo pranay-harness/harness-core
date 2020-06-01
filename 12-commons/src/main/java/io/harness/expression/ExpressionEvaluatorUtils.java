@@ -110,22 +110,26 @@ public class ExpressionEvaluatorUtils {
     }
   }
 
-  public interface Functor { Optional<Object> evaluate(String o); }
+  public interface ResolveFunctor {
+    String renderExpression(String str);
+    Optional<Object> evaluateExpressionOptional(String str);
+  }
 
   /**
    * Update expression values inside object recursively. The new value is obtained using the functor. If the field has a
-   * NotExpression annotation, it is skipped.
+   * NotExpression annotation, it is skipped. String fields are rendered and ParameterFields are evaluated if they have
+   * an expression.
    *
    * @param o             the object to update
-   * @param functor       the functor which provides the evaluated value
+   * @param functor       the functor which provides the evaluated and rendered values
    * @return the new object with updated objects (this can be done in-place or a new object can be returned)
    */
-  public Object updateExpressions(Object o, Functor functor) {
+  public Object updateExpressions(Object o, ResolveFunctor functor) {
     Object updatedObj = updateExpressionsInternal(o, functor, new HashSet<>());
     return updatedObj == null ? o : updatedObj;
   }
 
-  private Object updateExpressionsInternal(Object obj, Functor functor, Set<Integer> cache) {
+  private Object updateExpressionsInternal(Object obj, ResolveFunctor functor, Set<Integer> cache) {
     if (obj == null) {
       return null;
     }
@@ -136,9 +140,7 @@ public class ExpressionEvaluatorUtils {
     }
 
     if (obj instanceof String) {
-      String oldVal = (String) obj;
-      Optional<Object> optional = functor.evaluate(oldVal);
-      return optional.map(String::valueOf).orElse(oldVal);
+      return functor.renderExpression((String) obj);
     }
 
     // In case of array, update in-place and return null.
@@ -168,7 +170,7 @@ public class ExpressionEvaluatorUtils {
     return obj;
   }
 
-  private boolean updateExpressionFields(Object obj, Functor functor, Set<Integer> cache) {
+  private boolean updateExpressionFields(Object obj, ResolveFunctor functor, Set<Integer> cache) {
     if (obj == null) {
       return false;
     }
@@ -184,7 +186,7 @@ public class ExpressionEvaluatorUtils {
       ParameterField<?> parameterField = (ParameterField<?>) obj;
       Object value;
       if (parameterField.isExpression()) {
-        Optional<Object> optional = functor.evaluate(parameterField.getExpressionValue());
+        Optional<Object> optional = functor.evaluateExpressionOptional(parameterField.getExpressionValue());
         if (optional.isPresent()) {
           value = optional.get();
         } else {
@@ -232,7 +234,7 @@ public class ExpressionEvaluatorUtils {
     return updated;
   }
 
-  private boolean updateExpressionFieldsInternal(Object o, Field f, Functor functor, Set<Integer> cache)
+  private boolean updateExpressionFieldsInternal(Object o, Field f, ResolveFunctor functor, Set<Integer> cache)
       throws IllegalAccessException {
     if (f == null) {
       return false;
