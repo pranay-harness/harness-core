@@ -7,7 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.interrupts.InterruptEffect;
@@ -64,7 +64,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
 
   // Mutable
   long lastUpdatedAt;
-  NodeExecutionStatus status;
+  Status status;
   private Long expiryTs;
 
   @Singular List<ExecutableResponse> executableResponses;

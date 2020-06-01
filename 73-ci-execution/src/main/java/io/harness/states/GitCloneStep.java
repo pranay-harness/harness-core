@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.managerclient.ManagerCIResource;
@@ -30,6 +30,6 @@ public class GitCloneStep implements Step, SyncExecutable {
   @Override
   public StepResponse executeSync(
       Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
-    return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
+    return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }

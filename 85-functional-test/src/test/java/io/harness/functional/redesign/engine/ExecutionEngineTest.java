@@ -1,5 +1,6 @@
 package io.harness.functional.redesign.engine;
 
+import static io.harness.execution.status.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -7,7 +8,6 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.status.ExecutionInstanceStatus;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -44,7 +44,7 @@ public class ExecutionEngineTest extends AbstractFunctionalTest {
     PlanExecution httpSwitchResponse =
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-switch");
 
-    assertThat(httpSwitchResponse.getStatus()).isEqualTo(ExecutionInstanceStatus.SUCCEEDED);
+    assertThat(httpSwitchResponse.getStatus()).isEqualTo(SUCCEEDED);
   }
 
   @Test
@@ -54,7 +54,7 @@ public class ExecutionEngineTest extends AbstractFunctionalTest {
     PlanExecution httpForkResponse =
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-fork");
 
-    assertThat(httpForkResponse.getStatus()).isEqualTo(ExecutionInstanceStatus.SUCCEEDED);
+    assertThat(httpForkResponse.getStatus()).isEqualTo(SUCCEEDED);
   }
 
   @Test
@@ -64,7 +64,7 @@ public class ExecutionEngineTest extends AbstractFunctionalTest {
     PlanExecution httpForkResponse =
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-section");
 
-    assertThat(httpForkResponse.getStatus()).isEqualTo(ExecutionInstanceStatus.SUCCEEDED);
+    assertThat(httpForkResponse.getStatus()).isEqualTo(SUCCEEDED);
   }
 
   @Test
@@ -75,6 +75,6 @@ public class ExecutionEngineTest extends AbstractFunctionalTest {
     PlanExecution httpForkResponse =
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-retry");
 
-    assertThat(httpForkResponse.getStatus()).isEqualTo(ExecutionInstanceStatus.SUCCEEDED);
+    assertThat(httpForkResponse.getStatus()).isEqualTo(SUCCEEDED);
   }
 }

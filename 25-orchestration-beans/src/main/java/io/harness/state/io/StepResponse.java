@@ -7,7 +7,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.exception.FailureType;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
@@ -23,7 +23,7 @@ import java.util.Map;
 @Builder(toBuilder = true)
 @Redesign
 public class StepResponse {
-  @NonNull NodeExecutionStatus status;
+  @NonNull Status status;
   @Singular Collection<StepOutcome> stepOutcomes;
   FailureInfo failureInfo;
 

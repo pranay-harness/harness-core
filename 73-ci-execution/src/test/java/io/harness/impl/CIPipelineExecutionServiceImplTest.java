@@ -1,5 +1,6 @@
 package io.harness.impl;
 
+import static io.harness.execution.status.Status.RUNNING;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -14,7 +15,6 @@ import io.harness.beans.CIPipeline;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.ExecutionEngine;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.status.ExecutionInstanceStatus;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
@@ -39,8 +39,7 @@ public class CIPipelineExecutionServiceImplTest extends CIExecutionTest {
   public void executePipeline() {
     CIPipeline ciPipeline = executionPlanTestHelper.getCIPipeline();
 
-    when(engine.startExecution(any(), any(), any()))
-        .thenReturn(PlanExecution.builder().status(ExecutionInstanceStatus.RUNNING).build());
+    when(engine.startExecution(any(), any(), any())).thenReturn(PlanExecution.builder().status(RUNNING).build());
 
     PlanExecution planExecution = ciPipelineExecutionService.executePipeline(ciPipeline);
     assertThat(planExecution).isNotNull();

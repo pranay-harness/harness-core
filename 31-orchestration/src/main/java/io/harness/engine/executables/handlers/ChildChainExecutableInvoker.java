@@ -1,6 +1,7 @@
 package io.harness.engine.executables.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.execution.status.Status.QUEUED;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.inject.Inject;
@@ -18,7 +19,6 @@ import io.harness.engine.services.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.persistence.HPersistence;
@@ -70,7 +70,7 @@ public class ChildChainExecutableInvoker implements ExecutableInvoker {
                                            .node(node)
                                            .planExecutionId(nodeExecution.getPlanExecutionId())
                                            .levels(clonedAmbiance.getLevels())
-                                           .status(NodeExecutionStatus.QUEUED)
+                                           .status(QUEUED)
                                            .notifyId(childInstanceId)
                                            .parentId(nodeExecution.getUuid())
                                            .build();

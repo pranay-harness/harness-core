@@ -11,7 +11,7 @@ import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.Step;
@@ -54,15 +54,14 @@ public class EmailStep implements Step, SyncExecutable {
                                         .body(stepParameters.getBody())
                                         .accountId((String) ambiance.getInputArgs().get(ACCOUNT_ID))
                                         .build());
-      stepResponseBuilder.status(NodeExecutionStatus.SUCCEEDED);
+      stepResponseBuilder.status(Status.SUCCEEDED);
     } catch (Exception e) {
       stepResponseBuilder
           .failureInfo(StepResponse.FailureInfo.builder()
                            .errorMessage(e.getCause() == null ? ExceptionUtils.getMessage(e)
                                                               : ExceptionUtils.getMessage(e.getCause()))
                            .build())
-          .status(
-              stepParameters.isIgnoreDeliveryFailure() ? NodeExecutionStatus.SUCCEEDED : NodeExecutionStatus.FAILED);
+          .status(stepParameters.isIgnoreDeliveryFailure() ? Status.SUCCEEDED : Status.FAILED);
       logger.error("Exception while sending email", e);
     }
     return stepResponseBuilder.build();

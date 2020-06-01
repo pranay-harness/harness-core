@@ -2,7 +2,7 @@ package io.harness.cdng.pipeline.steps;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.Step;
@@ -22,7 +22,7 @@ public class PipelineSetupStep implements Step, SyncExecutable {
       Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
     CDPipelineSetupParameters parameters = (CDPipelineSetupParameters) stepParameters;
     return StepResponse.builder()
-        .status(NodeExecutionStatus.SUCCEEDED)
+        .status(Status.SUCCEEDED)
         .stepOutcome(StepOutcome.builder()
                          .name("service")
                          .outcome(parameters.getCdPipeline().getStages().get(0).getService())

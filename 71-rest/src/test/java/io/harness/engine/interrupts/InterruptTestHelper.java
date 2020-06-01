@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.execution.status.ExecutionInstanceStatus;
+import io.harness.execution.status.Status;
 import io.harness.persistence.HPersistence;
 import org.awaitility.Awaitility;
 
@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class InterruptTestHelper {
   @Inject HPersistence hPersistence;
 
-  public void waitForPlanStatus(String uuid, ExecutionInstanceStatus status) {
+  public void waitForPlanStatus(String uuid, Status status) {
     Awaitility.await().atMost(5, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
       final PlanExecution planExecution = fetchPlanExecutionStatus(uuid);
       return planExecution != null && status == planExecution.getStatus();

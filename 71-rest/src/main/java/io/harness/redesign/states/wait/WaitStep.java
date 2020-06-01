@@ -13,7 +13,7 @@ import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.SimpleNotifier;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.state.Step;
@@ -48,7 +48,7 @@ public class WaitStep implements Step, AsyncExecutable {
     WaitStepParameters parameters = (WaitStepParameters) stepParameters;
     String resumeId = generateUuid();
     executorService.schedule(new SimpleNotifier(waitNotifyEngine, resumeId,
-                                 StatusNotifyResponseData.builder().status(NodeExecutionStatus.SUCCEEDED).build()),
+                                 StatusNotifyResponseData.builder().status(Status.SUCCEEDED).build()),
         parameters.getWaitDurationSeconds(), TimeUnit.SECONDS);
     return AsyncExecutableResponse.builder().callbackId(resumeId).build();
   }
@@ -61,7 +61,7 @@ public class WaitStep implements Step, AsyncExecutable {
     waitStateExecutionData.setDuration(parameters.getWaitDurationSeconds());
     waitStateExecutionData.setWakeupTs(System.currentTimeMillis());
     return StepResponse.builder()
-        .status(NodeExecutionStatus.SUCCEEDED)
+        .status(Status.SUCCEEDED)
         .stepOutcome(StepOutcome.builder().name("waitData").outcome(waitStateExecutionData).build())
         .build();
   }

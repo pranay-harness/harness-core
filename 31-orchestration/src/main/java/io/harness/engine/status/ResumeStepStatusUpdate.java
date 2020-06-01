@@ -1,7 +1,7 @@
 package io.harness.engine.status;
 
-import static io.harness.execution.status.NodeExecutionStatus.PAUSED;
-import static io.harness.execution.status.NodeExecutionStatus.RUNNING;
+import static io.harness.execution.status.Status.PAUSED;
+import static io.harness.execution.status.Status.RUNNING;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
@@ -12,7 +12,6 @@ import io.harness.engine.services.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.execution.status.ExecutionInstanceStatus;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.query.Query;
@@ -39,8 +38,8 @@ public class ResumeStepStatusUpdate implements StepStatusUpdate {
       resumeParents(nodeExecution.getUuid(), stepStatusUpdateInfo.getInterruptId());
     }
 
-    planExecutionService.update(stepStatusUpdateInfo.getPlanExecutionId(),
-        ops -> ops.set(PlanExecutionKeys.status, ExecutionInstanceStatus.RUNNING));
+    planExecutionService.update(
+        stepStatusUpdateInfo.getPlanExecutionId(), ops -> ops.set(PlanExecutionKeys.status, RUNNING));
   }
 
   private void resumeParents(String nodeExecutionId, String interruptId) {

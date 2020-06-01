@@ -1,8 +1,8 @@
 package io.harness.engine.status;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.execution.status.NodeExecutionStatus.PAUSED;
-import static io.harness.execution.status.NodeExecutionStatus.flowingStatuses;
+import static io.harness.execution.status.Status.PAUSED;
+import static io.harness.execution.status.Status.flowingStatuses;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -12,7 +12,6 @@ import io.harness.engine.services.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.execution.status.ExecutionInstanceStatus;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
@@ -29,8 +28,8 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
   public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
     boolean pausePlan = pauseParents(stepStatusUpdateInfo.getNodeExecutionId(), stepStatusUpdateInfo.getInterruptId());
     if (pausePlan) {
-      planExecutionService.update(stepStatusUpdateInfo.getPlanExecutionId(),
-          ops -> ops.set(PlanExecutionKeys.status, ExecutionInstanceStatus.PAUSED));
+      planExecutionService.update(
+          stepStatusUpdateInfo.getPlanExecutionId(), ops -> ops.set(PlanExecutionKeys.status, PAUSED));
     }
   }
 

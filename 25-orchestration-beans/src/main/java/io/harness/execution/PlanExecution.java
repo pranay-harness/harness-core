@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.execution.status.ExecutionInstanceStatus;
+import io.harness.execution.status.Status;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -47,7 +47,7 @@ public final class PlanExecution implements PersistentRegularIterable, CreatedAt
   private Long nextIteration;
   @Builder.Default private Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 
-  ExecutionInstanceStatus status;
+  Status status;
   private Long startTs;
   private Long endTs;
 

@@ -4,8 +4,8 @@ import static io.harness.data.structure.CollectionUtils.isPresent;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.ABORT_ALL_ALREADY;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.execution.status.NodeExecutionStatus.ABORTED;
-import static io.harness.execution.status.NodeExecutionStatus.DISCONTINUING;
+import static io.harness.execution.status.Status.ABORTED;
+import static io.harness.execution.status.Status.DISCONTINUING;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
@@ -28,7 +28,7 @@ import io.harness.engine.services.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.Abortable;
 import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.facilitator.modes.TaskSpawningExecutableResponse;
@@ -91,7 +91,7 @@ public class AbortAllHandler implements InterruptHandler {
   public Interrupt handleInterrupt(
       @NonNull @Valid Interrupt interrupt, Ambiance ambiance, List<StepTransput> additionalInputs) {
     interruptService.markProcessing(interrupt.getUuid());
-    if (!markAbortingState(interrupt, NodeExecutionStatus.abortableStatuses())) {
+    if (!markAbortingState(interrupt, Status.abortableStatuses())) {
       return interrupt;
     }
 
@@ -152,7 +152,7 @@ public class AbortAllHandler implements InterruptHandler {
     }
   }
 
-  private boolean markAbortingState(@NotNull Interrupt interrupt, EnumSet<NodeExecutionStatus> statuses) {
+  private boolean markAbortingState(@NotNull Interrupt interrupt, EnumSet<Status> statuses) {
     // Get all that are eligible for discontinuing
     List<NodeExecution> allNodeExecutions =
         nodeExecutionService.fetchNodeExecutionsByStatuses(interrupt.getPlanExecutionId(), statuses);
@@ -181,7 +181,7 @@ public class AbortAllHandler implements InterruptHandler {
   }
 
   private List<String> getAllLeafInstanceIds(
-      Interrupt interrupt, List<NodeExecution> allNodeExecutions, EnumSet<NodeExecutionStatus> statuses) {
+      Interrupt interrupt, List<NodeExecution> allNodeExecutions, EnumSet<Status> statuses) {
     List<String> allInstanceIds = allNodeExecutions.stream().map(NodeExecution::getUuid).collect(toList());
     // Get Parent Ids
     List<String> parentIds = allNodeExecutions.stream()

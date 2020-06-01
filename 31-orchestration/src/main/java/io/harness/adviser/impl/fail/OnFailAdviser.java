@@ -1,7 +1,7 @@
 package io.harness.adviser.impl.fail;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.execution.status.NodeExecutionStatus.brokeStatuses;
+import static io.harness.execution.status.Status.brokeStatuses;
 
 import com.google.common.base.Preconditions;
 

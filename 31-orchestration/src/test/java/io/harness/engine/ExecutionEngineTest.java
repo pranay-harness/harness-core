@@ -1,6 +1,7 @@
 package io.harness.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.execution.status.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.utils.steps.TestAsyncStep.ASYNC_STEP_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,8 +22,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.status.ExecutionInstanceStatus;
-import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
@@ -97,7 +96,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
     response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
 
     assertThat(response).isNotNull();
-    assertThat(response.getStatus()).isEqualTo(ExecutionInstanceStatus.SUCCEEDED);
+    assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
   }
 
   @Test
@@ -144,7 +143,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
     response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
 
     assertThat(response).isNotNull();
-    assertThat(response.getStatus()).isEqualTo(ExecutionInstanceStatus.SUCCEEDED);
+    assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
   }
 
   @Test
@@ -196,7 +195,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
       response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
 
       assertThat(response).isNotNull();
-      assertThat(response.getStatus()).isEqualTo(ExecutionInstanceStatus.SUCCEEDED);
+      assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
     }
   }
 
@@ -233,7 +232,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
     @Override
     public StepResponse executeSync(
         Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
-      return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
+      return StepResponse.builder().status(SUCCEEDED).build();
     }
   }
 }

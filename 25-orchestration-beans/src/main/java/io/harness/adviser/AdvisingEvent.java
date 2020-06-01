@@ -6,7 +6,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.state.io.StepResponse.FailureInfo;
 import lombok.Builder;
 import lombok.NonNull;
@@ -22,6 +22,6 @@ public class AdvisingEvent {
   @NonNull Ambiance ambiance;
   Map<String, Outcome> outcomes;
   AdviserParameters adviserParameters;
-  NodeExecutionStatus status;
+  Status status;
   FailureInfo failureInfo;
 }

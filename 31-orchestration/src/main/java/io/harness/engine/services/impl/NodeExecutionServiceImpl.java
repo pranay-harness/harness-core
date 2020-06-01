@@ -12,7 +12,7 @@ import io.harness.engine.services.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.state.io.StepParameters;
@@ -45,7 +45,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
-  public List<NodeExecution> fetchNodeExecutionsByStatus(String planExecutionId, NodeExecutionStatus status) {
+  public List<NodeExecution> fetchNodeExecutionsByStatus(String planExecutionId, Status status) {
     List<NodeExecution> nodeExecutions = new ArrayList<>();
     Query<NodeExecution> nodeExecutionQuery = hPersistence.createQuery(NodeExecution.class, excludeAuthority)
                                                   .filter(NodeExecutionKeys.planExecutionId, planExecutionId)
@@ -59,8 +59,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
-  public List<NodeExecution> fetchNodeExecutionsByStatuses(
-      String planExecutionId, EnumSet<NodeExecutionStatus> statuses) {
+  public List<NodeExecution> fetchNodeExecutionsByStatuses(String planExecutionId, EnumSet<Status> statuses) {
     List<NodeExecution> nodeExecutions = new ArrayList<>();
     Query<NodeExecution> nodeExecutionQuery = hPersistence.createQuery(NodeExecution.class, excludeAuthority)
                                                   .filter(NodeExecutionKeys.planExecutionId, planExecutionId)

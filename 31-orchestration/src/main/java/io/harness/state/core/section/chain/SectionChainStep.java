@@ -1,8 +1,9 @@
 package io.harness.state.core.section.chain;
 
+import static io.harness.execution.status.Status.SUCCEEDED;
+
 import io.harness.ambiance.Ambiance;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.execution.status.NodeExecutionStatus;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
@@ -47,6 +48,6 @@ public class SectionChainStep implements Step, ChildChainExecutable {
   @Override
   public StepResponse finalizeExecution(
       Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    return StepResponse.builder().status(NodeExecutionStatus.SUCCEEDED).build();
+    return StepResponse.builder().status(SUCCEEDED).build();
   }
 }

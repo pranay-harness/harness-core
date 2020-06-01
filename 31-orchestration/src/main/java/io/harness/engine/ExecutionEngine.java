@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.execution.status.NodeExecutionStatus.resumableStatuses;
+import static io.harness.execution.status.Status.resumableStatuses;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.common.base.Preconditions;
@@ -40,8 +40,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.execution.status.ExecutionInstanceStatus;
-import io.harness.execution.status.NodeExecutionStatus;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorResponse;
@@ -105,7 +104,7 @@ public class ExecutionEngine implements Engine {
                                  .uuid(generateUuid())
                                  .plan(plan)
                                  .inputArgs(inputArgs == null ? new InputArgs() : inputArgs)
-                                 .status(ExecutionInstanceStatus.RUNNING)
+                                 .status(Status.RUNNING)
                                  .createdBy(createdBy)
                                  .startTs(System.currentTimeMillis())
                                  .build();
@@ -159,7 +158,7 @@ public class ExecutionEngine implements Engine {
             .planExecutionId(cloned.getPlanExecutionId())
             .levels(cloned.getLevels())
             .startTs(System.currentTimeMillis())
-            .status(NodeExecutionStatus.QUEUED)
+            .status(Status.QUEUED)
             .notifyId(previousNodeExecution == null ? null : previousNodeExecution.getNotifyId())
             .parentId(previousNodeExecution == null ? null : previousNodeExecution.getParentId())
             .previousId(previousNodeExecution == null ? null : previousNodeExecution.getUuid())
@@ -199,7 +198,7 @@ public class ExecutionEngine implements Engine {
       FacilitatorResponse finalFacilitatorResponse = facilitatorResponse;
       Preconditions.checkNotNull(nodeExecutionService.update(ambiance.obtainCurrentRuntimeId(),
           ops.andThen(op
-              -> op.set(NodeExecutionKeys.status, NodeExecutionStatus.WAITING)
+              -> op.set(NodeExecutionKeys.status, Status.WAITING)
                      .set(NodeExecutionKeys.initialWaitDuration, finalFacilitatorResponse.getInitialWait()))));
       String resumeId =
           delayEventHelper.delay(finalFacilitatorResponse.getInitialWait().getSeconds(), Collections.emptyMap());
@@ -211,8 +210,8 @@ public class ExecutionEngine implements Engine {
               .build(),
           resumeId);
     } else {
-      Preconditions.checkNotNull(nodeExecutionService.update(ambiance.obtainCurrentRuntimeId(),
-          ops.andThen(op -> op.set(NodeExecutionKeys.status, NodeExecutionStatus.RUNNING))));
+      Preconditions.checkNotNull(nodeExecutionService.update(
+          ambiance.obtainCurrentRuntimeId(), ops.andThen(op -> op.set(NodeExecutionKeys.status, Status.RUNNING))));
       invokeState(ambiance, facilitatorResponse, inputs);
     }
   }
@@ -287,10 +286,8 @@ public class ExecutionEngine implements Engine {
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
       logger.info("Ending Execution");
-      planExecutionService.update(nodeExecution.getPlanExecutionId(),
-          ops
-          -> ops.set(PlanExecutionKeys.status,
-              ExecutionInstanceStatus.obtainForNodeExecutionStatus(nodeExecution.getStatus())));
+      planExecutionService.update(
+          nodeExecution.getPlanExecutionId(), ops -> ops.set(PlanExecutionKeys.status, nodeExecution.getStatus()));
     }
   }
 
@@ -308,8 +305,8 @@ public class ExecutionEngine implements Engine {
           nodeExecution.getStatus());
       return;
     }
-    NodeExecution updatedNodeExecution = Preconditions.checkNotNull(nodeExecutionService.update(
-        nodeInstanceId, ops -> ops.set(NodeExecutionKeys.status, NodeExecutionStatus.RUNNING)));
+    NodeExecution updatedNodeExecution = Preconditions.checkNotNull(
+        nodeExecutionService.update(nodeInstanceId, ops -> ops.set(NodeExecutionKeys.status, Status.RUNNING)));
     Ambiance ambiance = ambianceHelper.fetchAmbiance(updatedNodeExecution);
     executorService.execute(EngineResumeExecutor.builder()
                                 .nodeExecution(updatedNodeExecution)
