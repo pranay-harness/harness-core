@@ -24,7 +24,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
-import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -301,6 +300,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private DelegateDao delegateDao;
   @Inject private ConfigurationController configurationController;
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
+  @Inject private DelegateConnectionDao delegateConnectionDao;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
 
@@ -380,11 +380,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public boolean checkDelegateConnected(String delegateId) {
-    return wingsPersistence.createQuery(DelegateConnection.class)
-               .filter(DelegateConnectionKeys.delegateId, delegateId)
-               .count(upToOne)
-        > 0;
+  public boolean checkDelegateConnected(String accountId, String delegateId) {
+    return delegateConnectionDao.checkDelegateConnected(
+        accountId, delegateId, versionInfoManager.getVersionInfo().getVersion());
   }
 
   @Override
@@ -1752,9 +1750,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public void removeDelegateConnection(String accountId, String delegateConnectionId) {
-    logger.info(
-        "Removing delegate connection for account {}: delegateConnectionId: {}", accountId, delegateConnectionId);
+  public void delegateConnectionLost(String accountId, String delegateConnectionId) {
+    logger.info("Removing delegate connection delegateConnectionId: {}", delegateConnectionId);
     wingsPersistence.delete(accountId, DelegateConnection.class, delegateConnectionId);
   }
 

@@ -34,7 +34,7 @@ import javax.validation.Valid;
 public interface DelegateService extends OwnedByAccount, TaskExecutor {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 
-  boolean checkDelegateConnected(String delegateId);
+  boolean checkDelegateConnected(String accountId, String delegateId);
 
   List<String> getKubernetesDelegateNames(String accountId);
 
@@ -89,7 +89,7 @@ public interface DelegateService extends OwnedByAccount, TaskExecutor {
 
   String getProfileResult(String accountId, String delegateId);
 
-  void removeDelegateConnection(String accountId, String delegateConnectionId);
+  void delegateConnectionLost(String accountId, String delegateConnectionId);
 
   void doConnectionHeartbeat(String accountId, String delegateId, DelegateConnectionHeartbeat heartbeat);
 

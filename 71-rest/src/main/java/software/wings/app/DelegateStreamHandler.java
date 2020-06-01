@@ -2,6 +2,7 @@ package software.wings.app;
 
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.common.base.Splitter;
 import com.google.common.io.CharStreams;
@@ -14,6 +15,7 @@ import io.harness.eraro.Level;
 import io.harness.eraro.MessageManager;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
+import io.harness.persistence.AccountLogContext;
 import io.harness.serializer.JsonUtils;
 import org.atmosphere.cache.UUIDBroadcasterCache;
 import org.atmosphere.config.service.AtmosphereHandlerService;
@@ -77,9 +79,11 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
         resource.addEventListener(new AtmosphereResourceEventListenerAdapter() {
           @Override
           public void onDisconnect(AtmosphereResourceEvent event) {
-            Delegate delegate = delegateService.get(accountId, delegateId, true);
-            delegateService.register(delegate);
-            delegateService.removeDelegateConnection(accountId, delegateConnectionId);
+            try (AccountLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+              Delegate delegate = delegateService.get(accountId, delegateId, true);
+              delegateService.register(delegate);
+              delegateService.delegateConnectionLost(accountId, delegateConnectionId);
+            }
           }
         });
       } catch (WingsException e) {

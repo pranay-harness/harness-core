@@ -32,8 +32,9 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = false)
 @Indexes({
   @Index(fields = {
-    @Field(DelegateConnectionKeys.accountId), @Field(DelegateConnectionKeys.delegateId)
-  }, options = @IndexOptions(name = "index"))
+    @Field(DelegateConnectionKeys.accountId)
+    , @Field(DelegateConnectionKeys.delegateId), @Field(DelegateConnectionKeys.version)
+  }, options = @IndexOptions(name = "index2"))
 })
 public class DelegateConnection implements PersistentEntity, UuidAware, AccountAccess {
   public static final int DEFAULT_EXPIRY_TIME_IN_MINUTES = 5;
