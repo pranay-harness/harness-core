@@ -65,7 +65,7 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testUpdateStringFieldValues() {
-    Object obj = ExpressionEvaluatorUtils.updateExpressions(null, Optional::of);
+    Object obj = ExpressionEvaluatorUtils.updateExpressions(null, DummyFunctor.builder().build());
     assertThat(obj).isNull();
 
     String original = "original";
@@ -110,8 +110,7 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
 
     Map<String, Object> context =
         ImmutableMap.of(original, updated, originalObject, dummyC1, originalInt1, 10, originalInt2, 15);
-    ExpressionEvaluatorUtils.updateExpressions(
-        dummyB, str -> context.containsKey(str) ? Optional.of(context.get(str)) : Optional.empty());
+    ExpressionEvaluatorUtils.updateExpressions(dummyB, DummyFunctor.builder().context(context).build());
     assertThat(dummyB.getDummyC1().isExpression()).isFalse();
     assertThat(dummyB.getDummyC1().getValue()).isEqualTo(dummyC1);
     assertThat(dummyC1.dummyC.isExpression()).isTrue();
@@ -153,6 +152,20 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
     assertThat(strArrArr[1][0]).isEqualTo("c");
     assertThat(strArrArr[1][1]).isEqualTo(updated);
     assertThat(strArrArr[1][2]).isEqualTo(updated);
+  }
+
+  @Value
+  @Builder
+  private static class DummyFunctor implements ExpressionEvaluatorUtils.ResolveFunctor {
+    Map<String, Object> context;
+
+    public String renderExpression(String str) {
+      return str.replaceAll("original", "updated");
+    }
+
+    public Optional<Object> evaluateExpressionOptional(String str) {
+      return context != null && context.containsKey(str) ? Optional.of(context.get(str)) : Optional.empty();
+    }
   }
 
   @Data
