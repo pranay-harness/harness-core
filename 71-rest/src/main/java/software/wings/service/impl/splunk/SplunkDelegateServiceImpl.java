@@ -55,7 +55,9 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -203,24 +205,37 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
   }
 
   @Override
-  public List<String> getSamples(
+  public SplunkSampleResponse getSamples(
       SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query) {
     Preconditions.checkNotNull(splunkConfig, "splunkConfig can not be null");
     Preconditions.checkNotNull(query, "query can not be null");
+
     Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
     ResultsReaderJson resultsReaderJson;
     List<String> results = new ArrayList<>();
+    Map<String, String> sample = new HashMap<>();
     try {
       resultsReaderJson = executeSearch(splunkService, "search " + query + " | head 10",
           Instant.now().minus(7, ChronoUnit.DAYS).toEpochMilli(), Instant.now().toEpochMilli());
       Event event;
       while ((event = resultsReaderJson.getNextEvent()) != null) {
+        if (sample.isEmpty()) {
+          sample = event;
+        }
         results.add(event.get("_raw"));
       }
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
-    return results;
+    // Fields starting with underscore are internal fields.
+    // https://docs.splunk.com/Splexicon:Internalfield
+    Map<String, String> withoutInternalFields =
+        sample.entrySet()
+            .stream()
+            .filter(entry -> entry.getKey().charAt(0) != '_')
+            .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
+
+    return SplunkSampleResponse.builder().sample(withoutInternalFields).rawSampleLogs(results).build();
   }
 
   private ResultsReaderJson executeSearch(Service service, String query, long startTimeMs, long endTimeMs)

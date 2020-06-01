@@ -706,6 +706,7 @@ import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowMetaDTO;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
+import software.wings.service.impl.splunk.SplunkSampleResponse;
 import software.wings.service.impl.splunk.SplunkSavedSearch;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotinstAllPhaseRollbackData;
@@ -1618,5 +1619,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ContainerSyncResponse.class, 7384);
     kryo.register(BasicHttpChainStepParameters.class, 7385);
     kryo.register(ScriptType.class, 7386);
+    kryo.register(SplunkSampleResponse.class, 7387);
   }
 }

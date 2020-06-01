@@ -23,6 +23,7 @@ import com.splunk.Service;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVHistogram;
 import io.harness.rule.Owner;
+import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -41,6 +42,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -156,12 +158,41 @@ public class SplunkDelegateServiceImplTest extends WingsBaseTest {
     when(jobCollection.create(any(), any())).thenReturn(job);
     when(job.getResults(any()))
         .thenReturn(getSplunkJsonResponseInputStream("splunk_json_response_for_samples_query.json"));
-    List<String> samples = splunkDelegateService.getSamples(splunkConfig, new ArrayList<>(), "exception");
+    SplunkSampleResponse samples = splunkDelegateService.getSamples(splunkConfig, new ArrayList<>(), "exception");
     verify(jobCollection).create(eq("search exception | head 10"), any());
-    assertThat(samples).hasSize(10);
-    assertThat(samples.get(0))
+    assertThat(samples.getRawSampleLogs()).hasSize(10);
+    assertThat(samples.getRawSampleLogs().get(0))
         .isEqualTo(
             "2020-05-26 18:10:39,278 [GitChangeSet] INFO  software.wings.yaml.gitSync.GitChangeSetRunnable - Not continuing with GitChangeSetRunnable job");
+    assertThat(samples.getSample())
+        .isEqualTo(JsonUtils.asObject("{\n"
+                + "            \"linecount\": \"1\",\n"
+                + "            \"splunk_server\": \"splunk-dev\",\n"
+                + "            \"host\": \"splunk-dev\",\n"
+                + "            \"index\": \"main\",\n"
+                + "            \"sourcetype\": \"delegate-logs-local\",\n"
+                + "            \"source\": \"delegate.2020-05-21.log\"\n"
+                + "        }",
+            HashMap.class));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetSample_withEmptyResults() throws IOException {
+    SplunkDelegateServiceImpl splunkDelegateService = spy(new SplunkDelegateServiceImpl());
+    Service service = mock(Service.class);
+    doReturn(service).when(splunkDelegateService).initSplunkService(any(), anyList());
+    SplunkConfig splunkConfig = mock(SplunkConfig.class);
+    JobCollection jobCollection = mock(JobCollection.class);
+    when(service.getJobs()).thenReturn(jobCollection);
+    Job job = mock(Job.class);
+    when(jobCollection.create(any(), any())).thenReturn(job);
+    when(job.getResults(any())).thenReturn(getSplunkJsonResponseInputStream("splunk_json_search_response_empty.json"));
+    SplunkSampleResponse samples = splunkDelegateService.getSamples(splunkConfig, new ArrayList<>(), "exception");
+    verify(jobCollection).create(eq("search exception | head 10"), any());
+    assertThat(samples.getRawSampleLogs()).isEmpty();
+    assertThat(samples.getSample()).isEmpty();
   }
 
   private InputStream getSplunkJsonResponseInputStream(String jsonFile) throws IOException {
