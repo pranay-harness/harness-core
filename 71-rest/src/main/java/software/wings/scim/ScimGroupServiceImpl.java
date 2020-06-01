@@ -60,7 +60,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
         String operand = split[1];
         searchQuery = operand.substring(1, operand.length() - 1);
       } catch (Exception ex) {
-        logger.error("SCIM: Failed to process group search query: {} for account: {}", filter, accountId, ex);
+        logger.error("SCIM: Failed to process for account {} group search query: {} ", accountId, filter, ex);
       }
     }
 
@@ -70,7 +70,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
       groupList = searchUserGroupByGroupName(accountId, searchQuery, count, startIndex);
       groupList.forEach(searchGroupResponse::resource);
     } catch (WingsException ex) {
-      logger.info("SCIM: Search query: {}, account: {}", searchQuery, accountId, ex);
+      logger.info("SCIM: Search in account {} for group , query: {}", accountId, searchQuery, ex);
     }
 
     searchGroupResponse.startIndex(startIndex);
@@ -111,7 +111,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
   @Override
   public Response updateGroup(String groupId, String accountId, ScimGroup scimGroup) {
     logger.info(
-        "SCIM: Update group call with groupId: {}, groupId {}, group resource:{}", groupId, accountId, scimGroup);
+        "SCIM: Update group call with accountId: {}, groupId {}, group resource:{}", accountId, groupId, scimGroup);
     UserGroup userGroup = userGroupService.get(accountId, groupId, false);
     if (userGroup == null) {
       return Response.status(Status.NOT_FOUND).build();
@@ -122,7 +122,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     updateMembers(scimGroup, updateOperations);
 
     wingsPersistence.update(userGroup, updateOperations);
-    logger.info("SCIM: Update group call successful groupId: {}, groupId {}, group resource: {}", groupId, accountId,
+    logger.info("SCIM: Update group call successful accountId {}, groupId  {}, group resource: {}", accountId, groupId,
         scimGroup);
     return Response.status(Status.OK).entity(scimGroup).build();
   }
@@ -133,9 +133,9 @@ public class ScimGroupServiceImpl implements ScimGroupService {
 
   @Override
   public void deleteGroup(String groupId, String accountId) {
-    logger.info("SCIM: Deleting group {} from account {}", groupId, accountId);
+    logger.info("SCIM: Deleting from account {}, group {}", accountId, groupId);
     wingsPersistence.delete(accountId, UserGroup.class, groupId);
-    logger.info("SCIM: Deleted group {} from account {}", groupId, accountId);
+    logger.info("SCIM: Deleted from account {}, group {}", accountId, groupId);
   }
 
   private String processReplaceOperationOnGroup(String groupId, String accountId, PatchOperation patchOperation) {
@@ -279,7 +279,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
       throw new UnauthorizedException(EXC_MSG_GROUP_DOESNT_EXIST, GROUP);
     }
     ScimGroup scimGroup = buildGroupResponse(userGroup);
-    logger.info("SCIM: Response to get group call: {}", scimGroup);
+    logger.info("SCIM: Response for accountId {} to get group {} with call: {}", accountId, groupId, scimGroup);
     return scimGroup;
   }
 
@@ -324,7 +324,8 @@ public class ScimGroupServiceImpl implements ScimGroupService {
 
   @Override
   public ScimGroup createGroup(ScimGroup groupQuery, String accountId) {
-    logger.info("SCIM: Creating group call: {}", groupQuery);
+    logger.info("SCIM: Creating group in account {} where name {} with call: {}", accountId,
+        groupQuery.getDisplayName(), groupQuery);
 
     UserGroup userGroupAlreadyPresent = checkIfUserGroupAlreadyPresentByName(accountId, groupQuery.getDisplayName());
 
@@ -342,7 +343,8 @@ public class ScimGroupServiceImpl implements ScimGroupService {
     userGroupService.save(userGroup);
 
     groupQuery.setId(userGroup.getUuid());
-    logger.info("SCIM: Completed creating group call: {}", groupQuery);
+    logger.info("SCIM: Completed creating group with name {} for account {} and call: {}", groupQuery.getDisplayName(),
+        accountId, groupQuery);
     return getGroup(userGroup.getUuid(), accountId);
   }
 
