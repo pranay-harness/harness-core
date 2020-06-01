@@ -40,35 +40,27 @@ public final class Task {
   static {
     java.lang.String[] descriptorData = {"\n\036io/harness/delegate/task.proto\022\023io.har"
         + "ness.delegate\032\036google/protobuf/duration."
-        + "proto\032$io/harness/delegate/capability.pr"
-        + "oto\"\024\n\006TaskId\022\n\n\002id\030\001 \001(\t\"\030\n\010TaskType\022\014\n"
-        + "\004type\030\001 \001(\t\"\216\001\n\025TaskSetupAbstractions\022F\n"
-        + "\006values\030\001 \003(\01326.io.harness.delegate.Task"
-        + "SetupAbstractions.ValuesEntry\032-\n\013ValuesE"
-        + "ntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\267\002\n"
-        + "\013TaskDetails\022+\n\004type\030\002 \001(\0132\035.io.harness."
-        + "delegate.TaskType\022\031\n\017kryo_parameters\030\003 \001"
-        + "(\014H\000\0224\n\021execution_timeout\030\004 \001(\0132\031.google"
-        + ".protobuf.Duration\022F\n\013expressions\030\005 \003(\0132"
-        + "1.io.harness.delegate.TaskDetails.Expres"
-        + "sionsEntry\022 \n\030expression_functor_token\030\006"
-        + " \001(\003\0322\n\020ExpressionsEntry\022\013\n\003key\030\001 \001(\t\022\r\n"
-        + "\005value\030\002 \001(\t:\0028\001B\014\n\nparametersB\002P\001b\006prot"
-        + "o3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
+        + "proto\"\030\n\006TaskId\022\016\n\002id\030\001 \001(\tR\002id\"\036\n\010TaskT"
+        + "ype\022\022\n\004type\030\001 \001(\tR\004type\"\242\001\n\025TaskSetupAbs"
+        + "tractions\022N\n\006values\030\001 \003(\01326.io.harness.d"
+        + "elegate.TaskSetupAbstractions.ValuesEntr"
+        + "yR\006values\0329\n\013ValuesEntry\022\020\n\003key\030\001 \001(\tR\003k"
+        + "ey\022\024\n\005value\030\002 \001(\tR\005value:\0028\001\"\220\003\n\013TaskDet"
+        + "ails\0221\n\004type\030\002 \001(\0132\035.io.harness.delegate"
+        + ".TaskTypeR\004type\022)\n\017kryo_parameters\030\003 \001(\014"
+        + "H\000R\016kryoParameters\022F\n\021execution_timeout\030"
+        + "\004 \001(\0132\031.google.protobuf.DurationR\020execut"
+        + "ionTimeout\022S\n\013expressions\030\005 \003(\01321.io.har"
+        + "ness.delegate.TaskDetails.ExpressionsEnt"
+        + "ryR\013expressions\0228\n\030expression_functor_to"
+        + "ken\030\006 \001(\003R\026expressionFunctorToken\032>\n\020Exp"
+        + "ressionsEntry\022\020\n\003key\030\001 \001(\tR\003key\022\024\n\005value"
+        + "\030\002 \001(\tR\005value:\0028\001B\014\n\nparametersB\002P\001b\006pro"
+        + "to3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.DurationProto.getDescriptor(),
-            io.harness.delegate.CapabilityOuterClass.getDescriptor(),
-        },
-        assigner);
+        });
     internal_static_io_harness_delegate_TaskId_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_delegate_TaskId_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
@@ -121,7 +113,6 @@ public final class Task {
                 "Value",
             });
     com.google.protobuf.DurationProto.getDescriptor();
-    io.harness.delegate.CapabilityOuterClass.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

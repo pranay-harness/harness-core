@@ -17,8 +17,8 @@ import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
 
 /**
  */
-@javax.annotation.Generated(
-    value = "by gRPC proto compiler (version 1.21.0)", comments = "Source: io/harness/event/event_publisher.proto")
+@javax.annotation.
+Generated(value = "by gRPC proto compiler", comments = "Source: io/harness/event/event_publisher.proto")
 public final class EventPublisherGrpc {
   private EventPublisherGrpc() {}
 
@@ -40,7 +40,7 @@ public final class EventPublisherGrpc {
           EventPublisherGrpc.getPublishMethod = getPublishMethod =
               io.grpc.MethodDescriptor.<io.harness.event.PublishRequest, io.harness.event.PublishResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                  .setFullMethodName(generateFullMethodName("io.harness.event.EventPublisher", "Publish"))
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "Publish"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(
                       io.grpc.protobuf.ProtoUtils.marshaller(io.harness.event.PublishRequest.getDefaultInstance()))

@@ -25,22 +25,16 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParamsOuterClass {
     java.lang.String[] descriptorData = {"\n\\io/harness/perpetualtask/instancesync/"
         + "spotinst_ami_instance_sync_perpetual_tas"
         + "k_params.proto\022%io.harness.perpetualtask"
-        + ".instancesync\"\276\001\n*SpotinstAmiInstanceSyn"
-        + "cPerpetualTaskParams\022\016\n\006region\030\001 \001(\t\022\026\n\016"
-        + "elastigroup_id\030\002 \001(\t\022\022\n\naws_config\030\003 \001(\014"
-        + "\022\027\n\017spotinst_config\030\004 \001(\014\022\032\n\022aws_encrypt"
-        + "ed_data\030\005 \001(\014\022\037\n\027spotinst_encrypted_data"
-        + "\030\006 \001(\014B\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {}, assigner);
+        + ".instancesync\"\231\002\n*SpotinstAmiInstanceSyn"
+        + "cPerpetualTaskParams\022\026\n\006region\030\001 \001(\tR\006re"
+        + "gion\022%\n\016elastigroup_id\030\002 \001(\tR\relastigrou"
+        + "pId\022\035\n\naws_config\030\003 \001(\014R\tawsConfig\022\'\n\017sp"
+        + "otinst_config\030\004 \001(\014R\016spotinstConfig\022,\n\022a"
+        + "ws_encrypted_data\030\005 \001(\014R\020awsEncryptedDat"
+        + "a\0226\n\027spotinst_encrypted_data\030\006 \001(\014R\025spot"
+        + "instEncryptedDataB\002P\001b\006proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
     internal_static_io_harness_perpetualtask_instancesync_SpotinstAmiInstanceSyncPerpetualTaskParams_descriptor =
         getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_perpetualtask_instancesync_SpotinstAmiInstanceSyncPerpetualTaskParams_fieldAccessorTable =

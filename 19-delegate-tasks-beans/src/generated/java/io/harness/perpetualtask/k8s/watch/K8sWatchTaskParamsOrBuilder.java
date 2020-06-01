@@ -8,34 +8,41 @@ public interface K8sWatchTaskParamsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.k8s.watch.K8sWatchTaskParams)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string cloud_provider_id = 1;</code>
+   * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   java.lang.String getCloudProviderId();
   /**
-   * <code>string cloud_provider_id = 1;</code>
+   * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   com.google.protobuf.ByteString getCloudProviderIdBytes();
 
   /**
-   * <code>bytes k8s_cluster_config = 2;</code>
+   * <code>bytes k8s_cluster_config = 2[json_name = "k8sClusterConfig"];</code>
+   * @return The k8sClusterConfig.
    */
   com.google.protobuf.ByteString getK8SClusterConfig();
 
   /**
-   * <code>string cluster_id = 3;</code>
+   * <code>string cluster_id = 3[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   java.lang.String getClusterId();
   /**
-   * <code>string cluster_id = 3;</code>
+   * <code>string cluster_id = 3[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   com.google.protobuf.ByteString getClusterIdBytes();
 
   /**
-   * <code>string cluster_name = 4;</code>
+   * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   java.lang.String getClusterName();
   /**
-   * <code>string cluster_name = 4;</code>
+   * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   com.google.protobuf.ByteString getClusterNameBytes();
 }

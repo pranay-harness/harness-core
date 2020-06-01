@@ -27,6 +27,13 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new SpotinstAmiInstanceSyncPerpetualTaskParams();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -37,7 +44,6 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -110,7 +116,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
   public static final int REGION_FIELD_NUMBER = 1;
   private volatile java.lang.Object region_;
   /**
-   * <code>string region = 1;</code>
+   * <code>string region = 1[json_name = "region"];</code>
+   * @return The region.
    */
   public java.lang.String getRegion() {
     java.lang.Object ref = region_;
@@ -124,7 +131,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
     }
   }
   /**
-   * <code>string region = 1;</code>
+   * <code>string region = 1[json_name = "region"];</code>
+   * @return The bytes for region.
    */
   public com.google.protobuf.ByteString getRegionBytes() {
     java.lang.Object ref = region_;
@@ -140,7 +148,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
   public static final int ELASTIGROUP_ID_FIELD_NUMBER = 2;
   private volatile java.lang.Object elastigroupId_;
   /**
-   * <code>string elastigroup_id = 2;</code>
+   * <code>string elastigroup_id = 2[json_name = "elastigroupId"];</code>
+   * @return The elastigroupId.
    */
   public java.lang.String getElastigroupId() {
     java.lang.Object ref = elastigroupId_;
@@ -154,7 +163,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
     }
   }
   /**
-   * <code>string elastigroup_id = 2;</code>
+   * <code>string elastigroup_id = 2[json_name = "elastigroupId"];</code>
+   * @return The bytes for elastigroupId.
    */
   public com.google.protobuf.ByteString getElastigroupIdBytes() {
     java.lang.Object ref = elastigroupId_;
@@ -170,7 +180,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
   public static final int AWS_CONFIG_FIELD_NUMBER = 3;
   private com.google.protobuf.ByteString awsConfig_;
   /**
-   * <code>bytes aws_config = 3;</code>
+   * <code>bytes aws_config = 3[json_name = "awsConfig"];</code>
+   * @return The awsConfig.
    */
   public com.google.protobuf.ByteString getAwsConfig() {
     return awsConfig_;
@@ -179,7 +190,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
   public static final int SPOTINST_CONFIG_FIELD_NUMBER = 4;
   private com.google.protobuf.ByteString spotinstConfig_;
   /**
-   * <code>bytes spotinst_config = 4;</code>
+   * <code>bytes spotinst_config = 4[json_name = "spotinstConfig"];</code>
+   * @return The spotinstConfig.
    */
   public com.google.protobuf.ByteString getSpotinstConfig() {
     return spotinstConfig_;
@@ -188,7 +200,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
   public static final int AWS_ENCRYPTED_DATA_FIELD_NUMBER = 5;
   private com.google.protobuf.ByteString awsEncryptedData_;
   /**
-   * <code>bytes aws_encrypted_data = 5;</code>
+   * <code>bytes aws_encrypted_data = 5[json_name = "awsEncryptedData"];</code>
+   * @return The awsEncryptedData.
    */
   public com.google.protobuf.ByteString getAwsEncryptedData() {
     return awsEncryptedData_;
@@ -197,7 +210,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
   public static final int SPOTINST_ENCRYPTED_DATA_FIELD_NUMBER = 6;
   private com.google.protobuf.ByteString spotinstEncryptedData_;
   /**
-   * <code>bytes spotinst_encrypted_data = 6;</code>
+   * <code>bytes spotinst_encrypted_data = 6[json_name = "spotinstEncryptedData"];</code>
+   * @return The spotinstEncryptedData.
    */
   public com.google.protobuf.ByteString getSpotinstEncryptedData() {
     return spotinstEncryptedData_;
@@ -577,7 +591,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
 
     private java.lang.Object region_ = "";
     /**
-     * <code>string region = 1;</code>
+     * <code>string region = 1[json_name = "region"];</code>
+     * @return The region.
      */
     public java.lang.String getRegion() {
       java.lang.Object ref = region_;
@@ -591,7 +606,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
       }
     }
     /**
-     * <code>string region = 1;</code>
+     * <code>string region = 1[json_name = "region"];</code>
+     * @return The bytes for region.
      */
     public com.google.protobuf.ByteString getRegionBytes() {
       java.lang.Object ref = region_;
@@ -604,7 +620,9 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
       }
     }
     /**
-     * <code>string region = 1;</code>
+     * <code>string region = 1[json_name = "region"];</code>
+     * @param value The region to set.
+     * @return This builder for chaining.
      */
     public Builder setRegion(java.lang.String value) {
       if (value == null) {
@@ -616,7 +634,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
       return this;
     }
     /**
-     * <code>string region = 1;</code>
+     * <code>string region = 1[json_name = "region"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearRegion() {
       region_ = getDefaultInstance().getRegion();
@@ -624,7 +643,9 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
       return this;
     }
     /**
-     * <code>string region = 1;</code>
+     * <code>string region = 1[json_name = "region"];</code>
+     * @param value The bytes for region to set.
+     * @return This builder for chaining.
      */
     public Builder setRegionBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -639,7 +660,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
 
     private java.lang.Object elastigroupId_ = "";
     /**
-     * <code>string elastigroup_id = 2;</code>
+     * <code>string elastigroup_id = 2[json_name = "elastigroupId"];</code>
+     * @return The elastigroupId.
      */
     public java.lang.String getElastigroupId() {
       java.lang.Object ref = elastigroupId_;
@@ -653,7 +675,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
       }
     }
     /**
-     * <code>string elastigroup_id = 2;</code>
+     * <code>string elastigroup_id = 2[json_name = "elastigroupId"];</code>
+     * @return The bytes for elastigroupId.
      */
     public com.google.protobuf.ByteString getElastigroupIdBytes() {
       java.lang.Object ref = elastigroupId_;
@@ -666,7 +689,9 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
       }
     }
     /**
-     * <code>string elastigroup_id = 2;</code>
+     * <code>string elastigroup_id = 2[json_name = "elastigroupId"];</code>
+     * @param value The elastigroupId to set.
+     * @return This builder for chaining.
      */
     public Builder setElastigroupId(java.lang.String value) {
       if (value == null) {
@@ -678,7 +703,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
       return this;
     }
     /**
-     * <code>string elastigroup_id = 2;</code>
+     * <code>string elastigroup_id = 2[json_name = "elastigroupId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearElastigroupId() {
       elastigroupId_ = getDefaultInstance().getElastigroupId();
@@ -686,7 +712,9 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
       return this;
     }
     /**
-     * <code>string elastigroup_id = 2;</code>
+     * <code>string elastigroup_id = 2[json_name = "elastigroupId"];</code>
+     * @param value The bytes for elastigroupId to set.
+     * @return This builder for chaining.
      */
     public Builder setElastigroupIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -701,13 +729,16 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
 
     private com.google.protobuf.ByteString awsConfig_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes aws_config = 3;</code>
+     * <code>bytes aws_config = 3[json_name = "awsConfig"];</code>
+     * @return The awsConfig.
      */
     public com.google.protobuf.ByteString getAwsConfig() {
       return awsConfig_;
     }
     /**
-     * <code>bytes aws_config = 3;</code>
+     * <code>bytes aws_config = 3[json_name = "awsConfig"];</code>
+     * @param value The awsConfig to set.
+     * @return This builder for chaining.
      */
     public Builder setAwsConfig(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -719,7 +750,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
       return this;
     }
     /**
-     * <code>bytes aws_config = 3;</code>
+     * <code>bytes aws_config = 3[json_name = "awsConfig"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearAwsConfig() {
       awsConfig_ = getDefaultInstance().getAwsConfig();
@@ -729,13 +761,16 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
 
     private com.google.protobuf.ByteString spotinstConfig_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes spotinst_config = 4;</code>
+     * <code>bytes spotinst_config = 4[json_name = "spotinstConfig"];</code>
+     * @return The spotinstConfig.
      */
     public com.google.protobuf.ByteString getSpotinstConfig() {
       return spotinstConfig_;
     }
     /**
-     * <code>bytes spotinst_config = 4;</code>
+     * <code>bytes spotinst_config = 4[json_name = "spotinstConfig"];</code>
+     * @param value The spotinstConfig to set.
+     * @return This builder for chaining.
      */
     public Builder setSpotinstConfig(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -747,7 +782,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
       return this;
     }
     /**
-     * <code>bytes spotinst_config = 4;</code>
+     * <code>bytes spotinst_config = 4[json_name = "spotinstConfig"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearSpotinstConfig() {
       spotinstConfig_ = getDefaultInstance().getSpotinstConfig();
@@ -757,13 +793,16 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
 
     private com.google.protobuf.ByteString awsEncryptedData_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes aws_encrypted_data = 5;</code>
+     * <code>bytes aws_encrypted_data = 5[json_name = "awsEncryptedData"];</code>
+     * @return The awsEncryptedData.
      */
     public com.google.protobuf.ByteString getAwsEncryptedData() {
       return awsEncryptedData_;
     }
     /**
-     * <code>bytes aws_encrypted_data = 5;</code>
+     * <code>bytes aws_encrypted_data = 5[json_name = "awsEncryptedData"];</code>
+     * @param value The awsEncryptedData to set.
+     * @return This builder for chaining.
      */
     public Builder setAwsEncryptedData(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -775,7 +814,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
       return this;
     }
     /**
-     * <code>bytes aws_encrypted_data = 5;</code>
+     * <code>bytes aws_encrypted_data = 5[json_name = "awsEncryptedData"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearAwsEncryptedData() {
       awsEncryptedData_ = getDefaultInstance().getAwsEncryptedData();
@@ -785,13 +825,16 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
 
     private com.google.protobuf.ByteString spotinstEncryptedData_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes spotinst_encrypted_data = 6;</code>
+     * <code>bytes spotinst_encrypted_data = 6[json_name = "spotinstEncryptedData"];</code>
+     * @return The spotinstEncryptedData.
      */
     public com.google.protobuf.ByteString getSpotinstEncryptedData() {
       return spotinstEncryptedData_;
     }
     /**
-     * <code>bytes spotinst_encrypted_data = 6;</code>
+     * <code>bytes spotinst_encrypted_data = 6[json_name = "spotinstEncryptedData"];</code>
+     * @param value The spotinstEncryptedData to set.
+     * @return This builder for chaining.
      */
     public Builder setSpotinstEncryptedData(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -803,7 +846,8 @@ public final class SpotinstAmiInstanceSyncPerpetualTaskParams extends com.google
       return this;
     }
     /**
-     * <code>bytes spotinst_encrypted_data = 6;</code>
+     * <code>bytes spotinst_encrypted_data = 6[json_name = "spotinstEncryptedData"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearSpotinstEncryptedData() {
       spotinstEncryptedData_ = getDefaultInstance().getSpotinstEncryptedData();

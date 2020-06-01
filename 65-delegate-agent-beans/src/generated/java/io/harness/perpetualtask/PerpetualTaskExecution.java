@@ -33,34 +33,28 @@ public final class PerpetualTaskExecution {
         + "k_execution.proto\022\030io.harness.perpetualt"
         + "ask\032\031google/protobuf/any.proto\032\037google/p"
         + "rotobuf/timestamp.proto\032-io/harness/perp"
-        + "etualtask/perpetual_task.proto\"O\n\034Perpet"
-        + "ualTaskExecutionParams\022/\n\021customized_par"
-        + "ams\030\001 \001(\0132\024.google.protobuf.Any\"\222\001\n\032Perp"
-        + "etualTaskAssignDetails\022:\n\007task_id\030\001 \001(\0132"
-        + ").io.harness.perpetualtask.PerpetualTask"
-        + "Id\0228\n\024last_context_updated\030\002 \001(\0132\032.googl"
-        + "e.protobuf.Timestamp\"\355\001\n\035PerpetualTaskEx"
-        + "ecutionContext\022K\n\013task_params\030\001 \001(\01326.io"
-        + ".harness.perpetualtask.PerpetualTaskExec"
-        + "utionParams\022F\n\rtask_schedule\030\002 \001(\0132/.io."
-        + "harness.perpetualtask.PerpetualTaskSched"
-        + "ule\0227\n\023heartbeat_timestamp\030\003 \001(\0132\032.googl"
-        + "e.protobuf.TimestampB\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
+        + "etualtask/perpetual_task.proto\"a\n\034Perpet"
+        + "ualTaskExecutionParams\022A\n\021customized_par"
+        + "ams\030\001 \001(\0132\024.google.protobuf.AnyR\020customi"
+        + "zedParams\"\256\001\n\032PerpetualTaskAssignDetails"
+        + "\022B\n\007task_id\030\001 \001(\0132).io.harness.perpetual"
+        + "task.PerpetualTaskIdR\006taskId\022L\n\024last_con"
+        + "text_updated\030\002 \001(\0132\032.google.protobuf.Tim"
+        + "estampR\022lastContextUpdated\"\233\002\n\035Perpetual"
+        + "TaskExecutionContext\022W\n\013task_params\030\001 \001("
+        + "\01326.io.harness.perpetualtask.PerpetualTa"
+        + "skExecutionParamsR\ntaskParams\022T\n\rtask_sc"
+        + "hedule\030\002 \001(\0132/.io.harness.perpetualtask."
+        + "PerpetualTaskScheduleR\014taskSchedule\022K\n\023h"
+        + "eartbeat_timestamp\030\003 \001(\0132\032.google.protob"
+        + "uf.TimestampR\022heartbeatTimestampB\002P\001b\006pr"
+        + "oto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.AnyProto.getDescriptor(),
             com.google.protobuf.TimestampProto.getDescriptor(),
             io.harness.perpetualtask.PerpetualTask.getDescriptor(),
-        },
-        assigner);
+        });
     internal_static_io_harness_perpetualtask_PerpetualTaskExecutionParams_descriptor =
         getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_perpetualtask_PerpetualTaskExecutionParams_fieldAccessorTable =

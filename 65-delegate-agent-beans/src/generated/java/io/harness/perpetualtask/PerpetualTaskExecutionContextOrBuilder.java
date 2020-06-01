@@ -9,41 +9,47 @@ public interface PerpetualTaskExecutionContextOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.PerpetualTaskExecutionContext)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
+   * @return Whether the taskParams field is set.
    */
   boolean hasTaskParams();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
+   * @return The taskParams.
    */
   io.harness.perpetualtask.PerpetualTaskExecutionParams getTaskParams();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionParams task_params = 1[json_name = "taskParams"];</code>
    */
   io.harness.perpetualtask.PerpetualTaskExecutionParamsOrBuilder getTaskParamsOrBuilder();
 
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
+   * @return Whether the taskSchedule field is set.
    */
   boolean hasTaskSchedule();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
+   * @return The taskSchedule.
    */
   io.harness.perpetualtask.PerpetualTaskSchedule getTaskSchedule();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskSchedule task_schedule = 2[json_name = "taskSchedule"];</code>
    */
   io.harness.perpetualtask.PerpetualTaskScheduleOrBuilder getTaskScheduleOrBuilder();
 
   /**
-   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
+   * @return Whether the heartbeatTimestamp field is set.
    */
   boolean hasHeartbeatTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
+   * @return The heartbeatTimestamp.
    */
   com.google.protobuf.Timestamp getHeartbeatTimestamp();
   /**
-   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3;</code>
+   * <code>.google.protobuf.Timestamp heartbeat_timestamp = 3[json_name = "heartbeatTimestamp"];</code>
    */
   com.google.protobuf.TimestampOrBuilder getHeartbeatTimestampOrBuilder();
 }

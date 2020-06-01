@@ -9,24 +9,31 @@ public interface RegisterPerpetualTaskClientEntrypointRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string type = 1;</code>
+   * <code>string type = 1[json_name = "type"];</code>
+   * @return The type.
    */
   java.lang.String getType();
   /**
-   * <code>string type = 1;</code>
+   * <code>string type = 1[json_name = "type"];</code>
+   * @return The bytes for type.
    */
   com.google.protobuf.ByteString getTypeBytes();
 
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+   * "perpetualTaskClientEntrypoint"];</code>
+   * @return Whether the perpetualTaskClientEntrypoint field is set.
    */
   boolean hasPerpetualTaskClientEntrypoint();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+   * "perpetualTaskClientEntrypoint"];</code>
+   * @return The perpetualTaskClientEntrypoint.
    */
   io.harness.perpetualtask.PerpetualTaskClientEntrypoint getPerpetualTaskClientEntrypoint();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2[json_name =
+   * "perpetualTaskClientEntrypoint"];</code>
    */
   io.harness.perpetualtask.PerpetualTaskClientEntrypointOrBuilder getPerpetualTaskClientEntrypointOrBuilder();
 }

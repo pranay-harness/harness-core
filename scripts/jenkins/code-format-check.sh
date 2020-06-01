@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+
+BASEDIR=$(pwd -L)
+
 retryCount=0
 timestamp=$(date +%d-%m-%Y_%H-%M-%S)
 logPath="/var/log/format_${timestamp}.log"
@@ -56,11 +60,7 @@ echo "Running Sort Pom"
 executeWithRetry 'sortpom:sort'
 echo "Sort Pom Completed"
 
-executeWithRetry 'install -pl 64-delegate-beans'
-
-echo "Generating Resources For Protobuf"
-executeWithRetry '-P protobuf clean generate-sources'
-echo "Protobuf completed"
+${BASEDIR}/scripts/jenkins/build-protos.sh
 
 find . -iname "*.graphql" | xargs -L 1 prettier --write --print-width=120
 

@@ -8,153 +8,127 @@ public interface K8sWatchEventOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.k8s.watch.K8sWatchEvent)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <pre>
-   * cluster details
-   * </pre>
-   *
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   java.lang.String getClusterId();
   /**
-   * <pre>
-   * cluster details
-   * </pre>
-   *
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   com.google.protobuf.ByteString getClusterIdBytes();
 
   /**
-   * <code>string cluster_name = 2;</code>
+   * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   java.lang.String getClusterName();
   /**
-   * <code>string cluster_name = 2;</code>
+   * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   com.google.protobuf.ByteString getClusterNameBytes();
 
   /**
-   * <code>string cloud_provider_id = 3;</code>
+   * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   java.lang.String getCloudProviderId();
   /**
-   * <code>string cloud_provider_id = 3;</code>
+   * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   com.google.protobuf.ByteString getCloudProviderIdBytes();
 
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4[json_name = "type"];</code>
+   * @return The enum numeric value on the wire for type.
    */
   int getTypeValue();
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4[json_name = "type"];</code>
+   * @return The type.
    */
   io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type getType();
 
   /**
-   * <pre>
-   * reference to the resource
-   * </pre>
-   *
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
+   * @return Whether the resourceRef field is set.
    */
   boolean hasResourceRef();
   /**
-   * <pre>
-   * reference to the resource
-   * </pre>
-   *
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
+   * @return The resourceRef.
    */
   io.harness.perpetualtask.k8s.watch.K8sObjectReference getResourceRef();
   /**
-   * <pre>
-   * reference to the resource
-   * </pre>
-   *
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
    */
   io.harness.perpetualtask.k8s.watch.K8sObjectReferenceOrBuilder getResourceRefOrBuilder();
 
   /**
-   * <pre>
-   * old resource version and yaml
-   * only present for UPDATED &amp; DELETED
-   * </pre>
-   *
-   * <code>string old_resource_version = 6;</code>
+   * <code>string old_resource_version = 6[json_name = "oldResourceVersion"];</code>
+   * @return The oldResourceVersion.
    */
   java.lang.String getOldResourceVersion();
   /**
-   * <pre>
-   * old resource version and yaml
-   * only present for UPDATED &amp; DELETED
-   * </pre>
-   *
-   * <code>string old_resource_version = 6;</code>
+   * <code>string old_resource_version = 6[json_name = "oldResourceVersion"];</code>
+   * @return The bytes for oldResourceVersion.
    */
   com.google.protobuf.ByteString getOldResourceVersionBytes();
 
   /**
-   * <code>string old_resource_yaml = 7;</code>
+   * <code>string old_resource_yaml = 7[json_name = "oldResourceYaml"];</code>
+   * @return The oldResourceYaml.
    */
   java.lang.String getOldResourceYaml();
   /**
-   * <code>string old_resource_yaml = 7;</code>
+   * <code>string old_resource_yaml = 7[json_name = "oldResourceYaml"];</code>
+   * @return The bytes for oldResourceYaml.
    */
   com.google.protobuf.ByteString getOldResourceYamlBytes();
 
   /**
-   * <pre>
-   * old resource version and yaml
-   * only present for UPDATED &amp; ADDED
-   * </pre>
-   *
-   * <code>string new_resource_version = 8;</code>
+   * <code>string new_resource_version = 8[json_name = "newResourceVersion"];</code>
+   * @return The newResourceVersion.
    */
   java.lang.String getNewResourceVersion();
   /**
-   * <pre>
-   * old resource version and yaml
-   * only present for UPDATED &amp; ADDED
-   * </pre>
-   *
-   * <code>string new_resource_version = 8;</code>
+   * <code>string new_resource_version = 8[json_name = "newResourceVersion"];</code>
+   * @return The bytes for newResourceVersion.
    */
   com.google.protobuf.ByteString getNewResourceVersionBytes();
 
   /**
-   * <code>string new_resource_yaml = 9;</code>
+   * <code>string new_resource_yaml = 9[json_name = "newResourceYaml"];</code>
+   * @return The newResourceYaml.
    */
   java.lang.String getNewResourceYaml();
   /**
-   * <code>string new_resource_yaml = 9;</code>
+   * <code>string new_resource_yaml = 9[json_name = "newResourceYaml"];</code>
+   * @return The bytes for newResourceYaml.
    */
   com.google.protobuf.ByteString getNewResourceYamlBytes();
 
   /**
-   * <pre>
-   * description of the change
-   * </pre>
-   *
-   * <code>string description = 10;</code>
+   * <code>string description = 10[json_name = "description"];</code>
+   * @return The description.
    */
   java.lang.String getDescription();
   /**
-   * <pre>
-   * description of the change
-   * </pre>
-   *
-   * <code>string description = 10;</code>
+   * <code>string description = 10[json_name = "description"];</code>
+   * @return The bytes for description.
    */
   com.google.protobuf.ByteString getDescriptionBytes();
 
   /**
-   * <code>string kube_system_uid = 11;</code>
+   * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+   * @return The kubeSystemUid.
    */
   java.lang.String getKubeSystemUid();
   /**
-   * <code>string kube_system_uid = 11;</code>
+   * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+   * @return The bytes for kubeSystemUid.
    */
   com.google.protobuf.ByteString getKubeSystemUidBytes();
 }

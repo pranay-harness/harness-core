@@ -21,18 +21,11 @@ public final class CapabilityOuterClass {
   private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
   static {
     java.lang.String[] descriptorData = {"\n$io/harness/delegate/capability.proto\022\023"
-        + "io.harness.delegate\"%\n\nCapability\022\027\n\017kry"
-        + "o_capability\030\001 \001(\014B\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {}, assigner);
+        + "io.harness.delegate\"5\n\nCapability\022\'\n\017kry"
+        + "o_capability\030\001 \001(\014R\016kryoCapabilityB\002P\001b\006"
+        + "proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
     internal_static_io_harness_delegate_Capability_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_delegate_Capability_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(

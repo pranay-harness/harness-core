@@ -4,10 +4,6 @@
 package io.harness.perpetualtask;
 
 /**
- * <pre>
- * params are tracked by clients
- * </pre>
- *
  * Protobuf type {@code io.harness.perpetualtask.PerpetualTaskExecutionParams}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:PerpetualTaskExecutionParams.java.pb.meta")
@@ -23,6 +19,13 @@ public final class PerpetualTaskExecutionParams extends com.google.protobuf.Gene
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new PerpetualTaskExecutionParams();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -33,7 +36,6 @@ public final class PerpetualTaskExecutionParams extends com.google.protobuf.Gene
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -90,19 +92,21 @@ public final class PerpetualTaskExecutionParams extends com.google.protobuf.Gene
   public static final int CUSTOMIZED_PARAMS_FIELD_NUMBER = 1;
   private com.google.protobuf.Any customizedParams_;
   /**
-   * <code>.google.protobuf.Any customized_params = 1;</code>
+   * <code>.google.protobuf.Any customized_params = 1[json_name = "customizedParams"];</code>
+   * @return Whether the customizedParams field is set.
    */
   public boolean hasCustomizedParams() {
     return customizedParams_ != null;
   }
   /**
-   * <code>.google.protobuf.Any customized_params = 1;</code>
+   * <code>.google.protobuf.Any customized_params = 1[json_name = "customizedParams"];</code>
+   * @return The customizedParams.
    */
   public com.google.protobuf.Any getCustomizedParams() {
     return customizedParams_ == null ? com.google.protobuf.Any.getDefaultInstance() : customizedParams_;
   }
   /**
-   * <code>.google.protobuf.Any customized_params = 1;</code>
+   * <code>.google.protobuf.Any customized_params = 1[json_name = "customizedParams"];</code>
    */
   public com.google.protobuf.AnyOrBuilder getCustomizedParamsOrBuilder() {
     return getCustomizedParams();
@@ -256,10 +260,6 @@ public final class PerpetualTaskExecutionParams extends com.google.protobuf.Gene
     return builder;
   }
   /**
-   * <pre>
-   * params are tracked by clients
-   * </pre>
-   *
    * Protobuf type {@code io.harness.perpetualtask.PerpetualTaskExecutionParams}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
@@ -413,13 +413,15 @@ public final class PerpetualTaskExecutionParams extends com.google.protobuf.Gene
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Any, com.google.protobuf.Any.Builder,
         com.google.protobuf.AnyOrBuilder> customizedParamsBuilder_;
     /**
-     * <code>.google.protobuf.Any customized_params = 1;</code>
+     * <code>.google.protobuf.Any customized_params = 1[json_name = "customizedParams"];</code>
+     * @return Whether the customizedParams field is set.
      */
     public boolean hasCustomizedParams() {
       return customizedParamsBuilder_ != null || customizedParams_ != null;
     }
     /**
-     * <code>.google.protobuf.Any customized_params = 1;</code>
+     * <code>.google.protobuf.Any customized_params = 1[json_name = "customizedParams"];</code>
+     * @return The customizedParams.
      */
     public com.google.protobuf.Any getCustomizedParams() {
       if (customizedParamsBuilder_ == null) {
@@ -429,7 +431,7 @@ public final class PerpetualTaskExecutionParams extends com.google.protobuf.Gene
       }
     }
     /**
-     * <code>.google.protobuf.Any customized_params = 1;</code>
+     * <code>.google.protobuf.Any customized_params = 1[json_name = "customizedParams"];</code>
      */
     public Builder setCustomizedParams(com.google.protobuf.Any value) {
       if (customizedParamsBuilder_ == null) {
@@ -445,7 +447,7 @@ public final class PerpetualTaskExecutionParams extends com.google.protobuf.Gene
       return this;
     }
     /**
-     * <code>.google.protobuf.Any customized_params = 1;</code>
+     * <code>.google.protobuf.Any customized_params = 1[json_name = "customizedParams"];</code>
      */
     public Builder setCustomizedParams(com.google.protobuf.Any.Builder builderForValue) {
       if (customizedParamsBuilder_ == null) {
@@ -458,7 +460,7 @@ public final class PerpetualTaskExecutionParams extends com.google.protobuf.Gene
       return this;
     }
     /**
-     * <code>.google.protobuf.Any customized_params = 1;</code>
+     * <code>.google.protobuf.Any customized_params = 1[json_name = "customizedParams"];</code>
      */
     public Builder mergeCustomizedParams(com.google.protobuf.Any value) {
       if (customizedParamsBuilder_ == null) {
@@ -475,7 +477,7 @@ public final class PerpetualTaskExecutionParams extends com.google.protobuf.Gene
       return this;
     }
     /**
-     * <code>.google.protobuf.Any customized_params = 1;</code>
+     * <code>.google.protobuf.Any customized_params = 1[json_name = "customizedParams"];</code>
      */
     public Builder clearCustomizedParams() {
       if (customizedParamsBuilder_ == null) {
@@ -489,14 +491,14 @@ public final class PerpetualTaskExecutionParams extends com.google.protobuf.Gene
       return this;
     }
     /**
-     * <code>.google.protobuf.Any customized_params = 1;</code>
+     * <code>.google.protobuf.Any customized_params = 1[json_name = "customizedParams"];</code>
      */
     public com.google.protobuf.Any.Builder getCustomizedParamsBuilder() {
       onChanged();
       return getCustomizedParamsFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Any customized_params = 1;</code>
+     * <code>.google.protobuf.Any customized_params = 1[json_name = "customizedParams"];</code>
      */
     public com.google.protobuf.AnyOrBuilder getCustomizedParamsOrBuilder() {
       if (customizedParamsBuilder_ != null) {
@@ -506,7 +508,7 @@ public final class PerpetualTaskExecutionParams extends com.google.protobuf.Gene
       }
     }
     /**
-     * <code>.google.protobuf.Any customized_params = 1;</code>
+     * <code>.google.protobuf.Any customized_params = 1[json_name = "customizedParams"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Any, com.google.protobuf.Any.Builder,
         com.google.protobuf.AnyOrBuilder>

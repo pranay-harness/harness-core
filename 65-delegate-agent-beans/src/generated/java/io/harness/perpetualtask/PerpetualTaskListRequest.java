@@ -19,6 +19,13 @@ public final class PerpetualTaskListRequest extends com.google.protobuf.Generate
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new PerpetualTaskListRequest();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -29,7 +36,6 @@ public final class PerpetualTaskListRequest extends com.google.protobuf.Generate
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -86,19 +92,21 @@ public final class PerpetualTaskListRequest extends com.google.protobuf.Generate
   public static final int DELEGATE_ID_FIELD_NUMBER = 1;
   private io.harness.delegate.DelegateId delegateId_;
   /**
-   * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+   * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
+   * @return Whether the delegateId field is set.
    */
   public boolean hasDelegateId() {
     return delegateId_ != null;
   }
   /**
-   * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+   * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
+   * @return The delegateId.
    */
   public io.harness.delegate.DelegateId getDelegateId() {
     return delegateId_ == null ? io.harness.delegate.DelegateId.getDefaultInstance() : delegateId_;
   }
   /**
-   * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+   * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
    */
   public io.harness.delegate.DelegateIdOrBuilder getDelegateIdOrBuilder() {
     return getDelegateId();
@@ -403,13 +411,15 @@ public final class PerpetualTaskListRequest extends com.google.protobuf.Generate
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.DelegateId,
         io.harness.delegate.DelegateId.Builder, io.harness.delegate.DelegateIdOrBuilder> delegateIdBuilder_;
     /**
-     * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+     * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
+     * @return Whether the delegateId field is set.
      */
     public boolean hasDelegateId() {
       return delegateIdBuilder_ != null || delegateId_ != null;
     }
     /**
-     * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+     * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
+     * @return The delegateId.
      */
     public io.harness.delegate.DelegateId getDelegateId() {
       if (delegateIdBuilder_ == null) {
@@ -419,7 +429,7 @@ public final class PerpetualTaskListRequest extends com.google.protobuf.Generate
       }
     }
     /**
-     * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+     * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
      */
     public Builder setDelegateId(io.harness.delegate.DelegateId value) {
       if (delegateIdBuilder_ == null) {
@@ -435,7 +445,7 @@ public final class PerpetualTaskListRequest extends com.google.protobuf.Generate
       return this;
     }
     /**
-     * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+     * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
      */
     public Builder setDelegateId(io.harness.delegate.DelegateId.Builder builderForValue) {
       if (delegateIdBuilder_ == null) {
@@ -448,7 +458,7 @@ public final class PerpetualTaskListRequest extends com.google.protobuf.Generate
       return this;
     }
     /**
-     * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+     * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
      */
     public Builder mergeDelegateId(io.harness.delegate.DelegateId value) {
       if (delegateIdBuilder_ == null) {
@@ -465,7 +475,7 @@ public final class PerpetualTaskListRequest extends com.google.protobuf.Generate
       return this;
     }
     /**
-     * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+     * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
      */
     public Builder clearDelegateId() {
       if (delegateIdBuilder_ == null) {
@@ -479,14 +489,14 @@ public final class PerpetualTaskListRequest extends com.google.protobuf.Generate
       return this;
     }
     /**
-     * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+     * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
      */
     public io.harness.delegate.DelegateId.Builder getDelegateIdBuilder() {
       onChanged();
       return getDelegateIdFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+     * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
      */
     public io.harness.delegate.DelegateIdOrBuilder getDelegateIdOrBuilder() {
       if (delegateIdBuilder_ != null) {
@@ -496,7 +506,7 @@ public final class PerpetualTaskListRequest extends com.google.protobuf.Generate
       }
     }
     /**
-     * <code>.io.harness.delegate.DelegateId delegate_id = 1;</code>
+     * <code>.io.harness.delegate.DelegateId delegate_id = 1[json_name = "delegateId"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.DelegateId,
         io.harness.delegate.DelegateId.Builder, io.harness.delegate.DelegateIdOrBuilder>

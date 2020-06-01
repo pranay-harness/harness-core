@@ -8,109 +8,133 @@ public interface K8sWorkloadSpecOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   java.lang.String getClusterId();
   /**
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   com.google.protobuf.ByteString getClusterIdBytes();
 
   /**
-   * <code>string cluster_name = 2;</code>
+   * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   java.lang.String getClusterName();
   /**
-   * <code>string cluster_name = 2;</code>
+   * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   com.google.protobuf.ByteString getClusterNameBytes();
 
   /**
-   * <code>string cloud_provider_id = 3;</code>
+   * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   java.lang.String getCloudProviderId();
   /**
-   * <code>string cloud_provider_id = 3;</code>
+   * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   com.google.protobuf.ByteString getCloudProviderIdBytes();
 
   /**
-   * <code>string kube_system_uid = 4;</code>
+   * <code>string kube_system_uid = 4[json_name = "kubeSystemUid"];</code>
+   * @return The kubeSystemUid.
    */
   java.lang.String getKubeSystemUid();
   /**
-   * <code>string kube_system_uid = 4;</code>
+   * <code>string kube_system_uid = 4[json_name = "kubeSystemUid"];</code>
+   * @return The bytes for kubeSystemUid.
    */
   com.google.protobuf.ByteString getKubeSystemUidBytes();
 
   /**
-   * <code>string workload_kind = 5;</code>
+   * <code>string workload_kind = 5[json_name = "workloadKind"];</code>
+   * @return The workloadKind.
    */
   java.lang.String getWorkloadKind();
   /**
-   * <code>string workload_kind = 5;</code>
+   * <code>string workload_kind = 5[json_name = "workloadKind"];</code>
+   * @return The bytes for workloadKind.
    */
   com.google.protobuf.ByteString getWorkloadKindBytes();
 
   /**
-   * <code>string workload_name = 6;</code>
+   * <code>string workload_name = 6[json_name = "workloadName"];</code>
+   * @return The workloadName.
    */
   java.lang.String getWorkloadName();
   /**
-   * <code>string workload_name = 6;</code>
+   * <code>string workload_name = 6[json_name = "workloadName"];</code>
+   * @return The bytes for workloadName.
    */
   com.google.protobuf.ByteString getWorkloadNameBytes();
 
   /**
-   * <code>string namespace = 7;</code>
+   * <code>string namespace = 7[json_name = "namespace"];</code>
+   * @return The namespace.
    */
   java.lang.String getNamespace();
   /**
-   * <code>string namespace = 7;</code>
+   * <code>string namespace = 7[json_name = "namespace"];</code>
+   * @return The bytes for namespace.
    */
   com.google.protobuf.ByteString getNamespaceBytes();
 
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+   * "containerSpecs"];</code>
    */
   java.util.List<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec> getContainerSpecsList();
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+   * "containerSpecs"];</code>
    */
   io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec getContainerSpecs(int index);
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+   * "containerSpecs"];</code>
    */
   int getContainerSpecsCount();
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+   * "containerSpecs"];</code>
    */
   java.util.List<? extends io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder>
   getContainerSpecsOrBuilderList();
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+   * "containerSpecs"];</code>
    */
   io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder getContainerSpecsOrBuilder(int index);
 
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9[json_name
+   * = "initContainerSpecs"];</code>
    */
   java.util.List<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec> getInitContainerSpecsList();
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9[json_name
+   * = "initContainerSpecs"];</code>
    */
   io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec getInitContainerSpecs(int index);
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9[json_name
+   * = "initContainerSpecs"];</code>
    */
   int getInitContainerSpecsCount();
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9[json_name
+   * = "initContainerSpecs"];</code>
    */
   java.util.List<? extends io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder>
   getInitContainerSpecsOrBuilderList();
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9[json_name
+   * = "initContainerSpecs"];</code>
    */
   io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder getInitContainerSpecsOrBuilder(int index);
 }

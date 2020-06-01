@@ -19,6 +19,13 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new TaskProgressRequest();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -29,7 +36,6 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -85,19 +91,21 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
   public static final int TASK_ID_FIELD_NUMBER = 1;
   private io.harness.delegate.TaskId taskId_;
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * @return Whether the taskId field is set.
    */
   public boolean hasTaskId() {
     return taskId_ != null;
   }
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * @return The taskId.
    */
   public io.harness.delegate.TaskId getTaskId() {
     return taskId_ == null ? io.harness.delegate.TaskId.getDefaultInstance() : taskId_;
   }
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
    */
   public io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder() {
     return getTaskId();
@@ -400,13 +408,15 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskId, io.harness.delegate.TaskId.Builder,
         io.harness.delegate.TaskIdOrBuilder> taskIdBuilder_;
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * @return Whether the taskId field is set.
      */
     public boolean hasTaskId() {
       return taskIdBuilder_ != null || taskId_ != null;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * @return The taskId.
      */
     public io.harness.delegate.TaskId getTaskId() {
       if (taskIdBuilder_ == null) {
@@ -416,7 +426,7 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
       }
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
      */
     public Builder setTaskId(io.harness.delegate.TaskId value) {
       if (taskIdBuilder_ == null) {
@@ -432,7 +442,7 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
      */
     public Builder setTaskId(io.harness.delegate.TaskId.Builder builderForValue) {
       if (taskIdBuilder_ == null) {
@@ -445,7 +455,7 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
      */
     public Builder mergeTaskId(io.harness.delegate.TaskId value) {
       if (taskIdBuilder_ == null) {
@@ -462,7 +472,7 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
      */
     public Builder clearTaskId() {
       if (taskIdBuilder_ == null) {
@@ -476,14 +486,14 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
      */
     public io.harness.delegate.TaskId.Builder getTaskIdBuilder() {
       onChanged();
       return getTaskIdFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
      */
     public io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder() {
       if (taskIdBuilder_ != null) {
@@ -493,7 +503,7 @@ public final class TaskProgressRequest extends com.google.protobuf.GeneratedMess
       }
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1;</code>
+     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskId, io.harness.delegate.TaskId.Builder,
         io.harness.delegate.TaskIdOrBuilder>

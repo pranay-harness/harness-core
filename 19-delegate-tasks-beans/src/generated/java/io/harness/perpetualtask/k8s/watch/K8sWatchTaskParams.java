@@ -24,6 +24,13 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new K8sWatchTaskParams();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -34,7 +41,6 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -100,7 +106,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
   public static final int CLOUD_PROVIDER_ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object cloudProviderId_;
   /**
-   * <code>string cloud_provider_id = 1;</code>
+   * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   public java.lang.String getCloudProviderId() {
     java.lang.Object ref = cloudProviderId_;
@@ -114,7 +121,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string cloud_provider_id = 1;</code>
+   * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   public com.google.protobuf.ByteString getCloudProviderIdBytes() {
     java.lang.Object ref = cloudProviderId_;
@@ -130,7 +138,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
   public static final int K8S_CLUSTER_CONFIG_FIELD_NUMBER = 2;
   private com.google.protobuf.ByteString k8SClusterConfig_;
   /**
-   * <code>bytes k8s_cluster_config = 2;</code>
+   * <code>bytes k8s_cluster_config = 2[json_name = "k8sClusterConfig"];</code>
+   * @return The k8sClusterConfig.
    */
   public com.google.protobuf.ByteString getK8SClusterConfig() {
     return k8SClusterConfig_;
@@ -139,7 +148,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
   public static final int CLUSTER_ID_FIELD_NUMBER = 3;
   private volatile java.lang.Object clusterId_;
   /**
-   * <code>string cluster_id = 3;</code>
+   * <code>string cluster_id = 3[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -153,7 +163,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string cluster_id = 3;</code>
+   * <code>string cluster_id = 3[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -169,7 +180,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
   public static final int CLUSTER_NAME_FIELD_NUMBER = 4;
   private volatile java.lang.Object clusterName_;
   /**
-   * <code>string cluster_name = 4;</code>
+   * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   public java.lang.String getClusterName() {
     java.lang.Object ref = clusterName_;
@@ -183,7 +195,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string cluster_name = 4;</code>
+   * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   public com.google.protobuf.ByteString getClusterNameBytes() {
     java.lang.Object ref = clusterName_;
@@ -532,7 +545,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object cloudProviderId_ = "";
     /**
-     * <code>string cloud_provider_id = 1;</code>
+     * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+     * @return The cloudProviderId.
      */
     public java.lang.String getCloudProviderId() {
       java.lang.Object ref = cloudProviderId_;
@@ -546,7 +560,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cloud_provider_id = 1;</code>
+     * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+     * @return The bytes for cloudProviderId.
      */
     public com.google.protobuf.ByteString getCloudProviderIdBytes() {
       java.lang.Object ref = cloudProviderId_;
@@ -559,7 +574,9 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cloud_provider_id = 1;</code>
+     * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+     * @param value The cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderId(java.lang.String value) {
       if (value == null) {
@@ -571,7 +588,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 1;</code>
+     * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCloudProviderId() {
       cloudProviderId_ = getDefaultInstance().getCloudProviderId();
@@ -579,7 +597,9 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 1;</code>
+     * <code>string cloud_provider_id = 1[json_name = "cloudProviderId"];</code>
+     * @param value The bytes for cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -594,13 +614,16 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
 
     private com.google.protobuf.ByteString k8SClusterConfig_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes k8s_cluster_config = 2;</code>
+     * <code>bytes k8s_cluster_config = 2[json_name = "k8sClusterConfig"];</code>
+     * @return The k8sClusterConfig.
      */
     public com.google.protobuf.ByteString getK8SClusterConfig() {
       return k8SClusterConfig_;
     }
     /**
-     * <code>bytes k8s_cluster_config = 2;</code>
+     * <code>bytes k8s_cluster_config = 2[json_name = "k8sClusterConfig"];</code>
+     * @param value The k8sClusterConfig to set.
+     * @return This builder for chaining.
      */
     public Builder setK8SClusterConfig(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -612,7 +635,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>bytes k8s_cluster_config = 2;</code>
+     * <code>bytes k8s_cluster_config = 2[json_name = "k8sClusterConfig"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearK8SClusterConfig() {
       k8SClusterConfig_ = getDefaultInstance().getK8SClusterConfig();
@@ -622,7 +646,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <code>string cluster_id = 3;</code>
+     * <code>string cluster_id = 3[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -636,7 +661,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cluster_id = 3;</code>
+     * <code>string cluster_id = 3[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -649,7 +675,9 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cluster_id = 3;</code>
+     * <code>string cluster_id = 3[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -661,7 +689,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cluster_id = 3;</code>
+     * <code>string cluster_id = 3[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -669,7 +698,9 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cluster_id = 3;</code>
+     * <code>string cluster_id = 3[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -684,7 +715,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object clusterName_ = "";
     /**
-     * <code>string cluster_name = 4;</code>
+     * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+     * @return The clusterName.
      */
     public java.lang.String getClusterName() {
       java.lang.Object ref = clusterName_;
@@ -698,7 +730,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cluster_name = 4;</code>
+     * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+     * @return The bytes for clusterName.
      */
     public com.google.protobuf.ByteString getClusterNameBytes() {
       java.lang.Object ref = clusterName_;
@@ -711,7 +744,9 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cluster_name = 4;</code>
+     * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+     * @param value The clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterName(java.lang.String value) {
       if (value == null) {
@@ -723,7 +758,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cluster_name = 4;</code>
+     * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterName() {
       clusterName_ = getDefaultInstance().getClusterName();
@@ -731,7 +767,9 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cluster_name = 4;</code>
+     * <code>string cluster_name = 4[json_name = "clusterName"];</code>
+     * @param value The bytes for clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

@@ -8,11 +8,11 @@ public interface TaskSetupAbstractionsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.TaskSetupAbstractions)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>map&lt;string, string&gt; values = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
    */
   int getValuesCount();
   /**
-   * <code>map&lt;string, string&gt; values = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
    */
   boolean containsValues(java.lang.String key);
   /**
@@ -20,16 +20,16 @@ public interface TaskSetupAbstractionsOrBuilder extends
    */
   @java.lang.Deprecated java.util.Map<java.lang.String, java.lang.String> getValues();
   /**
-   * <code>map&lt;string, string&gt; values = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
    */
   java.util.Map<java.lang.String, java.lang.String> getValuesMap();
   /**
-   * <code>map&lt;string, string&gt; values = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
    */
 
   java.lang.String getValuesOrDefault(java.lang.String key, java.lang.String defaultValue);
   /**
-   * <code>map&lt;string, string&gt; values = 1;</code>
+   * <code>map&lt;string, string&gt; values = 1[json_name = "values"];</code>
    */
 
   java.lang.String getValuesOrThrow(java.lang.String key);

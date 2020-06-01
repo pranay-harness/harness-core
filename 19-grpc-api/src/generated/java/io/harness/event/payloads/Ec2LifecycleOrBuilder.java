@@ -8,15 +8,17 @@ public interface Ec2LifecycleOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.payloads.Ec2Lifecycle)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+   * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
+   * @return Whether the lifecycle field is set.
    */
   boolean hasLifecycle();
   /**
-   * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+   * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
+   * @return The lifecycle.
    */
   io.harness.event.payloads.Lifecycle getLifecycle();
   /**
-   * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+   * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
    */
   io.harness.event.payloads.LifecycleOrBuilder getLifecycleOrBuilder();
 }

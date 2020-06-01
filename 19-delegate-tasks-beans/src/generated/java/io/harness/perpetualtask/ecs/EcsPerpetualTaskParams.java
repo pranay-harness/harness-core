@@ -26,6 +26,13 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new EcsPerpetualTaskParams();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -36,7 +43,6 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -112,7 +118,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
   public static final int CLUSTER_NAME_FIELD_NUMBER = 1;
   private volatile java.lang.Object clusterName_;
   /**
-   * <code>string cluster_name = 1;</code>
+   * <code>string cluster_name = 1[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   public java.lang.String getClusterName() {
     java.lang.Object ref = clusterName_;
@@ -126,7 +133,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
     }
   }
   /**
-   * <code>string cluster_name = 1;</code>
+   * <code>string cluster_name = 1[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   public com.google.protobuf.ByteString getClusterNameBytes() {
     java.lang.Object ref = clusterName_;
@@ -142,7 +150,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
   public static final int REGION_FIELD_NUMBER = 2;
   private volatile java.lang.Object region_;
   /**
-   * <code>string region = 2;</code>
+   * <code>string region = 2[json_name = "region"];</code>
+   * @return The region.
    */
   public java.lang.String getRegion() {
     java.lang.Object ref = region_;
@@ -156,7 +165,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
     }
   }
   /**
-   * <code>string region = 2;</code>
+   * <code>string region = 2[json_name = "region"];</code>
+   * @return The bytes for region.
    */
   public com.google.protobuf.ByteString getRegionBytes() {
     java.lang.Object ref = region_;
@@ -172,7 +182,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
   public static final int AWS_CONFIG_FIELD_NUMBER = 3;
   private com.google.protobuf.ByteString awsConfig_;
   /**
-   * <code>bytes aws_config = 3;</code>
+   * <code>bytes aws_config = 3[json_name = "awsConfig"];</code>
+   * @return The awsConfig.
    */
   public com.google.protobuf.ByteString getAwsConfig() {
     return awsConfig_;
@@ -181,7 +192,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
   public static final int ENCRYPTION_DETAIL_FIELD_NUMBER = 4;
   private com.google.protobuf.ByteString encryptionDetail_;
   /**
-   * <code>bytes encryption_detail = 4;</code>
+   * <code>bytes encryption_detail = 4[json_name = "encryptionDetail"];</code>
+   * @return The encryptionDetail.
    */
   public com.google.protobuf.ByteString getEncryptionDetail() {
     return encryptionDetail_;
@@ -190,7 +202,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
   public static final int CLUSTER_ID_FIELD_NUMBER = 5;
   private volatile java.lang.Object clusterId_;
   /**
-   * <code>string cluster_id = 5;</code>
+   * <code>string cluster_id = 5[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -204,7 +217,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
     }
   }
   /**
-   * <code>string cluster_id = 5;</code>
+   * <code>string cluster_id = 5[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -220,7 +234,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
   public static final int SETTING_ID_FIELD_NUMBER = 6;
   private volatile java.lang.Object settingId_;
   /**
-   * <code>string setting_id = 6;</code>
+   * <code>string setting_id = 6[json_name = "settingId"];</code>
+   * @return The settingId.
    */
   public java.lang.String getSettingId() {
     java.lang.Object ref = settingId_;
@@ -234,7 +249,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
     }
   }
   /**
-   * <code>string setting_id = 6;</code>
+   * <code>string setting_id = 6[json_name = "settingId"];</code>
+   * @return The bytes for settingId.
    */
   public com.google.protobuf.ByteString getSettingIdBytes() {
     java.lang.Object ref = settingId_;
@@ -616,7 +632,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
 
     private java.lang.Object clusterName_ = "";
     /**
-     * <code>string cluster_name = 1;</code>
+     * <code>string cluster_name = 1[json_name = "clusterName"];</code>
+     * @return The clusterName.
      */
     public java.lang.String getClusterName() {
       java.lang.Object ref = clusterName_;
@@ -630,7 +647,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       }
     }
     /**
-     * <code>string cluster_name = 1;</code>
+     * <code>string cluster_name = 1[json_name = "clusterName"];</code>
+     * @return The bytes for clusterName.
      */
     public com.google.protobuf.ByteString getClusterNameBytes() {
       java.lang.Object ref = clusterName_;
@@ -643,7 +661,9 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       }
     }
     /**
-     * <code>string cluster_name = 1;</code>
+     * <code>string cluster_name = 1[json_name = "clusterName"];</code>
+     * @param value The clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterName(java.lang.String value) {
       if (value == null) {
@@ -655,7 +675,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       return this;
     }
     /**
-     * <code>string cluster_name = 1;</code>
+     * <code>string cluster_name = 1[json_name = "clusterName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterName() {
       clusterName_ = getDefaultInstance().getClusterName();
@@ -663,7 +684,9 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       return this;
     }
     /**
-     * <code>string cluster_name = 1;</code>
+     * <code>string cluster_name = 1[json_name = "clusterName"];</code>
+     * @param value The bytes for clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -678,7 +701,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
 
     private java.lang.Object region_ = "";
     /**
-     * <code>string region = 2;</code>
+     * <code>string region = 2[json_name = "region"];</code>
+     * @return The region.
      */
     public java.lang.String getRegion() {
       java.lang.Object ref = region_;
@@ -692,7 +716,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       }
     }
     /**
-     * <code>string region = 2;</code>
+     * <code>string region = 2[json_name = "region"];</code>
+     * @return The bytes for region.
      */
     public com.google.protobuf.ByteString getRegionBytes() {
       java.lang.Object ref = region_;
@@ -705,7 +730,9 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       }
     }
     /**
-     * <code>string region = 2;</code>
+     * <code>string region = 2[json_name = "region"];</code>
+     * @param value The region to set.
+     * @return This builder for chaining.
      */
     public Builder setRegion(java.lang.String value) {
       if (value == null) {
@@ -717,7 +744,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       return this;
     }
     /**
-     * <code>string region = 2;</code>
+     * <code>string region = 2[json_name = "region"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearRegion() {
       region_ = getDefaultInstance().getRegion();
@@ -725,7 +753,9 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       return this;
     }
     /**
-     * <code>string region = 2;</code>
+     * <code>string region = 2[json_name = "region"];</code>
+     * @param value The bytes for region to set.
+     * @return This builder for chaining.
      */
     public Builder setRegionBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -740,13 +770,16 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
 
     private com.google.protobuf.ByteString awsConfig_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes aws_config = 3;</code>
+     * <code>bytes aws_config = 3[json_name = "awsConfig"];</code>
+     * @return The awsConfig.
      */
     public com.google.protobuf.ByteString getAwsConfig() {
       return awsConfig_;
     }
     /**
-     * <code>bytes aws_config = 3;</code>
+     * <code>bytes aws_config = 3[json_name = "awsConfig"];</code>
+     * @param value The awsConfig to set.
+     * @return This builder for chaining.
      */
     public Builder setAwsConfig(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -758,7 +791,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       return this;
     }
     /**
-     * <code>bytes aws_config = 3;</code>
+     * <code>bytes aws_config = 3[json_name = "awsConfig"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearAwsConfig() {
       awsConfig_ = getDefaultInstance().getAwsConfig();
@@ -768,13 +802,16 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
 
     private com.google.protobuf.ByteString encryptionDetail_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes encryption_detail = 4;</code>
+     * <code>bytes encryption_detail = 4[json_name = "encryptionDetail"];</code>
+     * @return The encryptionDetail.
      */
     public com.google.protobuf.ByteString getEncryptionDetail() {
       return encryptionDetail_;
     }
     /**
-     * <code>bytes encryption_detail = 4;</code>
+     * <code>bytes encryption_detail = 4[json_name = "encryptionDetail"];</code>
+     * @param value The encryptionDetail to set.
+     * @return This builder for chaining.
      */
     public Builder setEncryptionDetail(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -786,7 +823,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       return this;
     }
     /**
-     * <code>bytes encryption_detail = 4;</code>
+     * <code>bytes encryption_detail = 4[json_name = "encryptionDetail"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearEncryptionDetail() {
       encryptionDetail_ = getDefaultInstance().getEncryptionDetail();
@@ -796,7 +834,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <code>string cluster_id = 5;</code>
+     * <code>string cluster_id = 5[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -810,7 +849,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       }
     }
     /**
-     * <code>string cluster_id = 5;</code>
+     * <code>string cluster_id = 5[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -823,7 +863,9 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       }
     }
     /**
-     * <code>string cluster_id = 5;</code>
+     * <code>string cluster_id = 5[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -835,7 +877,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       return this;
     }
     /**
-     * <code>string cluster_id = 5;</code>
+     * <code>string cluster_id = 5[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -843,7 +886,9 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       return this;
     }
     /**
-     * <code>string cluster_id = 5;</code>
+     * <code>string cluster_id = 5[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -858,7 +903,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
 
     private java.lang.Object settingId_ = "";
     /**
-     * <code>string setting_id = 6;</code>
+     * <code>string setting_id = 6[json_name = "settingId"];</code>
+     * @return The settingId.
      */
     public java.lang.String getSettingId() {
       java.lang.Object ref = settingId_;
@@ -872,7 +918,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       }
     }
     /**
-     * <code>string setting_id = 6;</code>
+     * <code>string setting_id = 6[json_name = "settingId"];</code>
+     * @return The bytes for settingId.
      */
     public com.google.protobuf.ByteString getSettingIdBytes() {
       java.lang.Object ref = settingId_;
@@ -885,7 +932,9 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       }
     }
     /**
-     * <code>string setting_id = 6;</code>
+     * <code>string setting_id = 6[json_name = "settingId"];</code>
+     * @param value The settingId to set.
+     * @return This builder for chaining.
      */
     public Builder setSettingId(java.lang.String value) {
       if (value == null) {
@@ -897,7 +946,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       return this;
     }
     /**
-     * <code>string setting_id = 6;</code>
+     * <code>string setting_id = 6[json_name = "settingId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearSettingId() {
       settingId_ = getDefaultInstance().getSettingId();
@@ -905,7 +955,9 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       return this;
     }
     /**
-     * <code>string setting_id = 6;</code>
+     * <code>string setting_id = 6[json_name = "settingId"];</code>
+     * @param value The bytes for settingId to set.
+     * @return This builder for chaining.
      */
     public Builder setSettingIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

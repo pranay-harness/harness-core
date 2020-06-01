@@ -21,6 +21,13 @@ public final class DelegateId extends com.google.protobuf.GeneratedMessageV3 imp
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new DelegateId();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -31,7 +38,6 @@ public final class DelegateId extends com.google.protobuf.GeneratedMessageV3 imp
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -79,7 +85,8 @@ public final class DelegateId extends com.google.protobuf.GeneratedMessageV3 imp
   public static final int ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object id_;
   /**
-   * <code>string id = 1;</code>
+   * <code>string id = 1[json_name = "id"];</code>
+   * @return The id.
    */
   public java.lang.String getId() {
     java.lang.Object ref = id_;
@@ -93,7 +100,8 @@ public final class DelegateId extends com.google.protobuf.GeneratedMessageV3 imp
     }
   }
   /**
-   * <code>string id = 1;</code>
+   * <code>string id = 1[json_name = "id"];</code>
+   * @return The bytes for id.
    */
   public com.google.protobuf.ByteString getIdBytes() {
     java.lang.Object ref = id_;
@@ -385,7 +393,8 @@ public final class DelegateId extends com.google.protobuf.GeneratedMessageV3 imp
 
     private java.lang.Object id_ = "";
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @return The id.
      */
     public java.lang.String getId() {
       java.lang.Object ref = id_;
@@ -399,7 +408,8 @@ public final class DelegateId extends com.google.protobuf.GeneratedMessageV3 imp
       }
     }
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @return The bytes for id.
      */
     public com.google.protobuf.ByteString getIdBytes() {
       java.lang.Object ref = id_;
@@ -412,7 +422,9 @@ public final class DelegateId extends com.google.protobuf.GeneratedMessageV3 imp
       }
     }
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @param value The id to set.
+     * @return This builder for chaining.
      */
     public Builder setId(java.lang.String value) {
       if (value == null) {
@@ -424,7 +436,8 @@ public final class DelegateId extends com.google.protobuf.GeneratedMessageV3 imp
       return this;
     }
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearId() {
       id_ = getDefaultInstance().getId();
@@ -432,7 +445,9 @@ public final class DelegateId extends com.google.protobuf.GeneratedMessageV3 imp
       return this;
     }
     /**
-     * <code>string id = 1;</code>
+     * <code>string id = 1[json_name = "id"];</code>
+     * @param value The bytes for id to set.
+     * @return This builder for chaining.
      */
     public Builder setIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

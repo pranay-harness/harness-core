@@ -8,94 +8,95 @@ public interface EcsUtilizationOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.payloads.EcsUtilization)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string cluster_arn = 1;</code>
+   * <code>string cluster_arn = 1[json_name = "clusterArn"];</code>
+   * @return The clusterArn.
    */
   java.lang.String getClusterArn();
   /**
-   * <code>string cluster_arn = 1;</code>
+   * <code>string cluster_arn = 1[json_name = "clusterArn"];</code>
+   * @return The bytes for clusterArn.
    */
   com.google.protobuf.ByteString getClusterArnBytes();
 
   /**
-   * <code>string cluster_name = 2;</code>
+   * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   java.lang.String getClusterName();
   /**
-   * <code>string cluster_name = 2;</code>
+   * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   com.google.protobuf.ByteString getClusterNameBytes();
 
   /**
-   * <pre>
-   * Empty in case of cluster level metrics
-   * </pre>
-   *
-   * <code>string service_arn = 3;</code>
+   * <code>string service_arn = 3[json_name = "serviceArn"];</code>
+   * @return The serviceArn.
    */
   java.lang.String getServiceArn();
   /**
-   * <pre>
-   * Empty in case of cluster level metrics
-   * </pre>
-   *
-   * <code>string service_arn = 3;</code>
+   * <code>string service_arn = 3[json_name = "serviceArn"];</code>
+   * @return The bytes for serviceArn.
    */
   com.google.protobuf.ByteString getServiceArnBytes();
 
   /**
-   * <pre>
-   * Empty in case of cluster level metrics
-   * </pre>
-   *
-   * <code>string service_name = 4;</code>
+   * <code>string service_name = 4[json_name = "serviceName"];</code>
+   * @return The serviceName.
    */
   java.lang.String getServiceName();
   /**
-   * <pre>
-   * Empty in case of cluster level metrics
-   * </pre>
-   *
-   * <code>string service_name = 4;</code>
+   * <code>string service_name = 4[json_name = "serviceName"];</code>
+   * @return The bytes for serviceName.
    */
   com.google.protobuf.ByteString getServiceNameBytes();
 
   /**
-   * <code>repeated .io.harness.event.payloads.EcsUtilization.MetricValue metric_values = 5;</code>
+   * <code>repeated .io.harness.event.payloads.EcsUtilization.MetricValue metric_values = 5[json_name =
+   * "metricValues"];</code>
    */
   java.util.List<io.harness.event.payloads.EcsUtilization.MetricValue> getMetricValuesList();
   /**
-   * <code>repeated .io.harness.event.payloads.EcsUtilization.MetricValue metric_values = 5;</code>
+   * <code>repeated .io.harness.event.payloads.EcsUtilization.MetricValue metric_values = 5[json_name =
+   * "metricValues"];</code>
    */
   io.harness.event.payloads.EcsUtilization.MetricValue getMetricValues(int index);
   /**
-   * <code>repeated .io.harness.event.payloads.EcsUtilization.MetricValue metric_values = 5;</code>
+   * <code>repeated .io.harness.event.payloads.EcsUtilization.MetricValue metric_values = 5[json_name =
+   * "metricValues"];</code>
    */
   int getMetricValuesCount();
   /**
-   * <code>repeated .io.harness.event.payloads.EcsUtilization.MetricValue metric_values = 5;</code>
+   * <code>repeated .io.harness.event.payloads.EcsUtilization.MetricValue metric_values = 5[json_name =
+   * "metricValues"];</code>
    */
   java.util.List<? extends io.harness.event.payloads.EcsUtilization.MetricValueOrBuilder>
   getMetricValuesOrBuilderList();
   /**
-   * <code>repeated .io.harness.event.payloads.EcsUtilization.MetricValue metric_values = 5;</code>
+   * <code>repeated .io.harness.event.payloads.EcsUtilization.MetricValue metric_values = 5[json_name =
+   * "metricValues"];</code>
    */
   io.harness.event.payloads.EcsUtilization.MetricValueOrBuilder getMetricValuesOrBuilder(int index);
 
   /**
-   * <code>string cluster_id = 6;</code>
+   * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   java.lang.String getClusterId();
   /**
-   * <code>string cluster_id = 6;</code>
+   * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   com.google.protobuf.ByteString getClusterIdBytes();
 
   /**
-   * <code>string setting_id = 7;</code>
+   * <code>string setting_id = 7[json_name = "settingId"];</code>
+   * @return The settingId.
    */
   java.lang.String getSettingId();
   /**
-   * <code>string setting_id = 7;</code>
+   * <code>string setting_id = 7[json_name = "settingId"];</code>
+   * @return The bytes for settingId.
    */
   com.google.protobuf.ByteString getSettingIdBytes();
 }

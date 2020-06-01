@@ -4,10 +4,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
 /**
- * <pre>
- * Cluster events
- * </pre>
- *
  * Protobuf type {@code io.harness.perpetualtask.k8s.watch.K8sClusterEvent}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:K8sClusterEvent.java.pb.meta")
@@ -31,6 +27,13 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new K8sClusterEvent();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -41,7 +44,6 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -141,11 +143,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
   public static final int CLUSTER_ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object clusterId_;
   /**
-   * <pre>
-   * cluster details
-   * </pre>
-   *
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -159,11 +158,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <pre>
-   * cluster details
-   * </pre>
-   *
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -179,7 +175,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
   public static final int CLUSTER_NAME_FIELD_NUMBER = 2;
   private volatile java.lang.Object clusterName_;
   /**
-   * <code>string cluster_name = 2;</code>
+   * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   public java.lang.String getClusterName() {
     java.lang.Object ref = clusterName_;
@@ -193,7 +190,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string cluster_name = 2;</code>
+   * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   public com.google.protobuf.ByteString getClusterNameBytes() {
     java.lang.Object ref = clusterName_;
@@ -209,7 +207,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
   public static final int CLOUD_PROVIDER_ID_FIELD_NUMBER = 3;
   private volatile java.lang.Object cloudProviderId_;
   /**
-   * <code>string cloud_provider_id = 3;</code>
+   * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   public java.lang.String getCloudProviderId() {
     java.lang.Object ref = cloudProviderId_;
@@ -223,7 +222,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string cloud_provider_id = 3;</code>
+   * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   public com.google.protobuf.ByteString getCloudProviderIdBytes() {
     java.lang.Object ref = cloudProviderId_;
@@ -239,11 +239,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
   public static final int REASON_FIELD_NUMBER = 4;
   private volatile java.lang.Object reason_;
   /**
-   * <pre>
-   * event details
-   * </pre>
-   *
-   * <code>string reason = 4;</code>
+   * <code>string reason = 4[json_name = "reason"];</code>
+   * @return The reason.
    */
   public java.lang.String getReason() {
     java.lang.Object ref = reason_;
@@ -257,11 +254,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <pre>
-   * event details
-   * </pre>
-   *
-   * <code>string reason = 4;</code>
+   * <code>string reason = 4[json_name = "reason"];</code>
+   * @return The bytes for reason.
    */
   public com.google.protobuf.ByteString getReasonBytes() {
     java.lang.Object ref = reason_;
@@ -277,7 +271,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
   public static final int MESSAGE_FIELD_NUMBER = 5;
   private volatile java.lang.Object message_;
   /**
-   * <code>string message = 5;</code>
+   * <code>string message = 5[json_name = "message"];</code>
+   * @return The message.
    */
   public java.lang.String getMessage() {
     java.lang.Object ref = message_;
@@ -291,7 +286,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string message = 5;</code>
+   * <code>string message = 5[json_name = "message"];</code>
+   * @return The bytes for message.
    */
   public com.google.protobuf.ByteString getMessageBytes() {
     java.lang.Object ref = message_;
@@ -307,7 +303,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
   public static final int SOURCE_COMPONENT_FIELD_NUMBER = 6;
   private volatile java.lang.Object sourceComponent_;
   /**
-   * <code>string source_component = 6;</code>
+   * <code>string source_component = 6[json_name = "sourceComponent"];</code>
+   * @return The sourceComponent.
    */
   public java.lang.String getSourceComponent() {
     java.lang.Object ref = sourceComponent_;
@@ -321,7 +318,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string source_component = 6;</code>
+   * <code>string source_component = 6[json_name = "sourceComponent"];</code>
+   * @return The bytes for sourceComponent.
    */
   public com.google.protobuf.ByteString getSourceComponentBytes() {
     java.lang.Object ref = sourceComponent_;
@@ -337,20 +335,25 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
   public static final int INVOLVED_OBJECT_FIELD_NUMBER = 7;
   private io.harness.perpetualtask.k8s.watch.K8sObjectReference involvedObject_;
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7[json_name =
+   * "involvedObject"];</code>
+   * @return Whether the involvedObject field is set.
    */
   public boolean hasInvolvedObject() {
     return involvedObject_ != null;
   }
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7[json_name =
+   * "involvedObject"];</code>
+   * @return The involvedObject.
    */
   public io.harness.perpetualtask.k8s.watch.K8sObjectReference getInvolvedObject() {
     return involvedObject_ == null ? io.harness.perpetualtask.k8s.watch.K8sObjectReference.getDefaultInstance()
                                    : involvedObject_;
   }
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7[json_name =
+   * "involvedObject"];</code>
    */
   public io.harness.perpetualtask.k8s.watch.K8sObjectReferenceOrBuilder getInvolvedObjectOrBuilder() {
     return getInvolvedObject();
@@ -359,7 +362,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
   public static final int KUBE_SYSTEM_UID_FIELD_NUMBER = 8;
   private volatile java.lang.Object kubeSystemUid_;
   /**
-   * <code>string kube_system_uid = 8;</code>
+   * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+   * @return The kubeSystemUid.
    */
   public java.lang.String getKubeSystemUid() {
     java.lang.Object ref = kubeSystemUid_;
@@ -373,7 +377,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string kube_system_uid = 8;</code>
+   * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+   * @return The bytes for kubeSystemUid.
    */
   public com.google.protobuf.ByteString getKubeSystemUidBytes() {
     java.lang.Object ref = kubeSystemUid_;
@@ -602,10 +607,6 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
     return builder;
   }
   /**
-   * <pre>
-   * Cluster events
-   * </pre>
-   *
    * Protobuf type {@code io.harness.perpetualtask.k8s.watch.K8sClusterEvent}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
@@ -806,11 +807,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <pre>
-     * cluster details
-     * </pre>
-     *
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -824,11 +822,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <pre>
-     * cluster details
-     * </pre>
-     *
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -841,11 +836,9 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <pre>
-     * cluster details
-     * </pre>
-     *
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -857,11 +850,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <pre>
-     * cluster details
-     * </pre>
-     *
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -869,11 +859,9 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <pre>
-     * cluster details
-     * </pre>
-     *
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -888,7 +876,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object clusterName_ = "";
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @return The clusterName.
      */
     public java.lang.String getClusterName() {
       java.lang.Object ref = clusterName_;
@@ -902,7 +891,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @return The bytes for clusterName.
      */
     public com.google.protobuf.ByteString getClusterNameBytes() {
       java.lang.Object ref = clusterName_;
@@ -915,7 +905,9 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @param value The clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterName(java.lang.String value) {
       if (value == null) {
@@ -927,7 +919,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterName() {
       clusterName_ = getDefaultInstance().getClusterName();
@@ -935,7 +928,9 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @param value The bytes for clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -950,7 +945,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object cloudProviderId_ = "";
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @return The cloudProviderId.
      */
     public java.lang.String getCloudProviderId() {
       java.lang.Object ref = cloudProviderId_;
@@ -964,7 +960,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @return The bytes for cloudProviderId.
      */
     public com.google.protobuf.ByteString getCloudProviderIdBytes() {
       java.lang.Object ref = cloudProviderId_;
@@ -977,7 +974,9 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @param value The cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderId(java.lang.String value) {
       if (value == null) {
@@ -989,7 +988,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCloudProviderId() {
       cloudProviderId_ = getDefaultInstance().getCloudProviderId();
@@ -997,7 +997,9 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @param value The bytes for cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1012,11 +1014,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object reason_ = "";
     /**
-     * <pre>
-     * event details
-     * </pre>
-     *
-     * <code>string reason = 4;</code>
+     * <code>string reason = 4[json_name = "reason"];</code>
+     * @return The reason.
      */
     public java.lang.String getReason() {
       java.lang.Object ref = reason_;
@@ -1030,11 +1029,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <pre>
-     * event details
-     * </pre>
-     *
-     * <code>string reason = 4;</code>
+     * <code>string reason = 4[json_name = "reason"];</code>
+     * @return The bytes for reason.
      */
     public com.google.protobuf.ByteString getReasonBytes() {
       java.lang.Object ref = reason_;
@@ -1047,11 +1043,9 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <pre>
-     * event details
-     * </pre>
-     *
-     * <code>string reason = 4;</code>
+     * <code>string reason = 4[json_name = "reason"];</code>
+     * @param value The reason to set.
+     * @return This builder for chaining.
      */
     public Builder setReason(java.lang.String value) {
       if (value == null) {
@@ -1063,11 +1057,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <pre>
-     * event details
-     * </pre>
-     *
-     * <code>string reason = 4;</code>
+     * <code>string reason = 4[json_name = "reason"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearReason() {
       reason_ = getDefaultInstance().getReason();
@@ -1075,11 +1066,9 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <pre>
-     * event details
-     * </pre>
-     *
-     * <code>string reason = 4;</code>
+     * <code>string reason = 4[json_name = "reason"];</code>
+     * @param value The bytes for reason to set.
+     * @return This builder for chaining.
      */
     public Builder setReasonBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1094,7 +1083,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object message_ = "";
     /**
-     * <code>string message = 5;</code>
+     * <code>string message = 5[json_name = "message"];</code>
+     * @return The message.
      */
     public java.lang.String getMessage() {
       java.lang.Object ref = message_;
@@ -1108,7 +1098,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string message = 5;</code>
+     * <code>string message = 5[json_name = "message"];</code>
+     * @return The bytes for message.
      */
     public com.google.protobuf.ByteString getMessageBytes() {
       java.lang.Object ref = message_;
@@ -1121,7 +1112,9 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string message = 5;</code>
+     * <code>string message = 5[json_name = "message"];</code>
+     * @param value The message to set.
+     * @return This builder for chaining.
      */
     public Builder setMessage(java.lang.String value) {
       if (value == null) {
@@ -1133,7 +1126,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string message = 5;</code>
+     * <code>string message = 5[json_name = "message"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearMessage() {
       message_ = getDefaultInstance().getMessage();
@@ -1141,7 +1135,9 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string message = 5;</code>
+     * <code>string message = 5[json_name = "message"];</code>
+     * @param value The bytes for message to set.
+     * @return This builder for chaining.
      */
     public Builder setMessageBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1156,7 +1152,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object sourceComponent_ = "";
     /**
-     * <code>string source_component = 6;</code>
+     * <code>string source_component = 6[json_name = "sourceComponent"];</code>
+     * @return The sourceComponent.
      */
     public java.lang.String getSourceComponent() {
       java.lang.Object ref = sourceComponent_;
@@ -1170,7 +1167,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string source_component = 6;</code>
+     * <code>string source_component = 6[json_name = "sourceComponent"];</code>
+     * @return The bytes for sourceComponent.
      */
     public com.google.protobuf.ByteString getSourceComponentBytes() {
       java.lang.Object ref = sourceComponent_;
@@ -1183,7 +1181,9 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string source_component = 6;</code>
+     * <code>string source_component = 6[json_name = "sourceComponent"];</code>
+     * @param value The sourceComponent to set.
+     * @return This builder for chaining.
      */
     public Builder setSourceComponent(java.lang.String value) {
       if (value == null) {
@@ -1195,7 +1195,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string source_component = 6;</code>
+     * <code>string source_component = 6[json_name = "sourceComponent"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearSourceComponent() {
       sourceComponent_ = getDefaultInstance().getSourceComponent();
@@ -1203,7 +1204,9 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string source_component = 6;</code>
+     * <code>string source_component = 6[json_name = "sourceComponent"];</code>
+     * @param value The bytes for sourceComponent to set.
+     * @return This builder for chaining.
      */
     public Builder setSourceComponentBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1221,13 +1224,17 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
         io.harness.perpetualtask.k8s.watch.K8sObjectReference.Builder,
         io.harness.perpetualtask.k8s.watch.K8sObjectReferenceOrBuilder> involvedObjectBuilder_;
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7[json_name =
+     * "involvedObject"];</code>
+     * @return Whether the involvedObject field is set.
      */
     public boolean hasInvolvedObject() {
       return involvedObjectBuilder_ != null || involvedObject_ != null;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7[json_name =
+     * "involvedObject"];</code>
+     * @return The involvedObject.
      */
     public io.harness.perpetualtask.k8s.watch.K8sObjectReference getInvolvedObject() {
       if (involvedObjectBuilder_ == null) {
@@ -1238,7 +1245,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7[json_name =
+     * "involvedObject"];</code>
      */
     public Builder setInvolvedObject(io.harness.perpetualtask.k8s.watch.K8sObjectReference value) {
       if (involvedObjectBuilder_ == null) {
@@ -1254,7 +1262,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7[json_name =
+     * "involvedObject"];</code>
      */
     public Builder setInvolvedObject(io.harness.perpetualtask.k8s.watch.K8sObjectReference.Builder builderForValue) {
       if (involvedObjectBuilder_ == null) {
@@ -1267,7 +1276,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7[json_name =
+     * "involvedObject"];</code>
      */
     public Builder mergeInvolvedObject(io.harness.perpetualtask.k8s.watch.K8sObjectReference value) {
       if (involvedObjectBuilder_ == null) {
@@ -1286,7 +1296,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7[json_name =
+     * "involvedObject"];</code>
      */
     public Builder clearInvolvedObject() {
       if (involvedObjectBuilder_ == null) {
@@ -1300,14 +1311,16 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7[json_name =
+     * "involvedObject"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.K8sObjectReference.Builder getInvolvedObjectBuilder() {
       onChanged();
       return getInvolvedObjectFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7[json_name =
+     * "involvedObject"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.K8sObjectReferenceOrBuilder getInvolvedObjectOrBuilder() {
       if (involvedObjectBuilder_ != null) {
@@ -1318,7 +1331,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference involved_object = 7[json_name =
+     * "involvedObject"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.k8s.watch.K8sObjectReference,
         io.harness.perpetualtask.k8s.watch.K8sObjectReference.Builder,
@@ -1337,7 +1351,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object kubeSystemUid_ = "";
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @return The kubeSystemUid.
      */
     public java.lang.String getKubeSystemUid() {
       java.lang.Object ref = kubeSystemUid_;
@@ -1351,7 +1366,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @return The bytes for kubeSystemUid.
      */
     public com.google.protobuf.ByteString getKubeSystemUidBytes() {
       java.lang.Object ref = kubeSystemUid_;
@@ -1364,7 +1380,9 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @param value The kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUid(java.lang.String value) {
       if (value == null) {
@@ -1376,7 +1394,8 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearKubeSystemUid() {
       kubeSystemUid_ = getDefaultInstance().getKubeSystemUid();
@@ -1384,7 +1403,9 @@ public final class K8sClusterEvent extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string kube_system_uid = 8;</code>
+     * <code>string kube_system_uid = 8[json_name = "kubeSystemUid"];</code>
+     * @param value The bytes for kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUidBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

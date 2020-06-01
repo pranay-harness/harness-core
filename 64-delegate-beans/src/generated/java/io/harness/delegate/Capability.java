@@ -4,10 +4,6 @@
 package io.harness.delegate;
 
 /**
- * <pre>
- * Task capabilities describe a need capability from the delegate executor for the task to be accomplished.
- * </pre>
- *
  * Protobuf type {@code io.harness.delegate.Capability}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:Capability.java.pb.meta")
@@ -25,6 +21,13 @@ public final class Capability extends com.google.protobuf.GeneratedMessageV3 imp
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new Capability();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -35,7 +38,6 @@ public final class Capability extends com.google.protobuf.GeneratedMessageV3 imp
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -81,7 +83,8 @@ public final class Capability extends com.google.protobuf.GeneratedMessageV3 imp
   public static final int KRYO_CAPABILITY_FIELD_NUMBER = 1;
   private com.google.protobuf.ByteString kryoCapability_;
   /**
-   * <code>bytes kryo_capability = 1;</code>
+   * <code>bytes kryo_capability = 1[json_name = "kryoCapability"];</code>
+   * @return The kryoCapability.
    */
   public com.google.protobuf.ByteString getKryoCapability() {
     return kryoCapability_;
@@ -226,10 +229,6 @@ public final class Capability extends com.google.protobuf.GeneratedMessageV3 imp
     return builder;
   }
   /**
-   * <pre>
-   * Task capabilities describe a need capability from the delegate executor for the task to be accomplished.
-   * </pre>
-   *
    * Protobuf type {@code io.harness.delegate.Capability}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
@@ -369,13 +368,16 @@ public final class Capability extends com.google.protobuf.GeneratedMessageV3 imp
 
     private com.google.protobuf.ByteString kryoCapability_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes kryo_capability = 1;</code>
+     * <code>bytes kryo_capability = 1[json_name = "kryoCapability"];</code>
+     * @return The kryoCapability.
      */
     public com.google.protobuf.ByteString getKryoCapability() {
       return kryoCapability_;
     }
     /**
-     * <code>bytes kryo_capability = 1;</code>
+     * <code>bytes kryo_capability = 1[json_name = "kryoCapability"];</code>
+     * @param value The kryoCapability to set.
+     * @return This builder for chaining.
      */
     public Builder setKryoCapability(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -387,7 +389,8 @@ public final class Capability extends com.google.protobuf.GeneratedMessageV3 imp
       return this;
     }
     /**
-     * <code>bytes kryo_capability = 1;</code>
+     * <code>bytes kryo_capability = 1[json_name = "kryoCapability"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearKryoCapability() {
       kryoCapability_ = getDefaultInstance().getKryoCapability();

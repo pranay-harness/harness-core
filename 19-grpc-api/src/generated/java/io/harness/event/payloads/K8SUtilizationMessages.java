@@ -32,38 +32,35 @@ public final class K8SUtilizationMessages {
     java.lang.String[] descriptorData = {"\n8io/harness/event/payloads/k8s_utilizat"
         + "ion_messages.proto\022\031io.harness.event.pay"
         + "loads\032\036google/protobuf/duration.proto\032\037g"
-        + "oogle/protobuf/timestamp.proto\"o\n\017Aggreg"
-        + "atedUsage\022\024\n\014avg_cpu_nano\030\001 \001(\003\022\024\n\014max_c"
-        + "pu_nano\030\002 \001(\003\022\027\n\017avg_memory_byte\030\003 \001(\003\022\027"
-        + "\n\017max_memory_byte\030\004 \001(\003\"\210\002\n\nNodeMetric\022\031"
-        + "\n\021cloud_provider_id\030\001 \001(\t\022\014\n\004name\030\002 \001(\t\022"
-        + "-\n\ttimestamp\030\003 \001(\0132\032.google.protobuf.Tim"
-        + "estamp\022)\n\006window\030\004 \001(\0132\031.google.protobuf"
-        + ".Duration\022\022\n\ncluster_id\030\006 \001(\t\022\027\n\017kube_sy"
-        + "stem_uid\030\007 \001(\t\022D\n\020aggregated_usage\030\010 \001(\013"
-        + "2*.io.harness.event.payloads.AggregatedU"
-        + "sageJ\004\010\005\020\006\"\232\002\n\tPodMetric\022\031\n\021cloud_provid"
-        + "er_id\030\001 \001(\t\022\014\n\004name\030\002 \001(\t\022\021\n\tnamespace\030\003"
-        + " \001(\t\022-\n\ttimestamp\030\004 \001(\0132\032.google.protobu"
-        + "f.Timestamp\022)\n\006window\030\005 \001(\0132\031.google.pro"
-        + "tobuf.Duration\022\022\n\ncluster_id\030\007 \001(\t\022\027\n\017ku"
-        + "be_system_uid\030\010 \001(\t\022D\n\020aggregated_usage\030"
-        + "\t \001(\0132*.io.harness.event.payloads.Aggreg"
-        + "atedUsageJ\004\010\006\020\007B\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
+        + "oogle/protobuf/timestamp.proto\"\245\001\n\017Aggre"
+        + "gatedUsage\022 \n\014avg_cpu_nano\030\001 \001(\003R\navgCpu"
+        + "Nano\022 \n\014max_cpu_nano\030\002 \001(\003R\nmaxCpuNano\022&"
+        + "\n\017avg_memory_byte\030\003 \001(\003R\ravgMemoryByte\022&"
+        + "\n\017max_memory_byte\030\004 \001(\003R\rmaxMemoryByte\"\335"
+        + "\002\n\nNodeMetric\022*\n\021cloud_provider_id\030\001 \001(\t"
+        + "R\017cloudProviderId\022\022\n\004name\030\002 \001(\tR\004name\0228\n"
+        + "\ttimestamp\030\003 \001(\0132\032.google.protobuf.Times"
+        + "tampR\ttimestamp\0221\n\006window\030\004 \001(\0132\031.google"
+        + ".protobuf.DurationR\006window\022\035\n\ncluster_id"
+        + "\030\006 \001(\tR\tclusterId\022&\n\017kube_system_uid\030\007 \001"
+        + "(\tR\rkubeSystemUid\022U\n\020aggregated_usage\030\010 "
+        + "\001(\0132*.io.harness.event.payloads.Aggregat"
+        + "edUsageR\017aggregatedUsageJ\004\010\005\020\006\"\372\002\n\tPodMe"
+        + "tric\022*\n\021cloud_provider_id\030\001 \001(\tR\017cloudPr"
+        + "oviderId\022\022\n\004name\030\002 \001(\tR\004name\022\034\n\tnamespac"
+        + "e\030\003 \001(\tR\tnamespace\0228\n\ttimestamp\030\004 \001(\0132\032."
+        + "google.protobuf.TimestampR\ttimestamp\0221\n\006"
+        + "window\030\005 \001(\0132\031.google.protobuf.DurationR"
+        + "\006window\022\035\n\ncluster_id\030\007 \001(\tR\tclusterId\022&"
+        + "\n\017kube_system_uid\030\010 \001(\tR\rkubeSystemUid\022U"
+        + "\n\020aggregated_usage\030\t \001(\0132*.io.harness.ev"
+        + "ent.payloads.AggregatedUsageR\017aggregated"
+        + "UsageJ\004\010\006\020\007B\002P\001b\006proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.DurationProto.getDescriptor(),
             com.google.protobuf.TimestampProto.getDescriptor(),
-        },
-        assigner);
+        });
     internal_static_io_harness_event_payloads_AggregatedUsage_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_event_payloads_AggregatedUsage_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(

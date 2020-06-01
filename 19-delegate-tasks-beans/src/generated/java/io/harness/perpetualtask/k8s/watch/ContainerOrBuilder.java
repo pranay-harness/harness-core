@@ -8,33 +8,39 @@ public interface ContainerOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.k8s.watch.Container)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string name = 1;</code>
+   * <code>string name = 1[json_name = "name"];</code>
+   * @return The name.
    */
   java.lang.String getName();
   /**
-   * <code>string name = 1;</code>
+   * <code>string name = 1[json_name = "name"];</code>
+   * @return The bytes for name.
    */
   com.google.protobuf.ByteString getNameBytes();
 
   /**
-   * <code>string image = 2;</code>
+   * <code>string image = 2[json_name = "image"];</code>
+   * @return The image.
    */
   java.lang.String getImage();
   /**
-   * <code>string image = 2;</code>
+   * <code>string image = 2[json_name = "image"];</code>
+   * @return The bytes for image.
    */
   com.google.protobuf.ByteString getImageBytes();
 
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
+   * @return Whether the resource field is set.
    */
   boolean hasResource();
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
+   * @return The resource.
    */
   io.harness.perpetualtask.k8s.watch.Resource getResource();
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource resource = 3[json_name = "resource"];</code>
    */
   io.harness.perpetualtask.k8s.watch.ResourceOrBuilder getResourceOrBuilder();
 }

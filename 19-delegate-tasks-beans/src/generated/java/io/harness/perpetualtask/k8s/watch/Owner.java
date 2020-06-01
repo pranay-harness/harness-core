@@ -23,6 +23,13 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new Owner();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -61,9 +68,9 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
             break;
           }
           case 34: {
-            if (!((mutable_bitField0_ & 0x00000008) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
               labels_ = com.google.protobuf.MapField.newMapField(LabelsDefaultEntryHolder.defaultEntry);
-              mutable_bitField0_ |= 0x00000008;
+              mutable_bitField0_ |= 0x00000001;
             }
             com.google.protobuf.MapEntry<java.lang.String, java.lang.String> labels__ =
                 input.readMessage(LabelsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
@@ -111,11 +118,11 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
             io.harness.perpetualtask.k8s.watch.Owner.class, io.harness.perpetualtask.k8s.watch.Owner.Builder.class);
   }
 
-  private int bitField0_;
   public static final int UID_FIELD_NUMBER = 1;
   private volatile java.lang.Object uid_;
   /**
-   * <code>string uid = 1;</code>
+   * <code>string uid = 1[json_name = "uid"];</code>
+   * @return The uid.
    */
   public java.lang.String getUid() {
     java.lang.Object ref = uid_;
@@ -129,7 +136,8 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
     }
   }
   /**
-   * <code>string uid = 1;</code>
+   * <code>string uid = 1[json_name = "uid"];</code>
+   * @return The bytes for uid.
    */
   public com.google.protobuf.ByteString getUidBytes() {
     java.lang.Object ref = uid_;
@@ -145,7 +153,8 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
   public static final int KIND_FIELD_NUMBER = 2;
   private volatile java.lang.Object kind_;
   /**
-   * <code>string kind = 2;</code>
+   * <code>string kind = 2[json_name = "kind"];</code>
+   * @return The kind.
    */
   public java.lang.String getKind() {
     java.lang.Object ref = kind_;
@@ -159,7 +168,8 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
     }
   }
   /**
-   * <code>string kind = 2;</code>
+   * <code>string kind = 2[json_name = "kind"];</code>
+   * @return The bytes for kind.
    */
   public com.google.protobuf.ByteString getKindBytes() {
     java.lang.Object ref = kind_;
@@ -175,7 +185,8 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
   public static final int NAME_FIELD_NUMBER = 3;
   private volatile java.lang.Object name_;
   /**
-   * <code>string name = 3;</code>
+   * <code>string name = 3[json_name = "name"];</code>
+   * @return The name.
    */
   public java.lang.String getName() {
     java.lang.Object ref = name_;
@@ -189,7 +200,8 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
     }
   }
   /**
-   * <code>string name = 3;</code>
+   * <code>string name = 3[json_name = "name"];</code>
+   * @return The bytes for name.
    */
   public com.google.protobuf.ByteString getNameBytes() {
     java.lang.Object ref = name_;
@@ -222,7 +234,7 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
     return internalGetLabels().getMap().size();
   }
   /**
-   * <code>map&lt;string, string&gt; labels = 4;</code>
+   * <code>map&lt;string, string&gt; labels = 4[json_name = "labels"];</code>
    */
 
   public boolean containsLabels(java.lang.String key) {
@@ -240,14 +252,14 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
     return getLabelsMap();
   }
   /**
-   * <code>map&lt;string, string&gt; labels = 4;</code>
+   * <code>map&lt;string, string&gt; labels = 4[json_name = "labels"];</code>
    */
 
   public java.util.Map<java.lang.String, java.lang.String> getLabelsMap() {
     return internalGetLabels().getMap();
   }
   /**
-   * <code>map&lt;string, string&gt; labels = 4;</code>
+   * <code>map&lt;string, string&gt; labels = 4[json_name = "labels"];</code>
    */
 
   public java.lang.String getLabelsOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -258,7 +270,7 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
   /**
-   * <code>map&lt;string, string&gt; labels = 4;</code>
+   * <code>map&lt;string, string&gt; labels = 4[json_name = "labels"];</code>
    */
 
   public java.lang.String getLabelsOrThrow(java.lang.String key) {
@@ -538,13 +550,11 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
     public io.harness.perpetualtask.k8s.watch.Owner buildPartial() {
       io.harness.perpetualtask.k8s.watch.Owner result = new io.harness.perpetualtask.k8s.watch.Owner(this);
       int from_bitField0_ = bitField0_;
-      int to_bitField0_ = 0;
       result.uid_ = uid_;
       result.kind_ = kind_;
       result.name_ = name_;
       result.labels_ = internalGetLabels();
       result.labels_.makeImmutable();
-      result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
     }
@@ -630,7 +640,8 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
 
     private java.lang.Object uid_ = "";
     /**
-     * <code>string uid = 1;</code>
+     * <code>string uid = 1[json_name = "uid"];</code>
+     * @return The uid.
      */
     public java.lang.String getUid() {
       java.lang.Object ref = uid_;
@@ -644,7 +655,8 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       }
     }
     /**
-     * <code>string uid = 1;</code>
+     * <code>string uid = 1[json_name = "uid"];</code>
+     * @return The bytes for uid.
      */
     public com.google.protobuf.ByteString getUidBytes() {
       java.lang.Object ref = uid_;
@@ -657,7 +669,9 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       }
     }
     /**
-     * <code>string uid = 1;</code>
+     * <code>string uid = 1[json_name = "uid"];</code>
+     * @param value The uid to set.
+     * @return This builder for chaining.
      */
     public Builder setUid(java.lang.String value) {
       if (value == null) {
@@ -669,7 +683,8 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       return this;
     }
     /**
-     * <code>string uid = 1;</code>
+     * <code>string uid = 1[json_name = "uid"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearUid() {
       uid_ = getDefaultInstance().getUid();
@@ -677,7 +692,9 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       return this;
     }
     /**
-     * <code>string uid = 1;</code>
+     * <code>string uid = 1[json_name = "uid"];</code>
+     * @param value The bytes for uid to set.
+     * @return This builder for chaining.
      */
     public Builder setUidBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -692,7 +709,8 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
 
     private java.lang.Object kind_ = "";
     /**
-     * <code>string kind = 2;</code>
+     * <code>string kind = 2[json_name = "kind"];</code>
+     * @return The kind.
      */
     public java.lang.String getKind() {
       java.lang.Object ref = kind_;
@@ -706,7 +724,8 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       }
     }
     /**
-     * <code>string kind = 2;</code>
+     * <code>string kind = 2[json_name = "kind"];</code>
+     * @return The bytes for kind.
      */
     public com.google.protobuf.ByteString getKindBytes() {
       java.lang.Object ref = kind_;
@@ -719,7 +738,9 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       }
     }
     /**
-     * <code>string kind = 2;</code>
+     * <code>string kind = 2[json_name = "kind"];</code>
+     * @param value The kind to set.
+     * @return This builder for chaining.
      */
     public Builder setKind(java.lang.String value) {
       if (value == null) {
@@ -731,7 +752,8 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       return this;
     }
     /**
-     * <code>string kind = 2;</code>
+     * <code>string kind = 2[json_name = "kind"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearKind() {
       kind_ = getDefaultInstance().getKind();
@@ -739,7 +761,9 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       return this;
     }
     /**
-     * <code>string kind = 2;</code>
+     * <code>string kind = 2[json_name = "kind"];</code>
+     * @param value The bytes for kind to set.
+     * @return This builder for chaining.
      */
     public Builder setKindBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -754,7 +778,8 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
 
     private java.lang.Object name_ = "";
     /**
-     * <code>string name = 3;</code>
+     * <code>string name = 3[json_name = "name"];</code>
+     * @return The name.
      */
     public java.lang.String getName() {
       java.lang.Object ref = name_;
@@ -768,7 +793,8 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       }
     }
     /**
-     * <code>string name = 3;</code>
+     * <code>string name = 3[json_name = "name"];</code>
+     * @return The bytes for name.
      */
     public com.google.protobuf.ByteString getNameBytes() {
       java.lang.Object ref = name_;
@@ -781,7 +807,9 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       }
     }
     /**
-     * <code>string name = 3;</code>
+     * <code>string name = 3[json_name = "name"];</code>
+     * @param value The name to set.
+     * @return This builder for chaining.
      */
     public Builder setName(java.lang.String value) {
       if (value == null) {
@@ -793,7 +821,8 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       return this;
     }
     /**
-     * <code>string name = 3;</code>
+     * <code>string name = 3[json_name = "name"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearName() {
       name_ = getDefaultInstance().getName();
@@ -801,7 +830,9 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       return this;
     }
     /**
-     * <code>string name = 3;</code>
+     * <code>string name = 3[json_name = "name"];</code>
+     * @param value The bytes for name to set.
+     * @return This builder for chaining.
      */
     public Builder setNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -837,7 +868,7 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       return internalGetLabels().getMap().size();
     }
     /**
-     * <code>map&lt;string, string&gt; labels = 4;</code>
+     * <code>map&lt;string, string&gt; labels = 4[json_name = "labels"];</code>
      */
 
     public boolean containsLabels(java.lang.String key) {
@@ -855,14 +886,14 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       return getLabelsMap();
     }
     /**
-     * <code>map&lt;string, string&gt; labels = 4;</code>
+     * <code>map&lt;string, string&gt; labels = 4[json_name = "labels"];</code>
      */
 
     public java.util.Map<java.lang.String, java.lang.String> getLabelsMap() {
       return internalGetLabels().getMap();
     }
     /**
-     * <code>map&lt;string, string&gt; labels = 4;</code>
+     * <code>map&lt;string, string&gt; labels = 4[json_name = "labels"];</code>
      */
 
     public java.lang.String getLabelsOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -873,7 +904,7 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, string&gt; labels = 4;</code>
+     * <code>map&lt;string, string&gt; labels = 4[json_name = "labels"];</code>
      */
 
     public java.lang.String getLabelsOrThrow(java.lang.String key) {
@@ -892,7 +923,7 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       return this;
     }
     /**
-     * <code>map&lt;string, string&gt; labels = 4;</code>
+     * <code>map&lt;string, string&gt; labels = 4[json_name = "labels"];</code>
      */
 
     public Builder removeLabels(java.lang.String key) {
@@ -911,7 +942,7 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       return internalGetMutableLabels().getMutableMap();
     }
     /**
-     * <code>map&lt;string, string&gt; labels = 4;</code>
+     * <code>map&lt;string, string&gt; labels = 4[json_name = "labels"];</code>
      */
     public Builder putLabels(java.lang.String key, java.lang.String value) {
       if (key == null) {
@@ -924,7 +955,7 @@ public final class Owner extends com.google.protobuf.GeneratedMessageV3 implemen
       return this;
     }
     /**
-     * <code>map&lt;string, string&gt; labels = 4;</code>
+     * <code>map&lt;string, string&gt; labels = 4[json_name = "labels"];</code>
      */
 
     public Builder putAllLabels(java.util.Map<java.lang.String, java.lang.String> values) {

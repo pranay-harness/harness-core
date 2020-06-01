@@ -8,24 +8,26 @@ public interface PublishMessageOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.PublishMessage)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.google.protobuf.Any payload = 1;</code>
+   * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
+   * @return Whether the payload field is set.
    */
   boolean hasPayload();
   /**
-   * <code>.google.protobuf.Any payload = 1;</code>
+   * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
+   * @return The payload.
    */
   com.google.protobuf.Any getPayload();
   /**
-   * <code>.google.protobuf.Any payload = 1;</code>
+   * <code>.google.protobuf.Any payload = 1[json_name = "payload"];</code>
    */
   com.google.protobuf.AnyOrBuilder getPayloadOrBuilder();
 
   /**
-   * <code>map&lt;string, string&gt; attributes = 2;</code>
+   * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
    */
   int getAttributesCount();
   /**
-   * <code>map&lt;string, string&gt; attributes = 2;</code>
+   * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
    */
   boolean containsAttributes(java.lang.String key);
   /**
@@ -33,48 +35,54 @@ public interface PublishMessageOrBuilder extends
    */
   @java.lang.Deprecated java.util.Map<java.lang.String, java.lang.String> getAttributes();
   /**
-   * <code>map&lt;string, string&gt; attributes = 2;</code>
+   * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
    */
   java.util.Map<java.lang.String, java.lang.String> getAttributesMap();
   /**
-   * <code>map&lt;string, string&gt; attributes = 2;</code>
+   * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
    */
 
   java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue);
   /**
-   * <code>map&lt;string, string&gt; attributes = 2;</code>
+   * <code>map&lt;string, string&gt; attributes = 2[json_name = "attributes"];</code>
    */
 
   java.lang.String getAttributesOrThrow(java.lang.String key);
 
   /**
-   * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+   * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
+   * @return Whether the occurredAt field is set.
    */
   boolean hasOccurredAt();
   /**
-   * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+   * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
+   * @return The occurredAt.
    */
   com.google.protobuf.Timestamp getOccurredAt();
   /**
-   * <code>.google.protobuf.Timestamp occurred_at = 3;</code>
+   * <code>.google.protobuf.Timestamp occurred_at = 3[json_name = "occurredAt"];</code>
    */
   com.google.protobuf.TimestampOrBuilder getOccurredAtOrBuilder();
 
   /**
-   * <code>string message_id = 4;</code>
+   * <code>string message_id = 4[json_name = "messageId"];</code>
+   * @return The messageId.
    */
   java.lang.String getMessageId();
   /**
-   * <code>string message_id = 4;</code>
+   * <code>string message_id = 4[json_name = "messageId"];</code>
+   * @return The bytes for messageId.
    */
   com.google.protobuf.ByteString getMessageIdBytes();
 
   /**
-   * <code>string category = 5;</code>
+   * <code>string category = 5[json_name = "category"];</code>
+   * @return The category.
    */
   java.lang.String getCategory();
   /**
-   * <code>string category = 5;</code>
+   * <code>string category = 5[json_name = "category"];</code>
+   * @return The bytes for category.
    */
   com.google.protobuf.ByteString getCategoryBytes();
 }

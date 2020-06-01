@@ -19,6 +19,13 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new EcsTaskInfo();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -29,7 +36,6 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -99,20 +105,25 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
   public static final int ECS_TASK_DESCRIPTION_FIELD_NUMBER = 1;
   private io.harness.event.payloads.EcsTaskDescription ecsTaskDescription_;
   /**
-   * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+   * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+   * "ecsTaskDescription"];</code>
+   * @return Whether the ecsTaskDescription field is set.
    */
   public boolean hasEcsTaskDescription() {
     return ecsTaskDescription_ != null;
   }
   /**
-   * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+   * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+   * "ecsTaskDescription"];</code>
+   * @return The ecsTaskDescription.
    */
   public io.harness.event.payloads.EcsTaskDescription getEcsTaskDescription() {
     return ecsTaskDescription_ == null ? io.harness.event.payloads.EcsTaskDescription.getDefaultInstance()
                                        : ecsTaskDescription_;
   }
   /**
-   * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+   * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+   * "ecsTaskDescription"];</code>
    */
   public io.harness.event.payloads.EcsTaskDescriptionOrBuilder getEcsTaskDescriptionOrBuilder() {
     return getEcsTaskDescription();
@@ -121,20 +132,22 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
   public static final int ECS_TASK_RESOURCE_FIELD_NUMBER = 2;
   private io.harness.event.payloads.ReservedResource ecsTaskResource_;
   /**
-   * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+   * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
+   * @return Whether the ecsTaskResource field is set.
    */
   public boolean hasEcsTaskResource() {
     return ecsTaskResource_ != null;
   }
   /**
-   * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+   * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
+   * @return The ecsTaskResource.
    */
   public io.harness.event.payloads.ReservedResource getEcsTaskResource() {
     return ecsTaskResource_ == null ? io.harness.event.payloads.ReservedResource.getDefaultInstance()
                                     : ecsTaskResource_;
   }
   /**
-   * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+   * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
    */
   public io.harness.event.payloads.ReservedResourceOrBuilder getEcsTaskResourceOrBuilder() {
     return getEcsTaskResource();
@@ -465,13 +478,17 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
         io.harness.event.payloads.EcsTaskDescription.Builder, io.harness.event.payloads.EcsTaskDescriptionOrBuilder>
         ecsTaskDescriptionBuilder_;
     /**
-     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+     * "ecsTaskDescription"];</code>
+     * @return Whether the ecsTaskDescription field is set.
      */
     public boolean hasEcsTaskDescription() {
       return ecsTaskDescriptionBuilder_ != null || ecsTaskDescription_ != null;
     }
     /**
-     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+     * "ecsTaskDescription"];</code>
+     * @return The ecsTaskDescription.
      */
     public io.harness.event.payloads.EcsTaskDescription getEcsTaskDescription() {
       if (ecsTaskDescriptionBuilder_ == null) {
@@ -482,7 +499,8 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
       }
     }
     /**
-     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+     * "ecsTaskDescription"];</code>
      */
     public Builder setEcsTaskDescription(io.harness.event.payloads.EcsTaskDescription value) {
       if (ecsTaskDescriptionBuilder_ == null) {
@@ -498,7 +516,8 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+     * "ecsTaskDescription"];</code>
      */
     public Builder setEcsTaskDescription(io.harness.event.payloads.EcsTaskDescription.Builder builderForValue) {
       if (ecsTaskDescriptionBuilder_ == null) {
@@ -511,7 +530,8 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+     * "ecsTaskDescription"];</code>
      */
     public Builder mergeEcsTaskDescription(io.harness.event.payloads.EcsTaskDescription value) {
       if (ecsTaskDescriptionBuilder_ == null) {
@@ -530,7 +550,8 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+     * "ecsTaskDescription"];</code>
      */
     public Builder clearEcsTaskDescription() {
       if (ecsTaskDescriptionBuilder_ == null) {
@@ -544,14 +565,16 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+     * "ecsTaskDescription"];</code>
      */
     public io.harness.event.payloads.EcsTaskDescription.Builder getEcsTaskDescriptionBuilder() {
       onChanged();
       return getEcsTaskDescriptionFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+     * "ecsTaskDescription"];</code>
      */
     public io.harness.event.payloads.EcsTaskDescriptionOrBuilder getEcsTaskDescriptionOrBuilder() {
       if (ecsTaskDescriptionBuilder_ != null) {
@@ -562,7 +585,8 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
       }
     }
     /**
-     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+     * "ecsTaskDescription"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.EcsTaskDescription,
         io.harness.event.payloads.EcsTaskDescription.Builder, io.harness.event.payloads.EcsTaskDescriptionOrBuilder>
@@ -583,13 +607,15 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
         io.harness.event.payloads.ReservedResource.Builder, io.harness.event.payloads.ReservedResourceOrBuilder>
         ecsTaskResourceBuilder_;
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
+     * @return Whether the ecsTaskResource field is set.
      */
     public boolean hasEcsTaskResource() {
       return ecsTaskResourceBuilder_ != null || ecsTaskResource_ != null;
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
+     * @return The ecsTaskResource.
      */
     public io.harness.event.payloads.ReservedResource getEcsTaskResource() {
       if (ecsTaskResourceBuilder_ == null) {
@@ -600,7 +626,7 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
       }
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
      */
     public Builder setEcsTaskResource(io.harness.event.payloads.ReservedResource value) {
       if (ecsTaskResourceBuilder_ == null) {
@@ -616,7 +642,7 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
      */
     public Builder setEcsTaskResource(io.harness.event.payloads.ReservedResource.Builder builderForValue) {
       if (ecsTaskResourceBuilder_ == null) {
@@ -629,7 +655,7 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
      */
     public Builder mergeEcsTaskResource(io.harness.event.payloads.ReservedResource value) {
       if (ecsTaskResourceBuilder_ == null) {
@@ -647,7 +673,7 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
      */
     public Builder clearEcsTaskResource() {
       if (ecsTaskResourceBuilder_ == null) {
@@ -661,14 +687,14 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
      */
     public io.harness.event.payloads.ReservedResource.Builder getEcsTaskResourceBuilder() {
       onChanged();
       return getEcsTaskResourceFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
      */
     public io.harness.event.payloads.ReservedResourceOrBuilder getEcsTaskResourceOrBuilder() {
       if (ecsTaskResourceBuilder_ != null) {
@@ -679,7 +705,7 @@ public final class EcsTaskInfo extends com.google.protobuf.GeneratedMessageV3 im
       }
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.ReservedResource,
         io.harness.event.payloads.ReservedResource.Builder, io.harness.event.payloads.ReservedResourceOrBuilder>

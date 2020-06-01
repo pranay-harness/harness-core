@@ -19,6 +19,13 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new PerpetualTaskAssignDetails();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -29,7 +36,6 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -99,19 +105,21 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
   public static final int TASK_ID_FIELD_NUMBER = 1;
   private io.harness.perpetualtask.PerpetualTaskId taskId_;
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
+   * @return Whether the taskId field is set.
    */
   public boolean hasTaskId() {
     return taskId_ != null;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
+   * @return The taskId.
    */
   public io.harness.perpetualtask.PerpetualTaskId getTaskId() {
     return taskId_ == null ? io.harness.perpetualtask.PerpetualTaskId.getDefaultInstance() : taskId_;
   }
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
    */
   public io.harness.perpetualtask.PerpetualTaskIdOrBuilder getTaskIdOrBuilder() {
     return getTaskId();
@@ -120,19 +128,21 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
   public static final int LAST_CONTEXT_UPDATED_FIELD_NUMBER = 2;
   private com.google.protobuf.Timestamp lastContextUpdated_;
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+   * @return Whether the lastContextUpdated field is set.
    */
   public boolean hasLastContextUpdated() {
     return lastContextUpdated_ != null;
   }
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+   * @return The lastContextUpdated.
    */
   public com.google.protobuf.Timestamp getLastContextUpdated() {
     return lastContextUpdated_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : lastContextUpdated_;
   }
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
    */
   public com.google.protobuf.TimestampOrBuilder getLastContextUpdatedOrBuilder() {
     return getLastContextUpdated();
@@ -470,13 +480,15 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
         io.harness.perpetualtask.PerpetualTaskId.Builder, io.harness.perpetualtask.PerpetualTaskIdOrBuilder>
         taskIdBuilder_;
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
+     * @return Whether the taskId field is set.
      */
     public boolean hasTaskId() {
       return taskIdBuilder_ != null || taskId_ != null;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
+     * @return The taskId.
      */
     public io.harness.perpetualtask.PerpetualTaskId getTaskId() {
       if (taskIdBuilder_ == null) {
@@ -486,7 +498,7 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
      */
     public Builder setTaskId(io.harness.perpetualtask.PerpetualTaskId value) {
       if (taskIdBuilder_ == null) {
@@ -502,7 +514,7 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
      */
     public Builder setTaskId(io.harness.perpetualtask.PerpetualTaskId.Builder builderForValue) {
       if (taskIdBuilder_ == null) {
@@ -515,7 +527,7 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
      */
     public Builder mergeTaskId(io.harness.perpetualtask.PerpetualTaskId value) {
       if (taskIdBuilder_ == null) {
@@ -532,7 +544,7 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
      */
     public Builder clearTaskId() {
       if (taskIdBuilder_ == null) {
@@ -546,14 +558,14 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
      */
     public io.harness.perpetualtask.PerpetualTaskId.Builder getTaskIdBuilder() {
       onChanged();
       return getTaskIdFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
      */
     public io.harness.perpetualtask.PerpetualTaskIdOrBuilder getTaskIdOrBuilder() {
       if (taskIdBuilder_ != null) {
@@ -563,7 +575,7 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskId,
         io.harness.perpetualtask.PerpetualTaskId.Builder, io.harness.perpetualtask.PerpetualTaskIdOrBuilder>
@@ -581,13 +593,15 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> lastContextUpdatedBuilder_;
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+     * @return Whether the lastContextUpdated field is set.
      */
     public boolean hasLastContextUpdated() {
       return lastContextUpdatedBuilder_ != null || lastContextUpdated_ != null;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+     * @return The lastContextUpdated.
      */
     public com.google.protobuf.Timestamp getLastContextUpdated() {
       if (lastContextUpdatedBuilder_ == null) {
@@ -597,7 +611,7 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
      */
     public Builder setLastContextUpdated(com.google.protobuf.Timestamp value) {
       if (lastContextUpdatedBuilder_ == null) {
@@ -613,7 +627,7 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
      */
     public Builder setLastContextUpdated(com.google.protobuf.Timestamp.Builder builderForValue) {
       if (lastContextUpdatedBuilder_ == null) {
@@ -626,7 +640,7 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
      */
     public Builder mergeLastContextUpdated(com.google.protobuf.Timestamp value) {
       if (lastContextUpdatedBuilder_ == null) {
@@ -644,7 +658,7 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
      */
     public Builder clearLastContextUpdated() {
       if (lastContextUpdatedBuilder_ == null) {
@@ -658,14 +672,14 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
      */
     public com.google.protobuf.Timestamp.Builder getLastContextUpdatedBuilder() {
       onChanged();
       return getLastContextUpdatedFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
      */
     public com.google.protobuf.TimestampOrBuilder getLastContextUpdatedOrBuilder() {
       if (lastContextUpdatedBuilder_ != null) {
@@ -675,7 +689,7 @@ public final class PerpetualTaskAssignDetails extends com.google.protobuf.Genera
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2;</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>

@@ -9,40 +9,48 @@ public interface SpotinstAmiInstanceSyncPerpetualTaskParamsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskParams)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string region = 1;</code>
+   * <code>string region = 1[json_name = "region"];</code>
+   * @return The region.
    */
   java.lang.String getRegion();
   /**
-   * <code>string region = 1;</code>
+   * <code>string region = 1[json_name = "region"];</code>
+   * @return The bytes for region.
    */
   com.google.protobuf.ByteString getRegionBytes();
 
   /**
-   * <code>string elastigroup_id = 2;</code>
+   * <code>string elastigroup_id = 2[json_name = "elastigroupId"];</code>
+   * @return The elastigroupId.
    */
   java.lang.String getElastigroupId();
   /**
-   * <code>string elastigroup_id = 2;</code>
+   * <code>string elastigroup_id = 2[json_name = "elastigroupId"];</code>
+   * @return The bytes for elastigroupId.
    */
   com.google.protobuf.ByteString getElastigroupIdBytes();
 
   /**
-   * <code>bytes aws_config = 3;</code>
+   * <code>bytes aws_config = 3[json_name = "awsConfig"];</code>
+   * @return The awsConfig.
    */
   com.google.protobuf.ByteString getAwsConfig();
 
   /**
-   * <code>bytes spotinst_config = 4;</code>
+   * <code>bytes spotinst_config = 4[json_name = "spotinstConfig"];</code>
+   * @return The spotinstConfig.
    */
   com.google.protobuf.ByteString getSpotinstConfig();
 
   /**
-   * <code>bytes aws_encrypted_data = 5;</code>
+   * <code>bytes aws_encrypted_data = 5[json_name = "awsEncryptedData"];</code>
+   * @return The awsEncryptedData.
    */
   com.google.protobuf.ByteString getAwsEncryptedData();
 
   /**
-   * <code>bytes spotinst_encrypted_data = 6;</code>
+   * <code>bytes spotinst_encrypted_data = 6[json_name = "spotinstEncryptedData"];</code>
+   * @return The spotinstEncryptedData.
    */
   com.google.protobuf.ByteString getSpotinstEncryptedData();
 }

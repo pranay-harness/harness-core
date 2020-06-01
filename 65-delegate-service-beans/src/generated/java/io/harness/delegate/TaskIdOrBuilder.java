@@ -8,11 +8,13 @@ public interface TaskIdOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.TaskId)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string id = 1;</code>
+   * <code>string id = 1[json_name = "id"];</code>
+   * @return The id.
    */
   java.lang.String getId();
   /**
-   * <code>string id = 1;</code>
+   * <code>string id = 1[json_name = "id"];</code>
+   * @return The bytes for id.
    */
   com.google.protobuf.ByteString getIdBytes();
 }

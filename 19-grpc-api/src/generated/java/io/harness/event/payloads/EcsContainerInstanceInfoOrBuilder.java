@@ -8,28 +8,38 @@ public interface EcsContainerInstanceInfoOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.payloads.EcsContainerInstanceInfo)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+   * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name =
+   * "ecsContainerInstanceDescription"];</code>
+   * @return Whether the ecsContainerInstanceDescription field is set.
    */
   boolean hasEcsContainerInstanceDescription();
   /**
-   * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+   * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name =
+   * "ecsContainerInstanceDescription"];</code>
+   * @return The ecsContainerInstanceDescription.
    */
   io.harness.event.payloads.EcsContainerInstanceDescription getEcsContainerInstanceDescription();
   /**
-   * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+   * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name =
+   * "ecsContainerInstanceDescription"];</code>
    */
   io.harness.event.payloads.EcsContainerInstanceDescriptionOrBuilder getEcsContainerInstanceDescriptionOrBuilder();
 
   /**
-   * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+   * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+   * "ecsContainerInstanceResource"];</code>
+   * @return Whether the ecsContainerInstanceResource field is set.
    */
   boolean hasEcsContainerInstanceResource();
   /**
-   * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+   * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+   * "ecsContainerInstanceResource"];</code>
+   * @return The ecsContainerInstanceResource.
    */
   io.harness.event.payloads.ReservedResource getEcsContainerInstanceResource();
   /**
-   * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+   * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+   * "ecsContainerInstanceResource"];</code>
    */
   io.harness.event.payloads.ReservedResourceOrBuilder getEcsContainerInstanceResourceOrBuilder();
 }

@@ -4,10 +4,6 @@
 package io.harness.delegate;
 
 /**
- * <pre>
- * Task global unique identifier
- * </pre>
- *
  * Protobuf type {@code io.harness.delegate.TaskType}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:TaskType.java.pb.meta")
@@ -25,6 +21,13 @@ public final class TaskType extends com.google.protobuf.GeneratedMessageV3 imple
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new TaskType();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -35,7 +38,6 @@ public final class TaskType extends com.google.protobuf.GeneratedMessageV3 imple
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -83,7 +85,8 @@ public final class TaskType extends com.google.protobuf.GeneratedMessageV3 imple
   public static final int TYPE_FIELD_NUMBER = 1;
   private volatile java.lang.Object type_;
   /**
-   * <code>string type = 1;</code>
+   * <code>string type = 1[json_name = "type"];</code>
+   * @return The type.
    */
   public java.lang.String getType() {
     java.lang.Object ref = type_;
@@ -97,7 +100,8 @@ public final class TaskType extends com.google.protobuf.GeneratedMessageV3 imple
     }
   }
   /**
-   * <code>string type = 1;</code>
+   * <code>string type = 1[json_name = "type"];</code>
+   * @return The bytes for type.
    */
   public com.google.protobuf.ByteString getTypeBytes() {
     java.lang.Object ref = type_;
@@ -248,10 +252,6 @@ public final class TaskType extends com.google.protobuf.GeneratedMessageV3 imple
     return builder;
   }
   /**
-   * <pre>
-   * Task global unique identifier
-   * </pre>
-   *
    * Protobuf type {@code io.harness.delegate.TaskType}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
@@ -392,7 +392,8 @@ public final class TaskType extends com.google.protobuf.GeneratedMessageV3 imple
 
     private java.lang.Object type_ = "";
     /**
-     * <code>string type = 1;</code>
+     * <code>string type = 1[json_name = "type"];</code>
+     * @return The type.
      */
     public java.lang.String getType() {
       java.lang.Object ref = type_;
@@ -406,7 +407,8 @@ public final class TaskType extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string type = 1;</code>
+     * <code>string type = 1[json_name = "type"];</code>
+     * @return The bytes for type.
      */
     public com.google.protobuf.ByteString getTypeBytes() {
       java.lang.Object ref = type_;
@@ -419,7 +421,9 @@ public final class TaskType extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string type = 1;</code>
+     * <code>string type = 1[json_name = "type"];</code>
+     * @param value The type to set.
+     * @return This builder for chaining.
      */
     public Builder setType(java.lang.String value) {
       if (value == null) {
@@ -431,7 +435,8 @@ public final class TaskType extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string type = 1;</code>
+     * <code>string type = 1[json_name = "type"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearType() {
       type_ = getDefaultInstance().getType();
@@ -439,7 +444,9 @@ public final class TaskType extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string type = 1;</code>
+     * <code>string type = 1[json_name = "type"];</code>
+     * @param value The bytes for type to set.
+     * @return This builder for chaining.
      */
     public Builder setTypeBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

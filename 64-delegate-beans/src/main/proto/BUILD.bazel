@@ -1,0 +1,22 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_proto_grpc//java:defs.bzl", "java_proto_compile")
+
+proto_library(
+    name = "64_delegate_beans_proto",
+    srcs = glob(["**/*.proto"]),
+    strip_import_prefix = "",
+    deps = [
+        "@com_google_protobuf//:any_proto",
+        "@com_google_protobuf//:timestamp_proto",
+        "@com_google_protobuf//:duration_proto",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+java_proto_compile(
+    name = "64_delegate_beans_java_proto",
+    deps = [
+        ":64_delegate_beans_proto",
+    ],
+    visibility = ["//visibility:public"],
+)

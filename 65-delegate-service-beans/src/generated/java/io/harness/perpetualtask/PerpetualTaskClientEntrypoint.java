@@ -4,10 +4,6 @@
 package io.harness.perpetualtask;
 
 /**
- * <pre>
- * TODO: define what is needed to make a callback to the client entry-point
- * </pre>
- *
  * Protobuf type {@code io.harness.perpetualtask.PerpetualTaskClientEntrypoint}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:PerpetualTaskClientEntrypoint.java.pb.meta")
@@ -20,6 +16,13 @@ public final class PerpetualTaskClientEntrypoint extends com.google.protobuf.Gen
     super(builder);
   }
   private PerpetualTaskClientEntrypoint() {}
+
+  @java.
+  lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new PerpetualTaskClientEntrypoint();
+  }
 
   @java.
   lang.Override
@@ -205,10 +208,6 @@ public final class PerpetualTaskClientEntrypoint extends com.google.protobuf.Gen
     return builder;
   }
   /**
-   * <pre>
-   * TODO: define what is needed to make a callback to the client entry-point
-   * </pre>
-   *
    * Protobuf type {@code io.harness.perpetualtask.PerpetualTaskClientEntrypoint}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements

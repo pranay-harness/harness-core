@@ -22,6 +22,13 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new CeExceptionMessage();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -32,7 +39,6 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -88,7 +94,8 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
   public static final int CLUSTER_ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object clusterId_;
   /**
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -102,7 +109,8 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -118,7 +126,8 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
   public static final int MESSAGE_FIELD_NUMBER = 2;
   private volatile java.lang.Object message_;
   /**
-   * <code>string message = 2;</code>
+   * <code>string message = 2[json_name = "message"];</code>
+   * @return The message.
    */
   public java.lang.String getMessage() {
     java.lang.Object ref = message_;
@@ -132,7 +141,8 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string message = 2;</code>
+   * <code>string message = 2[json_name = "message"];</code>
+   * @return The bytes for message.
    */
   public com.google.protobuf.ByteString getMessageBytes() {
     java.lang.Object ref = message_;
@@ -445,7 +455,8 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -459,7 +470,8 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -472,7 +484,9 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -484,7 +498,8 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -492,7 +507,9 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -507,7 +524,8 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object message_ = "";
     /**
-     * <code>string message = 2;</code>
+     * <code>string message = 2[json_name = "message"];</code>
+     * @return The message.
      */
     public java.lang.String getMessage() {
       java.lang.Object ref = message_;
@@ -521,7 +539,8 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string message = 2;</code>
+     * <code>string message = 2[json_name = "message"];</code>
+     * @return The bytes for message.
      */
     public com.google.protobuf.ByteString getMessageBytes() {
       java.lang.Object ref = message_;
@@ -534,7 +553,9 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string message = 2;</code>
+     * <code>string message = 2[json_name = "message"];</code>
+     * @param value The message to set.
+     * @return This builder for chaining.
      */
     public Builder setMessage(java.lang.String value) {
       if (value == null) {
@@ -546,7 +567,8 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string message = 2;</code>
+     * <code>string message = 2[json_name = "message"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearMessage() {
       message_ = getDefaultInstance().getMessage();
@@ -554,7 +576,9 @@ public final class CeExceptionMessage extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string message = 2;</code>
+     * <code>string message = 2[json_name = "message"];</code>
+     * @param value The bytes for message to set.
+     * @return This builder for chaining.
      */
     public Builder setMessageBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

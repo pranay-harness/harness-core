@@ -21,18 +21,10 @@ public final class Delegate {
   private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
   static {
     java.lang.String[] descriptorData = {"\n\"io/harness/delegate/delegate.proto\022\023io"
-        + ".harness.delegate\"\030\n\nDelegateId\022\n\n\002id\030\001 "
-        + "\001(\tB\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {}, assigner);
+        + ".harness.delegate\"\034\n\nDelegateId\022\016\n\002id\030\001 "
+        + "\001(\tR\002idB\002P\001b\006proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
     internal_static_io_harness_delegate_DelegateId_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_delegate_DelegateId_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(

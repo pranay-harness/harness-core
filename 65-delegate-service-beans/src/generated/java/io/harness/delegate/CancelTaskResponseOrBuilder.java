@@ -8,11 +8,13 @@ public interface CancelTaskResponseOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.CancelTaskResponse)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.delegate.TaskExecutionStage canceled_at_stage = 1;</code>
+   * <code>.io.harness.delegate.TaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
+   * @return The enum numeric value on the wire for canceledAtStage.
    */
   int getCanceledAtStageValue();
   /**
-   * <code>.io.harness.delegate.TaskExecutionStage canceled_at_stage = 1;</code>
+   * <code>.io.harness.delegate.TaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
+   * @return The canceledAtStage.
    */
   io.harness.delegate.TaskExecutionStage getCanceledAtStage();
 }

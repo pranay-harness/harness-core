@@ -4,10 +4,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
 /**
- * <pre>
- * Resource specification for a k8s workload
- * </pre>
- *
  * Protobuf type {@code io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec}
  */
 @javax.annotation.Generated(value = "protoc", comments = "annotations:K8sWorkloadSpec.java.pb.meta")
@@ -29,6 +25,13 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
     namespace_ = "";
     containerSpecs_ = java.util.Collections.emptyList();
     initContainerSpecs_ = java.util.Collections.emptyList();
+  }
+
+  @java.
+  lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new K8sWorkloadSpec();
   }
 
   @java.
@@ -96,20 +99,20 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
             break;
           }
           case 66: {
-            if (!((mutable_bitField0_ & 0x00000080) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
               containerSpecs_ =
                   new java.util.ArrayList<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec>();
-              mutable_bitField0_ |= 0x00000080;
+              mutable_bitField0_ |= 0x00000001;
             }
             containerSpecs_.add(input.readMessage(
                 io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.parser(), extensionRegistry));
             break;
           }
           case 74: {
-            if (!((mutable_bitField0_ & 0x00000100) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
               initContainerSpecs_ =
                   new java.util.ArrayList<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec>();
-              mutable_bitField0_ |= 0x00000100;
+              mutable_bitField0_ |= 0x00000002;
             }
             initContainerSpecs_.add(input.readMessage(
                 io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.parser(), extensionRegistry));
@@ -128,10 +131,10 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
     } catch (java.io.IOException e) {
       throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
     } finally {
-      if (((mutable_bitField0_ & 0x00000080) != 0)) {
+      if (((mutable_bitField0_ & 0x00000001) != 0)) {
         containerSpecs_ = java.util.Collections.unmodifiableList(containerSpecs_);
       }
-      if (((mutable_bitField0_ & 0x00000100) != 0)) {
+      if (((mutable_bitField0_ & 0x00000002) != 0)) {
         initContainerSpecs_ = java.util.Collections.unmodifiableList(initContainerSpecs_);
       }
       this.unknownFields = unknownFields.build();
@@ -156,20 +159,22 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec)
       com.google.protobuf.MessageOrBuilder {
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 1[json_name = "name"];</code>
+     * @return The name.
      */
     java.lang.String getName();
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 1[json_name = "name"];</code>
+     * @return The bytes for name.
      */
     com.google.protobuf.ByteString getNameBytes();
 
     /**
-     * <code>map&lt;string, string&gt; requests = 2;</code>
+     * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
      */
     int getRequestsCount();
     /**
-     * <code>map&lt;string, string&gt; requests = 2;</code>
+     * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
      */
     boolean containsRequests(java.lang.String key);
     /**
@@ -177,26 +182,26 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
      */
     @java.lang.Deprecated java.util.Map<java.lang.String, java.lang.String> getRequests();
     /**
-     * <code>map&lt;string, string&gt; requests = 2;</code>
+     * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
      */
     java.util.Map<java.lang.String, java.lang.String> getRequestsMap();
     /**
-     * <code>map&lt;string, string&gt; requests = 2;</code>
+     * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
      */
 
     java.lang.String getRequestsOrDefault(java.lang.String key, java.lang.String defaultValue);
     /**
-     * <code>map&lt;string, string&gt; requests = 2;</code>
+     * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
      */
 
     java.lang.String getRequestsOrThrow(java.lang.String key);
 
     /**
-     * <code>map&lt;string, string&gt; limits = 3;</code>
+     * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
      */
     int getLimitsCount();
     /**
-     * <code>map&lt;string, string&gt; limits = 3;</code>
+     * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
      */
     boolean containsLimits(java.lang.String key);
     /**
@@ -204,16 +209,16 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
      */
     @java.lang.Deprecated java.util.Map<java.lang.String, java.lang.String> getLimits();
     /**
-     * <code>map&lt;string, string&gt; limits = 3;</code>
+     * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
      */
     java.util.Map<java.lang.String, java.lang.String> getLimitsMap();
     /**
-     * <code>map&lt;string, string&gt; limits = 3;</code>
+     * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
      */
 
     java.lang.String getLimitsOrDefault(java.lang.String key, java.lang.String defaultValue);
     /**
-     * <code>map&lt;string, string&gt; limits = 3;</code>
+     * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
      */
 
     java.lang.String getLimitsOrThrow(java.lang.String key);
@@ -231,6 +236,13 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
     }
     private ContainerSpec() {
       name_ = "";
+    }
+
+    @java.
+    lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+      return new ContainerSpec();
     }
 
     @java.
@@ -262,9 +274,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                 requests_ = com.google.protobuf.MapField.newMapField(RequestsDefaultEntryHolder.defaultEntry);
-                mutable_bitField0_ |= 0x00000002;
+                mutable_bitField0_ |= 0x00000001;
               }
               com.google.protobuf.MapEntry<java.lang.String, java.lang.String> requests__ =
                   input.readMessage(RequestsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
@@ -272,9 +284,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
               break;
             }
             case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 limits_ = com.google.protobuf.MapField.newMapField(LimitsDefaultEntryHolder.defaultEntry);
-                mutable_bitField0_ |= 0x00000004;
+                mutable_bitField0_ |= 0x00000002;
               }
               com.google.protobuf.MapEntry<java.lang.String, java.lang.String> limits__ =
                   input.readMessage(LimitsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
@@ -325,11 +337,11 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
               io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder.class);
     }
 
-    private int bitField0_;
     public static final int NAME_FIELD_NUMBER = 1;
     private volatile java.lang.Object name_;
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 1[json_name = "name"];</code>
+     * @return The name.
      */
     public java.lang.String getName() {
       java.lang.Object ref = name_;
@@ -343,7 +355,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 1[json_name = "name"];</code>
+     * @return The bytes for name.
      */
     public com.google.protobuf.ByteString getNameBytes() {
       java.lang.Object ref = name_;
@@ -376,7 +389,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return internalGetRequests().getMap().size();
     }
     /**
-     * <code>map&lt;string, string&gt; requests = 2;</code>
+     * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
      */
 
     public boolean containsRequests(java.lang.String key) {
@@ -394,14 +407,14 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return getRequestsMap();
     }
     /**
-     * <code>map&lt;string, string&gt; requests = 2;</code>
+     * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
      */
 
     public java.util.Map<java.lang.String, java.lang.String> getRequestsMap() {
       return internalGetRequests().getMap();
     }
     /**
-     * <code>map&lt;string, string&gt; requests = 2;</code>
+     * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
      */
 
     public java.lang.String getRequestsOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -412,7 +425,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, string&gt; requests = 2;</code>
+     * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
      */
 
     public java.lang.String getRequestsOrThrow(java.lang.String key) {
@@ -446,7 +459,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return internalGetLimits().getMap().size();
     }
     /**
-     * <code>map&lt;string, string&gt; limits = 3;</code>
+     * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
      */
 
     public boolean containsLimits(java.lang.String key) {
@@ -464,14 +477,14 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return getLimitsMap();
     }
     /**
-     * <code>map&lt;string, string&gt; limits = 3;</code>
+     * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
      */
 
     public java.util.Map<java.lang.String, java.lang.String> getLimitsMap() {
       return internalGetLimits().getMap();
     }
     /**
-     * <code>map&lt;string, string&gt; limits = 3;</code>
+     * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
      */
 
     public java.lang.String getLimitsOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -482,7 +495,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, string&gt; limits = 3;</code>
+     * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
      */
 
     public java.lang.String getLimitsOrThrow(java.lang.String key) {
@@ -764,13 +777,11 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec result =
             new io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec(this);
         int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
         result.name_ = name_;
         result.requests_ = internalGetRequests();
         result.requests_.makeImmutable();
         result.limits_ = internalGetLimits();
         result.limits_.makeImmutable();
-        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -849,7 +860,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
 
       private java.lang.Object name_ = "";
       /**
-       * <code>string name = 1;</code>
+       * <code>string name = 1[json_name = "name"];</code>
+       * @return The name.
        */
       public java.lang.String getName() {
         java.lang.Object ref = name_;
@@ -863,7 +875,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         }
       }
       /**
-       * <code>string name = 1;</code>
+       * <code>string name = 1[json_name = "name"];</code>
+       * @return The bytes for name.
        */
       public com.google.protobuf.ByteString getNameBytes() {
         java.lang.Object ref = name_;
@@ -876,7 +889,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         }
       }
       /**
-       * <code>string name = 1;</code>
+       * <code>string name = 1[json_name = "name"];</code>
+       * @param value The name to set.
+       * @return This builder for chaining.
        */
       public Builder setName(java.lang.String value) {
         if (value == null) {
@@ -888,7 +903,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         return this;
       }
       /**
-       * <code>string name = 1;</code>
+       * <code>string name = 1[json_name = "name"];</code>
+       * @return This builder for chaining.
        */
       public Builder clearName() {
         name_ = getDefaultInstance().getName();
@@ -896,7 +912,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         return this;
       }
       /**
-       * <code>string name = 1;</code>
+       * <code>string name = 1[json_name = "name"];</code>
+       * @param value The bytes for name to set.
+       * @return This builder for chaining.
        */
       public Builder setNameBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -932,7 +950,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         return internalGetRequests().getMap().size();
       }
       /**
-       * <code>map&lt;string, string&gt; requests = 2;</code>
+       * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
        */
 
       public boolean containsRequests(java.lang.String key) {
@@ -950,14 +968,14 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         return getRequestsMap();
       }
       /**
-       * <code>map&lt;string, string&gt; requests = 2;</code>
+       * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
        */
 
       public java.util.Map<java.lang.String, java.lang.String> getRequestsMap() {
         return internalGetRequests().getMap();
       }
       /**
-       * <code>map&lt;string, string&gt; requests = 2;</code>
+       * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
        */
 
       public java.lang.String getRequestsOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -968,7 +986,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
       /**
-       * <code>map&lt;string, string&gt; requests = 2;</code>
+       * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
        */
 
       public java.lang.String getRequestsOrThrow(java.lang.String key) {
@@ -987,7 +1005,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         return this;
       }
       /**
-       * <code>map&lt;string, string&gt; requests = 2;</code>
+       * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
        */
 
       public Builder removeRequests(java.lang.String key) {
@@ -1006,7 +1024,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         return internalGetMutableRequests().getMutableMap();
       }
       /**
-       * <code>map&lt;string, string&gt; requests = 2;</code>
+       * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
        */
       public Builder putRequests(java.lang.String key, java.lang.String value) {
         if (key == null) {
@@ -1019,7 +1037,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         return this;
       }
       /**
-       * <code>map&lt;string, string&gt; requests = 2;</code>
+       * <code>map&lt;string, string&gt; requests = 2[json_name = "requests"];</code>
        */
 
       public Builder putAllRequests(java.util.Map<java.lang.String, java.lang.String> values) {
@@ -1050,7 +1068,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         return internalGetLimits().getMap().size();
       }
       /**
-       * <code>map&lt;string, string&gt; limits = 3;</code>
+       * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
        */
 
       public boolean containsLimits(java.lang.String key) {
@@ -1068,14 +1086,14 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         return getLimitsMap();
       }
       /**
-       * <code>map&lt;string, string&gt; limits = 3;</code>
+       * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
        */
 
       public java.util.Map<java.lang.String, java.lang.String> getLimitsMap() {
         return internalGetLimits().getMap();
       }
       /**
-       * <code>map&lt;string, string&gt; limits = 3;</code>
+       * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
        */
 
       public java.lang.String getLimitsOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -1086,7 +1104,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
       /**
-       * <code>map&lt;string, string&gt; limits = 3;</code>
+       * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
        */
 
       public java.lang.String getLimitsOrThrow(java.lang.String key) {
@@ -1105,7 +1123,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         return this;
       }
       /**
-       * <code>map&lt;string, string&gt; limits = 3;</code>
+       * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
        */
 
       public Builder removeLimits(java.lang.String key) {
@@ -1124,7 +1142,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         return internalGetMutableLimits().getMutableMap();
       }
       /**
-       * <code>map&lt;string, string&gt; limits = 3;</code>
+       * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
        */
       public Builder putLimits(java.lang.String key, java.lang.String value) {
         if (key == null) {
@@ -1137,7 +1155,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         return this;
       }
       /**
-       * <code>map&lt;string, string&gt; limits = 3;</code>
+       * <code>map&lt;string, string&gt; limits = 3[json_name = "limits"];</code>
        */
 
       public Builder putAllLimits(java.util.Map<java.lang.String, java.lang.String> values) {
@@ -1194,11 +1212,11 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
     }
   }
 
-  private int bitField0_;
   public static final int CLUSTER_ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object clusterId_;
   /**
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -1212,7 +1230,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -1228,7 +1247,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
   public static final int CLUSTER_NAME_FIELD_NUMBER = 2;
   private volatile java.lang.Object clusterName_;
   /**
-   * <code>string cluster_name = 2;</code>
+   * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   public java.lang.String getClusterName() {
     java.lang.Object ref = clusterName_;
@@ -1242,7 +1262,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string cluster_name = 2;</code>
+   * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   public com.google.protobuf.ByteString getClusterNameBytes() {
     java.lang.Object ref = clusterName_;
@@ -1258,7 +1279,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
   public static final int CLOUD_PROVIDER_ID_FIELD_NUMBER = 3;
   private volatile java.lang.Object cloudProviderId_;
   /**
-   * <code>string cloud_provider_id = 3;</code>
+   * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   public java.lang.String getCloudProviderId() {
     java.lang.Object ref = cloudProviderId_;
@@ -1272,7 +1294,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string cloud_provider_id = 3;</code>
+   * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   public com.google.protobuf.ByteString getCloudProviderIdBytes() {
     java.lang.Object ref = cloudProviderId_;
@@ -1288,7 +1311,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
   public static final int KUBE_SYSTEM_UID_FIELD_NUMBER = 4;
   private volatile java.lang.Object kubeSystemUid_;
   /**
-   * <code>string kube_system_uid = 4;</code>
+   * <code>string kube_system_uid = 4[json_name = "kubeSystemUid"];</code>
+   * @return The kubeSystemUid.
    */
   public java.lang.String getKubeSystemUid() {
     java.lang.Object ref = kubeSystemUid_;
@@ -1302,7 +1326,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string kube_system_uid = 4;</code>
+   * <code>string kube_system_uid = 4[json_name = "kubeSystemUid"];</code>
+   * @return The bytes for kubeSystemUid.
    */
   public com.google.protobuf.ByteString getKubeSystemUidBytes() {
     java.lang.Object ref = kubeSystemUid_;
@@ -1318,7 +1343,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
   public static final int WORKLOAD_KIND_FIELD_NUMBER = 5;
   private volatile java.lang.Object workloadKind_;
   /**
-   * <code>string workload_kind = 5;</code>
+   * <code>string workload_kind = 5[json_name = "workloadKind"];</code>
+   * @return The workloadKind.
    */
   public java.lang.String getWorkloadKind() {
     java.lang.Object ref = workloadKind_;
@@ -1332,7 +1358,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string workload_kind = 5;</code>
+   * <code>string workload_kind = 5[json_name = "workloadKind"];</code>
+   * @return The bytes for workloadKind.
    */
   public com.google.protobuf.ByteString getWorkloadKindBytes() {
     java.lang.Object ref = workloadKind_;
@@ -1348,7 +1375,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
   public static final int WORKLOAD_NAME_FIELD_NUMBER = 6;
   private volatile java.lang.Object workloadName_;
   /**
-   * <code>string workload_name = 6;</code>
+   * <code>string workload_name = 6[json_name = "workloadName"];</code>
+   * @return The workloadName.
    */
   public java.lang.String getWorkloadName() {
     java.lang.Object ref = workloadName_;
@@ -1362,7 +1390,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string workload_name = 6;</code>
+   * <code>string workload_name = 6[json_name = "workloadName"];</code>
+   * @return The bytes for workloadName.
    */
   public com.google.protobuf.ByteString getWorkloadNameBytes() {
     java.lang.Object ref = workloadName_;
@@ -1378,7 +1407,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
   public static final int NAMESPACE_FIELD_NUMBER = 7;
   private volatile java.lang.Object namespace_;
   /**
-   * <code>string namespace = 7;</code>
+   * <code>string namespace = 7[json_name = "namespace"];</code>
+   * @return The namespace.
    */
   public java.lang.String getNamespace() {
     java.lang.Object ref = namespace_;
@@ -1392,7 +1422,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
     }
   }
   /**
-   * <code>string namespace = 7;</code>
+   * <code>string namespace = 7[json_name = "namespace"];</code>
+   * @return The bytes for namespace.
    */
   public com.google.protobuf.ByteString getNamespaceBytes() {
     java.lang.Object ref = namespace_;
@@ -1408,32 +1439,37 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
   public static final int CONTAINER_SPECS_FIELD_NUMBER = 8;
   private java.util.List<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec> containerSpecs_;
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+   * "containerSpecs"];</code>
    */
   public java.util.List<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec> getContainerSpecsList() {
     return containerSpecs_;
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+   * "containerSpecs"];</code>
    */
   public java.util.List<? extends io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder>
   getContainerSpecsOrBuilderList() {
     return containerSpecs_;
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+   * "containerSpecs"];</code>
    */
   public int getContainerSpecsCount() {
     return containerSpecs_.size();
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+   * "containerSpecs"];</code>
    */
   public io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec getContainerSpecs(int index) {
     return containerSpecs_.get(index);
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+   * "containerSpecs"];</code>
    */
   public io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder getContainerSpecsOrBuilder(
       int index) {
@@ -1443,32 +1479,37 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
   public static final int INIT_CONTAINER_SPECS_FIELD_NUMBER = 9;
   private java.util.List<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec> initContainerSpecs_;
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9[json_name
+   * = "initContainerSpecs"];</code>
    */
   public java.util.List<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec> getInitContainerSpecsList() {
     return initContainerSpecs_;
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9[json_name
+   * = "initContainerSpecs"];</code>
    */
   public java.util.List<? extends io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder>
   getInitContainerSpecsOrBuilderList() {
     return initContainerSpecs_;
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9[json_name
+   * = "initContainerSpecs"];</code>
    */
   public int getInitContainerSpecsCount() {
     return initContainerSpecs_.size();
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9[json_name
+   * = "initContainerSpecs"];</code>
    */
   public io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec getInitContainerSpecs(int index) {
     return initContainerSpecs_.get(index);
   }
   /**
-   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+   * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9[json_name
+   * = "initContainerSpecs"];</code>
    */
   public io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder getInitContainerSpecsOrBuilder(
       int index) {
@@ -1699,10 +1740,6 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
     return builder;
   }
   /**
-   * <pre>
-   * Resource specification for a k8s workload
-   * </pre>
-   *
    * Protobuf type {@code io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
@@ -1756,13 +1793,13 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
 
       if (containerSpecsBuilder_ == null) {
         containerSpecs_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000080);
+        bitField0_ = (bitField0_ & ~0x00000001);
       } else {
         containerSpecsBuilder_.clear();
       }
       if (initContainerSpecsBuilder_ == null) {
         initContainerSpecs_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000100);
+        bitField0_ = (bitField0_ & ~0x00000002);
       } else {
         initContainerSpecsBuilder_.clear();
       }
@@ -1798,7 +1835,6 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec result =
           new io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec(this);
       int from_bitField0_ = bitField0_;
-      int to_bitField0_ = 0;
       result.clusterId_ = clusterId_;
       result.clusterName_ = clusterName_;
       result.cloudProviderId_ = cloudProviderId_;
@@ -1807,24 +1843,23 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       result.workloadName_ = workloadName_;
       result.namespace_ = namespace_;
       if (containerSpecsBuilder_ == null) {
-        if (((bitField0_ & 0x00000080) != 0)) {
+        if (((bitField0_ & 0x00000001) != 0)) {
           containerSpecs_ = java.util.Collections.unmodifiableList(containerSpecs_);
-          bitField0_ = (bitField0_ & ~0x00000080);
+          bitField0_ = (bitField0_ & ~0x00000001);
         }
         result.containerSpecs_ = containerSpecs_;
       } else {
         result.containerSpecs_ = containerSpecsBuilder_.build();
       }
       if (initContainerSpecsBuilder_ == null) {
-        if (((bitField0_ & 0x00000100) != 0)) {
+        if (((bitField0_ & 0x00000002) != 0)) {
           initContainerSpecs_ = java.util.Collections.unmodifiableList(initContainerSpecs_);
-          bitField0_ = (bitField0_ & ~0x00000100);
+          bitField0_ = (bitField0_ & ~0x00000002);
         }
         result.initContainerSpecs_ = initContainerSpecs_;
       } else {
         result.initContainerSpecs_ = initContainerSpecsBuilder_.build();
       }
-      result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
     }
@@ -1899,7 +1934,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         if (!other.containerSpecs_.isEmpty()) {
           if (containerSpecs_.isEmpty()) {
             containerSpecs_ = other.containerSpecs_;
-            bitField0_ = (bitField0_ & ~0x00000080);
+            bitField0_ = (bitField0_ & ~0x00000001);
           } else {
             ensureContainerSpecsIsMutable();
             containerSpecs_.addAll(other.containerSpecs_);
@@ -1912,7 +1947,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
             containerSpecsBuilder_.dispose();
             containerSpecsBuilder_ = null;
             containerSpecs_ = other.containerSpecs_;
-            bitField0_ = (bitField0_ & ~0x00000080);
+            bitField0_ = (bitField0_ & ~0x00000001);
             containerSpecsBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ? getContainerSpecsFieldBuilder() : null;
           } else {
@@ -1924,7 +1959,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         if (!other.initContainerSpecs_.isEmpty()) {
           if (initContainerSpecs_.isEmpty()) {
             initContainerSpecs_ = other.initContainerSpecs_;
-            bitField0_ = (bitField0_ & ~0x00000100);
+            bitField0_ = (bitField0_ & ~0x00000002);
           } else {
             ensureInitContainerSpecsIsMutable();
             initContainerSpecs_.addAll(other.initContainerSpecs_);
@@ -1937,7 +1972,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
             initContainerSpecsBuilder_.dispose();
             initContainerSpecsBuilder_ = null;
             initContainerSpecs_ = other.initContainerSpecs_;
-            bitField0_ = (bitField0_ & ~0x00000100);
+            bitField0_ = (bitField0_ & ~0x00000002);
             initContainerSpecsBuilder_ = com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
                 ? getInitContainerSpecsFieldBuilder()
                 : null;
@@ -1976,7 +2011,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -1990,7 +2026,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -2003,7 +2040,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -2015,7 +2054,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -2023,7 +2063,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -2038,7 +2080,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object clusterName_ = "";
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @return The clusterName.
      */
     public java.lang.String getClusterName() {
       java.lang.Object ref = clusterName_;
@@ -2052,7 +2095,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @return The bytes for clusterName.
      */
     public com.google.protobuf.ByteString getClusterNameBytes() {
       java.lang.Object ref = clusterName_;
@@ -2065,7 +2109,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @param value The clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterName(java.lang.String value) {
       if (value == null) {
@@ -2077,7 +2123,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterName() {
       clusterName_ = getDefaultInstance().getClusterName();
@@ -2085,7 +2132,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @param value The bytes for clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -2100,7 +2149,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object cloudProviderId_ = "";
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @return The cloudProviderId.
      */
     public java.lang.String getCloudProviderId() {
       java.lang.Object ref = cloudProviderId_;
@@ -2114,7 +2164,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @return The bytes for cloudProviderId.
      */
     public com.google.protobuf.ByteString getCloudProviderIdBytes() {
       java.lang.Object ref = cloudProviderId_;
@@ -2127,7 +2178,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @param value The cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderId(java.lang.String value) {
       if (value == null) {
@@ -2139,7 +2192,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCloudProviderId() {
       cloudProviderId_ = getDefaultInstance().getCloudProviderId();
@@ -2147,7 +2201,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @param value The bytes for cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -2162,7 +2218,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object kubeSystemUid_ = "";
     /**
-     * <code>string kube_system_uid = 4;</code>
+     * <code>string kube_system_uid = 4[json_name = "kubeSystemUid"];</code>
+     * @return The kubeSystemUid.
      */
     public java.lang.String getKubeSystemUid() {
       java.lang.Object ref = kubeSystemUid_;
@@ -2176,7 +2233,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string kube_system_uid = 4;</code>
+     * <code>string kube_system_uid = 4[json_name = "kubeSystemUid"];</code>
+     * @return The bytes for kubeSystemUid.
      */
     public com.google.protobuf.ByteString getKubeSystemUidBytes() {
       java.lang.Object ref = kubeSystemUid_;
@@ -2189,7 +2247,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string kube_system_uid = 4;</code>
+     * <code>string kube_system_uid = 4[json_name = "kubeSystemUid"];</code>
+     * @param value The kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUid(java.lang.String value) {
       if (value == null) {
@@ -2201,7 +2261,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string kube_system_uid = 4;</code>
+     * <code>string kube_system_uid = 4[json_name = "kubeSystemUid"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearKubeSystemUid() {
       kubeSystemUid_ = getDefaultInstance().getKubeSystemUid();
@@ -2209,7 +2270,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string kube_system_uid = 4;</code>
+     * <code>string kube_system_uid = 4[json_name = "kubeSystemUid"];</code>
+     * @param value The bytes for kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUidBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -2224,7 +2287,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object workloadKind_ = "";
     /**
-     * <code>string workload_kind = 5;</code>
+     * <code>string workload_kind = 5[json_name = "workloadKind"];</code>
+     * @return The workloadKind.
      */
     public java.lang.String getWorkloadKind() {
       java.lang.Object ref = workloadKind_;
@@ -2238,7 +2302,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string workload_kind = 5;</code>
+     * <code>string workload_kind = 5[json_name = "workloadKind"];</code>
+     * @return The bytes for workloadKind.
      */
     public com.google.protobuf.ByteString getWorkloadKindBytes() {
       java.lang.Object ref = workloadKind_;
@@ -2251,7 +2316,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string workload_kind = 5;</code>
+     * <code>string workload_kind = 5[json_name = "workloadKind"];</code>
+     * @param value The workloadKind to set.
+     * @return This builder for chaining.
      */
     public Builder setWorkloadKind(java.lang.String value) {
       if (value == null) {
@@ -2263,7 +2330,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string workload_kind = 5;</code>
+     * <code>string workload_kind = 5[json_name = "workloadKind"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearWorkloadKind() {
       workloadKind_ = getDefaultInstance().getWorkloadKind();
@@ -2271,7 +2339,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string workload_kind = 5;</code>
+     * <code>string workload_kind = 5[json_name = "workloadKind"];</code>
+     * @param value The bytes for workloadKind to set.
+     * @return This builder for chaining.
      */
     public Builder setWorkloadKindBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -2286,7 +2356,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object workloadName_ = "";
     /**
-     * <code>string workload_name = 6;</code>
+     * <code>string workload_name = 6[json_name = "workloadName"];</code>
+     * @return The workloadName.
      */
     public java.lang.String getWorkloadName() {
       java.lang.Object ref = workloadName_;
@@ -2300,7 +2371,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string workload_name = 6;</code>
+     * <code>string workload_name = 6[json_name = "workloadName"];</code>
+     * @return The bytes for workloadName.
      */
     public com.google.protobuf.ByteString getWorkloadNameBytes() {
       java.lang.Object ref = workloadName_;
@@ -2313,7 +2385,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string workload_name = 6;</code>
+     * <code>string workload_name = 6[json_name = "workloadName"];</code>
+     * @param value The workloadName to set.
+     * @return This builder for chaining.
      */
     public Builder setWorkloadName(java.lang.String value) {
       if (value == null) {
@@ -2325,7 +2399,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string workload_name = 6;</code>
+     * <code>string workload_name = 6[json_name = "workloadName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearWorkloadName() {
       workloadName_ = getDefaultInstance().getWorkloadName();
@@ -2333,7 +2408,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string workload_name = 6;</code>
+     * <code>string workload_name = 6[json_name = "workloadName"];</code>
+     * @param value The bytes for workloadName to set.
+     * @return This builder for chaining.
      */
     public Builder setWorkloadNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -2348,7 +2425,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
 
     private java.lang.Object namespace_ = "";
     /**
-     * <code>string namespace = 7;</code>
+     * <code>string namespace = 7[json_name = "namespace"];</code>
+     * @return The namespace.
      */
     public java.lang.String getNamespace() {
       java.lang.Object ref = namespace_;
@@ -2362,7 +2440,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string namespace = 7;</code>
+     * <code>string namespace = 7[json_name = "namespace"];</code>
+     * @return The bytes for namespace.
      */
     public com.google.protobuf.ByteString getNamespaceBytes() {
       java.lang.Object ref = namespace_;
@@ -2375,7 +2454,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>string namespace = 7;</code>
+     * <code>string namespace = 7[json_name = "namespace"];</code>
+     * @param value The namespace to set.
+     * @return This builder for chaining.
      */
     public Builder setNamespace(java.lang.String value) {
       if (value == null) {
@@ -2387,7 +2468,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string namespace = 7;</code>
+     * <code>string namespace = 7[json_name = "namespace"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearNamespace() {
       namespace_ = getDefaultInstance().getNamespace();
@@ -2395,7 +2477,9 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>string namespace = 7;</code>
+     * <code>string namespace = 7[json_name = "namespace"];</code>
+     * @param value The bytes for namespace to set.
+     * @return This builder for chaining.
      */
     public Builder setNamespaceBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -2411,10 +2495,10 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
     private java.util.List<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec> containerSpecs_ =
         java.util.Collections.emptyList();
     private void ensureContainerSpecsIsMutable() {
-      if (!((bitField0_ & 0x00000080) != 0)) {
+      if (!((bitField0_ & 0x00000001) != 0)) {
         containerSpecs_ =
             new java.util.ArrayList<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec>(containerSpecs_);
-        bitField0_ |= 0x00000080;
+        bitField0_ |= 0x00000001;
       }
     }
 
@@ -2423,7 +2507,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder> containerSpecsBuilder_;
 
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public java.util.List<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec> getContainerSpecsList() {
       if (containerSpecsBuilder_ == null) {
@@ -2433,7 +2518,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public int getContainerSpecsCount() {
       if (containerSpecsBuilder_ == null) {
@@ -2443,7 +2529,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec getContainerSpecs(int index) {
       if (containerSpecsBuilder_ == null) {
@@ -2453,7 +2540,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public Builder setContainerSpecs(
         int index, io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec value) {
@@ -2470,7 +2558,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public Builder setContainerSpecs(
         int index, io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder builderForValue) {
@@ -2484,7 +2573,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public Builder addContainerSpecs(io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec value) {
       if (containerSpecsBuilder_ == null) {
@@ -2500,7 +2590,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public Builder addContainerSpecs(
         int index, io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec value) {
@@ -2517,7 +2608,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public Builder addContainerSpecs(
         io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder builderForValue) {
@@ -2531,7 +2623,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public Builder addContainerSpecs(
         int index, io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder builderForValue) {
@@ -2545,7 +2638,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public Builder addAllContainerSpecs(
         java.lang.Iterable<? extends io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec> values) {
@@ -2559,12 +2653,13 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public Builder clearContainerSpecs() {
       if (containerSpecsBuilder_ == null) {
         containerSpecs_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000080);
+        bitField0_ = (bitField0_ & ~0x00000001);
         onChanged();
       } else {
         containerSpecsBuilder_.clear();
@@ -2572,7 +2667,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public Builder removeContainerSpecs(int index) {
       if (containerSpecsBuilder_ == null) {
@@ -2585,14 +2681,16 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder getContainerSpecsBuilder(
         int index) {
       return getContainerSpecsFieldBuilder().getBuilder(index);
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder getContainerSpecsOrBuilder(
         int index) {
@@ -2603,7 +2701,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public java.util.List<? extends io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder>
     getContainerSpecsOrBuilderList() {
@@ -2614,14 +2713,16 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder addContainerSpecsBuilder() {
       return getContainerSpecsFieldBuilder().addBuilder(
           io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.getDefaultInstance());
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder addContainerSpecsBuilder(
         int index) {
@@ -2629,7 +2730,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
           index, io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.getDefaultInstance());
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec container_specs = 8[json_name =
+     * "containerSpecs"];</code>
      */
     public java.util.List<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder>
     getContainerSpecsBuilderList() {
@@ -2645,7 +2747,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
                 .RepeatedFieldBuilderV3<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec,
                     io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder,
                     io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder>(
-                    containerSpecs_, ((bitField0_ & 0x00000080) != 0), getParentForChildren(), isClean());
+                    containerSpecs_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
         containerSpecs_ = null;
       }
       return containerSpecsBuilder_;
@@ -2654,10 +2756,10 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
     private java.util.List<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec> initContainerSpecs_ =
         java.util.Collections.emptyList();
     private void ensureInitContainerSpecsIsMutable() {
-      if (!((bitField0_ & 0x00000100) != 0)) {
+      if (!((bitField0_ & 0x00000002) != 0)) {
         initContainerSpecs_ = new java.util.ArrayList<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec>(
             initContainerSpecs_);
-        bitField0_ |= 0x00000100;
+        bitField0_ |= 0x00000002;
       }
     }
 
@@ -2666,7 +2768,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
         io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder> initContainerSpecsBuilder_;
 
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public java.util.List<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec>
     getInitContainerSpecsList() {
@@ -2677,7 +2780,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public int getInitContainerSpecsCount() {
       if (initContainerSpecsBuilder_ == null) {
@@ -2687,7 +2791,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec getInitContainerSpecs(int index) {
       if (initContainerSpecsBuilder_ == null) {
@@ -2697,7 +2802,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public Builder setInitContainerSpecs(
         int index, io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec value) {
@@ -2714,7 +2820,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public Builder setInitContainerSpecs(
         int index, io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder builderForValue) {
@@ -2728,7 +2835,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public Builder addInitContainerSpecs(io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec value) {
       if (initContainerSpecsBuilder_ == null) {
@@ -2744,7 +2852,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public Builder addInitContainerSpecs(
         int index, io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec value) {
@@ -2761,7 +2870,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public Builder addInitContainerSpecs(
         io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder builderForValue) {
@@ -2775,7 +2885,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public Builder addInitContainerSpecs(
         int index, io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder builderForValue) {
@@ -2789,7 +2900,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public Builder addAllInitContainerSpecs(
         java.lang.Iterable<? extends io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec> values) {
@@ -2803,12 +2915,13 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public Builder clearInitContainerSpecs() {
       if (initContainerSpecsBuilder_ == null) {
         initContainerSpecs_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000100);
+        bitField0_ = (bitField0_ & ~0x00000002);
         onChanged();
       } else {
         initContainerSpecsBuilder_.clear();
@@ -2816,7 +2929,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public Builder removeInitContainerSpecs(int index) {
       if (initContainerSpecsBuilder_ == null) {
@@ -2829,14 +2943,16 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       return this;
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder getInitContainerSpecsBuilder(
         int index) {
       return getInitContainerSpecsFieldBuilder().getBuilder(index);
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder getInitContainerSpecsOrBuilder(
         int index) {
@@ -2847,7 +2963,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public java.util.List<? extends io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder>
     getInitContainerSpecsOrBuilderList() {
@@ -2858,14 +2975,16 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
       }
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder addInitContainerSpecsBuilder() {
       return getInitContainerSpecsFieldBuilder().addBuilder(
           io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.getDefaultInstance());
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder addInitContainerSpecsBuilder(
         int index) {
@@ -2873,7 +2992,8 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
           index, io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.getDefaultInstance());
     }
     /**
-     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs = 9;</code>
+     * <code>repeated .io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec init_container_specs =
+     * 9[json_name = "initContainerSpecs"];</code>
      */
     public java.util.List<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder>
     getInitContainerSpecsBuilderList() {
@@ -2889,7 +3009,7 @@ public final class K8sWorkloadSpec extends com.google.protobuf.GeneratedMessageV
                 .RepeatedFieldBuilderV3<io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec,
                     io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec.Builder,
                     io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpecOrBuilder>(
-                    initContainerSpecs_, ((bitField0_ & 0x00000100) != 0), getParentForChildren(), isClean());
+                    initContainerSpecs_, ((bitField0_ & 0x00000002) != 0), getParentForChildren(), isClean());
         initContainerSpecs_ = null;
       }
       return initContainerSpecsBuilder_;

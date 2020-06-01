@@ -27,6 +27,13 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new NodeInfo();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -79,9 +86,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
             break;
           }
           case 50: {
-            if (!((mutable_bitField0_ & 0x00000010) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
               labels_ = com.google.protobuf.MapField.newMapField(LabelsDefaultEntryHolder.defaultEntry);
-              mutable_bitField0_ |= 0x00000010;
+              mutable_bitField0_ |= 0x00000001;
             }
             com.google.protobuf.MapEntry<java.lang.String, java.lang.String> labels__ =
                 input.readMessage(LabelsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
@@ -89,10 +96,10 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
             break;
           }
           case 58: {
-            if (!((mutable_bitField0_ & 0x00000020) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
               allocatableResource_ =
                   com.google.protobuf.MapField.newMapField(AllocatableResourceDefaultEntryHolder.defaultEntry);
-              mutable_bitField0_ |= 0x00000020;
+              mutable_bitField0_ |= 0x00000002;
             }
             com.google.protobuf.MapEntry<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity>
                 allocatableResource__ = input.readMessage(
@@ -168,11 +175,11 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
             io.harness.perpetualtask.k8s.watch.NodeInfo.Builder.class);
   }
 
-  private int bitField0_;
   public static final int CLOUD_PROVIDER_ID_FIELD_NUMBER = 2;
   private volatile java.lang.Object cloudProviderId_;
   /**
-   * <code>string cloud_provider_id = 2;</code>
+   * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   public java.lang.String getCloudProviderId() {
     java.lang.Object ref = cloudProviderId_;
@@ -186,7 +193,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
   }
   /**
-   * <code>string cloud_provider_id = 2;</code>
+   * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   public com.google.protobuf.ByteString getCloudProviderIdBytes() {
     java.lang.Object ref = cloudProviderId_;
@@ -202,7 +210,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
   public static final int NODE_UID_FIELD_NUMBER = 3;
   private volatile java.lang.Object nodeUid_;
   /**
-   * <code>string node_uid = 3;</code>
+   * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+   * @return The nodeUid.
    */
   public java.lang.String getNodeUid() {
     java.lang.Object ref = nodeUid_;
@@ -216,7 +225,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
   }
   /**
-   * <code>string node_uid = 3;</code>
+   * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+   * @return The bytes for nodeUid.
    */
   public com.google.protobuf.ByteString getNodeUidBytes() {
     java.lang.Object ref = nodeUid_;
@@ -232,7 +242,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
   public static final int NODE_NAME_FIELD_NUMBER = 4;
   private volatile java.lang.Object nodeName_;
   /**
-   * <code>string node_name = 4;</code>
+   * <code>string node_name = 4[json_name = "nodeName"];</code>
+   * @return The nodeName.
    */
   public java.lang.String getNodeName() {
     java.lang.Object ref = nodeName_;
@@ -246,7 +257,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
   }
   /**
-   * <code>string node_name = 4;</code>
+   * <code>string node_name = 4[json_name = "nodeName"];</code>
+   * @return The bytes for nodeName.
    */
   public com.google.protobuf.ByteString getNodeNameBytes() {
     java.lang.Object ref = nodeName_;
@@ -262,19 +274,21 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
   public static final int CREATION_TIME_FIELD_NUMBER = 5;
   private com.google.protobuf.Timestamp creationTime_;
   /**
-   * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+   * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
+   * @return Whether the creationTime field is set.
    */
   public boolean hasCreationTime() {
     return creationTime_ != null;
   }
   /**
-   * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+   * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
+   * @return The creationTime.
    */
   public com.google.protobuf.Timestamp getCreationTime() {
     return creationTime_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : creationTime_;
   }
   /**
-   * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+   * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
    */
   public com.google.protobuf.TimestampOrBuilder getCreationTimeOrBuilder() {
     return getCreationTime();
@@ -300,7 +314,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     return internalGetLabels().getMap().size();
   }
   /**
-   * <code>map&lt;string, string&gt; labels = 6;</code>
+   * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
    */
 
   public boolean containsLabels(java.lang.String key) {
@@ -318,14 +332,14 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     return getLabelsMap();
   }
   /**
-   * <code>map&lt;string, string&gt; labels = 6;</code>
+   * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
    */
 
   public java.util.Map<java.lang.String, java.lang.String> getLabelsMap() {
     return internalGetLabels().getMap();
   }
   /**
-   * <code>map&lt;string, string&gt; labels = 6;</code>
+   * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
    */
 
   public java.lang.String getLabelsOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -336,7 +350,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
   /**
-   * <code>map&lt;string, string&gt; labels = 6;</code>
+   * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
    */
 
   public java.lang.String getLabelsOrThrow(java.lang.String key) {
@@ -375,7 +389,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     return internalGetAllocatableResource().getMap().size();
   }
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name =
+   * "allocatableResource"];</code>
    */
 
   public boolean containsAllocatableResource(java.lang.String key) {
@@ -394,7 +409,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     return getAllocatableResourceMap();
   }
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name =
+   * "allocatableResource"];</code>
    */
 
   public java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity>
@@ -402,7 +418,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     return internalGetAllocatableResource().getMap();
   }
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name =
+   * "allocatableResource"];</code>
    */
 
   public io.harness.perpetualtask.k8s.watch.Resource.Quantity getAllocatableResourceOrDefault(
@@ -415,7 +432,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
   /**
-   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+   * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name =
+   * "allocatableResource"];</code>
    */
 
   public io.harness.perpetualtask.k8s.watch.Resource.Quantity getAllocatableResourceOrThrow(java.lang.String key) {
@@ -433,7 +451,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
   public static final int CLUSTER_ID_FIELD_NUMBER = 8;
   private volatile java.lang.Object clusterId_;
   /**
-   * <code>string cluster_id = 8;</code>
+   * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -447,7 +466,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
   }
   /**
-   * <code>string cluster_id = 8;</code>
+   * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -463,7 +483,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
   public static final int CLUSTER_NAME_FIELD_NUMBER = 9;
   private volatile java.lang.Object clusterName_;
   /**
-   * <code>string cluster_name = 9;</code>
+   * <code>string cluster_name = 9[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   public java.lang.String getClusterName() {
     java.lang.Object ref = clusterName_;
@@ -477,7 +498,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
   }
   /**
-   * <code>string cluster_name = 9;</code>
+   * <code>string cluster_name = 9[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   public com.google.protobuf.ByteString getClusterNameBytes() {
     java.lang.Object ref = clusterName_;
@@ -493,7 +515,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
   public static final int PROVIDER_ID_FIELD_NUMBER = 10;
   private volatile java.lang.Object providerId_;
   /**
-   * <code>string provider_id = 10;</code>
+   * <code>string provider_id = 10[json_name = "providerId"];</code>
+   * @return The providerId.
    */
   public java.lang.String getProviderId() {
     java.lang.Object ref = providerId_;
@@ -507,7 +530,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
   }
   /**
-   * <code>string provider_id = 10;</code>
+   * <code>string provider_id = 10[json_name = "providerId"];</code>
+   * @return The bytes for providerId.
    */
   public com.google.protobuf.ByteString getProviderIdBytes() {
     java.lang.Object ref = providerId_;
@@ -523,7 +547,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
   public static final int KUBE_SYSTEM_UID_FIELD_NUMBER = 11;
   private volatile java.lang.Object kubeSystemUid_;
   /**
-   * <code>string kube_system_uid = 11;</code>
+   * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+   * @return The kubeSystemUid.
    */
   public java.lang.String getKubeSystemUid() {
     java.lang.Object ref = kubeSystemUid_;
@@ -537,7 +562,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
   }
   /**
-   * <code>string kube_system_uid = 11;</code>
+   * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+   * @return The bytes for kubeSystemUid.
    */
   public com.google.protobuf.ByteString getKubeSystemUidBytes() {
     java.lang.Object ref = kubeSystemUid_;
@@ -910,7 +936,6 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     public io.harness.perpetualtask.k8s.watch.NodeInfo buildPartial() {
       io.harness.perpetualtask.k8s.watch.NodeInfo result = new io.harness.perpetualtask.k8s.watch.NodeInfo(this);
       int from_bitField0_ = bitField0_;
-      int to_bitField0_ = 0;
       result.cloudProviderId_ = cloudProviderId_;
       result.nodeUid_ = nodeUid_;
       result.nodeName_ = nodeName_;
@@ -927,7 +952,6 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       result.clusterName_ = clusterName_;
       result.providerId_ = providerId_;
       result.kubeSystemUid_ = kubeSystemUid_;
-      result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
     }
@@ -1033,7 +1057,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
 
     private java.lang.Object cloudProviderId_ = "";
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @return The cloudProviderId.
      */
     public java.lang.String getCloudProviderId() {
       java.lang.Object ref = cloudProviderId_;
@@ -1047,7 +1072,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @return The bytes for cloudProviderId.
      */
     public com.google.protobuf.ByteString getCloudProviderIdBytes() {
       java.lang.Object ref = cloudProviderId_;
@@ -1060,7 +1086,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @param value The cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderId(java.lang.String value) {
       if (value == null) {
@@ -1072,7 +1100,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCloudProviderId() {
       cloudProviderId_ = getDefaultInstance().getCloudProviderId();
@@ -1080,7 +1109,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 2;</code>
+     * <code>string cloud_provider_id = 2[json_name = "cloudProviderId"];</code>
+     * @param value The bytes for cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1095,7 +1126,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
 
     private java.lang.Object nodeUid_ = "";
     /**
-     * <code>string node_uid = 3;</code>
+     * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+     * @return The nodeUid.
      */
     public java.lang.String getNodeUid() {
       java.lang.Object ref = nodeUid_;
@@ -1109,7 +1141,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string node_uid = 3;</code>
+     * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+     * @return The bytes for nodeUid.
      */
     public com.google.protobuf.ByteString getNodeUidBytes() {
       java.lang.Object ref = nodeUid_;
@@ -1122,7 +1155,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string node_uid = 3;</code>
+     * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+     * @param value The nodeUid to set.
+     * @return This builder for chaining.
      */
     public Builder setNodeUid(java.lang.String value) {
       if (value == null) {
@@ -1134,7 +1169,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string node_uid = 3;</code>
+     * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearNodeUid() {
       nodeUid_ = getDefaultInstance().getNodeUid();
@@ -1142,7 +1178,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string node_uid = 3;</code>
+     * <code>string node_uid = 3[json_name = "nodeUid"];</code>
+     * @param value The bytes for nodeUid to set.
+     * @return This builder for chaining.
      */
     public Builder setNodeUidBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1157,7 +1195,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
 
     private java.lang.Object nodeName_ = "";
     /**
-     * <code>string node_name = 4;</code>
+     * <code>string node_name = 4[json_name = "nodeName"];</code>
+     * @return The nodeName.
      */
     public java.lang.String getNodeName() {
       java.lang.Object ref = nodeName_;
@@ -1171,7 +1210,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string node_name = 4;</code>
+     * <code>string node_name = 4[json_name = "nodeName"];</code>
+     * @return The bytes for nodeName.
      */
     public com.google.protobuf.ByteString getNodeNameBytes() {
       java.lang.Object ref = nodeName_;
@@ -1184,7 +1224,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string node_name = 4;</code>
+     * <code>string node_name = 4[json_name = "nodeName"];</code>
+     * @param value The nodeName to set.
+     * @return This builder for chaining.
      */
     public Builder setNodeName(java.lang.String value) {
       if (value == null) {
@@ -1196,7 +1238,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string node_name = 4;</code>
+     * <code>string node_name = 4[json_name = "nodeName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearNodeName() {
       nodeName_ = getDefaultInstance().getNodeName();
@@ -1204,7 +1247,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string node_name = 4;</code>
+     * <code>string node_name = 4[json_name = "nodeName"];</code>
+     * @param value The bytes for nodeName to set.
+     * @return This builder for chaining.
      */
     public Builder setNodeNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1221,13 +1266,15 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> creationTimeBuilder_;
     /**
-     * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+     * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
+     * @return Whether the creationTime field is set.
      */
     public boolean hasCreationTime() {
       return creationTimeBuilder_ != null || creationTime_ != null;
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+     * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
+     * @return The creationTime.
      */
     public com.google.protobuf.Timestamp getCreationTime() {
       if (creationTimeBuilder_ == null) {
@@ -1237,7 +1284,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+     * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
      */
     public Builder setCreationTime(com.google.protobuf.Timestamp value) {
       if (creationTimeBuilder_ == null) {
@@ -1253,7 +1300,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+     * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
      */
     public Builder setCreationTime(com.google.protobuf.Timestamp.Builder builderForValue) {
       if (creationTimeBuilder_ == null) {
@@ -1266,7 +1313,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+     * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
      */
     public Builder mergeCreationTime(com.google.protobuf.Timestamp value) {
       if (creationTimeBuilder_ == null) {
@@ -1283,7 +1330,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+     * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
      */
     public Builder clearCreationTime() {
       if (creationTimeBuilder_ == null) {
@@ -1297,14 +1344,14 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+     * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
      */
     public com.google.protobuf.Timestamp.Builder getCreationTimeBuilder() {
       onChanged();
       return getCreationTimeFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+     * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
      */
     public com.google.protobuf.TimestampOrBuilder getCreationTimeOrBuilder() {
       if (creationTimeBuilder_ != null) {
@@ -1314,7 +1361,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp creation_time = 5;</code>
+     * <code>.google.protobuf.Timestamp creation_time = 5[json_name = "creationTime"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>
@@ -1351,7 +1398,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return internalGetLabels().getMap().size();
     }
     /**
-     * <code>map&lt;string, string&gt; labels = 6;</code>
+     * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
      */
 
     public boolean containsLabels(java.lang.String key) {
@@ -1369,14 +1416,14 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return getLabelsMap();
     }
     /**
-     * <code>map&lt;string, string&gt; labels = 6;</code>
+     * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
      */
 
     public java.util.Map<java.lang.String, java.lang.String> getLabelsMap() {
       return internalGetLabels().getMap();
     }
     /**
-     * <code>map&lt;string, string&gt; labels = 6;</code>
+     * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
      */
 
     public java.lang.String getLabelsOrDefault(java.lang.String key, java.lang.String defaultValue) {
@@ -1387,7 +1434,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, string&gt; labels = 6;</code>
+     * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
      */
 
     public java.lang.String getLabelsOrThrow(java.lang.String key) {
@@ -1406,7 +1453,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>map&lt;string, string&gt; labels = 6;</code>
+     * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
      */
 
     public Builder removeLabels(java.lang.String key) {
@@ -1425,7 +1472,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return internalGetMutableLabels().getMutableMap();
     }
     /**
-     * <code>map&lt;string, string&gt; labels = 6;</code>
+     * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
      */
     public Builder putLabels(java.lang.String key, java.lang.String value) {
       if (key == null) {
@@ -1438,7 +1485,7 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>map&lt;string, string&gt; labels = 6;</code>
+     * <code>map&lt;string, string&gt; labels = 6[json_name = "labels"];</code>
      */
 
     public Builder putAllLabels(java.util.Map<java.lang.String, java.lang.String> values) {
@@ -1473,7 +1520,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return internalGetAllocatableResource().getMap().size();
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name
+     * = "allocatableResource"];</code>
      */
 
     public boolean containsAllocatableResource(java.lang.String key) {
@@ -1492,7 +1540,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return getAllocatableResourceMap();
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name
+     * = "allocatableResource"];</code>
      */
 
     public java.util.Map<java.lang.String, io.harness.perpetualtask.k8s.watch.Resource.Quantity>
@@ -1500,7 +1549,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return internalGetAllocatableResource().getMap();
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name
+     * = "allocatableResource"];</code>
      */
 
     public io.harness.perpetualtask.k8s.watch.Resource.Quantity getAllocatableResourceOrDefault(
@@ -1513,7 +1563,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name
+     * = "allocatableResource"];</code>
      */
 
     public io.harness.perpetualtask.k8s.watch.Resource.Quantity getAllocatableResourceOrThrow(java.lang.String key) {
@@ -1533,7 +1584,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name
+     * = "allocatableResource"];</code>
      */
 
     public Builder removeAllocatableResource(java.lang.String key) {
@@ -1553,7 +1605,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return internalGetMutableAllocatableResource().getMutableMap();
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name
+     * = "allocatableResource"];</code>
      */
     public Builder putAllocatableResource(
         java.lang.String key, io.harness.perpetualtask.k8s.watch.Resource.Quantity value) {
@@ -1567,7 +1620,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7;</code>
+     * <code>map&lt;string, .io.harness.perpetualtask.k8s.watch.Resource.Quantity&gt; allocatable_resource = 7[json_name
+     * = "allocatableResource"];</code>
      */
 
     public Builder putAllAllocatableResource(
@@ -1578,7 +1632,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <code>string cluster_id = 8;</code>
+     * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -1592,7 +1647,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string cluster_id = 8;</code>
+     * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -1605,7 +1661,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string cluster_id = 8;</code>
+     * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -1617,7 +1675,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string cluster_id = 8;</code>
+     * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -1625,7 +1684,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string cluster_id = 8;</code>
+     * <code>string cluster_id = 8[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1640,7 +1701,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
 
     private java.lang.Object clusterName_ = "";
     /**
-     * <code>string cluster_name = 9;</code>
+     * <code>string cluster_name = 9[json_name = "clusterName"];</code>
+     * @return The clusterName.
      */
     public java.lang.String getClusterName() {
       java.lang.Object ref = clusterName_;
@@ -1654,7 +1716,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string cluster_name = 9;</code>
+     * <code>string cluster_name = 9[json_name = "clusterName"];</code>
+     * @return The bytes for clusterName.
      */
     public com.google.protobuf.ByteString getClusterNameBytes() {
       java.lang.Object ref = clusterName_;
@@ -1667,7 +1730,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string cluster_name = 9;</code>
+     * <code>string cluster_name = 9[json_name = "clusterName"];</code>
+     * @param value The clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterName(java.lang.String value) {
       if (value == null) {
@@ -1679,7 +1744,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string cluster_name = 9;</code>
+     * <code>string cluster_name = 9[json_name = "clusterName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterName() {
       clusterName_ = getDefaultInstance().getClusterName();
@@ -1687,7 +1753,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string cluster_name = 9;</code>
+     * <code>string cluster_name = 9[json_name = "clusterName"];</code>
+     * @param value The bytes for clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1702,7 +1770,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
 
     private java.lang.Object providerId_ = "";
     /**
-     * <code>string provider_id = 10;</code>
+     * <code>string provider_id = 10[json_name = "providerId"];</code>
+     * @return The providerId.
      */
     public java.lang.String getProviderId() {
       java.lang.Object ref = providerId_;
@@ -1716,7 +1785,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string provider_id = 10;</code>
+     * <code>string provider_id = 10[json_name = "providerId"];</code>
+     * @return The bytes for providerId.
      */
     public com.google.protobuf.ByteString getProviderIdBytes() {
       java.lang.Object ref = providerId_;
@@ -1729,7 +1799,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string provider_id = 10;</code>
+     * <code>string provider_id = 10[json_name = "providerId"];</code>
+     * @param value The providerId to set.
+     * @return This builder for chaining.
      */
     public Builder setProviderId(java.lang.String value) {
       if (value == null) {
@@ -1741,7 +1813,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string provider_id = 10;</code>
+     * <code>string provider_id = 10[json_name = "providerId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearProviderId() {
       providerId_ = getDefaultInstance().getProviderId();
@@ -1749,7 +1822,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string provider_id = 10;</code>
+     * <code>string provider_id = 10[json_name = "providerId"];</code>
+     * @param value The bytes for providerId to set.
+     * @return This builder for chaining.
      */
     public Builder setProviderIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1764,7 +1839,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
 
     private java.lang.Object kubeSystemUid_ = "";
     /**
-     * <code>string kube_system_uid = 11;</code>
+     * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+     * @return The kubeSystemUid.
      */
     public java.lang.String getKubeSystemUid() {
       java.lang.Object ref = kubeSystemUid_;
@@ -1778,7 +1854,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string kube_system_uid = 11;</code>
+     * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+     * @return The bytes for kubeSystemUid.
      */
     public com.google.protobuf.ByteString getKubeSystemUidBytes() {
       java.lang.Object ref = kubeSystemUid_;
@@ -1791,7 +1868,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
     }
     /**
-     * <code>string kube_system_uid = 11;</code>
+     * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+     * @param value The kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUid(java.lang.String value) {
       if (value == null) {
@@ -1803,7 +1882,8 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string kube_system_uid = 11;</code>
+     * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearKubeSystemUid() {
       kubeSystemUid_ = getDefaultInstance().getKubeSystemUid();
@@ -1811,7 +1891,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       return this;
     }
     /**
-     * <code>string kube_system_uid = 11;</code>
+     * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+     * @param value The bytes for kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUidBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

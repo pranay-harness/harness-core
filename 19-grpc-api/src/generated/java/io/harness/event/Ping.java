@@ -23,6 +23,13 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new Ping();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -32,7 +39,6 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -104,7 +110,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
   public static final int DELEGATE_ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object delegateId_;
   /**
-   * <code>string delegate_id = 1;</code>
+   * <code>string delegate_id = 1[json_name = "delegateId"];</code>
+   * @return The delegateId.
    */
   public java.lang.String getDelegateId() {
     java.lang.Object ref = delegateId_;
@@ -118,7 +125,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
     }
   }
   /**
-   * <code>string delegate_id = 1;</code>
+   * <code>string delegate_id = 1[json_name = "delegateId"];</code>
+   * @return The bytes for delegateId.
    */
   public com.google.protobuf.ByteString getDelegateIdBytes() {
     java.lang.Object ref = delegateId_;
@@ -134,19 +142,21 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
   public static final int PING_TIMESTAMP_FIELD_NUMBER = 2;
   private com.google.protobuf.Timestamp pingTimestamp_;
   /**
-   * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+   * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
+   * @return Whether the pingTimestamp field is set.
    */
   public boolean hasPingTimestamp() {
     return pingTimestamp_ != null;
   }
   /**
-   * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+   * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
+   * @return The pingTimestamp.
    */
   public com.google.protobuf.Timestamp getPingTimestamp() {
     return pingTimestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : pingTimestamp_;
   }
   /**
-   * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+   * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
    */
   public com.google.protobuf.TimestampOrBuilder getPingTimestampOrBuilder() {
     return getPingTimestamp();
@@ -155,7 +165,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
   public static final int PROCESS_ID_FIELD_NUMBER = 3;
   private volatile java.lang.Object processId_;
   /**
-   * <code>string process_id = 3;</code>
+   * <code>string process_id = 3[json_name = "processId"];</code>
+   * @return The processId.
    */
   public java.lang.String getProcessId() {
     java.lang.Object ref = processId_;
@@ -169,7 +180,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
     }
   }
   /**
-   * <code>string process_id = 3;</code>
+   * <code>string process_id = 3[json_name = "processId"];</code>
+   * @return The bytes for processId.
    */
   public com.google.protobuf.ByteString getProcessIdBytes() {
     java.lang.Object ref = processId_;
@@ -185,7 +197,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
   public static final int VERSION_FIELD_NUMBER = 4;
   private volatile java.lang.Object version_;
   /**
-   * <code>string version = 4;</code>
+   * <code>string version = 4[json_name = "version"];</code>
+   * @return The version.
    */
   public java.lang.String getVersion() {
     java.lang.Object ref = version_;
@@ -199,7 +212,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
     }
   }
   /**
-   * <code>string version = 4;</code>
+   * <code>string version = 4[json_name = "version"];</code>
+   * @return The bytes for version.
    */
   public com.google.protobuf.ByteString getVersionBytes() {
     java.lang.Object ref = version_;
@@ -551,7 +565,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
 
     private java.lang.Object delegateId_ = "";
     /**
-     * <code>string delegate_id = 1;</code>
+     * <code>string delegate_id = 1[json_name = "delegateId"];</code>
+     * @return The delegateId.
      */
     public java.lang.String getDelegateId() {
       java.lang.Object ref = delegateId_;
@@ -565,7 +580,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       }
     }
     /**
-     * <code>string delegate_id = 1;</code>
+     * <code>string delegate_id = 1[json_name = "delegateId"];</code>
+     * @return The bytes for delegateId.
      */
     public com.google.protobuf.ByteString getDelegateIdBytes() {
       java.lang.Object ref = delegateId_;
@@ -578,7 +594,9 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       }
     }
     /**
-     * <code>string delegate_id = 1;</code>
+     * <code>string delegate_id = 1[json_name = "delegateId"];</code>
+     * @param value The delegateId to set.
+     * @return This builder for chaining.
      */
     public Builder setDelegateId(java.lang.String value) {
       if (value == null) {
@@ -590,7 +608,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       return this;
     }
     /**
-     * <code>string delegate_id = 1;</code>
+     * <code>string delegate_id = 1[json_name = "delegateId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearDelegateId() {
       delegateId_ = getDefaultInstance().getDelegateId();
@@ -598,7 +617,9 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       return this;
     }
     /**
-     * <code>string delegate_id = 1;</code>
+     * <code>string delegate_id = 1[json_name = "delegateId"];</code>
+     * @param value The bytes for delegateId to set.
+     * @return This builder for chaining.
      */
     public Builder setDelegateIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -615,13 +636,15 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> pingTimestampBuilder_;
     /**
-     * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
+     * @return Whether the pingTimestamp field is set.
      */
     public boolean hasPingTimestamp() {
       return pingTimestampBuilder_ != null || pingTimestamp_ != null;
     }
     /**
-     * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
+     * @return The pingTimestamp.
      */
     public com.google.protobuf.Timestamp getPingTimestamp() {
       if (pingTimestampBuilder_ == null) {
@@ -631,7 +654,7 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
      */
     public Builder setPingTimestamp(com.google.protobuf.Timestamp value) {
       if (pingTimestampBuilder_ == null) {
@@ -647,7 +670,7 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
      */
     public Builder setPingTimestamp(com.google.protobuf.Timestamp.Builder builderForValue) {
       if (pingTimestampBuilder_ == null) {
@@ -660,7 +683,7 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
      */
     public Builder mergePingTimestamp(com.google.protobuf.Timestamp value) {
       if (pingTimestampBuilder_ == null) {
@@ -677,7 +700,7 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
      */
     public Builder clearPingTimestamp() {
       if (pingTimestampBuilder_ == null) {
@@ -691,14 +714,14 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
      */
     public com.google.protobuf.Timestamp.Builder getPingTimestampBuilder() {
       onChanged();
       return getPingTimestampFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
      */
     public com.google.protobuf.TimestampOrBuilder getPingTimestampOrBuilder() {
       if (pingTimestampBuilder_ != null) {
@@ -708,7 +731,7 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp ping_timestamp = 2;</code>
+     * <code>.google.protobuf.Timestamp ping_timestamp = 2[json_name = "pingTimestamp"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>
@@ -724,7 +747,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
 
     private java.lang.Object processId_ = "";
     /**
-     * <code>string process_id = 3;</code>
+     * <code>string process_id = 3[json_name = "processId"];</code>
+     * @return The processId.
      */
     public java.lang.String getProcessId() {
       java.lang.Object ref = processId_;
@@ -738,7 +762,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       }
     }
     /**
-     * <code>string process_id = 3;</code>
+     * <code>string process_id = 3[json_name = "processId"];</code>
+     * @return The bytes for processId.
      */
     public com.google.protobuf.ByteString getProcessIdBytes() {
       java.lang.Object ref = processId_;
@@ -751,7 +776,9 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       }
     }
     /**
-     * <code>string process_id = 3;</code>
+     * <code>string process_id = 3[json_name = "processId"];</code>
+     * @param value The processId to set.
+     * @return This builder for chaining.
      */
     public Builder setProcessId(java.lang.String value) {
       if (value == null) {
@@ -763,7 +790,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       return this;
     }
     /**
-     * <code>string process_id = 3;</code>
+     * <code>string process_id = 3[json_name = "processId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearProcessId() {
       processId_ = getDefaultInstance().getProcessId();
@@ -771,7 +799,9 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       return this;
     }
     /**
-     * <code>string process_id = 3;</code>
+     * <code>string process_id = 3[json_name = "processId"];</code>
+     * @param value The bytes for processId to set.
+     * @return This builder for chaining.
      */
     public Builder setProcessIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -786,7 +816,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
 
     private java.lang.Object version_ = "";
     /**
-     * <code>string version = 4;</code>
+     * <code>string version = 4[json_name = "version"];</code>
+     * @return The version.
      */
     public java.lang.String getVersion() {
       java.lang.Object ref = version_;
@@ -800,7 +831,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       }
     }
     /**
-     * <code>string version = 4;</code>
+     * <code>string version = 4[json_name = "version"];</code>
+     * @return The bytes for version.
      */
     public com.google.protobuf.ByteString getVersionBytes() {
       java.lang.Object ref = version_;
@@ -813,7 +845,9 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       }
     }
     /**
-     * <code>string version = 4;</code>
+     * <code>string version = 4[json_name = "version"];</code>
+     * @param value The version to set.
+     * @return This builder for chaining.
      */
     public Builder setVersion(java.lang.String value) {
       if (value == null) {
@@ -825,7 +859,8 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       return this;
     }
     /**
-     * <code>string version = 4;</code>
+     * <code>string version = 4[json_name = "version"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearVersion() {
       version_ = getDefaultInstance().getVersion();
@@ -833,7 +868,9 @@ public final class Ping extends com.google.protobuf.GeneratedMessageV3 implement
       return this;
     }
     /**
-     * <code>string version = 4;</code>
+     * <code>string version = 4[json_name = "version"];</code>
+     * @param value The bytes for version to set.
+     * @return This builder for chaining.
      */
     public Builder setVersionBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

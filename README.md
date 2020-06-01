@@ -35,20 +35,7 @@ Download OpenJDK 1.8-242 JRE Installer from [Java archive downloads](https://ado
 ::1        <your hostname>
 ```
 
-7. Download and install protoc
-Complete this step only if you actively working with the protocol buffer files. Maintaining the generated code in the repo allows us to eliminate protoc dependency for developers and project that do not use it.
-
-Go to https://github.com/protocolbuffers/protobuf/releases and find the protoc library for your platform. For macOS its at https://github.com/protocolbuffers/protobuf/releases/download/v3.7.1/protoc-3.7.1-osx-x86_64.zip
-Unzip the protoc file and add the bin directory to your path. Below is an example
-
-```
-   wget https://github.com/protocolbuffers/protobuf/releases/download/v3.7.1/protoc-3.7.1-osx-x86_64.zip
-   unzip protoc-3.7.1-linux-x86_64.zip -d <local_path>
-   export PATH=<local_path>/bin:$PATH
-
-```
-
-8. Download and install buf
+7. Download and install buf
 Complete this step only if you actively working with the protocol buffer files.
 
 ```
@@ -115,7 +102,7 @@ NOTE: the data from it is used for every git operation github does on you behave
 2. Go to `portal` directory and run
 
     (Optional) this is needed only if there is a change in the protobuf files
-    `mvn -P protobuf clean generate-sources`
+    `./scripts/jenkins/build-protos.sh`
     
     `mvn clean install`
 

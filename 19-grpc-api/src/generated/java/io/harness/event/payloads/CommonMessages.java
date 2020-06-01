@@ -23,28 +23,21 @@ public final class CommonMessages {
   static {
     java.lang.String[] descriptorData = {"\n/io/harness/event/payloads/common_messa"
         + "ges.proto\022\031io.harness.event.payloads\032\037go"
-        + "ogle/protobuf/timestamp.proto\"\274\002\n\tLifecy"
-        + "cle\022\023\n\013instance_id\030\001 \001(\t\022<\n\004type\030\002 \001(\0162."
-        + ".io.harness.event.payloads.Lifecycle.Eve"
-        + "ntType\022-\n\ttimestamp\030\003 \001(\0132\032.google.proto"
-        + "buf.Timestamp\0225\n\021created_timestamp\030\004 \001(\013"
-        + "2\032.google.protobuf.Timestamp\022\022\n\ncluster_"
-        + "id\030\005 \001(\t\022\022\n\nsetting_id\030\006 \001(\t\"N\n\tEventTyp"
-        + "e\022\026\n\022EVENT_TYPE_INVALID\020\000\022\024\n\020EVENT_TYPE_"
-        + "START\020\001\022\023\n\017EVENT_TYPE_STOP\020\002B\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
+        + "ogle/protobuf/timestamp.proto\"\201\003\n\tLifecy"
+        + "cle\022\037\n\013instance_id\030\001 \001(\tR\ninstanceId\022B\n\004"
+        + "type\030\002 \001(\0162..io.harness.event.payloads.L"
+        + "ifecycle.EventTypeR\004type\0228\n\ttimestamp\030\003 "
+        + "\001(\0132\032.google.protobuf.TimestampR\ttimesta"
+        + "mp\022G\n\021created_timestamp\030\004 \001(\0132\032.google.p"
+        + "rotobuf.TimestampR\020createdTimestamp\022\035\n\nc"
+        + "luster_id\030\005 \001(\tR\tclusterId\022\035\n\nsetting_id"
+        + "\030\006 \001(\tR\tsettingId\"N\n\tEventType\022\026\n\022EVENT_"
+        + "TYPE_INVALID\020\000\022\024\n\020EVENT_TYPE_START\020\001\022\023\n\017"
+        + "EVENT_TYPE_STOP\020\002B\002P\001b\006proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.TimestampProto.getDescriptor(),
-        },
-        assigner);
+        });
     internal_static_io_harness_event_payloads_Lifecycle_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_event_payloads_Lifecycle_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(

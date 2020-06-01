@@ -30,6 +30,13 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new K8sWatchEvent();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -40,7 +47,6 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -156,10 +162,6 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
   }
 
   /**
-   * <pre>
-   * type of watch event
-   * </pre>
-   *
    * Protobuf enum {@code io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type}
    */
   public enum Type implements com
@@ -207,6 +209,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -214,6 +218,10 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static Type forNumber(int value) {
       switch (value) {
         case 0:
@@ -273,11 +281,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
   public static final int CLUSTER_ID_FIELD_NUMBER = 1;
   private volatile java.lang.Object clusterId_;
   /**
-   * <pre>
-   * cluster details
-   * </pre>
-   *
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -291,11 +296,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     }
   }
   /**
-   * <pre>
-   * cluster details
-   * </pre>
-   *
-   * <code>string cluster_id = 1;</code>
+   * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -311,7 +313,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
   public static final int CLUSTER_NAME_FIELD_NUMBER = 2;
   private volatile java.lang.Object clusterName_;
   /**
-   * <code>string cluster_name = 2;</code>
+   * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+   * @return The clusterName.
    */
   public java.lang.String getClusterName() {
     java.lang.Object ref = clusterName_;
@@ -325,7 +328,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     }
   }
   /**
-   * <code>string cluster_name = 2;</code>
+   * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+   * @return The bytes for clusterName.
    */
   public com.google.protobuf.ByteString getClusterNameBytes() {
     java.lang.Object ref = clusterName_;
@@ -341,7 +345,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
   public static final int CLOUD_PROVIDER_ID_FIELD_NUMBER = 3;
   private volatile java.lang.Object cloudProviderId_;
   /**
-   * <code>string cloud_provider_id = 3;</code>
+   * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+   * @return The cloudProviderId.
    */
   public java.lang.String getCloudProviderId() {
     java.lang.Object ref = cloudProviderId_;
@@ -355,7 +360,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     }
   }
   /**
-   * <code>string cloud_provider_id = 3;</code>
+   * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+   * @return The bytes for cloudProviderId.
    */
   public com.google.protobuf.ByteString getCloudProviderIdBytes() {
     java.lang.Object ref = cloudProviderId_;
@@ -371,13 +377,15 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
   public static final int TYPE_FIELD_NUMBER = 4;
   private int type_;
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4[json_name = "type"];</code>
+   * @return The enum numeric value on the wire for type.
    */
   public int getTypeValue() {
     return type_;
   }
   /**
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4[json_name = "type"];</code>
+   * @return The type.
    */
   public io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type getType() {
     @SuppressWarnings("deprecation")
@@ -389,32 +397,22 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
   public static final int RESOURCE_REF_FIELD_NUMBER = 5;
   private io.harness.perpetualtask.k8s.watch.K8sObjectReference resourceRef_;
   /**
-   * <pre>
-   * reference to the resource
-   * </pre>
-   *
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
+   * @return Whether the resourceRef field is set.
    */
   public boolean hasResourceRef() {
     return resourceRef_ != null;
   }
   /**
-   * <pre>
-   * reference to the resource
-   * </pre>
-   *
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
+   * @return The resourceRef.
    */
   public io.harness.perpetualtask.k8s.watch.K8sObjectReference getResourceRef() {
     return resourceRef_ == null ? io.harness.perpetualtask.k8s.watch.K8sObjectReference.getDefaultInstance()
                                 : resourceRef_;
   }
   /**
-   * <pre>
-   * reference to the resource
-   * </pre>
-   *
-   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+   * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
    */
   public io.harness.perpetualtask.k8s.watch.K8sObjectReferenceOrBuilder getResourceRefOrBuilder() {
     return getResourceRef();
@@ -423,12 +421,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
   public static final int OLD_RESOURCE_VERSION_FIELD_NUMBER = 6;
   private volatile java.lang.Object oldResourceVersion_;
   /**
-   * <pre>
-   * old resource version and yaml
-   * only present for UPDATED &amp; DELETED
-   * </pre>
-   *
-   * <code>string old_resource_version = 6;</code>
+   * <code>string old_resource_version = 6[json_name = "oldResourceVersion"];</code>
+   * @return The oldResourceVersion.
    */
   public java.lang.String getOldResourceVersion() {
     java.lang.Object ref = oldResourceVersion_;
@@ -442,12 +436,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     }
   }
   /**
-   * <pre>
-   * old resource version and yaml
-   * only present for UPDATED &amp; DELETED
-   * </pre>
-   *
-   * <code>string old_resource_version = 6;</code>
+   * <code>string old_resource_version = 6[json_name = "oldResourceVersion"];</code>
+   * @return The bytes for oldResourceVersion.
    */
   public com.google.protobuf.ByteString getOldResourceVersionBytes() {
     java.lang.Object ref = oldResourceVersion_;
@@ -463,7 +453,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
   public static final int OLD_RESOURCE_YAML_FIELD_NUMBER = 7;
   private volatile java.lang.Object oldResourceYaml_;
   /**
-   * <code>string old_resource_yaml = 7;</code>
+   * <code>string old_resource_yaml = 7[json_name = "oldResourceYaml"];</code>
+   * @return The oldResourceYaml.
    */
   public java.lang.String getOldResourceYaml() {
     java.lang.Object ref = oldResourceYaml_;
@@ -477,7 +468,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     }
   }
   /**
-   * <code>string old_resource_yaml = 7;</code>
+   * <code>string old_resource_yaml = 7[json_name = "oldResourceYaml"];</code>
+   * @return The bytes for oldResourceYaml.
    */
   public com.google.protobuf.ByteString getOldResourceYamlBytes() {
     java.lang.Object ref = oldResourceYaml_;
@@ -493,12 +485,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
   public static final int NEW_RESOURCE_VERSION_FIELD_NUMBER = 8;
   private volatile java.lang.Object newResourceVersion_;
   /**
-   * <pre>
-   * old resource version and yaml
-   * only present for UPDATED &amp; ADDED
-   * </pre>
-   *
-   * <code>string new_resource_version = 8;</code>
+   * <code>string new_resource_version = 8[json_name = "newResourceVersion"];</code>
+   * @return The newResourceVersion.
    */
   public java.lang.String getNewResourceVersion() {
     java.lang.Object ref = newResourceVersion_;
@@ -512,12 +500,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     }
   }
   /**
-   * <pre>
-   * old resource version and yaml
-   * only present for UPDATED &amp; ADDED
-   * </pre>
-   *
-   * <code>string new_resource_version = 8;</code>
+   * <code>string new_resource_version = 8[json_name = "newResourceVersion"];</code>
+   * @return The bytes for newResourceVersion.
    */
   public com.google.protobuf.ByteString getNewResourceVersionBytes() {
     java.lang.Object ref = newResourceVersion_;
@@ -533,7 +517,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
   public static final int NEW_RESOURCE_YAML_FIELD_NUMBER = 9;
   private volatile java.lang.Object newResourceYaml_;
   /**
-   * <code>string new_resource_yaml = 9;</code>
+   * <code>string new_resource_yaml = 9[json_name = "newResourceYaml"];</code>
+   * @return The newResourceYaml.
    */
   public java.lang.String getNewResourceYaml() {
     java.lang.Object ref = newResourceYaml_;
@@ -547,7 +532,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     }
   }
   /**
-   * <code>string new_resource_yaml = 9;</code>
+   * <code>string new_resource_yaml = 9[json_name = "newResourceYaml"];</code>
+   * @return The bytes for newResourceYaml.
    */
   public com.google.protobuf.ByteString getNewResourceYamlBytes() {
     java.lang.Object ref = newResourceYaml_;
@@ -563,11 +549,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
   public static final int DESCRIPTION_FIELD_NUMBER = 10;
   private volatile java.lang.Object description_;
   /**
-   * <pre>
-   * description of the change
-   * </pre>
-   *
-   * <code>string description = 10;</code>
+   * <code>string description = 10[json_name = "description"];</code>
+   * @return The description.
    */
   public java.lang.String getDescription() {
     java.lang.Object ref = description_;
@@ -581,11 +564,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     }
   }
   /**
-   * <pre>
-   * description of the change
-   * </pre>
-   *
-   * <code>string description = 10;</code>
+   * <code>string description = 10[json_name = "description"];</code>
+   * @return The bytes for description.
    */
   public com.google.protobuf.ByteString getDescriptionBytes() {
     java.lang.Object ref = description_;
@@ -601,7 +581,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
   public static final int KUBE_SYSTEM_UID_FIELD_NUMBER = 11;
   private volatile java.lang.Object kubeSystemUid_;
   /**
-   * <code>string kube_system_uid = 11;</code>
+   * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+   * @return The kubeSystemUid.
    */
   public java.lang.String getKubeSystemUid() {
     java.lang.Object ref = kubeSystemUid_;
@@ -615,7 +596,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
     }
   }
   /**
-   * <code>string kube_system_uid = 11;</code>
+   * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+   * @return The bytes for kubeSystemUid.
    */
   public com.google.protobuf.ByteString getKubeSystemUidBytes() {
     java.lang.Object ref = kubeSystemUid_;
@@ -1094,11 +1076,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <pre>
-     * cluster details
-     * </pre>
-     *
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -1112,11 +1091,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <pre>
-     * cluster details
-     * </pre>
-     *
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -1129,11 +1105,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <pre>
-     * cluster details
-     * </pre>
-     *
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -1145,11 +1119,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <pre>
-     * cluster details
-     * </pre>
-     *
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -1157,11 +1128,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <pre>
-     * cluster details
-     * </pre>
-     *
-     * <code>string cluster_id = 1;</code>
+     * <code>string cluster_id = 1[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1176,7 +1145,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
 
     private java.lang.Object clusterName_ = "";
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @return The clusterName.
      */
     public java.lang.String getClusterName() {
       java.lang.Object ref = clusterName_;
@@ -1190,7 +1160,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @return The bytes for clusterName.
      */
     public com.google.protobuf.ByteString getClusterNameBytes() {
       java.lang.Object ref = clusterName_;
@@ -1203,7 +1174,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @param value The clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterName(java.lang.String value) {
       if (value == null) {
@@ -1215,7 +1188,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterName() {
       clusterName_ = getDefaultInstance().getClusterName();
@@ -1223,7 +1197,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>string cluster_name = 2;</code>
+     * <code>string cluster_name = 2[json_name = "clusterName"];</code>
+     * @param value The bytes for clusterName to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1238,7 +1214,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
 
     private java.lang.Object cloudProviderId_ = "";
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @return The cloudProviderId.
      */
     public java.lang.String getCloudProviderId() {
       java.lang.Object ref = cloudProviderId_;
@@ -1252,7 +1229,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @return The bytes for cloudProviderId.
      */
     public com.google.protobuf.ByteString getCloudProviderIdBytes() {
       java.lang.Object ref = cloudProviderId_;
@@ -1265,7 +1243,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @param value The cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderId(java.lang.String value) {
       if (value == null) {
@@ -1277,7 +1257,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearCloudProviderId() {
       cloudProviderId_ = getDefaultInstance().getCloudProviderId();
@@ -1285,7 +1266,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>string cloud_provider_id = 3;</code>
+     * <code>string cloud_provider_id = 3[json_name = "cloudProviderId"];</code>
+     * @param value The bytes for cloudProviderId to set.
+     * @return This builder for chaining.
      */
     public Builder setCloudProviderIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1300,13 +1283,16 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
 
     private int type_ = 0;
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4[json_name = "type"];</code>
+     * @return The enum numeric value on the wire for type.
      */
     public int getTypeValue() {
       return type_;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4[json_name = "type"];</code>
+     * @param value The enum numeric value on the wire for type to set.
+     * @return This builder for chaining.
      */
     public Builder setTypeValue(int value) {
       type_ = value;
@@ -1314,7 +1300,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4[json_name = "type"];</code>
+     * @return The type.
      */
     public io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type getType() {
       @SuppressWarnings("deprecation")
@@ -1323,7 +1310,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return result == null ? io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type.UNRECOGNIZED : result;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4[json_name = "type"];</code>
+     * @param value The type to set.
+     * @return This builder for chaining.
      */
     public Builder setType(io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type value) {
       if (value == null) {
@@ -1335,7 +1324,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sWatchEvent.Type type = 4[json_name = "type"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearType() {
       type_ = 0;
@@ -1348,21 +1338,15 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
         io.harness.perpetualtask.k8s.watch.K8sObjectReference.Builder,
         io.harness.perpetualtask.k8s.watch.K8sObjectReferenceOrBuilder> resourceRefBuilder_;
     /**
-     * <pre>
-     * reference to the resource
-     * </pre>
-     *
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
+     * @return Whether the resourceRef field is set.
      */
     public boolean hasResourceRef() {
       return resourceRefBuilder_ != null || resourceRef_ != null;
     }
     /**
-     * <pre>
-     * reference to the resource
-     * </pre>
-     *
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
+     * @return The resourceRef.
      */
     public io.harness.perpetualtask.k8s.watch.K8sObjectReference getResourceRef() {
       if (resourceRefBuilder_ == null) {
@@ -1373,11 +1357,7 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <pre>
-     * reference to the resource
-     * </pre>
-     *
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
      */
     public Builder setResourceRef(io.harness.perpetualtask.k8s.watch.K8sObjectReference value) {
       if (resourceRefBuilder_ == null) {
@@ -1393,11 +1373,7 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <pre>
-     * reference to the resource
-     * </pre>
-     *
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
      */
     public Builder setResourceRef(io.harness.perpetualtask.k8s.watch.K8sObjectReference.Builder builderForValue) {
       if (resourceRefBuilder_ == null) {
@@ -1410,11 +1386,7 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <pre>
-     * reference to the resource
-     * </pre>
-     *
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
      */
     public Builder mergeResourceRef(io.harness.perpetualtask.k8s.watch.K8sObjectReference value) {
       if (resourceRefBuilder_ == null) {
@@ -1433,11 +1405,7 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <pre>
-     * reference to the resource
-     * </pre>
-     *
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
      */
     public Builder clearResourceRef() {
       if (resourceRefBuilder_ == null) {
@@ -1451,22 +1419,14 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <pre>
-     * reference to the resource
-     * </pre>
-     *
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.K8sObjectReference.Builder getResourceRefBuilder() {
       onChanged();
       return getResourceRefFieldBuilder().getBuilder();
     }
     /**
-     * <pre>
-     * reference to the resource
-     * </pre>
-     *
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
      */
     public io.harness.perpetualtask.k8s.watch.K8sObjectReferenceOrBuilder getResourceRefOrBuilder() {
       if (resourceRefBuilder_ != null) {
@@ -1477,11 +1437,7 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <pre>
-     * reference to the resource
-     * </pre>
-     *
-     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5;</code>
+     * <code>.io.harness.perpetualtask.k8s.watch.K8sObjectReference resource_ref = 5[json_name = "resourceRef"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.k8s.watch.K8sObjectReference,
         io.harness.perpetualtask.k8s.watch.K8sObjectReference.Builder,
@@ -1500,12 +1456,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
 
     private java.lang.Object oldResourceVersion_ = "";
     /**
-     * <pre>
-     * old resource version and yaml
-     * only present for UPDATED &amp; DELETED
-     * </pre>
-     *
-     * <code>string old_resource_version = 6;</code>
+     * <code>string old_resource_version = 6[json_name = "oldResourceVersion"];</code>
+     * @return The oldResourceVersion.
      */
     public java.lang.String getOldResourceVersion() {
       java.lang.Object ref = oldResourceVersion_;
@@ -1519,12 +1471,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <pre>
-     * old resource version and yaml
-     * only present for UPDATED &amp; DELETED
-     * </pre>
-     *
-     * <code>string old_resource_version = 6;</code>
+     * <code>string old_resource_version = 6[json_name = "oldResourceVersion"];</code>
+     * @return The bytes for oldResourceVersion.
      */
     public com.google.protobuf.ByteString getOldResourceVersionBytes() {
       java.lang.Object ref = oldResourceVersion_;
@@ -1537,12 +1485,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <pre>
-     * old resource version and yaml
-     * only present for UPDATED &amp; DELETED
-     * </pre>
-     *
-     * <code>string old_resource_version = 6;</code>
+     * <code>string old_resource_version = 6[json_name = "oldResourceVersion"];</code>
+     * @param value The oldResourceVersion to set.
+     * @return This builder for chaining.
      */
     public Builder setOldResourceVersion(java.lang.String value) {
       if (value == null) {
@@ -1554,12 +1499,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <pre>
-     * old resource version and yaml
-     * only present for UPDATED &amp; DELETED
-     * </pre>
-     *
-     * <code>string old_resource_version = 6;</code>
+     * <code>string old_resource_version = 6[json_name = "oldResourceVersion"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearOldResourceVersion() {
       oldResourceVersion_ = getDefaultInstance().getOldResourceVersion();
@@ -1567,12 +1508,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <pre>
-     * old resource version and yaml
-     * only present for UPDATED &amp; DELETED
-     * </pre>
-     *
-     * <code>string old_resource_version = 6;</code>
+     * <code>string old_resource_version = 6[json_name = "oldResourceVersion"];</code>
+     * @param value The bytes for oldResourceVersion to set.
+     * @return This builder for chaining.
      */
     public Builder setOldResourceVersionBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1587,7 +1525,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
 
     private java.lang.Object oldResourceYaml_ = "";
     /**
-     * <code>string old_resource_yaml = 7;</code>
+     * <code>string old_resource_yaml = 7[json_name = "oldResourceYaml"];</code>
+     * @return The oldResourceYaml.
      */
     public java.lang.String getOldResourceYaml() {
       java.lang.Object ref = oldResourceYaml_;
@@ -1601,7 +1540,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <code>string old_resource_yaml = 7;</code>
+     * <code>string old_resource_yaml = 7[json_name = "oldResourceYaml"];</code>
+     * @return The bytes for oldResourceYaml.
      */
     public com.google.protobuf.ByteString getOldResourceYamlBytes() {
       java.lang.Object ref = oldResourceYaml_;
@@ -1614,7 +1554,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <code>string old_resource_yaml = 7;</code>
+     * <code>string old_resource_yaml = 7[json_name = "oldResourceYaml"];</code>
+     * @param value The oldResourceYaml to set.
+     * @return This builder for chaining.
      */
     public Builder setOldResourceYaml(java.lang.String value) {
       if (value == null) {
@@ -1626,7 +1568,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>string old_resource_yaml = 7;</code>
+     * <code>string old_resource_yaml = 7[json_name = "oldResourceYaml"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearOldResourceYaml() {
       oldResourceYaml_ = getDefaultInstance().getOldResourceYaml();
@@ -1634,7 +1577,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>string old_resource_yaml = 7;</code>
+     * <code>string old_resource_yaml = 7[json_name = "oldResourceYaml"];</code>
+     * @param value The bytes for oldResourceYaml to set.
+     * @return This builder for chaining.
      */
     public Builder setOldResourceYamlBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1649,12 +1594,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
 
     private java.lang.Object newResourceVersion_ = "";
     /**
-     * <pre>
-     * old resource version and yaml
-     * only present for UPDATED &amp; ADDED
-     * </pre>
-     *
-     * <code>string new_resource_version = 8;</code>
+     * <code>string new_resource_version = 8[json_name = "newResourceVersion"];</code>
+     * @return The newResourceVersion.
      */
     public java.lang.String getNewResourceVersion() {
       java.lang.Object ref = newResourceVersion_;
@@ -1668,12 +1609,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <pre>
-     * old resource version and yaml
-     * only present for UPDATED &amp; ADDED
-     * </pre>
-     *
-     * <code>string new_resource_version = 8;</code>
+     * <code>string new_resource_version = 8[json_name = "newResourceVersion"];</code>
+     * @return The bytes for newResourceVersion.
      */
     public com.google.protobuf.ByteString getNewResourceVersionBytes() {
       java.lang.Object ref = newResourceVersion_;
@@ -1686,12 +1623,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <pre>
-     * old resource version and yaml
-     * only present for UPDATED &amp; ADDED
-     * </pre>
-     *
-     * <code>string new_resource_version = 8;</code>
+     * <code>string new_resource_version = 8[json_name = "newResourceVersion"];</code>
+     * @param value The newResourceVersion to set.
+     * @return This builder for chaining.
      */
     public Builder setNewResourceVersion(java.lang.String value) {
       if (value == null) {
@@ -1703,12 +1637,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <pre>
-     * old resource version and yaml
-     * only present for UPDATED &amp; ADDED
-     * </pre>
-     *
-     * <code>string new_resource_version = 8;</code>
+     * <code>string new_resource_version = 8[json_name = "newResourceVersion"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearNewResourceVersion() {
       newResourceVersion_ = getDefaultInstance().getNewResourceVersion();
@@ -1716,12 +1646,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <pre>
-     * old resource version and yaml
-     * only present for UPDATED &amp; ADDED
-     * </pre>
-     *
-     * <code>string new_resource_version = 8;</code>
+     * <code>string new_resource_version = 8[json_name = "newResourceVersion"];</code>
+     * @param value The bytes for newResourceVersion to set.
+     * @return This builder for chaining.
      */
     public Builder setNewResourceVersionBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1736,7 +1663,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
 
     private java.lang.Object newResourceYaml_ = "";
     /**
-     * <code>string new_resource_yaml = 9;</code>
+     * <code>string new_resource_yaml = 9[json_name = "newResourceYaml"];</code>
+     * @return The newResourceYaml.
      */
     public java.lang.String getNewResourceYaml() {
       java.lang.Object ref = newResourceYaml_;
@@ -1750,7 +1678,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <code>string new_resource_yaml = 9;</code>
+     * <code>string new_resource_yaml = 9[json_name = "newResourceYaml"];</code>
+     * @return The bytes for newResourceYaml.
      */
     public com.google.protobuf.ByteString getNewResourceYamlBytes() {
       java.lang.Object ref = newResourceYaml_;
@@ -1763,7 +1692,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <code>string new_resource_yaml = 9;</code>
+     * <code>string new_resource_yaml = 9[json_name = "newResourceYaml"];</code>
+     * @param value The newResourceYaml to set.
+     * @return This builder for chaining.
      */
     public Builder setNewResourceYaml(java.lang.String value) {
       if (value == null) {
@@ -1775,7 +1706,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>string new_resource_yaml = 9;</code>
+     * <code>string new_resource_yaml = 9[json_name = "newResourceYaml"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearNewResourceYaml() {
       newResourceYaml_ = getDefaultInstance().getNewResourceYaml();
@@ -1783,7 +1715,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>string new_resource_yaml = 9;</code>
+     * <code>string new_resource_yaml = 9[json_name = "newResourceYaml"];</code>
+     * @param value The bytes for newResourceYaml to set.
+     * @return This builder for chaining.
      */
     public Builder setNewResourceYamlBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1798,11 +1732,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
 
     private java.lang.Object description_ = "";
     /**
-     * <pre>
-     * description of the change
-     * </pre>
-     *
-     * <code>string description = 10;</code>
+     * <code>string description = 10[json_name = "description"];</code>
+     * @return The description.
      */
     public java.lang.String getDescription() {
       java.lang.Object ref = description_;
@@ -1816,11 +1747,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <pre>
-     * description of the change
-     * </pre>
-     *
-     * <code>string description = 10;</code>
+     * <code>string description = 10[json_name = "description"];</code>
+     * @return The bytes for description.
      */
     public com.google.protobuf.ByteString getDescriptionBytes() {
       java.lang.Object ref = description_;
@@ -1833,11 +1761,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <pre>
-     * description of the change
-     * </pre>
-     *
-     * <code>string description = 10;</code>
+     * <code>string description = 10[json_name = "description"];</code>
+     * @param value The description to set.
+     * @return This builder for chaining.
      */
     public Builder setDescription(java.lang.String value) {
       if (value == null) {
@@ -1849,11 +1775,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <pre>
-     * description of the change
-     * </pre>
-     *
-     * <code>string description = 10;</code>
+     * <code>string description = 10[json_name = "description"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearDescription() {
       description_ = getDefaultInstance().getDescription();
@@ -1861,11 +1784,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <pre>
-     * description of the change
-     * </pre>
-     *
-     * <code>string description = 10;</code>
+     * <code>string description = 10[json_name = "description"];</code>
+     * @param value The bytes for description to set.
+     * @return This builder for chaining.
      */
     public Builder setDescriptionBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1880,7 +1801,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
 
     private java.lang.Object kubeSystemUid_ = "";
     /**
-     * <code>string kube_system_uid = 11;</code>
+     * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+     * @return The kubeSystemUid.
      */
     public java.lang.String getKubeSystemUid() {
       java.lang.Object ref = kubeSystemUid_;
@@ -1894,7 +1816,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <code>string kube_system_uid = 11;</code>
+     * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+     * @return The bytes for kubeSystemUid.
      */
     public com.google.protobuf.ByteString getKubeSystemUidBytes() {
       java.lang.Object ref = kubeSystemUid_;
@@ -1907,7 +1830,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       }
     }
     /**
-     * <code>string kube_system_uid = 11;</code>
+     * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+     * @param value The kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUid(java.lang.String value) {
       if (value == null) {
@@ -1919,7 +1844,8 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>string kube_system_uid = 11;</code>
+     * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearKubeSystemUid() {
       kubeSystemUid_ = getDefaultInstance().getKubeSystemUid();
@@ -1927,7 +1853,9 @@ public final class K8sWatchEvent extends com.google.protobuf.GeneratedMessageV3 
       return this;
     }
     /**
-     * <code>string kube_system_uid = 11;</code>
+     * <code>string kube_system_uid = 11[json_name = "kubeSystemUid"];</code>
+     * @param value The bytes for kubeSystemUid to set.
+     * @return This builder for chaining.
      */
     public Builder setKubeSystemUidBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

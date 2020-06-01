@@ -22,6 +22,13 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new ContainerInstanceSyncPerpetualTaskParams();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -32,7 +39,6 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -112,7 +118,8 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
   public static final int CONTAINER_TYPE_FIELD_NUMBER = 1;
   private volatile java.lang.Object containerType_;
   /**
-   * <code>string container_type = 1;</code>
+   * <code>string container_type = 1[json_name = "containerType"];</code>
+   * @return The containerType.
    */
   public java.lang.String getContainerType() {
     java.lang.Object ref = containerType_;
@@ -126,7 +133,8 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
   }
   /**
-   * <code>string container_type = 1;</code>
+   * <code>string container_type = 1[json_name = "containerType"];</code>
+   * @return The bytes for containerType.
    */
   public com.google.protobuf.ByteString getContainerTypeBytes() {
     java.lang.Object ref = containerType_;
@@ -144,14 +152,16 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
       .K8sContainerInstanceSyncPerpetualTaskParams k8SContainerPerpetualTaskParams_;
   /**
    * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-   * k8s_container_perpetual_task_params = 2;</code>
+   * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
+   * @return Whether the k8sContainerPerpetualTaskParams field is set.
    */
   public boolean hasK8SContainerPerpetualTaskParams() {
     return k8SContainerPerpetualTaskParams_ != null;
   }
   /**
    * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-   * k8s_container_perpetual_task_params = 2;</code>
+   * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
+   * @return The k8sContainerPerpetualTaskParams.
    */
   public io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
   getK8SContainerPerpetualTaskParams() {
@@ -161,7 +171,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
   }
   /**
    * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-   * k8s_container_perpetual_task_params = 2;</code>
+   * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
    */
   public io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParamsOrBuilder
   getK8SContainerPerpetualTaskParamsOrBuilder() {
@@ -173,14 +183,16 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
       .ContainerServicePerpetualTaskParams containerServicePerpetualTaskParams_;
   /**
    * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-   * container_service_perpetual_task_params = 3;</code>
+   * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
+   * @return Whether the containerServicePerpetualTaskParams field is set.
    */
   public boolean hasContainerServicePerpetualTaskParams() {
     return containerServicePerpetualTaskParams_ != null;
   }
   /**
    * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-   * container_service_perpetual_task_params = 3;</code>
+   * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
+   * @return The containerServicePerpetualTaskParams.
    */
   public io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
   getContainerServicePerpetualTaskParams() {
@@ -190,7 +202,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
   }
   /**
    * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-   * container_service_perpetual_task_params = 3;</code>
+   * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
    */
   public io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParamsOrBuilder
   getContainerServicePerpetualTaskParamsOrBuilder() {
@@ -548,7 +560,8 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
 
     private java.lang.Object containerType_ = "";
     /**
-     * <code>string container_type = 1;</code>
+     * <code>string container_type = 1[json_name = "containerType"];</code>
+     * @return The containerType.
      */
     public java.lang.String getContainerType() {
       java.lang.Object ref = containerType_;
@@ -562,7 +575,8 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
       }
     }
     /**
-     * <code>string container_type = 1;</code>
+     * <code>string container_type = 1[json_name = "containerType"];</code>
+     * @return The bytes for containerType.
      */
     public com.google.protobuf.ByteString getContainerTypeBytes() {
       java.lang.Object ref = containerType_;
@@ -575,7 +589,9 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
       }
     }
     /**
-     * <code>string container_type = 1;</code>
+     * <code>string container_type = 1[json_name = "containerType"];</code>
+     * @param value The containerType to set.
+     * @return This builder for chaining.
      */
     public Builder setContainerType(java.lang.String value) {
       if (value == null) {
@@ -587,7 +603,8 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
       return this;
     }
     /**
-     * <code>string container_type = 1;</code>
+     * <code>string container_type = 1[json_name = "containerType"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearContainerType() {
       containerType_ = getDefaultInstance().getContainerType();
@@ -595,7 +612,9 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
       return this;
     }
     /**
-     * <code>string container_type = 1;</code>
+     * <code>string container_type = 1[json_name = "containerType"];</code>
+     * @param value The bytes for containerType to set.
+     * @return This builder for chaining.
      */
     public Builder setContainerTypeBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -617,14 +636,16 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
             k8SContainerPerpetualTaskParamsBuilder_;
     /**
      * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-     * k8s_container_perpetual_task_params = 2;</code>
+     * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
+     * @return Whether the k8sContainerPerpetualTaskParams field is set.
      */
     public boolean hasK8SContainerPerpetualTaskParams() {
       return k8SContainerPerpetualTaskParamsBuilder_ != null || k8SContainerPerpetualTaskParams_ != null;
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-     * k8s_container_perpetual_task_params = 2;</code>
+     * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
+     * @return The k8sContainerPerpetualTaskParams.
      */
     public io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
     getK8SContainerPerpetualTaskParams() {
@@ -638,7 +659,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-     * k8s_container_perpetual_task_params = 2;</code>
+     * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
      */
     public Builder setK8SContainerPerpetualTaskParams(
         io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams value) {
@@ -656,7 +677,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-     * k8s_container_perpetual_task_params = 2;</code>
+     * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
      */
     public Builder setK8SContainerPerpetualTaskParams(
         io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams.Builder builderForValue) {
@@ -671,7 +692,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-     * k8s_container_perpetual_task_params = 2;</code>
+     * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
      */
     public Builder mergeK8SContainerPerpetualTaskParams(
         io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams value) {
@@ -694,7 +715,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-     * k8s_container_perpetual_task_params = 2;</code>
+     * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
      */
     public Builder clearK8SContainerPerpetualTaskParams() {
       if (k8SContainerPerpetualTaskParamsBuilder_ == null) {
@@ -709,7 +730,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-     * k8s_container_perpetual_task_params = 2;</code>
+     * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
      */
     public io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams.Builder
     getK8SContainerPerpetualTaskParamsBuilder() {
@@ -718,7 +739,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-     * k8s_container_perpetual_task_params = 2;</code>
+     * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
      */
     public io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParamsOrBuilder
     getK8SContainerPerpetualTaskParamsOrBuilder() {
@@ -732,7 +753,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams
-     * k8s_container_perpetual_task_params = 2;</code>
+     * k8s_container_perpetual_task_params = 2[json_name = "k8sContainerPerpetualTaskParams"];</code>
      */
     private com.google.protobuf
         .SingleFieldBuilderV3<io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTaskParams,
@@ -760,14 +781,16 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
             containerServicePerpetualTaskParamsBuilder_;
     /**
      * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-     * container_service_perpetual_task_params = 3;</code>
+     * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
+     * @return Whether the containerServicePerpetualTaskParams field is set.
      */
     public boolean hasContainerServicePerpetualTaskParams() {
       return containerServicePerpetualTaskParamsBuilder_ != null || containerServicePerpetualTaskParams_ != null;
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-     * container_service_perpetual_task_params = 3;</code>
+     * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
+     * @return The containerServicePerpetualTaskParams.
      */
     public io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
     getContainerServicePerpetualTaskParams() {
@@ -781,7 +804,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-     * container_service_perpetual_task_params = 3;</code>
+     * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
      */
     public Builder setContainerServicePerpetualTaskParams(
         io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams value) {
@@ -799,7 +822,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-     * container_service_perpetual_task_params = 3;</code>
+     * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
      */
     public Builder setContainerServicePerpetualTaskParams(
         io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams.Builder builderForValue) {
@@ -814,7 +837,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-     * container_service_perpetual_task_params = 3;</code>
+     * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
      */
     public Builder mergeContainerServicePerpetualTaskParams(
         io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams value) {
@@ -837,7 +860,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-     * container_service_perpetual_task_params = 3;</code>
+     * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
      */
     public Builder clearContainerServicePerpetualTaskParams() {
       if (containerServicePerpetualTaskParamsBuilder_ == null) {
@@ -852,7 +875,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-     * container_service_perpetual_task_params = 3;</code>
+     * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
      */
     public io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams.Builder
     getContainerServicePerpetualTaskParamsBuilder() {
@@ -861,7 +884,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-     * container_service_perpetual_task_params = 3;</code>
+     * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
      */
     public io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParamsOrBuilder
     getContainerServicePerpetualTaskParamsOrBuilder() {
@@ -875,7 +898,7 @@ public final class ContainerInstanceSyncPerpetualTaskParams extends com.google.p
     }
     /**
      * <code>.io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams
-     * container_service_perpetual_task_params = 3;</code>
+     * container_service_perpetual_task_params = 3[json_name = "containerServicePerpetualTaskParams"];</code>
      */
     private com.google.protobuf
         .SingleFieldBuilderV3<io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams,

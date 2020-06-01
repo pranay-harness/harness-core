@@ -17,8 +17,8 @@ import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
 
 /**
  */
-@javax.annotation.Generated(
-    value = "by gRPC proto compiler (version 1.21.0)", comments = "Source: io/harness/pingpong/ping_pong_service.proto")
+@javax.annotation.
+Generated(value = "by gRPC proto compiler", comments = "Source: io/harness/pingpong/ping_pong_service.proto")
 public final class PingPongServiceGrpc {
   private PingPongServiceGrpc() {}
 
@@ -39,7 +39,7 @@ public final class PingPongServiceGrpc {
           PingPongServiceGrpc.getTryPingMethod = getTryPingMethod =
               io.grpc.MethodDescriptor.<io.harness.event.Ping, io.harness.event.Pong>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                  .setFullMethodName(generateFullMethodName("io.harness.event.PingPongService", "TryPing"))
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "TryPing"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(
                       io.grpc.protobuf.ProtoUtils.marshaller(io.harness.event.Ping.getDefaultInstance()))

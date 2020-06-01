@@ -19,6 +19,13 @@ public final class Ec2Lifecycle extends com.google.protobuf.GeneratedMessageV3 i
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new Ec2Lifecycle();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -29,7 +36,6 @@ public final class Ec2Lifecycle extends com.google.protobuf.GeneratedMessageV3 i
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -84,19 +90,21 @@ public final class Ec2Lifecycle extends com.google.protobuf.GeneratedMessageV3 i
   public static final int LIFECYCLE_FIELD_NUMBER = 1;
   private io.harness.event.payloads.Lifecycle lifecycle_;
   /**
-   * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+   * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
+   * @return Whether the lifecycle field is set.
    */
   public boolean hasLifecycle() {
     return lifecycle_ != null;
   }
   /**
-   * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+   * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
+   * @return The lifecycle.
    */
   public io.harness.event.payloads.Lifecycle getLifecycle() {
     return lifecycle_ == null ? io.harness.event.payloads.Lifecycle.getDefaultInstance() : lifecycle_;
   }
   /**
-   * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+   * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
    */
   public io.harness.event.payloads.LifecycleOrBuilder getLifecycleOrBuilder() {
     return getLifecycle();
@@ -396,13 +404,15 @@ public final class Ec2Lifecycle extends com.google.protobuf.GeneratedMessageV3 i
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.Lifecycle,
         io.harness.event.payloads.Lifecycle.Builder, io.harness.event.payloads.LifecycleOrBuilder> lifecycleBuilder_;
     /**
-     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
+     * @return Whether the lifecycle field is set.
      */
     public boolean hasLifecycle() {
       return lifecycleBuilder_ != null || lifecycle_ != null;
     }
     /**
-     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
+     * @return The lifecycle.
      */
     public io.harness.event.payloads.Lifecycle getLifecycle() {
       if (lifecycleBuilder_ == null) {
@@ -412,7 +422,7 @@ public final class Ec2Lifecycle extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
      */
     public Builder setLifecycle(io.harness.event.payloads.Lifecycle value) {
       if (lifecycleBuilder_ == null) {
@@ -428,7 +438,7 @@ public final class Ec2Lifecycle extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
      */
     public Builder setLifecycle(io.harness.event.payloads.Lifecycle.Builder builderForValue) {
       if (lifecycleBuilder_ == null) {
@@ -441,7 +451,7 @@ public final class Ec2Lifecycle extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
      */
     public Builder mergeLifecycle(io.harness.event.payloads.Lifecycle value) {
       if (lifecycleBuilder_ == null) {
@@ -458,7 +468,7 @@ public final class Ec2Lifecycle extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
      */
     public Builder clearLifecycle() {
       if (lifecycleBuilder_ == null) {
@@ -472,14 +482,14 @@ public final class Ec2Lifecycle extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
      */
     public io.harness.event.payloads.Lifecycle.Builder getLifecycleBuilder() {
       onChanged();
       return getLifecycleFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
      */
     public io.harness.event.payloads.LifecycleOrBuilder getLifecycleOrBuilder() {
       if (lifecycleBuilder_ != null) {
@@ -489,7 +499,7 @@ public final class Ec2Lifecycle extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1;</code>
+     * <code>.io.harness.event.payloads.Lifecycle lifecycle = 1[json_name = "lifecycle"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.Lifecycle,
         io.harness.event.payloads.Lifecycle.Builder, io.harness.event.payloads.LifecycleOrBuilder>

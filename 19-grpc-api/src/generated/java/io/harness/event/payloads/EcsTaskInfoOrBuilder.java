@@ -8,28 +8,35 @@ public interface EcsTaskInfoOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.payloads.EcsTaskInfo)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+   * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+   * "ecsTaskDescription"];</code>
+   * @return Whether the ecsTaskDescription field is set.
    */
   boolean hasEcsTaskDescription();
   /**
-   * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+   * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+   * "ecsTaskDescription"];</code>
+   * @return The ecsTaskDescription.
    */
   io.harness.event.payloads.EcsTaskDescription getEcsTaskDescription();
   /**
-   * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1;</code>
+   * <code>.io.harness.event.payloads.EcsTaskDescription ecs_task_description = 1[json_name =
+   * "ecsTaskDescription"];</code>
    */
   io.harness.event.payloads.EcsTaskDescriptionOrBuilder getEcsTaskDescriptionOrBuilder();
 
   /**
-   * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+   * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
+   * @return Whether the ecsTaskResource field is set.
    */
   boolean hasEcsTaskResource();
   /**
-   * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+   * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
+   * @return The ecsTaskResource.
    */
   io.harness.event.payloads.ReservedResource getEcsTaskResource();
   /**
-   * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2;</code>
+   * <code>.io.harness.event.payloads.ReservedResource ecs_task_resource = 2[json_name = "ecsTaskResource"];</code>
    */
   io.harness.event.payloads.ReservedResourceOrBuilder getEcsTaskResourceOrBuilder();
 }

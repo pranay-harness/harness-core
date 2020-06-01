@@ -23,18 +23,10 @@ public final class SampleTask {
   static {
     java.lang.String[] descriptorData = {"\n2io/harness/perpetualtask/example/sampl"
         + "e_task.proto\022 io.harness.perpetualtask.e"
-        + "xample\",\n\031SamplePerpetualTaskParams\022\017\n\007c"
-        + "ountry\030\001 \001(\tB\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {}, assigner);
+        + "xample\"5\n\031SamplePerpetualTaskParams\022\030\n\007c"
+        + "ountry\030\001 \001(\tR\007countryB\002P\001b\006proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
     internal_static_io_harness_perpetualtask_example_SamplePerpetualTaskParams_descriptor =
         getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_perpetualtask_example_SamplePerpetualTaskParams_fieldAccessorTable =

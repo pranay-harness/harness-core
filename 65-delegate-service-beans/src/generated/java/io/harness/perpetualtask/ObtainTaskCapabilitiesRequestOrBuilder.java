@@ -9,15 +9,17 @@ public interface ObtainTaskCapabilitiesRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.ObtainTaskCapabilitiesRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
+   * @return Whether the taskId field is set.
    */
   boolean hasTaskId();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
+   * @return The taskId.
    */
   io.harness.perpetualtask.PerpetualTaskId getTaskId();
   /**
-   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1;</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskId task_id = 1[json_name = "taskId"];</code>
    */
   io.harness.perpetualtask.PerpetualTaskIdOrBuilder getTaskIdOrBuilder();
 }

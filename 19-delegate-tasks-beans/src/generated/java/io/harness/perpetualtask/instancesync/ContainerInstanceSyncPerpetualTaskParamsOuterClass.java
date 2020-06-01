@@ -33,35 +33,34 @@ public final class ContainerInstanceSyncPerpetualTaskParamsOuterClass {
     java.lang.String[] descriptorData = {"\nYio/harness/perpetualtask/instancesync/"
         + "container_instance_sync_perpetual_task_p"
         + "arams.proto\022%io.harness.perpetualtask.in"
-        + "stancesync\"\226\001\n+K8sContainerInstanceSyncP"
-        + "erpetualTaskParams\022\022\n\naccount_id\030\001 \001(\t\022\016"
-        + "\n\006app_id\030\002 \001(\t\022\032\n\022k8s_cluster_config\030\003 \001"
-        + "(\014\022\021\n\tnamespace\030\004 \001(\t\022\024\n\014release_name\030\005 "
-        + "\001(\t\"\366\001\n#ContainerServicePerpetualTaskPar"
-        + "ams\022\031\n\021setting_attribute\030\001 \001(\014\022\032\n\022contai"
-        + "ner_svc_name\030\002 \001(\t\022\032\n\022encryption_details"
-        + "\030\003 \001(\014\022\024\n\014cluster_name\030\004 \001(\t\022\021\n\tnamespac"
-        + "e\030\005 \001(\t\022\016\n\006region\030\006 \001(\t\022\027\n\017subscription_"
-        + "id\030\007 \001(\t\022\026\n\016resource_group\030\010 \001(\t\022\022\n\nmast"
-        + "er_url\030\t \001(\t\"\300\002\n(ContainerInstanceSyncPe"
-        + "rpetualTaskParams\022\026\n\016container_type\030\001 \001("
-        + "\t\022\177\n#k8s_container_perpetual_task_params"
-        + "\030\002 \001(\0132R.io.harness.perpetualtask.instan"
-        + "cesync.K8sContainerInstanceSyncPerpetual"
-        + "TaskParams\022{\n\'container_service_perpetua"
-        + "l_task_params\030\003 \001(\0132J.io.harness.perpetu"
-        + "altask.instancesync.ContainerServicePerp"
-        + "etualTaskParamsB\002P\001b\006proto3"};
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {}, assigner);
+        + "stancesync\"\322\001\n+K8sContainerInstanceSyncP"
+        + "erpetualTaskParams\022\035\n\naccount_id\030\001 \001(\tR\t"
+        + "accountId\022\025\n\006app_id\030\002 \001(\tR\005appId\022,\n\022k8s_"
+        + "cluster_config\030\003 \001(\014R\020k8sClusterConfig\022\034"
+        + "\n\tnamespace\030\004 \001(\tR\tnamespace\022!\n\014release_"
+        + "name\030\005 \001(\tR\013releaseName\"\367\002\n#ContainerSer"
+        + "vicePerpetualTaskParams\022+\n\021setting_attri"
+        + "bute\030\001 \001(\014R\020settingAttribute\022,\n\022containe"
+        + "r_svc_name\030\002 \001(\tR\020containerSvcName\022-\n\022en"
+        + "cryption_details\030\003 \001(\014R\021encryptionDetail"
+        + "s\022!\n\014cluster_name\030\004 \001(\tR\013clusterName\022\034\n\t"
+        + "namespace\030\005 \001(\tR\tnamespace\022\026\n\006region\030\006 \001"
+        + "(\tR\006region\022\'\n\017subscription_id\030\007 \001(\tR\016sub"
+        + "scriptionId\022%\n\016resource_group\030\010 \001(\tR\rres"
+        + "ourceGroup\022\035\n\nmaster_url\030\t \001(\tR\tmasterUr"
+        + "l\"\227\003\n(ContainerInstanceSyncPerpetualTask"
+        + "Params\022%\n\016container_type\030\001 \001(\tR\rcontaine"
+        + "rType\022\240\001\n#k8s_container_perpetual_task_p"
+        + "arams\030\002 \001(\0132R.io.harness.perpetualtask.i"
+        + "nstancesync.K8sContainerInstanceSyncPerp"
+        + "etualTaskParamsR\037k8sContainerPerpetualTa"
+        + "skParams\022\240\001\n\'container_service_perpetual"
+        + "_task_params\030\003 \001(\0132J.io.harness.perpetua"
+        + "ltask.instancesync.ContainerServicePerpe"
+        + "tualTaskParamsR#containerServicePerpetua"
+        + "lTaskParamsB\002P\001b\006proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
     internal_static_io_harness_perpetualtask_instancesync_K8sContainerInstanceSyncPerpetualTaskParams_descriptor =
         getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_perpetualtask_instancesync_K8sContainerInstanceSyncPerpetualTaskParams_fieldAccessorTable =

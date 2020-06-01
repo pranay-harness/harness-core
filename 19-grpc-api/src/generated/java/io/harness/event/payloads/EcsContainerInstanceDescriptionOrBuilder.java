@@ -9,65 +9,79 @@ public interface EcsContainerInstanceDescriptionOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.payloads.EcsContainerInstanceDescription)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string container_instance_arn = 1;</code>
+   * <code>string container_instance_arn = 1[json_name = "containerInstanceArn"];</code>
+   * @return The containerInstanceArn.
    */
   java.lang.String getContainerInstanceArn();
   /**
-   * <code>string container_instance_arn = 1;</code>
+   * <code>string container_instance_arn = 1[json_name = "containerInstanceArn"];</code>
+   * @return The bytes for containerInstanceArn.
    */
   com.google.protobuf.ByteString getContainerInstanceArnBytes();
 
   /**
-   * <code>string cluster_arn = 2;</code>
+   * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+   * @return The clusterArn.
    */
   java.lang.String getClusterArn();
   /**
-   * <code>string cluster_arn = 2;</code>
+   * <code>string cluster_arn = 2[json_name = "clusterArn"];</code>
+   * @return The bytes for clusterArn.
    */
   com.google.protobuf.ByteString getClusterArnBytes();
 
   /**
-   * <code>string ec2_instance_id = 3;</code>
+   * <code>string ec2_instance_id = 3[json_name = "ec2InstanceId"];</code>
+   * @return The ec2InstanceId.
    */
   java.lang.String getEc2InstanceId();
   /**
-   * <code>string ec2_instance_id = 3;</code>
+   * <code>string ec2_instance_id = 3[json_name = "ec2InstanceId"];</code>
+   * @return The bytes for ec2InstanceId.
    */
   com.google.protobuf.ByteString getEc2InstanceIdBytes();
 
   /**
-   * <code>string operating_system = 4;</code>
+   * <code>string operating_system = 4[json_name = "operatingSystem"];</code>
+   * @return The operatingSystem.
    */
   java.lang.String getOperatingSystem();
   /**
-   * <code>string operating_system = 4;</code>
+   * <code>string operating_system = 4[json_name = "operatingSystem"];</code>
+   * @return The bytes for operatingSystem.
    */
   com.google.protobuf.ByteString getOperatingSystemBytes();
 
   /**
-   * <code>string region = 5;</code>
+   * <code>string region = 5[json_name = "region"];</code>
+   * @return The region.
    */
   java.lang.String getRegion();
   /**
-   * <code>string region = 5;</code>
+   * <code>string region = 5[json_name = "region"];</code>
+   * @return The bytes for region.
    */
   com.google.protobuf.ByteString getRegionBytes();
 
   /**
-   * <code>string cluster_id = 6;</code>
+   * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   java.lang.String getClusterId();
   /**
-   * <code>string cluster_id = 6;</code>
+   * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   com.google.protobuf.ByteString getClusterIdBytes();
 
   /**
-   * <code>string setting_id = 7;</code>
+   * <code>string setting_id = 7[json_name = "settingId"];</code>
+   * @return The settingId.
    */
   java.lang.String getSettingId();
   /**
-   * <code>string setting_id = 7;</code>
+   * <code>string setting_id = 7[json_name = "settingId"];</code>
+   * @return The bytes for settingId.
    */
   com.google.protobuf.ByteString getSettingIdBytes();
 }

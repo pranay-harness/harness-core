@@ -17,8 +17,8 @@ import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
 
 /**
  */
-@javax.annotation.Generated(value = "by gRPC proto compiler (version 1.21.0)",
-    comments = "Source: io/harness/perpetualtask/perpetual_task_client_service.proto")
+@javax.annotation.Generated(
+    value = "by gRPC proto compiler", comments = "Source: io/harness/perpetualtask/perpetual_task_client_service.proto")
 public final class PerpetualTaskClientServiceGrpc {
   private PerpetualTaskClientServiceGrpc() {}
 
@@ -47,8 +47,7 @@ public final class PerpetualTaskClientServiceGrpc {
                   .<io.harness.perpetualtask.ObtainTaskCapabilitiesRequest,
                       io.harness.perpetualtask.ObtainTaskCapabilitiesResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                  .setFullMethodName(generateFullMethodName(
-                      "io.harness.perpetualtask.PerpetualTaskClientService", "ObtainTaskCapabilities"))
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "ObtainTaskCapabilities"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                       io.harness.perpetualtask.ObtainTaskCapabilitiesRequest.getDefaultInstance()))
@@ -85,8 +84,7 @@ public final class PerpetualTaskClientServiceGrpc {
                   .<io.harness.perpetualtask.ObtainTaskExecutionParamsRequest,
                       io.harness.perpetualtask.ObtainTaskExecutionParamsResponse>newBuilder()
                   .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                  .setFullMethodName(generateFullMethodName(
-                      "io.harness.perpetualtask.PerpetualTaskClientService", "ObtainTaskExecutionParams"))
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "ObtainTaskExecutionParams"))
                   .setSampledToLocalTracing(true)
                   .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                       io.harness.perpetualtask.ObtainTaskExecutionParamsRequest.getDefaultInstance()))

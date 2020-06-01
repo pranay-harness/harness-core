@@ -26,6 +26,13 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new EcsSyncEvent();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -54,27 +61,27 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
           }
           case 18: {
             java.lang.String s = input.readStringRequireUtf8();
-            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
               activeEc2InstanceArns_ = new com.google.protobuf.LazyStringArrayList();
-              mutable_bitField0_ |= 0x00000002;
+              mutable_bitField0_ |= 0x00000001;
             }
             activeEc2InstanceArns_.add(s);
             break;
           }
           case 26: {
             java.lang.String s = input.readStringRequireUtf8();
-            if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
               activeContainerInstanceArns_ = new com.google.protobuf.LazyStringArrayList();
-              mutable_bitField0_ |= 0x00000004;
+              mutable_bitField0_ |= 0x00000002;
             }
             activeContainerInstanceArns_.add(s);
             break;
           }
           case 34: {
             java.lang.String s = input.readStringRequireUtf8();
-            if (!((mutable_bitField0_ & 0x00000008) != 0)) {
+            if (!((mutable_bitField0_ & 0x00000004) != 0)) {
               activeTaskArns_ = new com.google.protobuf.LazyStringArrayList();
-              mutable_bitField0_ |= 0x00000008;
+              mutable_bitField0_ |= 0x00000004;
             }
             activeTaskArns_.add(s);
             break;
@@ -117,13 +124,13 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
     } catch (java.io.IOException e) {
       throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
     } finally {
-      if (((mutable_bitField0_ & 0x00000002) != 0)) {
+      if (((mutable_bitField0_ & 0x00000001) != 0)) {
         activeEc2InstanceArns_ = activeEc2InstanceArns_.getUnmodifiableView();
       }
-      if (((mutable_bitField0_ & 0x00000004) != 0)) {
+      if (((mutable_bitField0_ & 0x00000002) != 0)) {
         activeContainerInstanceArns_ = activeContainerInstanceArns_.getUnmodifiableView();
       }
-      if (((mutable_bitField0_ & 0x00000008) != 0)) {
+      if (((mutable_bitField0_ & 0x00000004) != 0)) {
         activeTaskArns_ = activeTaskArns_.getUnmodifiableView();
       }
       this.unknownFields = unknownFields.build();
@@ -142,11 +149,11 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
             io.harness.event.payloads.EcsSyncEvent.class, io.harness.event.payloads.EcsSyncEvent.Builder.class);
   }
 
-  private int bitField0_;
   public static final int CLUSTER_ARN_FIELD_NUMBER = 1;
   private volatile java.lang.Object clusterArn_;
   /**
-   * <code>string cluster_arn = 1;</code>
+   * <code>string cluster_arn = 1[json_name = "clusterArn"];</code>
+   * @return The clusterArn.
    */
   public java.lang.String getClusterArn() {
     java.lang.Object ref = clusterArn_;
@@ -160,7 +167,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
     }
   }
   /**
-   * <code>string cluster_arn = 1;</code>
+   * <code>string cluster_arn = 1[json_name = "clusterArn"];</code>
+   * @return The bytes for clusterArn.
    */
   public com.google.protobuf.ByteString getClusterArnBytes() {
     java.lang.Object ref = clusterArn_;
@@ -176,25 +184,31 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
   public static final int ACTIVE_EC2_INSTANCE_ARNS_FIELD_NUMBER = 2;
   private com.google.protobuf.LazyStringList activeEc2InstanceArns_;
   /**
-   * <code>repeated string active_ec2_instance_arns = 2;</code>
+   * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+   * @return A list containing the activeEc2InstanceArns.
    */
   public com.google.protobuf.ProtocolStringList getActiveEc2InstanceArnsList() {
     return activeEc2InstanceArns_;
   }
   /**
-   * <code>repeated string active_ec2_instance_arns = 2;</code>
+   * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+   * @return The count of activeEc2InstanceArns.
    */
   public int getActiveEc2InstanceArnsCount() {
     return activeEc2InstanceArns_.size();
   }
   /**
-   * <code>repeated string active_ec2_instance_arns = 2;</code>
+   * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+   * @param index The index of the element to return.
+   * @return The activeEc2InstanceArns at the given index.
    */
   public java.lang.String getActiveEc2InstanceArns(int index) {
     return activeEc2InstanceArns_.get(index);
   }
   /**
-   * <code>repeated string active_ec2_instance_arns = 2;</code>
+   * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the activeEc2InstanceArns at the given index.
    */
   public com.google.protobuf.ByteString getActiveEc2InstanceArnsBytes(int index) {
     return activeEc2InstanceArns_.getByteString(index);
@@ -203,25 +217,31 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
   public static final int ACTIVE_CONTAINER_INSTANCE_ARNS_FIELD_NUMBER = 3;
   private com.google.protobuf.LazyStringList activeContainerInstanceArns_;
   /**
-   * <code>repeated string active_container_instance_arns = 3;</code>
+   * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+   * @return A list containing the activeContainerInstanceArns.
    */
   public com.google.protobuf.ProtocolStringList getActiveContainerInstanceArnsList() {
     return activeContainerInstanceArns_;
   }
   /**
-   * <code>repeated string active_container_instance_arns = 3;</code>
+   * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+   * @return The count of activeContainerInstanceArns.
    */
   public int getActiveContainerInstanceArnsCount() {
     return activeContainerInstanceArns_.size();
   }
   /**
-   * <code>repeated string active_container_instance_arns = 3;</code>
+   * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+   * @param index The index of the element to return.
+   * @return The activeContainerInstanceArns at the given index.
    */
   public java.lang.String getActiveContainerInstanceArns(int index) {
     return activeContainerInstanceArns_.get(index);
   }
   /**
-   * <code>repeated string active_container_instance_arns = 3;</code>
+   * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the activeContainerInstanceArns at the given index.
    */
   public com.google.protobuf.ByteString getActiveContainerInstanceArnsBytes(int index) {
     return activeContainerInstanceArns_.getByteString(index);
@@ -230,25 +250,31 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
   public static final int ACTIVE_TASK_ARNS_FIELD_NUMBER = 4;
   private com.google.protobuf.LazyStringList activeTaskArns_;
   /**
-   * <code>repeated string active_task_arns = 4;</code>
+   * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+   * @return A list containing the activeTaskArns.
    */
   public com.google.protobuf.ProtocolStringList getActiveTaskArnsList() {
     return activeTaskArns_;
   }
   /**
-   * <code>repeated string active_task_arns = 4;</code>
+   * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+   * @return The count of activeTaskArns.
    */
   public int getActiveTaskArnsCount() {
     return activeTaskArns_.size();
   }
   /**
-   * <code>repeated string active_task_arns = 4;</code>
+   * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+   * @param index The index of the element to return.
+   * @return The activeTaskArns at the given index.
    */
   public java.lang.String getActiveTaskArns(int index) {
     return activeTaskArns_.get(index);
   }
   /**
-   * <code>repeated string active_task_arns = 4;</code>
+   * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the activeTaskArns at the given index.
    */
   public com.google.protobuf.ByteString getActiveTaskArnsBytes(int index) {
     return activeTaskArns_.getByteString(index);
@@ -257,20 +283,22 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
   public static final int LAST_PROCESSED_TIMESTAMP_FIELD_NUMBER = 5;
   private com.google.protobuf.Timestamp lastProcessedTimestamp_;
   /**
-   * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+   * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
+   * @return Whether the lastProcessedTimestamp field is set.
    */
   public boolean hasLastProcessedTimestamp() {
     return lastProcessedTimestamp_ != null;
   }
   /**
-   * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+   * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
+   * @return The lastProcessedTimestamp.
    */
   public com.google.protobuf.Timestamp getLastProcessedTimestamp() {
     return lastProcessedTimestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance()
                                            : lastProcessedTimestamp_;
   }
   /**
-   * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+   * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
    */
   public com.google.protobuf.TimestampOrBuilder getLastProcessedTimestampOrBuilder() {
     return getLastProcessedTimestamp();
@@ -279,7 +307,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
   public static final int CLUSTER_ID_FIELD_NUMBER = 6;
   private volatile java.lang.Object clusterId_;
   /**
-   * <code>string cluster_id = 6;</code>
+   * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+   * @return The clusterId.
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -293,7 +322,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
     }
   }
   /**
-   * <code>string cluster_id = 6;</code>
+   * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+   * @return The bytes for clusterId.
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -309,7 +339,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
   public static final int SETTING_ID_FIELD_NUMBER = 7;
   private volatile java.lang.Object settingId_;
   /**
-   * <code>string setting_id = 7;</code>
+   * <code>string setting_id = 7[json_name = "settingId"];</code>
+   * @return The settingId.
    */
   public java.lang.String getSettingId() {
     java.lang.Object ref = settingId_;
@@ -323,7 +354,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
     }
   }
   /**
-   * <code>string setting_id = 7;</code>
+   * <code>string setting_id = 7[json_name = "settingId"];</code>
+   * @return The bytes for settingId.
    */
   public com.google.protobuf.ByteString getSettingIdBytes() {
     java.lang.Object ref = settingId_;
@@ -598,11 +630,11 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       clusterArn_ = "";
 
       activeEc2InstanceArns_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000002);
+      bitField0_ = (bitField0_ & ~0x00000001);
       activeContainerInstanceArns_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000004);
+      bitField0_ = (bitField0_ & ~0x00000002);
       activeTaskArns_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000008);
+      bitField0_ = (bitField0_ & ~0x00000004);
       if (lastProcessedTimestampBuilder_ == null) {
         lastProcessedTimestamp_ = null;
       } else {
@@ -643,21 +675,20 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
     public io.harness.event.payloads.EcsSyncEvent buildPartial() {
       io.harness.event.payloads.EcsSyncEvent result = new io.harness.event.payloads.EcsSyncEvent(this);
       int from_bitField0_ = bitField0_;
-      int to_bitField0_ = 0;
       result.clusterArn_ = clusterArn_;
-      if (((bitField0_ & 0x00000002) != 0)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         activeEc2InstanceArns_ = activeEc2InstanceArns_.getUnmodifiableView();
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000001);
       }
       result.activeEc2InstanceArns_ = activeEc2InstanceArns_;
-      if (((bitField0_ & 0x00000004) != 0)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         activeContainerInstanceArns_ = activeContainerInstanceArns_.getUnmodifiableView();
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000002);
       }
       result.activeContainerInstanceArns_ = activeContainerInstanceArns_;
-      if (((bitField0_ & 0x00000008) != 0)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         activeTaskArns_ = activeTaskArns_.getUnmodifiableView();
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000004);
       }
       result.activeTaskArns_ = activeTaskArns_;
       if (lastProcessedTimestampBuilder_ == null) {
@@ -667,7 +698,6 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       }
       result.clusterId_ = clusterId_;
       result.settingId_ = settingId_;
-      result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
     }
@@ -717,7 +747,7 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       if (!other.activeEc2InstanceArns_.isEmpty()) {
         if (activeEc2InstanceArns_.isEmpty()) {
           activeEc2InstanceArns_ = other.activeEc2InstanceArns_;
-          bitField0_ = (bitField0_ & ~0x00000002);
+          bitField0_ = (bitField0_ & ~0x00000001);
         } else {
           ensureActiveEc2InstanceArnsIsMutable();
           activeEc2InstanceArns_.addAll(other.activeEc2InstanceArns_);
@@ -727,7 +757,7 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       if (!other.activeContainerInstanceArns_.isEmpty()) {
         if (activeContainerInstanceArns_.isEmpty()) {
           activeContainerInstanceArns_ = other.activeContainerInstanceArns_;
-          bitField0_ = (bitField0_ & ~0x00000004);
+          bitField0_ = (bitField0_ & ~0x00000002);
         } else {
           ensureActiveContainerInstanceArnsIsMutable();
           activeContainerInstanceArns_.addAll(other.activeContainerInstanceArns_);
@@ -737,7 +767,7 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       if (!other.activeTaskArns_.isEmpty()) {
         if (activeTaskArns_.isEmpty()) {
           activeTaskArns_ = other.activeTaskArns_;
-          bitField0_ = (bitField0_ & ~0x00000008);
+          bitField0_ = (bitField0_ & ~0x00000004);
         } else {
           ensureActiveTaskArnsIsMutable();
           activeTaskArns_.addAll(other.activeTaskArns_);
@@ -785,7 +815,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
 
     private java.lang.Object clusterArn_ = "";
     /**
-     * <code>string cluster_arn = 1;</code>
+     * <code>string cluster_arn = 1[json_name = "clusterArn"];</code>
+     * @return The clusterArn.
      */
     public java.lang.String getClusterArn() {
       java.lang.Object ref = clusterArn_;
@@ -799,7 +830,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>string cluster_arn = 1;</code>
+     * <code>string cluster_arn = 1[json_name = "clusterArn"];</code>
+     * @return The bytes for clusterArn.
      */
     public com.google.protobuf.ByteString getClusterArnBytes() {
       java.lang.Object ref = clusterArn_;
@@ -812,7 +844,9 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>string cluster_arn = 1;</code>
+     * <code>string cluster_arn = 1[json_name = "clusterArn"];</code>
+     * @param value The clusterArn to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterArn(java.lang.String value) {
       if (value == null) {
@@ -824,7 +858,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>string cluster_arn = 1;</code>
+     * <code>string cluster_arn = 1[json_name = "clusterArn"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterArn() {
       clusterArn_ = getDefaultInstance().getClusterArn();
@@ -832,7 +867,9 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>string cluster_arn = 1;</code>
+     * <code>string cluster_arn = 1[json_name = "clusterArn"];</code>
+     * @param value The bytes for clusterArn to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterArnBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -847,37 +884,46 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
 
     private com.google.protobuf.LazyStringList activeEc2InstanceArns_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     private void ensureActiveEc2InstanceArnsIsMutable() {
-      if (!((bitField0_ & 0x00000002) != 0)) {
+      if (!((bitField0_ & 0x00000001) != 0)) {
         activeEc2InstanceArns_ = new com.google.protobuf.LazyStringArrayList(activeEc2InstanceArns_);
-        bitField0_ |= 0x00000002;
+        bitField0_ |= 0x00000001;
       }
     }
     /**
-     * <code>repeated string active_ec2_instance_arns = 2;</code>
+     * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+     * @return A list containing the activeEc2InstanceArns.
      */
     public com.google.protobuf.ProtocolStringList getActiveEc2InstanceArnsList() {
       return activeEc2InstanceArns_.getUnmodifiableView();
     }
     /**
-     * <code>repeated string active_ec2_instance_arns = 2;</code>
+     * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+     * @return The count of activeEc2InstanceArns.
      */
     public int getActiveEc2InstanceArnsCount() {
       return activeEc2InstanceArns_.size();
     }
     /**
-     * <code>repeated string active_ec2_instance_arns = 2;</code>
+     * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+     * @param index The index of the element to return.
+     * @return The activeEc2InstanceArns at the given index.
      */
     public java.lang.String getActiveEc2InstanceArns(int index) {
       return activeEc2InstanceArns_.get(index);
     }
     /**
-     * <code>repeated string active_ec2_instance_arns = 2;</code>
+     * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the activeEc2InstanceArns at the given index.
      */
     public com.google.protobuf.ByteString getActiveEc2InstanceArnsBytes(int index) {
       return activeEc2InstanceArns_.getByteString(index);
     }
     /**
-     * <code>repeated string active_ec2_instance_arns = 2;</code>
+     * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+     * @param index The index to set the value at.
+     * @param value The activeEc2InstanceArns to set.
+     * @return This builder for chaining.
      */
     public Builder setActiveEc2InstanceArns(int index, java.lang.String value) {
       if (value == null) {
@@ -889,7 +935,9 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated string active_ec2_instance_arns = 2;</code>
+     * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+     * @param value The activeEc2InstanceArns to add.
+     * @return This builder for chaining.
      */
     public Builder addActiveEc2InstanceArns(java.lang.String value) {
       if (value == null) {
@@ -901,7 +949,9 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated string active_ec2_instance_arns = 2;</code>
+     * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+     * @param values The activeEc2InstanceArns to add.
+     * @return This builder for chaining.
      */
     public Builder addAllActiveEc2InstanceArns(java.lang.Iterable<java.lang.String> values) {
       ensureActiveEc2InstanceArnsIsMutable();
@@ -910,16 +960,19 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated string active_ec2_instance_arns = 2;</code>
+     * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearActiveEc2InstanceArns() {
       activeEc2InstanceArns_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000002);
+      bitField0_ = (bitField0_ & ~0x00000001);
       onChanged();
       return this;
     }
     /**
-     * <code>repeated string active_ec2_instance_arns = 2;</code>
+     * <code>repeated string active_ec2_instance_arns = 2[json_name = "activeEc2InstanceArns"];</code>
+     * @param value The bytes of the activeEc2InstanceArns to add.
+     * @return This builder for chaining.
      */
     public Builder addActiveEc2InstanceArnsBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -935,37 +988,46 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
     private com.google.protobuf.LazyStringList activeContainerInstanceArns_ =
         com.google.protobuf.LazyStringArrayList.EMPTY;
     private void ensureActiveContainerInstanceArnsIsMutable() {
-      if (!((bitField0_ & 0x00000004) != 0)) {
+      if (!((bitField0_ & 0x00000002) != 0)) {
         activeContainerInstanceArns_ = new com.google.protobuf.LazyStringArrayList(activeContainerInstanceArns_);
-        bitField0_ |= 0x00000004;
+        bitField0_ |= 0x00000002;
       }
     }
     /**
-     * <code>repeated string active_container_instance_arns = 3;</code>
+     * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+     * @return A list containing the activeContainerInstanceArns.
      */
     public com.google.protobuf.ProtocolStringList getActiveContainerInstanceArnsList() {
       return activeContainerInstanceArns_.getUnmodifiableView();
     }
     /**
-     * <code>repeated string active_container_instance_arns = 3;</code>
+     * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+     * @return The count of activeContainerInstanceArns.
      */
     public int getActiveContainerInstanceArnsCount() {
       return activeContainerInstanceArns_.size();
     }
     /**
-     * <code>repeated string active_container_instance_arns = 3;</code>
+     * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+     * @param index The index of the element to return.
+     * @return The activeContainerInstanceArns at the given index.
      */
     public java.lang.String getActiveContainerInstanceArns(int index) {
       return activeContainerInstanceArns_.get(index);
     }
     /**
-     * <code>repeated string active_container_instance_arns = 3;</code>
+     * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the activeContainerInstanceArns at the given index.
      */
     public com.google.protobuf.ByteString getActiveContainerInstanceArnsBytes(int index) {
       return activeContainerInstanceArns_.getByteString(index);
     }
     /**
-     * <code>repeated string active_container_instance_arns = 3;</code>
+     * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+     * @param index The index to set the value at.
+     * @param value The activeContainerInstanceArns to set.
+     * @return This builder for chaining.
      */
     public Builder setActiveContainerInstanceArns(int index, java.lang.String value) {
       if (value == null) {
@@ -977,7 +1039,9 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated string active_container_instance_arns = 3;</code>
+     * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+     * @param value The activeContainerInstanceArns to add.
+     * @return This builder for chaining.
      */
     public Builder addActiveContainerInstanceArns(java.lang.String value) {
       if (value == null) {
@@ -989,7 +1053,9 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated string active_container_instance_arns = 3;</code>
+     * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+     * @param values The activeContainerInstanceArns to add.
+     * @return This builder for chaining.
      */
     public Builder addAllActiveContainerInstanceArns(java.lang.Iterable<java.lang.String> values) {
       ensureActiveContainerInstanceArnsIsMutable();
@@ -998,16 +1064,19 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated string active_container_instance_arns = 3;</code>
+     * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearActiveContainerInstanceArns() {
       activeContainerInstanceArns_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000004);
+      bitField0_ = (bitField0_ & ~0x00000002);
       onChanged();
       return this;
     }
     /**
-     * <code>repeated string active_container_instance_arns = 3;</code>
+     * <code>repeated string active_container_instance_arns = 3[json_name = "activeContainerInstanceArns"];</code>
+     * @param value The bytes of the activeContainerInstanceArns to add.
+     * @return This builder for chaining.
      */
     public Builder addActiveContainerInstanceArnsBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1022,37 +1091,46 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
 
     private com.google.protobuf.LazyStringList activeTaskArns_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     private void ensureActiveTaskArnsIsMutable() {
-      if (!((bitField0_ & 0x00000008) != 0)) {
+      if (!((bitField0_ & 0x00000004) != 0)) {
         activeTaskArns_ = new com.google.protobuf.LazyStringArrayList(activeTaskArns_);
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000004;
       }
     }
     /**
-     * <code>repeated string active_task_arns = 4;</code>
+     * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+     * @return A list containing the activeTaskArns.
      */
     public com.google.protobuf.ProtocolStringList getActiveTaskArnsList() {
       return activeTaskArns_.getUnmodifiableView();
     }
     /**
-     * <code>repeated string active_task_arns = 4;</code>
+     * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+     * @return The count of activeTaskArns.
      */
     public int getActiveTaskArnsCount() {
       return activeTaskArns_.size();
     }
     /**
-     * <code>repeated string active_task_arns = 4;</code>
+     * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+     * @param index The index of the element to return.
+     * @return The activeTaskArns at the given index.
      */
     public java.lang.String getActiveTaskArns(int index) {
       return activeTaskArns_.get(index);
     }
     /**
-     * <code>repeated string active_task_arns = 4;</code>
+     * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the activeTaskArns at the given index.
      */
     public com.google.protobuf.ByteString getActiveTaskArnsBytes(int index) {
       return activeTaskArns_.getByteString(index);
     }
     /**
-     * <code>repeated string active_task_arns = 4;</code>
+     * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+     * @param index The index to set the value at.
+     * @param value The activeTaskArns to set.
+     * @return This builder for chaining.
      */
     public Builder setActiveTaskArns(int index, java.lang.String value) {
       if (value == null) {
@@ -1064,7 +1142,9 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated string active_task_arns = 4;</code>
+     * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+     * @param value The activeTaskArns to add.
+     * @return This builder for chaining.
      */
     public Builder addActiveTaskArns(java.lang.String value) {
       if (value == null) {
@@ -1076,7 +1156,9 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated string active_task_arns = 4;</code>
+     * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+     * @param values The activeTaskArns to add.
+     * @return This builder for chaining.
      */
     public Builder addAllActiveTaskArns(java.lang.Iterable<java.lang.String> values) {
       ensureActiveTaskArnsIsMutable();
@@ -1085,16 +1167,19 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>repeated string active_task_arns = 4;</code>
+     * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearActiveTaskArns() {
       activeTaskArns_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000008);
+      bitField0_ = (bitField0_ & ~0x00000004);
       onChanged();
       return this;
     }
     /**
-     * <code>repeated string active_task_arns = 4;</code>
+     * <code>repeated string active_task_arns = 4[json_name = "activeTaskArns"];</code>
+     * @param value The bytes of the activeTaskArns to add.
+     * @return This builder for chaining.
      */
     public Builder addActiveTaskArnsBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1111,13 +1196,15 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> lastProcessedTimestampBuilder_;
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
+     * @return Whether the lastProcessedTimestamp field is set.
      */
     public boolean hasLastProcessedTimestamp() {
       return lastProcessedTimestampBuilder_ != null || lastProcessedTimestamp_ != null;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
+     * @return The lastProcessedTimestamp.
      */
     public com.google.protobuf.Timestamp getLastProcessedTimestamp() {
       if (lastProcessedTimestampBuilder_ == null) {
@@ -1128,7 +1215,7 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
      */
     public Builder setLastProcessedTimestamp(com.google.protobuf.Timestamp value) {
       if (lastProcessedTimestampBuilder_ == null) {
@@ -1144,7 +1231,7 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
      */
     public Builder setLastProcessedTimestamp(com.google.protobuf.Timestamp.Builder builderForValue) {
       if (lastProcessedTimestampBuilder_ == null) {
@@ -1157,7 +1244,7 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
      */
     public Builder mergeLastProcessedTimestamp(com.google.protobuf.Timestamp value) {
       if (lastProcessedTimestampBuilder_ == null) {
@@ -1175,7 +1262,7 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
      */
     public Builder clearLastProcessedTimestamp() {
       if (lastProcessedTimestampBuilder_ == null) {
@@ -1189,14 +1276,14 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
      */
     public com.google.protobuf.Timestamp.Builder getLastProcessedTimestampBuilder() {
       onChanged();
       return getLastProcessedTimestampFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
      */
     public com.google.protobuf.TimestampOrBuilder getLastProcessedTimestampOrBuilder() {
       if (lastProcessedTimestampBuilder_ != null) {
@@ -1207,7 +1294,7 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5;</code>
+     * <code>.google.protobuf.Timestamp last_processed_timestamp = 5[json_name = "lastProcessedTimestamp"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>
@@ -1223,7 +1310,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
 
     private java.lang.Object clusterId_ = "";
     /**
-     * <code>string cluster_id = 6;</code>
+     * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+     * @return The clusterId.
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -1237,7 +1325,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>string cluster_id = 6;</code>
+     * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+     * @return The bytes for clusterId.
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -1250,7 +1339,9 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>string cluster_id = 6;</code>
+     * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+     * @param value The clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -1262,7 +1353,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>string cluster_id = 6;</code>
+     * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -1270,7 +1362,9 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>string cluster_id = 6;</code>
+     * <code>string cluster_id = 6[json_name = "clusterId"];</code>
+     * @param value The bytes for clusterId to set.
+     * @return This builder for chaining.
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1285,7 +1379,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
 
     private java.lang.Object settingId_ = "";
     /**
-     * <code>string setting_id = 7;</code>
+     * <code>string setting_id = 7[json_name = "settingId"];</code>
+     * @return The settingId.
      */
     public java.lang.String getSettingId() {
       java.lang.Object ref = settingId_;
@@ -1299,7 +1394,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>string setting_id = 7;</code>
+     * <code>string setting_id = 7[json_name = "settingId"];</code>
+     * @return The bytes for settingId.
      */
     public com.google.protobuf.ByteString getSettingIdBytes() {
       java.lang.Object ref = settingId_;
@@ -1312,7 +1408,9 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       }
     }
     /**
-     * <code>string setting_id = 7;</code>
+     * <code>string setting_id = 7[json_name = "settingId"];</code>
+     * @param value The settingId to set.
+     * @return This builder for chaining.
      */
     public Builder setSettingId(java.lang.String value) {
       if (value == null) {
@@ -1324,7 +1422,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>string setting_id = 7;</code>
+     * <code>string setting_id = 7[json_name = "settingId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearSettingId() {
       settingId_ = getDefaultInstance().getSettingId();
@@ -1332,7 +1431,9 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       return this;
     }
     /**
-     * <code>string setting_id = 7;</code>
+     * <code>string setting_id = 7[json_name = "settingId"];</code>
+     * @param value The bytes for settingId to set.
+     * @return This builder for chaining.
      */
     public Builder setSettingIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

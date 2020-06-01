@@ -8,23 +8,23 @@ public interface PublishRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.event.PublishRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>repeated .io.harness.event.PublishMessage messages = 1;</code>
+   * <code>repeated .io.harness.event.PublishMessage messages = 1[json_name = "messages"];</code>
    */
   java.util.List<io.harness.event.PublishMessage> getMessagesList();
   /**
-   * <code>repeated .io.harness.event.PublishMessage messages = 1;</code>
+   * <code>repeated .io.harness.event.PublishMessage messages = 1[json_name = "messages"];</code>
    */
   io.harness.event.PublishMessage getMessages(int index);
   /**
-   * <code>repeated .io.harness.event.PublishMessage messages = 1;</code>
+   * <code>repeated .io.harness.event.PublishMessage messages = 1[json_name = "messages"];</code>
    */
   int getMessagesCount();
   /**
-   * <code>repeated .io.harness.event.PublishMessage messages = 1;</code>
+   * <code>repeated .io.harness.event.PublishMessage messages = 1[json_name = "messages"];</code>
    */
   java.util.List<? extends io.harness.event.PublishMessageOrBuilder> getMessagesOrBuilderList();
   /**
-   * <code>repeated .io.harness.event.PublishMessage messages = 1;</code>
+   * <code>repeated .io.harness.event.PublishMessage messages = 1[json_name = "messages"];</code>
    */
   io.harness.event.PublishMessageOrBuilder getMessagesOrBuilder(int index);
 }

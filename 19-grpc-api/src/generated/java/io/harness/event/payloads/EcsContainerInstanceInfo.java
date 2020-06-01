@@ -19,6 +19,13 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
 
   @java.
   lang.Override
+  @SuppressWarnings({"unused"})
+  protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    return new EcsContainerInstanceInfo();
+  }
+
+  @java.
+  lang.Override
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
@@ -29,7 +36,6 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -101,13 +107,17 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
   public static final int ECS_CONTAINER_INSTANCE_DESCRIPTION_FIELD_NUMBER = 1;
   private io.harness.event.payloads.EcsContainerInstanceDescription ecsContainerInstanceDescription_;
   /**
-   * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+   * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name =
+   * "ecsContainerInstanceDescription"];</code>
+   * @return Whether the ecsContainerInstanceDescription field is set.
    */
   public boolean hasEcsContainerInstanceDescription() {
     return ecsContainerInstanceDescription_ != null;
   }
   /**
-   * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+   * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name =
+   * "ecsContainerInstanceDescription"];</code>
+   * @return The ecsContainerInstanceDescription.
    */
   public io.harness.event.payloads.EcsContainerInstanceDescription getEcsContainerInstanceDescription() {
     return ecsContainerInstanceDescription_ == null
@@ -115,7 +125,8 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
         : ecsContainerInstanceDescription_;
   }
   /**
-   * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+   * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name =
+   * "ecsContainerInstanceDescription"];</code>
    */
   public io.harness.event.payloads.EcsContainerInstanceDescriptionOrBuilder
   getEcsContainerInstanceDescriptionOrBuilder() {
@@ -125,20 +136,25 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
   public static final int ECS_CONTAINER_INSTANCE_RESOURCE_FIELD_NUMBER = 2;
   private io.harness.event.payloads.ReservedResource ecsContainerInstanceResource_;
   /**
-   * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+   * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+   * "ecsContainerInstanceResource"];</code>
+   * @return Whether the ecsContainerInstanceResource field is set.
    */
   public boolean hasEcsContainerInstanceResource() {
     return ecsContainerInstanceResource_ != null;
   }
   /**
-   * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+   * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+   * "ecsContainerInstanceResource"];</code>
+   * @return The ecsContainerInstanceResource.
    */
   public io.harness.event.payloads.ReservedResource getEcsContainerInstanceResource() {
     return ecsContainerInstanceResource_ == null ? io.harness.event.payloads.ReservedResource.getDefaultInstance()
                                                  : ecsContainerInstanceResource_;
   }
   /**
-   * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+   * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+   * "ecsContainerInstanceResource"];</code>
    */
   public io.harness.event.payloads.ReservedResourceOrBuilder getEcsContainerInstanceResourceOrBuilder() {
     return getEcsContainerInstanceResource();
@@ -474,13 +490,17 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
         io.harness.event.payloads.EcsContainerInstanceDescription.Builder,
         io.harness.event.payloads.EcsContainerInstanceDescriptionOrBuilder> ecsContainerInstanceDescriptionBuilder_;
     /**
-     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name
+     * = "ecsContainerInstanceDescription"];</code>
+     * @return Whether the ecsContainerInstanceDescription field is set.
      */
     public boolean hasEcsContainerInstanceDescription() {
       return ecsContainerInstanceDescriptionBuilder_ != null || ecsContainerInstanceDescription_ != null;
     }
     /**
-     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name
+     * = "ecsContainerInstanceDescription"];</code>
+     * @return The ecsContainerInstanceDescription.
      */
     public io.harness.event.payloads.EcsContainerInstanceDescription getEcsContainerInstanceDescription() {
       if (ecsContainerInstanceDescriptionBuilder_ == null) {
@@ -492,7 +512,8 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
       }
     }
     /**
-     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name
+     * = "ecsContainerInstanceDescription"];</code>
      */
     public Builder setEcsContainerInstanceDescription(io.harness.event.payloads.EcsContainerInstanceDescription value) {
       if (ecsContainerInstanceDescriptionBuilder_ == null) {
@@ -508,7 +529,8 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name
+     * = "ecsContainerInstanceDescription"];</code>
      */
     public Builder setEcsContainerInstanceDescription(
         io.harness.event.payloads.EcsContainerInstanceDescription.Builder builderForValue) {
@@ -522,7 +544,8 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name
+     * = "ecsContainerInstanceDescription"];</code>
      */
     public Builder mergeEcsContainerInstanceDescription(
         io.harness.event.payloads.EcsContainerInstanceDescription value) {
@@ -543,7 +566,8 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name
+     * = "ecsContainerInstanceDescription"];</code>
      */
     public Builder clearEcsContainerInstanceDescription() {
       if (ecsContainerInstanceDescriptionBuilder_ == null) {
@@ -557,7 +581,8 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name
+     * = "ecsContainerInstanceDescription"];</code>
      */
     public io.harness.event.payloads.EcsContainerInstanceDescription.Builder
     getEcsContainerInstanceDescriptionBuilder() {
@@ -565,7 +590,8 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
       return getEcsContainerInstanceDescriptionFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name
+     * = "ecsContainerInstanceDescription"];</code>
      */
     public io.harness.event.payloads.EcsContainerInstanceDescriptionOrBuilder
     getEcsContainerInstanceDescriptionOrBuilder() {
@@ -578,7 +604,8 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
       }
     }
     /**
-     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1;</code>
+     * <code>.io.harness.event.payloads.EcsContainerInstanceDescription ecs_container_instance_description = 1[json_name
+     * = "ecsContainerInstanceDescription"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.EcsContainerInstanceDescription,
         io.harness.event.payloads.EcsContainerInstanceDescription.Builder,
@@ -600,13 +627,17 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
         io.harness.event.payloads.ReservedResource.Builder, io.harness.event.payloads.ReservedResourceOrBuilder>
         ecsContainerInstanceResourceBuilder_;
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+     * "ecsContainerInstanceResource"];</code>
+     * @return Whether the ecsContainerInstanceResource field is set.
      */
     public boolean hasEcsContainerInstanceResource() {
       return ecsContainerInstanceResourceBuilder_ != null || ecsContainerInstanceResource_ != null;
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+     * "ecsContainerInstanceResource"];</code>
+     * @return The ecsContainerInstanceResource.
      */
     public io.harness.event.payloads.ReservedResource getEcsContainerInstanceResource() {
       if (ecsContainerInstanceResourceBuilder_ == null) {
@@ -617,7 +648,8 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
       }
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+     * "ecsContainerInstanceResource"];</code>
      */
     public Builder setEcsContainerInstanceResource(io.harness.event.payloads.ReservedResource value) {
       if (ecsContainerInstanceResourceBuilder_ == null) {
@@ -633,7 +665,8 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+     * "ecsContainerInstanceResource"];</code>
      */
     public Builder setEcsContainerInstanceResource(io.harness.event.payloads.ReservedResource.Builder builderForValue) {
       if (ecsContainerInstanceResourceBuilder_ == null) {
@@ -646,7 +679,8 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+     * "ecsContainerInstanceResource"];</code>
      */
     public Builder mergeEcsContainerInstanceResource(io.harness.event.payloads.ReservedResource value) {
       if (ecsContainerInstanceResourceBuilder_ == null) {
@@ -666,7 +700,8 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+     * "ecsContainerInstanceResource"];</code>
      */
     public Builder clearEcsContainerInstanceResource() {
       if (ecsContainerInstanceResourceBuilder_ == null) {
@@ -680,14 +715,16 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
       return this;
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+     * "ecsContainerInstanceResource"];</code>
      */
     public io.harness.event.payloads.ReservedResource.Builder getEcsContainerInstanceResourceBuilder() {
       onChanged();
       return getEcsContainerInstanceResourceFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+     * "ecsContainerInstanceResource"];</code>
      */
     public io.harness.event.payloads.ReservedResourceOrBuilder getEcsContainerInstanceResourceOrBuilder() {
       if (ecsContainerInstanceResourceBuilder_ != null) {
@@ -698,7 +735,8 @@ public final class EcsContainerInstanceInfo extends com.google.protobuf.Generate
       }
     }
     /**
-     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2;</code>
+     * <code>.io.harness.event.payloads.ReservedResource ecs_container_instance_resource = 2[json_name =
+     * "ecsContainerInstanceResource"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.event.payloads.ReservedResource,
         io.harness.event.payloads.ReservedResource.Builder, io.harness.event.payloads.ReservedResourceOrBuilder>
