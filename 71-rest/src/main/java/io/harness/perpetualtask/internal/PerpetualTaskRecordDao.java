@@ -82,8 +82,8 @@ public class PerpetualTaskRecordDao {
                                                   .equal(accountId)
                                                   .field(PerpetualTaskRecordKeys.perpetualTaskType)
                                                   .equal(perpetualTaskType)
-                                                  .field(PerpetualTaskRecordKeys.clientContext)
-                                                  .equal(clientContext)
+                                                  .field(PerpetualTaskRecordKeys.client_params)
+                                                  .equal(clientContext.getClientParams())
                                                   .get();
     return Optional.ofNullable(perpetualTaskRecord);
   }
