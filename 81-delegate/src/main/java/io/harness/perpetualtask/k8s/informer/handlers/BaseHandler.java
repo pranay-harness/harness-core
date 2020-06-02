@@ -215,6 +215,10 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
                                           .setDescription(String.format("%s deleted", getKind()));
       if (!finalStateUnknown) {
         builder.setOldResourceVersion(getResourceVersion(resource)).setOldResourceYaml(yamlDump(resource));
+      } else {
+        // Unobserved deletion - we didn't watch deletion but noticed it during subsequent re-list.
+        // TODO(avmohan): Remove this log. (Temporarily added to check how frequent)
+        logger.warn("Deletion with finalStateUnknown");
       }
       publishWatchEvent(builder.build(), HTimestamps.fromInstant(Instant.now()));
     }

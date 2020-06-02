@@ -144,6 +144,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   private void updateDeploymentEvent(InstanceData instanceData) {
     CostEventData costEventData = CostEventData.builder()
                                       .settingId(instanceData.getSettingId())
+                                      .accountId(instanceData.getAccountId())
                                       .clusterId(instanceData.getClusterId())
                                       .clusterType(InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
                                           InstanceMetaDataConstants.CLUSTER_TYPE, instanceData))

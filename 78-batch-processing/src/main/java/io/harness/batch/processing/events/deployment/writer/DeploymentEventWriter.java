@@ -15,7 +15,6 @@ import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import software.wings.api.DeploymentSummary;
-import software.wings.beans.ResourceLookup;
 import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
@@ -69,14 +68,13 @@ public class DeploymentEventWriter implements ItemWriter<List<String>> {
           harnessServiceInfoList.stream().collect(Collectors.toMap(
               HarnessServiceInfo::getInfraMappingId, Function.identity(), (existing, replacement) -> existing));
 
-      List<String> resourceIdList =
+      List<String> serviceIds =
           harnessServiceInfoList.stream().map(HarnessServiceInfo::getServiceId).collect(Collectors.toList());
-      resourceIdList.addAll(
-          harnessServiceInfoList.stream().map(HarnessServiceInfo::getEnvId).collect(Collectors.toList()));
+      List<String> envIds =
+          harnessServiceInfoList.stream().map(HarnessServiceInfo::getEnvId).collect(Collectors.toList());
 
-      List<ResourceLookup> resourceList = cloudToHarnessMappingService.getResourceList(accountId, resourceIdList);
-      Map<String, ResourceLookup> resourceLookupMap = resourceList.stream().collect(
-          Collectors.toMap(ResourceLookup::getResourceId, Function.identity(), (existing, replacement) -> existing));
+      Map<String, String> serviceNameMap = cloudToHarnessMappingService.getServiceName(accountId, serviceIds);
+      Map<String, String> envNameMap = cloudToHarnessMappingService.getEnvName(accountId, envIds);
 
       List<CostEventData> cloudEventDataList = new ArrayList<>();
       deploymentSummaries.forEach(deploymentSummary -> {
@@ -85,10 +83,8 @@ public class DeploymentEventWriter implements ItemWriter<List<String>> {
         if (null != harnessServiceInfo) {
           String serviceId = harnessServiceInfo.getServiceId();
           String envId = harnessServiceInfo.getEnvId();
-          String serviceName =
-              resourceLookupMap.containsKey(serviceId) ? resourceLookupMap.get(serviceId).getResourceName() : serviceId;
-          String envName =
-              resourceLookupMap.containsKey(envId) ? resourceLookupMap.get(envId).getResourceName() : envId;
+          String serviceName = serviceNameMap.containsKey(serviceId) ? serviceNameMap.get(serviceId) : serviceId;
+          String envName = envNameMap.containsKey(envId) ? envNameMap.get(envId) : envId;
           String deploymentEventDescription = String.format(DEPLOYMENT_EVENT_DESCRIPTION, serviceName, envName);
           CostEventData cloudEventData = CostEventData.builder()
                                              .accountId(accountId)

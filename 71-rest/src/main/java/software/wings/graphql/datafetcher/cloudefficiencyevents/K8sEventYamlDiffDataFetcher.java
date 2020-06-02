@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.cloudefficiencyevents;
 
 import com.google.inject.Inject;
 
-import io.harness.ccm.cluster.K8sYamlServiceImpl;
+import io.harness.ccm.cluster.dao.K8sYamlDao;
 import io.harness.ccm.cluster.entities.K8sYaml;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
@@ -14,15 +14,15 @@ import software.wings.security.annotations.AuthRule;
 @Slf4j
 public class K8sEventYamlDiffDataFetcher
     extends AbstractObjectDataFetcher<QLK8sEventYamlDiff, QLK8sEventYamlDiffQueryParameters> {
-  @Inject K8sYamlServiceImpl k8sYamlService;
+  @Inject private K8sYamlDao k8sYamlDao;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLK8sEventYamlDiff fetch(QLK8sEventYamlDiffQueryParameters qlQuery, String accountId) {
     QLK8sEventYamlDiff yamlDiff = null;
     if (qlQuery != null) {
-      K8sYaml oldYaml = k8sYamlService.get(accountId, qlQuery.getOldYamlRef());
-      K8sYaml newYaml = k8sYamlService.get(accountId, qlQuery.getNewYamlRef());
+      K8sYaml oldYaml = k8sYamlDao.getYaml(accountId, qlQuery.getOldYamlRef());
+      K8sYaml newYaml = k8sYamlDao.getYaml(accountId, qlQuery.getNewYamlRef());
       QLK8sEventYamlsBuilder builder = QLK8sEventYamls.builder();
       if (oldYaml != null) {
         builder.oldYaml(oldYaml.getYaml());

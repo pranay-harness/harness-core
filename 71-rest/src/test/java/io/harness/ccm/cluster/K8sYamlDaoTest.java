@@ -18,34 +18,24 @@ public class K8sYamlDaoTest extends WingsBaseTest {
   @Inject private K8sYamlDao k8sYamlDao;
   private static final String ACCOUNT_ID = "accountId";
   private static final String CLUSTER_ID = "clusterId";
-  private static final String RESOURCE_VERSION = "kind";
+  private static final String RESOURCE_VERSION = "12345";
   private static final String YAML = "yaml";
   private static final String UID = "uid";
-  private String uuid;
+  private String hash;
 
   @Before
   public void setUp() {
-    uuid = k8sYamlDao.save(getTestYamlRecord(UID, YAML));
+    hash = k8sYamlDao.ensureYamlSaved(ACCOUNT_ID, CLUSTER_ID, UID, RESOURCE_VERSION, YAML);
   }
 
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void shouldGetYaml() {
-    K8sYaml yamlRecord = k8sYamlDao.getYaml(ACCOUNT_ID, uuid);
+    K8sYaml yamlRecord = k8sYamlDao.getYaml(ACCOUNT_ID, hash);
     assertThat(yamlRecord.getUid()).isEqualTo(UID);
-    assertThat(yamlRecord.getUuid()).isEqualTo(uuid);
+    assertThat(yamlRecord.getHash()).isEqualTo(hash);
     assertThat(yamlRecord.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(yamlRecord.getYaml()).isEqualTo(YAML);
-  }
-
-  private K8sYaml getTestYamlRecord(String uid, String yaml) {
-    return K8sYaml.builder()
-        .accountId(ACCOUNT_ID)
-        .clusterId(CLUSTER_ID)
-        .resourceVersion(RESOURCE_VERSION)
-        .uid(uid)
-        .yaml(yaml)
-        .build();
   }
 }

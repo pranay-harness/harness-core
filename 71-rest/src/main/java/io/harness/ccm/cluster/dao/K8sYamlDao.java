@@ -3,12 +3,13 @@ package io.harness.ccm.cluster.dao;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.DuplicateKeyException;
 import io.harness.ccm.cluster.entities.K8sYaml;
 import io.harness.ccm.cluster.entities.K8sYaml.K8sYamlKeys;
 import io.harness.persistence.HPersistence;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Sort;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Singleton
 public class K8sYamlDao {
   private final HPersistence hPersistence;
@@ -18,44 +19,32 @@ public class K8sYamlDao {
     this.hPersistence = hPersistence;
   }
 
-  public K8sYaml fetchLatestYaml(String accountId, String clusterId, String uid) {
-    return hPersistence.createQuery(K8sYaml.class)
-        .field(K8sYamlKeys.accountId)
-        .equal(accountId)
-        .field(K8sYamlKeys.clusterId)
-        .equal(clusterId)
-        .field(K8sYamlKeys.uid)
-        .equal(uid)
-        .order(Sort.descending(K8sYamlKeys.resourceVersion))
-        .get(new FindOptions().limit(1));
-  }
-
   public String ensureYamlSaved(String accountId, String clusterId, String uid, String resourceVersion, String yaml) {
-    K8sYaml latest = fetchLatestYaml(accountId, clusterId, uid);
-    if (latest != null && yaml.equals(latest.getYaml())) {
-      return latest.getUuid();
-    } else {
-      return hPersistence.save(K8sYaml.builder()
-                                   .accountId(accountId)
-                                   .clusterId(clusterId)
-                                   .uid(uid)
-                                   .resourceVersion(resourceVersion)
-                                   .yaml(yaml)
-                                   .build());
-    }
+    K8sYaml k8sYaml = K8sYaml.builder()
+                          .accountId(accountId)
+                          .clusterId(clusterId)
+                          .uid(uid)
+                          .resourceVersion(resourceVersion)
+                          .yaml(yaml)
+                          .build();
+    saveIfNotPresent(k8sYaml);
+    return k8sYaml.getHash();
   }
 
-  public K8sYaml getYaml(String accountId, String uuid) {
+  public K8sYaml getYaml(String accountId, String hash) {
     return hPersistence.createQuery(K8sYaml.class)
         .field(K8sYamlKeys.accountId)
         .equal(accountId)
-        .field(K8sYamlKeys.uuid)
-        .equal(uuid)
-        .order(Sort.descending(K8sYamlKeys.resourceVersion))
+        .field(K8sYamlKeys.hash)
+        .equal(hash)
         .get();
   }
 
-  public String save(K8sYaml yamlRecord) {
-    return hPersistence.save(yamlRecord);
+  void saveIfNotPresent(K8sYaml yamlRecord) {
+    try {
+      hPersistence.save(yamlRecord);
+    } catch (DuplicateKeyException e) {
+      logger.debug("Ignoring exception for yaml already present", e);
+    }
   }
 }
