@@ -37,7 +37,7 @@ public class GcsUtils {
     String signedString = getSignedString(signInput, pk);
     // URL encode the signed string so that we can add this URL
     signedString = URLEncoder.encode(signedString, "UTF-8");
-    String portalUrl = subdomainUrlHelper.getPortalBaseUrlFromFeatureFlag(accountId);
+    String portalUrl = subdomainUrlHelper.getPortalBaseUrlWithoutSeparator(accountId);
     return constructSignedUrl(portalUrl + downloadPathPattern + objectPath, account, expiryTime, signedString);
   }
 

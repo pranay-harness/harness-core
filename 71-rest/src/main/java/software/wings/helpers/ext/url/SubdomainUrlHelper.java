@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.app.UrlConfiguration;
 import software.wings.beans.Account;
-import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AccountThreadLocal;
 import software.wings.security.UserThreadLocal;
@@ -42,10 +41,14 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
     // Set baseUrl = subDomainUrl only if subDomainUrl is not null, otherwise
     // set baseUrl equal to URL of portal
     logger.info("Generating Portal URL for account {}", accountId);
-    Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
-    String portalUrl = subdomainUrl.isPresent() ? subdomainUrl.get() : urlConfiguration.getPortalUrl().trim();
+    String portalUrl = appendSeparatorToUrl(getPortalUrl(accountId));
     logger.info("Returning {} from getPortalBaseUrl", portalUrl);
-    return appendSeparatorToUrl(portalUrl);
+    return portalUrl;
+  }
+
+  private String getPortalUrl(String accountId) {
+    Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
+    return subdomainUrl.isPresent() ? subdomainUrl.get() : urlConfiguration.getPortalUrl().trim();
   }
 
   /**
@@ -132,7 +135,7 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
    */
   public String getManagerUrl(HttpServletRequest request, String accountId) {
     logger.info("Generating manager URL for account {}", accountId);
-    Optional<String> subdomainUrl = getCustomSubdomainUrlFromFeatureFlag(accountId);
+    Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
     String apiUrl = subdomainUrl.isPresent() ? subdomainUrl.get() : urlConfiguration.getApiUrl().trim();
     apiUrl = removeSeparatorFromUrl(apiUrl);
     logger.info("Returning manager URL {} for account {}", apiUrl, accountId);
@@ -143,7 +146,7 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
 
   public String getDelegateMetadataUrl(String accountId) {
     logger.info("Generating delegate metadata URL for account {}", accountId);
-    Optional<String> subdomainUrl = getCustomSubdomainUrlFromFeatureFlag(accountId);
+    Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
     String delegateMetadataUrl = urlConfiguration.getDelegateMetadataUrl().trim();
     delegateMetadataUrl =
         overrideMetadataUrl(subdomainUrl.isPresent() ? subdomainUrl.get() : null, delegateMetadataUrl);
@@ -153,7 +156,7 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
 
   public String getWatcherMetadataUrl(String accountId) {
     logger.info("Generating watcher metadata URL for account {}", accountId);
-    Optional<String> subdomainUrl = getCustomSubdomainUrlFromFeatureFlag(accountId);
+    Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
     String watcherMetadataUrl = urlConfiguration.getWatcherMetadataUrl().trim();
     watcherMetadataUrl = overrideMetadataUrl(subdomainUrl.isPresent() ? subdomainUrl.get() : null, watcherMetadataUrl);
     logger.info("Returning watcher metadata URL {} for account {}", watcherMetadataUrl, accountId);
@@ -184,28 +187,13 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
   }
 
   /**
-   * Returns Optional of subdomain URL according to the VANITY_URL feature flag for a given account Id
-   * @param accountId
-   * @return
-   */
-  private Optional<String> getCustomSubdomainUrlFromFeatureFlag(String accountId) {
-    if (null != accountId && featureFlagService.isEnabled(FeatureName.VANITY_URL, accountId)) {
-      logger.info("Feature Flag VANITY_URL is enabled for account {}", accountId);
-      return getCustomSubdomainUrl(accountId);
-    }
-    return Optional.empty();
-  }
-
-  /**
    * Returns Portal URL according to the VANITY_URL feature flag
    * @param accountId
    * @return
    */
-  public String getPortalBaseUrlFromFeatureFlag(String accountId) {
+  public String getPortalBaseUrlWithoutSeparator(String accountId) {
     logger.info("Getting download URL for account {}", accountId);
-    Optional<String> subdomainUrl = getCustomSubdomainUrlFromFeatureFlag(accountId);
-    String portalUrl = subdomainUrl.isPresent() ? subdomainUrl.get() : urlConfiguration.getPortalUrl().trim();
-    portalUrl = removeSeparatorFromUrl(portalUrl);
+    String portalUrl = removeSeparatorFromUrl(getPortalUrl(accountId));
     logger.info("Returning {} as download URL for account {}", portalUrl, accountId);
     return portalUrl;
   }
