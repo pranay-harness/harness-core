@@ -30,11 +30,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>11-commons-test</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>12-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -45,13 +40,51 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>25-orchestration-beans</artifactId>
+            <artifactId>35-yaml-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>35-yaml-beans</artifactId>
+            <artifactId>71-rest</artifactId>
             <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>de.bwaldvogel</groupId>
+            <artifactId>mongo-java-server</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.bwaldvogel</groupId>
+            <artifactId>mongo-java-server-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.bwaldvogel</groupId>
+            <artifactId>mongo-java-server-memory-backend</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.benas</groupId>
+            <artifactId>random-beans</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>11-commons-test</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>21-persistence</artifactId>
+            <version>${project.parent.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
@@ -82,7 +115,7 @@
                 <groupId>com.github.chrisdchristo</groupId>
                 <artifactId>capsule-maven-plugin</artifactId>
                 <configuration>
-                    <appClass>io.harness.cdng.CDNextGenApplication</appClass>
+                    <appClass>io.harness.ng.CDNextGenApplication</appClass>
                     <type>fat</type>
                     <manifest>
                         <entry>
@@ -117,7 +150,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <configuration>
-                    <mainClass>io.harness.cdng.CDNextGenApplication</mainClass>
+                    <mainClass>io.harness.ng.CDNextGenApplication</mainClass>
                     <arguments>
                         <argument>server</argument>
                         <argument>./config.yml</argument>
