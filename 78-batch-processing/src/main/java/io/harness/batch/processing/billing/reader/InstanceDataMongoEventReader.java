@@ -44,7 +44,7 @@ public class InstanceDataMongoEventReader implements InstanceDataEventReader {
                     .andOperator(Criteria.where(InstanceDataKeys.usageStartTime).gte(new Date(startDate)),
                         Criteria.where(InstanceDataKeys.usageStartTime).lt(new Date(endDate)))));
 
-    query.with(new Sort(Sort.Direction.ASC, InstanceDataKeys.usageStartTime));
+    query.with(Sort.by(InstanceDataKeys.usageStartTime));
     reader.setQuery(query);
     reader.setPageSize(READER_BATCH_SIZE);
     return reader;

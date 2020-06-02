@@ -51,7 +51,7 @@ public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidA
   @EqualsAndHashCode.Exclude
   @Builder.Default
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private final Date validUntil = Date.from(OffsetDateTime.now().plusDays(14).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(14).toInstant());
 
   private final long occurredAt;
   private final String accountId;

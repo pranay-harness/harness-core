@@ -1,12 +1,11 @@
-package io.harness.serializer.morphia;
+package io.harness.ng.core.serializer.morphia;
 
-import io.harness.cdng.core.entities.Project;
-import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.core.entities.Project;
 
 import java.util.Map;
 import java.util.Set;
 
-public class CDNextGenMorphiaRegistrar implements MorphiaRegistrar {
+public class MorphiaClassesRegistrar implements io.harness.morphia.MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(Project.class);
