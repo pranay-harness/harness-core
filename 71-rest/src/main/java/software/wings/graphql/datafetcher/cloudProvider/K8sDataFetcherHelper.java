@@ -134,6 +134,7 @@ public class K8sDataFetcherHelper {
           break;
         case MANUAL_CLUSTER_DETAILS:
           config.setUseKubernetesDelegate(false);
+          config.setDelegateName(null);
           if (input.getManualClusterDetails().isPresent()) {
             input.getManualClusterDetails().getValue().ifPresent(clusterDetails -> {
               clusterDetails.getMasterUrl().getValue().ifPresent(config::setMasterUrl);
