@@ -20,7 +20,7 @@ import io.harness.engine.services.OutcomeService;
 import io.harness.execution.PlanExecution;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.VariableResolverTracker;
-import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputResolver;
+import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 
@@ -33,7 +33,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   @Inject private OutcomeService outcomeService;
-  @Inject private ExecutionSweepingOutputResolver executionSweepingOutputResolver;
+  @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private AmbianceHelper ambianceHelper;
   @Inject private NodeExecutionService nodeExecutionService;
 
@@ -51,7 +51,7 @@ public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator
     addToContext("outcome", OutcomeFunctor.builder().ambiance(ambiance).outcomeService(outcomeService).build());
     addToContext("output",
         ExecutionSweepingOutputFunctor.builder()
-            .executionSweepingOutputResolver(executionSweepingOutputResolver)
+            .executionSweepingOutputService(executionSweepingOutputService)
             .ambiance(ambiance)
             .build());
 

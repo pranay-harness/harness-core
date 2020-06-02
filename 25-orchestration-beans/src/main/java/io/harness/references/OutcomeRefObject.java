@@ -20,6 +20,6 @@ public class OutcomeRefObject implements RefObject {
 
   @Override
   public RefType getRefType() {
-    return RefType.builder().type("OUTCOME").build();
+    return RefType.builder().type(RefType.OUTCOME).build();
   }
 }

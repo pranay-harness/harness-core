@@ -25,6 +25,8 @@ import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.TimerScheduledExecutorService;
+import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
+import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputServiceImpl;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.state.inspection.StateInspectionServiceImpl;
 import io.harness.threading.ThreadPool;
@@ -54,6 +56,7 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
     bind(InterruptService.class).to(InterruptServiceImpl.class);
     bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
     bind(OutcomeService.class).to(OutcomeServiceImpl.class);
+    bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingOutputServiceImpl.class);
     bind(HPersistence.class).annotatedWith(Names.named("enginePersistence")).to(MongoPersistence.class);
     bind(ExecutionEngine.class).toInstance(new ExecutionEngine());
     bind(GraphGenerator.class).toInstance(new GraphGenerator());

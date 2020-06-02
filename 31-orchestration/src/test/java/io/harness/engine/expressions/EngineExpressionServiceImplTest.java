@@ -28,7 +28,7 @@ public class EngineExpressionServiceImplTest extends OrchestrationTest {
   @Before
   public void setup() {
     ambiance = AmbianceTestUtils.buildAmbiance();
-    outcomeService.consume(ambiance, OUTCOME_NAME, DummyOutcome.builder().test("harness").build());
+    outcomeService.consume(ambiance, OUTCOME_NAME, DummyOutcome.builder().test("harness").build(), null);
   }
 
   @Test

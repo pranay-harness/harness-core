@@ -17,7 +17,6 @@ import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.services.OutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.plan.PlanNode;
-import io.harness.references.RefObject;
 import io.harness.rule.Owner;
 import io.harness.state.StepType;
 import io.harness.utils.AmbianceTestUtils;
@@ -110,10 +109,11 @@ public class NodeExecutionValueTest extends CategoryTest {
     when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, nodeExecution4.getUuid()))
         .thenReturn(Collections.singletonList(nodeExecution6));
 
-    when(outcomeService.resolve(any(), any(), any())).thenAnswer(invocation -> {
-      RefObject refObject = invocation.getArgumentAt(1, RefObject.class);
-      if (refObject.getProducerId().equals(nodeExecution2.getUuid())) {
-        return Optional.of(refObject.getName());
+    when(outcomeService.find(any(), any(), any(), any())).thenAnswer(invocation -> {
+      String setupId = invocation.getArgumentAt(1, String.class);
+      String name = invocation.getArgumentAt(3, String.class);
+      if (setupId.equals(nodeExecution2.getUuid())) {
+        return Optional.of(name);
       }
       return Optional.empty();
     });

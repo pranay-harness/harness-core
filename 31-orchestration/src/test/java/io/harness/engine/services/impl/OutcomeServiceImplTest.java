@@ -10,6 +10,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.data.Outcome;
 import io.harness.engine.services.OutcomeService;
+import io.harness.references.OutcomeRefObject;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
@@ -27,10 +28,11 @@ public class OutcomeServiceImplTest extends OrchestrationTest {
   public void shouldTestSaveAndFind() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcomeName";
-    Outcome outcome = outcomeService.consume(ambiance, outcomeName, DummyOutcome.builder().test("test").build());
-    assertThat(outcome).isNotNull();
+    Outcome outcome = DummyOutcome.builder().test("test").build();
+    outcomeService.consume(ambiance, outcomeName, outcome, null);
 
-    DummyOutcome savedOutcome = outcomeService.findOutcome(ambiance, outcomeName);
+    DummyOutcome savedOutcome =
+        (DummyOutcome) outcomeService.resolve(ambiance, OutcomeRefObject.builder().name(outcomeName).build());
     assertThat(savedOutcome).isNotNull();
     assertThat(savedOutcome.getTest()).isEqualTo("test");
   }
@@ -42,10 +44,9 @@ public class OutcomeServiceImplTest extends OrchestrationTest {
   public void shouldTestSaveAndFindForNull() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcomeName";
-    Outcome savedOutCome = outcomeService.consume(ambiance, outcomeName, null);
-    assertThat(savedOutCome).isNull();
+    outcomeService.consume(ambiance, outcomeName, null, null);
 
-    Outcome outcome = outcomeService.findOutcome(ambiance, outcomeName);
+    Outcome outcome = outcomeService.resolve(ambiance, OutcomeRefObject.builder().name(outcomeName).build());
     assertThat(outcome).isNull();
   }
 }

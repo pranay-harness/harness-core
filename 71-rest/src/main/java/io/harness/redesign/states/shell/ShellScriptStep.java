@@ -35,7 +35,8 @@ import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;
-import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputResolver;
+import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
+import io.harness.resolvers.ResolverUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.state.Step;
 import io.harness.state.StepType;
@@ -85,7 +86,7 @@ public class ShellScriptStep implements Step, TaskExecutable {
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
-  @Inject private ExecutionSweepingOutputResolver executionSweepingOutputResolver;
+  @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private FeatureFlagService featureFlagService;
 
@@ -304,12 +305,12 @@ public class ShellScriptStep implements Step, TaskExecutable {
     updateActivityStatus(activityId, getAppId(ambiance), executionStatus);
 
     if (saveSweepingOutputToContext && shellScriptStateParameters.getSweepingOutputName() != null) {
-      executionSweepingOutputResolver.save(ambiance, shellScriptStateParameters.getSweepingOutputName(),
+      executionSweepingOutputService.consume(ambiance, shellScriptStateParameters.getSweepingOutputName(),
           ShellScriptVariablesSweepingOutput.builder()
               .variables(((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
                              .getSweepingOutputEnvVariables())
               .build(),
-          0);
+          ResolverUtils.GLOBAL_GROUP_SCOPE);
     }
 
     return stepResponse;

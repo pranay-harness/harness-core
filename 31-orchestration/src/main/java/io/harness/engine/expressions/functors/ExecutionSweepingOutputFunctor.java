@@ -8,7 +8,7 @@ import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.LateBindingMap;
 import io.harness.references.SweepingOutputRefObject;
-import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputResolver;
+import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -20,12 +20,12 @@ import lombok.Value;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class ExecutionSweepingOutputFunctor extends LateBindingMap {
-  transient ExecutionSweepingOutputResolver executionSweepingOutputResolver;
+  transient ExecutionSweepingOutputService executionSweepingOutputService;
   transient Ambiance ambiance;
 
   @Override
   public synchronized Object get(Object key) {
-    return executionSweepingOutputResolver.resolve(
+    return executionSweepingOutputService.resolve(
         ambiance, SweepingOutputRefObject.builder().name((String) key).build());
   }
 }

@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.services.OutcomeService;
 import io.harness.references.RefType;
 import io.harness.registries.registrar.ResolverRegistrar;
-import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputResolver;
+import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
 import io.harness.resolvers.Resolver;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -18,6 +18,6 @@ public class OrchestrationResolverRegistrar implements ResolverRegistrar {
   public void register(Set<Pair<RefType, Class<? extends Resolver<?>>>> resolverClasses) {
     resolverClasses.add(Pair.of(RefType.builder().type(RefType.OUTCOME).build(), OutcomeService.class));
     resolverClasses.add(
-        Pair.of(RefType.builder().type(RefType.SWEEPING_OUTPUT).build(), ExecutionSweepingOutputResolver.class));
+        Pair.of(RefType.builder().type(RefType.SWEEPING_OUTPUT).build(), ExecutionSweepingOutputService.class));
   }
 }
