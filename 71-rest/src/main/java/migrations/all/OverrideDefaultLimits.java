@@ -12,8 +12,6 @@ import java.util.concurrent.TimeUnit;
 public class OverrideDefaultLimits implements Migration {
   @Inject private LimitConfigurationService limitConfigurationService;
 
-  // limits decided based on logDNA deployment metrics:
-  // https://app.logdna.com/d9a7810a99/graphs/board/23ed1d1712?from=1543382340000&to=1543468740000
   @Override
   public void migrate() {
     // iHerb

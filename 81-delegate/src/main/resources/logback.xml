@@ -32,15 +32,6 @@
         </encoder>
     </appender>
 
-    <appender name="REST1" class="io.harness.logging.RestLogAppender">
-        <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern>%replace(%blue([${version}]) %highlight(%process_id) %green([%thread]) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'})){'0;39m', ''} %n</pattern>
-        </layout>
-        <programName>delegate</programName>
-        <key>${logdnakey:-9a3e6eac4dcdbdc41a93ca99100537df}</key>
-        <threshold>TRACE</threshold>
-    </appender>
-
     <appender name="REST2" class="io.harness.delegate.logging.DelegateStackdriverLogAppender">
         <threshold>TRACE</threshold>
     </appender>
@@ -51,7 +42,6 @@
 
     <root level="INFO">
         <appender-ref ref="file"/>
-        <appender-ref ref="REST1"/>
         <appender-ref ref="REST2"/>
         <appender-ref ref="stdout"/>
     </root>

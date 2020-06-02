@@ -20,7 +20,10 @@ xxxxxxxx
     certAlias: localhost
     validateCerts: false
   requestLog:
-    appenders: []
+    appenders:
+    - type: console
+      target: STDOUT
+      threshold: ERROR
   maxThreads: 1024
 
 backgroundScheduler:

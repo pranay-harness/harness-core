@@ -109,9 +109,7 @@ if [[ "" != "$MONGO_LOCK_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.locksUri "${MONGO_LOCK_URI//\\&/&}"
 fi
 
-yq write -i $CONFIG_FILE server.requestLog.appenders[0].type "console"
 yq write -i $CONFIG_FILE server.requestLog.appenders[0].threshold "TRACE"
-yq write -i $CONFIG_FILE server.requestLog.appenders[0].target "STDOUT"
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
   yq delete -i $CONFIG_FILE logging.appenders[0]

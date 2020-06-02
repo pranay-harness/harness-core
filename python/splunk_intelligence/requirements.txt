@@ -39,7 +39,6 @@ jupyter==1.0.0
 jupyter-client==5.2.3
 jupyter-console==5.2.0
 jupyter-core==4.4.0
-logdna==1.2.7
 MarkupSafe==1.0
 mistune==0.8.3
 mock==2.0.0
