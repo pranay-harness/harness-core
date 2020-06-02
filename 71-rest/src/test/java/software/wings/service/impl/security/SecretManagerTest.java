@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -9,12 +10,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -27,7 +31,9 @@ import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -37,6 +43,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -113,6 +120,7 @@ public class SecretManagerTest extends CategoryTest {
   @Mock private GlobalEncryptDecryptClient globalEncryptDecryptClient;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SecretSetupUsageService secretSetupUsageService;
+  @Mock RuntimeCredentialsInjector vaultRuntimeCredentialsInjector;
   @Inject @InjectMocks private SecretManagerImpl secretManager;
 
   @Rule public ExpectedException expectedEx = ExpectedException.none();
@@ -740,5 +748,314 @@ public class SecretManagerTest extends CategoryTest {
     verify(featureFlagService, times(1)).isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId);
     verify(wingsPersistence, times(0)).delete(EncryptedData.class, secretId);
     verify(auditServiceHelper, times(0)).reportDeleteForAuditingUsingAccountId(accountId, encryptedData);
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testCreateSecretTextUsingTemplatizedSecretManager_shouldSucceed() {
+    String accountId = "accountId";
+    SecretText secretText = SecretText.builder()
+                                .name("name")
+                                .value("value")
+                                .kmsId("kmsId")
+                                .runtimeParameters(Maps.newHashMap(ImmutableMap.of("authToken", "abcde")))
+                                .build();
+    SecretManagerImpl spySecretManager = spy(secretManager);
+    SecretManagerConfig secretManagerConfig = VaultConfig.builder().build();
+    secretManagerConfig.setEncryptionType(EncryptionType.VAULT);
+    secretManagerConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
+
+    doReturn(secretManagerConfig).when(spySecretManager).getSecretManager(anyString(), anyString());
+    when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any()))
+        .thenReturn(Optional.of(secretManagerConfig));
+    doReturn("secretId").when(spySecretManager).saveSecretInternal(anyString(), any());
+    spySecretManager.saveSecret(accountId, secretText);
+
+    verify(vaultRuntimeCredentialsInjector).updateRuntimeCredentials(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testCreateSecretTextUsingTemplatizedSecretManager_shouldFail() {
+    String accountId = "accountId";
+    SecretText secretText = SecretText.builder().name("name").value("value").kmsId("kmsId").build();
+    SecretManagerImpl spySecretManager = spy(secretManager);
+    SecretManagerConfig secretManagerConfig = VaultConfig.builder().build();
+    secretManagerConfig.setEncryptionType(EncryptionType.VAULT);
+    secretManagerConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
+
+    doReturn(secretManagerConfig).when(spySecretManager).getSecretManager(anyString(), anyString());
+    when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any())).thenReturn(Optional.empty());
+    doReturn("secretId").when(spySecretManager).saveSecretInternal(anyString(), any());
+
+    try {
+      spySecretManager.saveSecret(accountId, secretText);
+      fail("Save secret should fail if update run time parameters is failing");
+    } catch (InvalidRequestException e) {
+      assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testUpdateSecretText_shouldSucceed() {
+    String accountId = "accountId";
+    SecretText secretText = SecretText.builder()
+                                .name("name")
+                                .value("value")
+                                .kmsId("kmsId")
+                                .runtimeParameters(Maps.newHashMap(ImmutableMap.of("authToken", "abcde")))
+                                .build();
+    SecretManagerConfig secretManagerConfig = VaultConfig.builder().build();
+    secretManagerConfig.setEncryptionType(EncryptionType.VAULT);
+    secretManagerConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
+    EncryptedData encryptedData = EncryptedData.builder().encryptionType(EncryptionType.VAULT).build();
+    SecretManagerImpl spySecretManager = spy(secretManager);
+
+    when(wingsPersistence.get(any(), anyString())).thenReturn(encryptedData);
+    doReturn(secretManagerConfig).when(spySecretManager).getSecretManager(anyString(), anyString());
+    when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any()))
+        .thenReturn(Optional.of(secretManagerConfig));
+    doReturn(true).when(spySecretManager).updateSecretInternal(anyString(), anyString(), any());
+
+    spySecretManager.updateSecret(accountId, "encryptedDataId", secretText);
+
+    verify(vaultRuntimeCredentialsInjector).updateRuntimeCredentials(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testUpdateSecretText_shouldFail() {
+    String accountId = "accountId";
+    SecretText secretText = SecretText.builder()
+                                .name("name")
+                                .value("value")
+                                .kmsId("kmsId")
+                                .runtimeParameters(Maps.newHashMap(ImmutableMap.of("authToken", "abcde")))
+                                .build();
+    SecretManagerConfig secretManagerConfig = VaultConfig.builder().build();
+    secretManagerConfig.setEncryptionType(EncryptionType.VAULT);
+    secretManagerConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
+    EncryptedData encryptedData = EncryptedData.builder().encryptionType(EncryptionType.VAULT).build();
+    SecretManagerImpl spySecretManager = spy(secretManager);
+
+    when(wingsPersistence.get(any(), anyString())).thenReturn(encryptedData);
+    doReturn(Optional.of(secretManagerConfig))
+        .when(vaultRuntimeCredentialsInjector)
+        .updateRuntimeCredentials(any(), any());
+    doReturn(secretManagerConfig).when(spySecretManager).getSecretManager(anyString(), anyString());
+    doReturn(false).when(spySecretManager).updateSecretInternal(anyString(), anyString(), any());
+
+    try {
+      spySecretManager.updateSecret(accountId, "encryptedDataId", secretText);
+    } catch (InvalidRequestException e) {
+      assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+
+    verify(vaultRuntimeCredentialsInjector).updateRuntimeCredentials(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testTransitionSecretsUsingTemplatizedSecretManager_shouldSucceed() {
+    SecretManagerImpl spySecretManager = spy(secretManager);
+
+    SecretManagerConfig config = VaultConfig.builder().build();
+    config.setEncryptionType(EncryptionType.VAULT);
+    config.setTemplatizedFields(Lists.newArrayList("authToken"));
+
+    doReturn(config).when(spySecretManager).getSecretManager(any(), any());
+    doReturn(true).when(spySecretManager).transitionSecrets(any(), any(), any(), any(), any());
+    when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any())).thenReturn(Optional.of(config));
+
+    spySecretManager.transitionSecrets("accountId", EncryptionType.KMS, "fromSecretManagerId", EncryptionType.VAULT,
+        "toSecretManagerId", null, Maps.newHashMap(ImmutableMap.of("authToken", "abcde")));
+
+    verify(vaultRuntimeCredentialsInjector, times(2)).updateRuntimeCredentials(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testTransitionSecretsUsingTemplatizedSecretManager_shouldFail() {
+    SecretManagerImpl spySecretManager = spy(secretManager);
+
+    SecretManagerConfig config = VaultConfig.builder().build();
+    config.setEncryptionType(EncryptionType.VAULT);
+    config.setTemplatizedFields(Lists.newArrayList("authToken"));
+
+    doReturn(config).when(spySecretManager).getSecretManager(any(), any());
+    when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any())).thenReturn(Optional.empty());
+
+    try {
+      spySecretManager.transitionSecrets("accountId", EncryptionType.KMS, "fromSecretManagerId", EncryptionType.VAULT,
+          "toSecretManagerId", null, Maps.newHashMap(ImmutableMap.of("authToken", "abcde")));
+      fail("Should not transition secrets when using a templatized secret manager");
+    } catch (InvalidRequestException e) {
+      assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testDeleteSecret_shouldSucceed() {
+    SecretManagerImpl spySecretManager = spy(secretManager);
+    SecretManagerConfig vaultConfig = VaultConfig.builder().build();
+    vaultConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
+    EncryptedData encryptedData = EncryptedData.builder().encryptionType(EncryptionType.VAULT).kmsId("kmsId").build();
+
+    when(wingsPersistence.get(any(), any())).thenReturn(encryptedData);
+    doReturn(vaultConfig).when(spySecretManager).getSecretManager(any(), any());
+    when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any())).thenReturn(Optional.of(vaultConfig));
+    doReturn(true).when(spySecretManager).deleteSecret(anyString(), anyString());
+
+    spySecretManager.deleteSecret("accoundId", "secretId", Maps.newHashMap(ImmutableMap.of("authToken", "abc")));
+
+    verify(vaultRuntimeCredentialsInjector).updateRuntimeCredentials(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testDeleteSecret_shouldFail() {
+    SecretManagerImpl spySecretManager = spy(secretManager);
+    SecretManagerConfig vaultConfig = VaultConfig.builder().build();
+    vaultConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
+    EncryptedData encryptedData = EncryptedData.builder().encryptionType(EncryptionType.VAULT).kmsId("kmsId").build();
+
+    when(wingsPersistence.get(any(), any())).thenReturn(encryptedData);
+    doReturn(vaultConfig).when(spySecretManager).getSecretManager(any(), any());
+    when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any())).thenReturn(Optional.empty());
+
+    try {
+      spySecretManager.deleteSecret("accoundId", "secretId", Maps.newHashMap(ImmutableMap.of("authToken", "abc")));
+      fail("Should not delete secret with templatized secret manager if update runtime credentials fails");
+    } catch (InvalidRequestException e) {
+      assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+
+    verify(vaultRuntimeCredentialsInjector).updateRuntimeCredentials(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testAddFileWithTemplatizedSecretManager_shouldSucceed() {
+    SecretManagerImpl spySecretManager = spy(secretManager);
+    SecretManagerConfig vaultConfig = VaultConfig.builder().build();
+    vaultConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
+
+    doReturn(vaultConfig).when(spySecretManager).getSecretManager(any(), any());
+    when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any())).thenReturn(Optional.of(vaultConfig));
+    doReturn("encryptedDataId").when(spySecretManager).saveFile(any(), any(), any(), anyLong(), any(), any());
+
+    spySecretManager.saveFile(
+        "AccountId", "kmsId", "name", 1000, null, null, Maps.newHashMap(ImmutableMap.of("authToken", "abc")));
+
+    verify(vaultRuntimeCredentialsInjector).updateRuntimeCredentials(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testAddFileWithTemplatizedSecretManager_shouldFail() {
+    SecretManagerImpl spySecretManager = spy(secretManager);
+    SecretManagerConfig vaultConfig = VaultConfig.builder().build();
+    vaultConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
+
+    doReturn(vaultConfig).when(spySecretManager).getSecretManager(any(), any());
+    when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any())).thenReturn(Optional.empty());
+
+    try {
+      spySecretManager.saveFile(
+          "AccountId", "kmsId", "name", 1000, null, null, Maps.newHashMap(ImmutableMap.of("authToken", "abc")));
+      fail("should not save file if unable to update run time parameters for secret manager");
+    } catch (InvalidRequestException e) {
+      assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testUpdateFileWithTemplatizedSecretManager_shouldSucceed() {
+    SecretManagerImpl spySecretManager = spy(secretManager);
+    SecretManagerConfig vaultConfig = VaultConfig.builder().build();
+    vaultConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
+
+    doReturn(EncryptedData.builder().build()).when(spySecretManager).getSecretById(any(), any());
+    doReturn(vaultConfig).when(spySecretManager).getSecretManager(any(), any());
+    when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any())).thenReturn(Optional.of(vaultConfig));
+    doReturn(true).when(spySecretManager).updateFile(any(), any(), any(), anyLong(), any(), any());
+
+    spySecretManager.updateFile(
+        "accountId", "kmsId", "name", 1000, null, null, Maps.newHashMap(ImmutableMap.of("authToken", "abc")));
+
+    verify(vaultRuntimeCredentialsInjector).updateRuntimeCredentials(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testUpdateFileWithTemplatizedSecretManager_shouldFail() {
+    SecretManagerImpl spySecretManager = spy(secretManager);
+    SecretManagerConfig vaultConfig = VaultConfig.builder().build();
+    vaultConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
+
+    doReturn(EncryptedData.builder().build()).when(spySecretManager).getSecretById(any(), any());
+    doReturn(vaultConfig).when(spySecretManager).getSecretManager(any(), any());
+    when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any())).thenReturn(Optional.empty());
+
+    try {
+      spySecretManager.updateFile(
+          "accountId", "kmsId", "name", 1000, null, null, Maps.newHashMap(ImmutableMap.of("authToken", "abc")));
+      fail("Should not update file if unable to update runtime credentials");
+    } catch (InvalidRequestException e) {
+      assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testDeleteFileWithTemplatizedSecretManager_shouldSucceed() {
+    SecretManagerImpl spySecretManager = spy(secretManager);
+    SecretManagerConfig vaultConfig = VaultConfig.builder().build();
+    vaultConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
+
+    doReturn(EncryptedData.builder().build()).when(spySecretManager).getSecretById(any(), any());
+    doReturn(vaultConfig).when(spySecretManager).getSecretManager(any(), any());
+    when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any())).thenReturn(Optional.of(vaultConfig));
+    doReturn(true).when(spySecretManager).deleteFile(any(), any());
+
+    spySecretManager.deleteFile("accountId", "kmsId", Maps.newHashMap(ImmutableMap.of("authToken", "abc")));
+
+    verify(vaultRuntimeCredentialsInjector).updateRuntimeCredentials(any(), any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testDeleteFileWithTemplatizedSecretManager_shouldFail() {
+    SecretManagerImpl spySecretManager = spy(secretManager);
+    SecretManagerConfig vaultConfig = VaultConfig.builder().build();
+    vaultConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
+
+    doReturn(EncryptedData.builder().build()).when(spySecretManager).getSecretById(any(), any());
+    doReturn(vaultConfig).when(spySecretManager).getSecretManager(any(), any());
+    when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any())).thenReturn(Optional.empty());
+
+    try {
+      spySecretManager.deleteFile("accountId", "kmsId", Maps.newHashMap(ImmutableMap.of("authToken", "abc")));
+      fail("Should not delete file if unable to update runtime credentials");
+    } catch (InvalidRequestException e) {
+      assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
   }
 }

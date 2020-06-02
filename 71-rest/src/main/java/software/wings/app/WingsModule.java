@@ -394,6 +394,7 @@ import software.wings.service.impl.security.GcpSecretsManagerServiceImpl;
 import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.LocalEncryptionServiceImpl;
 import software.wings.service.impl.security.ManagerDecryptionServiceImpl;
+import software.wings.service.impl.security.RuntimeCredentialsInjector;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.SecretManagerConfigServiceImpl;
 import software.wings.service.impl.security.SecretManagerImpl;
@@ -648,6 +649,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class WingsModule extends DependencyModule implements ServersModule {
+  private final String hashicorpvault = "hashicorpvault";
   private MainConfiguration configuration;
 
   /**
@@ -838,6 +840,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
     bind(ManagerDecryptionService.class).to(ManagerDecryptionServiceImpl.class);
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
+    bind(RuntimeCredentialsInjector.class).annotatedWith(Names.named(hashicorpvault)).to(VaultServiceImpl.class);
     bind(SecretManager.class).to(SecretManagerImpl.class);
     bind(TriggerService.class).to(TriggerServiceImpl.class);
     bind(VaultService.class).to(VaultServiceImpl.class);

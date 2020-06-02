@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import software.wings.settings.UsageRestrictions;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -21,4 +22,5 @@ public class SecretText {
   private Set<EncryptedDataParams> parameters;
   private UsageRestrictions usageRestrictions;
   private String kmsId;
+  private Map<String, String> runtimeParameters;
 }

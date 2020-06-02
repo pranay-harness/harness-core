@@ -72,6 +72,7 @@ public interface SecretManager extends OwnedByAccount {
   Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId);
 
   List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object);
+
   List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object, String appId, String workflowExecutionId);
 
   SecretManagerConfig getSecretManager(String accountId, String entityId, EncryptionType encryptionType);
@@ -86,6 +87,11 @@ public interface SecretManager extends OwnedByAccount {
 
   boolean transitionSecrets(String accountId, EncryptionType fromEncryptionType, String fromSecretId,
       EncryptionType toEncryptionType, String toSecretId);
+
+  boolean transitionSecrets(String accountId, EncryptionType fromEncryptionType, String fromManagerSecretId,
+      EncryptionType toEncryptionType, String toSecretManagerId,
+      Map<String, String> runtimeParametersForSourceSecretManager,
+      Map<String, String> runtimeParametersForDestinationSecretManager);
 
   void changeSecretManager(String accountId, String entityId, EncryptionType fromEncryptionType, String fromKmsId,
       EncryptionType toEncryptionType, String toKmsId) throws IOException;
@@ -116,10 +122,15 @@ public interface SecretManager extends OwnedByAccount {
 
   boolean deleteSecret(String accountId, String uuId);
 
+  boolean deleteSecret(String accountId, String uuId, Map<String, String> runtimeParameters);
+
   boolean deleteSecretUsingUuid(String uuId);
 
   String saveFile(String accountId, String kmsId, String name, long fileSize, UsageRestrictions usageRestrictions,
       BoundedInputStream inputStream);
+
+  String saveFile(String accountId, String kmsId, String name, long fileSize, UsageRestrictions usageRestrictions,
+      BoundedInputStream inputStream, Map<String, String> runtimeParameters);
 
   File getFile(String accountId, String uuId, File readInto);
 
@@ -128,7 +139,12 @@ public interface SecretManager extends OwnedByAccount {
   boolean updateFile(String accountId, String name, String uuid, long fileSize, UsageRestrictions usageRestrictions,
       BoundedInputStream inputStream);
 
+  boolean updateFile(String accountId, String name, String uuid, long fileSize, UsageRestrictions usageRestrictions,
+      BoundedInputStream inputStream, Map<String, String> runtimeParameters);
+
   boolean deleteFile(String accountId, String uuId);
+
+  boolean deleteFile(String accountId, String uuId, Map<String, String> runtimeParameters);
 
   PageResponse<EncryptedData> listSecrets(String accountId, PageRequest<EncryptedData> pageRequest,
       String appIdFromRequest, String envIdFromRequest, boolean details) throws IllegalAccessException;

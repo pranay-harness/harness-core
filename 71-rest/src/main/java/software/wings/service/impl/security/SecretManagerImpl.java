@@ -54,6 +54,7 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.EmbeddedUser;
@@ -201,6 +202,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private CustomSecretsManagerEncryptionService customSecretsManagerEncryptionService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private SecretSetupUsageService secretSetupUsageService;
+  @Inject @Named("hashicorpvault") private RuntimeCredentialsInjector vaultRuntimeCredentialsInjector;
   @Inject private SettingServiceHelper settingServiceHelper;
 
   @Override
@@ -977,6 +979,22 @@ public class SecretManagerImpl implements SecretManager {
     return true;
   }
 
+  @Override
+  public boolean transitionSecrets(String accountId, EncryptionType fromEncryptionType, String fromSecretManagerId,
+      EncryptionType toEncryptionType, String toSecretManagerId,
+      Map<String, String> runtimeParametersForSourceSecretManager,
+      Map<String, String> runtimeParametersForDestinationSecretManager) {
+    SecretManagerConfig sourceSecretManagerConfig = getSecretManager(accountId, fromSecretManagerId);
+    SecretManagerConfig destinationSecretManagerConfig = getSecretManager(accountId, toSecretManagerId);
+    if (SecretManagerConfig.isTemplatized(sourceSecretManagerConfig)) {
+      updateRuntimeParameters(sourceSecretManagerConfig, runtimeParametersForSourceSecretManager);
+    }
+    if (SecretManagerConfig.isTemplatized(destinationSecretManagerConfig)) {
+      updateRuntimeParameters(destinationSecretManagerConfig, runtimeParametersForDestinationSecretManager);
+    }
+    return transitionSecrets(accountId, fromEncryptionType, fromSecretManagerId, toEncryptionType, toSecretManagerId);
+  }
+
   private boolean transitionSecretsFromGlobalSecretManager(
       String accountId, EncryptionType toEncryptionType, String toSecretManagerId) {
     List<SecretManagerConfig> secretManagerConfigList = secretManagerConfigService.getAllGlobalSecretManagers();
@@ -1284,6 +1302,12 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public String saveSecret(String accountId, SecretText secretText) {
+    if (!StringUtils.isEmpty(secretText.getKmsId())) {
+      SecretManagerConfig secretManagerConfig = getSecretManager(accountId, secretText.getKmsId());
+      if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+        updateRuntimeParameters(secretManagerConfig, secretText.getRuntimeParameters());
+      }
+    }
     return saveSecretInternal(accountId, secretText);
   }
 
@@ -1408,8 +1432,14 @@ public class SecretManagerImpl implements SecretManager {
     logger.info("Cleared default flag for secret managers in account {}.", accountId);
   }
 
-  @Override
-  public boolean updateSecret(String accountId, String encryptedDataId, SecretText secretText) {
+  private RuntimeCredentialsInjector getRuntimeCredentialsInjectorInstance(EncryptionType encryptionType) {
+    if (encryptionType == VAULT) {
+      return vaultRuntimeCredentialsInjector;
+    }
+    throw new UnsupportedOperationException("Runtime credentials not supported for encryption type: " + encryptionType);
+  }
+
+  boolean updateSecretInternal(String accountId, String encryptedDataId, SecretText secretText) {
     EncryptedData savedData = Optional.ofNullable(wingsPersistence.get(EncryptedData.class, encryptedDataId))
                                   .<SecretManagementException>orElseThrow(() -> {
                                     String reason = "Secret " + secretText.getName() + "does not exists";
@@ -1535,7 +1565,18 @@ public class SecretManagerImpl implements SecretManager {
     return encryptedDataId != null;
   }
 
-  private String saveSecretInternal(String accountId, SecretText secretText) {
+  public boolean updateSecret(String accountId, String encryptedDataId, SecretText secretText) {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedDataId);
+    if (Objects.nonNull(encryptedData)) {
+      SecretManagerConfig secretManagerConfig = getSecretManager(accountId, encryptedData.getKmsId());
+      if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+        updateRuntimeParameters(secretManagerConfig, secretText.getRuntimeParameters());
+      }
+    }
+    return updateSecretInternal(accountId, encryptedDataId, secretText);
+  }
+
+  String saveSecretInternal(String accountId, SecretText secretText) {
     if (containsIllegalCharacters(secretText.getName())) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
           "Secret name should not have any of the following characters " + ILLEGAL_CHARACTERS, USER);
@@ -1714,6 +1755,18 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public boolean deleteSecret(String accountId, String secretId, Map<String, String> runtimeParameters) {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+    if (Objects.nonNull(encryptedData)) {
+      SecretManagerConfig secretManagerConfig = getSecretManager(accountId, encryptedData.getKmsId());
+      if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+        updateRuntimeParameters(secretManagerConfig, runtimeParameters);
+      }
+    }
+    return deleteSecret(accountId, secretId);
+  }
+
+  @Override
   public boolean deleteSecretUsingUuid(String uuId) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
     checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
@@ -1724,6 +1777,16 @@ public class SecretManagerImpl implements SecretManager {
   public String saveFile(String accountId, String kmsId, String name, long fileSize,
       UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
     return upsertFileInternal(accountId, kmsId, name, null, fileSize, usageRestrictions, inputStream);
+  }
+
+  @Override
+  public String saveFile(String accountId, String kmsId, String name, long fileSize,
+      UsageRestrictions usageRestrictions, BoundedInputStream inputStream, Map<String, String> runtimeParameters) {
+    SecretManagerConfig secretManagerConfig = getSecretManager(accountId, kmsId);
+    if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+      updateRuntimeParameters(secretManagerConfig, runtimeParameters);
+    }
+    return saveFile(accountId, kmsId, name, fileSize, usageRestrictions, inputStream);
   }
 
   @Override
@@ -1830,8 +1893,23 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public boolean updateFile(String accountId, String name, String uuid, long fileSize,
       UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
+    EncryptedData encryptedData = getSecretById(accountId, uuid);
+    checkNotNull(encryptedData, "File not found.");
     String recordId = upsertFileInternal(accountId, null, name, uuid, fileSize, usageRestrictions, inputStream);
     return isNotEmpty(recordId);
+  }
+
+  @Override
+  public boolean updateFile(String accountId, String name, String uuid, long fileSize,
+      UsageRestrictions usageRestrictions, BoundedInputStream inputStream, Map<String, String> runtimeParameters) {
+    EncryptedData encryptedData = getSecretById(accountId, uuid);
+    if (Objects.nonNull(encryptedData)) {
+      SecretManagerConfig secretManagerConfig = getSecretManager(accountId, encryptedData.getKmsId());
+      if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+        updateRuntimeParameters(secretManagerConfig, runtimeParameters);
+      }
+    }
+    return updateFile(accountId, name, uuid, fileSize, usageRestrictions, inputStream);
   }
 
   /**
@@ -2091,17 +2169,26 @@ public class SecretManagerImpl implements SecretManager {
     }
   }
 
+  private void updateRuntimeParameters(SecretManagerConfig secretManagerConfig, Map<String, String> runtimeParameters) {
+    Optional<SecretManagerConfig> updatedSecretManagerConfig =
+        getRuntimeCredentialsInjectorInstance(secretManagerConfig.getEncryptionType())
+            .updateRuntimeCredentials(secretManagerConfig, runtimeParameters);
+    if (!updatedSecretManagerConfig.isPresent()) {
+      throw new InvalidRequestException("values of one or more run time fields are missing.");
+    }
+  }
+
   @Override
-  public boolean deleteFile(String accountId, String uuId) {
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
-    checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
+  public boolean deleteFile(String accountId, String uuid) {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
+    checkNotNull(encryptedData, "No encrypted record found with id " + uuid);
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions())) {
       throw new SecretManagementException(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
 
     List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
                                        .filter(ACCOUNT_ID_KEY, accountId)
-                                       .filter(ConfigFileKeys.encryptedFileId, uuId)
+                                       .filter(ConfigFileKeys.encryptedFileId, uuid)
                                        .asList();
     if (!configFiles.isEmpty()) {
       StringBuilder errorMessage = new StringBuilder("Being used by ");
@@ -2137,6 +2224,18 @@ public class SecretManagerImpl implements SecretManager {
         throw new IllegalStateException("Invalid type " + encryptedData.getEncryptionType());
     }
     return deleteAndReportForAuditRecord(accountId, encryptedData);
+  }
+
+  @Override
+  public boolean deleteFile(String accountId, String uuId, Map<String, String> runtimeParameters) {
+    EncryptedData encryptedData = getSecretById(accountId, uuId);
+    if (Objects.nonNull(encryptedData)) {
+      SecretManagerConfig secretManagerConfig = getSecretManager(accountId, encryptedData.getKmsId());
+      if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+        updateRuntimeParameters(secretManagerConfig, runtimeParameters);
+      }
+    }
+    return deleteFile(accountId, uuId);
   }
 
   @Override
