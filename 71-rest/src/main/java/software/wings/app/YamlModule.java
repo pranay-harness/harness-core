@@ -6,6 +6,7 @@ import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
 import static io.harness.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
+
 import static software.wings.beans.InfrastructureMappingType.AWS_AMI;
 import static software.wings.beans.InfrastructureMappingType.AWS_AWS_CODEDEPLOY;
 import static software.wings.beans.InfrastructureMappingType.AWS_AWS_LAMBDA;
@@ -122,7 +123,6 @@ import software.wings.service.impl.yaml.handler.setting.artifactserver.BambooCon
 import software.wings.service.impl.yaml.handler.setting.artifactserver.CustomArtifactServerConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.DockerRegistryConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.GcsHelmRepoConfigYamlHandler;
-import software.wings.service.impl.yaml.handler.setting.artifactserver.GitConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.HelmRepoYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.HttpHelmRepoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.JenkinsConfigYamlHandler;
@@ -141,6 +141,8 @@ import software.wings.service.impl.yaml.handler.setting.collaborationprovider.Ji
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.ServiceNowConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SmtpConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SpotInstConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.sourcerepoprovider.GitConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.sourcerepoprovider.SourceRepoProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.AppDynamicsConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.DynaTraceConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.ElkConfigYamlHandler;
@@ -316,7 +318,7 @@ public class YamlModule extends CommandLibrarySharedModule {
     artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.BAMBOO.name()).to(BambooConfigYamlHandler.class);
     artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.DOCKER.name())
         .to(DockerRegistryConfigYamlHandler.class);
-    artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.GIT.name()).to(GitConfigYamlHandler.class);
+
     artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.JENKINS.name())
         .to(JenkinsConfigYamlHandler.class);
     artifactServerYamlHelperMapBinder.addBinding(SettingVariableTypes.NEXUS.name()).to(NexusConfigYamlHandler.class);
@@ -396,6 +398,10 @@ public class YamlModule extends CommandLibrarySharedModule {
         .to(JiraConfigYamlHandler.class);
     collaborationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SERVICENOW.name())
         .to(ServiceNowConfigYamlHandler.class);
+
+    MapBinder<String, SourceRepoProviderYamlHandler> sourceRepoProviderYamlHelperMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, SourceRepoProviderYamlHandler.class);
+    sourceRepoProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.GIT.name()).to(GitConfigYamlHandler.class);
 
     MapBinder<String, CloudProviderYamlHandler> cloudProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CloudProviderYamlHandler.class);

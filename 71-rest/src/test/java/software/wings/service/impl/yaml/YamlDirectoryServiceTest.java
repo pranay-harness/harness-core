@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.HarnessStringUtils.join;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.DHRUV;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -81,6 +82,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
@@ -511,6 +513,33 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     assertThat(collabDirNode).hasSize(2);
     assertThat(Arrays.asList(collabDirNode.get(0).getName(), collabDirNode.get(1).getName()))
         .containsExactlyInAnyOrder(jiraConnector.getName() + YAML_EXTENSION, snowConnector.getName() + YAML_EXTENSION);
+  }
+
+  @Test
+  @Owner(developers = DHRUV)
+  @Category(UnitTests.class)
+  public void testDoSourceRepoProviders() {
+    SettingAttribute gitConnector = aSettingAttribute()
+                                        .withAccountId(ACCOUNT_ID)
+                                        .withName("git-connector")
+                                        .withCategory(CONNECTOR)
+                                        .withValue(GitConfig.builder()
+                                                       .repoUrl("https://test"
+                                                           + ".com")
+                                                       .username("test")
+                                                       .password("test".toCharArray())
+                                                       .build())
+                                        .build();
+
+    // mock stuff
+    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.GIT.name()))
+        .thenReturn(Arrays.asList(gitConnector));
+
+    final FolderNode sourceRepoFolderNode = yamlDirectoryService.doSourceRepoProviders(ACCOUNT_ID, directoryPath);
+    List<DirectoryNode> sourceRepoDirNode = getNodesOfClass(sourceRepoFolderNode, SettingAttribute.class);
+    assertThat(sourceRepoDirNode).hasSize(1);
+    assertThat(Arrays.asList(sourceRepoDirNode.get(0).getName()))
+        .containsExactlyInAnyOrder(gitConnector.getName() + YAML_EXTENSION);
   }
 
   @Test

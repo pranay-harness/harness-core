@@ -9,6 +9,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.sort;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -46,6 +47,7 @@ import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PROVISIONERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.SOURCE_REPO_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.TAGS_YAML;
 import static software.wings.beans.yaml.YamlConstants.TRIGGER_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VALUES_FOLDER;
@@ -543,6 +545,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     futureList.add(executorService.submit(() -> {
       try (UserThreadLocal.Guard guard = userGuard(user)) {
+        return doSourceRepoProviders(accountId, directoryPath.clone());
+      }
+    }));
+
+    futureList.add(executorService.submit(() -> {
+      try (UserThreadLocal.Guard guard = userGuard(user)) {
         return doVerificationProviders(accountId, directoryPath.clone());
       }
     }));
@@ -586,6 +594,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     configFolder.addChild(map.get(CLOUD_PROVIDERS_FOLDER));
     configFolder.addChild(map.get(ARTIFACT_SOURCES_FOLDER));
     configFolder.addChild(map.get(COLLABORATION_PROVIDERS_FOLDER));
+    configFolder.addChild(map.get(SOURCE_REPO_PROVIDERS_FOLDER));
     configFolder.addChild(map.get(VERIFICATION_PROVIDERS_FOLDER));
     configFolder.addChild(map.get(NOTIFICATION_GROUPS_FOLDER));
     if (map.containsKey(GLOBAL_TEMPLATE_LIBRARY_FOLDER)) {
@@ -599,6 +608,33 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     logger.info("********* ELAPSED_TIME: " + elapsedTime + " *********");
 
     return configFolder;
+  }
+
+  @VisibleForTesting
+  FolderNode doSourceRepoProviders(String accountId, DirectoryPath directoryPath) {
+    // create source repo providers
+    FolderNode sourceRepoFolder = new FolderNode(accountId, SOURCE_REPO_PROVIDERS_FOLDER, SettingAttribute.class,
+        directoryPath.add(YamlConstants.SOURCE_REPO_PROVIDERS_FOLDER), yamlGitSyncService);
+
+    doSourceRepoProviderType(accountId, sourceRepoFolder, SettingVariableTypes.GIT, directoryPath.clone());
+    sort(sourceRepoFolder.getChildren(), new DirectoryComparator());
+    return sourceRepoFolder;
+  }
+
+  private void doSourceRepoProviderType(
+      String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
+    List<SettingAttribute> settingAttributes;
+    settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+    if (settingAttributes != null) {
+      // iterate over providers
+      for (SettingAttribute settingAttribute : settingAttributes) {
+        DirectoryPath cpPath = directoryPath.clone();
+        String yamlFileName = getSettingAttributeYamlName(settingAttribute);
+        parentFolder.addChild(
+            new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
+                yamlFileName, SettingAttribute.class, cpPath.add(yamlFileName), yamlGitSyncService));
+      }
+    }
   }
 
   @Override

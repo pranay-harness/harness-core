@@ -67,6 +67,7 @@ import software.wings.service.impl.yaml.handler.setting.artifactserver.HelmRepoY
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.CloudProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.CollaborationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.loadbalancer.ElasticLoadBalancerConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.sourcerepoprovider.SourceRepoProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.VerificationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHandler;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
@@ -122,6 +123,7 @@ public class YamlHandlerFactory {
   @Inject private Map<String, CVConfigurationYamlHandler> cvConfigurationYamlHelperMap;
   @Inject private Map<String, InfrastructureProvisionerYamlHandler> infrastructureProvisionerYamlHandler;
   @Inject private Map<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMap;
+  @Inject private Map<String, SourceRepoProviderYamlHandler> sourceRepoProviderYamlHelperMap;
   @Inject private Map<String, CloudProviderYamlHandler> cloudProviderYamlHelperMap;
   @Inject private Map<String, HelmRepoYamlHandler> helmRepoYamlHelperMap;
   @Inject private Map<String, AzureArtifactsYamlHandler> azureArtifactsYamlHandlerMap;
@@ -196,6 +198,9 @@ public class YamlHandlerFactory {
         break;
       case COLLABORATION_PROVIDER:
         yamlHandler = collaborationProviderYamlHelperMap.get(subType);
+        break;
+      case SOURCE_REPO_PROVIDER:
+        yamlHandler = sourceRepoProviderYamlHelperMap.get(subType);
         break;
       case LOADBALANCER_PROVIDER:
         yamlHandler = elbConfigYamlHandler;
