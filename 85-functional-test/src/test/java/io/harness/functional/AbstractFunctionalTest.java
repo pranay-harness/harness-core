@@ -12,6 +12,8 @@ import graphql.GraphQLContext;
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
+import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.multiline.MultilineStringMixin;
@@ -221,10 +223,16 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   }
 
   private PlanExecution getPlanExecution(String uuid) {
-    return wingsPersistence.createQuery(PlanExecution.class)
+    return wingsPersistence.createQuery(PlanExecution.class, excludeAuthority)
         .filter(PlanExecutionKeys.uuid, uuid)
         .project(PlanExecutionKeys.status, true)
         .get();
+  }
+
+  public List<NodeExecution> getNodeExecutions(String planExecutionId) {
+    return wingsPersistence.createQuery(NodeExecution.class, excludeAuthority)
+        .filter(NodeExecutionKeys.planExecutionId, planExecutionId)
+        .asList();
   }
 
   private AnalysisContext getWorkflowExecutionWithVerification(

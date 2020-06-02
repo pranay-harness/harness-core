@@ -21,7 +21,7 @@ public interface CustomExecutionService {
 
   PlanExecution executeRollbackPlan();
 
-  PlanExecution executeSimpleShellScriptPlan();
+  PlanExecution executeSimpleShellScriptPlan(String accountId, String appId);
 
   PlanExecution executeTaskChainPlan();
 

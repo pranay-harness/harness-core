@@ -11,6 +11,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.delay.DelayEventNotifyData;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.state.core.dummy.DummySectionOutcome;
 import io.harness.state.core.dummy.DummySectionStepTransput;
 import io.harness.waiter.ListNotifyResponseData;
 import io.harness.waiter.StringNotifyResponseData;
@@ -31,6 +32,7 @@ public class OrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(ExecutionStatusResponseData.class, 3102);
     kryo.register(RetryAdviserParameters.class, 3103);
     kryo.register(DummySectionStepTransput.class, 3104);
+    kryo.register(DummySectionOutcome.class, 3105);
 
     // Put promoted classes here and do not change the id
     kryo.register(DelayEventNotifyData.class, 7273);
