@@ -938,6 +938,8 @@ public class UserServiceImpl implements UserService {
       userInvite.setUuid(inviteId);
       sendNewInvitationMail(userInvite, account, user);
       eventPublishHelper.publishUserInviteFromAccountEvent(accountId, userEmail);
+      auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userInvite, Type.CREATE);
+      logger.info("Auditing creation of userInvite={} for account={}", userInvite.getEmail(), account.getUuid());
     } else if (isNotEmpty(accountList) && accountList.contains(accountId)) {
       // user already present in the account
       updateUserGroupsOfUser(user.getUuid(), userGroupService.getUserGroupsFromUserInvite(userInvite), accountId, true);
@@ -948,13 +950,14 @@ public class UserServiceImpl implements UserService {
         wingsPersistence.updateField(
             UserInvite.class, existingInvite.getUuid(), "userGroups", userInvite.getUserGroups());
         sendNewInvitationMail(existingInvite, account, user);
+        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userInvite, Type.CREATE);
+        logger.info("Auditing creation of userInvite={} for account={}", userInvite.getEmail(), account.getUuid());
       }
     }
 
     logger.info("Invited user {} to join existing accountName {} with accountId {}", userInvite.getEmail(),
         userInvite.getAccountName(), userInvite.getAccountId());
-    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userInvite, Type.CREATE);
-    logger.info("Auditing creation of userInvite={} for account={}", userInvite.getEmail(), account.getUuid());
+
     return InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
   }
 

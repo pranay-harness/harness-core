@@ -15,6 +15,11 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
+import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
+import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -62,6 +67,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.features.RbacFeature;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.scheduler.LdapGroupSyncJob;
+import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.UserGroupUtils;
@@ -78,6 +84,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -416,6 +423,7 @@ public class UserGroupServiceImpl implements UserGroupService {
       String accountId, String userGroupId, AccountPermissions accountPermissions, Set<AppPermission> appPermissions) {
     UserGroup userGroup = get(accountId, userGroupId);
     checkImplicitPermissions(accountPermissions, accountId, userGroup.getName());
+    checkDeploymentPermissions(userGroup);
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, "appPermissions", appPermissions);
     setUnset(operations, "accountPermissions", accountPermissions);
@@ -424,9 +432,37 @@ public class UserGroupServiceImpl implements UserGroupService {
     return updatedUserGroup;
   }
 
+  private void checkDeploymentPermissions(UserGroup userGroup) {
+    if (isEmpty(userGroup.getAppPermissions())) {
+      return;
+    }
+
+    Set<AppPermission> newAppPermissions = new HashSet<>();
+    for (AppPermission appPermission : userGroup.getAppPermissions()) {
+      if (isNotEmpty(appPermission.getActions())
+          && (appPermission.getPermissionType() == ALL_APP_ENTITIES
+                 || appPermission.getPermissionType() == DEPLOYMENT)) {
+        Set<PermissionAttribute.Action> actionSet = new HashSet<>();
+        appPermission.getActions().forEach(action -> {
+          if (action != null && action.equals(EXECUTE)) {
+            actionSet.add(EXECUTE_PIPELINE);
+            actionSet.add(EXECUTE_WORKFLOW);
+          }
+          actionSet.add(action);
+        });
+        appPermission.setActions(actionSet);
+      }
+      newAppPermissions.add(appPermission);
+    }
+    if (!newAppPermissions.equals(userGroup.getAppPermissions())) {
+      userGroup.setAppPermissions(newAppPermissions);
+    }
+  }
+
   @Override
   public UserGroup updatePermissions(UserGroup userGroup) {
     checkImplicitPermissions(userGroup.getAccountPermissions(), userGroup.getAccountId(), userGroup.getName());
+    checkDeploymentPermissions(userGroup);
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, "appPermissions", userGroup.getAppPermissions());
     setUnset(operations, "accountPermissions", userGroup.getAccountPermissions());
@@ -448,12 +484,11 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     Set<PermissionType> permissions = accountPermissions.getPermissions();
-    if (isNotEmpty(permissions) && permissions.contains(PermissionType.USER_PERMISSION_MANAGEMENT)) {
-      if (!permissions.contains(PermissionType.USER_PERMISSION_READ)) {
-        logger.info("Received account permissions {} are not in proper format for account {}, userGroupName {}",
-            permissions, accountId, name);
-        throw new WingsException(ErrorCode.INVALID_ACCOUNT_PERMISSION, USER);
-      }
+    if (isNotEmpty(permissions) && permissions.contains(PermissionType.USER_PERMISSION_MANAGEMENT)
+        && !permissions.contains(PermissionType.USER_PERMISSION_READ)) {
+      logger.info("Received account permissions {} are not in proper format for account {}, userGroupName {}",
+          permissions, accountId, name);
+      throw new InvalidRequestException("Invalid account permission.", ErrorCode.INVALID_ACCOUNT_PERMISSION, USER);
     }
   }
 
