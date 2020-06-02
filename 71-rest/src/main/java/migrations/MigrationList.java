@@ -104,6 +104,7 @@ import migrations.all.OauthEnabledFieldMigration;
 import migrations.all.OverrideDefaultLimits;
 import migrations.all.PcfServiceDeploymentMigration;
 import migrations.all.PcfServiceSpecificationToManifestFileMigration;
+import migrations.all.PipelineWorkflowExecutionActionMigration;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import migrations.all.PrometheusCVMigration;
 import migrations.all.RemoveDupInstanceStats;
@@ -337,7 +338,7 @@ public class MigrationList {
         .add(Pair.of(310, DropAppIdIndexOnCommandLogs.class))
         .add(Pair.of(311, StackdriverMetricServiceGuardJsonMigration.class))
         .add(Pair.of(312, DropUniqueIndexOnImportedTemplate.class))
-
+        .add(Pair.of(313, PipelineWorkflowExecutionActionMigration.class))
         .build();
   }
 }
