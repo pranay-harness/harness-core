@@ -75,6 +75,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
+import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
 import io.harness.limits.ActionType;
@@ -771,17 +772,48 @@ public class UserServiceImpl implements UserService {
   @Override
   public List<InviteOperationResponse> inviteUsers(UserInvite userInvite) {
     String accountId = userInvite.getAccountId();
-
     limitCheck(accountId, userInvite);
 
-    return userInvite.getEmails()
-        .stream()
-        .map(email -> {
-          UserInvite userInviteClone = KryoUtils.clone(userInvite);
-          userInviteClone.setEmail(email.trim());
-          return inviteUserNew(userInviteClone);
-        })
-        .collect(toList());
+    Account account = accountService.get(accountId);
+    List<String> alreadyInvitedUsers = new ArrayList<>();
+    List<String> alreadyAddedUsers = new ArrayList<>();
+
+    userInvite.getEmails().forEach(email -> {
+      User user = getUserByEmail(email, accountId);
+      if (user != null && user.getPendingAccounts() != null && user.getPendingAccounts().contains(account)) {
+        alreadyInvitedUsers.add(email.trim());
+      } else if (user != null) {
+        alreadyAddedUsers.add(email.trim());
+      }
+    });
+
+    List<InviteOperationResponse> inviteOperationResponses = new ArrayList<>();
+
+    for (String email : userInvite.getEmails()) {
+      if (alreadyAddedUsers.contains(email)) {
+        inviteOperationResponses.add(InviteOperationResponse.USER_ALREADY_ADDED);
+        continue;
+      }
+      UserInvite userInviteClone = KryoUtils.clone(userInvite);
+      userInviteClone.setEmail(email.trim());
+      inviteOperationResponses.add(inviteUserNew(userInviteClone));
+    }
+
+    String message = "";
+    if (isNotEmpty(alreadyAddedUsers)) {
+      message += "User(s) with email: " + String.join(", ", alreadyAddedUsers)
+          + " are already part of the account. Please change their user groups individually on user's page."
+          + "\n";
+    }
+    if (isNotEmpty(alreadyInvitedUsers)) {
+      message += "User(s) with email: " + String.join(", ", alreadyInvitedUsers)
+          + " are already invited. Their user groups have been updated.";
+    }
+    if (!message.equals("")) {
+      throw new UserAlreadyPresentException(message);
+    }
+
+    return inviteOperationResponses;
   }
 
   private void limitCheck(String accountId, UserInvite userInvite) {
@@ -943,6 +975,7 @@ public class UserServiceImpl implements UserService {
     } else if (isNotEmpty(accountList) && accountList.contains(accountId)) {
       // user already present in the account
       updateUserGroupsOfUser(user.getUuid(), userGroupService.getUserGroupsFromUserInvite(userInvite), accountId, true);
+      return InviteOperationResponse.USER_ALREADY_ADDED;
     } else {
       // invitation not yet accepted, resend invitation email if groups are updated
       UserInvite existingInvite = getUserInviteByEmailAndAccount(userEmail, accountId);
@@ -953,6 +986,7 @@ public class UserServiceImpl implements UserService {
         auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userInvite, Type.CREATE);
         logger.info("Auditing creation of userInvite={} for account={}", userInvite.getEmail(), account.getUuid());
       }
+      return InviteOperationResponse.USER_ALREADY_INVITED;
     }
 
     logger.info("Invited user {} to join existing accountName {} with accountId {}", userInvite.getEmail(),
