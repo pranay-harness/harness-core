@@ -2,6 +2,7 @@ package software.wings.security.authentication;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.UNKNOWN;
@@ -12,14 +13,18 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.User.Builder.anUser;
 import static software.wings.security.authentication.TwoFactorAuthenticationMechanism.TOTP;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -305,6 +310,26 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
         assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
       }
     }
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testAuditForTwoFactorLogin() {
+    String jwtToken = "YWJjOmFiYw==";
+    Account account = anAccount().withUuid("Account1").build();
+    TOTPAuthHandler mockedTotpAuthHandler = mock(TOTPAuthHandler.class);
+    TwoFactorAuthenticationManager spyTwoFactorAuthenticationManager = spy(twoFactorAuthenticationManager);
+
+    User user = anUser().uuid("User1").accounts(Lists.newArrayList(account)).build();
+    when(userService.verifyJWTToken(anyString(), any())).thenReturn(user);
+    doReturn(mockedTotpAuthHandler).when(spyTwoFactorAuthenticationManager).getTwoFactorAuthHandler(any());
+    when(mockedTotpAuthHandler.authenticate(any(), anyString())).thenReturn(user);
+    doNothing().when(authService).auditLogin(any());
+
+    spyTwoFactorAuthenticationManager.authenticate(jwtToken);
+
+    verify(authService).auditLogin(any());
   }
 
   private Account getAccount(String accountType, boolean twoFactorAdminEnforced) {

@@ -4,6 +4,7 @@ import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.rule.OwnerRule.AMAN;
+import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
@@ -14,11 +15,17 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.User.Builder.anUser;
+import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
@@ -82,13 +89,11 @@ public class AuthenticationManagerTest extends WingsBaseTest {
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
     when(AUTHENTICATION_UTL.getUser("testUser", WingsException.USER)).thenReturn(mockUser);
-    assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
-        .isEqualTo(AuthenticationMechanism.USER_PASSWORD);
+    assertThat(authenticationManager.getAuthenticationMechanism("testUser")).isEqualTo(USER_PASSWORD);
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
-    when(account1.getAuthenticationMechanism()).thenReturn(AuthenticationMechanism.USER_PASSWORD);
-    assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
-        .isEqualTo(AuthenticationMechanism.USER_PASSWORD);
+    when(account1.getAuthenticationMechanism()).thenReturn(USER_PASSWORD);
+    assertThat(authenticationManager.getAuthenticationMechanism("testUser")).isEqualTo(USER_PASSWORD);
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
     when(account1.getAuthenticationMechanism()).thenReturn(AuthenticationMechanism.SAML);
@@ -164,16 +169,15 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     when(USER_SERVICE.getAccountByIdIfExistsElseGetDefaultAccount(any(User.class), Optional.of(anyString())))
         .thenReturn(account1);
     LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
-    assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
+    assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
     assertThat(loginTypeResponse.getSSORequest()).isNull();
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
     when(AUTHENTICATION_UTL.getUser("testUser", WingsException.USER)).thenReturn(mockUser);
-    assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
-        .isEqualTo(AuthenticationMechanism.USER_PASSWORD);
+    assertThat(authenticationManager.getAuthenticationMechanism("testUser")).isEqualTo(USER_PASSWORD);
 
     loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
-    assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
+    assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
     assertThat(loginTypeResponse.getSSORequest()).isNull();
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
@@ -258,7 +262,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     String password = PASSWORD_WITH_SPECIAL_CHARECTERS;
     User user = authenticationManager.defaultLogin(Base64.encodeBase64String((USER_NAME + ":" + password).getBytes()));
 
-    Mockito.verify(PASSWORD_BASED_AUTH_HANDLER, times(1)).authenticate(argCaptor.capture());
+    verify(PASSWORD_BASED_AUTH_HANDLER, times(1)).authenticate(argCaptor.capture());
 
     assertThat(USER_NAME).isEqualTo(argCaptor.getAllValues().get(0));
     assertThat(password).isEqualTo(argCaptor.getAllValues().get(1));
@@ -323,6 +327,51 @@ public class AuthenticationManagerTest extends WingsBaseTest {
 
     LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse(NON_EXISTING_USER);
     assertThat(loginTypeResponse).isNotNull();
-    assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
+    assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testAuditForDefaultLogin() {
+    Account account = anAccount().withUuid("AccountId1").build();
+    AuthenticationManager spyAuthenticationManager = spy(authenticationManager);
+    User userToBeReturned = anUser()
+                                .twoFactorAuthenticationEnabled(false)
+                                .defaultAccountId("AccountId1")
+                                .uuid("User")
+                                .accounts(Lists.newArrayList(account))
+                                .build();
+
+    when(PASSWORD_BASED_AUTH_HANDLER.authenticate(any(), any()))
+        .thenReturn(new AuthenticationResponse(userToBeReturned));
+    doReturn(USER_PASSWORD).when(spyAuthenticationManager).getAuthenticationMechanism(any());
+    when(AUTHSERVICE.generateBearerTokenForUser(any())).thenReturn(userToBeReturned);
+    doNothing().when(AUTHSERVICE).auditLogin(any());
+
+    spyAuthenticationManager.defaultLogin("abcd", "abcd");
+    verify(AUTHSERVICE).auditLogin(any());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testAuditForLoginWithSso() {
+    Account account = anAccount().withUuid("AccountId1").build();
+    AuthenticationManager spyAuthenticationManager = spy(authenticationManager);
+    User userToBeReturned = anUser()
+                                .twoFactorAuthenticationEnabled(false)
+                                .defaultAccountId("AccountId1")
+                                .uuid("User")
+                                .accounts(Lists.newArrayList(account))
+                                .build();
+
+    when(USER_SERVICE.verifyJWTToken(anyString(), any())).thenReturn(userToBeReturned);
+    when(AUTHSERVICE.generateBearerTokenForUser(any())).thenReturn(userToBeReturned);
+    doNothing().when(AUTHSERVICE).auditLogin(any());
+
+    spyAuthenticationManager.ssoRedirectLogin("abcd");
+
+    verify(AUTHSERVICE).auditLogin(any());
   }
 }

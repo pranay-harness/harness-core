@@ -61,7 +61,9 @@ public class TwoFactorAuthenticationManager {
       throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST);
     }
 
-    user = getTwoFactorAuthHandler(user.getTwoFactorAuthenticationMechanism()).authenticate(user, passcode);
+    User loggedInUser =
+        getTwoFactorAuthHandler(user.getTwoFactorAuthenticationMechanism()).authenticate(user, passcode);
+    authService.auditLogin(loggedInUser);
     return authService.generateBearerTokenForUser(user);
   }
 

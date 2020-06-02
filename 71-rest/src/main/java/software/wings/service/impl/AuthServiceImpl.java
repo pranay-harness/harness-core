@@ -68,6 +68,7 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.AuthToken.AuthTokenKeys;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.Event;
 import software.wings.beans.Permission;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Role;
@@ -114,6 +115,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -139,6 +141,7 @@ public class AuthServiceImpl implements AuthService {
   @Inject private ExecutorService executorService;
   @Inject private ApiKeyService apiKeyService;
   @Inject @Nullable private SegmentHandler segmentHandler;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, HPersistence persistence, UserService userService,
@@ -1122,6 +1125,15 @@ public class AuthServiceImpl implements AuthService {
 
     if (!authHandler.checkIfPipelineHasOnlyGivenEnvs(pipeline, allowedEnvIds)) {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+    }
+  }
+
+  @Override
+  public void auditLogin(User loggedInUser) {
+    if (Objects.nonNull(loggedInUser) && Objects.nonNull(loggedInUser.getAccounts())) {
+      loggedInUser.getAccounts().forEach(account
+          -> auditServiceHelper.reportForAuditingUsingAccountId(
+              account.getUuid(), null, loggedInUser, Event.Type.LOGIN));
     }
   }
 
