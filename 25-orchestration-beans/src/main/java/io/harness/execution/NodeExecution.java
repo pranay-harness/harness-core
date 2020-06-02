@@ -18,6 +18,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.persistence.converters.DurationConverter;
 import io.harness.plan.PlanNode;
+import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepParameters;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -76,6 +77,8 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   @Singular List<String> retryIds;
 
   @Singular private List<InterruptEffect> interruptHistories;
+
+  FailureInfo failureInfo;
 
   public boolean isRetry() {
     return isNotEmpty(retryIds);

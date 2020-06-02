@@ -7,8 +7,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.status.Status;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StatusNotifyResponseData;
-import io.harness.state.io.StepResponse.FailureInfo;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponseNotifyData;
 

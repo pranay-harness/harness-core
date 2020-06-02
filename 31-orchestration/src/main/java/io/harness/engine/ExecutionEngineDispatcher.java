@@ -1,14 +1,10 @@
 package io.harness.engine;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.WingsException;
-import io.harness.logging.AutoLogContext;
-import io.harness.logging.ExceptionLogger;
 import io.harness.state.io.StepTransput;
 import lombok.Builder;
 import lombok.Value;
@@ -28,12 +24,6 @@ public class ExecutionEngineDispatcher implements Runnable {
 
   @Override
   public void run() {
-    try (AutoLogContext ignore = ambiance.autoLogContext()) {
-      executionEngine.startNodeExecution(ambiance, additionalInputs);
-    } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
-    } catch (Exception exception) {
-      logger.error("Unhandled exception", exception);
-    }
+    executionEngine.startNodeExecution(ambiance, additionalInputs);
   }
 }

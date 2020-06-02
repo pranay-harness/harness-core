@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
-import io.harness.exception.FailureType;
 import io.harness.execution.status.Status;
 import lombok.Builder;
 import lombok.NonNull;
@@ -14,7 +13,6 @@ import lombok.Singular;
 import lombok.Value;
 
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,13 +24,6 @@ public class StepResponse {
   @NonNull Status status;
   @Singular Collection<StepOutcome> stepOutcomes;
   FailureInfo failureInfo;
-
-  @Value
-  @Builder
-  public static class FailureInfo {
-    String errorMessage;
-    @Builder.Default EnumSet<FailureType> failureTypes = EnumSet.noneOf(FailureType.class);
-  }
 
   @Value
   @Builder
