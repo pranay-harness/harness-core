@@ -28,11 +28,13 @@ import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.ResourceLookup;
 import software.wings.beans.ResourceLookup.ResourceLookupKeys;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -47,6 +49,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -163,6 +166,26 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
         .field(ResourceLookupKeys.resourceId)
         .in(resourceIds)
         .asList();
+  }
+
+  @Override
+  public Map<String, String> getServiceName(String accountId, List<String> serviceIds) {
+    List<Service> services = persistence.createQuery(Service.class)
+                                 .filter(ServiceKeys.accountId, accountId)
+                                 .field(ServiceKeys.uuid)
+                                 .in(serviceIds)
+                                 .asList();
+    return services.stream().collect(Collectors.toMap(Service::getUuid, Service::getName));
+  }
+
+  @Override
+  public Map<String, String> getEnvName(String accountId, List<String> envIds) {
+    List<Environment> environments = persistence.createQuery(Environment.class)
+                                         .filter(EnvironmentKeys.accountId, accountId)
+                                         .field(EnvironmentKeys.uuid)
+                                         .in(envIds)
+                                         .asList();
+    return environments.stream().collect(Collectors.toMap(Environment::getUuid, Environment::getName));
   }
 
   @Override

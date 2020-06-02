@@ -3,7 +3,7 @@ package io.harness.functional.trigger;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.generator.PipelineGenerator.Pipelines.BASIC;
-import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -148,7 +148,7 @@ public class TriggerFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ABHINAV)
+  @Owner(developers = POOJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void testPipelineCompletionTrigger() {
     GenericType<RestResponse<Trigger>> triggerType = new GenericType<RestResponse<Trigger>>() {

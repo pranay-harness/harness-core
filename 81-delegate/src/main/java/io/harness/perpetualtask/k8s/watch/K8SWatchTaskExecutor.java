@@ -65,7 +65,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     try {
       Instant now = Instant.now();
       String watchId = k8sWatchServiceDelegate.create(watchTaskParams);
-      logger.info("Created a watch with id {}.", watchId);
+      logger.info("Ensured watch exists with id {}.", watchId);
       K8sClusterConfig k8sClusterConfig =
           (K8sClusterConfig) KryoUtils.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
       K8sMetricsClient k8sMetricsClient =

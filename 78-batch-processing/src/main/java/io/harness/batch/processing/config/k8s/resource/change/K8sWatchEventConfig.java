@@ -1,7 +1,11 @@
-package io.harness.batch.processing.config;
+package io.harness.batch.processing.config.k8s.resource.change;
+
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableList;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.CostEventSource;
@@ -15,10 +19,10 @@ import io.harness.batch.processing.k8s.WatchEventCostEstimator;
 import io.harness.batch.processing.processor.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.reader.EventReaderFactory;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
+import io.harness.batch.processing.support.Deduper;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.ccm.cluster.dao.K8sYamlDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
-import io.harness.ccm.cluster.entities.K8sYaml;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.govern.Switch;
 import io.harness.perpetualtask.k8s.watch.K8sWatchEvent;
@@ -42,6 +46,8 @@ import org.springframework.context.annotation.Configuration;
 import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -53,6 +59,9 @@ public class K8sWatchEventConfig {
   private static final int BATCH_SIZE = 100;
   private final EventReaderFactory eventReaderFactory;
   private final StepBuilderFactory stepBuilderFactory;
+
+  private Cache<WorkloadId, Long> workloadLastChangeTimestamps = Caffeine.newBuilder().build();
+  private Cache<WorkloadId, Deduper<WorkloadEventId>> workloadRecentHistoryCache = Caffeine.newBuilder().build();
 
   public K8sWatchEventConfig(
       @Qualifier("mongoEventReader") EventReaderFactory eventReaderFactory, StepBuilderFactory stepBuilderFactory) {
@@ -68,32 +77,35 @@ public class K8sWatchEventConfig {
   }
 
   @Bean
-  public ItemProcessor<PublishedMessage, PublishedMessage> normalizer(K8sYamlDao k8sYamlDao) {
+  @StepScope
+  public ItemProcessor<PublishedMessage, PublishedMessage> normalizer(
+      CostEventService costEventService, @Value("#{jobParameters[startDate]}") long startDate) {
+    String[] lastProcessedAccountId = {""};
     return k8sWatchEventMsg -> {
+      String accountId = k8sWatchEventMsg.getAccountId();
+      if (!lastProcessedAccountId[0].equals(accountId)) {
+        workloadLastChangeTimestamps.invalidateAll();
+        workloadRecentHistoryCache.invalidateAll();
+        lastProcessedAccountId[0] = accountId;
+      }
       K8sWatchEvent k8sWatchEvent = (K8sWatchEvent) k8sWatchEventMsg.getMessage();
-      // special handling for added events (for restarting watches)
-      if (k8sWatchEvent.getType() == K8sWatchEvent.Type.TYPE_ADDED) {
-        K8sYaml k8sYaml = k8sYamlDao.fetchLatestYaml(
-            k8sWatchEventMsg.getAccountId(), k8sWatchEvent.getClusterId(), k8sWatchEvent.getResourceRef().getUid());
-        if (k8sYaml != null) {
-          if (k8sWatchEvent.getNewResourceYaml().equals(k8sYaml.getYaml())) {
-            // same yaml already captured - skip.
-            return null;
-          }
-          // latest captured yaml is different - convert to updated event.
-          return k8sWatchEventMsg.toBuilder()
-              .message(K8sWatchEvent.newBuilder(k8sWatchEvent)
-                           .setType(K8sWatchEvent.Type.TYPE_UPDATED)
-                           .setOldResourceYaml(k8sYaml.getYaml())
-                           .setOldResourceVersion(k8sYaml.getResourceVersion())
-                           .setDescription("Missed update event")
-                           .build())
-              .build();
-        }
-        // No pre-existing yaml => true ADDED
+      Instant minChangeInstant = Instant.ofEpochMilli(startDate).minus(1, ChronoUnit.DAYS);
+      Deduper<WorkloadEventId> deduper = requireNonNull(workloadRecentHistoryCache.get(
+          WorkloadId.of(k8sWatchEvent.getClusterId(), k8sWatchEvent.getResourceRef().getUid()),
+          wl
+          -> new Deduper<>(costEventService
+                               .getEventsForWorkload(accountId, wl.getClusterId(), wl.getUid(),
+                                   CostEventType.K8S_RESOURCE_CHANGE.name(), minChangeInstant.toEpochMilli())
+                               .stream()
+                               .map(ced
+                                   -> Deduper.Timestamped.of(ced.getStartTimestamp(),
+                                       WorkloadEventId.of(ced.getOldYamlRef(), ced.getNewYamlRef())))
+                               .collect(Collectors.toList()))));
+      if (deduper.checkEvent(
+              Deduper.Timestamped.of(k8sWatchEventMsg.getOccurredAt(), WorkloadEventId.of(accountId, k8sWatchEvent)))) {
         return k8sWatchEventMsg;
       }
-      return k8sWatchEventMsg;
+      return null;
     };
   }
 
@@ -171,6 +183,7 @@ public class K8sWatchEventConfig {
                           .namespace(k8sWatchEvent.getResourceRef().getNamespace())
                           .workloadName(k8sWatchEvent.getResourceRef().getName())
                           .workloadType(k8sWatchEvent.getResourceRef().getKind())
+                          .instanceId(k8sWatchEvent.getResourceRef().getUid())
                           .billingAmount(diffAmount)
                           .oldYamlRef(oldYamlRef)
                           .newYamlRef(newYamlRef)
@@ -207,7 +220,7 @@ public class K8sWatchEventConfig {
   }
   @Bean
   @Autowired
-  public Job k8sClusterEventsJob(JobBuilderFactory jobBuilderFactory, Step k8sWatchEventsStep) {
+  public Job k8sWatchEventsJob(JobBuilderFactory jobBuilderFactory, Step k8sWatchEventsStep) {
     return jobBuilderFactory.get(BatchJobType.K8S_WATCH_EVENT.name())
         .incrementer(new RunIdIncrementer())
         .start(k8sWatchEventsStep)

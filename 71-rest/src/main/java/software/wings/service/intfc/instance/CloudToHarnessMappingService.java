@@ -12,6 +12,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface CloudToHarnessMappingService {
@@ -29,6 +30,10 @@ public interface CloudToHarnessMappingService {
   Account getAccountInfoFromId(String accountId);
 
   List<ResourceLookup> getResourceList(String accountId, List<String> resourceIds);
+
+  Map<String, String> getServiceName(String accountId, List<String> serviceIds);
+
+  Map<String, String> getEnvName(String accountId, List<String> envIds);
 
   List<DeploymentSummary> getDeploymentSummary(String accountId, String offset, Instant startTime, Instant endTime);
 

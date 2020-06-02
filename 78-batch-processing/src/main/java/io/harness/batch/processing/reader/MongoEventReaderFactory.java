@@ -28,8 +28,8 @@ public class MongoEventReaderFactory implements EventReaderFactory {
         Criteria.where(PublishedMessageKeys.type).is(messageType),
         Criteria.where(PublishedMessageKeys.createdAt).gte(startDate).lt(endDate)));
 
-    query.with(Sort.by(PublishedMessageKeys.accountId, PublishedMessageKeys.type, PublishedMessageKeys.createdAt,
-        PublishedMessageKeys.occurredAt));
+    query.with(Sort.by(PublishedMessageKeys.accountId, PublishedMessageKeys.type, PublishedMessageKeys.occurredAt,
+        PublishedMessageKeys.createdAt));
 
     MongoItemReader<PublishedMessage> reader = new MongoItemReader<>();
     reader.setTemplate(mongoTemplate);

@@ -28,13 +28,13 @@ import org.springframework.batch.core.JobParameter;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import software.wings.api.DeploymentSummary;
-import software.wings.beans.ResourceLookup;
 import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,7 +87,8 @@ public class DeploymentEventWriterTest extends CategoryTest {
     when(cloudToHarnessMappingService.getDeploymentSummary(ACCOUNT_ID, String.valueOf(1),
              Instant.ofEpochMilli(START_TIME_MILLIS), Instant.ofEpochMilli(END_TIME_MILLIS)))
         .thenReturn(emptyList());
-    when(cloudToHarnessMappingService.getResourceList(any(), any())).thenReturn(resourceLookupList());
+    when(cloudToHarnessMappingService.getServiceName(any(), any())).thenReturn(serviceName());
+    when(cloudToHarnessMappingService.getEnvName(any(), any())).thenReturn(envName());
     when(cloudToHarnessMappingService.getHarnessServiceInfoList(any())).thenReturn(harnessServiceInfoList());
 
     deploymentEventWriter.write(emptyList());
@@ -131,13 +132,19 @@ public class DeploymentEventWriterTest extends CategoryTest {
     return Arrays.asList(deploymentSummaryFirst, deploymentSummarySecond);
   }
 
-  private List<ResourceLookup> resourceLookupList() {
-    ResourceLookup serviceResourceLookup =
-        ResourceLookup.builder().resourceId(SERVICE_ID).resourceName(SERVICE_NAME).build();
-    ResourceLookup serviceResourceLookupTwo =
-        ResourceLookup.builder().resourceId(SERVICE_ID_TWO).resourceName(SERVICE_NAME_TWO).build();
-    ResourceLookup envResourceLookup = ResourceLookup.builder().resourceId(ENV_ID).resourceName(ENV_NAME).build();
-    return Arrays.asList(serviceResourceLookup, serviceResourceLookupTwo, envResourceLookup);
+  private Map<String, String> serviceName() {
+    return Collections.unmodifiableMap(new HashMap<String, String>() {
+      {
+        put(SERVICE_ID, SERVICE_NAME);
+        put(SERVICE_ID_TWO, SERVICE_NAME_TWO);
+      }
+    });
+  }
+
+  private Map<String, String> envName() {
+    return Collections.unmodifiableMap(new HashMap<String, String>() {
+      { put(ENV_ID, ENV_NAME); }
+    });
   }
 
   private List<HarnessServiceInfo> harnessServiceInfoList() {

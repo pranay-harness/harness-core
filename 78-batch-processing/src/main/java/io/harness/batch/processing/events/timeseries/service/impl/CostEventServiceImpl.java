@@ -10,9 +10,14 @@ import software.wings.graphql.datafetcher.DataFetcherUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
+import java.util.TimeZone;
 
 @Slf4j
 @Service
@@ -32,7 +37,15 @@ public class CostEventServiceImpl implements CostEventService {
 
   static final String UPDATE_DEPLOYMENT_STATEMENT =
       "UPDATE COST_EVENT_DATA SET SETTINGID=?, CLUSTERID=?, CLUSTERTYPE=?, CLOUDPROVIDER=?, NAMESPACE=?, WORKLOADNAME=?,"
-      + "WORKLOADTYPE=?, CLOUDSERVICENAME=?, TASKID=?, LAUNCHTYPE=? WHERE DEPLOYMENTID=? AND CLUSTERID IS NULL ";
+      + "WORKLOADTYPE=?, CLOUDSERVICENAME=?, TASKID=?, LAUNCHTYPE=? WHERE ACCOUNTID=? AND DEPLOYMENTID=? AND CLUSTERID IS NULL ";
+
+  static final String SELECT_EVENTS_FOR_WORKLOAD =
+      "SELECT STARTTIME, OLDYAMLREF, NEWYAMLREF FROM COST_EVENT_DATA WHERE ACCOUNTID=? AND CLUSTERID=? AND INSTANCEID=?"
+      + " AND COSTEVENTTYPE=? AND STARTTIME >= ?";
+
+  private static final String SELECT_LATEST_TIMESTAMP_STATEMENT =
+      "SELECT MAX(STARTTIME) FROM COST_EVENT_DATA WHERE ACCOUNTID=? AND CLUSTERID=? AND INSTANCEID=?"
+      + " AND COSTEVENTTYPE=? AND STARTTIME >= ?";
 
   @Override
   public boolean create(List<CostEventData> costEventDataList) {
@@ -55,7 +68,7 @@ public class CostEventServiceImpl implements CostEventService {
           }
           successfulInsert = true;
         } catch (SQLException e) {
-          logger.error("Failed to save cost event retryCount=[{}]", retryCount);
+          logger.error("Failed to save cost event retryCount=[{}]", retryCount, e);
           retryCount++;
         }
       }
@@ -77,11 +90,74 @@ public class CostEventServiceImpl implements CostEventService {
         statement.executeUpdate();
         successfulUpdate = true;
       } catch (SQLException e) {
-        logger.error("Failed to update deployment cost event retryCount=[{}]", retryCount);
+        logger.error("Failed to update deployment cost event retryCount=[{}]", retryCount, e);
         retryCount++;
       }
     }
     return successfulUpdate;
+  }
+
+  @Override
+  public Timestamp getLastChangeTimestamp(
+      String accountId, String clusterId, String instanceId, String costEventType, Timestamp startTimestamp) {
+    int retryCount = 0;
+    while (retryCount < MAX_RETRY_COUNT) {
+      try (Connection dbConnection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = dbConnection.prepareStatement(SELECT_LATEST_TIMESTAMP_STATEMENT)) {
+        statement.setString(1, accountId);
+        statement.setString(2, clusterId);
+        statement.setString(3, instanceId);
+        statement.setString(4, costEventType);
+        statement.setTimestamp(5, startTimestamp);
+        logger.debug("getLastChangeTimestamp query {}", statement);
+        try (ResultSet resultSet = statement.executeQuery()) {
+          if (resultSet.next()) {
+            return resultSet.getTimestamp(1, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+          }
+        }
+      } catch (SQLException e) {
+        logger.error("Failed to get latest timestamp retryCount=[{}]", retryCount, e);
+        retryCount++;
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public List<CostEventData> getEventsForWorkload(
+      String accountId, String clusterId, String instanceId, String costEventType, long startTimeMillis) {
+    int retryCount = 0;
+    while (retryCount < MAX_RETRY_COUNT) {
+      List<CostEventData> costEventDataList = new ArrayList<>();
+      try (Connection dbConnection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = dbConnection.prepareStatement(SELECT_EVENTS_FOR_WORKLOAD)) {
+        statement.setString(1, accountId);
+        statement.setString(2, clusterId);
+        statement.setString(3, instanceId);
+        statement.setString(4, costEventType);
+        statement.setTimestamp(5, new Timestamp(startTimeMillis));
+        logger.debug("getEventsForWorkload query {}", statement);
+        try (ResultSet resultSet = statement.executeQuery()) {
+          while (resultSet.next()) {
+            costEventDataList.add(
+                CostEventData.builder()
+                    .startTimestamp(
+                        resultSet.getTimestamp(1, Calendar.getInstance(TimeZone.getTimeZone("UTC"))).getTime())
+                    .accountId(accountId)
+                    .clusterId(clusterId)
+                    .instanceId(instanceId)
+                    .oldYamlRef(resultSet.getString(2))
+                    .newYamlRef(resultSet.getString(3))
+                    .build());
+          }
+          return costEventDataList;
+        }
+      } catch (SQLException e) {
+        logger.error("Failed getEventsForWorkload retryCount=[{}]", retryCount, e);
+        retryCount++;
+      }
+    }
+    return Collections.emptyList();
   }
 
   private void updateDeploymentStatement(PreparedStatement statement, CostEventData costEventData) throws SQLException {
@@ -95,7 +171,8 @@ public class CostEventServiceImpl implements CostEventService {
     statement.setString(8, costEventData.getCloudServiceName());
     statement.setString(9, costEventData.getTaskId());
     statement.setString(10, costEventData.getLaunchType());
-    statement.setString(11, costEventData.getDeploymentId());
+    statement.setString(11, costEventData.getAccountId());
+    statement.setString(12, costEventData.getDeploymentId());
   }
 
   private void updateInsertStatement(PreparedStatement statement, CostEventData costEventData) throws SQLException {
