@@ -36,6 +36,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;
@@ -68,6 +69,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.AzureArtifactsBuildService;
 import software.wings.service.intfc.BambooBuildService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.GcsBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
@@ -106,6 +108,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private BuildSourceServiceImpl buildSourceService;
   @Mock DelegateProxyFactory delegateProxyFactory;
   @Mock ExpressionEvaluator evaluator;
+  @Mock FeatureFlagService featureFlagService;
 
   @Test
   @Owner(developers = AADITI)
@@ -1125,5 +1128,18 @@ public class BuildSourceServiceTest extends WingsBaseTest {
         .thenReturn(BuildDetails.Builder.aBuildDetails().withNumber("1.0.0").build());
     BuildDetails buildDetails = buildSourceService.getBuild(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID, runtimeValues);
     assertThat(buildDetails).isNotNull();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testCollectArtifactForParameterizedArtifactStreamShouldFail() {
+    NexusArtifactStream nexusArtifactStream =
+        NexusArtifactStream.builder().uuid(ARTIFACT_STREAM_ID).accountId(ACCOUNT_ID).build();
+    nexusArtifactStream.setArtifactStreamParameterized(true);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    buildSourceService.collectArtifact(
+        APP_ID, ARTIFACT_STREAM_ID, BuildDetails.Builder.aBuildDetails().withNumber("1.0").build());
   }
 }

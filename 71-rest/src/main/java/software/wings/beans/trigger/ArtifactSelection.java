@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.yaml.BaseYaml;
 
 /**
@@ -30,6 +31,7 @@ public class ArtifactSelection {
   private String workflowId;
   private String workflowName;
   private boolean regex;
+  @Transient private String uiDisplayName;
 
   public enum Type { ARTIFACT_SOURCE, LAST_COLLECTED, LAST_DEPLOYED, PIPELINE_SOURCE, WEBHOOK_VARIABLE }
 

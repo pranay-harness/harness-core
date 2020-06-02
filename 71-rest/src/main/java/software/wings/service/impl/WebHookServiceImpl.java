@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
@@ -288,12 +289,20 @@ public class WebHookServiceImpl implements WebHookService {
 
   private Response resolveServiceBuildNumbers(
       String appId, WebHookRequest webHookRequest, Map<String, ArtifactSummary> serviceArtifactMapping) {
-    List<Map<String, String>> artifacts = webHookRequest.getArtifacts();
+    List<Map<String, Object>> artifacts = webHookRequest.getArtifacts();
     if (artifacts != null) {
-      for (Map<String, String> artifact : artifacts) {
-        String serviceName = artifact.get("service");
-        String buildNumber = artifact.get("buildNumber");
-        String artifactStreamName = artifact.get("artifactSourceName");
+      for (Map<String, Object> artifact : artifacts) {
+        String serviceName = (String) artifact.get("service");
+        String buildNumber = (String) artifact.get("buildNumber");
+        String artifactStreamName = (String) artifact.get("artifactSourceName");
+        String accountId = appService.getAccountIdByAppId(appId);
+        Map<String, Object> parameterMap = null;
+        if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, accountId)) {
+          parameterMap = (Map<String, Object>) artifact.get("artifactVariables");
+          if (isNotEmpty(parameterMap)) {
+            parameterMap.put("buildNo", buildNumber);
+          }
+        }
         logger.info("WebHook params Service name {}, Build Number {} and Artifact Source Name {}", serviceName,
             buildNumber, artifactStreamName);
         if (serviceName != null) {
@@ -303,8 +312,17 @@ public class WebHookServiceImpl implements WebHookService {
                 WebHookResponse.builder().error("Service Name [" + serviceName + "] does not exist").build(),
                 Response.Status.BAD_REQUEST);
           }
-          serviceArtifactMapping.put(
-              service.getUuid(), ArtifactSummary.builder().name(artifactStreamName).buildNo(buildNumber).build());
+          if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, accountId) && isNotEmpty(parameterMap)) {
+            serviceArtifactMapping.put(service.getUuid(),
+                ArtifactSummary.builder()
+                    .name(artifactStreamName)
+                    .buildNo(buildNumber)
+                    .artifactParameters(parameterMap)
+                    .build());
+          } else {
+            serviceArtifactMapping.put(
+                service.getUuid(), ArtifactSummary.builder().name(artifactStreamName).buildNo(buildNumber).build());
+          }
         }
       }
     }

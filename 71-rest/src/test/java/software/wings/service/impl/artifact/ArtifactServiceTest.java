@@ -1382,4 +1382,15 @@ public class ArtifactServiceTest extends WingsBaseTest {
     assertThat(artifact.getBuildIdentity()).contains("200");
     assertThat(artifact.getArtifactSourceName()).isEqualTo("releases/mygroup/myartifact");
   }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetArtifactByBuildNumberAndSourceName() {
+    Artifact savedArtifact = artifactService.create(artifactBuilder.build(), true);
+    artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAccountId(), APPROVED);
+    Artifact latestArtifact = artifactService.getArtifactByBuildNumberAndSourceName(
+        jenkinsArtifactStream, savedArtifact.getBuildNo(), false, jenkinsArtifactStream.getSourceName());
+    assertThat(latestArtifact).isNotNull().extracting(Artifact::getUuid).isEqualTo(savedArtifact.getUuid());
+  }
 }

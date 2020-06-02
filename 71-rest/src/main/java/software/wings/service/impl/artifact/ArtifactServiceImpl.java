@@ -626,6 +626,20 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
+  public Artifact getArtifactByBuildNumberAndSourceName(
+      ArtifactStream artifactStream, String buildNumber, boolean regex, String artifactSourceName) {
+    // TODO: ASR: update with accountId
+    Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class, excludeAuthority)
+                                        .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid());
+
+    return artifactQuery.filter(ArtifactKeys.artifactSourceName, artifactSourceName)
+        .filter(ArtifactKeys.metadata_buildNo, regex ? compile(buildNumber) : buildNumber)
+        .order("-createdAt")
+        .disableValidation()
+        .get();
+  }
+
+  @Override
   public Artifact startArtifactCollection(String accountId, String artifactId) {
     logger.info("Start collecting artifact {} of accountId {}", artifactId, accountId);
     Artifact artifact = wingsPersistence.get(Artifact.class, artifactId);

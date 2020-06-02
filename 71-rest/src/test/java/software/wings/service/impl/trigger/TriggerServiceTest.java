@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -43,7 +44,9 @@ import static software.wings.beans.trigger.WebhookSource.GITHUB;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.artifact;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildArtifactTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildJenkinsArtifactStream;
+import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildNewArtifactTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildNewInstanceTrigger;
+import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildNexusArtifactStream;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildPipeline;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildPipelineCondTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildScheduledCondTrigger;
@@ -85,6 +88,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.distribution.idempotence.IdempotentLock;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -108,6 +112,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
@@ -155,6 +160,7 @@ import java.util.Optional;
 
 public class TriggerServiceTest extends WingsBaseTest {
   private static final String CATALOG_SERVICE_NAME = "Catalog";
+  private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
 
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private PipelineService pipelineService;
@@ -265,6 +271,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(savedTrigger.getName()).isEqualTo(TRIGGER_NAME);
     assertThat(savedTrigger.getAppId()).isEqualTo(APP_ID);
   }
+
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
@@ -340,6 +347,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     assertThat(((ArtifactTriggerCondition) updatedTrigger.getCondition()).isRegex()).isTrue();
   }
+
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
@@ -945,6 +953,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(workflowExecutionService, times(0))
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
+
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
@@ -1142,7 +1151,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
-    verify(artifactStreamService, times(3)).get(ARTIFACT_STREAM_ID);
+    verify(artifactStreamService, times(4)).get(ARTIFACT_STREAM_ID);
     verify(artifactService).getArtifactByBuildNumber(artifactStream, ARTIFACT_FILTER, false);
   }
 
@@ -1151,6 +1160,15 @@ public class TriggerServiceTest extends WingsBaseTest {
         .withAppId(APP_ID)
         .withUuid(artifactId)
         .withArtifactStreamId(ARTIFACT_STREAM_ID)
+        .withMetadata(ImmutableMap.of("buildNo", ARTIFACT_FILTER))
+        .build();
+  }
+
+  private Artifact prepareArtifact(String artifactId, String artifactStreamId) {
+    return anArtifact()
+        .withAppId(APP_ID)
+        .withUuid(artifactId)
+        .withArtifactStreamId(artifactStreamId)
         .withMetadata(ImmutableMap.of("buildNo", ARTIFACT_FILTER))
         .build();
   }
@@ -1198,7 +1216,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
-    verify(artifactStreamService, times(3)).get(ARTIFACT_STREAM_ID);
+    verify(artifactStreamService, times(4)).get(ARTIFACT_STREAM_ID);
     verify(artifactService).getArtifactByBuildNumber(artifactStream, ARTIFACT_FILTER, false);
     verify(workflowExecutionService).obtainLastGoodDeployedArtifacts(APP_ID, WORKFLOW_ID);
     verify(workflowService, times(2)).readWorkflow(APP_ID, WORKFLOW_ID);
@@ -1254,7 +1272,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
-    verify(artifactStreamService, times(3)).get(ARTIFACT_STREAM_ID);
+    verify(artifactStreamService, times(4)).get(ARTIFACT_STREAM_ID);
     verify(artifactService).getArtifactByBuildNumber(artifactStream, ARTIFACT_FILTER, false);
     verify(workflowExecutionService).obtainLastGoodDeployedArtifacts(APP_ID, WORKFLOW_ID);
     verify(workflowService, times(2)).readWorkflow(APP_ID, WORKFLOW_ID);
@@ -1370,7 +1388,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     triggerService.triggerExecutionPostPipelineCompletionAsync(APP_ID, PIPELINE_ID);
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
-    verify(artifactStreamService, times(2)).get(ARTIFACT_STREAM_ID);
+    verify(artifactStreamService, times(3)).get(ARTIFACT_STREAM_ID);
     verify(artifactService).getArtifactByBuildNumber(artifactStream, ARTIFACT_FILTER, false);
   }
 
@@ -1473,6 +1491,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
+
   private void scheduledTriggerMocks() {
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setArtifacts(singletonList(artifact));
@@ -1512,7 +1531,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     triggerService.triggerScheduledExecutionAsync(scheduledConditionTrigger, new Date());
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
-    verify(artifactStreamService, times(2)).get(ARTIFACT_STREAM_ID);
+    verify(artifactStreamService, times(3)).get(ARTIFACT_STREAM_ID);
     verify(artifactService).getArtifactByBuildNumber(artifactStream, ARTIFACT_FILTER, false);
     verify(idempotentRegistry).create(any(), any(), any(), any());
   }
@@ -1576,7 +1595,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
-    verify(artifactStreamService, times(6)).get(ARTIFACT_STREAM_ID);
+    verify(artifactStreamService, times(8)).get(ARTIFACT_STREAM_ID);
     verify(artifactService).getArtifactByBuildNumber(artifactStream, ARTIFACT_FILTER, false);
   }
 
@@ -1634,7 +1653,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
-    verify(artifactStreamService, times(6)).get(ARTIFACT_STREAM_ID);
+    verify(artifactStreamService, times(8)).get(ARTIFACT_STREAM_ID);
     verify(artifactService).getArtifactByBuildNumber(artifactStream, ARTIFACT_FILTER, false);
 
     verify(workflowExecutionService).obtainLastGoodDeployedArtifacts(APP_ID, PIPELINE_ID);
@@ -1688,7 +1707,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
-    verify(artifactStreamService, times(4)).get(ARTIFACT_STREAM_ID);
+    verify(artifactStreamService, times(5)).get(ARTIFACT_STREAM_ID);
     verify(artifactService).getArtifactByBuildNumber(artifactStream, ARTIFACT_FILTER, false);
 
     verify(workflowExecutionService).obtainLastGoodDeployedArtifacts(APP_ID, WORKFLOW_ID);
@@ -2259,5 +2278,110 @@ public class TriggerServiceTest extends WingsBaseTest {
     triggerService1.resolveInfraDefinitions(APP_ID, triggerWorkflowVariables, ENV_ID, workflowVariables);
     assertThat(triggerWorkflowVariables.get("InfraDefinition_ECS")).isNotNull();
     assertThat(triggerWorkflowVariables.get("InfraDefinition_ECS")).isEqualTo(INFRA_DEFINITION_ID);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldListTriggersWithParameterizedStreams() {
+    Trigger trigger1 = triggerService.save(artifactConditionTrigger);
+    assertThat(trigger1).isNotNull();
+
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(buildNexusArtifactStream());
+    when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID_1, false))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).name(CATALOG_SERVICE_NAME).accountId(ACCOUNT_ID).build());
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+
+    Trigger t2 = Trigger.builder()
+                     .workflowId(WORKFLOW_ID)
+                     .workflowType(ORCHESTRATION)
+                     .uuid("TRIGGER_ID_2")
+                     .appId(APP_ID)
+                     .name("TRIGGER_NAME_2")
+                     .condition(WebHookTriggerCondition.builder()
+                                    .webHookToken(WebHookToken.builder().build())
+                                    .parameters(ImmutableMap.of("MyVar", "MyVal"))
+                                    .build())
+                     .build();
+    t2.setArtifactSelections(asList(ArtifactSelection.builder()
+                                        .type(WEBHOOK_VARIABLE)
+                                        .serviceId(SERVICE_ID)
+                                        .artifactStreamId(ARTIFACT_STREAM_ID_1)
+                                        .build()));
+
+    Trigger trigger2 = triggerService.save(t2);
+    assertThat(trigger2).isNotNull();
+    PageRequest<Trigger> pageRequest = new PageRequest<>();
+    PageResponse<Trigger> triggers = triggerService.list(pageRequest, false, null);
+    assertThat(triggers.size()).isEqualTo(2);
+    for (Trigger trigger : triggers) {
+      if (trigger.getUuid().equals("TRIGGER_ID_2")) {
+        assertThat(trigger.getArtifactSelections().get(0).getUiDisplayName())
+            .isEqualTo("testNexus (requires values on runtime)");
+      }
+    }
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldTriggerArtifactCollectionForWebhookTriggerWithParameterizedArtifactStream() {
+    Artifact artifact = prepareArtifact(ARTIFACT_ID, ARTIFACT_STREAM_ID_1);
+    NexusArtifactStream nexusArtifactStream = buildNexusArtifactStream();
+    nexusArtifactStream.setSourceName(ARTIFACT_SOURCE_NAME);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(nexusArtifactStream);
+    when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID_1, false))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).name(CATALOG_SERVICE_NAME).build());
+    webhookConditionTrigger.setArtifactSelections(asList(ArtifactSelection.builder()
+                                                             .type(WEBHOOK_VARIABLE)
+                                                             .serviceId(SERVICE_ID)
+                                                             .artifactStreamId(ARTIFACT_STREAM_ID_1)
+                                                             .artifactSourceName(ARTIFACT_SOURCE_NAME)
+                                                             .build()));
+
+    triggerService.save(webhookConditionTrigger);
+    String buildNumber = "123";
+    Map<String, Object> artifactParameters = new HashMap<>();
+    artifactParameters.put("path", "todolist");
+    artifactParameters.put("groupId", "mygroup");
+    artifactParameters.put("buildNo", "123");
+
+    when(artifactCollectionServiceAsync.collectNewArtifacts(
+             APP_ID, nexusArtifactStream, buildNumber, artifactParameters))
+        .thenReturn(artifact);
+    when(artifactService.getArtifactByBuildNumberAndSourceName(any(), any(), anyBoolean(), any())).thenReturn(null);
+
+    triggerService.triggerExecutionByWebHook(APP_ID, webhookConditionTrigger.getWebHookToken(),
+        ImmutableMap.of(
+            SERVICE_ID, ArtifactSummary.builder().buildNo(buildNumber).artifactParameters(artifactParameters).build()),
+        new HashMap<>(), null);
+
+    verify(artifactCollectionServiceAsync, times(1))
+        .collectNewArtifacts(APP_ID, nexusArtifactStream, buildNumber, artifactParameters);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testShouldNotAddParameterizedArtifactSourceOnNewConditionTrigger() {
+    Trigger trigger = buildNewArtifactTrigger();
+    trigger.setArtifactSelections(
+        asList(ArtifactSelection.builder().type(ARTIFACT_SOURCE).serviceId(SERVICE_ID).build()));
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(buildNexusArtifactStream());
+    triggerService.save(trigger);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotAddParameterizedArtifactSourceOnLastCollectedType() {
+    Trigger trigger = buildPipelineCondTrigger();
+    trigger.setArtifactSelections(asList(ArtifactSelection.builder()
+                                             .type(LAST_COLLECTED)
+                                             .serviceId(SERVICE_ID)
+                                             .artifactStreamId(ARTIFACT_STREAM_ID_1)
+                                             .build()));
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(buildNexusArtifactStream());
+    triggerService.save(trigger);
   }
 }
