@@ -91,8 +91,8 @@ public class EngineResumeExecutor implements Runnable {
           TaskChainExecutableResponse lastLinkResponse =
               Preconditions.checkNotNull((TaskChainExecutableResponse) nodeExecution.obtainLatestExecutableResponse());
           if (lastLinkResponse.isChainEnd()) {
-            stepResponse =
-                taskChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(), response);
+            stepResponse = taskChainExecutable.finalizeExecution(
+                ambiance, nodeExecution.getResolvedStepParameters(), lastLinkResponse.getPassThroughData(), response);
             break;
           } else {
             executionEngine.triggerLink(step, ambiance, nodeExecution, lastLinkResponse.getPassThroughData(), response);
@@ -103,8 +103,8 @@ public class EngineResumeExecutor implements Runnable {
           ChildChainResponse lastChildChainExecutableResponse =
               Preconditions.checkNotNull((ChildChainResponse) nodeExecution.obtainLatestExecutableResponse());
           if (lastChildChainExecutableResponse.isChainEnd()) {
-            stepResponse =
-                childChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(), response);
+            stepResponse = childChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(),
+                lastChildChainExecutableResponse.getPassThroughData(), response);
             break;
           } else {
             executionEngine.triggerLink(

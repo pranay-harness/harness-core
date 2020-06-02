@@ -13,6 +13,14 @@ import io.harness.state.io.StepTransput;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Use this interface when you want spawn a child
+ *
+ * This Node will spawn child and the response is passed to handleChildResponse as {@link
+ * io.harness.state.io.StepResponseNotifyData}
+ *
+ */
+
 @OwnedBy(CDC)
 @Redesign
 public interface ChildExecutable {
