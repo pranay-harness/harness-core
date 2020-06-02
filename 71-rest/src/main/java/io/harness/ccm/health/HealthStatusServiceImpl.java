@@ -5,6 +5,7 @@ import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.GCP_KUBERNETES;
+import static io.harness.ccm.health.CEError.AWS_ECS_CLUSTER_NOT_FOUND;
 import static io.harness.ccm.health.CEError.DELEGATE_NOT_AVAILABLE;
 import static io.harness.ccm.health.CEError.METRICS_SERVER_NOT_FOUND;
 import static io.harness.ccm.health.CEError.NO_CLUSTERS_TRACKED_BY_HARNESS_CE;
@@ -85,9 +86,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     }
 
     List<CEClusterHealth> ceClusterHealthList = new ArrayList<>();
-    for (ClusterRecord clusterRecord : clusterRecords) {
-      ceClusterHealthList.add(getClusterHealth(clusterRecord));
-    }
+    clusterRecords.forEach(clusterRecord -> ceClusterHealthList.add(getClusterHealth(clusterRecord)));
 
     boolean isHealthy = ceClusterHealthList.stream().allMatch(CEClusterHealth::isHealthy);
     return CEHealthStatus.builder().isHealthy(isHealthy).ceClusterHealthList(ceClusterHealthList).build();
@@ -125,21 +124,25 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         }
         continue;
       }
-
       long lastEventTimestamp = getLastEventTimestamp(clusterRecord.getAccountId(), clusterRecord.getUuid());
       String clusterType = clusterRecord.getCluster().getClusterType();
       if (lastEventTimestamp != 0 && !hasRecentEvents(lastEventTimestamp, clusterType)) {
-        errors.add(NO_RECENT_EVENTS_PUBLISHED);
-      }
-
-      CeExceptionRecord CeExceptionRecord =
-          ceExceptionRecordDao.getLatestException(clusterRecord.getAccountId(), clusterRecord.getUuid());
-      if (CeExceptionRecord != null
-          && CeExceptionRecord.getMessage().contains("/apis/metrics.k8s.io/v1beta1/nodes. Message: 404")) {
-        errors.add(METRICS_SERVER_NOT_FOUND);
+        CeExceptionRecord ceExceptionRecord =
+            ceExceptionRecordDao.getLatestException(clusterRecord.getAccountId(), clusterRecord.getUuid());
+        if (ceExceptionRecord != null) {
+          String exceptionMessage = ceExceptionRecord.getMessage();
+          if (exceptionMessage.contains("/apis/metrics.k8s.io/v1beta1/nodes. Message: 404")) {
+            errors.add(METRICS_SERVER_NOT_FOUND);
+          }
+          if (exceptionMessage.contains(
+                  "Service: AmazonECS; Status Code: 400; Error Code: ClusterNotFoundException;")) {
+            errors.add(AWS_ECS_CLUSTER_NOT_FOUND);
+          }
+        } else {
+          errors.add(NO_RECENT_EVENTS_PUBLISHED);
+        }
       }
     }
-
     return errors;
   }
 
@@ -170,6 +173,9 @@ public class HealthStatusServiceImpl implements HealthStatusService {
           break;
         case METRICS_SERVER_NOT_FOUND:
           messages.add(String.format(METRICS_SERVER_NOT_FOUND.getMessage(), clusterName));
+          break;
+        case AWS_ECS_CLUSTER_NOT_FOUND:
+          messages.add(String.format(AWS_ECS_CLUSTER_NOT_FOUND.getMessage(), clusterName));
           break;
         default:
           messages.add("Unexpected error. Please contact Harness support.");
