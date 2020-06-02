@@ -5,6 +5,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.WeeklyReportServiceImpl;
+import io.harness.batch.processing.ccm.BatchJobBucket;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineHealthStatusService;
 import io.harness.logging.AutoLogContext;
@@ -40,9 +41,21 @@ public class EventJobScheduler {
   }
 
   @Scheduled(cron = "0 */20 * * * ?")
-  public void runCloudEfficiencyEventJobs() {
+  public void runCloudEfficiencyB1Jobs() {
+    runCloudEfficiencyEventJobs(BatchJobBucket.OUT_OF_CLUSTER);
+  }
+
+  @Scheduled(cron = "0 */20 * * * ?")
+  public void runCloudEfficiencyB2Jobs() {
+    runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER);
+  }
+
+  public void runCloudEfficiencyEventJobs(BatchJobBucket batchJobBucket) {
     List<Account> ccmEnabledAccounts = cloudToHarnessMappingService.getCCMEnabledAccounts();
-    ccmEnabledAccounts.forEach(account -> jobs.forEach(job -> runJob(account.getUuid(), job)));
+    ccmEnabledAccounts.forEach(account
+        -> jobs.stream()
+               .filter(job -> BatchJobType.fromJob(job).getBatchJobBucket() == batchJobBucket)
+               .forEach(job -> runJob(account.getUuid(), job)));
   }
 
   @Scheduled(cron = "0 0 8 * * ?")
