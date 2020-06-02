@@ -516,6 +516,10 @@ public class GitClientImpl implements GitClient {
       try {
         git.add().addFilepattern(".").call();
       } catch (GitAPIException ex) {
+        logger.error(
+            format("Error in add/modify git operation connectorId:[%s]", gitOperationContext.getGitConnectorId())
+                + " Exception: ",
+            ex);
         throw new YamlException(
             format("Error in add/modify git operation connectorId:[%s]", gitOperationContext.getGitConnectorId()),
             ADMIN_SRE);
@@ -567,6 +571,7 @@ public class GitClientImpl implements GitClient {
               filesToAdd.add(gitFileChange.getFilePath());
               git.rm().addFilepattern(gitFileChange.getOldFilePath()).call();
             } catch (IOException | GitAPIException e) {
+              logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception in renaming file " + e);
               throw new YamlException(
                   format("Exception in renaming file [%s]->[%s]", oldFile.toPath(), newFile.toPath()), ADMIN_SRE);
             }
@@ -581,6 +586,7 @@ public class GitClientImpl implements GitClient {
             try {
               git.rm().addFilepattern(gitFileChange.getFilePath()).call();
             } catch (GitAPIException e) {
+              logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception in deleting file " + e);
               throw new YamlException(
                   format("Exception in deleting file [%s]", gitFileChange.getFilePath()), ADMIN_SRE);
             }
@@ -713,6 +719,7 @@ public class GitClientImpl implements GitClient {
       } catch (WingsException e) {
         throw e;
       } catch (Exception e) {
+        logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", e);
         throw new YamlException(new StringBuilder()
                                     .append("Failed while fetching files between commits ")
                                     .append("Account: ")
@@ -856,6 +863,7 @@ public class GitClientImpl implements GitClient {
       } catch (WingsException e) {
         throw e;
       } catch (Exception e) {
+        logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", e);
         throw new YamlException(
             new StringBuilder()
                 .append("Failed while fetching files ")
