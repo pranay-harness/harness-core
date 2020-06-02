@@ -1,5 +1,7 @@
 package io.harness.batch.processing.service.intfc;
 
+import com.google.cloud.bigquery.datatransfer.v1.DataTransferServiceClient;
+
 import software.wings.beans.Account;
 
 import java.io.IOException;
@@ -18,4 +20,5 @@ public interface BillingDataPipelineService {
   Map<String, String> getLabelMap(String accountName, String accountType);
   String getAccountType(Account accountInfo);
   String createDataSet(Account account);
+  DataTransferServiceClient getDataTransferClient() throws IOException;
 }

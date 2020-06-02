@@ -9,6 +9,7 @@ import java.util.List;
 @Builder
 public class CEHealthStatus {
   boolean isHealthy;
+  boolean isCEConnector;
   List<String> messages;
-  List<CEClusterHealth> ceClusterHealthList;
+  List<CEClusterHealth> clusterHealthStatusList;
 }

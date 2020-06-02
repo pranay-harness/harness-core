@@ -1,6 +1,10 @@
 package io.harness.ccm.health;
 
+import static io.harness.ccm.health.CEConnectorHealthMessages.BILLING_DATA_PIPELINE_SUCCESS;
+import static io.harness.ccm.health.CEConnectorHealthMessages.BILLING_PIPELINE_CREATION_SUCCESSFUL;
+import static io.harness.ccm.health.CEConnectorHealthMessages.SETTING_ATTRIBUTE_CREATED;
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
@@ -12,6 +16,8 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.ClusterRecordService;
+import io.harness.ccm.cluster.dao.BillingDataPipelineRecordDao;
+import io.harness.ccm.cluster.entities.BillingDataPipelineRecord;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
@@ -34,9 +40,11 @@ import org.mockito.junit.MockitoRule;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.beans.ce.CEAwsConfig;
 import software.wings.service.intfc.SettingsService;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 
 public class HealthStatusServiceImplTest extends CategoryTest {
@@ -46,7 +54,11 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   private static final String password = "dummyPassword";
   private CCMConfig ccmConfig = CCMConfig.builder().cloudCostEnabled(true).build();
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
+  private String awsConnectorId = "AWS_CONNECTOR_ID";
   private String clusterId = "CLUSTER_ID";
+  private String datasetId = "DATA_SET_ID";
+  private static final String status = "SUCCEEDED";
+  private static final String s3SyncMessage = "Last Successful S3 Sync at";
 
   private SettingAttribute cloudProvider;
   private Cluster k8sCluster;
@@ -54,6 +66,8 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   private String[] perpetualTaskIds = new String[] {"1", "2"};
   private String delegateId = "DELEGATE_ID";
   private PerpetualTaskRecord taskRecord;
+  private SettingAttribute awsConnector;
+  Instant currentInstant;
 
   FakeClock fakeClock = new FakeClock();
 
@@ -64,6 +78,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Mock ClusterRecordService clusterRecordService;
   @Mock PerpetualTaskService perpetualTaskService;
   @Mock LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
+  @Mock BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   @Mock CeExceptionRecordDao ceExceptionRecordDao;
 
   @InjectMocks HealthStatusServiceImpl healthStatusService;
@@ -86,6 +101,13 @@ public class HealthStatusServiceImplTest extends CategoryTest {
                         .withValue(kubernetesClusterConfig)
                         .build();
 
+    awsConnector = aSettingAttribute()
+                       .withCategory(SettingCategory.CE_CONNECTOR)
+                       .withUuid(awsConnectorId)
+                       .withAccountId(accountId)
+                       .withValue(CEAwsConfig.builder().build())
+                       .build();
+
     k8sCluster = DirectKubernetesCluster.builder().cloudProviderId(cloudProviderId).build();
     clusterRecord = ClusterRecord.builder()
                         .accountId(accountId)
@@ -95,6 +117,16 @@ public class HealthStatusServiceImplTest extends CategoryTest {
                         .build();
 
     taskRecord = getPerpetualTaskRecord(delegateId, PerpetualTaskState.TASK_RUN_SUCCEEDED);
+    currentInstant = Instant.now();
+
+    when(billingDataPipelineRecordDao.fetchBillingPipelineRecord(accountId, awsConnectorId))
+        .thenReturn(BillingDataPipelineRecord.builder()
+                        .dataSetId(datasetId)
+                        .lastSuccessfulS3Sync(currentInstant.minus(1, ChronoUnit.DAYS))
+                        .dataTransferJobStatus(status)
+                        .awsFallbackTableScheduledQueryStatus(status)
+                        .preAggregatedScheduledQueryStatus(status)
+                        .build());
 
     when(settingsService.get(eq(cloudProviderId))).thenReturn(cloudProvider);
     when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
@@ -136,5 +168,40 @@ public class HealthStatusServiceImplTest extends CategoryTest {
     when(ccmSettingService.isCloudCostEnabled(isA(SettingAttribute.class))).thenReturn(true);
     CEHealthStatus status = healthStatusService.getHealthStatus(cloudProviderId);
     assertThat(status.isHealthy()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void healthStatusForAConnectorJustCreated() {
+    when(settingsService.get(awsConnectorId)).thenReturn(awsConnector);
+    awsConnector.setCreatedAt(currentInstant.minus(0, ChronoUnit.DAYS).toEpochMilli());
+    CEHealthStatus healthStatus = healthStatusService.getHealthStatus(awsConnectorId);
+    assertThat(healthStatus.getClusterHealthStatusList().get(0).getMessages().get(0))
+        .isEqualTo(SETTING_ATTRIBUTE_CREATED.getMessage());
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void healthStatusForCaseOfSuccessfulPipelineCreation() {
+    when(settingsService.get(awsConnectorId)).thenReturn(awsConnector);
+    awsConnector.setCreatedAt(currentInstant.minus(1, ChronoUnit.DAYS).toEpochMilli());
+    CEHealthStatus healthStatus = healthStatusService.getHealthStatus(awsConnectorId);
+    assertThat(healthStatus.getClusterHealthStatusList().get(0).getMessages().get(0))
+        .isEqualTo(BILLING_PIPELINE_CREATION_SUCCESSFUL.getMessage());
+    assertThat(healthStatus.getClusterHealthStatusList().get(0).getMessages().get(1)).contains(s3SyncMessage);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void healthStatusForAConnectorRunningSuccessfullyForFiveDays() {
+    when(settingsService.get(awsConnectorId)).thenReturn(awsConnector);
+    awsConnector.setCreatedAt(currentInstant.minus(5, ChronoUnit.DAYS).toEpochMilli());
+    CEHealthStatus healthStatus = healthStatusService.getHealthStatus(awsConnectorId);
+    assertThat(healthStatus.getClusterHealthStatusList().get(0).getMessages().get(0))
+        .isEqualTo(BILLING_DATA_PIPELINE_SUCCESS.getMessage());
+    assertThat(healthStatus.getClusterHealthStatusList().get(0).getMessages().get(1)).contains(s3SyncMessage);
   }
 }

@@ -6,6 +6,7 @@ import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataSe
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.WeeklyReportServiceImpl;
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.service.intfc.BillingDataPipelineHealthStatusService;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ public class EventJobScheduler {
   @Autowired private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
   @Autowired private WeeklyReportServiceImpl weeklyReportService;
   @Autowired private BillingDataServiceImpl billingDataService;
+  @Autowired private BillingDataPipelineHealthStatusService billingDataPipelineHealthStatusService;
 
   @PostConstruct
   public void orderJobs() {
@@ -55,6 +57,15 @@ public class EventJobScheduler {
       billingDataService.purgeOldHourlyBillingData();
     } catch (Exception ex) {
       logger.error("Exception while running purgeOldHourlyBillingData Job", ex);
+    }
+  }
+
+  @Scheduled(cron = "0 0 8 * * ?")
+  public void runConnectorsHealthStatusJob() {
+    try {
+      billingDataPipelineHealthStatusService.processAndUpdateHealthStatus();
+    } catch (Exception ex) {
+      logger.error("Exception while running runConnectorsHealthStatusJob {}", ex);
     }
   }
 

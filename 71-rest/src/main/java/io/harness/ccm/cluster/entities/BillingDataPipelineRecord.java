@@ -13,6 +13,8 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
+import java.time.Instant;
+
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -36,4 +38,9 @@ public class BillingDataPipelineRecord implements PersistentEntity, UuidAware, C
   private String gcpBqDatasetId;
   private String awsMasterAccountId;
   private String awsFallbackTableScheduledQueryName;
+
+  private String dataTransferJobStatus;
+  private String preAggregatedScheduledQueryStatus;
+  private String awsFallbackTableScheduledQueryStatus;
+  private Instant lastSuccessfulS3Sync;
 }

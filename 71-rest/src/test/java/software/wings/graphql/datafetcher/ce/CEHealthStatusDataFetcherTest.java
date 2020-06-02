@@ -37,7 +37,7 @@ public class CEHealthStatusDataFetcherTest extends CategoryTest {
 
   private List<CEClusterHealth> clusterHealthStatusList = Arrays.asList(clusterHealthStatus);
   private CEHealthStatus ceHealthStatus =
-      CEHealthStatus.builder().isHealthy(false).ceClusterHealthList(clusterHealthStatusList).build();
+      CEHealthStatus.builder().isHealthy(false).clusterHealthStatusList(clusterHealthStatusList).build();
 
   @Mock private DataFetchingEnvironment environment;
   private QLKubernetesClusterCloudProvider k8sCloudProvider =
