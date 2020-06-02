@@ -13,6 +13,7 @@ import java.util.List;
 @EqualsAndHashCode(of = {"metricPackName"})
 public class AppdynamicsValidationResponse {
   private String metricPackName;
+  private ThirdPartyApiResponseStatus overallStatus;
   @Singular("addValidationResponse") private List<AppdynamicsMetricValueValidationResponse> values;
 
   @Data
@@ -22,5 +23,6 @@ public class AppdynamicsValidationResponse {
     private String metricName;
     private ThirdPartyApiResponseStatus apiResponseStatus;
     private double value;
+    private String errorMessage;
   }
 }

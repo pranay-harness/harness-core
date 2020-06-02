@@ -17,6 +17,7 @@ import io.harness.cvng.beans.AppdynamicsValidationResponse.AppdynamicsValidation
 import io.harness.cvng.core.CVNextGenConstants;
 import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.cvng.models.ThirdPartyApiResponseStatus;
+import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -50,6 +51,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -392,17 +394,24 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
               return AppdynamicsMetricValueValidationResponse.builder()
                   .metricName(metricDefinition.getName())
                   .apiResponseStatus(ThirdPartyApiResponseStatus.FAILED)
+                  .errorMessage(ExceptionUtils.getMessage(e))
                   .build();
             }
           }));
       final List<Optional<AppdynamicsMetricValueValidationResponse>> metricValidationResponses =
           dataCollectionService.executeParrallel(callables);
+      AtomicReference<ThirdPartyApiResponseStatus> overAllStatus =
+          new AtomicReference<>(ThirdPartyApiResponseStatus.SUCCESS);
       metricValidationResponses.forEach(validationResponse -> {
         if (validationResponse.isPresent()) {
-          appdynamicsValidationResponse.addValidationResponse(validationResponse.get());
+          final AppdynamicsMetricValueValidationResponse valueValidationResponse = validationResponse.get();
+          if (valueValidationResponse.getApiResponseStatus().compareTo(overAllStatus.get()) > 0) {
+            overAllStatus.set(valueValidationResponse.getApiResponseStatus());
+          }
+          appdynamicsValidationResponse.addValidationResponse(valueValidationResponse);
         }
       });
-      appdynamicsValidationResponses.add(appdynamicsValidationResponse.build());
+      appdynamicsValidationResponses.add(appdynamicsValidationResponse.overallStatus(overAllStatus.get()).build());
     });
 
     return appdynamicsValidationResponses;

@@ -1,6 +1,5 @@
 package software.wings.service.impl.appdynamics;
 
-import static graphql.Assert.assertNotNull;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,6 +10,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -22,10 +22,8 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.beans.AppdynamicsValidationResponse.AppdynamicsMetricValueValidationResponse;
 import io.harness.cvng.core.services.api.DataSourceService;
 import io.harness.cvng.core.services.entities.MetricPack;
-import io.harness.cvng.core.services.entities.MetricPack.MetricDefinition;
 import io.harness.cvng.models.DataSourceType;
 import io.harness.cvng.models.ThirdPartyApiResponseStatus;
 import io.harness.rest.RestResponse;
@@ -47,6 +45,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
@@ -307,47 +306,60 @@ public class AppdynamicsApiTest extends WingsBaseTest {
             AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(random.nextInt()).build())));
     when(appdynamicsRestClient.getTierDetails(anyString(), anyLong(), anyLong())).thenReturn(tierRestCall);
 
-    Call<List<AppdynamicsMetricData>> metricDataCall = mock(Call.class);
-    handleClone(metricDataCall);
-    when(metricDataCall.execute())
+    Call<List<AppdynamicsMetricData>> metricDataSuccessCall = mock(Call.class);
+    handleClone(metricDataSuccessCall);
+    when(metricDataSuccessCall.execute())
         .thenReturn(Response.success(
             Lists.newArrayList(AppdynamicsMetricData.builder()
                                    .metricName(generateUuid())
                                    .metricValues(Lists.newArrayList(
                                        AppdynamicsMetricDataValue.builder().value(random.nextDouble()).build()))
                                    .build())));
+    Call<List<AppdynamicsMetricData>> metricDataNoDataCall = mock(Call.class);
+    handleClone(metricDataNoDataCall);
+    when(metricDataNoDataCall.execute())
+        .thenReturn(Response.success(Lists.newArrayList(
+            AppdynamicsMetricData.builder().metricName(generateUuid()).metricValues(Lists.newArrayList()).build())));
+
+    Call<List<AppdynamicsMetricData>> metricDataErrorCall = mock(Call.class);
+    handleClone(metricDataErrorCall);
+    doThrow(new DataCollectionException("invalid request")).when(metricDataErrorCall).execute();
     when(appdynamicsRestClient.getMetricDataTimeRange(
              anyString(), anyLong(), anyString(), anyLong(), anyLong(), anyBoolean()))
-        .thenReturn(metricDataCall);
+        .thenAnswer(invocationOnMock -> {
+          final String metricPath = invocationOnMock.getArgumentAt(2, String.class);
+          if (metricPath.contains("Exceptions")) {
+            return metricDataNoDataCall;
+          }
+          if (metricPath.contains("CPU")) {
+            return metricDataErrorCall;
+          }
+          return metricDataSuccessCall;
+        });
     final List<MetricPack> metricPacks = new ArrayList<>(
         dataSourceService.getMetricPacks(accountId, generateUuid(), DataSourceType.APP_DYNAMICS, false));
     final Set<AppdynamicsValidationResponse> metricPacksData = appdynamicsService.getMetricPackData(
         accountId, generateUuid(), saveAppdynamicsConfig(), 100, 200, generateUuid(), metricPacks);
     assertThat(metricPacksData.size()).isEqualTo(metricPacks.size());
+    metricPacksData.forEach(metricPackData -> {
+      if (metricPackData.getMetricPackName().equals("Performance and Availability")) {
+        assertThat(metricPackData.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.SUCCESS);
+      }
 
-    metricPacks.forEach(metricPack -> {
-      final AppdynamicsValidationResponse validationResponse =
-          metricPacksData.stream()
-              .filter(metricPackData -> metricPackData.getMetricPackName().equals(metricPack.getName()))
-              .findFirst()
-              .orElse(null);
-      assertNotNull(validationResponse, "failed for mertic pack " + metricPack.getName());
-      final Set<MetricDefinition> metricDefinitions = metricPack.getMetrics()
-                                                          .stream()
-                                                          .filter(metricDefinition -> metricDefinition.isIncluded())
-                                                          .collect(Collectors.toSet());
-      assertThat(metricDefinitions.size()).isEqualTo(validationResponse.getValues().size());
-      metricDefinitions.forEach(metricDefinition -> {
-        final AppdynamicsMetricValueValidationResponse valueValidationResponse =
-            validationResponse.getValues()
-                .stream()
-                .filter(response -> response.getMetricName().equals(metricDefinition.getName()))
-                .findFirst()
-                .orElse(null);
-        assertNotNull(valueValidationResponse);
-        assertThat(valueValidationResponse.getApiResponseStatus()).isEqualTo(ThirdPartyApiResponseStatus.SUCCESS);
-        assertThat(valueValidationResponse.getValue()).isNotZero();
-      });
+      if (metricPackData.getMetricPackName().equals("Quality")) {
+        assertThat(metricPackData.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.NO_DATA);
+      }
+
+      if (metricPackData.getMetricPackName().equals("Resources")) {
+        assertThat(metricPackData.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.FAILED);
+        metricPackData.getValues().forEach(response -> {
+          if (response.getMetricName().contains("CPU")) {
+            assertThat(response.getApiResponseStatus()).isEqualTo(ThirdPartyApiResponseStatus.FAILED);
+            assertThat(response.getErrorMessage())
+                .isEqualTo("DataCollectionException: " + DataCollectionException.class.getName() + ": invalid request");
+          }
+        });
+      }
     });
   }
 
