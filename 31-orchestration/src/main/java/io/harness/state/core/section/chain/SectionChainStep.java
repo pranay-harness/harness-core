@@ -46,8 +46,8 @@ public class SectionChainStep implements Step, ChildChainExecutable {
   }
 
   @Override
-  public StepResponse finalizeExecution(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+  public StepResponse finalizeExecution(Ambiance ambiance, StepParameters stepParameters,
+      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     return StepResponse.builder().status(SUCCEEDED).build();
   }
 }

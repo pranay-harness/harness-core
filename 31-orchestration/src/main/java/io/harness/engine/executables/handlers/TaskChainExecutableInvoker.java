@@ -39,8 +39,8 @@ public class TaskChainExecutableInvoker implements ExecutableInvoker {
       taskChainResponse =
           taskChainExecutable.startChainLink(ambiance, invokerPackage.getParameters(), invokerPackage.getInputs());
     } else {
-      taskChainResponse = taskChainExecutable.executeNextLink(
-          ambiance, invokerPackage.getParameters(), invokerPackage.getInputs(), invokerPackage.getResponseDataMap());
+      taskChainResponse = taskChainExecutable.executeNextLink(ambiance, invokerPackage.getParameters(),
+          invokerPackage.getInputs(), invokerPackage.getPassThroughData(), invokerPackage.getResponseDataMap());
     }
     handleResponse(ambiance, taskChainResponse);
   }
@@ -59,6 +59,7 @@ public class TaskChainExecutableInvoker implements ExecutableInvoker {
                 .taskIdentifier(task.getTaskIdentifier())
                 .taskType(task.getTaskType())
                 .chainEnd(taskChainResponse.isChainEnd())
+                .passThroughData(taskChainResponse.getPassThroughData())
                 .build()));
     NotifyCallback callback = EngineResumeCallback.builder().nodeInstanceId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, task.getWaitId());

@@ -12,6 +12,13 @@ import io.harness.state.io.StepTransput;
 
 import java.util.List;
 
+/**
+ * Use this interface whn you want to perform synchronous requests.
+ *
+ * InterfaceDefinition:
+ *
+ * executeSync: This straight away responds with {@link StepResponse}
+ */
 @OwnedBy(CDC)
 @Redesign
 public interface SyncExecutable {

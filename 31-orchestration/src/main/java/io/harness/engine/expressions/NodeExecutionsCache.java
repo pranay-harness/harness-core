@@ -50,6 +50,16 @@ public class NodeExecutionsCache {
     return nodeExecution;
   }
 
+  /**
+   * Fetches a list of children for a particular parent Id.
+   *
+   * If parentId found in cache {@link NodeExecutionsCache#childrenMap} return list of nodes by
+   * querying the {@link NodeExecutionsCache#map}
+   *
+   * Adds all the children to the {@link NodeExecutionsCache#map} and populates
+   * {@link NodeExecutionsCache#childrenMap} with parentId => List#childIds
+   *
+   */
   public synchronized List<NodeExecution> fetchChildren(String parentId) {
     String childrenMapKey = parentId == null ? NULL_PARENT_ID : parentId;
     if (childrenMap.containsKey(childrenMapKey)) {
@@ -61,15 +71,15 @@ public class NodeExecutionsCache {
       return ids.stream().map(map::get).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    List<NodeExecution> nodeExecutions =
+    List<NodeExecution> childExecutions =
         nodeExecutionService.fetchChildrenNodeExecutions(ambiance.getPlanExecutionId(), parentId);
-    if (EmptyPredicate.isEmpty(nodeExecutions)) {
+    if (EmptyPredicate.isEmpty(childExecutions)) {
       childrenMap.put(parentId, Collections.emptyList());
       return Collections.emptyList();
     }
 
-    nodeExecutions.forEach(nodeExecution -> map.put(nodeExecution.getUuid(), nodeExecution));
-    childrenMap.put(parentId, nodeExecutions.stream().map(NodeExecution::getUuid).collect(Collectors.toList()));
-    return nodeExecutions;
+    childExecutions.forEach(childExecution -> map.put(childExecution.getUuid(), childExecution));
+    childrenMap.put(parentId, childExecutions.stream().map(NodeExecution::getUuid).collect(Collectors.toList()));
+    return childExecutions;
   }
 }
