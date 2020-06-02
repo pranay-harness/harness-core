@@ -1,6 +1,6 @@
 package io.harness.app.impl;
 
-import com.google.inject.Inject;
+import com.google.common.annotations.VisibleForTesting;
 
 import io.harness.app.intfc.YAMLToObject;
 import io.harness.beans.CIPipeline;
@@ -11,15 +11,19 @@ import java.io.IOException;
 
 @Slf4j
 public class YAMLToObjectImpl implements YAMLToObject {
-  @Inject YamlPipelineUtils yamlPipelineUtils;
   @Override
   public CIPipeline convertYAML(String yaml) {
     CIPipeline ciPipeline = null;
     try {
-      ciPipeline = yamlPipelineUtils.read(yaml, CIPipeline.class);
+      ciPipeline = readYaml(yaml);
     } catch (IOException e) {
       logger.error("Error parsing yaml file", e);
     }
     return ciPipeline;
+  }
+
+  @VisibleForTesting
+  CIPipeline readYaml(String yaml) throws IOException {
+    return YamlPipelineUtils.read(yaml, CIPipeline.class);
   }
 }

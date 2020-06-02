@@ -12,7 +12,6 @@ import io.harness.rule.InjectorRuleMixin;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
-import io.harness.yaml.utils.YamlPipelineUtils;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -37,9 +36,7 @@ public class CIBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(new AbstractModule() {
       @Override
-      protected void configure() {
-        bind(YamlPipelineUtils.class).toInstance(new YamlPipelineUtils());
-      }
+      protected void configure() {}
     });
     modules.addAll(new CIBeansModule().cumulativeDependencies());
     return modules;

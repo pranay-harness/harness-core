@@ -728,7 +728,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>35-yaml-beans</artifactId>
+            <artifactId>38-execution-plan</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
