@@ -41,11 +41,7 @@ public class CostEventServiceImpl implements CostEventService {
 
   static final String SELECT_EVENTS_FOR_WORKLOAD =
       "SELECT STARTTIME, OLDYAMLREF, NEWYAMLREF FROM COST_EVENT_DATA WHERE ACCOUNTID=? AND CLUSTERID=? AND INSTANCEID=?"
-      + " AND COSTEVENTTYPE=? AND STARTTIME >= ?";
-
-  private static final String SELECT_LATEST_TIMESTAMP_STATEMENT =
-      "SELECT MAX(STARTTIME) FROM COST_EVENT_DATA WHERE ACCOUNTID=? AND CLUSTERID=? AND INSTANCEID=?"
-      + " AND COSTEVENTTYPE=? AND STARTTIME >= ?";
+      + " AND COSTEVENTTYPE=? AND STARTTIME >= ? ORDER BY STARTTIME";
 
   @Override
   public boolean create(List<CostEventData> costEventDataList) {
@@ -95,32 +91,6 @@ public class CostEventServiceImpl implements CostEventService {
       }
     }
     return successfulUpdate;
-  }
-
-  @Override
-  public Timestamp getLastChangeTimestamp(
-      String accountId, String clusterId, String instanceId, String costEventType, Timestamp startTimestamp) {
-    int retryCount = 0;
-    while (retryCount < MAX_RETRY_COUNT) {
-      try (Connection dbConnection = timeScaleDBService.getDBConnection();
-           PreparedStatement statement = dbConnection.prepareStatement(SELECT_LATEST_TIMESTAMP_STATEMENT)) {
-        statement.setString(1, accountId);
-        statement.setString(2, clusterId);
-        statement.setString(3, instanceId);
-        statement.setString(4, costEventType);
-        statement.setTimestamp(5, startTimestamp);
-        logger.debug("getLastChangeTimestamp query {}", statement);
-        try (ResultSet resultSet = statement.executeQuery()) {
-          if (resultSet.next()) {
-            return resultSet.getTimestamp(1, Calendar.getInstance(TimeZone.getTimeZone("UTC")));
-          }
-        }
-      } catch (SQLException e) {
-        logger.error("Failed to get latest timestamp retryCount=[{}]", retryCount, e);
-        retryCount++;
-      }
-    }
-    return null;
   }
 
   @Override
