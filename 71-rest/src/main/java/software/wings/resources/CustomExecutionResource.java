@@ -63,8 +63,9 @@ public class CustomExecutionResource {
   @GET
   @Path("/simple-shell-script")
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
-  public RestResponse<PlanExecution> executeSimpleShellScriptPlan() {
-    return new RestResponse<>(customExecutionService.executeSimpleShellScriptPlan());
+  public RestResponse<PlanExecution> executeSimpleShellScriptPlan(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId) {
+    return new RestResponse<>(customExecutionService.executeSimpleShellScriptPlan(accountId, appId));
   }
 
   @GET

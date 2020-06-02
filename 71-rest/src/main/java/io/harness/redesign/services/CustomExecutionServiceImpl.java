@@ -66,9 +66,9 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
-  public PlanExecution executeSimpleShellScriptPlan() {
+  public PlanExecution executeSimpleShellScriptPlan(String accountId, String appId) {
     return engine.startExecution(
-        CustomExecutionUtils.provideSimpleShellScriptPlan(), getInputArgs(), getEmbeddedUser());
+        CustomExecutionUtils.provideSimpleShellScriptPlan(), getInputArgs(accountId, appId), getEmbeddedUser());
   }
 
   @Override
@@ -120,6 +120,10 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   private InputArgs getInputArgs() {
-    return InputArgs.builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build();
+    return getInputArgs(ACCOUNT_ID, APP_ID);
+  }
+
+  private InputArgs getInputArgs(String accountId, String appId) {
+    return InputArgs.builder().put("accountId", accountId).put("appId", appId).build();
   }
 }

@@ -498,7 +498,8 @@ public class CustomExecutionUtils {
                 + "echo \"section11.f1 = ${section1.sectionChild.data.map.f1}\"\n" // qualified
                 + "echo \"section11.f1 = ${section1.sectionChild.outcomeData.map.f1}\"\n" // qualified
                 + "echo \"shell1.scriptType = ${section1.sectionChild.shell.scriptType}\"\n" // qualified
-                + "echo \"shell1.activityId = ${section1.sectionChild.shell.data.activityId}\"\n" // qualified
+                + "echo \"shell1.HELLO = ${section1.sectionChild.shell.data.sweepingOutputEnvVariables.HELLO}\"\n" // qualified
+                + "echo \"shell1.HI = ${section1.sectionChild.shell.data.sweepingOutputEnvVariables.HI}\"\n" // qualified
                 + "echo \"scriptType = ${scriptType}\"\n" // child
                 + "echo \"section2.f1 = ${section2.data.map.f1}\"\n" // qualified
                 + "echo \"section2.f2 = ${section2.data.map.f2}\"\n" // qualified
@@ -513,7 +514,8 @@ public class CustomExecutionUtils {
                 + "echo \"section11.f1 = ${qualified.section1.sectionChild.data.map.f1}\"\n"
                 + "echo \"section11.f1 = ${qualified.section1.sectionChild.outcomeData.map.f1}\"\n"
                 + "echo \"shell1.scriptType = ${qualified.section1.sectionChild.shell.scriptType}\"\n"
-                + "echo \"shell1.activityId = ${qualified.section1.sectionChild.shell.data.activityId}\"\n"
+                + "echo \"shell1.HELLO = ${qualified.section1.sectionChild.shell.data.sweepingOutputEnvVariables.HELLO}\"\n" // qualified
+                + "echo \"shell1.HI = ${qualified.section1.sectionChild.shell.data.sweepingOutputEnvVariables.HI}\"\n" // qualified
                 + "echo \"scriptType = ${child.scriptType}\"\n"
                 + "echo \"section2.f1 = ${qualified.section2.data.map.f1}\"\n"
                 + "echo \"section2.f2 = ${qualified.section2.data.map.f2}\"\n"
@@ -595,7 +597,7 @@ public class CustomExecutionUtils {
                 .build())
         .node(PlanNode.builder()
                   .uuid(shellScript1NodeId)
-                  .name("Shell Script 1")
+                  .name("shell1")
                   .identifier("shell")
                   .stepType(StepType.builder().type(StateType.SHELL_SCRIPT.name()).build())
                   .stepParameters(shellScript1StepParameters)
@@ -606,7 +608,7 @@ public class CustomExecutionUtils {
         .node(
             PlanNode.builder()
                 .uuid(shellScript2NodeId)
-                .name("Shell Script 2")
+                .name("shell2")
                 .identifier("shell")
                 .stepType(StepType.builder().type(StateType.SHELL_SCRIPT.name()).build())
                 .stepParameters(shellScript2StepParameters)

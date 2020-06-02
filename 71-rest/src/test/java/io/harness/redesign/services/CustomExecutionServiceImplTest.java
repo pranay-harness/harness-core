@@ -6,6 +6,8 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.powermock.api.mockito.PowerMockito.when;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.inject.Inject;
 
@@ -108,7 +110,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
     Plan expectedShellScriptPlan = CustomExecutionUtils.provideSimpleShellScriptPlan();
     when(executionEngine.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(Status.RUNNING).plan(expectedShellScriptPlan).build());
-    PlanExecution planExecutionResponse = customExecutionService.executeSimpleShellScriptPlan();
+    PlanExecution planExecutionResponse = customExecutionService.executeSimpleShellScriptPlan(ACCOUNT_ID, APP_ID);
 
     assertThat(planExecutionResponse.getPlan()).isEqualTo(expectedShellScriptPlan);
     assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.RUNNING);
