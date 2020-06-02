@@ -82,6 +82,8 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
       logger.info("Set all other secret managers as non-default in account {}", accountId);
     }
 
+    //[PL-11328] DO NOT remove this innocent redundant looking line which is actually setting the encryptionType.
+    secretManagerConfig.setEncryptionType(secretManagerConfig.getEncryptionType());
     return wingsPersistence.save(secretManagerConfig);
   }
 
