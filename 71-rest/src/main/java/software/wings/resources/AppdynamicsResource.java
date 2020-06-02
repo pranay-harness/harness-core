@@ -7,8 +7,11 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.cvng.beans.AppdynamicsValidationResponse;
+import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import retrofit2.http.Body;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
@@ -21,6 +24,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -85,5 +89,18 @@ public class AppdynamicsResource {
       @QueryParam("accountId") final String accountId,
       @Valid AppdynamicsSetupTestNodeData appdynamicsSetupTestNodeData) {
     return new RestResponse<>(appdynamicsService.getMetricsWithDataForNode(appdynamicsSetupTestNodeData));
+  }
+
+  @POST
+  @Path("/metric-data")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<AppdynamicsValidationResponse>> getMetricData(
+      @QueryParam("accountId") @NotNull String accountId, @QueryParam("projectId") @NotNull String projectId,
+      @QueryParam("connectorId") @NotNull String connectorId, @QueryParam("appdAppId") @NotNull long appdAppId,
+      @QueryParam("appdTierId") @NotNull long appdTierId, @QueryParam("requestGuid") @NotNull String requestGuid,
+      @NotNull @Valid @Body List<MetricPack> metricPacks) {
+    return new RestResponse<>(appdynamicsService.getMetricPackData(
+        accountId, projectId, connectorId, appdAppId, appdTierId, requestGuid, metricPacks));
   }
 }

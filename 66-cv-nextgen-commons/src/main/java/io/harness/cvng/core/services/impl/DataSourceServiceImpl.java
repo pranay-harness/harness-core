@@ -6,6 +6,8 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -16,31 +18,29 @@ import io.harness.cvng.models.DataSourceType;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.YamlUtils;
-import org.apache.commons.io.FileUtils;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class DataSourceServiceImpl implements DataSourceService {
-  private static final String APPDYNAMICS_METRIC_PACKS_PATH = "/metric-packs/appdynamics";
+  static final List<String> appdynamicsMetricPackFiles =
+      Lists.newArrayList("/metric-packs/appdynamics/business-transactions-pack.yml",
+          "/metric-packs/appdynamics/quality-pack.yml", "/metric-packs/appdynamics/resource-pack.yml");
   @Inject private HPersistence hPersistence;
 
   @Override
-  public Collection<MetricPack> getMetricPacks(String accountId, String projectId, DataSourceType dataSourceType) {
+  public Map<String, MetricPack> getMetricPackMap(String accountId, String projectId, DataSourceType dataSourceType) {
     Map<String, MetricPack> metricPackMap = new HashMap<>();
     switch (dataSourceType) {
       case APP_DYNAMICS:
-        final URL metricPackUrl = DataSourceService.class.getResource(APPDYNAMICS_METRIC_PACKS_PATH);
-        final Collection<File> metricPackYamls = FileUtils.listFiles(new File(metricPackUrl.getFile()), null, false);
         YamlUtils yamlUtils = new YamlUtils();
-        metricPackYamls.forEach(metricPackPath -> {
+        appdynamicsMetricPackFiles.forEach(metricPackPath -> {
           try {
-            final String metricPackYaml = FileUtils.readFileToString(metricPackPath, Charsets.UTF_8);
+            final String metricPackYaml =
+                Resources.toString(DataSourceService.class.getResource(metricPackPath), Charsets.UTF_8);
             final MetricPack metricPack = yamlUtils.read(metricPackYaml, new TypeReference<MetricPack>() {});
             metricPack.setAccountId(accountId);
             metricPack.setProjectId(projectId);
@@ -74,7 +74,19 @@ public class DataSourceServiceImpl implements DataSourceService {
           }
           metricPackMap.put(metricPackFromDb.getName(), metricPackFromDb);
         });
-    return metricPackMap.values();
+    return metricPackMap;
+  }
+
+  @Override
+  public Collection<MetricPack> getMetricPacks(
+      String accountId, String projectId, DataSourceType dataSourceType, boolean excludeDetails) {
+    final Map<String, MetricPack> metricPackMap = getMetricPackMap(accountId, projectId, dataSourceType);
+    final Collection<MetricPack> metricPacks = metricPackMap.values();
+    if (excludeDetails) {
+      metricPacks.forEach(metricPack -> metricPack.getMetrics().clear());
+    }
+
+    return metricPacks;
   }
 
   @Override

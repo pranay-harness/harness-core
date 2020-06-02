@@ -126,7 +126,7 @@ public class AppDynamicsDataCollector implements MetricsDataCollector<AppDynamic
     logger.info("fetching metrics for path {} ", metricPath);
     Call<List<AppdynamicsMetricData>> tierBTMetricRequest = getAppDynamicsRestClient().getMetricDataTimeRange(
         getHeaderWithCredentials(), dataCollectionInfo.getAppDynamicsApplicationId(), metricPath,
-        dataCollectionInfo.getStartTime().toEpochMilli(), dataCollectionInfo.getEndTime().toEpochMilli());
+        dataCollectionInfo.getStartTime().toEpochMilli(), dataCollectionInfo.getEndTime().toEpochMilli(), false);
     return dataCollectionExecutionContext.executeRequest(
         "Fetching data for metric path: " + metricPath, tierBTMetricRequest);
   }

@@ -2,11 +2,11 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.GoogleDataStoreAware.addFieldIfNotEmpty;
+import static io.harness.persistence.GoogleDataStoreAware.readList;
+import static io.harness.persistence.GoogleDataStoreAware.readLong;
+import static io.harness.persistence.GoogleDataStoreAware.readString;
 import static java.lang.System.currentTimeMillis;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.addFieldIfNotEmpty;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.readList;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.readLong;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
 
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
@@ -69,8 +69,8 @@ public class LabeledLogRecord implements GoogleDataStoreAware {
                       .newKey(this.uuid == null ? generateUuid() : this.uuid);
     com.google.cloud.datastore.Entity.Builder recordBuilder = com.google.cloud.datastore.Entity.newBuilder(taskKey);
     addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.label, label, false);
-    addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.feedbackIds, feedbackIds, true, String.class);
-    addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.logDataRecordIds, logDataRecordIds, true, String.class);
+    addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.feedbackIds, feedbackIds, String.class);
+    addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.logDataRecordIds, logDataRecordIds, String.class);
     addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.serviceId, serviceId, false);
     addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.accountId, accountId, false);
     addFieldIfNotEmpty(recordBuilder, LabeledLogRecordKeys.envId, envId, false);

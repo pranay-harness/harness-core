@@ -1,8 +1,8 @@
 package software.wings.service.impl.analysis;
 
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.addFieldIfNotEmpty;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.readDouble;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
+import static io.harness.persistence.GoogleDataStoreAware.addFieldIfNotEmpty;
+import static io.harness.persistence.GoogleDataStoreAware.readDouble;
+import static io.harness.persistence.GoogleDataStoreAware.readString;
 
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;

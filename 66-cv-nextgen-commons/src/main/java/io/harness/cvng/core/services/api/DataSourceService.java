@@ -5,9 +5,13 @@ import io.harness.cvng.models.DataSourceType;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface DataSourceService {
-  Collection<MetricPack> getMetricPacks(String accountId, String projectId, DataSourceType dataSourceType);
+  Map<String, MetricPack> getMetricPackMap(String accountId, String projectId, DataSourceType dataSourceType);
+
+  Collection<MetricPack> getMetricPacks(
+      String accountId, String projectId, DataSourceType dataSourceType, boolean excludeDetails);
 
   boolean saveMetricPacks(
       String accountId, String projectId, DataSourceType dataSourceType, List<MetricPack> metricPacks);

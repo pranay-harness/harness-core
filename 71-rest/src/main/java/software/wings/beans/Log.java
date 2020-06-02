@@ -4,11 +4,11 @@ import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.GoogleDataStoreAware.readBlob;
+import static io.harness.persistence.GoogleDataStoreAware.readLong;
+import static io.harness.persistence.GoogleDataStoreAware.readString;
 import static java.lang.System.currentTimeMillis;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.readBlob;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.readLong;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
 
 import com.google.cloud.datastore.Blob;
 import com.google.cloud.datastore.BlobValue;

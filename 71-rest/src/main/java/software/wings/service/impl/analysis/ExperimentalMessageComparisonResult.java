@@ -1,10 +1,10 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.addFieldIfNotEmpty;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.readDouble;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.readLong;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
+import static io.harness.persistence.GoogleDataStoreAware.addFieldIfNotEmpty;
+import static io.harness.persistence.GoogleDataStoreAware.readDouble;
+import static io.harness.persistence.GoogleDataStoreAware.readLong;
+import static io.harness.persistence.GoogleDataStoreAware.readString;
 
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;

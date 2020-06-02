@@ -79,8 +79,8 @@ public interface AppdynamicsRestClient {
    * @param metricPath    the path to look for metrics
    * @return the call
    */
-  @GET("rest/applications/{applicationId}/metric-data?output=JSON&time-range-type=BETWEEN_TIMES&rollup=false")
+  @GET("rest/applications/{applicationId}/metric-data?output=JSON&time-range-type=BETWEEN_TIMES")
   Call<List<AppdynamicsMetricData>> getMetricDataTimeRange(@Header("Authorization") String authorization,
       @Path("applicationId") long applicationId, @Query("metric-path") String metricPath,
-      @Query("start-time") long startTime, @Query("end-time") long endTime);
+      @Query("start-time") long startTime, @Query("end-time") long endTime, @Query("rollup") boolean rollup);
 }

@@ -1,5 +1,26 @@
 name: Resources
 metrics:
   - name: CPU.%Busy
-    path: Application Infrastructure Performance|__tier_name_|Hardware Resources|CPU|%Busy
-    defaultIncluded: true
+    path: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|%Busy
+    validationPath: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|%Busy
+    included: true
+  - name: CPU.%Idle
+    path: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|%Idle
+    validationPath: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|%Idle
+    included: false
+  - name: CPU.%Stolen
+    path: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|%Stolen
+    validationPath: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|%Stolen
+    included: false
+  - name: CPU.IOWait
+    path: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|IOWait
+    validationPath: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|IOWait
+    included: false
+  - name: CPU.System
+    path: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|System
+    validationPath: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|System
+    included: false
+  - name: CPU.User
+    path: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|User
+    validationPath: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|User
+    included: false
