@@ -100,7 +100,7 @@ then
 fi
 cd ../..
 
-echo "System-Properties: version=1.0.${VERSION} logdnakey=${LOGDNA_KEY}" >> app.mf
+echo "System-Properties: version=1.0.${VERSION}" >> app.mf
 echo "Application-Version: version=1.0.${VERSION}" >> app.mf
 
 mkdir -p dist/delegate

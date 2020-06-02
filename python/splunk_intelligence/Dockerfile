@@ -2,7 +2,6 @@ FROM python:2.7-slim
 COPY VERSION dist/splunk_pyml /home/harness/
 WORKDIR /home/harness
 ENV SPLUNKML_ROOT /home/harness
-ENV logdna_key 4ac03b05674fc5c488e3b9b235078d5d
 ARG new_relic_key
 ARG server_url
 ARG service_secret

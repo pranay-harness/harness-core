@@ -20,12 +20,7 @@ xxxxxxxx
       certAlias: localhost
       validateCerts: false
   requestLog:
-    appenders:
-      - type: rest-log
-        name: rest-accesslogs-appender
-        threshold: TRACE
-        key: 9a3e6eac4dcdbdc41a93ca99100537df
-        programName: manager-saas-accesslogs
+    appenders: []
 
 githubConfig:
   clientId: "424a251ac2cdfc4a941e"
@@ -91,11 +86,6 @@ logging:
       threshold: TRACE
       target: STDOUT
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
-    - type: rest-log
-      threshold: TRACE
-      logFormat: "%blue([${VERSION}]) %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
-      key: 9a3e6eac4dcdbdc41a93ca99100537df
-      programName: manager-saas
 
 mongo:
   uri: mongodb://localhost:27017/harness
