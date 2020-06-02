@@ -1,6 +1,7 @@
 package io.harness.redesign.advisers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.execution.status.Status.positiveStatuses;
 
 import com.google.common.base.Preconditions;
 
@@ -26,12 +27,15 @@ public class HttpResponseCodeSwitchAdviser implements Adviser {
   public static final AdviserType ADVISER_TYPE = AdviserType.builder().type("HTTP_RESPONSE_CODE_SWITCH").build();
 
   @Override
-  public Advise onAdviseEvent(AdvisingEvent adviseEvent) {
+  public Advise onAdviseEvent(AdvisingEvent advisingEvent) {
+    if (!positiveStatuses().contains(advisingEvent.getStatus())) {
+      return null;
+    }
     HttpResponseCodeSwitchAdviserParameters parameters =
-        (HttpResponseCodeSwitchAdviserParameters) Preconditions.checkNotNull(adviseEvent.getAdviserParameters());
+        (HttpResponseCodeSwitchAdviserParameters) Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
     // This will be changed to obtain via output type
     HttpStateExecutionData httpStateExecutionData = (HttpStateExecutionData) Preconditions.checkNotNull(
-        adviseEvent.getOutcomes()
+        advisingEvent.getOutcomes()
             .values()
             .stream()
             // TODO => Find a better way to do this

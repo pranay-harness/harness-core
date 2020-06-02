@@ -2,7 +2,6 @@ package io.harness.state.io;
 
 import io.harness.delegate.beans.ResponseData;
 import io.harness.execution.status.Status;
-import io.harness.state.io.StepResponse.FailureInfo;
 import io.harness.state.io.StepResponse.StepOutcome;
 import lombok.Builder;
 import lombok.Value;

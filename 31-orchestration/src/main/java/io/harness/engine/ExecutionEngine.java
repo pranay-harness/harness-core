@@ -37,6 +37,7 @@ import io.harness.engine.resume.EngineResumeExecutor;
 import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.services.PlanExecutionService;
+import io.harness.exception.ExceptionUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
@@ -47,6 +48,7 @@ import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.ExecutionMode;
+import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
@@ -57,6 +59,7 @@ import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.state.Step;
+import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponseNotifyData;
@@ -64,6 +67,7 @@ import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import java.util.ArrayList;
@@ -110,39 +114,42 @@ public class ExecutionEngine implements Engine {
                                  .createdBy(createdBy)
                                  .startTs(System.currentTimeMillis())
                                  .build();
-    hPersistence.save(instance);
     PlanNode planNode = plan.fetchStartingNode();
     if (planNode == null) {
-      logger.warn("Cannot Start Execution for empty plan");
+      logger.error("Cannot Start Execution for empty plan");
       return null;
     }
-    Ambiance ambiance = Ambiance.builder().inputArgs(inputArgs).planExecutionId(instance.getUuid()).build();
-    triggerExecution(ambiance, plan.fetchStartingNode());
+    String savedPlanExecutionId = hPersistence.save(instance);
+    Ambiance ambiance = Ambiance.builder().inputArgs(inputArgs).planExecutionId(savedPlanExecutionId).build();
+    triggerExecution(ambiance, planNode);
     return instance;
   }
 
   public void startNodeExecution(Ambiance ambiance, List<StepTransput> additionalInputs) {
-    // Check Plan level Interrupts
-    logger.info("Checking Interrupts before Node Start");
-    InterruptCheck check = interruptService.checkAndHandleInterruptsBeforeNodeStart(ambiance, additionalInputs);
-    if (!check.isProceed()) {
-      logger.info("Suspending Execution. Reason : {}", check.getReason());
-      return;
-    }
-    logger.info("Proceeding with  Execution. Reason : {}", check.getReason());
+    try (AutoLogContext ignore = ambiance.autoLogContext()) {
+      logger.info("Checking Interrupts before Node Start");
+      InterruptCheck check = interruptService.checkAndHandleInterruptsBeforeNodeStart(ambiance, additionalInputs);
+      if (!check.isProceed()) {
+        logger.info("Suspending Execution. Reason : {}", check.getReason());
+        return;
+      }
+      logger.info("Proceeding with  Execution. Reason : {}", check.getReason());
 
-    NodeExecution nodeExecution = hPersistence.createQuery(NodeExecution.class)
-                                      .filter(NodeExecutionKeys.uuid, ambiance.obtainCurrentRuntimeId())
-                                      .get();
-    PlanNode node = nodeExecution.getNode();
-    // Facilitate and execute
-    List<StepTransput> inputs = engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), additionalInputs);
-    StepParameters resolvedStepParameters =
-        (StepParameters) engineExpressionService.resolve(ambiance, node.getStepParameters());
-    nodeExecution = Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),
-        ops -> setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters)));
-    nodeExecution.setResolvedStepParameters(resolvedStepParameters);
-    facilitateExecution(ambiance, nodeExecution, inputs);
+      NodeExecution nodeExecution = hPersistence.createQuery(NodeExecution.class)
+                                        .filter(NodeExecutionKeys.uuid, ambiance.obtainCurrentRuntimeId())
+                                        .get();
+      PlanNode node = nodeExecution.getNode();
+      // Facilitate and execute
+      List<StepTransput> inputs = engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), additionalInputs);
+      StepParameters resolvedStepParameters =
+          (StepParameters) engineExpressionService.resolve(ambiance, node.getStepParameters());
+      nodeExecution = Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),
+          ops -> setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters)));
+      nodeExecution.setResolvedStepParameters(resolvedStepParameters);
+      facilitateExecution(ambiance, nodeExecution, inputs);
+    } catch (Exception exception) {
+      handleError(ambiance, exception);
+    }
   }
 
   public void triggerExecution(Ambiance ambiance, PlanNode node) {
@@ -236,15 +243,11 @@ public class ExecutionEngine implements Engine {
   }
 
   public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponse stepResponse) {
-    NodeExecution nodeExecution = nodeExecutionService.update(nodeExecutionId,
-        ops
-        -> ops.set(NodeExecutionKeys.status, stepResponse.getStatus())
-               .set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
+    NodeExecution nodeExecution = concludeNodeExecution(nodeExecutionId, stepResponse);
     // TODO => handle before node execution update
     Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
     handleOutcomes(ambiance, stepResponse.stepOutcomeMap());
 
-    // TODO handle Failure
     PlanNode node = nodeExecution.getNode();
     if (isEmpty(node.getAdviserObtainments())) {
       endTransition(nodeExecution, nodeExecution.getStatus(), stepResponse);
@@ -270,6 +273,18 @@ public class ExecutionEngine implements Engine {
       return;
     }
     handleAdvise(ambiance, advise);
+  }
+
+  private NodeExecution concludeNodeExecution(@NonNull String nodeExecutionId, @NonNull StepResponse stepResponse) {
+    UpdateOperations<NodeExecution> operations = hPersistence.createUpdateOperations(NodeExecution.class)
+                                                     .set(NodeExecutionKeys.status, stepResponse.getStatus())
+                                                     .set(NodeExecutionKeys.endTs, System.currentTimeMillis());
+    if (stepResponse.getFailureInfo() != null) {
+      operations.set(NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
+    }
+    Query<NodeExecution> query =
+        hPersistence.createQuery(NodeExecution.class).filter(NodeExecutionKeys.uuid, nodeExecutionId);
+    return hPersistence.findAndModify(query, operations, HPersistence.returnNewOptions);
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -354,5 +369,20 @@ public class ExecutionEngine implements Engine {
                                  .passThroughData(passThroughData)
                                  .start(false)
                                  .build());
+  }
+
+  public void handleError(Ambiance ambiance, Exception exception) {
+    try {
+      StepResponse response = StepResponse.builder()
+                                  .status(Status.FAILED)
+                                  .failureInfo(FailureInfo.builder()
+                                                   .errorMessage(ExceptionUtils.getMessage(exception))
+                                                   .failureTypes(ExceptionUtils.getFailureTypes(exception))
+                                                   .build())
+                                  .build();
+      handleStepResponse(ambiance.obtainCurrentRuntimeId(), response);
+    } catch (RuntimeException ex) {
+      logger.error("Error when trying to obtain the advice ", ex);
+    }
   }
 }

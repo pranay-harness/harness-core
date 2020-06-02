@@ -16,6 +16,7 @@ import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
+import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
@@ -57,7 +58,7 @@ public class EmailStep implements Step, SyncExecutable {
       stepResponseBuilder.status(Status.SUCCEEDED);
     } catch (Exception e) {
       stepResponseBuilder
-          .failureInfo(StepResponse.FailureInfo.builder()
+          .failureInfo(FailureInfo.builder()
                            .errorMessage(e.getCause() == null ? ExceptionUtils.getMessage(e)
                                                               : ExceptionUtils.getMessage(e.getCause()))
                            .build())

@@ -25,8 +25,8 @@ import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.plan.PlanNode;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.Step;
+import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepResponse;
-import io.harness.state.io.StepResponse.FailureInfo;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -118,7 +118,7 @@ public class EngineResumeExecutor implements Runnable {
           stepResponse, "Step Response Cannot Be null. NodeExecutionId: " + nodeExecution.getUuid());
       executionEngine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
     } catch (Exception ex) {
-      logger.error(ex.getMessage());
+      executionEngine.handleError(ambiance, ex);
     }
   }
 }

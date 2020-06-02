@@ -40,6 +40,7 @@ import io.harness.resolvers.ResolverUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.state.Step;
 import io.harness.state.StepType;
+import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
@@ -278,7 +279,7 @@ public class ShellScriptStep implements Step, TaskExecutable {
       }
 
       stepResponseBuilder.failureInfo(
-          StepResponse.FailureInfo.builder().errorMessage(commandExecutionResult.getErrorMessage()).build());
+          FailureInfo.builder().errorMessage(commandExecutionResult.getErrorMessage()).build());
 
       ScriptStateExecutionData scriptStateExecutionData =
           ScriptStateExecutionData.builder().activityId(activityId).build();
@@ -294,7 +295,7 @@ public class ShellScriptStep implements Step, TaskExecutable {
     } else if (data instanceof ErrorNotifyResponseData) {
       stepResponseBuilder.status(Status.FAILED);
       stepResponseBuilder.failureInfo(
-          StepResponse.FailureInfo.builder().errorMessage(((ErrorNotifyResponseData) data).getErrorMessage()).build());
+          FailureInfo.builder().errorMessage(((ErrorNotifyResponseData) data).getErrorMessage()).build());
       return stepResponseBuilder.build();
     } else {
       logger.error("Unhandled ResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
