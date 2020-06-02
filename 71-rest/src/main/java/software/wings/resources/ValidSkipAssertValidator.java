@@ -12,6 +12,7 @@ import javax.validation.ConstraintValidatorContext;
 @Slf4j
 @Singleton
 public class ValidSkipAssertValidator implements ConstraintValidator<ValidSkipAssert, String> {
+  public static final int MAX_LEVEL_NESTING = 99;
   public static final String VARIABLE_PATTERN = "\\$\\{([^{}]+)}";
   public static final String GROUP_1 = "$1";
   private final JexlEngine engine = new JexlBuilder().create();
@@ -35,8 +36,12 @@ public class ValidSkipAssertValidator implements ConstraintValidator<ValidSkipAs
     if (value == null) {
       return true;
     }
+    String sanitized = value.replaceAll(VARIABLE_PATTERN, GROUP_1);
     try {
-      String sanitized = value.replaceAll(VARIABLE_PATTERN, GROUP_1);
+      int nesting = MAX_LEVEL_NESTING;
+      while (sanitized.matches("\\$\\{.*}") && nesting-- > 0) {
+        sanitized = sanitized.replaceAll(VARIABLE_PATTERN, GROUP_1);
+      }
       engine.createExpression(sanitized);
     } catch (Exception e) {
       logger.error("Nothing to See here", e);

@@ -55,4 +55,29 @@ public class ValidSkipAssertValidatorTest {
     verify(builder, never()).addPropertyNode(anyString());
     verify(nodeBuilderCustomizableContext, never()).addConstraintViolation();
   }
+
+  @Test
+  @Owner(developers = VGLIJIN)
+  @Category(UnitTests.class)
+  public void shouldReturnTrueForExpressions() {
+    doNothing().when(context).disableDefaultConstraintViolation();
+    assertThat(validator.isValid("${a} == ${b} or ${c} == ${d}", context)).isTrue();
+    assertThat(validator.isValid("${a.${b}} == ${b.${a}} and ${c.${a}} == ${d.${b}}", context)).isTrue();
+    assertThat(validator.isValid("${a.${b}} =~ {1,2,3}", context)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = VGLIJIN)
+  @Category(UnitTests.class)
+  public void shouldReturnFalseForExpressions() {
+    doNothing().when(context).disableDefaultConstraintViolation();
+    ConstraintViolationBuilder builder = mock(ConstraintViolationBuilder.class);
+    doReturn(builder).when(context).buildConstraintViolationWithTemplate(anyString());
+    NodeBuilderCustomizableContext nodeBuilderCustomizableContext = mock(NodeBuilderCustomizableContext.class);
+    doReturn(nodeBuilderCustomizableContext).when(builder).addPropertyNode(anyString());
+    doReturn(context).when(nodeBuilderCustomizableContext).addConstraintViolation();
+
+    assertThat(validator.isValid("${a.${b}} ~= {1,2,3}", context)).isFalse();
+    assertThat(validator.isValid("${a.{b}} =~ {1,2,3}", context)).isFalse();
+  }
 }
