@@ -71,7 +71,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
     String command = "export A=\"aaa\"\n"
         + "export B=\"bbb\"";
     CommandExecutionResult commandExecutionResult =
-        scriptProcessExecutor.executeCommandString(command, asList("A", "B"));
+        scriptProcessExecutor.executeCommandString(command, asList("A", "B", "${C}", "${A}"));
     assertThat(commandExecutionResult).isNotNull();
     assertThat(commandExecutionResult.getStatus()).isEqualTo(SUCCESS);
     assertThat(commandExecutionResult.getCommandExecutionData()).isNotNull();
@@ -79,6 +79,8 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).isNotEmpty();
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).containsEntry("A", "aaa");
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).containsEntry("B", "bbb");
+    assertThat(shellExecutionData.getSweepingOutputEnvVariables()).containsKey("aaa");
+    assertThat(shellExecutionData.getSweepingOutputEnvVariables()).doesNotContainKey("C");
   }
 
   @Test
