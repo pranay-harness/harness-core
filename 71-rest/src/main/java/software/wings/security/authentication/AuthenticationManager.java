@@ -345,8 +345,11 @@ public class AuthenticationManager {
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
       } else {
-        return authService.generateBearerTokenForUser(user);
+        User loggedInUser = authService.generateBearerTokenForUser(user);
+        authService.auditLogin(loggedInUser);
+        return loggedInUser;
       }
+
     } catch (WingsException we) {
       logger.warn("Failed to login via default mechanism", we);
       if (NON_INVALID_CREDENTIALS_ERROR_CODES.contains(we.getCode())) {
@@ -388,7 +391,9 @@ public class AuthenticationManager {
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
       } else {
-        return authService.generateBearerTokenForUser(user);
+        User loggedInUser = authService.generateBearerTokenForUser(user);
+        authService.auditLogin(loggedInUser);
+        return loggedInUser;
       }
     } catch (Exception e) {
       logger.warn("Failed to login via SSO", e);

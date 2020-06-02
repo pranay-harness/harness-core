@@ -118,4 +118,6 @@ public interface AuthService {
   void checkPipelinePermissionsForEnv(String appId, Pipeline pipeline, Action action);
 
   void authorizeAppAccess(String accountId, String appId, User user, Action action);
+
+  void auditLogin(User loggedInUser);
 }

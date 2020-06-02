@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
+import io.fabric8.utils.Lists;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.context.GlobalContextData;
@@ -79,9 +80,11 @@ import software.wings.yaml.YamlPayload;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -453,6 +456,7 @@ public class AuditServiceImpl implements AuditService {
         case TEST:
         case UPDATE:
         case ADD:
+        case LOGIN:
         case DELEGATE_APPROVAL:
         case REMOVE:
           entityToQuery = (UuidAccess) newEntity;
@@ -485,6 +489,7 @@ public class AuditServiceImpl implements AuditService {
         case ADD:
         case REMOVE:
         case DELEGATE_APPROVAL:
+        case LOGIN:
         case CREATE: {
           saveEntityYamlForAudit(newEntity, record, accountId);
           resourceLookupService.updateResourceLookupRecordIfNeeded(record, accountId, newEntity, oldEntity);
@@ -543,6 +548,7 @@ public class AuditServiceImpl implements AuditService {
   public PageResponse<AuditHeader> listUsingFilter(String accountId, String filterJson, String limit, String offset) {
     AuditPreference auditPreference = (AuditPreference) auditPreferenceHelper.parseJsonIntoPreference(filterJson);
     auditPreference.setAccountId(accountId);
+    changeAuditPreferenceForHomePage(auditPreference);
 
     if (!auditPreference.isIncludeAppLevelResources() && !auditPreference.isIncludeAccountLevelResources()) {
       return new PageResponse<>();
@@ -551,6 +557,15 @@ public class AuditServiceImpl implements AuditService {
     PageRequest<AuditHeader> pageRequest =
         auditPreferenceHelper.generatePageRequestFromAuditPreference(auditPreference, offset, limit);
     return wingsPersistence.query(AuditHeader.class, pageRequest);
+  }
+
+  private void changeAuditPreferenceForHomePage(AuditPreference auditPreference) {
+    if (Objects.isNull(auditPreference.getApplicationAuditFilter())
+        && Objects.isNull(auditPreference.getAccountAuditFilter())
+        && Lists.isNullOrEmpty(auditPreference.getOperationTypes())) {
+      auditPreference.setOperationTypes(
+          Arrays.stream(Type.values()).filter(type -> type != Type.LOGIN).map(Type::name).collect(Collectors.toList()));
+    }
   }
 
   private <T> void updateEntityNameCacheIfRequired(T oldEntity, T newEntity, EntityAuditRecord record) {
