@@ -10,4 +10,5 @@ import javax.validation.constraints.NotNull;
 @Builder
 public class Service implements Outcome {
   @NotNull private String identifier;
+  @NotNull private String name;
 }

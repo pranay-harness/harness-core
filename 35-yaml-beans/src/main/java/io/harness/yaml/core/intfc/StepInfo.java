@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionSection;
 import io.harness.yaml.core.auxiliary.intfc.StepWrapper;
@@ -15,4 +16,5 @@ import io.harness.yaml.core.deserializer.StepPolymorphicDeserializer;
  */
 @JsonTypeInfo(use = NAME, property = "type", include = PROPERTY, visible = true)
 @JsonDeserialize(using = StepPolymorphicDeserializer.class)
+@JsonTypeName("step")
 public interface StepInfo extends ExecutionSection, StepWrapper, WithType, WithIdentifier, DefaultStepProperties {}

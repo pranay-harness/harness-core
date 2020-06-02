@@ -9,15 +9,22 @@ import com.google.inject.Singleton;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.GraphGenerator;
 import io.harness.engine.interrupts.InterruptManager;
+import io.harness.exception.GeneralException;
 import io.harness.execution.PlanExecution;
+import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.interrupts.Interrupt;
+import io.harness.plan.Plan;
 import io.harness.plan.input.InputArgs;
 import io.harness.resource.Graph;
+import io.harness.yaml.utils.YamlPipelineUtils;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
+
+import java.io.IOException;
 
 @OwnedBy(CDC)
 @Redesign
@@ -26,6 +33,7 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Inject private ExecutionEngine engine;
   @Inject private InterruptManager interruptManager;
   @Inject private GraphGenerator graphGenerator;
+  @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
 
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
   private static final String APP_ID = "d9cTupsyQjWqbhUmZ8XPdQ";
@@ -96,6 +104,19 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   private EmbeddedUser getEmbeddedUser() {
     User user = UserThreadLocal.get();
     return EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
+  }
+
+  @Override
+  public PlanExecution testExecutionPlanCreator(String pipelineYaml, String accountId, String appId) {
+    final CDPipeline cdPipeline;
+    try {
+      cdPipeline = YamlPipelineUtils.read(pipelineYaml, CDPipeline.class);
+      final Plan planForPipeline = executionPlanCreatorService.createPlanForPipeline(cdPipeline, accountId);
+      return engine.startExecution(planForPipeline,
+          InputArgs.builder().put("accountId", accountId).put("appId", appId).build(), getEmbeddedUser());
+    } catch (IOException e) {
+      throw new GeneralException("error while testing execution plan", e);
+    }
   }
 
   private InputArgs getInputArgs() {

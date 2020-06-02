@@ -3,7 +3,6 @@ package io.harness.perpetualtask.ecs;
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
-
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Function.identity;

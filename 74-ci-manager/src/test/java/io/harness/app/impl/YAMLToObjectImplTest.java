@@ -2,39 +2,41 @@ package io.harness.app.impl;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import io.harness.beans.CIPipeline;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.yaml.utils.YamlPipelineUtils;
 import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 import java.io.IOException;
 
 public class YAMLToObjectImplTest extends CIManagerTest {
-  @Mock private YamlPipelineUtils yamlPipelineUtils;
-  @InjectMocks private YAMLToObjectImpl yamlToObject;
+  @Spy private YAMLToObjectImpl yamlToObject;
+
+  void init() {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @SneakyThrows
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldReturnCIPipeline() {
-    when(yamlPipelineUtils.read(anyString(), any())).thenReturn(CIPipeline.builder().build());
+    doReturn(CIPipeline.builder().build()).when(yamlToObject).readYaml(anyString());
     String yaml = "dummy";
     CIPipeline ciPipeline = yamlToObject.convertYAML(yaml);
     assertThat(ciPipeline).isNotNull();
 
-    verify(yamlPipelineUtils, times(1)).read(anyString(), any());
+    verify(yamlToObject, times(1)).readYaml(anyString());
   }
 
   @SneakyThrows
@@ -42,10 +44,10 @@ public class YAMLToObjectImplTest extends CIManagerTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldReturnNull() {
-    when(yamlPipelineUtils.read(anyString(), any())).thenThrow(new IOException());
+    doThrow(new IOException()).when(yamlToObject).readYaml(anyString());
     String yaml = "dummy";
     CIPipeline ciPipeline = yamlToObject.convertYAML(yaml);
     assertThat(ciPipeline).isNull();
-    verify(yamlPipelineUtils, times(1)).read(anyString(), any());
+    verify(yamlToObject, times(1)).readYaml(anyString());
   }
 }

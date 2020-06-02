@@ -3,8 +3,6 @@ package io.harness.beans.yaml;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-
 import io.harness.beans.CIBeansTest;
 import io.harness.beans.CIPipeline;
 import io.harness.beans.stages.IntegrationStage;
@@ -18,8 +16,6 @@ import java.io.IOException;
 import java.net.URL;
 
 public class CIPipelineYamlTest extends CIBeansTest {
-  @Inject private YamlPipelineUtils yamlPipelineUtils;
-
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
@@ -27,7 +23,7 @@ public class CIPipelineYamlTest extends CIBeansTest {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("ci.yml");
 
-    CIPipeline ciPipeline = yamlPipelineUtils.read(testFile, CIPipeline.class);
+    CIPipeline ciPipeline = YamlPipelineUtils.read(testFile, CIPipeline.class);
     assertThat(ciPipeline.getStages()).hasSize(1);
     assertThat(ciPipeline.getStages().get(0)).isInstanceOf(IntegrationStage.class);
   }

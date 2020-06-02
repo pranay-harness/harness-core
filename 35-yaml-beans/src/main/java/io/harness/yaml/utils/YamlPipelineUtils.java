@@ -12,6 +12,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.jackson.HarnessJacksonModule;
+import lombok.experimental.UtilityClass;
 
 import java.io.IOException;
 import java.net.URL;
@@ -24,6 +25,7 @@ import java.net.URL;
  * End user will typically extend interface and define {@link com.fasterxml.jackson.annotation.JsonTypeName} annotation
  * with proper type name. This way framework is decoupled from concrete implementations.
  */
+@UtilityClass
 public class YamlPipelineUtils {
   private static final ObjectMapper mapper;
 
@@ -50,7 +52,7 @@ public class YamlPipelineUtils {
    * @throws JsonMappingException the json mapping exception
    * @throws IOException          Signals that an I/O exception has occurred.
    */
-  public <T> T read(String yaml, Class<T> cls) throws JsonParseException, JsonMappingException, IOException {
+  public static <T> T read(String yaml, Class<T> cls) throws IOException {
     return mapper.readValue(yaml, cls);
   }
 
@@ -65,7 +67,7 @@ public class YamlPipelineUtils {
    * @throws JsonMappingException the json mapping exception
    * @throws IOException          Signals that an I/O exception has occurred.
    */
-  public <T> T read(URL yaml, Class<T> cls) throws JsonParseException, JsonMappingException, IOException {
+  public static <T> T read(URL yaml, Class<T> cls) throws JsonParseException, JsonMappingException, IOException {
     return mapper.readValue(yaml, cls);
   }
 }

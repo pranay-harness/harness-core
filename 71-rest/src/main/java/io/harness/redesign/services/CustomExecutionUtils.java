@@ -18,7 +18,7 @@ import io.harness.cdng.infra.beans.K8sDirectInfraDefinition;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.CDPipeline;
-import io.harness.cdng.pipeline.CDStage;
+import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.steps.PipelineSetupStep;
@@ -786,7 +786,7 @@ public class CustomExecutionUtils {
 
     CDPipeline cdPipeline =
         CDPipeline.builder()
-            .stage(CDStage.builder().service(service).infrastructure(pipelineInfrastructure).build())
+            .stage(DeploymentStage.builder().service(service).infrastructure(pipelineInfrastructure).build())
             .build();
 
     ShellScriptStepParameters shellScriptStepParameters =

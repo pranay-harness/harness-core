@@ -14,6 +14,7 @@ import io.harness.rest.RestResponse;
 import software.wings.security.annotations.AuthRule;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -107,5 +108,14 @@ public class CustomExecutionResource {
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<Graph> getGraph(@QueryParam("planExecutionId") String planExecutionId) {
     return new RestResponse<>(customExecutionService.getGraph(planExecutionId));
+  }
+
+  @POST
+  @Path("/test-execution-plan")
+  @Produces("application/json")
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<PlanExecution> testExecutionPlan(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, String pipelineYaml) {
+    return new RestResponse<>(customExecutionService.testExecutionPlanCreator(pipelineYaml, accountId, appId));
   }
 }

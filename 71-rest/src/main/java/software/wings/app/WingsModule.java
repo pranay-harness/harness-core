@@ -52,6 +52,7 @@ import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.event.reconciliation.service.DeploymentReconService;
 import io.harness.event.reconciliation.service.DeploymentReconServiceImpl;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.DependencyModule;
 import io.harness.govern.ServersModule;
 import io.harness.governance.pipeline.service.GovernanceStatusEvaluator;
@@ -1270,7 +1271,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
   @Override
   public Set<DependencyModule> dependencies() {
     return ImmutableSet.<DependencyModule>of(TimeModule.getInstance(), VersionModule.getInstance(),
-        OrchestrationModule.getInstance(), PersistentLockModule.getInstance());
+        OrchestrationModule.getInstance(), PersistentLockModule.getInstance(), ExecutionPlanModule.getInstance());
   }
 
   @Provides

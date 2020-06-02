@@ -36,4 +36,6 @@ public interface CustomExecutionService {
   // Interrupts
 
   Interrupt registerInterrupt(String planExecutionId);
+
+  PlanExecution testExecutionPlanCreator(String pipelineYaml, String accountId, String appId);
 }

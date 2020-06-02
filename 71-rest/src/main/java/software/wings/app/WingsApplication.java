@@ -52,6 +52,7 @@ import io.harness.ccm.budget.BudgetHandler;
 import io.harness.ccm.cluster.ClusterRecordHandler;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
+import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.commandlibrary.client.CommandLibraryServiceClientModule;
 import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
@@ -477,6 +478,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
 
     registerDatadogPublisherIfEnabled(configuration);
+    registerExecutionPlanCreators(injector);
 
     logger.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
@@ -804,5 +806,9 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void runMigrations(Injector injector) {
     injector.getInstance(MigrationService.class).runMigrations();
+  }
+
+  private void registerExecutionPlanCreators(Injector injector) {
+    injector.getInstance(ExecutionPlanCreatorRegistrar.class).register();
   }
 }
