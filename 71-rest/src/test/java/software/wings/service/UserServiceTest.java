@@ -91,6 +91,7 @@ import io.harness.event.model.EventType;
 import io.harness.exception.GeneralException;
 import io.harness.exception.HintException;
 import io.harness.exception.UnauthorizedException;
+import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
@@ -249,6 +250,9 @@ public class UserServiceTest extends WingsBaseTest {
   @Captor private ArgumentCaptor<PageRequest<User>> pageRequestArgumentCaptor;
   @Inject @InjectMocks SecretManager secretManager;
   @Inject @InjectMocks private AwsMarketPlaceApiHandlerImpl marketPlaceService;
+  @Inject WingsPersistence realWingsPersistence;
+  private Query<User> userQuery;
+
   /**
    * Sets mocks.
    */
@@ -281,6 +285,8 @@ public class UserServiceTest extends WingsBaseTest {
 
     when(configuration.isBlacklistedEmailDomainsAllowed()).thenReturn(true);
     when(totpAuthHandler.generateOtpUrl(any(), any(), any())).thenReturn(StringUtils.EMPTY);
+
+    userQuery = realWingsPersistence.createQuery(User.class);
   }
 
   @Test
@@ -835,11 +841,11 @@ public class UserServiceTest extends WingsBaseTest {
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL);
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+    when(wingsPersistence.createQuery(User.class)).thenReturn(userQuery);
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(userBuilder.uuid(USER_ID).build());
     when(authenticationUtils.getDefaultAccount(any())).thenReturn(account);
     when(wingsPersistence.getWithAppId(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID)).thenReturn(userInvite);
-
     userService.inviteUsers(userInvite);
     verify(wingsPersistence).save(any(UserInvite.class));
     verify(wingsPersistence).saveAndGet(eq(User.class), any(User.class));
@@ -847,24 +853,8 @@ public class UserServiceTest extends WingsBaseTest {
     verify(auditServiceHelper, times(userInvite.getEmails().size()))
         .reportForAuditingUsingAccountId(eq(ACCOUNT_ID), eq(null), any(UserInvite.class), eq(Type.CREATE));
 
-    // verify the outgoing email template
     verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
     assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo(INVITE_EMAIL_TEMPLATE_NAME);
-
-    User sameUser = new User();
-    sameUser.setEmail(USER_EMAIL);
-    sameUser.setName(USER_EMAIL);
-    when(wingsPersistence.createQuery(User.class).get()).thenReturn(sameUser);
-    // mock out addToSet
-    when(updateOperations.addToSet(anyString(), any(Account.class))).thenReturn(updateOperations);
-
-    // now try to invite same user again, should still be "signup" and not "role"
-    userService.inviteUsers(userInvite);
-    verify(emailDataNotificationService, times(2)).send(emailDataArgumentCaptor.capture());
-    assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo(INVITE_EMAIL_TEMPLATE_NAME);
-    verify(auditServiceHelper, atLeastOnce())
-        .reportForAuditingUsingAccountId(
-            eq(userInvite.getAccountId()), eq(null), any(UserInvite.class), any(Type.class));
   }
 
   /**
@@ -889,6 +879,7 @@ public class UserServiceTest extends WingsBaseTest {
                           .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
                           .build();
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+    when(wingsPersistence.createQuery(User.class)).thenReturn(userQuery);
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(userBuilder.uuid(USER_ID).build());
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL);
@@ -920,6 +911,7 @@ public class UserServiceTest extends WingsBaseTest {
                         .withUuid(ACCOUNT_ID)
                         .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
                         .build());
+    when(wingsPersistence.createQuery(User.class)).thenReturn(userQuery);
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(userBuilder.uuid(USER_ID).build());
 
@@ -1437,5 +1429,20 @@ public class UserServiceTest extends WingsBaseTest {
 
     userService.sendAccountLockedNotificationMail(user, 2);
     verify(emailDataNotificationService, times(1)).send(any(EmailData.class));
+  }
+
+  @Test(expected = UserAlreadyPresentException.class)
+  @Owner(developers = MOHIT)
+  @Category(UnitTests.class)
+  public void shouldNotAllowAExistingUsersToBeAddedAgain() {
+    UserInvite userInvite = anUserInvite().withEmails(Arrays.asList(USER_EMAIL)).build();
+    Account account = anAccount().build();
+    realWingsPersistence.save(account);
+    User user = anUser().email(USER_EMAIL).pendingAccounts(Arrays.asList(account)).build();
+    realWingsPersistence.save(user);
+    when(wingsPersistence.createQuery(User.class)).thenReturn(userQuery);
+    when(accountService.get(anyString())).thenReturn(account);
+    when(subdomainUrlHelper.getPortalBaseUrl(account.getUuid())).thenReturn(PORTAL_URL);
+    userService.inviteUsers(userInvite);
   }
 }

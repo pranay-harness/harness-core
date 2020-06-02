@@ -326,6 +326,8 @@ public enum ErrorCode {
 
   USER_NOT_AUTHORIZED("User not authorized"),
 
+  USER_ALREADY_PRESENT,
+
   INVALID_USAGE_RESTRICTION("Invalid usage restrictions"),
 
   STATE_EXECUTION_INSTANCE_NOT_FOUND("State Execution Instance not found"),
