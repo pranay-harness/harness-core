@@ -1,9 +1,15 @@
 package io.harness.grpc;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.MARKO;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import com.google.protobuf.Duration;
+import com.google.protobuf.util.Timestamps;
 
 import io.grpc.Channel;
 import io.grpc.Server;
@@ -19,9 +25,13 @@ import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
 import io.harness.delegate.TaskSetupAbstractions;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
+import io.harness.perpetualtask.PerpetualTaskClientEntrypoint;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
+import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -32,6 +42,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -39,6 +50,9 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
   private DelegateServiceGrpcClient delegateServiceGrpcClient;
+  private io.harness.grpc.DelegateServiceGrpc delegateServiceGrpc;
+
+  private PerpetualTaskService perpetualTaskService;
   private Server server;
   private Logger mockClientLogger;
   private Logger mockServerLogger;
@@ -56,11 +70,12 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
     DelegateServiceGrpc.DelegateServiceBlockingStub delegateServiceBlockingStub =
         DelegateServiceGrpc.newBlockingStub(channel);
     delegateServiceGrpcClient = new DelegateServiceGrpcClient(delegateServiceBlockingStub);
-    server = InProcessServerBuilder.forName(serverName)
-                 .directExecutor()
-                 .addService(new io.harness.grpc.DelegateServiceGrpc())
-                 .build()
-                 .start();
+
+    perpetualTaskService = mock(PerpetualTaskService.class);
+    delegateServiceGrpc = new io.harness.grpc.DelegateServiceGrpc(perpetualTaskService);
+
+    server =
+        InProcessServerBuilder.forName(serverName).directExecutor().addService(delegateServiceGrpc).build().start();
     grpcCleanup.register(server);
   }
 
@@ -106,12 +121,46 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
+  public void testRegisterPerpetualTaskClientEntrypoint() {
+    try {
+      delegateServiceGrpcClient.registerPerpetualTaskClientEntrypoint(
+          PerpetualTaskType.SAMPLE.name(), PerpetualTaskClientEntrypoint.newBuilder().build());
+    } catch (Exception e) {
+      fail("Should not have thrown any exception");
+    }
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
   public void testCreatePerpetualTask() {
-    PerpetualTaskId perpetualTaskId = delegateServiceGrpcClient.createPerpetualTask(AccountId.newBuilder().build(), "",
-        PerpetualTaskSchedule.newBuilder().build(), PerpetualTaskClientContextDetails.newBuilder().build(), false);
+    String accountId = generateUuid();
+    PerpetualTaskType type = PerpetualTaskType.SAMPLE;
+    long lastContextUpdated = 1000L;
+    String taskId = generateUuid();
+
+    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
+                                         .setInterval(Duration.newBuilder().setSeconds(5).build())
+                                         .setTimeout(Duration.newBuilder().setSeconds(2).build())
+                                         .build();
+
+    PerpetualTaskClientContextDetails contextDetails =
+        PerpetualTaskClientContextDetails.newBuilder()
+            .putAllTaskClientParams(new HashMap<>())
+            .setLastContextUpdated(Timestamps.fromMillis(lastContextUpdated))
+            .build();
+
+    PerpetualTaskClientContext context = new PerpetualTaskClientContext(new HashMap<>());
+    context.setLastContextUpdated(lastContextUpdated);
+
+    when(perpetualTaskService.createTask(eq(type), eq(accountId), eq(context), eq(schedule), eq(false)))
+        .thenReturn(taskId);
+
+    PerpetualTaskId perpetualTaskId = delegateServiceGrpcClient.createPerpetualTask(
+        AccountId.newBuilder().setId(accountId).build(), type.name(), schedule, contextDetails, false);
 
     assertThat(perpetualTaskId).isNotNull();
-    assertThat(perpetualTaskId.getId()).isNullOrEmpty();
+    assertThat(perpetualTaskId.getId()).isEqualTo(taskId);
   }
 
   @Test
