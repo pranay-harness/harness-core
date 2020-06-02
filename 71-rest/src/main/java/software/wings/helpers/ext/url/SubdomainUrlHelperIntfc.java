@@ -13,5 +13,5 @@ public interface SubdomainUrlHelperIntfc {
 
   String getWatcherMetadataUrl(String accountId);
 
-  String getPortalBaseUrlFromFeatureFlag(String accountId);
+  String getPortalBaseUrlWithoutSeparator(String accountId);
 }

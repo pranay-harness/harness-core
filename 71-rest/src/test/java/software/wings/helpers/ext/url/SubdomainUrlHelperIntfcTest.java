@@ -22,21 +22,18 @@ import software.wings.app.UrlConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AccountThreadLocal;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.FeatureFlagService;
 
 import javax.servlet.http.HttpServletRequest;
 
 public class SubdomainUrlHelperIntfcTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private UrlConfiguration urlConfiguration;
-  @Mock private FeatureFlagService featureFlagService;
   @InjectMocks @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   private static final String PORTAL_URL_WITH_SEPARATOR = PORTAL_URL + "/";
@@ -50,8 +47,7 @@ public class SubdomainUrlHelperIntfcTest extends WingsBaseTest {
   private static final String WATCHER_METADATA_URL_WITH_SUBDOMAIN = SUBDOMAIN_URL + "test/file";
   private static final String ACCOUNT_ID_1 = "account1";
   private static final String ACCOUNT_ID_2 = "account2";
-  private static final String ACCOUNT_ID_3 = "account3";
-  private Account account1, account2, account3;
+  private Account account1, account2;
   private HttpServletRequest mockHttpServletRequest;
 
   @Before
@@ -64,31 +60,19 @@ public class SubdomainUrlHelperIntfcTest extends WingsBaseTest {
                    .withLicenseInfo(getLicenseInfo())
                    .build();
     account2 = anAccount()
-                   .withCompanyName("company2")
-                   .withAccountName("account2")
+                   .withCompanyName("company3")
+                   .withAccountName("account3")
                    .withAccountKey("ACCOUNT_KEY")
                    .withUuid(ACCOUNT_ID_2)
                    .withLicenseInfo(getLicenseInfo())
                    .withSubdomainUrl(SUBDOMAIN_URL)
                    .build();
-    account3 = anAccount()
-                   .withCompanyName("company3")
-                   .withAccountName("account3")
-                   .withAccountKey("ACCOUNT_KEY")
-                   .withUuid(ACCOUNT_ID_3)
-                   .withLicenseInfo(getLicenseInfo())
-                   .withSubdomainUrl(SUBDOMAIN_URL)
-                   .build();
     when(accountService.get(ACCOUNT_ID_1)).thenReturn(account1);
     when(accountService.get(ACCOUNT_ID_2)).thenReturn(account2);
-    when(accountService.get(ACCOUNT_ID_3)).thenReturn(account3);
     when(urlConfiguration.getPortalUrl()).thenReturn(PORTAL_URL);
     when(urlConfiguration.getApiUrl()).thenReturn(API_URL);
     when(urlConfiguration.getDelegateMetadataUrl()).thenReturn(DELEGATE_METADATA_URL);
     when(urlConfiguration.getWatcherMetadataUrl()).thenReturn(WATCHER_METADATA_URL);
-    when(featureFlagService.isEnabled(FeatureName.VANITY_URL, ACCOUNT_ID_1)).thenReturn(false);
-    when(featureFlagService.isEnabled(FeatureName.VANITY_URL, ACCOUNT_ID_2)).thenReturn(false);
-    when(featureFlagService.isEnabled(FeatureName.VANITY_URL, ACCOUNT_ID_3)).thenReturn(true);
     mockHttpServletRequest = mock(HttpServletRequest.class);
     when(mockHttpServletRequest.getScheme()).thenReturn("scheme");
     when(mockHttpServletRequest.getServerName()).thenReturn("server");
@@ -203,51 +187,35 @@ public class SubdomainUrlHelperIntfcTest extends WingsBaseTest {
   @Test
   @Owner(developers = MEHUL)
   @Category(UnitTests.class)
-  public void getDelegateMetadataUrlWithoutFF() {
+  public void getDelegateMetadataUrl() {
     String result1 = subdomainUrlHelper.getDelegateMetadataUrl(null);
     assertThat(result1).isEqualTo(DELEGATE_METADATA_URL);
     String result2 = subdomainUrlHelper.getDelegateMetadataUrl(ACCOUNT_ID_1);
     assertThat(result2).isEqualTo(DELEGATE_METADATA_URL);
-    String result3 = subdomainUrlHelper.getDelegateMetadataUrl(ACCOUNT_ID_2);
-    assertThat(result3).isEqualTo(DELEGATE_METADATA_URL);
+    assertThat(subdomainUrlHelper.getDelegateMetadataUrl(ACCOUNT_ID_2)).isEqualTo(DELEGATE_METADATA_URL_WITH_SUBDOMAIN);
   }
 
   @Test
   @Owner(developers = MEHUL)
   @Category(UnitTests.class)
-  public void getDelegateMetadataUrlWithFF() {
-    assertThat(subdomainUrlHelper.getDelegateMetadataUrl(ACCOUNT_ID_3)).isEqualTo(DELEGATE_METADATA_URL_WITH_SUBDOMAIN);
-  }
-
-  @Test
-  @Owner(developers = MEHUL)
-  @Category(UnitTests.class)
-  public void getWatcherMetadataUrlWithoutFF() {
+  public void getWatcherMetadataUrl() {
     String result1 = subdomainUrlHelper.getWatcherMetadataUrl(null);
     assertThat(result1).isEqualTo(WATCHER_METADATA_URL);
     String result2 = subdomainUrlHelper.getWatcherMetadataUrl(ACCOUNT_ID_1);
     assertThat(result2).isEqualTo(WATCHER_METADATA_URL);
-    String result3 = subdomainUrlHelper.getWatcherMetadataUrl(ACCOUNT_ID_2);
-    assertThat(result3).isEqualTo(WATCHER_METADATA_URL);
+    assertThat(subdomainUrlHelper.getWatcherMetadataUrl(ACCOUNT_ID_2)).isEqualTo(WATCHER_METADATA_URL_WITH_SUBDOMAIN);
   }
 
   @Test
   @Owner(developers = MEHUL)
   @Category(UnitTests.class)
-  public void getWatcherMetadataUrlWithFF() {
-    assertThat(subdomainUrlHelper.getWatcherMetadataUrl(ACCOUNT_ID_3)).isEqualTo(WATCHER_METADATA_URL_WITH_SUBDOMAIN);
-  }
-
-  @Test
-  @Owner(developers = MEHUL)
-  @Category(UnitTests.class)
-  public void getManagerUrlWithoutFF() {
+  public void getManagerUrl() {
     String result1 = subdomainUrlHelper.getManagerUrl(mockHttpServletRequest, null);
     assertThat(result1).isEqualTo(API_URL);
     String result2 = subdomainUrlHelper.getManagerUrl(mockHttpServletRequest, ACCOUNT_ID_1);
     assertThat(result2).isEqualTo(API_URL);
-    String result3 = subdomainUrlHelper.getManagerUrl(mockHttpServletRequest, ACCOUNT_ID_2);
-    assertThat(result3).isEqualTo(API_URL);
+    assertThat(subdomainUrlHelper.getManagerUrl(mockHttpServletRequest, ACCOUNT_ID_2))
+        .isEqualTo(SUBDOMAIN_URL_WITHOUT_SEPARATOR);
     when(urlConfiguration.getApiUrl()).thenReturn(StringUtils.EMPTY);
     String result4 = subdomainUrlHelper.getManagerUrl(mockHttpServletRequest, null);
     assertThat(result4).isEqualTo("scheme://xxxxxxxx0");
@@ -256,19 +224,10 @@ public class SubdomainUrlHelperIntfcTest extends WingsBaseTest {
   @Test
   @Owner(developers = MEHUL)
   @Category(UnitTests.class)
-  public void getManagerUrlWithFF() {
-    assertThat(subdomainUrlHelper.getManagerUrl(mockHttpServletRequest, ACCOUNT_ID_3))
-        .isEqualTo(SUBDOMAIN_URL_WITHOUT_SEPARATOR);
-  }
-
-  @Test
-  @Owner(developers = MEHUL)
-  @Category(UnitTests.class)
-  public void getPortalBaseUrlFromFeatureFlagTest() {
-    assertThat(subdomainUrlHelper.getPortalBaseUrlFromFeatureFlag(null)).isEqualTo(PORTAL_URL);
-    assertThat(subdomainUrlHelper.getPortalBaseUrlFromFeatureFlag(ACCOUNT_ID_1)).isEqualTo(PORTAL_URL);
-    assertThat(subdomainUrlHelper.getPortalBaseUrlFromFeatureFlag(ACCOUNT_ID_2)).isEqualTo(PORTAL_URL);
-    assertThat(subdomainUrlHelper.getPortalBaseUrlFromFeatureFlag(ACCOUNT_ID_3))
+  public void getDownloadUrlTest() {
+    assertThat(subdomainUrlHelper.getPortalBaseUrlWithoutSeparator(null)).isEqualTo(PORTAL_URL);
+    assertThat(subdomainUrlHelper.getPortalBaseUrlWithoutSeparator(ACCOUNT_ID_1)).isEqualTo(PORTAL_URL);
+    assertThat(subdomainUrlHelper.getPortalBaseUrlWithoutSeparator(ACCOUNT_ID_2))
         .isEqualTo(SUBDOMAIN_URL_WITHOUT_SEPARATOR);
   }
 }
