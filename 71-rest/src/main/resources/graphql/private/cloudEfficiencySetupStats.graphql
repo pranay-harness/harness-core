@@ -42,11 +42,7 @@ type ceConnector {
   curReportName: String
   crossAccountRoleArn: String
   infraType: infraTypesEnum
-  ceHealthStatus: ConnectorHealthStatus
-}
-
-type ConnectorHealthStatus {
-  isHealthy: Boolean
+  ceHealthStatus: CEHealthStatus
 }
 
 type countStats {

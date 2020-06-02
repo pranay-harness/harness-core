@@ -109,33 +109,4 @@ public class AwsBillingDataPipelineWriterTest extends CategoryTest {
     assertThat(value.getAwsFallbackTableScheduledQueryName()).isEqualTo(scheduledQueryName);
     assertThat(value.getPreAggregatedScheduledQueryName()).isEqualTo(preAggQueryName);
   }
-
-  @Test
-  @Owner(developers = ROHIT)
-  @Category(UnitTests.class)
-  public void testWriteTransferJobThrowsException() throws IOException {
-    when(billingDataPipelineService.createDataTransferJobFromGCS(dataSetId, settingId, accountId, accountName))
-        .thenThrow(IOException.class);
-    awsBillingDataPipelineWriter.write(Collections.EMPTY_LIST);
-    ArgumentCaptor<BillingDataPipelineRecord> billingDataPipelineRecordArgumentCaptor =
-        ArgumentCaptor.forClass(BillingDataPipelineRecord.class);
-    verify(billingDataPipelineRecordDao).create(billingDataPipelineRecordArgumentCaptor.capture());
-    BillingDataPipelineRecord value = billingDataPipelineRecordArgumentCaptor.getValue();
-    assertThat(value.getDataTransferJobName()).isNull();
-  }
-
-  @Test
-  @Owner(developers = ROHIT)
-  @Category(UnitTests.class)
-  public void testScheduledQueriesThrowsException() throws IOException {
-    when(billingDataPipelineService.createScheduledQueriesForAWS(dataSetId, accountId, accountName))
-        .thenThrow(IOException.class);
-    awsBillingDataPipelineWriter.write(Collections.EMPTY_LIST);
-    ArgumentCaptor<BillingDataPipelineRecord> billingDataPipelineRecordArgumentCaptor =
-        ArgumentCaptor.forClass(BillingDataPipelineRecord.class);
-    verify(billingDataPipelineRecordDao).create(billingDataPipelineRecordArgumentCaptor.capture());
-    BillingDataPipelineRecord value = billingDataPipelineRecordArgumentCaptor.getValue();
-    assertThat(value.getPreAggregatedScheduledQueryName()).isNull();
-    assertThat(value.getAwsFallbackTableScheduledQueryName()).isNull();
-  }
 }

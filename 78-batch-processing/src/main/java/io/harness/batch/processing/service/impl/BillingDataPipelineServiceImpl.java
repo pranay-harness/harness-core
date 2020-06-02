@@ -338,7 +338,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
     dataTransferServiceClient.createTransferConfig(request);
   }
 
-  DataTransferServiceClient getDataTransferClient() throws IOException {
+  public DataTransferServiceClient getDataTransferClient() throws IOException {
     ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
     Credentials credentials = getImpersonatedCredentials(sourceCredentials, null);
     return getDataTransferClient(credentials);

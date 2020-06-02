@@ -5,6 +5,13 @@ import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.GCP_KUBERNETES;
+import static io.harness.ccm.health.CEConnectorHealthMessages.AWS_S3_SYNC_MESSAGE;
+import static io.harness.ccm.health.CEConnectorHealthMessages.BILLING_DATA_PIPELINE_ERROR;
+import static io.harness.ccm.health.CEConnectorHealthMessages.BILLING_DATA_PIPELINE_SUCCESS;
+import static io.harness.ccm.health.CEConnectorHealthMessages.BILLING_PIPELINE_CREATION_FAILED;
+import static io.harness.ccm.health.CEConnectorHealthMessages.BILLING_PIPELINE_CREATION_SUCCESSFUL;
+import static io.harness.ccm.health.CEConnectorHealthMessages.SETTING_ATTRIBUTE_CREATED;
+import static io.harness.ccm.health.CEConnectorHealthMessages.WAITING_FOR_SUCCESSFUL_AWS_S3_SYNC_MESSAGE;
 import static io.harness.ccm.health.CEError.AWS_ECS_CLUSTER_NOT_FOUND;
 import static io.harness.ccm.health.CEError.DELEGATE_NOT_AVAILABLE;
 import static io.harness.ccm.health.CEError.METRICS_SERVER_NOT_FOUND;
@@ -20,6 +27,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.ccm.cluster.ClusterRecordService;
+import io.harness.ccm.cluster.dao.BillingDataPipelineRecordDao;
+import io.harness.ccm.cluster.entities.BillingDataPipelineRecord;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.ccm.config.CCMSettingService;
@@ -30,10 +39,15 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,12 +56,15 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class HealthStatusServiceImpl implements HealthStatusService {
+  private static final String SUCCEEDED = "SUCCEEDED";
+  private static final String DEFAULT_TIME_ZONE = "GMT";
   @Inject SettingsService settingsService;
   @Inject CCMSettingService ccmSettingService;
   @Inject ClusterRecordService clusterRecordService;
   @Inject PerpetualTaskService perpetualTaskService;
   @Inject LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
   @Inject CeExceptionRecordDao ceExceptionRecordDao;
+  @Inject BillingDataPipelineRecordDao billingDataPipelineRecordDao;
 
   private static final String TIMESTAMP_FORMAT_SPECIFIER = "{}";
   private static final String LAST_EVENT_TIMESTAMP_MESSAGE = "Last event collected at %s";
@@ -67,6 +84,10 @@ public class HealthStatusServiceImpl implements HealthStatusService {
   public CEHealthStatus getHealthStatus(String cloudProviderId, boolean cloudCostEnabled) {
     SettingAttribute cloudProvider = settingsService.get(cloudProviderId);
     Preconditions.checkNotNull(cloudProvider);
+    if (cloudProvider.getCategory() == SettingCategory.CE_CONNECTOR) {
+      return getConnectorHealth(cloudProvider);
+    }
+
     if (cloudCostEnabled) {
       Preconditions.checkArgument(ccmSettingService.isCloudCostEnabled(cloudProvider),
           format("The cloud provider with id=%s has CE disabled.", cloudProvider.getUuid()));
@@ -89,7 +110,76 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     clusterRecords.forEach(clusterRecord -> ceClusterHealthList.add(getClusterHealth(clusterRecord)));
 
     boolean isHealthy = ceClusterHealthList.stream().allMatch(CEClusterHealth::isHealthy);
-    return CEHealthStatus.builder().isHealthy(isHealthy).ceClusterHealthList(ceClusterHealthList).build();
+    return CEHealthStatus.builder().isHealthy(isHealthy).clusterHealthStatusList(ceClusterHealthList).build();
+  }
+
+  private CEHealthStatus getConnectorHealth(SettingAttribute cloudProvider) {
+    boolean dataTransferJobStatus;
+    boolean preAggregatedJobStatus;
+    boolean awsFallbackTableJob = true;
+
+    Instant connectorCreationInstantDayTruncated =
+        Instant.ofEpochMilli(cloudProvider.getCreatedAt()).truncatedTo(ChronoUnit.DAYS);
+    Instant currentInstantDayTruncated = Instant.now().truncatedTo(ChronoUnit.DAYS);
+
+    long timeDifference =
+        currentInstantDayTruncated.toEpochMilli() - connectorCreationInstantDayTruncated.toEpochMilli();
+
+    BillingDataPipelineRecord billingDataPipelineRecord =
+        billingDataPipelineRecordDao.fetchBillingPipelineRecord(cloudProvider.getAccountId(), cloudProvider.getUuid());
+
+    if (timeDifference == 0 || billingDataPipelineRecord == null) {
+      return serialiseHealthStatusToPOJO(true, Collections.singletonList(SETTING_ATTRIBUTE_CREATED.getMessage()));
+    }
+
+    String s3SyncHealthStatus = getS3SyncHealthStatus(billingDataPipelineRecord);
+
+    if (timeDifference == ChronoUnit.DAYS.getDuration().toMillis()) {
+      boolean isBillingDataPipelineCreationSuccessful = billingDataPipelineRecord.getDataSetId() != null;
+      List<String> messages =
+          Arrays.asList(isBillingDataPipelineCreationSuccessful ? BILLING_PIPELINE_CREATION_SUCCESSFUL.getMessage()
+                                                                : BILLING_PIPELINE_CREATION_FAILED.getMessage(),
+              s3SyncHealthStatus);
+      return serialiseHealthStatusToPOJO(isBillingDataPipelineCreationSuccessful, messages);
+    }
+
+    if (billingDataPipelineRecord.getDataSetId() == null) {
+      return serialiseHealthStatusToPOJO(
+          true, Arrays.asList(BILLING_PIPELINE_CREATION_FAILED.getMessage(), s3SyncHealthStatus));
+    }
+
+    dataTransferJobStatus = billingDataPipelineRecord.getDataTransferJobStatus().equals(SUCCEEDED);
+    preAggregatedJobStatus = billingDataPipelineRecord.getPreAggregatedScheduledQueryStatus().equals(SUCCEEDED);
+    if (cloudProvider.getValue().getType().equals(SettingValue.SettingVariableTypes.CE_AWS.toString())) {
+      awsFallbackTableJob = billingDataPipelineRecord.getAwsFallbackTableScheduledQueryStatus().equals(SUCCEEDED);
+    }
+
+    boolean healthStatus = dataTransferJobStatus && preAggregatedJobStatus && awsFallbackTableJob;
+    List<String> messages = Arrays.asList(
+        healthStatus ? BILLING_DATA_PIPELINE_SUCCESS.getMessage() : BILLING_DATA_PIPELINE_ERROR.getMessage(),
+        s3SyncHealthStatus);
+    return serialiseHealthStatusToPOJO(healthStatus, messages);
+  }
+
+  private CEHealthStatus serialiseHealthStatusToPOJO(boolean healthStatus, List<String> messages) {
+    return CEHealthStatus.builder()
+        .isHealthy(healthStatus)
+        .isCEConnector(true)
+        .clusterHealthStatusList(
+            Collections.singletonList(CEClusterHealth.builder().isHealthy(healthStatus).messages(messages).build()))
+        .build();
+  }
+
+  private String getS3SyncHealthStatus(BillingDataPipelineRecord billingDataPipelineRecord) {
+    String s3SyncHealthStatus = WAITING_FOR_SUCCESSFUL_AWS_S3_SYNC_MESSAGE.getMessage();
+
+    Instant lastSuccessfulS3SyncInstant = billingDataPipelineRecord.getLastSuccessfulS3Sync();
+    if (!lastSuccessfulS3SyncInstant.equals(Instant.MIN)) {
+      String formattedDate = lastSuccessfulS3SyncInstant.atZone(ZoneId.of(DEFAULT_TIME_ZONE))
+                                 .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG));
+      s3SyncHealthStatus = format(AWS_S3_SYNC_MESSAGE.getMessage(), formattedDate);
+    }
+    return s3SyncHealthStatus;
   }
 
   private CEClusterHealth getClusterHealth(ClusterRecord clusterRecord) {

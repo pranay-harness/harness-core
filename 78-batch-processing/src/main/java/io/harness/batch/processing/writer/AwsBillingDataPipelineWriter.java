@@ -57,35 +57,31 @@ public class AwsBillingDataPipelineWriter extends EventWriter implements ItemWri
       BillingDataPipelineRecord billingDataPipelineRecord =
           billingDataPipelineRecordDao.getByMasterAccountId(accountId, masterAccountId);
       if (null == billingDataPipelineRecord) {
-        String dataSetId = billingDataPipelineService.createDataSet(account);
-        String dataTransferJobName = null;
-        HashMap<String, String> scheduledQueryJobsMap = new HashMap<>();
         try {
+          String dataSetId = billingDataPipelineService.createDataSet(account);
+          String dataTransferJobName;
+          HashMap<String, String> scheduledQueryJobsMap;
           dataTransferJobName =
               billingDataPipelineService.createDataTransferJobFromGCS(dataSetId, settingId, accountId, accountName);
-        } catch (IOException e) {
-          logger.error("Error while creating GCS -> BQ Transfer Job {}", e);
-        }
-        try {
           scheduledQueryJobsMap =
               billingDataPipelineService.createScheduledQueriesForAWS(dataSetId, accountId, accountName);
-        } catch (IOException e) {
-          logger.error("Error while creating Scheduled Queries {}", e);
-        }
 
-        BillingDataPipelineRecord dataPipelineRecord =
-            BillingDataPipelineRecord.builder()
-                .accountId(accountId)
-                .accountName(accountName)
-                .cloudProvider(CloudProvider.AWS.name())
-                .awsMasterAccountId(masterAccountId)
-                .settingId(settingId)
-                .dataSetId(dataSetId)
-                .dataTransferJobName(dataTransferJobName)
-                .awsFallbackTableScheduledQueryName(scheduledQueryJobsMap.get(scheduledQueryKey))
-                .preAggregatedScheduledQueryName(scheduledQueryJobsMap.get(preAggQueryKey))
-                .build();
-        billingDataPipelineRecordDao.create(dataPipelineRecord);
+          BillingDataPipelineRecord dataPipelineRecord =
+              BillingDataPipelineRecord.builder()
+                  .accountId(accountId)
+                  .accountName(accountName)
+                  .cloudProvider(CloudProvider.AWS.name())
+                  .awsMasterAccountId(masterAccountId)
+                  .settingId(settingId)
+                  .dataSetId(dataSetId)
+                  .dataTransferJobName(dataTransferJobName)
+                  .awsFallbackTableScheduledQueryName(scheduledQueryJobsMap.get(scheduledQueryKey))
+                  .preAggregatedScheduledQueryName(scheduledQueryJobsMap.get(preAggQueryKey))
+                  .build();
+          billingDataPipelineRecordDao.create(dataPipelineRecord);
+        } catch (IOException e) {
+          logger.error("Error while creating Billing Data Pipeline {}", e);
+        }
       }
     });
   }

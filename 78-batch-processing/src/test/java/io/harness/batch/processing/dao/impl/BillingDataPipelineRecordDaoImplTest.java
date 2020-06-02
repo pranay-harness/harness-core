@@ -3,6 +3,7 @@ package io.harness.batch.processing.dao.impl;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.cloud.bigquery.datatransfer.v1.TransferState;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
@@ -32,7 +33,7 @@ public class BillingDataPipelineRecordDaoImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void create() {
+  public void testBillingDataPipelineRecordDao() {
     BillingDataPipelineRecord dataPipelineRecord = BillingDataPipelineRecord.builder()
                                                        .accountId(accountId)
                                                        .accountName(accountName)
@@ -51,5 +52,21 @@ public class BillingDataPipelineRecordDaoImplTest extends WingsBaseTest {
             .get();
 
     assertThat(billingDataPipelineRecord).isEqualTo(dataPipelineRecord);
+
+    BillingDataPipelineRecord updatedBillingDataPipelineRecord = billingDataPipelineRecord;
+    updatedBillingDataPipelineRecord.setAwsFallbackTableScheduledQueryStatus(TransferState.SUCCEEDED.toString());
+    updatedBillingDataPipelineRecord.setPreAggregatedScheduledQueryStatus(TransferState.SUCCEEDED.toString());
+    updatedBillingDataPipelineRecord.setDataTransferJobStatus(TransferState.SUCCEEDED.toString());
+
+    BillingDataPipelineRecord upsertedBillingDataPipelineRecord =
+        billingDataPipelineRecordDao.upsert(updatedBillingDataPipelineRecord);
+
+    assertThat(upsertedBillingDataPipelineRecord).isNotNull();
+    assertThat(upsertedBillingDataPipelineRecord.getDataTransferJobStatus())
+        .isEqualTo(TransferState.SUCCEEDED.toString());
+    assertThat(upsertedBillingDataPipelineRecord.getPreAggregatedScheduledQueryStatus())
+        .isEqualTo(TransferState.SUCCEEDED.toString());
+    assertThat(upsertedBillingDataPipelineRecord.getAwsFallbackTableScheduledQueryStatus())
+        .isEqualTo(TransferState.SUCCEEDED.toString());
   }
 }

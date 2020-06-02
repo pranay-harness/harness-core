@@ -3,7 +3,7 @@ package io.harness.ccm.setup.graphql;
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
-import io.harness.ccm.health.CEHealthStatus;
+import io.harness.ccm.health.HealthStatusServiceImpl;
 import io.harness.ccm.setup.graphql.QLCEConnector.QLCEConnectorBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -25,6 +25,7 @@ import java.util.List;
 public class CeConnectorDataFetcher
     extends AbstractConnectionV2DataFetcher<QLCESetupFilter, QLNoOpSortCriteria, QLCEConnectorData> {
   @Inject private CESetupQueryHelper ceSetupQueryHelper;
+  @Inject private HealthStatusServiceImpl healthStatusService;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -45,14 +46,16 @@ public class CeConnectorDataFetcher
   private QLCEConnector populateCEConnector(SettingAttribute settingAttribute) {
     String accountName = settingAttribute.getName();
     QLCEConnectorBuilder qlCEConnectorBuilder =
-        QLCEConnector.builder().settingId(settingAttribute.getUuid()).accountName(accountName);
+        QLCEConnector.builder()
+            .settingId(settingAttribute.getUuid())
+            .accountName(accountName)
+            .ceHealthStatus(healthStatusService.getHealthStatus(settingAttribute.getUuid()));
     if (settingAttribute.getValue() instanceof CEAwsConfig) {
       CEAwsConfig ceAwsConfig = (CEAwsConfig) settingAttribute.getValue();
       qlCEConnectorBuilder.curReportName(ceAwsConfig.getCurReportName())
           .s3BucketName(ceAwsConfig.getS3BucketDetails().getS3BucketName())
           .crossAccountRoleArn(ceAwsConfig.getAwsCrossAccountAttributes().getCrossAccountRoleArn())
-          .infraType(QLInfraTypesEnum.AWS)
-          .ceHealthStatus(CEHealthStatus.builder().isHealthy(true).build());
+          .infraType(QLInfraTypesEnum.AWS);
     } else if (settingAttribute.getValue() instanceof CEGcpConfig) {
       qlCEConnectorBuilder.infraType(QLInfraTypesEnum.GCP);
     }

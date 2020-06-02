@@ -13,9 +13,20 @@ import lombok.extern.slf4j.Slf4j;
 public class BillingDataPipelineRecordDao {
   @Inject private HPersistence persistence;
 
+  public boolean create(BillingDataPipelineRecord billingDataPipelineRecord) {
+    return persistence.save(billingDataPipelineRecord) != null;
+  }
+
   public BillingDataPipelineRecord fetchBillingPipelineMetaDataFromAccountId(String accountId) {
     return persistence.createQuery(BillingDataPipelineRecord.class)
         .filter(BillingDataPipelineRecordKeys.accountId, accountId)
+        .get();
+  }
+
+  public BillingDataPipelineRecord fetchBillingPipelineRecord(String accountId, String settingId) {
+    return persistence.createQuery(BillingDataPipelineRecord.class)
+        .filter(BillingDataPipelineRecordKeys.accountId, accountId)
+        .filter(BillingDataPipelineRecordKeys.settingId, settingId)
         .get();
   }
 }
