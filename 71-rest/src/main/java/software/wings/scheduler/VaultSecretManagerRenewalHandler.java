@@ -43,6 +43,11 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
   public void handle(SecretManagerConfig secretManagerConfig) {
     logger.info("renewing client tokens for {}", secretManagerConfig.getUuid());
     VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
+    if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+      logger.debug("Renewing tokens/appRoleClientToken not required for a templatized secret manager: {}",
+          secretManagerConfig.getUuid());
+      return;
+    }
     try {
       vaultService.renewTokens(vaultConfig);
       vaultService.renewAppRoleClientToken(vaultConfig);

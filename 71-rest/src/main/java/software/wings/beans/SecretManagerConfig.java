@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -29,6 +31,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -73,6 +76,12 @@ public abstract class SecretManagerConfig
   @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   @Indexed private Long nextTokenRenewIteration;
+
+  private List<String> templatizedFields;
+
+  public static boolean isTemplatized(SecretManagerConfig secretManagerConfig) {
+    return !isEmpty(secretManagerConfig.getTemplatizedFields());
+  }
 
   public abstract void maskSecrets();
 

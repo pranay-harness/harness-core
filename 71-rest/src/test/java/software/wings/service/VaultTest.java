@@ -8,6 +8,7 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -27,6 +28,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
@@ -34,6 +36,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.TimerScheduledExecutorService;
@@ -1840,6 +1843,174 @@ public class VaultTest extends WingsBaseTest {
     assertThat(secretEngines.get(0).getVersion()).isEqualTo(secretEngineSummary1.getVersion());
     assertThat(secretEngines.get(1).getName()).isEqualTo(secretEngineSummary2.getName());
     assertThat(secretEngines.get(1).getVersion()).isEqualTo(secretEngineSummary2.getVersion());
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void createTemplatizedVault_shouldSucceed() {
+    if (isKmsEnabled) {
+      return;
+    }
+
+    // should save a valid configuration with appRoleId and secretId as templatized
+    String temporaryAppRoleId = "appRoleId";
+    String temporarySecretId = "secretId";
+    String temporaryToken = "token";
+    VaultConfig vaultConfig = getVaultConfigWithAppRole(temporaryAppRoleId, temporarySecretId);
+    vaultConfig.setDefault(false);
+    vaultConfig.setTemplatizedFields(Lists.newArrayList("appRoleId", "secretId"));
+
+    VaultAppRoleLoginResult vaultAppRoleLoginResult = mock(VaultAppRoleLoginResult.class);
+    when(secretManagementDelegateService.appRoleLogin(any())).thenReturn(vaultAppRoleLoginResult);
+    when(vaultAppRoleLoginResult.getClientToken()).thenReturn(temporaryToken);
+
+    String vaultConfigId = vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
+    vaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
+
+    assertThat(vaultConfig.getAuthToken()).isEqualTo(temporaryToken);
+    assertThat(vaultConfig.getTemplatizedFields()).hasSize(2);
+    assertThat(vaultConfig.getAppRoleId()).isEqualTo(temporaryAppRoleId);
+    assertThat(vaultConfig.getSecretId()).isEqualTo(temporarySecretId);
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void createTemplatizedVault_shouldFail() {
+    if (isKmsEnabled) {
+      return;
+    }
+
+    // should fail when trying to save a templatized SM as default
+    VaultConfig vaultConfig = getVaultConfigWithAppRole(null, "secretId");
+    vaultConfig.setDefault(true);
+    vaultConfig.setTemplatizedFields(Lists.newArrayList("appRoleId", "secretId"));
+    try {
+      vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
+      fail("Should not save a templatized secret manager as default");
+    } catch (InvalidRequestException ire) {
+      assertThat(ire.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+
+    // should fail when trying to save a templatized SM with required fields not provided
+    vaultConfig = getVaultConfigWithAppRole(null, "secretId");
+    vaultConfig.setDefault(false);
+    vaultConfig.setTemplatizedFields(Lists.newArrayList("appRoleId", "secretId"));
+    try {
+      vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
+      fail("Saving a vault configuration with invalid values should fail.");
+    } catch (InvalidRequestException ire) {
+      assertThat(ire.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+
+    // should fail when trying to save a templatized SM with required fields not provided
+    vaultConfig = getVaultConfigWithAppRole("", null);
+    vaultConfig.setDefault(false);
+    vaultConfig.setTemplatizedFields(Lists.newArrayList("appRoleId", "secretId"));
+    try {
+      vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
+      fail("Saving a vault configuration with invalid values should fail.");
+    } catch (InvalidRequestException ire) {
+      assertThat(ire.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+
+    // should fail when trying to save a templatized SM with required fields not provided
+    vaultConfig = getVaultConfigWithAuthToken(null);
+    vaultConfig.setDefault(false);
+    vaultConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
+    try {
+      vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
+      fail("Saving a vault configuration with invalid values should fail.");
+    } catch (InvalidRequestException ire) {
+      assertThat(ire.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void updateTemplatizedVault_shouldSucceed() {
+    if (isKmsEnabled) {
+      return;
+    }
+
+    // should update vault with a valid configuration with appRoleId and secretId as templatized
+    String temporaryAppRoleId = "tempAppRoleId";
+    String temporarySecretId = "tempSecretId";
+    String temporaryToken = "tempToken";
+    VaultConfig templatizedVaultConfig = getVaultConfigWithAppRole(temporaryAppRoleId, temporarySecretId);
+    templatizedVaultConfig.setTemplatizedFields(Lists.newArrayList("appRoleId", "secretId"));
+    templatizedVaultConfig.setDefault(false);
+
+    VaultAppRoleLoginResult vaultAppRoleLoginResult = mock(VaultAppRoleLoginResult.class);
+    when(secretManagementDelegateService.appRoleLogin(any())).thenReturn(vaultAppRoleLoginResult);
+    when(vaultAppRoleLoginResult.getClientToken()).thenReturn(temporaryToken);
+
+    String vaultConfigId = vaultService.saveOrUpdateVaultConfig(accountId, templatizedVaultConfig);
+    templatizedVaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
+
+    assertThat(templatizedVaultConfig.getAppRoleId()).isEqualTo(temporaryAppRoleId);
+    assertThat(templatizedVaultConfig.getSecretId()).isEqualTo(temporarySecretId);
+    assertThat(templatizedVaultConfig.getAuthToken()).isEqualTo(temporaryToken);
+    assertThat(templatizedVaultConfig.getTemplatizedFields()).hasSize(2);
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void updateTemplatizedVault_shouldFail() {
+    if (isKmsEnabled) {
+      return;
+    }
+
+    String appRoleId = "appRoleId";
+    String secretId = "secretId";
+
+    // should fail when trying to update templatized SM which is default
+    VaultConfig templatizedVaultConfig = getVaultConfigWithAppRole(appRoleId, secretId);
+    templatizedVaultConfig.setTemplatizedFields(Lists.newArrayList("appRoleId", "secretId"));
+    templatizedVaultConfig.setDefault(true);
+    templatizedVaultConfig.setAccountId(accountId);
+    try {
+      vaultService.saveOrUpdateVaultConfig(accountId, templatizedVaultConfig);
+      fail("Saving a vault configuration with invalid values should fail.");
+    } catch (InvalidRequestException ire) {
+      assertThat(ire.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+
+    // should fail when required fields not present
+    templatizedVaultConfig = getVaultConfigWithAppRole(null, "secretId");
+    templatizedVaultConfig.setDefault(false);
+    templatizedVaultConfig.setTemplatizedFields(Lists.newArrayList("appRoleId", "secretId"));
+    try {
+      vaultService.saveOrUpdateVaultConfig(accountId, templatizedVaultConfig);
+      fail("Saving a vault configuration with invalid values should fail.");
+    } catch (InvalidRequestException ire) {
+      assertThat(ire.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+
+    // should fail when required fields not present
+    templatizedVaultConfig = getVaultConfigWithAppRole("", null);
+    templatizedVaultConfig.setDefault(false);
+    templatizedVaultConfig.setTemplatizedFields(Lists.newArrayList("appRoleId", "secretId"));
+    try {
+      vaultService.saveOrUpdateVaultConfig(accountId, templatizedVaultConfig);
+      fail("Saving a vault configuration with invalid values should fail.");
+    } catch (InvalidRequestException ire) {
+      assertThat(ire.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
+
+    // should fail when required fields not present
+    templatizedVaultConfig = getVaultConfigWithAuthToken(null);
+    templatizedVaultConfig.setDefault(false);
+    templatizedVaultConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
+    try {
+      vaultService.saveOrUpdateVaultConfig(accountId, templatizedVaultConfig);
+      fail("Saving a vault configuration with invalid values should fail.");
+    } catch (InvalidRequestException ire) {
+      assertThat(ire.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
+    }
   }
 
   private Thread startTransitionListener() throws IllegalAccessException {

@@ -43,6 +43,7 @@ import io.harness.expression.SecretString;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.serializer.JsonUtils;
 import io.harness.stream.BoundedInputStream;
 import io.harness.testlib.RealMongo;
 import lombok.extern.slf4j.Slf4j;
@@ -1095,10 +1096,10 @@ public class SecretTextTest extends WingsBaseTest {
     String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
     when(httpServletRequest.getContentLengthLong()).thenReturn(fileToSave.length());
-    String secretFileId =
-        secretManagementResource
-            .saveFile(httpServletRequest, accountId, kmsId, secretName, new FileInputStream(fileToSave), null)
-            .getResource();
+    String secretFileId = secretManagementResource
+                              .saveFile(httpServletRequest, accountId, kmsId, secretName,
+                                  new FileInputStream(fileToSave), null, JsonUtils.asJson(new HashMap<>()))
+                              .getResource();
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -1155,8 +1156,8 @@ public class SecretTextTest extends WingsBaseTest {
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
     when(httpServletRequest.getContentLengthLong()).thenReturn(fileToUpdate.length());
 
-    secretManagementResource.updateFile(
-        httpServletRequest, accountId, newSecretName, null, encryptedUuid, new FileInputStream(fileToUpdate));
+    secretManagementResource.updateFile(httpServletRequest, accountId, newSecretName, null,
+        JsonUtils.asJson(new HashMap<>()), encryptedUuid, new FileInputStream(fileToUpdate));
 
     query = wingsPersistence.createQuery(EncryptedData.class)
                 .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -1192,10 +1193,10 @@ public class SecretTextTest extends WingsBaseTest {
         new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
     when(httpServletRequest.getContentLengthLong()).thenReturn(newFileToSave.length());
 
-    String newSecretFileId =
-        secretManagementResource
-            .saveFile(httpServletRequest, accountId, kmsId, secretName, new FileInputStream(fileToSave), null)
-            .getResource();
+    String newSecretFileId = secretManagementResource
+                                 .saveFile(httpServletRequest, accountId, kmsId, secretName,
+                                     new FileInputStream(fileToSave), null, JsonUtils.asJson(new HashMap<>()))
+                                 .getResource();
     configFile.setEncryptedFileId(newSecretFileId);
     configService.update(configFile, null);
 

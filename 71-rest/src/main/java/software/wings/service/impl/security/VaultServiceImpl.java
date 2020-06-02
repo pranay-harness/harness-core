@@ -25,6 +25,7 @@ import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
@@ -32,6 +33,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.SecretManagerConfig;
@@ -59,7 +61,9 @@ import java.nio.CharBuffer;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -67,7 +71,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Singleton
 @Slf4j
-public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService {
+public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService, RuntimeCredentialsInjector {
   private static final String TOKEN_SECRET_NAME_SUFFIX = "_token";
   private static final String SECRET_ID_SECRET_NAME_SUFFIX = "_secret_id";
 
@@ -311,26 +315,25 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     }
   }
 
-  private String updateVaultConfig(String accountId, VaultConfig vaultConfig) {
-    VaultConfig savedVaultConfig = getVaultConfig(accountId, vaultConfig.getUuid());
+  String updateVaultConfig(String accountId, VaultConfig vaultConfig, boolean auditChanges) {
+    VaultConfig savedVaultConfigWithCredentials = getVaultConfig(accountId, vaultConfig.getUuid());
+    VaultConfig oldConfigForAudit = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
+    VaultConfig savedVaultConfig = KryoUtils.clone(oldConfigForAudit);
     // Replaced masked secrets with the real secret value.
     if (SECRET_MASK.equals(vaultConfig.getAuthToken())) {
-      vaultConfig.setAuthToken(savedVaultConfig.getAuthToken());
+      vaultConfig.setAuthToken(savedVaultConfigWithCredentials.getAuthToken());
     }
     if (SECRET_MASK.equals(vaultConfig.getSecretId())) {
-      vaultConfig.setSecretId(savedVaultConfig.getSecretId());
+      vaultConfig.setSecretId(savedVaultConfigWithCredentials.getSecretId());
     }
 
-    boolean credentialChanged = !Objects.equals(savedVaultConfig.getAuthToken(), vaultConfig.getAuthToken())
-        || !Objects.equals(savedVaultConfig.getSecretId(), vaultConfig.getSecretId());
-
-    // secret field un-decrypted version of saved KMS config
-    savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
+    boolean credentialChanged =
+        !Objects.equals(savedVaultConfigWithCredentials.getAuthToken(), vaultConfig.getAuthToken())
+        || !Objects.equals(savedVaultConfigWithCredentials.getSecretId(), vaultConfig.getSecretId());
 
     // Validate every time when secret manager config change submitted
     validateVaultConfig(accountId, vaultConfig);
 
-    VaultConfig oldConfigForAudit = KryoUtils.clone(savedVaultConfig);
     if (credentialChanged) {
       updateVaultCredentials(savedVaultConfig, vaultConfig.getAuthToken(), vaultConfig.getSecretId());
     }
@@ -344,9 +347,16 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     savedVaultConfig.setSecretEngineVersion(vaultConfig.getSecretEngineVersion());
     savedVaultConfig.setAppRoleId(vaultConfig.getAppRoleId());
     savedVaultConfig.setVaultUrl(vaultConfig.getVaultUrl());
+    savedVaultConfig.setTemplatizedFields(vaultConfig.getTemplatizedFields());
     // PL-3237: Audit secret manager config changes.
-    generateAuditForSecretManager(accountId, oldConfigForAudit, savedVaultConfig);
+    if (auditChanges) {
+      generateAuditForSecretManager(accountId, oldConfigForAudit, savedVaultConfig);
+    }
     return secretManagerConfigService.save(savedVaultConfig);
+  }
+
+  private String updateVaultConfig(String accountId, VaultConfig vaultConfig) {
+    return updateVaultConfig(accountId, vaultConfig, true);
   }
 
   private String saveVaultConfig(String accountId, VaultConfig vaultConfig) {
@@ -399,8 +409,36 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           SECRET_MANAGEMENT_ERROR, "A read only vault cannot be the default secret manager", USER);
     }
 
+    checkIfTemplatizedSecretManagerCanBeCreatedOrUpdated(vaultConfig);
+
     return isEmpty(vaultConfig.getUuid()) ? saveVaultConfig(accountId, vaultConfig)
                                           : updateVaultConfig(accountId, vaultConfig);
+  }
+
+  private Optional<String> getTemplatizedField(String templatizedField, VaultConfig vaultConfig) {
+    if (templatizedField.equals(VaultConfigKeys.authToken)) {
+      return Optional.ofNullable(vaultConfig.getAuthToken());
+    } else if (templatizedField.equals(VaultConfigKeys.appRoleId)) {
+      return Optional.ofNullable(vaultConfig.getAppRoleId());
+    } else if (templatizedField.equals(VaultConfigKeys.secretId)) {
+      return Optional.ofNullable(vaultConfig.getSecretId());
+    }
+    return Optional.empty();
+  }
+
+  private void checkIfTemplatizedSecretManagerCanBeCreatedOrUpdated(VaultConfig vaultConfig) {
+    if (SecretManagerConfig.isTemplatized(vaultConfig)) {
+      if (vaultConfig.isDefault()) {
+        throw new InvalidRequestException("Cannot set a templatized secret manager as default");
+      }
+
+      for (String templatizedField : vaultConfig.getTemplatizedFields()) {
+        Optional<String> requiredField = getTemplatizedField(templatizedField, vaultConfig);
+        if (!requiredField.isPresent() || SECRET_MASK.equals(requiredField.get())) {
+          throw new InvalidRequestException("Invalid value provided for templatized field: " + templatizedField);
+        }
+      }
+    }
   }
 
   @Override
@@ -655,5 +693,30 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
     logger.info("Matched Vault secret engine: {}", secretEngine);
     return secretEngine;
+  }
+
+  @Override
+  public Optional<SecretManagerConfig> updateRuntimeCredentials(
+      SecretManagerConfig secretManagerConfig, Map<String, String> runtimeParameters) {
+    if (isEmpty(secretManagerConfig.getTemplatizedFields()) || isEmpty(runtimeParameters)) {
+      return Optional.empty();
+    }
+
+    VaultConfig vaultConfig = (VaultConfig) KryoUtils.clone(secretManagerConfig);
+    for (String templatizedField : secretManagerConfig.getTemplatizedFields()) {
+      String templatizedFieldValue = runtimeParameters.get(templatizedField);
+      if (StringUtils.isEmpty(templatizedFieldValue)) {
+        return Optional.empty();
+      }
+      if (templatizedField.equals(VaultConfigKeys.appRoleId)) {
+        vaultConfig.setAppRoleId(templatizedFieldValue);
+      } else if (templatizedField.equals(VaultConfigKeys.secretId)) {
+        vaultConfig.setSecretId(templatizedFieldValue);
+      } else if (templatizedField.equals(VaultConfigKeys.authToken)) {
+        vaultConfig.setAuthToken(templatizedFieldValue);
+      }
+    }
+    updateVaultConfig(vaultConfig.getAccountId(), vaultConfig, false);
+    return Optional.of(vaultConfig);
   }
 }
