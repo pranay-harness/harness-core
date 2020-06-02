@@ -18,6 +18,6 @@ import java.util.Map;
 @Builder
 public class WebHookRequest {
   @NotEmpty private String application;
-  private List<Map<String, String>> artifacts;
+  private List<Map<String, Object>> artifacts;
   private Map<String, String> parameters;
 }

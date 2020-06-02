@@ -25,6 +25,7 @@ import software.wings.service.intfc.BuildSourceService;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -66,6 +67,17 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
       if (buildDetails.isPresent()) {
         return collectArtifact(artifactStream.getUuid(), buildDetails.get());
       }
+    }
+    return null;
+  }
+
+  @Override
+  public Artifact collectNewArtifacts(
+      String appId, ArtifactStream artifactStream, String buildNumber, Map<String, Object> artifactVariables) {
+    BuildDetails buildDetails =
+        buildSourceService.getBuild(appId, artifactStream.getUuid(), artifactStream.getSettingId(), artifactVariables);
+    if (buildDetails != null) {
+      return collectArtifact(artifactStream.getUuid(), buildDetails);
     }
     return null;
   }

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -47,6 +48,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
@@ -147,7 +149,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldExecuteNoService() {
-    List<Map<String, String>> artifacts =
+    List<Map<String, Object>> artifacts =
         Collections.singletonList(of("service", SERVICE_NAME, "buildNumber", BUILD_NO));
     WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
     WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
@@ -160,7 +162,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldExecuteWithService() {
     wingsPersistence.save(Service.builder().name(SERVICE_NAME).appId(APP_ID).build());
-    List<Map<String, String>> artifacts =
+    List<Map<String, Object>> artifacts =
         Collections.singletonList(of("service", SERVICE_NAME, "buildNumber", BUILD_NO));
     WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
     WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
@@ -971,5 +973,22 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     WebHookServiceImpl webHookServiceImpl = new WebHookServiceImpl();
     webHookServiceImpl.validateWebHook(WebhookSource.BITBUCKET, webhookTrigger,
         (WebHookTriggerCondition) webhookTrigger.getCondition(), new HashMap<>(), null);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldExecuteWithServiceAndParameterizedArtifactStream() {
+    wingsPersistence.save(Service.builder().name(SERVICE_NAME).appId(APP_ID).build());
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    Map<String, Object> parameterMap = new HashMap<>();
+    parameterMap.put("repo", "npm-internal");
+    parameterMap.put("package", "npm-app1");
+    List<Map<String, Object>> artifacts = Collections.singletonList(
+        of("service", SERVICE_NAME, "buildNumber", BUILD_NO, "artifactVariables", parameterMap));
+    WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
+    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
   }
 }

@@ -25,6 +25,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -400,6 +401,14 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       throw new InvalidRequestException("Build details can not null", USER);
     }
     String displayName = buildDetails.getUiDisplayName() == null ? "null" : buildDetails.getUiDisplayName();
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    if (artifactStream == null) {
+      throw new InvalidRequestException("Artifact stream was deleted", USER);
+    }
+    if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, artifactStream.getAccountId())
+        && artifactStream.isArtifactStreamParameterized()) {
+      throw new InvalidRequestException("Manually pull artifact not supported for parameterized artifact stream");
+    }
     logger.info(
         format("Manually pulling for artifact stream: [%s] with artifact: [%s]", artifactStreamId, displayName));
     return artifactCollectionServiceAsync.collectArtifact(artifactStreamId, buildDetails);

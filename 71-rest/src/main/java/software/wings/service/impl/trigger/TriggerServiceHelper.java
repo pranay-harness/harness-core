@@ -11,6 +11,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.lang.String.format;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -40,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.redhogs.cronparser.I18nMessages;
 import org.quartz.CronScheduleBuilder;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
@@ -47,6 +49,8 @@ import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
@@ -60,7 +64,9 @@ import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.CryptoUtils;
 
 import java.util.ArrayList;
@@ -84,6 +90,8 @@ import java.util.stream.Stream;
 public class TriggerServiceHelper {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private FeatureFlagService featureFlagService;
 
   public void deletePipelineCompletionTriggers(String appId, String pipelineId) {
     getMatchedSourcePipelineTriggers(appId, pipelineId).collect(toList()).forEach(trigger -> delete(trigger.getUuid()));
@@ -265,7 +273,7 @@ public class TriggerServiceHelper {
     }
   }
 
-  public static WebHookToken constructWebhookToken(Trigger trigger, WebHookToken existingToken, List<Service> services,
+  public WebHookToken constructWebhookToken(Trigger trigger, WebHookToken existingToken, List<Service> services,
       boolean artifactNeeded, Map<String, String> parameters) {
     WebHookToken webHookToken;
     if (existingToken == null || existingToken.getWebHookToken() == null) {
@@ -278,13 +286,19 @@ public class TriggerServiceHelper {
     Map<String, Object> payload = new HashMap<>();
     payload.put("application", trigger.getAppId());
 
-    List<Map<String, String>> artifactList = new ArrayList();
+    List<Map<String, Object>> artifactList = new ArrayList();
     if (isNotEmpty(trigger.getArtifactSelections())) {
       if (services != null) {
         for (Service service : services) {
-          Map<String, String> artifacts = new HashMap<>();
+          Map<String, Object> artifacts = new HashMap<>();
           artifacts.put("service", service.getName());
           artifacts.put("buildNumber", service.getName() + "_BUILD_NUMBER_PLACE_HOLDER");
+          if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, service.getAccountId())) {
+            Map<String, Object> parameterMap = addParametersForArtifactStream(service, trigger.getArtifactSelections());
+            if (isNotEmpty(parameterMap)) {
+              artifacts.put("artifactVariables", parameterMap);
+            }
+          }
           artifactList.add(artifacts);
         }
       }
@@ -297,6 +311,29 @@ public class TriggerServiceHelper {
     }
     webHookToken.setPayload(new Gson().toJson(payload));
     return webHookToken;
+  }
+
+  private Map<String, Object> addParametersForArtifactStream(
+      Service service, List<ArtifactSelection> artifactSelections) {
+    Map<String, Object> parameterMap = new HashMap<>();
+    for (ArtifactSelection artifactSelection : artifactSelections) {
+      if (artifactSelection.getServiceId().equals(service.getUuid())) {
+        if (artifactSelection.getArtifactStreamId() != null) {
+          ArtifactStream artifactStream = artifactStreamService.get(artifactSelection.getArtifactStreamId());
+          notNullCheck(
+              format("Artifact stream with id %s not found", artifactSelection.getArtifactStreamId()), artifactStream);
+          if (artifactStream.isArtifactStreamParameterized()) {
+            List<String> parameters = artifactStream.fetchArtifactStreamParameters();
+            if (isNotEmpty(parameters)) {
+              for (String parameter : parameters) {
+                parameterMap.put(parameter, parameter.toUpperCase() + "_PLACE_HOLDER");
+              }
+            }
+          }
+        }
+      }
+    }
+    return parameterMap;
   }
 
   public static void notNullCheckWorkflow(Workflow workflow) {

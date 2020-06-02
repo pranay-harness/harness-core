@@ -30,7 +30,6 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIAB
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
-import static software.wings.service.impl.trigger.TriggerServiceHelper.constructWebhookToken;
 import static software.wings.service.impl.trigger.TriggerServiceHelper.notNullCheckWorkflow;
 import static software.wings.service.impl.trigger.TriggerServiceHelper.overrideTriggerVariables;
 import static software.wings.service.impl.trigger.TriggerServiceHelper.validateAndSetCronExpression;
@@ -102,6 +101,7 @@ import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededRespon
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.service.ArtifactStreamHelper;
 import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.TriggerLogContext;
@@ -179,10 +179,31 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private AuthHandler authHandler;
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private TriggerAuthHandler triggerAuthHandler;
+  @Inject private ArtifactStreamHelper artifactStreamHelper;
 
   @Override
   public PageResponse<Trigger> list(PageRequest<Trigger> pageRequest, boolean withTags, String tagFilter) {
-    return resourceLookupService.listWithTagFilters(pageRequest, tagFilter, EntityType.TRIGGER, withTags);
+    PageResponse<Trigger> response =
+        resourceLookupService.listWithTagFilters(pageRequest, tagFilter, EntityType.TRIGGER, withTags);
+    return postProcessTriggers(response);
+  }
+
+  private PageResponse<Trigger> postProcessTriggers(PageResponse<Trigger> response) {
+    if (response != null && isNotEmpty(response.getResponse())) {
+      for (Trigger trigger : response.getResponse()) {
+        if (isNotEmpty(trigger.getArtifactSelections())) {
+          for (ArtifactSelection artifactSelection : trigger.getArtifactSelections()) {
+            if (artifactSelection.getType() == WEBHOOK_VARIABLE && artifactSelection.getArtifactStreamId() != null) {
+              ArtifactStream artifactStream = artifactStreamService.get(artifactSelection.getArtifactStreamId());
+              if (artifactStream != null && artifactStream.isArtifactStreamParameterized()) {
+                artifactSelection.setUiDisplayName(artifactStream.getName() + " (requires values on runtime)");
+              }
+            }
+          }
+        }
+      }
+    }
+    return response;
   }
 
   @Override
@@ -1241,6 +1262,10 @@ public class TriggerServiceImpl implements TriggerService {
     }
     ArtifactStream artifactStream = artifactStreamService.get(artifactTriggerCondition.getArtifactStreamId());
     notNullCheck("Artifact Source is mandatory for New Artifact Condition Trigger", artifactStream, USER);
+    if (artifactStream.isArtifactStreamParameterized()) {
+      throw new InvalidRequestException(
+          "Cannot select parameterized artifact source for New Artifact Condition Trigger");
+    }
     Service service =
         artifactStreamServiceBindingService.getService(trigger.getAppId(), artifactStream.getUuid(), false);
     notNullCheck("Service does not exist", service, USER);
@@ -1277,6 +1302,11 @@ public class TriggerServiceImpl implements TriggerService {
         case LAST_COLLECTED:
           if (isEmpty(artifactSelection.getArtifactStreamId())) {
             throw new WingsException("Artifact Source cannot be empty for Last collected type");
+          }
+          ArtifactStream artifactStream = artifactStreamService.get(artifactSelection.getArtifactStreamId());
+          notNullCheck("Artifact Source does not exist", artifactStream, USER);
+          if (artifactStream.isArtifactStreamParameterized()) {
+            throw new InvalidRequestException("Cannot select parameterized artifact source for last collected type");
           }
           setArtifactSourceName(trigger, artifactSelection);
           break;
@@ -1402,7 +1432,7 @@ public class TriggerServiceImpl implements TriggerService {
       }
       addVariables(parameters, workflow.getOrchestrationWorkflow().getUserVariables());
     }
-    return constructWebhookToken(trigger, existingToken, services, artifactNeeded, parameters);
+    return triggerServiceHelper.constructWebhookToken(trigger, existingToken, services, artifactNeeded, parameters);
   }
 
   private void addVariables(Map<String, String> parameters, List<Variable> variables) {
@@ -1440,8 +1470,15 @@ public class TriggerServiceImpl implements TriggerService {
           if (isBlank(buildNumber)) {
             throw new InvalidRequestException("Build Number is Mandatory", USER);
           } else {
-            Artifact artifact = getAlreadyCollectedOrCollectNewArtifactForBuildNumber(
-                trigger.getAppId(), artifactSelection.getArtifactStreamId(), buildNumber);
+            Artifact artifact;
+            if (artifactSummary.getArtifactParameters() == null) {
+              artifact = getAlreadyCollectedOrCollectNewArtifactForBuildNumber(
+                  trigger.getAppId(), artifactSelection.getArtifactStreamId(), buildNumber);
+
+            } else {
+              artifact = getAlreadyCollectedOrCollectNewArtifactForBuildNumber(trigger.getAppId(),
+                  artifactSelection.getArtifactStreamId(), buildNumber, artifactSummary.getArtifactParameters());
+            }
             if (artifact != null) {
               artifacts.add(artifact);
             }
@@ -1518,6 +1555,11 @@ public class TriggerServiceImpl implements TriggerService {
                 + "] does not exist for the Service +[" + services.get(serviceArtifactSummaryEntry.getKey()) + "]",
             USER);
       }
+      if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, artifactStream.getAccountId())
+          && artifactStream.isArtifactStreamParameterized()) {
+        throw new InvalidRequestException(
+            "Parameterized artifact stream found in service however parameter values not provided", USER);
+      }
       Artifact artifact = getAlreadyCollectedOrCollectNewArtifactForBuildNumber(
           appId, artifactStream.getUuid(), artifactSummary.getBuildNo());
       if (artifact != null) {
@@ -1542,6 +1584,35 @@ public class TriggerServiceImpl implements TriggerService {
 
   private Artifact collectNewArtifactForBuildNumber(String appId, ArtifactStream artifactStream, String buildNumber) {
     Artifact artifact = artifactCollectionServiceAsync.collectNewArtifacts(appId, artifactStream, buildNumber);
+    if (artifact != null) {
+      logger.info("Artifact {} collected for the build number {} of stream id {}", artifact, buildNumber,
+          artifactStream.getUuid());
+    } else {
+      logger.warn(
+          "Artifact collection invoked. However, Artifact not yet collected for the build number {} of stream id {}",
+          buildNumber, artifactStream.getUuid());
+    }
+    return artifact;
+  }
+
+  private Artifact getAlreadyCollectedOrCollectNewArtifactForBuildNumber(
+      String appId, String artifactStreamId, String buildNumber, Map<String, Object> artifactVariables) {
+    ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    notNullCheck("Artifact Source doesn't exist", artifactStream, USER);
+    artifactStreamHelper.resolveArtifactStreamRuntimeValues(artifactStream, artifactVariables);
+    artifactStream.setSourceName(artifactStream.generateSourceName());
+    Artifact collectedArtifactForBuildNumber = artifactService.getArtifactByBuildNumberAndSourceName(
+        artifactStream, buildNumber, false, artifactStream.getSourceName());
+
+    return collectedArtifactForBuildNumber != null
+        ? collectedArtifactForBuildNumber
+        : collectNewArtifactForBuildNumber(appId, artifactStream, buildNumber, artifactVariables);
+  }
+
+  private Artifact collectNewArtifactForBuildNumber(
+      String appId, ArtifactStream artifactStream, String buildNumber, Map<String, Object> artifactVariables) {
+    Artifact artifact =
+        artifactCollectionServiceAsync.collectNewArtifacts(appId, artifactStream, buildNumber, artifactVariables);
     if (artifact != null) {
       logger.info("Artifact {} collected for the build number {} of stream id {}", artifact, buildNumber,
           artifactStream.getUuid());

@@ -31,7 +31,6 @@ import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertType;
@@ -57,6 +56,7 @@ import software.wings.service.intfc.SettingsService;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -97,17 +97,17 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     if (artifactStream == null) {
       throw new InvalidRequestException("Artifact stream was deleted", USER);
     }
-    if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, artifactStream.getAccountId())
-        && artifactStream.checkIfStreamParameterized()) {
-      throw new InvalidRequestException(
-          "Artifact stream [%s] is parameterized. Manual pull not available for parameterized artifact streams");
-    }
     return collectArtifactWithoutLabels(artifactStream, buildDetails);
   }
 
   private Artifact collectArtifactWithoutLabels(ArtifactStream artifactStream, BuildDetails buildDetails) {
-    final Artifact savedArtifact =
-        artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, buildDetails));
+    final Artifact savedArtifact;
+    if (!artifactStream.isArtifactStreamParameterized()) {
+      savedArtifact = artifactService.create(artifactCollectionUtils.getArtifact(artifactStream, buildDetails));
+    } else {
+      savedArtifact = artifactService.create(
+          artifactCollectionUtils.getArtifact(artifactStream, buildDetails), artifactStream, false);
+    }
     if (artifactStream.getFailedCronAttempts() != 0) {
       artifactStreamService.updateFailedCronAttempts(
           artifactStream.getAccountId(), savedArtifact.getArtifactStreamId(), 0);
@@ -195,6 +195,17 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       if (buildDetails.isPresent()) {
         return collectArtifactWithoutLabels(artifactStream.getUuid(), buildDetails.get());
       }
+    }
+    return null;
+  }
+
+  @Override
+  public Artifact collectNewArtifacts(
+      String appId, ArtifactStream artifactStream, String buildNumber, Map<String, Object> artifactVariables) {
+    BuildDetails buildDetails =
+        buildSourceService.getBuild(appId, artifactStream.getUuid(), artifactStream.getSettingId(), artifactVariables);
+    if (buildDetails != null) {
+      return collectArtifactWithoutLabels(artifactStream, buildDetails);
     }
     return null;
   }

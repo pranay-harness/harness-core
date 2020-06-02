@@ -6,10 +6,13 @@ import static io.harness.rule.OwnerRule.HARSH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.inject.Inject;
@@ -24,9 +27,16 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream.Action;
+import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.DelegateService;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ArtifactCollectionServiceAsyncImplTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
@@ -34,6 +44,7 @@ public class ArtifactCollectionServiceAsyncImplTest extends WingsBaseTest {
   @Mock private WaitNotifyEngine mockWaitNotifyEngine;
 
   @Inject @InjectMocks private ArtifactCollectionServiceAsyncImpl artifactCollectionServiceAsync;
+  @Mock private BuildSourceService buildSourceService;
 
   @Test
   @Owner(developers = HARSH)
@@ -73,5 +84,32 @@ public class ArtifactCollectionServiceAsyncImplTest extends WingsBaseTest {
                             .timeout(timeoutInSecs)
                             .build()))
         .build();
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void collectNewArtifactsForParameterizedArtifactStream() {
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .appId(APP_ID)
+                                                  .accountId(ACCOUNT_ID)
+                                                  .name("nexus test")
+                                                  .jobname("releases")
+                                                  .groupId("mygroup")
+                                                  .artifactPaths(asList("${path"))
+                                                  .uuid(ARTIFACT_STREAM_ID)
+                                                  .build();
+    nexusArtifactStream.setArtifactStreamParameterized(true);
+    Map<String, Object> artifactVariables = new HashMap<>();
+    artifactVariables.put("path", "todolist");
+    artifactVariables.put("buildNo", "1.0");
+    BuildDetails buildDetails = BuildDetails.Builder.aBuildDetails().withNumber("1.0").build();
+    Artifact artifact = Artifact.Builder.anArtifact()
+                            .withUuid(ARTIFACT_ID)
+                            .withAccountId(ACCOUNT_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .build();
+    artifactCollectionServiceAsync.collectNewArtifacts(APP_ID, nexusArtifactStream, "1.0", artifactVariables);
+    verify(buildSourceService, times(1)).getBuild(anyString(), anyString(), anyString(), any());
   }
 }

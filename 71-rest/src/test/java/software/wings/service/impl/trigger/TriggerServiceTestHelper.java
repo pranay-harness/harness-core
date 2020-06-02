@@ -15,6 +15,7 @@ import static software.wings.beans.VariableType.TEXT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_FILTER;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -50,6 +51,7 @@ import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.NewInstanceTriggerCondition;
 import software.wings.beans.trigger.PipelineAction;
@@ -72,6 +74,7 @@ import java.util.List;
 import java.util.Map;
 
 public class TriggerServiceTestHelper {
+  private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
   public static Artifact artifact = anArtifact()
                                         .withAppId(APP_ID)
                                         .withUuid(ARTIFACT_ID)
@@ -123,6 +126,16 @@ public class TriggerServiceTestHelper {
         .appId(APP_ID)
         .name(TRIGGER_NAME)
         .condition(ScheduledTriggerCondition.builder().cronExpression("* * * * ?").build())
+        .build();
+  }
+
+  public static Trigger buildNewArtifactTrigger() {
+    return Trigger.builder()
+        .workflowId(PIPELINE_ID)
+        .uuid(TRIGGER_ID)
+        .appId(APP_ID)
+        .name(TRIGGER_NAME)
+        .condition(ArtifactTriggerCondition.builder().artifactStreamId(ARTIFACT_STREAM_ID_1).build())
         .build();
   }
 
@@ -264,6 +277,23 @@ public class TriggerServiceTestHelper {
         .serviceId(SERVICE_ID)
         .artifactPaths(asList("*WAR"))
         .build();
+  }
+
+  public static NexusArtifactStream buildNexusArtifactStream() {
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("releases")
+                                                  .groupId("${groupId}")
+                                                  .artifactPaths(asList("${path}"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .uuid(ARTIFACT_STREAM_ID_1)
+                                                  .build();
+    nexusArtifactStream.setArtifactStreamParameterized(true);
+    return nexusArtifactStream;
   }
 
   public static SettingAttribute buildSettingAttribute() {
