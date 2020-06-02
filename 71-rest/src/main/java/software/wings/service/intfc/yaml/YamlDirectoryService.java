@@ -1,6 +1,7 @@
 package software.wings.service.intfc.yaml;
 
 import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;

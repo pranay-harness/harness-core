@@ -126,6 +126,10 @@ public class YamlHelper {
     return getSettingAttribute(accountId, YamlType.COLLABORATION_PROVIDER, yamlFilePath);
   }
 
+  public SettingAttribute getSourceRepoProvider(String accountId, String yamlFilePath) {
+    return getSettingAttribute(accountId, YamlType.SOURCE_REPO_PROVIDER, yamlFilePath);
+  }
+
   public SettingAttribute getVerificationProvider(String accountId, String yamlFilePath) {
     return getSettingAttribute(accountId, YamlType.VERIFICATION_PROVIDER, yamlFilePath);
   }

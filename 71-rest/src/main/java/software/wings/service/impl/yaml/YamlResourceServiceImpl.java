@@ -580,7 +580,6 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case GCR:
       case ACR:
       case AMAZON_S3:
-      case GIT:
       case HTTP_HELM_REPO:
       case AMAZON_S3_HELM_REPO:
       case GCS_HELM_REPO:
@@ -595,6 +594,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case JIRA:
       case SERVICENOW:
         return yamlHandlerFactory.getYamlHandler(YamlType.COLLABORATION_PROVIDER, settingVariableType.name());
+        // source repo providers
+      case GIT:
+        return yamlHandlerFactory.getYamlHandler(YamlType.SOURCE_REPO_PROVIDER, settingVariableType.name());
 
       // CD-7865 : Change as part of removing SLACK Collaboration provider connector
       case SLACK:

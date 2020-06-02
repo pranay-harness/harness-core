@@ -29,7 +29,7 @@ import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
-import software.wings.yaml.setting.ArtifactServerYaml;
+import software.wings.yaml.setting.SourceRepoProviderYaml;
 
 import java.util.Collections;
 import java.util.List;
@@ -137,7 +137,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ArtifactServerYaml {
+  public static final class Yaml extends SourceRepoProviderYaml {
     private String branch;
     private String reference;
     private boolean keyAuth;

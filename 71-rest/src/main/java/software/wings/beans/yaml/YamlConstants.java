@@ -41,6 +41,7 @@ public interface YamlConstants {
   String CLOUD_PROVIDERS_FOLDER = "Cloud Providers";
   String ARTIFACT_SERVERS_FOLDER = "Artifact Servers";
   String COLLABORATION_PROVIDERS_FOLDER = "Collaboration Providers";
+  String SOURCE_REPO_PROVIDERS_FOLDER = "Source Repo Providers";
   String VERIFICATION_PROVIDERS_FOLDER = "Verification Providers";
   String NOTIFICATION_GROUPS_FOLDER = "Notification Groups";
   String GLOBAL_TEMPLATE_LIBRARY_FOLDER = "Template Library";
@@ -59,6 +60,7 @@ public interface YamlConstants {
   String DEFAULTS = "Defaults";
   String ARTIFACT_SERVER = "ARTIFACT_SERVER";
   String COLLABORATION_PROVIDER = "COLLABORATION_PROVIDER";
+  String SOURCE_REPO_PROVIDER = "SOURCE_REPO_PROVIDER";
   String LOADBALANCER_PROVIDER = "LOADBALANCER_PROVIDER";
   String VERIFICATION_PROVIDER = "VERIFICATION_PROVIDER";
   String CONFIG_FILE_CONTENT = "CONFIG_FILE_CONTENT";

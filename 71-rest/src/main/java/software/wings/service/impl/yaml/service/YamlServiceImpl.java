@@ -12,6 +12,7 @@ import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.MapUtils.emptyIfNull;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
@@ -64,6 +65,7 @@ import static software.wings.beans.yaml.YamlType.NOTIFICATION_GROUP;
 import static software.wings.beans.yaml.YamlType.PIPELINE;
 import static software.wings.beans.yaml.YamlType.PROVISIONER;
 import static software.wings.beans.yaml.YamlType.SERVICE;
+import static software.wings.beans.yaml.YamlType.SOURCE_REPO_PROVIDER;
 import static software.wings.beans.yaml.YamlType.TAG;
 import static software.wings.beans.yaml.YamlType.TRIGGER;
 import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
@@ -204,8 +206,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
 
   private List<YamlType> getEntityProcessingOrder() {
-    return Lists.newArrayList(ACCOUNT_DEFAULTS, TAG, CLOUD_PROVIDER, CLOUD_PROVIDER_OVERRIDE, ARTIFACT_SERVER,
-        ARTIFACT_SERVER_OVERRIDE, COLLABORATION_PROVIDER, LOADBALANCER_PROVIDER, VERIFICATION_PROVIDER,
+    return Lists.newArrayList(SOURCE_REPO_PROVIDER, ACCOUNT_DEFAULTS, TAG, CLOUD_PROVIDER, CLOUD_PROVIDER_OVERRIDE,
+        ARTIFACT_SERVER, ARTIFACT_SERVER_OVERRIDE, COLLABORATION_PROVIDER, LOADBALANCER_PROVIDER, VERIFICATION_PROVIDER,
         NOTIFICATION_GROUP, GLOBAL_TEMPLATE_LIBRARY, APPLICATION, APPLICATION_DEFAULTS, APPLICATION_TEMPLATE_LIBRARY,
         SERVICE, PROVISIONER, ARTIFACT_STREAM, ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE,
         CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE, COMMAND, DEPLOYMENT_SPECIFICATION, CONFIG_FILE_CONTENT, CONFIG_FILE,

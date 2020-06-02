@@ -1,4 +1,4 @@
-package software.wings.service.impl.yaml.handler.setting.artifactserver;
+package software.wings.service.impl.yaml.handler.setting.sourcerepoprovider;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
@@ -12,12 +12,9 @@ import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
-/**
- * @author rktummala on 11/19/17
- */
 @OwnedBy(CDC)
 @Singleton
-public class GitConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, GitConfig> {
+public class GitConfigYamlHandler extends SourceRepoProviderYamlHandler<Yaml, GitConfig> {
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     GitConfig gitConfig = (GitConfig) settingAttribute.getValue();

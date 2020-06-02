@@ -36,6 +36,7 @@ import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PROVISIONERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.SOURCE_REPO_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.TAGS_YAML;
 import static software.wings.beans.yaml.YamlConstants.TRIGGER_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VALUES_FOLDER;
@@ -120,6 +121,9 @@ public enum YamlType {
   COLLABORATION_PROVIDER(YamlConstants.COLLABORATION_PROVIDER,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, COLLABORATION_PROVIDERS_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, COLLABORATION_PROVIDERS_FOLDER, ANY), SettingAttribute.class),
+  SOURCE_REPO_PROVIDER(YamlConstants.SOURCE_REPO_PROVIDER,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, SOURCE_REPO_PROVIDERS_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, SOURCE_REPO_PROVIDERS_FOLDER, ANY), SettingAttribute.class),
   LOADBALANCER_PROVIDER(YamlConstants.LOADBALANCER_PROVIDER,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, LOAD_BALANCERS_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, LOAD_BALANCERS_FOLDER, ANY), SettingAttribute.class),
