@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 public class DataSourceServiceImpl implements DataSourceService {
-  static final List<String> appdynamicsMetricPackFiles =
+  static final List<String> APPDYNAMICS_METRICPACK_FILES =
       Lists.newArrayList("/metric-packs/appdynamics/business-transactions-pack.yml",
           "/metric-packs/appdynamics/quality-pack.yml", "/metric-packs/appdynamics/resource-pack.yml");
   @Inject private HPersistence hPersistence;
@@ -37,7 +37,7 @@ public class DataSourceServiceImpl implements DataSourceService {
     switch (dataSourceType) {
       case APP_DYNAMICS:
         YamlUtils yamlUtils = new YamlUtils();
-        appdynamicsMetricPackFiles.forEach(metricPackPath -> {
+        APPDYNAMICS_METRICPACK_FILES.forEach(metricPackPath -> {
           try {
             final String metricPackYaml =
                 Resources.toString(DataSourceService.class.getResource(metricPackPath), Charsets.UTF_8);

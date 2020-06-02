@@ -42,7 +42,7 @@ public class DataSourceServiceImplTest extends CVNextGenBaseTest {
   public void testMetricPackFilesAdded() {
     final URL metricPackUrl = DataSourceService.class.getResource("/metric-packs/appdynamics");
     final Collection<File> metricPackYamls = FileUtils.listFiles(new File(metricPackUrl.getFile()), null, false);
-    assertThat(metricPackYamls.size()).isEqualTo(DataSourceServiceImpl.appdynamicsMetricPackFiles.size());
+    assertThat(metricPackYamls.size()).isEqualTo(DataSourceServiceImpl.APPDYNAMICS_METRICPACK_FILES.size());
   }
 
   @Test
