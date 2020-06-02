@@ -13,12 +13,16 @@ import io.harness.cvng.core.services.api.DataSourceService;
 import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.cvng.models.DataSourceType;
 import io.harness.rule.Owner;
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.io.File;
+import java.net.URL;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DataSourceServiceImplTest extends CVNextGenBaseTest {
@@ -35,9 +39,36 @@ public class DataSourceServiceImplTest extends CVNextGenBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  public void testMetricPackFilesAdded() {
+    final URL metricPackUrl = DataSourceService.class.getResource("/metric-packs/appdynamics");
+    final Collection<File> metricPackYamls = FileUtils.listFiles(new File(metricPackUrl.getFile()), null, false);
+    assertThat(metricPackYamls.size()).isEqualTo(DataSourceServiceImpl.appdynamicsMetricPackFiles.size());
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetMetricPacksMap() {
+    final Map<String, MetricPack> metricPacks =
+        dataSourceService.getMetricPackMap(accountId, projectId, DataSourceType.APP_DYNAMICS);
+    assertThat(metricPacks.size()).isGreaterThan(0);
+    metricPacks.forEach((metricPackName, metricPack) -> {
+      assertThat(metricPack.getName()).isNotEmpty();
+      assertThat(metricPack.getName()).isEqualTo(metricPackName);
+      assertThat(metricPack.getMetrics().size()).isGreaterThan(0);
+      metricPack.getMetrics().forEach(metricDefinition -> {
+        assertThat(metricDefinition.getName()).isNotEmpty();
+        assertThat(metricDefinition.getPath()).isNotEmpty();
+      });
+    });
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
   public void testGetMetricPacks() {
     final Collection<MetricPack> metricPacks =
-        dataSourceService.getMetricPacks(accountId, projectId, DataSourceType.APP_DYNAMICS);
+        dataSourceService.getMetricPacks(accountId, projectId, DataSourceType.APP_DYNAMICS, false);
     assertThat(metricPacks.size()).isGreaterThan(0);
     metricPacks.forEach(metricPack -> {
       assertThat(metricPack.getName()).isNotEmpty();
@@ -52,18 +83,31 @@ public class DataSourceServiceImplTest extends CVNextGenBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  public void testGetMetricPacks_whenExcludeDetails() {
+    final Collection<MetricPack> metricPacks =
+        dataSourceService.getMetricPacks(accountId, projectId, DataSourceType.APP_DYNAMICS, true);
+    assertThat(metricPacks.size()).isGreaterThan(0);
+    metricPacks.forEach(metricPack -> {
+      assertThat(metricPack.getName()).isNotEmpty();
+      assertThat(metricPack.getMetrics()).isEmpty();
+    });
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
   public void testSaveMetricPacks() {
     Collection<MetricPack> metricPacks =
-        dataSourceService.getMetricPacks(accountId, projectId, DataSourceType.APP_DYNAMICS);
+        dataSourceService.getMetricPacks(accountId, projectId, DataSourceType.APP_DYNAMICS, false);
     List<MetricPack> performancePacks =
         metricPacks.stream()
-            .filter(metricPack -> metricPack.getName().equals("Performance And Availability"))
+            .filter(metricPack -> metricPack.getName().equals("Performance and Availability"))
             .collect(Collectors.toList());
     assertThat(performancePacks.size()).isEqualTo(1);
     MetricPack performancePack = performancePacks.get(0);
 
     int performancePackSize = performancePack.getMetrics().size();
-    performancePack.getMetrics().forEach(metric -> metric.setDefaultIncluded(true));
+    performancePack.getMetrics().forEach(metric -> metric.setIncluded(true));
     assertThat(
         performancePack.getMetrics().remove(MetricPack.MetricDefinition.builder().name("Number of Slow Calls").build()))
         .isTrue();
@@ -72,11 +116,11 @@ public class DataSourceServiceImplTest extends CVNextGenBaseTest {
         accountId, projectId, DataSourceType.APP_DYNAMICS, Lists.newArrayList(performancePack));
     assertThat(saved).isTrue();
 
-    metricPacks = dataSourceService.getMetricPacks(accountId, projectId, DataSourceType.APP_DYNAMICS);
+    metricPacks = dataSourceService.getMetricPacks(accountId, projectId, DataSourceType.APP_DYNAMICS, false);
     assertThat(metricPacks.size()).isGreaterThan(1);
 
     performancePacks = metricPacks.stream()
-                           .filter(metricPack -> metricPack.getName().equals("Performance And Availability"))
+                           .filter(metricPack -> metricPack.getName().equals("Performance and Availability"))
                            .collect(Collectors.toList());
     assertThat(performancePacks.size()).isEqualTo(1);
     performancePack = performancePacks.get(0);
@@ -86,9 +130,9 @@ public class DataSourceServiceImplTest extends CVNextGenBaseTest {
         .contains(MetricPack.MetricDefinition.builder().name("Number of Slow Calls").build());
     performancePack.getMetrics().forEach(metricDefinition -> {
       if (metricDefinition.getName().equals("Number of Slow Calls")) {
-        assertThat(metricDefinition.isDefaultIncluded()).isFalse();
+        assertThat(metricDefinition.isIncluded()).isFalse();
       } else {
-        assertThat(metricDefinition.isDefaultIncluded()).isTrue();
+        assertThat(metricDefinition.isIncluded()).isTrue();
       }
     });
   }

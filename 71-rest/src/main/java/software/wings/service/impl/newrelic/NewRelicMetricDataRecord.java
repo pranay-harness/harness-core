@@ -2,10 +2,10 @@ package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.GoogleDataStoreAware.addFieldIfNotEmpty;
+import static io.harness.persistence.GoogleDataStoreAware.readLong;
+import static io.harness.persistence.GoogleDataStoreAware.readString;
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.addFieldIfNotEmpty;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.readLong;
-import static software.wings.service.impl.GoogleDataStoreServiceImpl.readString;
 
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;

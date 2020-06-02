@@ -35,8 +35,9 @@ public class DataSourceResource {
   @ExceptionMetered
   public RestResponse<Collection<MetricPack>> getMetricPacks(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("projectId") @NotNull String projectId,
-      @QueryParam("datasourceType") @NotNull DataSourceType dataSourceType) {
-    return new RestResponse<>(dataSourceService.getMetricPacks(accountId, projectId, dataSourceType));
+      @QueryParam("dataSourceType") @NotNull DataSourceType dataSourceType,
+      @QueryParam("excludeDetails") boolean excludeDetails) {
+    return new RestResponse<>(dataSourceService.getMetricPacks(accountId, projectId, dataSourceType, excludeDetails));
   }
 
   @POST

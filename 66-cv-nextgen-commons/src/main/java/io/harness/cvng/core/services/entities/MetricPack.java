@@ -15,11 +15,20 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 
 import java.util.Set;
 
+@Indexes({
+  @Index(fields = {
+    @Field("projectId"), @Field("dataSourceType"), @Field("name")
+  }, options = @IndexOptions(name = "uniqueIdx", unique = true))
+})
 @Data
 @Builder
 @NoArgsConstructor
@@ -33,8 +42,8 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
   private long createdAt;
   private long lastUpdatedAt;
   @Indexed private String accountId;
-  @Indexed private String projectId;
-  @Indexed private DataSourceType dataSourceType;
+  private String projectId;
+  private DataSourceType dataSourceType;
   private String name;
   private Set<MetricDefinition> metrics;
 
@@ -44,6 +53,7 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
   public static class MetricDefinition {
     private String name;
     private String path;
-    private boolean defaultIncluded;
+    private String validationPath;
+    private boolean included;
   }
 }

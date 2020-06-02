@@ -1,36 +1,42 @@
-name: Performance And Availability
+name: Performance and Availability
 metrics:
   - name: Average Response Time (ms)
     path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Average Response Time (ms)
-    defaultIncluded: true
+    validationPath: Overall Application Performance|__tier_name__|Average Response Time (ms)
+    included: true
   - name: Calls per Minute
     path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Calls per Minute
-    defaultIncluded: true
+    validationPath: Overall Application Performance|__tier_name__|Calls per Minute
+    included: true
   - name: Stall Count
     path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Stall Count
-    defaultIncluded: true
+    validationPath: Overall Application Performance|__tier_name__|Stall Count
+    included: true
   - name: Errors per Minute
     path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Errors per Minute
-    defaultIncluded: true
+    validationPath: Overall Application Performance|__tier_name__|Errors per Minute
+    included: true
   - name: 95th Percentile Response Time (ms)
     path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|95th Percentile Response Time (ms)
-    defaultIncluded: false
+    included: false
   - name: Average Block Time (ms)
     path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Average Block Time (ms)
-    defaultIncluded: false
+    included: false
   - name: Average CPU Used (ms)
     path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Average CPU Used (ms)
-    defaultIncluded: false
+    included: false
   - name: Average Wait Time (ms)
     path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Average Wait Time (ms)
-    defaultIncluded: false
+    included: false
   - name: Normal Average Response Time (ms)
     path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Normal Average Response Time (ms)
-    defaultIncluded: false
+    included: false
   - name: Number of Slow Calls
     path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Number of Slow Calls
-    defaultIncluded: false
+    validationPath: Overall Application Performance|__tier_name__|Number of Slow Calls
+    included: false
   - name: Number of Very Slow Calls
     path: Business Transaction Performance|Business Transactions|__tier_name__|/__group_name__|Number of Very Slow Calls
+    validation: Overall Application Performance|__tier_name__|Number of Very Slow Calls
 
 
