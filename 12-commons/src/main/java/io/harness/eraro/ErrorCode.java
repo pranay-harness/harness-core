@@ -422,6 +422,8 @@ public enum ErrorCode {
 
   ENGINE_IO_EXCEPTION,
 
+  ENGINE_OUTCOME_EXCEPTION,
+
   ENGINE_SWEEPING_OUTPUT_EXCEPTION;
 
   private Status status = BAD_REQUEST;

@@ -10,7 +10,6 @@ import io.harness.execution.NodeExecution;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.LateBindingMap;
 import io.harness.expression.LateBindingValue;
-import io.harness.references.OutcomeRefObject;
 import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -155,9 +154,7 @@ public class NodeExecutionValue implements LateBindingValue {
         return Optional.empty();
       }
 
-      return outcomeService
-          .resolve(ambiance, OutcomeRefObject.builder().producerId(nodeExecution.getNode().getUuid()).name(key).build(),
-              nodeExecution.getUuid())
+      return outcomeService.find(ambiance, nodeExecution.getNode().getUuid(), nodeExecution.getUuid(), key)
           .map(obj -> obj);
     }
   }

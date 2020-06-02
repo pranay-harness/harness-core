@@ -58,8 +58,8 @@ public class ResolverRegistryTest extends OrchestrationBeansTest {
     }
 
     @Override
-    public DummyOutcome consume(Ambiance ambiance, String name, DummyOutcome value) {
-      return null;
+    public String consumeInternal(Ambiance ambiance, String name, DummyOutcome value, int levelsToKeep) {
+      return "id";
     }
   }
 }

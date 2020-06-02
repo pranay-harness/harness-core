@@ -242,7 +242,7 @@ public class ExecutionEngine implements Engine {
                .set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
     // TODO => handle before node execution update
     Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
-    handleOutcomes(ambiance, stepResponse.outcomeMap());
+    handleOutcomes(ambiance, stepResponse.stepOutcomeMap());
 
     // TODO handle Failure
     PlanNode node = nodeExecution.getNode();
@@ -273,13 +273,16 @@ public class ExecutionEngine implements Engine {
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private void handleOutcomes(Ambiance ambiance, Map<String, Outcome> outcomes) {
-    if (outcomes == null) {
+  private void handleOutcomes(Ambiance ambiance, Map<String, StepResponse.StepOutcome> stepOutcomes) {
+    if (stepOutcomes == null) {
       return;
     }
-    outcomes.forEach((name, outcome) -> {
-      Resolver resolver = resolverRegistry.obtain(outcome.getRefType());
-      resolver.consume(ambiance, name, outcome);
+    stepOutcomes.forEach((name, stepOutcome) -> {
+      Outcome outcome = stepOutcome.getOutcome();
+      if (outcome != null) {
+        Resolver resolver = resolverRegistry.obtain(outcome.getRefType());
+        resolver.consume(ambiance, name, outcome, stepOutcome.getGroup());
+      }
     });
   }
 

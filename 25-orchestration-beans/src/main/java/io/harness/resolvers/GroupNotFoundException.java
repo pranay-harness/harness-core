@@ -1,4 +1,4 @@
-package io.harness.resolver.sweepingoutput;
+package io.harness.resolvers;
 
 import static io.harness.eraro.ErrorCode.ENGINE_SWEEPING_OUTPUT_EXCEPTION;
 import static java.lang.String.format;

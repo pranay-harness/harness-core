@@ -13,6 +13,8 @@ import io.harness.ambiance.Level;
 import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
 import io.harness.references.SweepingOutputRefObject;
+import io.harness.resolvers.GroupNotFoundException;
+import io.harness.resolvers.ResolverUtils;
 import io.harness.rule.Owner;
 import io.harness.state.StepType;
 import io.harness.testlib.RealMongo;
@@ -21,11 +23,11 @@ import io.harness.utils.DummySweepingOutput;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
+public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTest {
   private static final String STEP_RUNTIME_ID = generateUuid();
   private static final String STEP_SETUP_ID = generateUuid();
 
-  @Inject private ExecutionSweepingOutputResolver executionSweepingOutputResolver;
+  @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Test
   @RealMongo
@@ -40,14 +42,14 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
     String testValueSection = "testSection";
     String testValueStep = "testStep";
 
-    executionSweepingOutputResolver.consume(
-        ambianceSection, outputName, DummySweepingOutput.builder().test(testValueSection).build());
+    executionSweepingOutputService.consume(
+        ambianceSection, outputName, DummySweepingOutput.builder().test(testValueSection).build(), null);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
-    executionSweepingOutputResolver.consume(
-        ambianceStep, outputName, DummySweepingOutput.builder().test(testValueStep).build());
+    executionSweepingOutputService.consume(
+        ambianceStep, outputName, DummySweepingOutput.builder().test(testValueStep).build(), null);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueStep);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
@@ -57,7 +59,7 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
   @RealMongo
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testSaveAndFind() {
+  public void testSaveWithLevelsToKeepAndFind() {
     Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
     Ambiance ambiancePhase = ambianceSection.cloneForFinish();
     Ambiance ambianceStep = prepareStepAmbiance(ambianceSection);
@@ -66,13 +68,13 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
     String testValueSection = "testSection";
     String testValueStep = "testStep";
 
-    executionSweepingOutputResolver.save(
+    executionSweepingOutputService.consumeInternal(
         ambianceSection, outputName, DummySweepingOutput.builder().test(testValueSection).build(), 2);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
-    executionSweepingOutputResolver.save(
+    executionSweepingOutputService.consumeInternal(
         ambianceStep, outputName, DummySweepingOutput.builder().test(testValueStep).build(), 0);
     validateResult(resolve(ambiancePhase, outputName), testValueStep);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
@@ -92,20 +94,20 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
     String testValueSection = "testSection";
     String testValueStep = "testStep";
 
-    executionSweepingOutputResolver.saveAtGroupScope(
+    executionSweepingOutputService.consume(
         ambianceSection, outputName, DummySweepingOutput.builder().test(testValueSection).build(), "SECTION");
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
-    executionSweepingOutputResolver.saveAtGlobalScope(
-        ambianceStep, outputName, DummySweepingOutput.builder().test(testValueStep).build());
+    executionSweepingOutputService.consume(ambianceStep, outputName,
+        DummySweepingOutput.builder().test(testValueStep).build(), ResolverUtils.GLOBAL_GROUP_SCOPE);
     validateResult(resolve(ambiancePhase, outputName), testValueStep);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
 
     assertThatThrownBy(()
-                           -> executionSweepingOutputResolver.saveAtGroupScope(ambianceSection, "randomOutputName",
+                           -> executionSweepingOutputService.consume(ambianceSection, "randomOutputName",
                                DummySweepingOutput.builder().test("randomTestValue").build(), "RANDOM"))
         .isInstanceOf(GroupNotFoundException.class);
   }
@@ -135,14 +137,13 @@ public class ExecutionSweepingOutputResolverTest extends OrchestrationTest {
   public void shouldTestSaveAndFindForNull() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outputName = "outcomeName";
-    executionSweepingOutputResolver.consume(ambiance, outputName, null);
+    executionSweepingOutputService.consume(ambiance, outputName, null, null);
 
     SweepingOutput output = resolve(ambiance, outputName);
     assertThat(output).isNull();
   }
 
   private SweepingOutput resolve(Ambiance ambiance, String outputName) {
-    return executionSweepingOutputResolver.resolve(
-        ambiance, SweepingOutputRefObject.builder().name(outputName).build());
+    return executionSweepingOutputService.resolve(ambiance, SweepingOutputRefObject.builder().name(outputName).build());
   }
 }
