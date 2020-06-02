@@ -7,25 +7,31 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.joda.time.Seconds.secondsBetween;
+import static software.wings.beans.FeatureName.MOVE_AWS_LAMBDA_INSTANCE_SYNC_TO_PERPETUAL_TASK;
 import static software.wings.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_LAMBDA_DEPLOYMENTS;
+import static software.wings.beans.infrastructure.instance.InvocationCount.InvocationCountKey.INVOCATION_COUNT_KEY_LIST;
+import static software.wings.service.impl.instance.InstanceSyncFlow.NEW_DEPLOYMENT;
+import static software.wings.service.impl.instance.InstanceSyncFlow.PERPETUAL_TASK;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.UnexpectedException;
@@ -68,10 +74,13 @@ import software.wings.beans.infrastructure.instance.key.AwsLambdaInstanceKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsLambdaDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.service.AwsLambdaInstanceSyncPerpetualTaskCreator;
+import software.wings.service.InstanceSyncPerpetualTaskCreator;
 import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
 import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
 import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
 import software.wings.service.impl.aws.model.response.AwsCloudWatchStatisticsResponse;
+import software.wings.service.impl.aws.model.response.AwsLambdaDetailsMetricsResponse;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.aws.delegate.AwsCloudWatchHelperServiceDelegate;
 import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
@@ -88,10 +97,8 @@ import javax.validation.constraints.NotNull;
 
 @Slf4j
 @Singleton
-public class AwsLambdaInstanceHandler extends InstanceHandler {
-  private static final List<InvocationCountKey> INVOCATION_COUNT_KEY_LIST =
-      ImmutableList.of(InvocationCountKey.LAST_30_DAYS, InvocationCountKey.SINCE_LAST_DEPLOYED);
-
+public class AwsLambdaInstanceHandler extends InstanceHandler implements InstanceSyncByPerpetualTaskHandler {
+  @Inject private AwsLambdaInstanceSyncPerpetualTaskCreator perpetualTaskCreator;
   @Inject private AwsLambdaHelperServiceManager awsLambdaHelperServiceManager;
   @Inject ArtifactService artifactService;
   @Inject ServerlessInstanceService serverlessInstanceService;
@@ -99,7 +106,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
 
   @Override
   public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
-    syncInstancesInternal(appId, infraMappingId, emptyList());
+    syncInstancesInternal(appId, infraMappingId, emptyList(), null, instanceSyncFlow);
   }
 
   @Override
@@ -116,6 +123,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
     PageResponse<ServerlessInstance> pageResponse = serverlessInstanceService.list(pageRequest);
     return pageResponse.getResponse();
   }
+
   AwsLambdaInfraStructureMapping getInfraMapping(String infraMappingId, String appId) {
     final InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
@@ -142,8 +150,9 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
     return secretManager.getEncryptionDetails((EncryptableSetting) cloudProviderSetting.getValue(), null, null);
   }
   @VisibleForTesting
-  void syncInstancesInternal(
-      String appId, String infraMappingId, @NotNull List<DeploymentSummary> newDeploymentSummaries) {
+  void syncInstancesInternal(String appId, String infraMappingId,
+      @NotNull List<DeploymentSummary> newDeploymentSummaries, AwsLambdaDetailsMetricsResponse awsLambdaDetailsResponse,
+      InstanceSyncFlow instanceSyncFlow) {
     logger.info("# Performing Aws Lambda Instance Sync");
     final AwsLambdaInfraStructureMapping awsLambdaInfraStructureMapping = getInfraMapping(infraMappingId, appId);
     final SettingAttribute cloudProviderSetting = cloudProviderSetting(awsLambdaInfraStructureMapping);
@@ -156,6 +165,34 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
             + "No of instances in DB: {}, No of new instances to add: {}",
         appId, activeInstancesInDB.size(), newDeploymentSummaries.size());
 
+    if (PERPETUAL_TASK != instanceSyncFlow) {
+      handleNonPerpetualInstanceSync(
+          newDeploymentSummaries, awsLambdaInfraStructureMapping, awsConfig, encryptedDataDetails, activeInstancesInDB);
+    } else {
+      handlePerpetualInstanceSync(awsLambdaDetailsResponse, activeInstancesInDB);
+    }
+  }
+
+  private void handlePerpetualInstanceSync(
+      AwsLambdaDetailsMetricsResponse awsLambdaDetailsResponse, Collection<ServerlessInstance> activeInstancesInDB) {
+    logger.info("Syncing existing Aws Lambda Instances from perpetual task");
+    activeInstancesInDB.stream()
+        .filter(awsLambdaInstance -> hasSameFunctionNameAndVersion(awsLambdaInstance, awsLambdaDetailsResponse))
+        .forEach(instanceToUpdate -> syncInDBInstanceForPerpetualTask(instanceToUpdate, awsLambdaDetailsResponse));
+  }
+
+  private boolean hasSameFunctionNameAndVersion(
+      ServerlessInstance awsLambdaInstance, AwsLambdaDetailsMetricsResponse awsLambdaDetailsResponse) {
+    boolean hasSameFunctionName = awsLambdaInstance.getLambdaInstanceKey().getFunctionName().equals(
+        awsLambdaDetailsResponse.getLambdaDetails().getFunctionName());
+    boolean hasSameFunctionVersion = awsLambdaInstance.getLambdaInstanceKey().getFunctionVersion().equals(
+        awsLambdaDetailsResponse.getLambdaDetails().getVersion());
+    return hasSameFunctionName && hasSameFunctionVersion;
+  }
+
+  private void handleNonPerpetualInstanceSync(@NotNull List<DeploymentSummary> newDeploymentSummaries,
+      AwsLambdaInfraStructureMapping awsLambdaInfraStructureMapping, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, Collection<ServerlessInstance> activeInstancesInDB) {
     if (isNotEmpty(newDeploymentSummaries)) {
       handleNewDeploymentInternal(
           newDeploymentSummaries, activeInstancesInDB, awsLambdaInfraStructureMapping, awsConfig, encryptedDataDetails);
@@ -266,35 +303,64 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
     try {
       final AwsLambdaInstanceInfo lambdaInstanceInfo = getLambdaInstanceInfo(functionName, functionVersion,
           new Date(instanceToUpdate.getLastDeployedAt()), infrastructureMapping, awsConfig, encryptedDataDetails);
-      if (lambdaInstanceInfo == null) {
-        handleFunctionNotExist(instanceToUpdate);
-      } else {
-        if (!somethingUpdated(lambdaInstanceInfo, instanceToUpdate.getInstanceInfo())) {
-          logger.info("Lambda details and Invocation count have not changed. Skipping update.");
-        } else {
-          handleNewUpdatesToInstance(instanceToUpdate, lambdaInstanceInfo);
-        }
-      }
+      syncLambdaInstanceInDB(instanceToUpdate, lambdaInstanceInfo);
 
     } catch (Exception e) {
       logger.info("error while Syncing Aws Lambda Instance. skipping the sync for it", e);
     }
   }
+
   @VisibleForTesting
-  AwsLambdaInstanceInfo getLambdaInstanceInfo(String fucntionName, String version, Date lastDeployedAt,
+  void syncInDBInstanceForPerpetualTask(
+      ServerlessInstance instanceToUpdate, AwsLambdaDetailsMetricsResponse awsLambdaDetailsResponse) {
+    final String functionName = instanceToUpdate.getLambdaInstanceKey().getFunctionName();
+    final String functionVersion = instanceToUpdate.getLambdaInstanceKey().getFunctionVersion();
+    logger.info("Syncing existing instance id=[{}], function name=[{}], function version=[{}]",
+        instanceToUpdate.getUuid(), functionName, functionVersion);
+    try {
+      final AwsLambdaInstanceInfo lambdaInstanceInfo = createLambdaInstanceInfo(
+          awsLambdaDetailsResponse.getLambdaDetails(), awsLambdaDetailsResponse.getInvocationCountList());
+      syncLambdaInstanceInDB(instanceToUpdate, lambdaInstanceInfo);
+
+    } catch (Exception e) {
+      logger.info("error while Syncing Aws Lambda Instance. skipping the sync for it", e);
+    }
+  }
+
+  private void syncLambdaInstanceInDB(ServerlessInstance instanceToUpdate, AwsLambdaInstanceInfo lambdaInstanceInfo) {
+    if (lambdaInstanceInfo == null) {
+      handleFunctionNotExist(instanceToUpdate);
+    } else {
+      if (!somethingUpdated(lambdaInstanceInfo, instanceToUpdate.getInstanceInfo())) {
+        logger.info("Lambda details and Invocation count have not changed. Skipping update.");
+      } else {
+        handleNewUpdatesToInstance(instanceToUpdate, lambdaInstanceInfo);
+      }
+    }
+  }
+
+  @VisibleForTesting
+  AwsLambdaInstanceInfo getLambdaInstanceInfo(String functionName, String version, Date lastDeployedAt,
       AwsLambdaInfraStructureMapping infrastructureMapping, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails) {
-    logger.info("Fetching details for Aws Lambda Function: [{}] , version =[{}]", fucntionName, version);
+    logger.info("Fetching details for Aws Lambda Function: [{}] , version =[{}]", functionName, version);
 
     final AwsLambdaDetails lambdaDetails =
-        getFunctionDetails(infrastructureMapping, awsConfig, encryptedDataDetails, fucntionName, version);
+        getFunctionDetails(infrastructureMapping, awsConfig, encryptedDataDetails, functionName, version);
 
+    return getInvocationCountAndCreateLambdaInstanceInfo(
+        functionName, lastDeployedAt, infrastructureMapping, awsConfig, encryptedDataDetails, lambdaDetails);
+  }
+
+  private AwsLambdaInstanceInfo getInvocationCountAndCreateLambdaInstanceInfo(String functionName, Date lastDeployedAt,
+      AwsLambdaInfraStructureMapping infrastructureMapping, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, AwsLambdaDetails lambdaDetails) {
     if (lambdaDetails == null) {
       return null;
     }
-    logger.info("Fetching Invocation count for Aws Lambda Function: [{}] ", fucntionName);
+    logger.info("Fetching Invocation count for Aws Lambda Function: [{}] ", functionName);
     List<InvocationCount> invocationCountList =
-        prepareInvocationCountList(fucntionName, lastDeployedAt, INVOCATION_COUNT_KEY_LIST,
+        prepareInvocationCountList(functionName, lastDeployedAt, INVOCATION_COUNT_KEY_LIST,
             infrastructureMapping.getAppId(), infrastructureMapping.getRegion(), awsConfig, encryptedDataDetails);
 
     return createLambdaInstanceInfo(lambdaDetails, invocationCountList);
@@ -371,7 +437,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
     if (!isNullOrEmpty(deploymentSummaries)) {
       final String appId = deploymentSummaries.iterator().next().getAppId();
       final String infraMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
-      syncInstancesInternal(appId, infraMappingId, deploymentSummaries);
+      syncInstancesInternal(appId, infraMappingId, deploymentSummaries, null, NEW_DEPLOYMENT);
     }
   }
 
@@ -597,5 +663,32 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
     } catch (Exception e) {
       throw new UnexpectedException("Error while fetching Invocation count", e);
     }
+  }
+
+  @Override
+  public FeatureName getFeatureFlagToEnablePerpetualTaskForInstanceSync() {
+    return MOVE_AWS_LAMBDA_INSTANCE_SYNC_TO_PERPETUAL_TASK;
+  }
+
+  @Override
+  public InstanceSyncPerpetualTaskCreator getInstanceSyncPerpetualTaskCreator() {
+    return perpetualTaskCreator;
+  }
+
+  @Override
+  public void processInstanceSyncResponseFromPerpetualTask(
+      InfrastructureMapping infrastructureMapping, ResponseData response) {
+    syncInstancesInternal(infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), emptyList(),
+        (AwsLambdaDetailsMetricsResponse) response, PERPETUAL_TASK);
+  }
+
+  @Override
+  public Status getStatus(InfrastructureMapping infrastructureMapping, ResponseData response) {
+    AwsLambdaDetailsMetricsResponse awsLambdaDetailsResponse = (AwsLambdaDetailsMetricsResponse) response;
+    boolean success = awsLambdaDetailsResponse.getExecutionStatus() == ExecutionStatus.SUCCESS;
+    boolean deleteTask = success && isNull(awsLambdaDetailsResponse.getLambdaDetails());
+    String errorMessage = success ? null : awsLambdaDetailsResponse.getErrorMessage();
+
+    return Status.builder().retryable(!deleteTask).errorMessage(errorMessage).success(success).build();
   }
 }

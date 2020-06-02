@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -8,17 +9,20 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNotNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static software.wings.beans.FeatureName.MOVE_AWS_LAMBDA_INSTANCE_SYNC_TO_PERPETUAL_TASK;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.cloudwatch.model.Datapoint;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
@@ -67,9 +71,11 @@ import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploym
 import software.wings.beans.infrastructure.instance.key.deployment.AwsLambdaDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.service.AwsLambdaInstanceSyncPerpetualTaskCreator;
 import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
 import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
 import software.wings.service.impl.aws.model.response.AwsCloudWatchStatisticsResponse;
+import software.wings.service.impl.aws.model.response.AwsLambdaDetailsMetricsResponse;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
@@ -310,15 +316,18 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   public void testSyncInstances() {
     doNothing()
         .when(awsLambdaInstanceHandler)
-        .syncInstancesInternal(anyString(), anyString(), anyListOf(DeploymentSummary.class));
+        .syncInstancesInternal(anyString(), anyString(), anyListOf(DeploymentSummary.class),
+            any(AwsLambdaDetailsMetricsResponse.class), any(InstanceSyncFlow.class));
     awsLambdaInstanceHandler.syncInstances("appid", "innfraid", InstanceSyncFlow.MANUAL);
 
     verify(awsLambdaInstanceHandler, times(1))
-        .syncInstancesInternal(anyString(), anyString(), anyListOf(DeploymentSummary.class));
+        .syncInstancesInternal(anyString(), anyString(), anyListOf(DeploymentSummary.class),
+            any(AwsLambdaDetailsMetricsResponse.class), any(InstanceSyncFlow.class));
 
     ArgumentCaptor<List> argumentcaptor = ArgumentCaptor.forClass(List.class);
     verify(awsLambdaInstanceHandler, times(1))
-        .syncInstancesInternal(anyString(), anyString(), argumentcaptor.capture());
+        .syncInstancesInternal(anyString(), anyString(), argumentcaptor.capture(),
+            any(AwsLambdaDetailsMetricsResponse.class), any(InstanceSyncFlow.class));
     assertThat(argumentcaptor.getValue().isEmpty()).isTrue();
   }
 
@@ -398,7 +407,8 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
 
     setupAwsLambdaInstanceHandler();
 
-    awsLambdaInstanceHandler.syncInstancesInternal("appid", "inframappinfid", Collections.emptyList());
+    awsLambdaInstanceHandler.syncInstancesInternal(
+        "appid", "inframappinfid", Collections.emptyList(), null, InstanceSyncFlow.ITERATOR);
     verify(awsLambdaInstanceHandler, times(2))
         .syncInDBInstance(any(AwsLambdaInfraStructureMapping.class), any(AwsConfig.class),
             anyListOf(EncryptedDataDetail.class), any(ServerlessInstance.class));
@@ -437,7 +447,8 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
 
     List<DeploymentSummary> newDeploymentSummaries =
         Arrays.asList(DeploymentSummary.builder().build(), DeploymentSummary.builder().build());
-    awsLambdaInstanceHandler.syncInstancesInternal("appid", "inframappinfid", newDeploymentSummaries);
+    awsLambdaInstanceHandler.syncInstancesInternal(
+        "appid", "inframappinfid", newDeploymentSummaries, null, InstanceSyncFlow.NEW_DEPLOYMENT);
 
     verify(awsLambdaInstanceHandler, times(0))
         .syncInDBInstance(any(AwsLambdaInfraStructureMapping.class), any(AwsConfig.class),
@@ -700,11 +711,72 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
     OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
     doNothing()
         .when(awsLambdaInstanceHandler)
-        .syncInstancesInternal(anyString(), anyString(), anyListOf(DeploymentSummary.class));
+        .syncInstancesInternal(anyString(), anyString(), anyListOf(DeploymentSummary.class),
+            any(AwsLambdaDetailsMetricsResponse.class), any(InstanceSyncFlow.class));
     awsLambdaInstanceHandler.handleNewDeployment(getDeploymentSummarList(), false, onDemandRollbackInfo);
     verify(awsLambdaInstanceHandler, times(1))
-        .syncInstancesInternal(anyString(), anyString(), eq(getDeploymentSummarList()));
+        .syncInstancesInternal(anyString(), anyString(), eq(getDeploymentSummarList()),
+            any(AwsLambdaDetailsMetricsResponse.class), any(InstanceSyncFlow.class));
   }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void test_handlePerpetualTask() {
+    doNothing()
+        .when(awsLambdaInstanceHandler)
+        .syncInstancesInternal(anyString(), anyString(), anyListOf(DeploymentSummary.class),
+            any(AwsLambdaDetailsMetricsResponse.class), any(InstanceSyncFlow.class));
+    awsLambdaInstanceHandler.processInstanceSyncResponseFromPerpetualTask(
+        getInframapping(), AwsLambdaDetailsMetricsResponse.builder().build());
+    verify(awsLambdaInstanceHandler, times(1))
+        .syncInstancesInternal(anyString(), anyString(), anyListOf(DeploymentSummary.class),
+            isNotNull(AwsLambdaDetailsMetricsResponse.class), eq(InstanceSyncFlow.PERPETUAL_TASK));
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void test_getPerpetualSuccessfullStatus() {
+    Status retryableStatus =
+        awsLambdaInstanceHandler.getStatus(getInframapping(), getSuccessfullAwsResponse(getAwsLambdaDetails()));
+    assertThat(retryableStatus).isNotNull();
+    assertThat(retryableStatus.isSuccess()).isTrue();
+    assertThat(retryableStatus.isRetryable()).isTrue();
+
+    Status nonRetryableStatus = awsLambdaInstanceHandler.getStatus(getInframapping(), getSuccessfullAwsResponse(null));
+    assertThat(nonRetryableStatus).isNotNull();
+    assertThat(nonRetryableStatus.isSuccess()).isTrue();
+    assertThat(nonRetryableStatus.isRetryable()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void test_getPerpetualFailureStatus() {
+    Status status = awsLambdaInstanceHandler.getStatus(getInframapping(), getFailedAwsResponse());
+    assertThat(status).isNotNull();
+    assertThat(status.isSuccess()).isFalse();
+    assertThat(status.getErrorMessage()).isEqualTo("Something went wrong");
+    assertThat(status.isRetryable()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void test_getPerpetualTaskCreator() {
+    assertThat(awsLambdaInstanceHandler.getInstanceSyncPerpetualTaskCreator().getClass())
+        .isEqualTo(AwsLambdaInstanceSyncPerpetualTaskCreator.class);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void test_getPerpetualTaskFeatureName() {
+    assertThat(awsLambdaInstanceHandler.getFeatureFlagToEnablePerpetualTaskForInstanceSync())
+        .isEqualTo(MOVE_AWS_LAMBDA_INSTANCE_SYNC_TO_PERPETUAL_TASK);
+  }
+
   private List<DeploymentSummary> getDeploymentSummarList() {
     return Arrays.asList(DeploymentSummary.builder().build(), DeploymentSummary.builder().build());
   }
@@ -713,6 +785,24 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
     return AwsLambdaInfraStructureMapping.builder()
         .infraMappingType(InfrastructureMappingType.AWS_AWS_LAMBDA.name())
         .build();
+  }
+
+  private AwsLambdaDetailsMetricsResponse getSuccessfullAwsResponse(AwsLambdaDetails awsLambdaDetails) {
+    return AwsLambdaDetailsMetricsResponse.builder()
+        .executionStatus(ExecutionStatus.SUCCESS)
+        .lambdaDetails(awsLambdaDetails)
+        .build();
+  }
+
+  private AwsLambdaDetailsMetricsResponse getFailedAwsResponse() {
+    return AwsLambdaDetailsMetricsResponse.builder()
+        .executionStatus(ExecutionStatus.FAILED)
+        .errorMessage("Something went wrong")
+        .build();
+  }
+
+  private AwsLambdaDetails getAwsLambdaDetails() {
+    return AwsLambdaDetails.builder().functionName("test").build();
   }
 
   private AwsConfig getAwsConfig() {

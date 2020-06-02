@@ -659,6 +659,7 @@ import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequ
 import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
 import software.wings.service.impl.aws.model.response.AwsCloudWatchMetricDataResponse;
 import software.wings.service.impl.aws.model.response.AwsCloudWatchStatisticsResponse;
+import software.wings.service.impl.aws.model.response.AwsLambdaDetailsMetricsResponse;
 import software.wings.service.impl.aws.model.response.AwsLambdaDetailsResponse;
 import software.wings.service.impl.bugsnag.BugsnagApplication;
 import software.wings.service.impl.bugsnag.BugsnagSetupTestData;
@@ -1620,5 +1621,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BasicHttpChainStepParameters.class, 7385);
     kryo.register(ScriptType.class, 7386);
     kryo.register(SplunkSampleResponse.class, 7387);
+    kryo.register(AwsLambdaDetailsMetricsResponse.class, 7388);
   }
 }
