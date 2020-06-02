@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -93,6 +94,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
         .getWithAppId(eq(ServerlessInstance.class), anyString(), anyString());
     Query queryMock = mock(Query.class);
     doReturn(queryMock).when(wingsPersistence).createQuery(ServerlessInstance.class);
+    doReturn(queryMock).when(wingsPersistence).createAuthorizedQuery(ServerlessInstance.class);
     final UpdateOperations updateOperationsMock = mock(UpdateOperations.class);
     doReturn(updateOperationsMock).when(wingsPersistence).createUpdateOperations(ServerlessInstance.class);
     doReturn(updateOperationsMock).when(updateOperationsMock).set(anyString(), any());
@@ -101,6 +103,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
     doReturn(mock(UpdateResults.class)).when(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
     doReturn(serverlessInstance).when(wingsPersistence).getWithAppId(any(Class.class), anyString(), anyString());
     doReturn(mock(PageResponse.class)).when(wingsPersistence).query(any(Class.class), any(PageRequest.class));
+    doReturn(Arrays.asList(serverlessInstance)).when(queryMock).asList();
 
     return Mocks.builder()
         .serverlessInstance(serverlessInstance)
@@ -117,6 +120,22 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
     setup_wingspersistence();
     final ServerlessInstance serverlessInstance = serverlessInstanceService.get("instanceid");
     assertThat(serverlessInstance.getUuid()).isEqualTo("instanceid");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void test_list() {
+    setup_AggregationPipeline();
+    setup_wingspersistence();
+    List<ServerlessInstance> serverlessInstances = serverlessInstanceService.list("inframappingid", "appid");
+    assertThat(serverlessInstances).isNotEmpty();
+    serverlessInstances = serverlessInstanceService.list("", "");
+    assertThat(serverlessInstances).isEmpty();
+    serverlessInstances = serverlessInstanceService.list("inframappingid", "");
+    assertThat(serverlessInstances).isEmpty();
+    serverlessInstances = serverlessInstanceService.list("", "appid");
+    assertThat(serverlessInstances).isEmpty();
   }
 
   @Test

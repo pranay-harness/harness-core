@@ -1,10 +1,13 @@
 package software.wings.beans.infrastructure.instance;
 
+import com.google.common.collect.ImmutableList;
+
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 @Value
@@ -36,5 +39,7 @@ public class InvocationCount {
   public enum InvocationCountKey {
     LAST_30_DAYS,
     SINCE_LAST_DEPLOYED;
+    public static final List<InvocationCountKey> INVOCATION_COUNT_KEY_LIST =
+        ImmutableList.of(LAST_30_DAYS, SINCE_LAST_DEPLOYED);
   }
 }

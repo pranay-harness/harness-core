@@ -3,6 +3,7 @@ package io.harness.perpetualtask;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskServiceClient;
 import io.harness.perpetualtask.example.SamplePerpetualTaskServiceClient;
+import io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.AwsSshPerpetualTaskServiceClient;
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient;
@@ -19,7 +20,8 @@ public enum PerpetualTaskType {
   AWS_AMI_INSTANCE_SYNC(AwsAmiInstanceSyncPerpetualTaskClient.class),
   AWS_CODE_DEPLOY_INSTANCE_SYNC(AwsCodeDeployInstanceSyncPerpetualTaskClient.class),
   SPOT_INST_AMI_INSTANCE_SYNC(SpotinstAmiInstanceSyncPerpetualTaskClient.class),
-  CONTAINER_INSTANCE_SYNC(ContainerInstanceSyncPerpetualTaskClient.class);
+  CONTAINER_INSTANCE_SYNC(ContainerInstanceSyncPerpetualTaskClient.class),
+  AWS_LAMBDA_INSTANCE_SYNC(AwsLambdaInstanceSyncPerpetualTaskClient.class);
 
   private final Class<? extends PerpetualTaskServiceClient> perpetualTaskServiceClientClass;
 

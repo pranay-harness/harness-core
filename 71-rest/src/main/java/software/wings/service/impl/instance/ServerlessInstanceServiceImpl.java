@@ -15,15 +15,18 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.NoResultFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.infrastructure.instance.ServerlessInstance;
+import software.wings.beans.infrastructure.instance.ServerlessInstance.ServerlessInstanceKeys;
 import software.wings.beans.infrastructure.instance.SyncStatus;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.ServerlessInstanceService;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @Singleton
@@ -74,6 +77,18 @@ public class ServerlessInstanceServiceImpl implements ServerlessInstanceService 
   public PageResponse<ServerlessInstance> list(PageRequest<ServerlessInstance> pageRequest) {
     pageRequest.addFilter("isDeleted", Operator.EQ, false);
     return wingsPersistence.query(ServerlessInstance.class, pageRequest);
+  }
+
+  @Override
+  public List<ServerlessInstance> list(String infraMappingId, String appId) {
+    if (StringUtils.isEmpty(infraMappingId) || StringUtils.isEmpty(appId)) {
+      return Collections.emptyList();
+    }
+
+    Query<ServerlessInstance> query = wingsPersistence.createAuthorizedQuery(ServerlessInstance.class);
+    query.filter(ServerlessInstanceKeys.infraMappingId, infraMappingId);
+    query.filter(ServerlessInstanceKeys.appId, appId);
+    return query.asList();
   }
 
   @Override
