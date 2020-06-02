@@ -20,6 +20,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
@@ -256,7 +257,8 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
     saveExecutionLog(line, RUNNING);
   }
 
-  protected void processScriptOutputFile(Map<String, String> envVariablesMap, BufferedReader br) throws IOException {
+  protected void processScriptOutputFile(@NotNull Map<String, String> envVariablesMap, @NotNull BufferedReader br)
+      throws IOException {
     saveExecutionLog("Script Output: ");
     StringBuilder sb = new StringBuilder();
     String line;
@@ -270,8 +272,10 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
         if (index != -1) {
           String key = envVar.substring(0, index).trim();
           String value = envVar.substring(index + 1).trim();
-          envVariablesMap.put(key, value);
-          saveExecutionLog(key + "=" + value);
+          if (StringUtils.isNotBlank(key)) {
+            envVariablesMap.put(key, value);
+            saveExecutionLog(key + "=" + value);
+          }
           sb = new StringBuilder();
         }
       }
