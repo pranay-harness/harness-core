@@ -13,4 +13,11 @@ message PerpetualTaskClientContextDetails {
 
 // TODO: define what is needed to make a callback to the client entry-point
 message PerpetualTaskClientEntrypoint {
+  oneof entrypoints {
+    HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1;
+  }
+}
+
+message HttpsPerpetualTaskClientEntrypoint {
+  string url = 1;
 }
