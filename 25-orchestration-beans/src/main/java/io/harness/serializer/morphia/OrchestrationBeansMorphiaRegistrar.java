@@ -26,7 +26,6 @@ import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
 import io.harness.tasks.Task;
 
-import java.util.Map;
 import java.util.Set;
 
 @OwnedBy(CDC)
@@ -50,10 +49,7 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(Map<String, Class> map) {
-    final HelperPut h = (name, clazz) -> {
-      map.put(PKG_HARNESS + name, clazz);
-    };
+  public void registerImplementationClasses(HelperPut h, HelperPut w) {
     h.put("facilitator.DefaultFacilitatorParams", DefaultFacilitatorParams.class);
     h.put("references.OutcomeRefObject", OutcomeRefObject.class);
 

@@ -24,7 +24,6 @@ import io.harness.persistence.UuidAccess;
 import io.harness.persistence.UuidAware;
 import io.harness.queue.Queuable;
 
-import java.util.Map;
 import java.util.Set;
 
 public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
@@ -55,7 +54,7 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(Map<String, Class> map) {
+  public void registerImplementationClasses(HelperPut h, HelperPut w) {
     // no classes to register
   }
 }

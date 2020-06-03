@@ -3,7 +3,6 @@ package io.harness.beans.morphia;
 import io.harness.beans.CIPipeline;
 import io.harness.morphia.MorphiaRegistrar;
 
-import java.util.Map;
 import java.util.Set;
 
 public class CIBeansMorphiaRegistrar implements MorphiaRegistrar {
@@ -13,7 +12,7 @@ public class CIBeansMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(Map<String, Class> map) {
+  public void registerImplementationClasses(HelperPut h, HelperPut w) {
     // No classes to register
   }
 }

@@ -13,6 +13,6 @@ public class MorphiaClassesRegistrarTest extends CategoryTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void test() {
-    new MorphiaClassesRegistrar().testClassesModule();
+    new NextGenMorphiaClassesRegistrar().testClassesModule();
   }
 }

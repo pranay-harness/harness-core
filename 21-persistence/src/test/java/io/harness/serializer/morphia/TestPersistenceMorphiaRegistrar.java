@@ -13,7 +13,6 @@ import io.harness.queue.TestInternalEntity;
 import io.harness.queue.TestNoTopicQueuableObject;
 import io.harness.queue.TestTopicQueuableObject;
 
-import java.util.Map;
 import java.util.Set;
 
 public class TestPersistenceMorphiaRegistrar implements MorphiaRegistrar {
@@ -30,11 +29,7 @@ public class TestPersistenceMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(Map<String, Class> map) {
-    final HelperPut h = (name, clazz) -> {
-      map.put(PKG_HARNESS + name, clazz);
-    };
-
+  public void registerImplementationClasses(HelperPut h, HelperPut w) {
     // from commons
     h.put("persistence.MorphiaOldClass", MorphiaClass.class);
     h.put("limits.impl.model.RateLimit", RateLimit.class);

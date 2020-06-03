@@ -7,7 +7,6 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
 
-import java.util.Map;
 import java.util.Set;
 
 public class ApiServiceMorphiaRegistrar implements MorphiaRegistrar {
@@ -18,11 +17,7 @@ public class ApiServiceMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(Map<String, Class> map) {
-    final HelperPut h = (name, clazz) -> {
-      map.put(PKG_HARNESS + name, clazz);
-    };
-
+  public void registerImplementationClasses(HelperPut h, HelperPut w) {
     h.put("globalcontex.AuditGlobalContextData", AuditGlobalContextData.class);
     h.put("globalcontex.PurgeGlobalContextData", PurgeGlobalContextData.class);
     h.put("deployment.InstanceDetails", InstanceDetails.class);
