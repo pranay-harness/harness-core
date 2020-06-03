@@ -12,7 +12,6 @@ import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.MapUtils.emptyIfNull;
-
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
@@ -160,11 +159,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
 
 /**
  * @author rktummala on 10/16/17
@@ -307,15 +303,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       if (isNotEmpty(failedYamlFileChangeMap)) {
         ChangeWithErrorMsg changeWithErrorMsg = failedYamlFileChangeMap.get(change.getFilePath());
         if (changeWithErrorMsg != null) {
-          if (changeWithErrorMsg.getCause() instanceof ConstraintViolationException) {
-            errorMsg = ((ConstraintViolationException) changeWithErrorMsg.getCause())
-                           .getConstraintViolations()
-                           .stream()
-                           .map(ConstraintViolation::getMessage)
-                           .collect(Collectors.joining(", "));
-          } else {
-            errorMsg = changeWithErrorMsg.getErrorMsg();
-          }
+          errorMsg = changeWithErrorMsg.getErrorMsg();
         } else {
           errorMsg = "Internal error";
         }
@@ -689,7 +677,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           logger.warn("Exception while processing yaml file {}", yamlFilePath, ex);
           ChangeWithErrorMsg changeWithErrorMsg = ChangeWithErrorMsg.builder()
                                                       .change(changeContext.getChange())
-                                                      .cause(ex)
                                                       .errorMsg(ExceptionUtils.getMessage(ex))
                                                       .build();
           // We continue processing the yaml files we understand, the failures are reported at the end

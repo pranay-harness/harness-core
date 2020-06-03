@@ -30,7 +30,6 @@ public class YamlProcessingException extends HarnessException {
   @lombok.Builder
   public static class ChangeWithErrorMsg {
     private Change change;
-    private Throwable cause;
     private String errorMsg;
   }
 }
