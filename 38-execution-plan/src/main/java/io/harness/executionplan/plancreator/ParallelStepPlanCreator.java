@@ -1,7 +1,7 @@
-package io.harness.executionplan.plancreators;
+package io.harness.executionplan.plancreator;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.executionplan.constants.PlanCreatorType.STEP_PLAN_CREATOR;
+import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STEP_PLAN_CREATOR;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -31,7 +31,7 @@ public class ParallelStepPlanCreator implements SupportDefinedExecutorPlanCreato
 
   @Override
   public CreateExecutionPlanResponse createPlan(Parallel parallelStep, CreateExecutionPlanContext context) {
-    final List<CreateExecutionPlanResponse> planForSteps = getPlanCreatorForSteps(context, parallelStep);
+    final List<CreateExecutionPlanResponse> planForSteps = getPlanForSteps(context, parallelStep);
     final PlanNode parallelExecutionNode = prepareParallelExecutionNode(context,
         planForSteps.stream().map(CreateExecutionPlanResponse::getStartingNodeId).collect(Collectors.toList()));
     return CreateExecutionPlanResponse.builder()
@@ -43,8 +43,7 @@ public class ParallelStepPlanCreator implements SupportDefinedExecutorPlanCreato
         .build();
   }
 
-  private List<CreateExecutionPlanResponse> getPlanCreatorForSteps(
-      CreateExecutionPlanContext context, Parallel parallelStep) {
+  private List<CreateExecutionPlanResponse> getPlanForSteps(CreateExecutionPlanContext context, Parallel parallelStep) {
     return parallelStep.getSections()
         .stream()
         .map(step -> getPlanCreatorForStep(context, step).createPlan(step, context))

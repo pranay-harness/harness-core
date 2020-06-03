@@ -1,8 +1,8 @@
 package io.harness.cdng.pipeline.plancreators;
 
-import static io.harness.cdng.executionplan.CDPlanCreatorType.STAGES_PLAN_CREATOR;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.executionplan.constants.PlanCreatorType.PIPELINE_PLAN_CREATOR;
+import static io.harness.executionplan.plancreator.beans.PlanCreatorType.PIPELINE_PLAN_CREATOR;
+import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGES_PLAN_CREATOR;
 import static java.util.Collections.singletonList;
 
 import com.google.common.collect.ImmutableMap;
@@ -58,14 +58,12 @@ public class PipelinePlanCreator implements SupportDefinedExecutorPlanCreator<CD
 
   private PlanNode preparePipelineNode(
       CDPipeline pipeline, CreateExecutionPlanContext context, CreateExecutionPlanResponse planForStages) {
-    final String PIPELINE_SETUP_STEP_NAME = "PIPELINE SETUP";
-
     final String pipelineSetupNodeId = generateUuid();
 
     return PlanNode.builder()
         .uuid(pipelineSetupNodeId)
-        .name(PIPELINE_SETUP_STEP_NAME)
-        .identifier(PIPELINE_SETUP_STEP_NAME)
+        .name(pipeline.getName())
+        .identifier(pipeline.getIdentifier())
         .stepType(PipelineSetupStep.STEP_TYPE)
         .skipExpressionChain(true)
         .stepParameters(CDPipelineSetupParameters.builder()

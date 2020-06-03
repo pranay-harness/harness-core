@@ -1,7 +1,7 @@
 package io.harness.cdng.pipeline.plancreators;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.executionplan.constants.PlanCreatorType.STEP_PLAN_CREATOR;
+import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STEP_PLAN_CREATOR;
 
 import com.google.inject.Singleton;
 
@@ -39,7 +39,7 @@ public class HttpStepPlanCreator implements SupportDefinedExecutorPlanCreator<Ht
     final HttpStepInfo.HttpSpec spec = httpStepInfo.getSpec();
     return PlanNode.builder()
         .uuid(deploymentStageUid)
-        .name(httpStepInfo.getIdentifier())
+        .name(httpStepInfo.getName())
         .identifier(httpStepInfo.getIdentifier())
         .stepType(BasicHttpStep.STEP_TYPE)
         .stepParameters(BasicHttpStepParameters.builder().url(spec.getUrl()).method(spec.getMethod()).build())

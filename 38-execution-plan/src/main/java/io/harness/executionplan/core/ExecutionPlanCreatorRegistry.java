@@ -9,5 +9,5 @@ import java.util.Optional;
  */
 public interface ExecutionPlanCreatorRegistry {
   <T> Optional<ExecutionPlanCreator<T>> obtainCreator(PlanCreatorSearchContext<T> context);
-  void registerCreator(SupportDefiner supportDefiner, ExecutionPlanCreator<?> executionPlanCreator);
+  void registerCreator(SupportedConfigDefiner supportedConfigDefiner, ExecutionPlanCreator<?> executionPlanCreator);
 }

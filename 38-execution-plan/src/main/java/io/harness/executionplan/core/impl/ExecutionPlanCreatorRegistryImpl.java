@@ -8,7 +8,7 @@ import com.google.common.collect.Multimap;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.ExecutionPlanCreatorRegistry;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
-import io.harness.executionplan.core.SupportDefiner;
+import io.harness.executionplan.core.SupportedConfigDefiner;
 import lombok.Builder;
 import lombok.Value;
 
@@ -21,18 +21,19 @@ public class ExecutionPlanCreatorRegistryImpl implements ExecutionPlanCreatorReg
   @Override
   public <T> Optional<ExecutionPlanCreator<T>> obtainCreator(PlanCreatorSearchContext<T> context) {
     for (PlanCreatorDefinition planCreatorDefinition : typeToPlanMap.get(context.getType())) {
-      if (planCreatorDefinition.getSupportDefiner().supports(context)) {
+      if (planCreatorDefinition.getSupportedConfigDefiner().supports(context)) {
         return Optional.ofNullable((ExecutionPlanCreator<T>) planCreatorDefinition.getExecutionPlanCreator());
       }
     }
     return Optional.empty();
   }
 
-  public void registerCreator(SupportDefiner supportDefiner, ExecutionPlanCreator<?> executionPlanCreator) {
-    for (String supportedType : supportDefiner.getSupportedTypes()) {
+  public void registerCreator(
+      SupportedConfigDefiner supportedConfigDefiner, ExecutionPlanCreator<?> executionPlanCreator) {
+    for (String supportedType : supportedConfigDefiner.getSupportedTypes()) {
       typeToPlanMap.put(supportedType,
           PlanCreatorDefinition.builder()
-              .supportDefiner(supportDefiner)
+              .supportedConfigDefiner(supportedConfigDefiner)
               .executionPlanCreator(executionPlanCreator)
               .build());
     }
@@ -42,6 +43,6 @@ public class ExecutionPlanCreatorRegistryImpl implements ExecutionPlanCreatorReg
   @Builder
   private static class PlanCreatorDefinition {
     ExecutionPlanCreator<?> executionPlanCreator;
-    SupportDefiner supportDefiner;
+    SupportedConfigDefiner supportedConfigDefiner;
   }
 }

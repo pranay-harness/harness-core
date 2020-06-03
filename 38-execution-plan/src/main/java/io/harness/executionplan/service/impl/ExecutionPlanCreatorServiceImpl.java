@@ -1,7 +1,7 @@
 package io.harness.executionplan.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.executionplan.constants.PlanCreatorType.PIPELINE_PLAN_CREATOR;
+import static io.harness.executionplan.plancreator.beans.PlanCreatorType.PIPELINE_PLAN_CREATOR;
 
 import com.google.inject.Inject;
 

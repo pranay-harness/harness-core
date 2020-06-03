@@ -2,12 +2,12 @@ package io.harness.cdng.pipeline.plancreators;
 
 import static io.harness.cdng.executionplan.CDPlanCreatorType.EXECUTION_PHASES_PLAN_CREATOR;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGE_PLAN_CREATOR;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.cdng.executionplan.CDPlanCreatorType;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
@@ -50,7 +50,7 @@ public class DeploymentStagePlanCreator implements SupportDefinedExecutorPlanCre
 
     return PlanNode.builder()
         .uuid(deploymentStageUid)
-        .name(deploymentStage.getIdentifier())
+        .name(deploymentStage.getName())
         .identifier(deploymentStage.getIdentifier())
         .stepType(DeploymentStageStep.STEP_TYPE)
         .stepParameters(
@@ -81,6 +81,6 @@ public class DeploymentStagePlanCreator implements SupportDefinedExecutorPlanCre
 
   @Override
   public List<String> getSupportedTypes() {
-    return Collections.singletonList(CDPlanCreatorType.STAGE_PLAN_CREATOR.getName());
+    return Collections.singletonList(STAGE_PLAN_CREATOR.getName());
   }
 }
