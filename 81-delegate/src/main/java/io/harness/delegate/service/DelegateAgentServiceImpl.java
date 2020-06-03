@@ -796,7 +796,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private String registerDelegate(DelegateParamsBuilder builder) {
     updateBuilderIfEcsDelegate(builder);
     AtomicInteger attempts = new AtomicInteger(0);
-    while (acquireTasks.get()) {
+    while (acquireTasks.get() && shouldContactManager()) {
       RestResponse<DelegateRegisterResponse> restResponse;
       try {
         attempts.incrementAndGet();
@@ -822,13 +822,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       String responseDelegateId = delegateResponse.getDelegateId();
       handleEcsDelegateRegistrationResponse(delegateResponse);
 
-      if (StringUtils.equals(responseDelegateId, DelegateRegisterResponse.Action.SELF_DESTRUCT.name())) {
+      if (DelegateRegisterResponse.Action.SELF_DESTRUCT == delegateResponse.getAction()) {
         initiateSelfDestruct();
         sleep(ofMinutes(1));
         continue;
       }
-      if (StringUtils.startsWith(responseDelegateId, DelegateRegisterResponse.Action.MIGRATE.name())) {
-        migrate(StringUtils.substringAfter(responseDelegateId, DelegateRegisterResponse.Action.MIGRATE.name()));
+      if (DelegateRegisterResponse.Action.MIGRATE == delegateResponse.getAction()) {
+        migrate(delegateResponse.getMigrateUrl());
         continue;
       }
       builder.delegateId(responseDelegateId);
@@ -851,7 +851,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void checkForProfile() {
-    if (!executingProfile.get() && !isLocked(new File("profile"))) {
+    if (shouldContactManager() && !executingProfile.get() && !isLocked(new File("profile"))) {
       try {
         logger.info("Checking for profile ...");
         DelegateProfileParams profileParams = getProfile();
@@ -1090,7 +1090,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void pollForTask() {
-    if (pollingForTasks.get()) {
+    if (pollingForTasks.get() && shouldContactManager()) {
       try {
         List<DelegateTaskEvent> taskEvents = timeLimiter.callWithTimeout(
             ()
@@ -1314,6 +1314,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void sendHeartbeat(DelegateParamsBuilder builder, Socket socket) {
+    if (!shouldContactManager()) {
+      return;
+    }
+
     if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
       logger.info("Sending heartbeat...");
 
@@ -1343,6 +1347,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void sendKeepAlivePacket(DelegateParamsBuilder builder, Socket socket) {
+    if (!shouldContactManager()) {
+      return;
+    }
+
     if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
       logger.info("Sending keepAlive packet...");
       updateBuilderIfEcsDelegate(builder);
@@ -1362,6 +1370,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void sendHeartbeatWhenPollingEnabled(DelegateParamsBuilder builder) {
+    if (!shouldContactManager()) {
+      return;
+    }
+
     logger.info("Sending heartbeat...");
 
     try {
@@ -1438,6 +1450,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void sendKeepAliveRequestWhenPollingEnabled(DelegateParamsBuilder builder) {
+    if (!shouldContactManager()) {
+      return;
+    }
+
     logger.info("Sending Keep Alive Request...");
     try {
       updateBuilderIfEcsDelegate(builder);
@@ -1520,6 +1536,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent) {
+    if (!shouldContactManager()) {
+      return;
+    }
+
     logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
 
     String delegateTaskId = delegateTaskEvent.getDelegateTaskId();
@@ -1997,6 +2017,15 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     upgradeNeeded.set(false);
     restartNeeded.set(false);
     selfDestruct.set(true);
+
+    if (socket != null) {
+      socket.close();
+    }
+
+    DelegateStackdriverLogAppender.setManagerClient(null);
+    if (perpetualTaskWorker != null) {
+      perpetualTaskWorker.stop();
+    }
   }
 
   private void migrate(String newUrl) {
@@ -2163,5 +2192,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
           value -> delegateExpressionEvaluator.substitute(value, new HashMap<>()));
     }
+  }
+
+  private boolean shouldContactManager() {
+    return !selfDestruct.get();
   }
 }
