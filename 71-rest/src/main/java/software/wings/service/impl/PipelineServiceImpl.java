@@ -1449,7 +1449,7 @@ public class PipelineServiceImpl implements PipelineService {
         workflow.getOrchestrationWorkflow()
             .getUserVariables()
             .stream()
-            .filter(variable -> (variable.isMandatory()) && (variable.getType() != VariableType.TEXT))
+            .filter(variable -> (variable.isMandatory()) && (variable.getType() == VariableType.ENTITY))
             .map(Variable::getName)
             .collect(toSet());
 
