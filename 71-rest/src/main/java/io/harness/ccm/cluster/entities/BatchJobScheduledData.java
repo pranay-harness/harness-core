@@ -1,10 +1,7 @@
-package io.harness.batch.processing.entities;
-
-import static io.harness.event.app.EventServiceApplication.EVENTS_DB;
+package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
-import io.harness.batch.processing.ccm.BatchJobType;
-import io.harness.batch.processing.entities.BatchJobScheduledData.BatchJobScheduledDataKeys;
+import io.harness.ccm.cluster.entities.BatchJobScheduledData.BatchJobScheduledDataKeys;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -35,12 +32,12 @@ import java.time.Instant;
 })
 @FieldNameConstants(innerTypeName = "BatchJobScheduledDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@StoreIn(EVENTS_DB)
+@StoreIn("events")
 public class BatchJobScheduledData
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
   String accountId;
-  BatchJobType batchJobType;
+  String batchJobType;
   long jobRunTimeMillis;
   Instant startAt;
   Instant endAt;
@@ -48,7 +45,7 @@ public class BatchJobScheduledData
   long lastUpdatedAt;
 
   public BatchJobScheduledData(
-      String accountId, BatchJobType batchJobType, long jobRunTimeMillis, Instant startAt, Instant endAt) {
+      String accountId, String batchJobType, long jobRunTimeMillis, Instant startAt, Instant endAt) {
     this.accountId = accountId;
     this.batchJobType = batchJobType;
     this.jobRunTimeMillis = jobRunTimeMillis;

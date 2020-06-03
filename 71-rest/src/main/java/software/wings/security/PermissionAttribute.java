@@ -236,6 +236,8 @@ public class PermissionAttribute {
 
     CE_CONNECTOR(ACCOUNT),
 
+    CE_BATCH(ACCOUNT),
+
     LINKED_ACCOUNT(ACCOUNT);
 
     private ImmutableMap<Action, PermissionType> actionPermissionScopeMap;

@@ -1,7 +1,7 @@
 package io.harness.batch.processing.service.intfc;
 
 import io.harness.batch.processing.ccm.BatchJobType;
-import io.harness.batch.processing.entities.BatchJobScheduledData;
+import io.harness.ccm.cluster.entities.BatchJobScheduledData;
 
 import java.time.Instant;
 
