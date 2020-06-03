@@ -1,4 +1,4 @@
-package io.harness.ng.core.serializer.morphia;
+package io.harness.serializer.morphia;
 
 import io.harness.ng.core.entities.Project;
 
