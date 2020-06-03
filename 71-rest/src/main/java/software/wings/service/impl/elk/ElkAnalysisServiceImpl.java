@@ -114,12 +114,11 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
       logger.info("Error while getting data ", ex);
       return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
     }
-
+    String hostName = mlServiceUtils.getHostName(elkSetupTestNodeData);
     long totalHitsPerMinute = parseTotalHits(responseWithoutHost) / TIME_DURATION_FOR_LOGS_IN_MINUTES;
     List<LogElement> logElementsWithoutHost = parseElkResponse(responseWithoutHost, elkSetupTestNodeData.getQuery(),
         elkSetupTestNodeData.getTimeStampField(), elkSetupTestNodeData.getTimeStampFieldFormat(),
-        elkSetupTestNodeData.getHostNameField(),
-        elkSetupTestNodeData.isServiceLevel() ? null : elkSetupTestNodeData.getInstanceElement().getHostName(),
+        elkSetupTestNodeData.getHostNameField(), elkSetupTestNodeData.isServiceLevel() ? null : hostName,
         elkSetupTestNodeData.getMessageField(), 0, true, TimeUnit.SECONDS.toMillis(elkSetupTestNodeData.getFromTime()),
         TimeUnit.SECONDS.toMillis(elkSetupTestNodeData.getToTime()));
 
@@ -149,7 +148,6 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     }
 
     String hostNameField = elkSetupTestNodeData.getHostNameField();
-    String hostName = mlServiceUtils.getHostName(elkSetupTestNodeData);
 
     logger.info("Hostname Expression : " + hostName);
     final ElkLogFetchRequest elkFetchRequestWithHost =
@@ -157,7 +155,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
             .query(elkSetupTestNodeData.getQuery())
             .indices(elkSetupTestNodeData.getIndices())
             .hostnameField(hostNameField)
-            .hosts(Collections.singleton(elkSetupTestNodeData.getInstanceElement().getHostName()))
+            .hosts(Collections.singleton(hostName))
             .messageField(elkSetupTestNodeData.getMessageField())
             .timestampField(elkSetupTestNodeData.getTimeStampField())
             .startTime(TimeUnit.SECONDS.toMillis(OffsetDateTime.now().minusMinutes(15).toEpochSecond()))
@@ -177,8 +175,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     }
     List<LogElement> logElementsWithHost = parseElkResponse(responseWithHost, elkSetupTestNodeData.getQuery(),
         elkSetupTestNodeData.getTimeStampField(), elkSetupTestNodeData.getTimeStampFieldFormat(), hostNameField,
-        elkSetupTestNodeData.getInstanceElement().getHostName(), elkSetupTestNodeData.getMessageField(), 0, false, -1,
-        -1);
+        hostName, elkSetupTestNodeData.getMessageField(), 0, false, -1, -1);
 
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)
