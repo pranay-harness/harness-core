@@ -47,6 +47,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.command.CommandHelper;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,16 +59,16 @@ import java.util.stream.Collectors;
 public class TemplateHelper {
   @Inject private WingsPersistence wingsPersistence;
 
-  public Class<? extends PersistentEntity> lookupEntityClass(TemplateType templateType) {
+  public List<Class<? extends PersistentEntity>> lookupEntityClass(TemplateType templateType) {
     switch (templateType) {
       case SSH:
-        return ServiceCommand.class;
+        return Arrays.asList(ServiceCommand.class, Workflow.class);
       case HTTP:
       case SHELL_SCRIPT:
       case PCF_PLUGIN:
-        return Workflow.class;
+        return Collections.singletonList(Workflow.class);
       case ARTIFACT_SOURCE:
-        return ArtifactStream.class;
+        return Collections.singletonList(ArtifactStream.class);
       default:
         unhandled(templateType);
     }
@@ -99,10 +101,19 @@ public class TemplateHelper {
                                .field(Template.ID_KEY)
                                .in(templateUuids)
                                .count(upToOne);
-    long linkedTemplates = wingsPersistence.createQuery(lookupEntityClass(templateType))
-                               .field(lookupLinkedTemplateField(templateType))
-                               .in(templateUuids)
-                               .count(upToOne);
+
+    long linkedTemplates = 0;
+    List<Class<? extends PersistentEntity>> lookupClasses = lookupEntityClass(templateType);
+    for (Class<? extends PersistentEntity> lookupClass : lookupClasses) {
+      linkedTemplates = wingsPersistence.createQuery(lookupClass)
+                            .field(lookupLinkedTemplateField(templateType, lookupClass))
+                            .in(templateUuids)
+                            .count(upToOne);
+      if (linkedTemplates > 0) {
+        break;
+      }
+    }
+
     long templatesReferencedInOtherTemplates;
     if (templateType == TemplateType.SSH) {
       templatesReferencedInOtherTemplates =
@@ -116,18 +127,15 @@ public class TemplateHelper {
     return templatesOfType != 0 && linkedTemplates != 0;
   }
 
-  private String lookupLinkedTemplateField(TemplateType templateType) {
-    switch (templateType) {
-      case SSH:
-        return ServiceCommand.TEMPLATE_UUID_KEY;
-      case HTTP:
-      case SHELL_SCRIPT:
-      case PCF_PLUGIN:
-        return WorkflowKeys.linkedTemplateUuids;
-      case ARTIFACT_SOURCE:
-        return ArtifactStreamKeys.templateUuid;
-      default:
-        unhandled(templateType);
+  private String lookupLinkedTemplateField(TemplateType templateType, Class<? extends PersistentEntity> lookUpClass) {
+    if (Workflow.class.equals(lookUpClass)) {
+      return WorkflowKeys.linkedTemplateUuids;
+    } else if (ServiceCommand.class.equals(lookUpClass)) {
+      return ServiceCommand.TEMPLATE_UUID_KEY;
+    } else if (ArtifactStream.class.equals(lookUpClass)) {
+      return ArtifactStreamKeys.templateUuid;
+    } else {
+      unhandled(lookUpClass);
     }
     return null;
   }
