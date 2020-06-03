@@ -10,7 +10,6 @@ import com.esotericsoftware.kryo.Kryo;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.PlanExecution;
 import io.harness.logging.AutoLogContext;
 import io.harness.plan.input.InputArgs;
 import lombok.Builder;
@@ -18,7 +17,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import lombok.experimental.NonFinal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +32,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode
 public class Ambiance {
   @Getter @NotNull InputArgs inputArgs;
-  @Getter @NonFinal List<Level> levels;
+  @Getter @NotNull List<Level> levels;
   @Getter @NotNull String planExecutionId;
 
   @Builder
@@ -65,7 +63,7 @@ public class Ambiance {
     return cloned;
   }
 
-  public Ambiance cloneForFinish(int levelsToKeep) {
+  public Ambiance clone(int levelsToKeep) {
     Ambiance cloned = deepCopy();
     if (levelsToKeep >= 0 && levelsToKeep < levels.size()) {
       cloned.levels.subList(levelsToKeep, cloned.levels.size()).clear();
@@ -95,10 +93,9 @@ public class Ambiance {
     return kryo.copy(this);
   }
 
-  public static Ambiance fromExecutionInstances(
-      @NotNull PlanExecution planExecution, @NotNull NodeExecution nodeExecution) {
+  public static Ambiance fromNodeExecution(@NotNull InputArgs inputArgs, @NotNull NodeExecution nodeExecution) {
     return Ambiance.builder()
-        .inputArgs(planExecution.getInputArgs())
+        .inputArgs(inputArgs)
         .planExecutionId(nodeExecution.getPlanExecutionId())
         .levels(nodeExecution.getLevels())
         .build();

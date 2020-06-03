@@ -8,6 +8,7 @@ import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.services.OutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.LateBindingMap;
+import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -19,6 +20,7 @@ import lombok.Value;
 public class NodeExecutionAncestorFunctor extends LateBindingMap {
   transient NodeExecutionsCache nodeExecutionsCache;
   transient OutcomeService outcomeService;
+  transient ExecutionSweepingOutputService executionSweepingOutputService;
   transient Ambiance ambiance;
 
   @Override
@@ -32,6 +34,7 @@ public class NodeExecutionAncestorFunctor extends LateBindingMap {
                                       : NodeExecutionValue.builder()
                                             .nodeExecutionsCache(nodeExecutionsCache)
                                             .outcomeService(outcomeService)
+                                            .executionSweepingOutputService(executionSweepingOutputService)
                                             .ambiance(ambiance)
                                             .startNodeExecution(startNodeExecution)
                                             .build()

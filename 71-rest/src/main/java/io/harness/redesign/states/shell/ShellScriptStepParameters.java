@@ -46,4 +46,5 @@ public class ShellScriptStepParameters implements StepParameters {
 
   @Attributes(title = "Script Output Variables") String outputVars;
   @Attributes(title = "Publish Variable Name") String sweepingOutputName;
+  @Attributes(title = "Publish Variable Scope") String sweepingOutputScope;
 }

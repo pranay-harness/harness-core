@@ -95,10 +95,28 @@ public class ExecutionEngineTest extends AbstractFunctionalTest {
     List<NodeExecution> nodeExecutions = getNodeExecutions(shellScriptResponse.getUuid());
     assertThat(nodeExecutions).isNotNull();
 
-    String shellScript1 = fetchShellScriptLogs(nodeExecutions, "shell1");
-    String expectedShellScript1 = "echo 'Hello, world, from script 1!'\n"
-        + "export HELLO='hello!'\n"
-        + "export HI='hi!'\n"
+    String shellScript11 = fetchShellScriptLogs(nodeExecutions, "shell11");
+    String shellScript12 = fetchShellScriptLogs(nodeExecutions, "shell12");
+    String shellScript2 = fetchShellScriptLogs(nodeExecutions, "shell2");
+
+    String expectedShellScript11 = "echo 'Hello, world, from script 11!'\n"
+        + "export HELLO='hello1!'\n"
+        + "export HI='hi1!'\n"
+        + "echo \"scriptType = BASH\"\n"
+        + "echo \"sweepingOutputScope = SECTION\"\n";
+    assertThat(shellScript11).isEqualTo(expectedShellScript11);
+
+    String expectedShellScript12 = "echo 'Hello, world, from script 12!'\n"
+        + "export HELLO='hello2!'\n"
+        + "export HI='hi2!'\n"
+        + "echo \"shell1.HELLO = hello1!\"\n"
+        + "echo \"shell1.HI = hi1!\"\n"
+        + "echo \"shell1.HELLO = hello1!\"\n"
+        + "echo \"shell1.HI = hi1!\"\n"
+        + "echo \"shell1.HELLO = hello1!\"\n"
+        + "echo \"shell1.HI = hi1!\"\n"
+        + "echo \"shell1.HELLO = hello1!\"\n"
+        + "echo \"shell1.HI = hi1!\"\n"
         + "echo \"scriptType = BASH\"\n"
         + "echo \"section1.f1 = v11\"\n"
         + "echo \"section1.f2 = v12\"\n"
@@ -106,6 +124,14 @@ public class ExecutionEngineTest extends AbstractFunctionalTest {
         + "echo \"sectionChild.f1 = v111\"\n"
         + "echo \"sectionChild.f2 = v112\"\n"
         + "echo \"sectionChild.f2 = v112\"\n"
+        + "echo \"shell1.HELLO = hello1!\"\n"
+        + "echo \"shell1.HI = hi1!\"\n"
+        + "echo \"shell1.HELLO = hello1!\"\n"
+        + "echo \"shell1.HI = hi1!\"\n"
+        + "echo \"shell1.HELLO = hello1!\"\n"
+        + "echo \"shell1.HI = hi1!\"\n"
+        + "echo \"shell1.HELLO = hello1!\"\n"
+        + "echo \"shell1.HI = hi1!\"\n"
         + "echo \"scriptType = BASH\"\n"
         + "echo \"section1.f1 = v11\"\n"
         + "echo \"section1.f2 = v12\"\n"
@@ -113,19 +139,22 @@ public class ExecutionEngineTest extends AbstractFunctionalTest {
         + "echo \"sectionChild.f1 = v111\"\n"
         + "echo \"sectionChild.f2 = v112\"\n"
         + "echo \"sectionChild.f2 = v112\"\n";
-    assertThat(shellScript1.trim()).isEqualTo(expectedShellScript1.trim());
+    assertThat(shellScript12.trim()).isEqualTo(expectedShellScript12.trim());
 
-    String shellScript2 = fetchShellScriptLogs(nodeExecutions, "shell2");
     String expectedShellScript2 = "echo 'Hello, world, from script 2!'\n"
-        + "echo \"shell1.HELLO = hello!\"\n"
-        + "echo \"shell1.HI = hi!\"\n"
+        + "echo \"shell1.HELLO = hello1!\"\n"
+        + "echo \"shell1.HI = hi1!\"\n"
+        + "echo \"shell1.HELLO = hello1!\"\n"
+        + "echo \"shell1.HI = hi1!\"\n"
+        + "echo \"shell2.HELLO = hello2!\"\n"
+        + "echo \"shell2.HI = hi2!\"\n"
         + "echo \"section1.f1 = v11\"\n"
         + "echo \"section1.f1 = v11\"\n"
         + "echo \"section11.f1 = v111\"\n"
         + "echo \"section11.f1 = v111\"\n"
-        + "echo \"shell1.scriptType = BASH\"\n"
-        + "echo \"shell1.HELLO = hello!\"\n"
-        + "echo \"shell1.HI = hi!\"\n"
+        + "echo \"shell2.scriptType = BASH\"\n"
+        + "echo \"shell2.HELLO = null\"\n"
+        + "echo \"shell2.HI = null\"\n"
         + "echo \"scriptType = BASH\"\n"
         + "echo \"section2.f1 = v21\"\n"
         + "echo \"section2.f2 = v22\"\n"
@@ -133,15 +162,19 @@ public class ExecutionEngineTest extends AbstractFunctionalTest {
         + "echo \"sectionChild.f1 = v211\"\n"
         + "echo \"sectionChild.f2 = v212\"\n"
         + "echo \"sectionChild.f2 = v212\"\n"
-        + "echo \"shell1.HELLO = hello!\"\n"
-        + "echo \"shell1.HI = hi!\"\n"
+        + "echo \"shell1.HELLO = hello1!\"\n"
+        + "echo \"shell1.HI = hi1!\"\n"
+        + "echo \"shell1.HELLO = hello1!\"\n"
+        + "echo \"shell1.HI = hi1!\"\n"
+        + "echo \"shell2.HELLO = hello2!\"\n"
+        + "echo \"shell2.HI = hi2!\"\n"
         + "echo \"section1.f1 = v11\"\n"
         + "echo \"section1.f1 = v11\"\n"
         + "echo \"section11.f1 = v111\"\n"
         + "echo \"section11.f1 = v111\"\n"
-        + "echo \"shell1.scriptType = BASH\"\n"
-        + "echo \"shell1.HELLO = hello!\"\n"
-        + "echo \"shell1.HI = hi!\"\n"
+        + "echo \"shell2.scriptType = BASH\"\n"
+        + "echo \"shell2.HELLO = null\"\n"
+        + "echo \"shell2.HI = null\"\n"
         + "echo \"scriptType = BASH\"\n"
         + "echo \"section2.f1 = v21\"\n"
         + "echo \"section2.f2 = v22\"\n"

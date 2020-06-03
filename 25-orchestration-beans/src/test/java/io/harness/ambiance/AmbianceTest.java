@@ -75,22 +75,22 @@ public class AmbianceTest extends OrchestrationBeansTest {
     Ambiance ambiance = buildAmbiance();
     assertThat(ambiance.getLevels()).hasSize(2);
 
-    Ambiance clonedAmbiance = ambiance.cloneForFinish(0);
+    Ambiance clonedAmbiance = ambiance.clone(0);
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevels()).hasSize(0);
     assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
 
-    clonedAmbiance = ambiance.cloneForFinish(1);
+    clonedAmbiance = ambiance.clone(1);
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevels()).hasSize(1);
     assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
 
-    clonedAmbiance = ambiance.cloneForFinish(2);
+    clonedAmbiance = ambiance.clone(2);
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevels()).hasSize(2);
     assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
 
-    clonedAmbiance = ambiance.cloneForFinish(3);
+    clonedAmbiance = ambiance.clone(3);
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevels()).hasSize(2);
     assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
