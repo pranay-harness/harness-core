@@ -14,6 +14,7 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
+import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineHealthStatusService;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineService;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
@@ -84,9 +85,11 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
           getTransferStateStringValue(transferToStatusMap, record.getDataTransferJobName()));
       billingDataPipelineRecordBuilder.preAggregatedScheduledQueryStatus(
           getTransferStateStringValue(transferToStatusMap, record.getPreAggregatedScheduledQueryName()));
-      billingDataPipelineRecordBuilder.awsFallbackTableScheduledQueryStatus(
-          getTransferStateStringValue(transferToStatusMap, record.getAwsFallbackTableScheduledQueryName()));
-      billingDataPipelineRecordBuilder.lastSuccessfulS3Sync(fetchLastSuccessfulS3RunInstant(record.getAccountId()));
+      if (record.getCloudProvider().equals(CloudProvider.AWS.name())) {
+        billingDataPipelineRecordBuilder.awsFallbackTableScheduledQueryStatus(
+            getTransferStateStringValue(transferToStatusMap, record.getAwsFallbackTableScheduledQueryName()));
+        billingDataPipelineRecordBuilder.lastSuccessfulS3Sync(fetchLastSuccessfulS3RunInstant(record.getAccountId()));
+      }
       billingDataPipelineRecordDao.upsert(billingDataPipelineRecordBuilder.build());
     }
   }

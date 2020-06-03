@@ -368,8 +368,8 @@ public class PreAggregatedBillingDataHelper {
       }
     }
     PreAggregatedCostData preAggregatedCostData =
-        preAggregatedCostDataBuilder.maxStartTime(row.get(maxPreAggStartTimeConstant).getTimestampValue())
-            .minStartTime(row.get(minPreAggStartTimeConstant).getTimestampValue())
+        preAggregatedCostDataBuilder.maxStartTime(getTimeStampValue(row, maxPreAggStartTimeConstant))
+            .minStartTime(getTimeStampValue(row, minPreAggStartTimeConstant))
             .build();
     PreAggregateBillingEntityDataPoint billingEntityDataPoint = dataPointBuilder.build();
     if (idToPrevBillingAmountData != null && idToPrevBillingAmountData.containsKey(billingEntityDataPoint.getId())) {
@@ -679,8 +679,8 @@ public class PreAggregatedBillingDataHelper {
       PreAggregatedCostData preAggregatedCostData =
           PreAggregatedCostData.builder()
               .cost(cloudOverviewDataPoint.getCost().doubleValue())
-              .maxStartTime(row.get(maxPreAggStartTimeConstant).getTimestampValue())
-              .minStartTime(row.get(minPreAggStartTimeConstant).getTimestampValue())
+              .maxStartTime(getTimeStampValue(row, maxPreAggStartTimeConstant))
+              .minStartTime(getTimeStampValue(row, minPreAggStartTimeConstant))
               .build();
 
       if (idToPrevOverviewAmountData != null
@@ -762,8 +762,8 @@ public class PreAggregatedBillingDataHelper {
       idToPrevBillingDataMap.put(cloudProvider,
           PreAggregatedCostData.builder()
               .cost(cost)
-              .maxStartTime(row.get(maxPreAggStartTimeConstant).getTimestampValue())
-              .minStartTime(row.get(minPreAggStartTimeConstant).getTimestampValue())
+              .maxStartTime(getTimeStampValue(row, maxPreAggStartTimeConstant))
+              .minStartTime(getTimeStampValue(row, minPreAggStartTimeConstant))
               .build());
     }
     return idToPrevBillingDataMap;

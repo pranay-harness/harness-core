@@ -35,7 +35,8 @@ public class BillingDataPipelineHealthStatusServiceImplTest extends CategoryTest
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    BillingDataPipelineRecord billingDataPipelineRecord = BillingDataPipelineRecord.builder().build();
+    BillingDataPipelineRecord billingDataPipelineRecord =
+        BillingDataPipelineRecord.builder().cloudProvider("AWS").build();
     when(billingDataPipelineRecordDao.getAllBillingDataPipelineRecords())
         .thenReturn(Collections.singletonList(billingDataPipelineRecord));
     when(batchJobScheduledDataDao.fetchLastBatchJobScheduledData(anyString(), any())).thenReturn(null);
