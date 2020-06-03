@@ -16,6 +16,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.security.PermissionAttribute.Action.CREATE;
@@ -375,12 +376,13 @@ public class AuthServiceImpl implements AuthService {
   public void validateDelegateToken(String accountId, String tokenString) {
     logger.info("Delegate token validation, account id [{}] token requested", accountId);
     Account account = dbCache.get(Account.class, accountId);
-    if (account == null) {
+
+    if (account == null || GLOBAL_ACCOUNT_ID.equals(accountId)) {
       logger.error("Account Id {} does not exist in manager. So, rejecting delegate register request.", accountId);
-      throw new WingsException(ACCESS_DENIED);
+      throw new InvalidRequestException("Access denied");
     }
 
-    EncryptedJWT encryptedJWT = null;
+    EncryptedJWT encryptedJWT;
     try {
       encryptedJWT = EncryptedJWT.parse(tokenString);
     } catch (ParseException e) {
