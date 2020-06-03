@@ -69,10 +69,10 @@ public abstract class InfrastructureMapping
   public static final String INFRA_MAPPING_TYPE_KEY = "infraMappingType";
   public static final String APP_ID_KEY = "appId";
 
-  @SchemaIgnore @NotEmpty @NonNull String accountId;
+  @SchemaIgnore @NotEmpty @NonNull @Indexed String accountId;
   @NotEmpty @NonNull String infraMappingType;
   @NotEmpty @NonNull String computeProviderType;
-  @NotEmpty @NonNull String computeProviderSettingId;
+  @NotEmpty @NonNull @Indexed String computeProviderSettingId;
   @NotEmpty @NonNull String envId;
 
   @NotEmpty @NonNull String deploymentType;
