@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.batch.processing.ccm.BatchJobType;
-import io.harness.batch.processing.entities.BatchJobScheduledData;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.entities.BatchJobScheduledData;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -44,6 +44,6 @@ public class BatchJobScheduledDataDaoImplTest extends WingsBaseTest {
   }
 
   private BatchJobScheduledData batchJobScheduledData(Instant startInstant, Instant endInstant) {
-    return new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT, 1, startInstant, endInstant);
+    return new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT.name(), 1, startInstant, endInstant);
   }
 }

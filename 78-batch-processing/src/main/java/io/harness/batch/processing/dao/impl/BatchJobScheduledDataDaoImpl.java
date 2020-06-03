@@ -4,8 +4,8 @@ import com.google.inject.Inject;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
-import io.harness.batch.processing.entities.BatchJobScheduledData;
-import io.harness.batch.processing.entities.BatchJobScheduledData.BatchJobScheduledDataKeys;
+import io.harness.ccm.cluster.entities.BatchJobScheduledData;
+import io.harness.ccm.cluster.entities.BatchJobScheduledData.BatchJobScheduledDataKeys;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;

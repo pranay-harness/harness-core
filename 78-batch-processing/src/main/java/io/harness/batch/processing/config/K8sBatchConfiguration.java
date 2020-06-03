@@ -124,6 +124,12 @@ public class K8sBatchConfiguration {
         .reader(k8sNodeInfoMessageReader(null, null, null))
         .processor(k8sNodeInfoProcessor())
         .writer(instanceInfoWriter)
+        .faultTolerant()
+        .retryLimit(RETRY_LIMIT)
+        .retry(Exception.class)
+        .skipLimit(SKIP_LIMIT)
+        .skip(Exception.class)
+        .listener(ecsStepSkipListener)
         .build();
   }
 
@@ -134,6 +140,12 @@ public class K8sBatchConfiguration {
         .reader(k8sNodeEventMessageReader(null, null, null))
         .processor(k8sNodeEventProcessor())
         .writer(instanceEventWriter)
+        .faultTolerant()
+        .retryLimit(RETRY_LIMIT)
+        .retry(Exception.class)
+        .skipLimit(SKIP_LIMIT)
+        .skip(Exception.class)
+        .listener(ecsStepSkipListener)
         .build();
   }
 
@@ -175,6 +187,12 @@ public class K8sBatchConfiguration {
         .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
         .reader(k8sClusterSyncEventMessageReader(null, null, null))
         .writer(k8sSyncEventWriter())
+        .faultTolerant()
+        .retryLimit(RETRY_LIMIT)
+        .retry(Exception.class)
+        .skipLimit(SKIP_LIMIT)
+        .skip(Exception.class)
+        .listener(ecsStepSkipListener)
         .build();
   }
 }

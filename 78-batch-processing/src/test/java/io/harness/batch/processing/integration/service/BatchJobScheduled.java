@@ -4,10 +4,10 @@ import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.batch.processing.ccm.BatchJobType;
-import io.harness.batch.processing.entities.BatchJobScheduledData;
-import io.harness.batch.processing.entities.BatchJobScheduledData.BatchJobScheduledDataKeys;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.entities.BatchJobScheduledData;
+import io.harness.ccm.cluster.entities.BatchJobScheduledData.BatchJobScheduledDataKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import lombok.val;
@@ -42,14 +42,15 @@ public class BatchJobScheduled {
     Instant firstStartAt = Instant.now().minus(2, ChronoUnit.DAYS);
     Instant firstEndAt = Instant.now().minus(1, ChronoUnit.DAYS);
     BatchJobScheduledData batchJobScheduledData =
-        new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT, 1, firstStartAt, firstEndAt);
+        new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT.name(), 1, firstStartAt, firstEndAt);
     assertThat(batchJobScheduledDataService.create(batchJobScheduledData)).isTrue();
 
     Instant instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.ECS_EVENT);
     assertThat(instant).isEqualTo(firstEndAt);
 
     Instant secondEndAt = Instant.now();
-    batchJobScheduledData = new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT, 1, firstEndAt, secondEndAt);
+    batchJobScheduledData =
+        new BatchJobScheduledData(ACCOUNT_ID, BatchJobType.ECS_EVENT.name(), 1, firstEndAt, secondEndAt);
     assertThat(batchJobScheduledDataService.create(batchJobScheduledData)).isTrue();
 
     instant = batchJobScheduledDataService.fetchLastBatchJobScheduledTime(ACCOUNT_ID, BatchJobType.ECS_EVENT);

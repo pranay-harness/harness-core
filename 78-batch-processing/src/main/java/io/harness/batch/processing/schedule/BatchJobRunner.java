@@ -2,10 +2,10 @@ package io.harness.batch.processing.schedule;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
-import io.harness.batch.processing.entities.BatchJobScheduledData;
 import io.harness.batch.processing.service.intfc.BatchJobIntervalService;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import io.harness.ccm.cluster.entities.BatchJobInterval;
+import io.harness.ccm.cluster.entities.BatchJobScheduledData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
@@ -74,7 +74,7 @@ public class BatchJobRunner {
         Instant jobStopTime = Instant.now();
 
         if (status == BatchStatus.COMPLETED) {
-          BatchJobScheduledData batchJobScheduledData = new BatchJobScheduledData(accountId, batchJobType,
+          BatchJobScheduledData batchJobScheduledData = new BatchJobScheduledData(accountId, batchJobType.name(),
               Duration.between(jobStartTime, jobStopTime).toMillis(), startInstant, endInstant);
           batchJobScheduledDataService.create(batchJobScheduledData);
           startInstant = endInstant;
