@@ -29,7 +29,6 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.shell.ScriptType;
-import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
@@ -88,12 +87,7 @@ public class ShellScriptStep implements Step, TaskExecutable {
   @Inject private SecretManager secretManager;
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
-  @Inject private EngineExpressionService engineExpressionService;
   @Inject private FeatureFlagService featureFlagService;
-
-  private StepType getType() {
-    return STEP_TYPE;
-  }
 
   @Override
   public DelegateTask obtainTask(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
@@ -290,8 +284,11 @@ public class ShellScriptStep implements Step, TaskExecutable {
         scriptStateExecutionData.setSweepingOutputEnvVariables(sweepingOutputEnvVariables);
         saveSweepingOutputToContext = true;
       }
-      stepResponseBuilder.stepOutcome(
-          StepResponse.StepOutcome.builder().name("data").outcome(scriptStateExecutionData).build());
+      stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
+                                          .name("shellOutcome")
+                                          .outcome(scriptStateExecutionData)
+                                          .group(shellScriptStateParameters.getSweepingOutputScope())
+                                          .build());
     } else if (data instanceof ErrorNotifyResponseData) {
       stepResponseBuilder.status(Status.FAILED);
       stepResponseBuilder.failureInfo(
@@ -311,7 +308,9 @@ public class ShellScriptStep implements Step, TaskExecutable {
               .variables(((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
                              .getSweepingOutputEnvVariables())
               .build(),
-          ResolverUtils.GLOBAL_GROUP_SCOPE);
+          shellScriptStateParameters.getSweepingOutputScope() == null
+              ? ResolverUtils.GLOBAL_GROUP_SCOPE
+              : shellScriptStateParameters.getSweepingOutputScope());
     }
 
     return stepResponse;
@@ -340,7 +339,7 @@ public class ShellScriptStep implements Step, TaskExecutable {
                   .workflowType(WorkflowType.PIPELINE)
                   .stateExecutionInstanceId("stateExecutionInstanceId")
                   .stateExecutionInstanceName("stateExecutionInstanceName")
-                  .commandType(getType().getType())
+                  .commandType(STEP_TYPE.getType())
                   .commandName(CommandUnit)
                   .commandUnits(singletonList(
                       Builder.aCommand().withName(CommandUnit).withCommandType(CommandType.OTHER).build()))

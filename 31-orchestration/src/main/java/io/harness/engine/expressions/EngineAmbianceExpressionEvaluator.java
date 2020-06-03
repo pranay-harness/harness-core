@@ -66,6 +66,7 @@ public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator
         NodeExecutionChildFunctor.builder()
             .nodeExecutionsCache(nodeExecutionsCache)
             .outcomeService(outcomeService)
+            .executionSweepingOutputService(executionSweepingOutputService)
             .ambiance(ambiance)
             .build());
     // Access StepParameters and Outcomes of ancestors.
@@ -73,6 +74,7 @@ public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator
         NodeExecutionAncestorFunctor.builder()
             .nodeExecutionsCache(nodeExecutionsCache)
             .outcomeService(outcomeService)
+            .executionSweepingOutputService(executionSweepingOutputService)
             .ambiance(ambiance)
             .build());
     // Access StepParameters and Outcomes using fully qualified names.
@@ -80,6 +82,7 @@ public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator
         NodeExecutionQualifiedFunctor.builder()
             .nodeExecutionsCache(nodeExecutionsCache)
             .outcomeService(outcomeService)
+            .executionSweepingOutputService(executionSweepingOutputService)
             .ambiance(ambiance)
             .build());
   }

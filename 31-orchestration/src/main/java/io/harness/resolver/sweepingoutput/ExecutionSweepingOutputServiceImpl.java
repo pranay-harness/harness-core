@@ -31,7 +31,7 @@ public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutp
   @Override
   public String consumeInternal(Ambiance ambiance, String name, SweepingOutput value, int levelsToKeep) {
     if (levelsToKeep >= 0) {
-      ambiance = ambiance.cloneForFinish(levelsToKeep);
+      ambiance = ambiance.clone(levelsToKeep);
     }
 
     try {

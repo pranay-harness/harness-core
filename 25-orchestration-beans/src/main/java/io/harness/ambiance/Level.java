@@ -4,12 +4,15 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.plan.PlanNode;
 import io.harness.state.StepType;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * Level is a combination for the setupId and runtime executionId for a particular entity which runs
@@ -34,5 +37,14 @@ public class Level {
     this.runtimeId = runtimeId;
     this.identifier = identifier;
     this.stepType = stepType;
+  }
+
+  public static Level fromPlanNode(@NotNull String nodeExecutionId, @NotNull PlanNode node) {
+    return Level.builder()
+        .setupId(node.getUuid())
+        .runtimeId(nodeExecutionId)
+        .identifier(node.getIdentifier())
+        .stepType(node.getStepType())
+        .build();
   }
 }

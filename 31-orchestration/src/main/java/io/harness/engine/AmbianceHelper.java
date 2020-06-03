@@ -41,6 +41,6 @@ public class AmbianceHelper {
                                       .filter(PlanExecutionKeys.uuid, nodeExecution.getPlanExecutionId())
                                       .get();
     Preconditions.checkNotNull(planExecution);
-    return Ambiance.fromExecutionInstances(planExecution, nodeExecution);
+    return Ambiance.fromNodeExecution(planExecution.getInputArgs(), nodeExecution);
   }
 }

@@ -29,9 +29,16 @@ public class OutcomeServiceImplTest extends OrchestrationTest {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcomeName";
     Outcome outcome = DummyOutcome.builder().test("test").build();
-    outcomeService.consume(ambiance, outcomeName, outcome, null);
+    outcomeService.consume(ambiance, outcomeName, outcome, "PHASE");
 
-    DummyOutcome savedOutcome =
+    // Resolve with producer id
+    DummyOutcome savedOutcome = (DummyOutcome) outcomeService.resolve(ambiance,
+        OutcomeRefObject.builder().producerId(ambiance.obtainCurrentLevel().getSetupId()).name(outcomeName).build());
+    assertThat(savedOutcome).isNotNull();
+    assertThat(savedOutcome.getTest()).isEqualTo("test");
+
+    // Resolve with scope
+    savedOutcome =
         (DummyOutcome) outcomeService.resolve(ambiance, OutcomeRefObject.builder().name(outcomeName).build());
     assertThat(savedOutcome).isNotNull();
     assertThat(savedOutcome.getTest()).isEqualTo("test");

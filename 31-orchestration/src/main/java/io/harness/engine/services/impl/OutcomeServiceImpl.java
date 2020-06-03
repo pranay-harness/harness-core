@@ -38,7 +38,7 @@ public class OutcomeServiceImpl implements OutcomeService {
   public String consumeInternal(Ambiance ambiance, String name, Outcome value, int levelsToKeep) {
     Level producedBy = ambiance.obtainCurrentLevel();
     if (levelsToKeep >= 0) {
-      ambiance = ambiance.cloneForFinish(levelsToKeep);
+      ambiance = ambiance.clone(levelsToKeep);
     }
 
     try {

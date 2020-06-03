@@ -53,7 +53,6 @@ import io.harness.state.core.section.chain.SectionChainStep;
 import io.harness.state.core.section.chain.SectionChainStepParameters;
 import io.harness.state.io.StepParameters;
 import lombok.experimental.UtilityClass;
-import software.wings.sm.StateType;
 import software.wings.sm.states.ShellScriptState;
 
 import java.util.Collections;
@@ -447,27 +446,55 @@ public class CustomExecutionUtils {
    *
    * - section1
    *   - sectionChild
-   *     - shell (stores to sweeping output with global name shell1)
+   *     - shell0 (stores to outcome and sweeping output with name shell1 in section scope)
+   *     - shell  (stores to outcome and sweeping output with name shell2 in global scope)
    * - section2
    *   - sectionChild
    *     - shell
+   *     - dummy
    */
   public static Plan provideSimpleShellScriptPlan() {
     String section1NodeId = generateUuid();
     String section11NodeId = generateUuid();
     String section2NodeId = generateUuid();
     String section21NodeId = generateUuid();
-    String shellScript1NodeId = generateUuid();
+    String shellScript11NodeId = generateUuid();
+    String shellScript12NodeId = generateUuid();
     String shellScript2NodeId = generateUuid();
     String dummyNodeId = generateUuid();
-    ShellScriptStepParameters shellScript1StepParameters =
+    ShellScriptStepParameters shellScript11StepParameters =
         ShellScriptStepParameters.builder()
             .executeOnDelegate(true)
             .connectionType(ShellScriptState.ConnectionType.SSH)
             .scriptType(ScriptType.BASH)
-            .scriptString("echo 'Hello, world, from script 1!'\n"
-                + "export HELLO='hello!'\n"
-                + "export HI='hi!'\n"
+            .scriptString("echo 'Hello, world, from script 11!'\n"
+                + "export HELLO='hello1!'\n"
+                + "export HI='hi1!'\n"
+                + "echo \"scriptType = ${scriptType}\"\n"
+                + "echo \"sweepingOutputScope = ${sweepingOutputScope}\"\n")
+            .outputVars("HELLO,HI")
+            .sweepingOutputName("shell1")
+            .sweepingOutputScope("SECTION")
+            .build();
+    ShellScriptStepParameters shellScript12StepParameters =
+        ShellScriptStepParameters.builder()
+            .executeOnDelegate(true)
+            .connectionType(ShellScriptState.ConnectionType.SSH)
+            .scriptType(ScriptType.BASH)
+            .scriptString("echo 'Hello, world, from script 12!'\n"
+                + "export HELLO='hello2!'\n"
+                + "export HI='hi2!'\n"
+                + "echo \"shell1.HELLO = ${sectionChild.shell1.variables.HELLO}\"\n" // ancestor output
+                + "echo \"shell1.HI = ${sectionChild.shell1.variables.HI}\"\n" // ancestor output
+                + "echo \"shell1.HELLO = ${sectionChild.shellOutcome.sweepingOutputEnvVariables.HELLO}\"\n" // ancestor
+                                                                                                            // output
+                + "echo \"shell1.HI = ${sectionChild.shellOutcome.sweepingOutputEnvVariables.HI}\"\n" // ancestor
+                                                                                                      // outcome
+                + "echo \"shell1.HELLO = ${section1.sectionChild.shell1.variables.HELLO}\"\n" // qualified output
+                + "echo \"shell1.HI = ${section1.sectionChild.shell1.variables.HI}\"\n" // qualified output
+                + "echo \"shell1.HELLO = ${section1.sectionChild.shellOutcome.sweepingOutputEnvVariables.HELLO}\"\n" // qualified output
+                + "echo \"shell1.HI = ${section1.sectionChild.shellOutcome.sweepingOutputEnvVariables.HI}\"\n" // qualified
+                // outcome
                 + "echo \"scriptType = ${scriptType}\"\n" // child
                 + "echo \"section1.f1 = ${section1.data.map.f1}\"\n" // qualified
                 + "echo \"section1.f2 = ${section1.data.map.f2}\"\n" // qualified
@@ -475,6 +502,14 @@ public class CustomExecutionUtils {
                 + "echo \"sectionChild.f1 = ${section1.sectionChild.data.map.f1}\"\n" // qualified
                 + "echo \"sectionChild.f2 = ${sectionChild.data.map.f2}\"\n" // ancestor
                 + "echo \"sectionChild.f2 = ${section1.sectionChild.data.map.f2}\"\n" // qualified
+                + "echo \"shell1.HELLO = ${ancestor.sectionChild.shell1.variables.HELLO}\"\n"
+                + "echo \"shell1.HI = ${ancestor.sectionChild.shell1.variables.HI}\"\n"
+                + "echo \"shell1.HELLO = ${ancestor.sectionChild.shellOutcome.sweepingOutputEnvVariables.HELLO}\"\n"
+                + "echo \"shell1.HI = ${ancestor.sectionChild.shellOutcome.sweepingOutputEnvVariables.HI}\"\n"
+                + "echo \"shell1.HELLO = ${qualified.section1.sectionChild.shell1.variables.HELLO}\"\n"
+                + "echo \"shell1.HI = ${qualified.section1.sectionChild.shell1.variables.HI}\"\n"
+                + "echo \"shell1.HELLO = ${qualified.section1.sectionChild.shellOutcome.sweepingOutputEnvVariables.HELLO}\"\n"
+                + "echo \"shell1.HI = ${qualified.section1.sectionChild.shellOutcome.sweepingOutputEnvVariables.HI}\"\n"
                 + "echo \"scriptType = ${child.scriptType}\"\n"
                 + "echo \"section1.f1 = ${qualified.section1.data.map.f1}\"\n"
                 + "echo \"section1.f2 = ${qualified.section1.data.map.f2}\"\n"
@@ -483,7 +518,7 @@ public class CustomExecutionUtils {
                 + "echo \"sectionChild.f2 = ${ancestor.sectionChild.data.map.f2}\"\n"
                 + "echo \"sectionChild.f2 = ${qualified.section1.sectionChild.data.map.f2}\"\n")
             .outputVars("HELLO,HI")
-            .sweepingOutputName("shell1")
+            .sweepingOutputName("shell2")
             .build();
     ShellScriptStepParameters shellScript2StepParameters =
         ShellScriptStepParameters.builder()
@@ -491,15 +526,20 @@ public class CustomExecutionUtils {
             .connectionType(ShellScriptState.ConnectionType.SSH)
             .scriptType(ScriptType.BASH)
             .scriptString("echo 'Hello, world, from script 2!'\n"
-                + "echo \"shell1.HELLO = ${shell1.variables.HELLO}\"\n" // output
-                + "echo \"shell1.HI = ${shell1.variables.HI}\"\n" // output
+                + "echo \"shell1.HELLO = ${section1.sectionChild.shell1.variables.HELLO}\"\n" // qualified output
+                + "echo \"shell1.HI = ${section1.sectionChild.shell1.variables.HI}\"\n" // qualified output
+                + "echo \"shell1.HELLO = ${section1.sectionChild.shellOutcome.sweepingOutputEnvVariables.HELLO}\"\n" // qualified output
+                + "echo \"shell1.HI = ${section1.sectionChild.shellOutcome.sweepingOutputEnvVariables.HI}\"\n" // qualified
+                                                                                                               // outcome
+                + "echo \"shell2.HELLO = ${shell2.variables.HELLO}\"\n" // output
+                + "echo \"shell2.HI = ${shell2.variables.HI}\"\n" // output
                 + "echo \"section1.f1 = ${section1.data.map.f1}\"\n" // qualified
                 + "echo \"section1.f1 = ${section1.outcomeData.map.f1}\"\n" // qualified
                 + "echo \"section11.f1 = ${section1.sectionChild.data.map.f1}\"\n" // qualified
                 + "echo \"section11.f1 = ${section1.sectionChild.outcomeData.map.f1}\"\n" // qualified
-                + "echo \"shell1.scriptType = ${section1.sectionChild.shell.scriptType}\"\n" // qualified
-                + "echo \"shell1.HELLO = ${section1.sectionChild.shell.data.sweepingOutputEnvVariables.HELLO}\"\n" // qualified
-                + "echo \"shell1.HI = ${section1.sectionChild.shell.data.sweepingOutputEnvVariables.HI}\"\n" // qualified
+                + "echo \"shell2.scriptType = ${section1.sectionChild.shell.scriptType}\"\n" // qualified
+                + "echo \"shell2.HELLO = ${section1.sectionChild.shell.data.sweepingOutputEnvVariables.HELLO}\"\n" // qualified
+                + "echo \"shell2.HI = ${section1.sectionChild.shell.data.sweepingOutputEnvVariables.HI}\"\n" // qualified
                 + "echo \"scriptType = ${scriptType}\"\n" // child
                 + "echo \"section2.f1 = ${section2.data.map.f1}\"\n" // qualified
                 + "echo \"section2.f2 = ${section2.data.map.f2}\"\n" // qualified
@@ -507,15 +547,19 @@ public class CustomExecutionUtils {
                 + "echo \"sectionChild.f1 = ${section2.sectionChild.data.map.f1}\"\n" // qualified
                 + "echo \"sectionChild.f2 = ${sectionChild.data.map.f2}\"\n" // ancestor
                 + "echo \"sectionChild.f2 = ${section2.sectionChild.data.map.f2}\"\n" // qualified
-                + "echo \"shell1.HELLO = ${output.shell1.variables.HELLO}\"\n"
-                + "echo \"shell1.HI = ${output.shell1.variables.HI}\"\n"
+                + "echo \"shell1.HELLO = ${qualified.section1.sectionChild.shell1.variables.HELLO}\"\n"
+                + "echo \"shell1.HI = ${qualified.section1.sectionChild.shell1.variables.HI}\"\n"
+                + "echo \"shell1.HELLO = ${qualified.section1.sectionChild.shellOutcome.sweepingOutputEnvVariables.HELLO}\"\n"
+                + "echo \"shell1.HI = ${qualified.section1.sectionChild.shellOutcome.sweepingOutputEnvVariables.HI}\"\n"
+                + "echo \"shell2.HELLO = ${output.shell2.variables.HELLO}\"\n"
+                + "echo \"shell2.HI = ${output.shell2.variables.HI}\"\n"
                 + "echo \"section1.f1 = ${qualified.section1.data.map.f1}\"\n"
                 + "echo \"section1.f1 = ${qualified.section1.outcomeData.map.f1}\"\n"
                 + "echo \"section11.f1 = ${qualified.section1.sectionChild.data.map.f1}\"\n"
                 + "echo \"section11.f1 = ${qualified.section1.sectionChild.outcomeData.map.f1}\"\n"
-                + "echo \"shell1.scriptType = ${qualified.section1.sectionChild.shell.scriptType}\"\n"
-                + "echo \"shell1.HELLO = ${qualified.section1.sectionChild.shell.data.sweepingOutputEnvVariables.HELLO}\"\n" // qualified
-                + "echo \"shell1.HI = ${qualified.section1.sectionChild.shell.data.sweepingOutputEnvVariables.HI}\"\n" // qualified
+                + "echo \"shell2.scriptType = ${qualified.section1.sectionChild.shell.scriptType}\"\n"
+                + "echo \"shell2.HELLO = ${qualified.section1.sectionChild.shell.data.sweepingOutputEnvVariables.HELLO}\"\n"
+                + "echo \"shell2.HI = ${qualified.section1.sectionChild.shell.data.sweepingOutputEnvVariables.HI}\"\n"
                 + "echo \"scriptType = ${child.scriptType}\"\n"
                 + "echo \"section2.f1 = ${qualified.section2.data.map.f1}\"\n"
                 + "echo \"section2.f2 = ${qualified.section2.data.map.f2}\"\n"
@@ -556,7 +600,7 @@ public class CustomExecutionUtils {
                 .stepType(DummySectionStep.STEP_TYPE)
                 .stepParameters(
                     DummySectionStepParameters.builder()
-                        .childNodeId(shellScript1NodeId)
+                        .childNodeId(shellScript11NodeId)
                         .data(
                             DummySectionStepTransput.builder().map(ImmutableMap.of("f1", "v111", "f2", "v112")).build())
                         .build())
@@ -596,11 +640,26 @@ public class CustomExecutionUtils {
                                            .build())
                 .build())
         .node(PlanNode.builder()
-                  .uuid(shellScript1NodeId)
-                  .name("shell1")
+                  .uuid(shellScript11NodeId)
+                  .name("shell11")
+                  .identifier("shell0")
+                  .stepType(ShellScriptStep.STEP_TYPE)
+                  .stepParameters(shellScript11StepParameters)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                             .build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(shellScript12NodeId).build())
+                          .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(shellScript12NodeId)
+                  .name("shell12")
                   .identifier("shell")
-                  .stepType(StepType.builder().type(StateType.SHELL_SCRIPT.name()).build())
-                  .stepParameters(shellScript1StepParameters)
+                  .stepType(ShellScriptStep.STEP_TYPE)
+                  .stepParameters(shellScript12StepParameters)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
                                              .build())
@@ -610,7 +669,7 @@ public class CustomExecutionUtils {
                 .uuid(shellScript2NodeId)
                 .name("shell2")
                 .identifier("shell")
-                .stepType(StepType.builder().type(StateType.SHELL_SCRIPT.name()).build())
+                .stepType(ShellScriptStep.STEP_TYPE)
                 .stepParameters(shellScript2StepParameters)
                 .facilitatorObtainment(FacilitatorObtainment.builder()
                                            .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())

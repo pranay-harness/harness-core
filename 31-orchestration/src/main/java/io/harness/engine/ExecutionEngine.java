@@ -180,12 +180,7 @@ public class ExecutionEngine implements Engine {
 
   private Ambiance reBuildAmbiance(Ambiance ambiance, PlanNode node, String uuid) {
     Ambiance cloned = ambiance.obtainCurrentRuntimeId() == null ? ambiance : ambiance.cloneForFinish();
-    cloned.addLevel(Level.builder()
-                        .setupId(node.getUuid())
-                        .runtimeId(uuid)
-                        .identifier(node.getIdentifier())
-                        .stepType(node.getStepType())
-                        .build());
+    cloned.addLevel(Level.fromPlanNode(uuid, node));
     return cloned;
   }
 
