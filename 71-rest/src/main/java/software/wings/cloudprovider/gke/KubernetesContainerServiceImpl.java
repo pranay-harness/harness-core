@@ -79,6 +79,7 @@ import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSetList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.VersionInfo;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
@@ -1671,5 +1672,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             -> StringUtils.isBlank(pod.getMetadata().getDeletionTimestamp())
                 && StringUtils.equals(pod.getStatus().getPhase(), "Running"))
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public VersionInfo getVersion(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails).getVersion();
   }
 }
