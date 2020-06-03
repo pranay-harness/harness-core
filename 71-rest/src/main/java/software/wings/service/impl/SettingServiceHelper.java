@@ -307,7 +307,7 @@ public class SettingServiceHelper {
       return;
     }
 
-    usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, newUsageRestrictions);
+    usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, newUsageRestrictions, false);
   }
 
   public void validateUsageRestrictionsOnEntityUpdate(SettingAttribute settingAttribute, String accountId,
@@ -321,7 +321,7 @@ public class SettingServiceHelper {
     }
 
     usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-        accountId, oldUsageRestrictions, newUsageRestrictions);
+        accountId, oldUsageRestrictions, newUsageRestrictions, false);
   }
 
   public boolean userHasPermissionsToChangeEntity(
@@ -331,7 +331,7 @@ public class SettingServiceHelper {
       return secretManager.hasUpdateAccessToSecrets(usedSecretIds, accountId);
     }
 
-    return usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, entityUsageRestrictions);
+    return usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, entityUsageRestrictions, false);
   }
 
   public Set<String> getUsedSecretIds(SettingAttribute settingAttribute) {

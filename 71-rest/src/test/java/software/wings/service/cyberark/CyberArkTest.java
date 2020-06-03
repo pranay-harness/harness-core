@@ -52,6 +52,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
+import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.KmsService;
@@ -261,8 +262,9 @@ public class CyberArkTest extends WingsBaseTest {
     saveCyberArkConfig();
 
     // Encrypt of path reference will use a CyberArk decryption to validate the reference
-    EncryptedData encryptedData = secretManager.encrypt(accountId, SettingVariableTypes.ARTIFACTORY, null, queryAsPath,
-        null, null, secretName, new UsageRestrictions());
+    EncryptedData encryptedData = secretManager.encrypt(accountId, SettingVariableTypes.ARTIFACTORY, null, null,
+        SecretText.builder().path(queryAsPath).name(secretName).usageRestrictions(new UsageRestrictions()).build());
+
     assertThat(encryptedData).isNotNull();
     assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.CYBERARK);
     assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.ARTIFACTORY);
@@ -271,7 +273,8 @@ public class CyberArkTest extends WingsBaseTest {
     // Encrypt of real secret text will use a LOCAL Harness SecretStore to encrypt, since CyberArk doesn't support
     // creating new reference now.
     encryptedData = secretManager.encrypt(accountId, SettingVariableTypes.ARTIFACTORY, secretValue.toCharArray(), null,
-        null, null, secretName, new UsageRestrictions());
+        SecretText.builder().name(secretName).usageRestrictions(new UsageRestrictions()).build());
+
     assertThat(encryptedData).isNotNull();
     if (isGlobalKmsEnabled) {
       assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.KMS);

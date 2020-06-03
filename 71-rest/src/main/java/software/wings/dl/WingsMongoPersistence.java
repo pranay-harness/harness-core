@@ -57,6 +57,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretParentsUpdateDetail;
+import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -562,9 +563,15 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
 
   private String updateSecret(@NonNull String accountId, @NonNull EncryptedData encryptedData, @NonNull char[] secret,
       @NonNull String fieldName) {
-    EncryptedData updatedEncryptedData = secretManager.encrypt(accountId, encryptedData.getType(), secret,
-        encryptedData.getPath(), encryptedData.getParameters(), encryptedData, encryptedData.getName(),
-        encryptedData.getUsageRestrictions());
+    EncryptedData updatedEncryptedData =
+        secretManager.encrypt(accountId, encryptedData.getType(), secret, encryptedData,
+            SecretText.builder()
+                .path(encryptedData.getPath())
+                .parameters(encryptedData.getParameters())
+                .name(encryptedData.getName())
+                .scopedToAccount(encryptedData.isScopedToAccount())
+                .usageRestrictions(encryptedData.getUsageRestrictions())
+                .build());
     encryptedData.setEncryptionKey(updatedEncryptedData.getEncryptionKey());
     encryptedData.setEncryptedValue(updatedEncryptedData.getEncryptedValue());
     encryptedData.setEncryptionType(updatedEncryptedData.getEncryptionType());
@@ -582,8 +589,8 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
 
   private String createSecret(@NonNull String accountId, @NonNull char[] secret, @NonNull String fieldName,
       @NonNull SettingVariableTypes type) {
-    EncryptedData encryptedData =
-        secretManager.encrypt(accountId, type, secret, null, null, null, UUID.randomUUID().toString(), null);
+    EncryptedData encryptedData = secretManager.encrypt(
+        accountId, type, secret, null, SecretText.builder().name(UUID.randomUUID().toString()).build());
     encryptedData.setAccountId(accountId);
     String changeLogDescription = "Created";
 

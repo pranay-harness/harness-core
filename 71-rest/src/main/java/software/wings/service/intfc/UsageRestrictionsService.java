@@ -50,7 +50,7 @@ public interface UsageRestrictionsService {
    */
   boolean hasAccess(String accountId, boolean isAccountAdmin, String appIdFromRequest, String envIdFromRequest,
       UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions,
-      Map<String, Set<String>> appEnvMapFromPermissions, Map<String, List<Base>> appIdEnvMap);
+      Map<String, Set<String>> appEnvMapFromPermissions, Map<String, List<Base>> appIdEnvMap, boolean scopedToAccount);
 
   /**
    * Lists all the applications and environments that the user has update permissions on.
@@ -72,8 +72,8 @@ public interface UsageRestrictionsService {
    */
   UsageRestrictions getDefaultUsageRestrictions(String accountId, String appId, String envId);
 
-  boolean userHasPermissionsToChangeEntity(
-      String accountId, UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions);
+  boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions,
+      UsageRestrictions restrictionsFromUserPermissions, boolean scopedToEntity);
 
   /**
    * Checks if the user can update / delete entity based on the user permissions and restrictions set on the entity.
@@ -81,37 +81,42 @@ public interface UsageRestrictionsService {
    * @param entityUsageRestrictions entity usage restrictions
    * @param restrictionsFromUserPermissions restrictions from user permissions
    * @param appIdEnvMap
+   * @param scopedToAccount
    * @return boolean
    */
   boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions,
-      UsageRestrictions restrictionsFromUserPermissions, Map<String, List<Base>> appIdEnvMap);
+      UsageRestrictions restrictionsFromUserPermissions, Map<String, List<Base>> appIdEnvMap, boolean scopedToAccount);
 
   /**
    * Checks if the user can update / delete entity based on the user permissions and restrictions set on the entity.
    * @param accountId account id
    * @param entityUsageRestrictions entity usage restrictions
+   * @param scopedToAccount
    * @return boolean
    */
-  boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions);
+  boolean userHasPermissionsToChangeEntity(
+      String accountId, UsageRestrictions entityUsageRestrictions, boolean scopedToAccount);
 
   /**
    * Checks if the user can update / delete entity based on the user permissions and restrictions set on the entity.
    * @param accountId account id
    * @param entityUsageRestrictions entity usage restrictions
    * @param appIdEnvMap
+   * @param scopedToAccount boolean to define
    * @return boolean
    */
-  boolean userHasPermissionsToChangeEntity(
-      String accountId, UsageRestrictions entityUsageRestrictions, Map<String, List<Base>> appIdEnvMap);
+  boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions,
+      Map<String, List<Base>> appIdEnvMap, boolean scopedToAccount);
 
   /**
    * Checks if user can update an entity
    * @param oldUsageRestrictions old usage restrictions
    * @param newUsageRestrictions new usage restrictions
    * @param accountId account id
+   * @param scopedToAccount boolean to define
    */
-  void validateUsageRestrictionsOnEntityUpdate(
-      String accountId, UsageRestrictions oldUsageRestrictions, UsageRestrictions newUsageRestrictions);
+  void validateUsageRestrictionsOnEntityUpdate(String accountId, UsageRestrictions oldUsageRestrictions,
+      UsageRestrictions newUsageRestrictions, boolean scopedToAccount);
 
   /**
    * The update of usage restrictions should not leave setup entities references to be dangling. This method will
@@ -126,11 +131,13 @@ public interface UsageRestrictionsService {
       String accountId, Map<String, Set<String>> setupUsages, UsageRestrictions newUsageRestrictions);
 
   /**
-   * Checks if user can create an entity.
-   * @param newUsageRestrictions new usage restrictions in case of update
-   * @param accountId account id
+   * This method checks whether usages restriction and scoping to account is allowed for current user
+   * @param accountId
+   * @param newUsageRestrictions
+   * @param scopedToAccount
    */
-  void validateUsageRestrictionsOnEntitySave(String accountId, UsageRestrictions newUsageRestrictions);
+  void validateUsageRestrictionsOnEntitySave(
+      String accountId, UsageRestrictions newUsageRestrictions, boolean scopedToAccount);
 
   boolean hasNoRestrictions(UsageRestrictions usageRestrictions);
 

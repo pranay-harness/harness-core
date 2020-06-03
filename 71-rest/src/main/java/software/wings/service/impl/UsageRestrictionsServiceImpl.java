@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptySet;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -16,6 +17,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.UsageRestrictionException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.serializer.JsonUtils;
@@ -92,6 +94,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private SecretManager secretManager;
   @Inject private WingsPersistence wingsPersistence;
+  public static final String NON_NULL_USAGE_RESTRICTION_MSG_FMT =
+      "Non null restrictions are not allowed when scoping entity to account for accountId %s";
 
   @Inject
   public UsageRestrictionsServiceImpl(AuthHandler authHandler, UserGroupService userGroupService, AppService appService,
@@ -110,8 +114,14 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Override
   public boolean hasAccess(String accountId, boolean isAccountAdmin, String appIdFromRequest, String envIdFromRequest,
       UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions,
-      Map<String, Set<String>> appEnvMapFromPermissions, Map<String, List<Base>> appIdEnvMap) {
+      Map<String, Set<String>> appEnvMapFromPermissions, Map<String, List<Base>> appIdEnvMap,
+      boolean isScopedToAccount) {
+    if (isScopedToAccount) {
+      return isAccountAdmin || hasAllEnvAccess(restrictionsFromUserPermissions);
+    }
+
     boolean hasNoRestrictions = hasNoRestrictions(entityUsageRestrictions);
+
     if (isNotEmpty(appIdFromRequest) && !appIdFromRequest.equals(GLOBAL_APP_ID)) {
       if (hasNoRestrictions) {
         return false;
@@ -741,46 +751,61 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   }
 
   @Override
-  public boolean userHasPermissionsToChangeEntity(
-      String accountId, UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions) {
+  public boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions,
+      UsageRestrictions restrictionsFromUserPermissions, boolean scopedToAccount) {
     if (!hasUserContext()) {
       return true;
     }
 
     Set<String> appIdsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
     Map<String, List<Base>> appIdEnvMap = environmentService.getAppIdEnvMap(appIdsByAccountId);
-    return userHasPermissions(accountId, entityUsageRestrictions, restrictionsFromUserPermissions, appIdEnvMap);
+    return userHasPermissions(
+        accountId, entityUsageRestrictions, restrictionsFromUserPermissions, appIdEnvMap, scopedToAccount);
   }
 
   @Override
   public boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions,
-      UsageRestrictions restrictionsFromUserPermissions, Map<String, List<Base>> appIdEnvMap) {
+      UsageRestrictions restrictionsFromUserPermissions, Map<String, List<Base>> appIdEnvMap, boolean scopedToAccount) {
     if (!hasUserContext()) {
       return true;
     }
 
-    return userHasPermissions(accountId, entityUsageRestrictions, restrictionsFromUserPermissions, appIdEnvMap);
-  }
-
-  @Override
-  public boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions) {
-    Set<String> appIdsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
-    Map<String, List<Base>> appIdEnvMap = environmentService.getAppIdEnvMap(appIdsByAccountId);
-    return userHasPermissionsToChangeEntity(accountId, entityUsageRestrictions, appIdEnvMap);
+    return userHasPermissions(
+        accountId, entityUsageRestrictions, restrictionsFromUserPermissions, appIdEnvMap, scopedToAccount);
   }
 
   @Override
   public boolean userHasPermissionsToChangeEntity(
-      String accountId, UsageRestrictions entityUsageRestrictions, Map<String, List<Base>> appIdEnvMap) {
+      String accountId, UsageRestrictions entityUsageRestrictions, boolean scopedToAccount) {
+    Set<String> appIdsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
+    Map<String, List<Base>> appIdEnvMap = environmentService.getAppIdEnvMap(appIdsByAccountId);
     return userHasPermissionsToChangeEntity(accountId, entityUsageRestrictions,
-        getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getUsageRestrictions(), appIdEnvMap);
+        getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getUsageRestrictions(), appIdEnvMap,
+        scopedToAccount);
+  }
+
+  @Override
+  public boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions,
+      Map<String, List<Base>> appIdEnvMap, boolean scopedToAccount) {
+    return userHasPermissionsToChangeEntity(accountId, entityUsageRestrictions,
+        getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getUsageRestrictions(), appIdEnvMap,
+        scopedToAccount);
   }
 
   private boolean userHasPermissions(String accountId, UsageRestrictions entityUsageRestrictions,
-      UsageRestrictions restrictionsFromUserPermissions, Map<String, List<Base>> appIdEnvMap) {
-    // If no restrictions, only account admin can modify it
+      UsageRestrictions restrictionsFromUserPermissions, Map<String, List<Base>> appIdEnvMap, boolean scopedToAccount) {
+    if (!hasUserContext()) {
+      return true;
+    }
+
+    if (scopedToAccount) {
+      return isAdminOrHasAllEnvAccess(accountId, restrictionsFromUserPermissions);
+    }
+
+    // If someone is updating a secret with no usage restrictions then no permission check is required.
+    // This will allow env to be deleted if a secret only refers to the env being deleted
     if (hasNoRestrictions(entityUsageRestrictions)) {
-      return userService.isAccountAdmin(accountId);
+      return true;
     }
 
     if (hasNoRestrictions(restrictionsFromUserPermissions)) {
@@ -821,79 +846,115 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   }
 
   /**
-   * Checks if user can create / update an entity without any usage restrictions. Only users with Account Manager
-   * permission or (All Apps - All Envs) permissions can do it.
+   *
    * @param accountId
-   * @param usageRestrictions usage restrictions
-   * @param restrictionsFromUserPermissions
-   * @return boolean
+   * @param usageRestrictions
+   * @param scopedToAccount
    */
-  private boolean checkIfUserCanSetWithNoUsageRestrictions(
-      String accountId, UsageRestrictions usageRestrictions, UsageRestrictions restrictionsFromUserPermissions) {
-    if (!hasNoRestrictions(usageRestrictions)) {
-      return true;
-    }
-    if (userService.isAccountAdmin(accountId)) {
-      return true;
-    }
-
-    return hasAllEnvAccess(restrictionsFromUserPermissions);
-  }
-
   @Override
-  public void validateUsageRestrictionsOnEntitySave(String accountId, UsageRestrictions usageRestrictions) {
-    checkIfValidUsageRestrictions(usageRestrictions);
-
+  public void validateUsageRestrictionsOnEntitySave(
+      String accountId, UsageRestrictions usageRestrictions, boolean scopedToAccount) {
     if (!hasUserContext()) {
       return;
     }
 
+    checkForNonNullRestrictionWhenScopedToAccount(accountId, scopedToAccount, usageRestrictions);
+
+    checkIfValidUsageRestrictions(usageRestrictions);
+
     UsageRestrictions restrictionsFromUserPermissions =
         getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getUsageRestrictions();
-    boolean allowed =
-        checkIfUserCanSetWithNoUsageRestrictions(accountId, usageRestrictions, restrictionsFromUserPermissions);
 
-    if (!allowed) {
-      throw new WingsException(ErrorCode.NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS, USER);
+    /**
+     * Condition for which scopedToAccount will be false and also usage restrictions is null or empty
+     */
+    if (!scopedToAccount && hasNoRestrictions(usageRestrictions)) {
+      // Read only user should not be able to create with null restrictions
+      if (hasNoRestrictions(restrictionsFromUserPermissions)) {
+        throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
+      }
+      return;
     }
+
+    validatedIfEntityScopingAllowedForUser(accountId, restrictionsFromUserPermissions, scopedToAccount);
 
     Set<String> appIdsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
     Map<String, List<Base>> appIdEnvMap = environmentService.getAppIdEnvMap(appIdsByAccountId);
-    boolean canUpdateEntity =
-        userHasPermissionsToChangeEntity(accountId, usageRestrictions, restrictionsFromUserPermissions, appIdEnvMap);
+    boolean canUpdateEntity = userHasPermissionsToChangeEntity(
+        accountId, usageRestrictions, restrictionsFromUserPermissions, appIdEnvMap, scopedToAccount);
 
     if (!canUpdateEntity) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
   }
 
-  @Override
-  public void validateUsageRestrictionsOnEntityUpdate(
-      String accountId, UsageRestrictions oldUsageRestrictions, UsageRestrictions newUsageRestrictions) {
-    checkIfValidUsageRestrictions(newUsageRestrictions);
+  @VisibleForTesting
+  boolean isAdminOrHasAllEnvAccess(String accountId, UsageRestrictions restrictionsFromUserPermissions) {
+    return userService.isAccountAdmin(accountId) || hasAllEnvAccess(restrictionsFromUserPermissions);
+  }
 
+  private void validatedIfEntityScopingAllowedForUser(
+      String accountId, UsageRestrictions restrictionsFromUserPermissions, boolean scopedToAccount) {
+    if (scopedToAccount) {
+      boolean allowed = isAdminOrHasAllEnvAccess(accountId, restrictionsFromUserPermissions);
+      if (!allowed) {
+        throw new WingsException(ErrorCode.NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS, USER);
+      }
+    }
+  }
+
+  @VisibleForTesting
+  void checkForNonNullRestrictionWhenScopedToAccount(
+      String accountId, boolean scopedToAccount, UsageRestrictions usageRestrictions) {
+    /**
+     * We should not allows scopedToAccount to be true and usageRestrictions to be non-null
+     */
+    if (scopedToAccount && !hasNoRestrictions(usageRestrictions)) {
+      String errorMsg = String.format(NON_NULL_USAGE_RESTRICTION_MSG_FMT, accountId);
+      throw new UsageRestrictionException(errorMsg, USER, null);
+    }
+  }
+
+  @Override
+  public void validateUsageRestrictionsOnEntityUpdate(String accountId, UsageRestrictions oldUsageRestrictions,
+      UsageRestrictions newUsageRestrictions, boolean scopedToAccount) {
     if (!hasUserContext()) {
       return;
     }
 
+    checkIfValidUsageRestrictions(newUsageRestrictions);
+
+    checkForNonNullRestrictionWhenScopedToAccount(accountId, scopedToAccount, newUsageRestrictions);
+
     UsageRestrictions restrictionsFromUserPermissions =
         getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getUsageRestrictions();
-    boolean allowed =
-        checkIfUserCanSetWithNoUsageRestrictions(accountId, newUsageRestrictions, restrictionsFromUserPermissions);
 
-    if (!allowed) {
-      throw new WingsException(ErrorCode.NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS, USER);
+    /**
+     * Condition for which scopedToAccount will be null and also no restrictions
+     */
+    if (!scopedToAccount && hasNoRestrictions(newUsageRestrictions)) {
+      // Read only user should not be able to create with null restrictions
+      if (hasNoRestrictions(restrictionsFromUserPermissions)) {
+        throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
+      }
+      return;
     }
 
-    boolean canUpdateOldRestrictions =
-        userHasPermissionsToChangeEntity(accountId, oldUsageRestrictions, restrictionsFromUserPermissions);
+    validatedIfEntityScopingAllowedForUser(accountId, restrictionsFromUserPermissions, scopedToAccount);
+
+    boolean canUpdateOldRestrictions = userHasPermissionsToChangeEntity(
+        accountId, oldUsageRestrictions, restrictionsFromUserPermissions, scopedToAccount);
+
+    if (!canUpdateOldRestrictions) {
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
+    }
 
     Set<String> appIdsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
     Map<String, List<Base>> appIdEnvMap = environmentService.getAppIdEnvMap(appIdsByAccountId);
-    boolean canAddNewRestrictions =
-        userHasPermissionsToChangeEntity(accountId, newUsageRestrictions, restrictionsFromUserPermissions, appIdEnvMap);
+    boolean canAddNewRestrictions = userHasPermissionsToChangeEntity(
+        accountId, newUsageRestrictions, restrictionsFromUserPermissions, appIdEnvMap, scopedToAccount);
 
-    if (!canUpdateOldRestrictions || !canAddNewRestrictions) {
+    if (!canAddNewRestrictions) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
   }
@@ -988,7 +1049,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       if (encryptedData == null) {
         return false;
       }
-      return userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions());
+      return userHasPermissionsToChangeEntity(
+          accountId, encryptedData.getUsageRestrictions(), encryptedData.isScopedToAccount());
 
     } else {
       SettingAttribute settingAttribute = settingsService.get(entityId);
@@ -1113,7 +1175,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         // Dangling reference to App/Env has been cleared in the usage restrictions. Then update with the updated usage
         // restrictions.
         if (count > 0) {
-          secretManager.updateUsageRestrictionsForSecretOrFile(accountId, encryptedData.getUuid(), usageRestrictions);
+          secretManager.updateUsageRestrictionsForSecretOrFile(
+              accountId, encryptedData.getUuid(), usageRestrictions, false);
         }
       }
     }
@@ -1148,7 +1211,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         // Dangling reference to App/Env has been cleared in the usage restrictions. Then update with the updated usage
         // restrictions.
         if (count > 0) {
-          secretManager.updateUsageRestrictionsForSecretOrFile(accountId, encryptedData.getUuid(), usageRestrictions);
+          secretManager.updateUsageRestrictionsForSecretOrFile(
+              accountId, encryptedData.getUuid(), usageRestrictions, false);
           logger.info("Reference to application {} has been removed in encrypted text/file {} with id {} in account {}",
               appId, encryptedData.getName(), encryptedData.getUuid(), accountId);
         }

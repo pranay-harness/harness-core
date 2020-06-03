@@ -83,7 +83,7 @@ public class AddRestrictionsToSecrets implements Migration {
         UsageRestrictions usageRestrictions =
             UsageRestrictions.builder().appEnvRestrictions(Sets.newHashSet(appEnvRestriction)).build();
 
-        secretManager.updateUsageRestrictionsForSecretOrFile(accountId, secretText.getUuid(), usageRestrictions);
+        secretManager.updateUsageRestrictionsForSecretOrFile(accountId, secretText.getUuid(), usageRestrictions, false);
       });
 
       logger.info("Migration of secrets done successfully");

@@ -208,7 +208,7 @@ public class SecretManagerTest extends CategoryTest {
             getSecretList(3));
     when(wingsPersistence.query(eq(EncryptedData.class), any(PageRequest.class))).thenReturn(pageResponse);
     when(usageRestrictionsService.hasAccess(anyString(), anyBoolean(), anyString(), anyString(),
-             any(UsageRestrictions.class), any(UsageRestrictions.class), anyMap(), anyMap()))
+             any(UsageRestrictions.class), any(UsageRestrictions.class), anyMap(), anyMap(), anyBoolean()))
         .thenReturn(true);
 
     PageResponse<EncryptedData> finalPageResponse =
@@ -233,7 +233,7 @@ public class SecretManagerTest extends CategoryTest {
     when(pageResponse.getResponse()).thenReturn(getSecretList(pageSize * 2));
     when(wingsPersistence.query(eq(EncryptedData.class), any(PageRequest.class))).thenReturn(pageResponse);
     when(usageRestrictionsService.hasAccess(anyString(), anyBoolean(), anyString(), anyString(),
-             any(UsageRestrictions.class), any(UsageRestrictions.class), anyMap(), anyMap()))
+             any(UsageRestrictions.class), any(UsageRestrictions.class), anyMap(), anyMap(), anyBoolean()))
         .thenReturn(false, false, false, true);
 
     PageResponse<EncryptedData> finalPageResponse =
@@ -261,7 +261,7 @@ public class SecretManagerTest extends CategoryTest {
 
     // Filter out the first 3 records based on usage restriction.
     when(usageRestrictionsService.hasAccess(anyString(), anyBoolean(), anyString(), anyString(),
-             any(UsageRestrictions.class), any(UsageRestrictions.class), anyMap(), anyMap()))
+             any(UsageRestrictions.class), any(UsageRestrictions.class), anyMap(), anyMap(), anyBoolean()))
         .thenReturn(true, true, true, false);
 
     PageResponse<EncryptedData> finalPageResponse =
@@ -499,12 +499,13 @@ public class SecretManagerTest extends CategoryTest {
     UsageRestrictions usageRestrictions = mock(UsageRestrictions.class);
     when(encryptedData1.getUsageRestrictions()).thenReturn(usageRestrictions);
     when(encryptedData2.getUsageRestrictions()).thenReturn(usageRestrictions);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions)).thenReturn(true);
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
+        .thenReturn(true);
 
     boolean isEditable = secretManager.hasUpdateAccessToSecrets(secretIds, accountId);
     assertThat(isEditable).isTrue();
     verify(mockMorphiaIterator, times(2)).next();
-    verify(usageRestrictionsService, times(2)).userHasPermissionsToChangeEntity(accountId, usageRestrictions);
+    verify(usageRestrictionsService, times(2)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
   }
 
   @Test
@@ -520,7 +521,7 @@ public class SecretManagerTest extends CategoryTest {
     boolean isEditable = secretManager.hasUpdateAccessToSecrets(secretIds, accountId);
     assertThat(isEditable).isTrue();
     verify(mockMorphiaIterator, times(0)).next();
-    verify(usageRestrictionsService, times(0)).userHasPermissionsToChangeEntity(any(), any());
+    verify(usageRestrictionsService, times(0)).userHasPermissionsToChangeEntity(any(), any(), any(Boolean.class));
   }
 
   @Test
@@ -539,14 +540,14 @@ public class SecretManagerTest extends CategoryTest {
     UsageRestrictions usageRestrictions = mock(UsageRestrictions.class);
     when(encryptedData1.getUsageRestrictions()).thenReturn(usageRestrictions);
     when(encryptedData2.getUsageRestrictions()).thenReturn(usageRestrictions);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions))
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
         .thenReturn(true)
         .thenReturn(false);
 
     boolean isEditable = secretManager.hasUpdateAccessToSecrets(secretIds, accountId);
     assertThat(isEditable).isFalse();
     verify(mockMorphiaIterator, times(2)).next();
-    verify(usageRestrictionsService, times(2)).userHasPermissionsToChangeEntity(accountId, usageRestrictions);
+    verify(usageRestrictionsService, times(2)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
   }
 
   @Test
@@ -564,7 +565,8 @@ public class SecretManagerTest extends CategoryTest {
     when(encryptedData.getUsageRestrictions()).thenReturn(usageRestrictions);
 
     when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions)).thenReturn(true);
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
+        .thenReturn(true);
     when(featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)).thenReturn(true);
     when(secretSetupUsageService.getSecretUsage(accountId, secretId)).thenReturn(new HashSet<>());
     when(wingsPersistence.delete(EncryptedData.class, secretId)).thenReturn(false);
@@ -573,7 +575,7 @@ public class SecretManagerTest extends CategoryTest {
     assertThat(isDeleted).isFalse();
 
     verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
-    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions);
+    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
     verify(featureFlagService, times(1)).isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId);
     verify(secretSetupUsageService, times(1)).getSecretUsage(accountId, secretId);
     verify(wingsPersistence, times(1)).delete(EncryptedData.class, secretId);
@@ -595,7 +597,8 @@ public class SecretManagerTest extends CategoryTest {
     when(encryptedData.getUsageRestrictions()).thenReturn(usageRestrictions);
 
     when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions)).thenReturn(false);
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
+        .thenReturn(false);
 
     try {
       secretManager.deleteSecret(accountId, secretId);
@@ -605,7 +608,7 @@ public class SecretManagerTest extends CategoryTest {
     }
 
     verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
-    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions);
+    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
     verify(featureFlagService, times(0)).isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId);
     verify(secretSetupUsageService, times(0)).getSecretUsage(accountId, secretId);
     verify(wingsPersistence, times(0)).delete(EncryptedData.class, secretId);
@@ -627,7 +630,8 @@ public class SecretManagerTest extends CategoryTest {
     when(encryptedData.getUsageRestrictions()).thenReturn(usageRestrictions);
 
     when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions)).thenReturn(true);
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
+        .thenReturn(true);
     when(featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)).thenReturn(true);
     when(secretSetupUsageService.getSecretUsage(accountId, secretId)).thenReturn(new HashSet<>());
     when(wingsPersistence.delete(EncryptedData.class, secretId)).thenReturn(true);
@@ -636,7 +640,7 @@ public class SecretManagerTest extends CategoryTest {
     assertThat(isDeleted).isTrue();
 
     verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
-    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions);
+    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
     verify(featureFlagService, times(1)).isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId);
     verify(secretSetupUsageService, times(1)).getSecretUsage(accountId, secretId);
     verify(wingsPersistence, times(1)).delete(EncryptedData.class, secretId);
@@ -659,7 +663,8 @@ public class SecretManagerTest extends CategoryTest {
 
     SecretSetupUsage secretSetupUsage = SecretSetupUsage.builder().entityId("uuid").type(AWS).build();
     when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions)).thenReturn(true);
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
+        .thenReturn(true);
     when(featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)).thenReturn(true);
     when(secretSetupUsageService.getSecretUsage(accountId, secretId)).thenReturn(Sets.newHashSet(secretSetupUsage));
 
@@ -671,7 +676,7 @@ public class SecretManagerTest extends CategoryTest {
     }
 
     verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
-    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions);
+    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
     verify(featureFlagService, times(1)).isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId);
     verify(secretSetupUsageService, times(1)).getSecretUsage(accountId, secretId);
     verify(wingsPersistence, times(0)).delete(EncryptedData.class, secretId);
@@ -694,7 +699,8 @@ public class SecretManagerTest extends CategoryTest {
 
     Query<ServiceVariable> mockQuery = mock(Query.class);
     when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions)).thenReturn(true);
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
+        .thenReturn(true);
     when(featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)).thenReturn(false);
     when(wingsPersistence.createQuery(ServiceVariable.class)).thenReturn(mockQuery);
     when(mockQuery.filter(ACCOUNT_ID_KEY, accountId)).thenReturn(mockQuery);
@@ -706,7 +712,7 @@ public class SecretManagerTest extends CategoryTest {
     assertThat(isDeleted).isTrue();
 
     verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
-    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions);
+    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
     verify(featureFlagService, times(1)).isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId);
     verify(wingsPersistence, times(1)).delete(EncryptedData.class, secretId);
     verify(auditServiceHelper, times(1)).reportDeleteForAuditingUsingAccountId(accountId, encryptedData);
@@ -729,7 +735,8 @@ public class SecretManagerTest extends CategoryTest {
     Query<ServiceVariable> mockQuery = mock(Query.class);
     ServiceVariable mockServiceVariable = mock(ServiceVariable.class);
     when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions)).thenReturn(true);
+    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
+        .thenReturn(true);
     when(featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)).thenReturn(false);
     when(wingsPersistence.createQuery(ServiceVariable.class)).thenReturn(mockQuery);
     when(mockQuery.filter(ACCOUNT_ID_KEY, accountId)).thenReturn(mockQuery);
@@ -744,7 +751,7 @@ public class SecretManagerTest extends CategoryTest {
     }
 
     verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
-    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions);
+    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
     verify(featureFlagService, times(1)).isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId);
     verify(wingsPersistence, times(0)).delete(EncryptedData.class, secretId);
     verify(auditServiceHelper, times(0)).reportDeleteForAuditingUsingAccountId(accountId, encryptedData);
@@ -953,10 +960,12 @@ public class SecretManagerTest extends CategoryTest {
 
     doReturn(vaultConfig).when(spySecretManager).getSecretManager(any(), any());
     when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any())).thenReturn(Optional.of(vaultConfig));
-    doReturn("encryptedDataId").when(spySecretManager).saveFile(any(), any(), any(), anyLong(), any(), any());
+    doReturn("encryptedDataId")
+        .when(spySecretManager)
+        .saveFile(any(), any(), any(), anyLong(), any(), any(), anyBoolean());
 
     spySecretManager.saveFile(
-        "AccountId", "kmsId", "name", 1000, null, null, Maps.newHashMap(ImmutableMap.of("authToken", "abc")));
+        "AccountId", "kmsId", "name", 1000, null, null, Maps.newHashMap(ImmutableMap.of("authToken", "abc")), false);
 
     verify(vaultRuntimeCredentialsInjector).updateRuntimeCredentials(any(), any());
   }
@@ -974,7 +983,7 @@ public class SecretManagerTest extends CategoryTest {
 
     try {
       spySecretManager.saveFile(
-          "AccountId", "kmsId", "name", 1000, null, null, Maps.newHashMap(ImmutableMap.of("authToken", "abc")));
+          "AccountId", "kmsId", "name", 1000, null, null, Maps.newHashMap(ImmutableMap.of("authToken", "abc")), false);
       fail("should not save file if unable to update run time parameters for secret manager");
     } catch (InvalidRequestException e) {
       assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);
@@ -992,10 +1001,10 @@ public class SecretManagerTest extends CategoryTest {
     doReturn(EncryptedData.builder().build()).when(spySecretManager).getSecretById(any(), any());
     doReturn(vaultConfig).when(spySecretManager).getSecretManager(any(), any());
     when(vaultRuntimeCredentialsInjector.updateRuntimeCredentials(any(), any())).thenReturn(Optional.of(vaultConfig));
-    doReturn(true).when(spySecretManager).updateFile(any(), any(), any(), anyLong(), any(), any());
+    doReturn(true).when(spySecretManager).updateFile(any(), any(), any(), anyLong(), any(), any(), anyBoolean());
 
     spySecretManager.updateFile(
-        "accountId", "kmsId", "name", 1000, null, null, Maps.newHashMap(ImmutableMap.of("authToken", "abc")));
+        "accountId", "kmsId", "name", 1000, null, null, Maps.newHashMap(ImmutableMap.of("authToken", "abc")), false);
 
     verify(vaultRuntimeCredentialsInjector).updateRuntimeCredentials(any(), any());
   }
@@ -1014,7 +1023,7 @@ public class SecretManagerTest extends CategoryTest {
 
     try {
       spySecretManager.updateFile(
-          "accountId", "kmsId", "name", 1000, null, null, Maps.newHashMap(ImmutableMap.of("authToken", "abc")));
+          "accountId", "kmsId", "name", 1000, null, null, Maps.newHashMap(ImmutableMap.of("authToken", "abc")), false);
       fail("Should not update file if unable to update runtime credentials");
     } catch (InvalidRequestException e) {
       assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_REQUEST);

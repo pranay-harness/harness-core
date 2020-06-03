@@ -330,6 +330,8 @@ public enum ErrorCode {
 
   INVALID_USAGE_RESTRICTION("Invalid usage restrictions"),
 
+  USAGE_RESTRICTION_ERROR,
+
   STATE_EXECUTION_INSTANCE_NOT_FOUND("State Execution Instance not found"),
 
   DELEGATE_TASK_RETRY,

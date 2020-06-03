@@ -3,7 +3,6 @@ package software.wings.service.intfc.security;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
@@ -65,9 +64,8 @@ public interface SecretManager extends OwnedByAccount {
 
   String encrypt(String accountId, String secret, UsageRestrictions usageRestrictions);
 
-  EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret, String secretPath,
-      Set<EncryptedDataParams> parameters, EncryptedData encryptedData, String secretName,
-      UsageRestrictions usageRestrictions);
+  EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret, EncryptedData encryptedData,
+      SecretText secretText);
 
   Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId);
 
@@ -118,7 +116,8 @@ public interface SecretManager extends OwnedByAccount {
    *  This method is called when removing application/environment, and all its referring secrets need to clear their
    *  references in usage scope to the application/environment to be deleted.
    */
-  boolean updateUsageRestrictionsForSecretOrFile(String accountId, String uuId, UsageRestrictions usageRestrictions);
+  boolean updateUsageRestrictionsForSecretOrFile(
+      String accountId, String uuId, UsageRestrictions usageRestrictions, boolean scopedToEntity);
 
   boolean deleteSecret(String accountId, String uuId);
 
@@ -127,20 +126,20 @@ public interface SecretManager extends OwnedByAccount {
   boolean deleteSecretUsingUuid(String uuId);
 
   String saveFile(String accountId, String kmsId, String name, long fileSize, UsageRestrictions usageRestrictions,
-      BoundedInputStream inputStream);
+      BoundedInputStream inputStream, boolean scopedToAccount);
 
   String saveFile(String accountId, String kmsId, String name, long fileSize, UsageRestrictions usageRestrictions,
-      BoundedInputStream inputStream, Map<String, String> runtimeParameters);
+      BoundedInputStream inputStream, Map<String, String> runtimeParameters, boolean scopedToAccount);
 
   File getFile(String accountId, String uuId, File readInto);
 
   byte[] getFileContents(String accountId, String uuId);
 
   boolean updateFile(String accountId, String name, String uuid, long fileSize, UsageRestrictions usageRestrictions,
-      BoundedInputStream inputStream);
+      BoundedInputStream inputStream, boolean scopedToAccount);
 
   boolean updateFile(String accountId, String name, String uuid, long fileSize, UsageRestrictions usageRestrictions,
-      BoundedInputStream inputStream, Map<String, String> runtimeParameters);
+      BoundedInputStream inputStream, Map<String, String> runtimeParameters, boolean scopedToAccount);
 
   boolean deleteFile(String accountId, String uuId);
 

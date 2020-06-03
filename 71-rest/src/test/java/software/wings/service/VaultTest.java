@@ -305,8 +305,8 @@ public class VaultTest extends WingsBaseTest {
     assertThat(configId).isNotNull();
 
     try {
-      secretManager.saveFile(
-          accountId, configId, secretFileName, file.length(), null, new BoundedInputStream(new FileInputStream(file)));
+      secretManager.saveFile(accountId, configId, secretFileName, file.length(), null,
+          new BoundedInputStream(new FileInputStream(file)), false);
       fail("Should not have been able to create encrypted file with read only vault");
     } catch (SecretManagementException e) {
       logger.info("Error", e);
@@ -1449,7 +1449,7 @@ public class VaultTest extends WingsBaseTest {
     String secretName = UUID.randomUUID().toString();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
     String secretFileId = secretManager.saveFile(accountId, kmsId, secretName, fileToSave.length(), null,
-        new BoundedInputStream(new FileInputStream(fileToSave)));
+        new BoundedInputStream(new FileInputStream(fileToSave)), false);
 
     String encryptedUuid = wingsPersistence.createQuery(EncryptedData.class)
                                .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -1506,7 +1506,7 @@ public class VaultTest extends WingsBaseTest {
     String newSecretName = UUID.randomUUID().toString();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
     secretManager.updateFile(accountId, newSecretName, encryptedUuid, fileToUpdate.length(), null,
-        new BoundedInputStream(new FileInputStream(fileToUpdate)));
+        new BoundedInputStream(new FileInputStream(fileToUpdate)), false);
 
     download = configService.download(appId, configFileId);
     assertThat(FileUtils.readFileToString(download, Charset.defaultCharset()))

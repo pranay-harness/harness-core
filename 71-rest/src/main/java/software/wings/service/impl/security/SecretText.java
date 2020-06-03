@@ -23,4 +23,5 @@ public class SecretText {
   private UsageRestrictions usageRestrictions;
   private String kmsId;
   private Map<String, String> runtimeParameters;
+  private boolean scopedToAccount;
 }
