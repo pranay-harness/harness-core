@@ -15,7 +15,7 @@ public enum CEConnectorHealthMessages {
 
   WAITING_FOR_SUCCESSFUL_AWS_S3_SYNC_MESSAGE("Processing CUR Data Sync"),
 
-  AWS_S3_SYNC_MESSAGE("Last Successful S3 Sync at %s");
+  AWS_S3_SYNC_MESSAGE("Last Successful S3 Sync at {}");
 
   @Getter private String message;
 

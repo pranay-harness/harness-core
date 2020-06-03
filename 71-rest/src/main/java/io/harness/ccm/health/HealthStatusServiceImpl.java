@@ -44,9 +44,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -129,10 +126,11 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         billingDataPipelineRecordDao.fetchBillingPipelineRecord(cloudProvider.getAccountId(), cloudProvider.getUuid());
 
     if (timeDifference == 0 || billingDataPipelineRecord == null) {
-      return serialiseHealthStatusToPOJO(true, Collections.singletonList(SETTING_ATTRIBUTE_CREATED.getMessage()));
+      return serialiseHealthStatusToPOJO(true, Collections.singletonList(SETTING_ATTRIBUTE_CREATED.getMessage()), 0L);
     }
 
     String s3SyncHealthStatus = getS3SyncHealthStatus(billingDataPipelineRecord);
+    long lastS3SyncTimestamp = billingDataPipelineRecord.getLastSuccessfulS3Sync().toEpochMilli();
 
     if (timeDifference == ChronoUnit.DAYS.getDuration().toMillis()) {
       boolean isBillingDataPipelineCreationSuccessful = billingDataPipelineRecord.getDataSetId() != null;
@@ -140,12 +138,12 @@ public class HealthStatusServiceImpl implements HealthStatusService {
           Arrays.asList(isBillingDataPipelineCreationSuccessful ? BILLING_PIPELINE_CREATION_SUCCESSFUL.getMessage()
                                                                 : BILLING_PIPELINE_CREATION_FAILED.getMessage(),
               s3SyncHealthStatus);
-      return serialiseHealthStatusToPOJO(isBillingDataPipelineCreationSuccessful, messages);
+      return serialiseHealthStatusToPOJO(isBillingDataPipelineCreationSuccessful, messages, lastS3SyncTimestamp);
     }
 
     if (billingDataPipelineRecord.getDataSetId() == null) {
       return serialiseHealthStatusToPOJO(
-          true, Arrays.asList(BILLING_PIPELINE_CREATION_FAILED.getMessage(), s3SyncHealthStatus));
+          true, Arrays.asList(BILLING_PIPELINE_CREATION_FAILED.getMessage(), s3SyncHealthStatus), lastS3SyncTimestamp);
     }
 
     dataTransferJobStatus = billingDataPipelineRecord.getDataTransferJobStatus().equals(SUCCEEDED);
@@ -158,15 +156,19 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     List<String> messages = Arrays.asList(
         healthStatus ? BILLING_DATA_PIPELINE_SUCCESS.getMessage() : BILLING_DATA_PIPELINE_ERROR.getMessage(),
         s3SyncHealthStatus);
-    return serialiseHealthStatusToPOJO(healthStatus, messages);
+    return serialiseHealthStatusToPOJO(healthStatus, messages, lastS3SyncTimestamp);
   }
 
-  private CEHealthStatus serialiseHealthStatusToPOJO(boolean healthStatus, List<String> messages) {
+  private CEHealthStatus serialiseHealthStatusToPOJO(
+      boolean healthStatus, List<String> messages, long lastS3SyncMillis) {
     return CEHealthStatus.builder()
         .isHealthy(healthStatus)
         .isCEConnector(true)
-        .clusterHealthStatusList(
-            Collections.singletonList(CEClusterHealth.builder().isHealthy(healthStatus).messages(messages).build()))
+        .clusterHealthStatusList(Collections.singletonList(CEClusterHealth.builder()
+                                                               .isHealthy(healthStatus)
+                                                               .lastEventTimestamp(lastS3SyncMillis)
+                                                               .messages(messages)
+                                                               .build()))
         .build();
   }
 
@@ -175,9 +177,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
 
     Instant lastSuccessfulS3SyncInstant = billingDataPipelineRecord.getLastSuccessfulS3Sync();
     if (!lastSuccessfulS3SyncInstant.equals(Instant.MIN)) {
-      String formattedDate = lastSuccessfulS3SyncInstant.atZone(ZoneId.of(DEFAULT_TIME_ZONE))
-                                 .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG));
-      s3SyncHealthStatus = format(AWS_S3_SYNC_MESSAGE.getMessage(), formattedDate);
+      s3SyncHealthStatus = AWS_S3_SYNC_MESSAGE.getMessage();
     }
     return s3SyncHealthStatus;
   }
