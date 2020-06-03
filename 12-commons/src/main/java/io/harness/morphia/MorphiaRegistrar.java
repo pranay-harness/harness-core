@@ -1,5 +1,6 @@
 package io.harness.morphia;
 
+import io.harness.exception.GeneralException;
 import io.harness.reflection.CodeUtils;
 
 import java.util.HashMap;
@@ -24,7 +25,7 @@ public interface MorphiaRegistrar {
 
   // This method should register every class that is serialized/deserialized from morphia referring by className field.
   // This could be implementation classes of a field interface or a base abstract or any non final class.
-  void registerImplementationClasses(Map<String, Class> map);
+  void registerImplementationClasses(HelperPut h, HelperPut w);
 
   default void testClassesModule() {
     final Set<Class> classes = new HashSet<>();
@@ -34,7 +35,14 @@ public interface MorphiaRegistrar {
 
   default void testImplementationClassesModule() {
     final Map<String, Class> map = new HashMap<>();
-    registerImplementationClasses(map);
+
+    HelperPut h =
+        (name, clazz) -> map.merge(PKG_HARNESS + name, clazz, (x, y) -> { throw new GeneralException("Duplicated"); });
+
+    HelperPut w =
+        (name, clazz) -> map.merge(PKG_WINGS + name, clazz, (x, y) -> { throw new GeneralException("Duplicated"); });
+
+    registerImplementationClasses(h, w);
 
     Set<Class> classes = new HashSet<>(map.values());
     classes.remove(NotFoundClass.class);

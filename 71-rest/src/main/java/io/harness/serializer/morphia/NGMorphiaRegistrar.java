@@ -6,7 +6,6 @@ import io.harness.cdng.infra.beans.K8sDirectInfraDefinition;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
 import io.harness.morphia.MorphiaRegistrar;
 
-import java.util.Map;
 import java.util.Set;
 
 public class NGMorphiaRegistrar implements MorphiaRegistrar {
@@ -19,7 +18,7 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(Map<String, Class> map) {
+  public void registerImplementationClasses(HelperPut h, HelperPut w) {
     // Nothing to register yet
   }
 }

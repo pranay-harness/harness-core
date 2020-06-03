@@ -9,7 +9,6 @@ import io.harness.cvng.core.services.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.entities.TimeSeriesRecord;
 import io.harness.morphia.MorphiaRegistrar;
 
-import java.util.Map;
 import java.util.Set;
 
 public class CVNextGenCommonMorphiaRegister implements MorphiaRegistrar {
@@ -25,7 +24,7 @@ public class CVNextGenCommonMorphiaRegister implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(Map<String, Class> map) {
+  public void registerImplementationClasses(HelperPut h, HelperPut w) {
     // no classes to register
   }
 }

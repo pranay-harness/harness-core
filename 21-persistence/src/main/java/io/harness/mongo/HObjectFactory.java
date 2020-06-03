@@ -1,10 +1,15 @@
 package io.harness.mongo;
 
+import static io.harness.morphia.MorphiaRegistrar.PKG_HARNESS;
+import static io.harness.morphia.MorphiaRegistrar.PKG_WINGS;
+
 import com.mongodb.DBObject;
+import io.harness.exception.GeneralException;
 import io.harness.exception.UnexpectedException;
 import io.harness.logging.AutoLogRemoveContext;
 import io.harness.mongo.MorphiaMove.MorphiaMoveKeys;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.morphia.MorphiaRegistrar.HelperPut;
 import io.harness.morphia.MorphiaRegistrar.NotFoundClass;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,13 +42,21 @@ public class HObjectFactory extends DefaultCreator {
   private static synchronized Map<String, Class> collectMorphiaInterfaceImplementers() {
     Map<String, Class> morphiaInterfaceImplementers = new ConcurrentHashMap<>();
 
+    HelperPut h = (name, clazz) -> morphiaInterfaceImplementers.merge(PKG_HARNESS + name, clazz, (x, y) -> {
+      throw new GeneralException("Duplicated");
+    });
+
+    HelperPut w = (name, clazz) -> morphiaInterfaceImplementers.merge(PKG_WINGS + name, clazz, (x, y) -> {
+      throw new GeneralException("Duplicated");
+    });
+
     try {
       Reflections reflections = new Reflections("io.harness.serializer.morphia");
       for (Class clazz : reflections.getSubTypesOf(MorphiaRegistrar.class)) {
         Constructor<?> constructor = clazz.getConstructor();
         final MorphiaRegistrar morphiaRegistrar = (MorphiaRegistrar) constructor.newInstance();
 
-        morphiaRegistrar.registerImplementationClasses(morphiaInterfaceImplementers);
+        morphiaRegistrar.registerImplementationClasses(h, w);
       }
     } catch (Exception e) {
       logger.error("Failed to initialize morphia object factory", e);

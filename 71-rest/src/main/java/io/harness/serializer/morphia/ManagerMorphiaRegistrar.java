@@ -762,12 +762,10 @@ import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.security.Principal;
-import java.util.Map;
 import java.util.Set;
 
 public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
   private String cf = "helpers.ext.cloudformation.";
-  private String smss = "sm.states.spotinst.";
 
   @Override
   public void registerClasses(Set<Class> set) {
@@ -1052,9 +1050,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(Map<String, Class> map) {
-    final HelperPut h = (name, clazz) -> map.put(PKG_HARNESS + name, clazz);
-
+  public void registerImplementationClasses(HelperPut h, HelperPut w) {
     h.put("ccm.budget.entities.ApplicationBudgetScope", ApplicationBudgetScope.class);
     h.put("ccm.budget.entities.ClusterBudgetScope", ClusterBudgetScope.class);
     h.put("ccm.cluster.entities.AzureKubernetesCluster", AzureKubernetesCluster.class);
@@ -1068,8 +1064,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     h.put("redesign.states.wait.WaitStepParameters", WaitStepParameters.class);
     h.put("redesign.states.shell.ShellScriptStepParameters", ShellScriptStepParameters.class);
     h.put("redesign.states.email.EmailStepParameters", EmailStepParameters.class);
-
-    final HelperPut w = (name, clazz) -> map.put(PKG_WINGS + name, clazz);
 
     w.put("api.AmiServiceDeployElement", AmiServiceDeployElement.class);
     w.put("api.AmiServiceSetupElement", AmiServiceSetupElement.class);
@@ -1320,6 +1314,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.yaml.GitDiffRequest", GitDiffRequest.class);
     w.put("beans.yaml.GitDiffResult", GitDiffResult.class);
     w.put("beans.yaml.GitFetchFilesFromMultipleRepoResult", GitFetchFilesFromMultipleRepoResult.class);
+    w.put("beans.yaml.GitSuccessFulChangeDetail", GitSuccessFulChangeDetail.class);
+    w.put("beans.yaml.HarnessSuccessFulChangeDetail", HarnessSuccessFulChangeDetail.class);
     w.put("collect.ArtifactCollectionCallback", ArtifactCollectionCallback.class);
     w.put("delegatetasks.buildsource.BuildSourceCallback", BuildSourceCallback.class);
     w.put("delegatetasks.buildsource.BuildSourceCleanupCallback", BuildSourceCleanupCallback.class);
@@ -1398,7 +1394,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("service.impl.instana.InstanaDataCollectionInfo", InstanaDataCollectionInfo.class);
     w.put("service.impl.logz.LogzDataCollectionInfo", LogzDataCollectionInfo.class);
     w.put("service.impl.newrelic.MetricAnalysisExecutionData", NotFoundClass.class);
-    w.put("service.impl.newrelic.NewRelicDataCollectionInfoV2", NewRelicDataCollectionInfoV2.class);
     w.put("service.impl.newrelic.NewRelicDataCollectionInfoV2", NewRelicDataCollectionInfoV2.class);
     w.put("service.impl.newrelic.NewRelicMarkerExecutionData", NewRelicMarkerExecutionData.class);
     w.put("service.impl.splunk.SplunkAnalysisCluster", SplunkAnalysisCluster.class);
@@ -1553,34 +1548,33 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("verification.stackdriver.StackDriverMetricCVConfiguration", StackDriverMetricCVConfiguration.class);
     w.put("verification.VerificationDataAnalysisResponse", VerificationDataAnalysisResponse.class);
     w.put("verification.VerificationStateAnalysisExecutionData", VerificationStateAnalysisExecutionData.class);
+    w.put("yaml.errorhandling.GitToHarnessErrorDetails", GitToHarnessErrorDetails.class);
+    w.put("yaml.errorhandling.HarnessToGitErrorDetails", HarnessToGitErrorDetails.class);
     w.put("yaml.gitSync.GitFileProcessingSummary", GitFileProcessingSummary.class);
     w.put("yaml.gitSync.GitSyncMetadata", GitSyncMetadata.class);
     w.put(cf + "response.CloudFormationCommandExecutionResponse", CloudFormationCommandExecutionResponse.class);
     w.put(cf + "response.CloudFormationCreateStackResponse", CloudFormationCreateStackResponse.class);
-    w.put(smss + "SpotInstDeployState", SpotInstDeployState.class);
-    w.put(smss + "SpotInstDeployStateExecutionData", SpotInstDeployStateExecutionData.class);
-    w.put(smss + "SpotInstListenerUpdateRollbackState", SpotInstListenerUpdateRollbackState.class);
-    w.put(smss + "SpotInstListenerUpdateState", SpotInstListenerUpdateState.class);
-    w.put(smss + "SpotInstListenerUpdateStateExecutionData", SpotInstListenerUpdateStateExecutionData.class);
-    w.put(smss + "SpotInstRollbackState", SpotInstRollbackState.class);
-    w.put(smss + "SpotInstServiceSetup", SpotInstServiceSetup.class);
-    w.put(smss + "SpotInstSetupContextElement", SpotInstSetupContextElement.class);
-    w.put(smss + "SpotInstSetupExecutionSummary", SpotInstSetupExecutionSummary.class);
-    w.put(smss + "SpotInstSetupStateExecutionData", SpotInstSetupStateExecutionData.class);
-    w.put(smss + "SpotinstDeployExecutionSummary", SpotinstDeployExecutionSummary.class);
-    w.put(smss + "SpotinstTrafficShiftAlbSetupState", SpotinstTrafficShiftAlbSetupState.class);
-    w.put(smss + "SpotinstTrafficShiftAlbDeployState", SpotinstTrafficShiftAlbDeployState.class);
-    w.put(smss + "SpotinstTrafficShiftAlbSwitchRoutesState", SpotinstTrafficShiftAlbSwitchRoutesState.class);
-    w.put(smss + "SpotinstTrafficShiftAlbRollbackSwitchRoutesState",
-        SpotinstTrafficShiftAlbRollbackSwitchRoutesState.class);
-    w.put(smss + "SpotinstTrafficShiftAlbSetupElement", SpotinstTrafficShiftAlbSetupElement.class);
-    w.put(smss + "SpotinstTrafficShiftAlbSetupExecutionData", SpotinstTrafficShiftAlbSetupExecutionData.class);
-    w.put(smss + "SpotinstTrafficShiftAlbDeployExecutionData", SpotinstTrafficShiftAlbDeployExecutionData.class);
-    w.put("yaml.errorhandling.GitToHarnessErrorDetails", GitToHarnessErrorDetails.class);
-    w.put("yaml.errorhandling.HarnessToGitErrorDetails", HarnessToGitErrorDetails.class);
-    w.put(
-        smss + "SpotinstTrafficShiftAlbSwapRoutesExecutionData", SpotinstTrafficShiftAlbSwapRoutesExecutionData.class);
-    w.put("beans.yaml.GitSuccessFulChangeDetail", GitSuccessFulChangeDetail.class);
-    w.put("beans.yaml.HarnessSuccessFulChangeDetail", HarnessSuccessFulChangeDetail.class);
+
+    HelperPut sm = (name, clazz) -> w.put("sm.states.spotinst." + name, clazz);
+
+    sm.put("SpotinstDeployExecutionSummary", SpotinstDeployExecutionSummary.class);
+    sm.put("SpotInstDeployState", SpotInstDeployState.class);
+    sm.put("SpotInstDeployStateExecutionData", SpotInstDeployStateExecutionData.class);
+    sm.put("SpotInstListenerUpdateRollbackState", SpotInstListenerUpdateRollbackState.class);
+    sm.put("SpotInstListenerUpdateState", SpotInstListenerUpdateState.class);
+    sm.put("SpotInstListenerUpdateStateExecutionData", SpotInstListenerUpdateStateExecutionData.class);
+    sm.put("SpotInstRollbackState", SpotInstRollbackState.class);
+    sm.put("SpotInstServiceSetup", SpotInstServiceSetup.class);
+    sm.put("SpotInstSetupContextElement", SpotInstSetupContextElement.class);
+    sm.put("SpotInstSetupExecutionSummary", SpotInstSetupExecutionSummary.class);
+    sm.put("SpotInstSetupStateExecutionData", SpotInstSetupStateExecutionData.class);
+    sm.put("SpotinstTrafficShiftAlbDeployExecutionData", SpotinstTrafficShiftAlbDeployExecutionData.class);
+    sm.put("SpotinstTrafficShiftAlbDeployState", SpotinstTrafficShiftAlbDeployState.class);
+    sm.put("SpotinstTrafficShiftAlbRollbackSwitchRoutesState", SpotinstTrafficShiftAlbRollbackSwitchRoutesState.class);
+    sm.put("SpotinstTrafficShiftAlbSetupElement", SpotinstTrafficShiftAlbSetupElement.class);
+    sm.put("SpotinstTrafficShiftAlbSetupExecutionData", SpotinstTrafficShiftAlbSetupExecutionData.class);
+    sm.put("SpotinstTrafficShiftAlbSetupState", SpotinstTrafficShiftAlbSetupState.class);
+    sm.put("SpotinstTrafficShiftAlbSwapRoutesExecutionData", SpotinstTrafficShiftAlbSwapRoutesExecutionData.class);
+    sm.put("SpotinstTrafficShiftAlbSwitchRoutesState", SpotinstTrafficShiftAlbSwitchRoutesState.class);
   }
 }

@@ -27,7 +27,6 @@ import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyResponse;
 import io.harness.waiter.WaitInstance;
 
-import java.util.Map;
 import java.util.Set;
 
 public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
@@ -45,36 +44,30 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(Map<String, Class> map) {
-    final HelperPut h = (name, clazz) -> {
-      map.put(PKG_HARNESS + name, clazz);
-    };
-
-    h.put("waiter.ListNotifyResponseData", ListNotifyResponseData.class);
+  public void registerImplementationClasses(HelperPut h, HelperPut w) {
     h.put("state.inspection.ExpressionVariableUsage", ExpressionVariableUsage.class);
-    h.put("engine.resume.EngineResumeCallback", EngineResumeCallback.class);
+    h.put("waiter.ListNotifyResponseData", ListNotifyResponseData.class);
 
     // Engine Callback
+    h.put("engine.resume.EngineResumeAllCallback", EngineResumeAllCallback.class);
     h.put("engine.resume.EngineResumeCallback", EngineResumeCallback.class);
     h.put("engine.resume.EngineWaitResumeCallback", EngineWaitResumeCallback.class);
     h.put("engine.resume.EngineWaitRetryCallback", EngineWaitRetryCallback.class);
-    h.put("engine.resume.EngineResumeAllCallback", EngineResumeAllCallback.class);
 
     // Adviser Related Classes
     h.put("adviser.impl.ignore.IgnoreAdviserParameters", IgnoreAdviserParameters.class);
     h.put("adviser.impl.retry.RetryAdviserParameters", RetryAdviserParameters.class);
     h.put("adviser.impl.success.OnSuccessAdviserParameters", OnSuccessAdviserParameters.class);
-    h.put("adviser.impl.retry.RetryAdviserParameters", RetryAdviserParameters.class);
 
     // Facilitator related classes
     h.put("delay.DelayEventNotifyData", DelayEventNotifyData.class);
 
     // State Related Classes
-    h.put("state.core.fork.ForkStepParameters", ForkStepParameters.class);
-    h.put("state.core.section.SectionStepParameters", SectionStepParameters.class);
-    h.put("state.core.section.chain.SectionStepParameters", SectionChainStepParameters.class);
-    h.put("state.core.section.chain.SectionChainPassThroughData", SectionChainPassThroughData.class);
-    h.put("state.core.dummy.DummySectionStepParameters", DummySectionStepParameters.class);
     h.put("state.core.dummy.DummySectionOutcome", DummySectionOutcome.class);
+    h.put("state.core.dummy.DummySectionStepParameters", DummySectionStepParameters.class);
+    h.put("state.core.fork.ForkStepParameters", ForkStepParameters.class);
+    h.put("state.core.section.chain.SectionChainPassThroughData", SectionChainPassThroughData.class);
+    h.put("state.core.section.chain.SectionStepParameters", SectionChainStepParameters.class);
+    h.put("state.core.section.SectionStepParameters", SectionStepParameters.class);
   }
 }
