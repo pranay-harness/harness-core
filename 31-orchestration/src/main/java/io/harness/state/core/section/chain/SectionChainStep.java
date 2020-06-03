@@ -26,7 +26,7 @@ public class SectionChainStep implements Step, ChildChainExecutable {
     return ChildChainResponse.builder()
         .childNodeId(parameters.getChildNodeIds().get(0))
         .passThroughData(SectionChainPassThroughData.builder().childIndex(0).build())
-        .chainEnd(false)
+        .chainEnd(parameters.getChildNodeIds().size() == 1)
         .build();
   }
 

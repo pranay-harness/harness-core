@@ -7,7 +7,6 @@ import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
 import io.harness.cdng.pipeline.steps.PipelineSetupStep;
-import io.harness.cdng.pipeline.steps.StagesStep;
 import io.harness.redesign.states.email.EmailStep;
 import io.harness.redesign.states.http.BasicHttpStep;
 import io.harness.redesign.states.http.chain.BasicHttpChainStep;
@@ -35,7 +34,6 @@ public class WingsStepRegistrar implements StepRegistrar {
     stateClasses.add(Pair.of(PipelineSetupStep.STEP_TYPE, PipelineSetupStep.class));
     stateClasses.add(Pair.of(InfrastructureSectionStep.STEP_TYPE, InfrastructureSectionStep.class));
     stateClasses.add(Pair.of(InfrastructureStep.STEP_TYPE, InfrastructureStep.class));
-    stateClasses.add(Pair.of(StagesStep.STEP_TYPE, StagesStep.class));
     stateClasses.add(Pair.of(DeploymentStageStep.STEP_TYPE, DeploymentStageStep.class));
   }
 }

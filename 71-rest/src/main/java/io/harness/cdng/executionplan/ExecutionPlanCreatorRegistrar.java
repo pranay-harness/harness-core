@@ -8,10 +8,10 @@ import io.harness.cdng.pipeline.plancreators.ExecutionPhasesPlanCreator;
 import io.harness.cdng.pipeline.plancreators.HttpStepPlanCreator;
 import io.harness.cdng.pipeline.plancreators.PhasePlanCreator;
 import io.harness.cdng.pipeline.plancreators.PipelinePlanCreator;
-import io.harness.cdng.pipeline.plancreators.StagesPlanCreator;
 import io.harness.executionplan.core.ExecutionPlanCreatorRegistry;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
-import io.harness.executionplan.plancreators.ParallelStepPlanCreator;
+import io.harness.executionplan.plancreator.ParallelStepPlanCreator;
+import io.harness.executionplan.plancreator.StagesPlanCreator;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton

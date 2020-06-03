@@ -1,8 +1,10 @@
 package io.harness.cdng.pipeline.plancreators;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.executionplan.constants.PlanCreatorType.STEP_PLAN_CREATOR;
+import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STEP_PLAN_CREATOR;
+import static io.harness.state.core.section.chain.SectionChainStep.STEP_TYPE;
 import static java.lang.String.format;
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,13 +20,14 @@ import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
-import io.harness.state.core.section.SectionStep;
-import io.harness.state.core.section.SectionStepParameters;
+import io.harness.state.core.section.chain.SectionChainStepParameters;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionSection;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -33,15 +36,30 @@ public class PhasePlanCreator implements SupportDefinedExecutorPlanCreator<CDPha
 
   @Override
   public CreateExecutionPlanResponse createPlan(CDPhase phase, CreateExecutionPlanContext context) {
-    final ExecutionPlanCreator<ExecutionSection> planCreatorForStep =
-        getPlanCreatorForStep(context, phase.getSteps().get(0));
-    final CreateExecutionPlanResponse planForStep = planCreatorForStep.createPlan(phase.getSteps().get(0), context);
-    final PlanNode executionPhasesNode = preparePhaseNode(phase, context, planForStep);
+    final List<CreateExecutionPlanResponse> planForSteps = getPlanForSteps(context, phase.getSteps());
+    final List<CreateExecutionPlanResponse> planForRollbackSteps =
+        getPlanForSteps(context, emptyIfNull(phase.getRollbackSteps()));
+    final PlanNode phasePlanNode = preparePhaseNode(phase, context, planForSteps, planForRollbackSteps);
     return CreateExecutionPlanResponse.builder()
-        .planNode(executionPhasesNode)
-        .planNodes(planForStep.getPlanNodes())
-        .startingNodeId(executionPhasesNode.getUuid())
+        .planNode(phasePlanNode)
+        .planNodes(getPlanNodes(planForSteps))
+        .planNodes(getPlanNodes(planForRollbackSteps))
+        .startingNodeId(phasePlanNode.getUuid())
         .build();
+  }
+
+  @NotNull
+  private List<PlanNode> getPlanNodes(List<CreateExecutionPlanResponse> planForSteps) {
+    return planForSteps.stream()
+        .flatMap(createExecutionPlanResponse -> createExecutionPlanResponse.getPlanNodes().stream())
+        .collect(Collectors.toList());
+  }
+
+  private List<CreateExecutionPlanResponse> getPlanForSteps(
+      CreateExecutionPlanContext context, List<ExecutionSection> executionSections) {
+    return executionSections.stream()
+        .map(step -> getPlanCreatorForStep(context, step).createPlan(step, context))
+        .collect(Collectors.toList());
   }
 
   private ExecutionPlanCreator<ExecutionSection> getPlanCreatorForStep(
@@ -50,19 +68,24 @@ public class PhasePlanCreator implements SupportDefinedExecutorPlanCreator<CDPha
         STEP_PLAN_CREATOR.getName(), step, context, format("no execution plan creator found for step [%s]", step));
   }
 
-  private PlanNode preparePhaseNode(
-      CDPhase phase, CreateExecutionPlanContext context, CreateExecutionPlanResponse planForStep) {
+  private PlanNode preparePhaseNode(CDPhase phase, CreateExecutionPlanContext context,
+      List<CreateExecutionPlanResponse> planForSteps, List<CreateExecutionPlanResponse> planForRollbackSteps) {
     final String nodeId = generateUuid();
-
+    // TODO @rk: 02/06/20 : rollback steps wont be running as of now, they should run only if any of steps failed
     final String phaseIdentifier = phase.getIdentifier();
     return PlanNode.builder()
         .uuid(nodeId)
-        .name(phaseIdentifier)
+        .name(phase.getName())
         .identifier(phaseIdentifier)
-        .stepType(SectionStep.STEP_TYPE)
-        .stepParameters(SectionStepParameters.builder().childNodeId(planForStep.getStartingNodeId()).build())
-        .facilitatorObtainment(
-            FacilitatorObtainment.builder().type(FacilitatorType.builder().type(FacilitatorType.CHILD).build()).build())
+        .stepType(STEP_TYPE)
+        .stepParameters(SectionChainStepParameters.builder()
+                            .childNodeIds(planForSteps.stream()
+                                              .map(CreateExecutionPlanResponse::getStartingNodeId)
+                                              .collect(Collectors.toList()))
+                            .build())
+        .facilitatorObtainment(FacilitatorObtainment.builder()
+                                   .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
+                                   .build())
         .build();
   }
 
