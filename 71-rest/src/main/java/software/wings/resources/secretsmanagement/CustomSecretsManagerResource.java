@@ -90,7 +90,7 @@ public class CustomSecretsManagerResource {
   @DELETE
   @Path("{configId}")
   public RestResponse<Boolean> deleteCustomSecretsManagerConfig(
-      @QueryParam("accountId") String accountId, @QueryParam("configId") String configId) {
+      @QueryParam("accountId") String accountId, @PathParam("configId") String configId) {
     checkIfFeatureAvailable(accountId);
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(customSecretsManagerService.deleteSecretsManager(accountId, configId));
