@@ -212,7 +212,8 @@ public class SecretManagementResource {
       @QueryParam("accountId") final String accountId, @Nullable @FormDataParam("kmsId") final String kmsId,
       @FormDataParam("name") final String name, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("usageRestrictions") final String usageRestrictionsString,
-      @FormDataParam("runtimeParameters") final String runtimeParametersString) {
+      @FormDataParam("runtimeParameters") final String runtimeParametersString,
+      @FormDataParam("scopedToAccount") final boolean scopedToAccount) {
     Map<String, String> runtimeParameters = new HashMap<>();
     if (!StringUtils.isEmpty(runtimeParametersString)) {
       runtimeParameters = JsonUtils.asObject(runtimeParametersString, new TypeReference<Map<String, String>>() {});
@@ -220,7 +221,7 @@ public class SecretManagementResource {
     return new RestResponse<>(secretManager.saveFile(accountId, kmsId, name, request.getContentLengthLong(),
         usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString),
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit()),
-        runtimeParameters));
+        runtimeParameters, scopedToAccount));
   }
 
   @POST
@@ -230,7 +231,8 @@ public class SecretManagementResource {
       @QueryParam("accountId") final String accountId, @FormDataParam("name") final String name,
       @FormDataParam("usageRestrictions") final String usageRestrictionsString,
       @FormDataParam("runtimeParameters") final String runtimeParametersString,
-      @FormDataParam("uuid") final String fileId, @FormDataParam("file") InputStream uploadedInputStream) {
+      @FormDataParam("uuid") final String fileId, @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("scopedToAccount") final boolean scopedToAccount) {
     // HAR-9736: If the user doesn't make any change in the secret file update, null is expected for now.
     if (uploadedInputStream == null) {
       // fill in with an empty input stream
@@ -243,7 +245,7 @@ public class SecretManagementResource {
     return new RestResponse<>(secretManager.updateFile(accountId, name, fileId, request.getContentLengthLong(),
         usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString),
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit()),
-        runtimeParameters));
+        runtimeParameters, scopedToAccount));
   }
 
   /*

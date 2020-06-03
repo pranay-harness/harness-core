@@ -28,6 +28,6 @@ public class EncryptedFileHelper {
     accountId = account.getUuid();
     InputStream is = new ByteArrayInputStream(Charset.forName("UTF-16").encode("test").array());
     BoundedInputStream boundedInputStream = new BoundedInputStream(is);
-    return secretManager.saveFile(accountId, null, name, 120, null, boundedInputStream);
+    return secretManager.saveFile(accountId, null, name, 120, null, boundedInputStream, false);
   }
 }

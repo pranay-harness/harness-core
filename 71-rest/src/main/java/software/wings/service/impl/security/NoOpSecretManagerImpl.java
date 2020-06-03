@@ -3,7 +3,6 @@ package software.wings.service.impl.security;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
 import lombok.NonNull;
@@ -85,9 +84,8 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret, String path,
-      Set<EncryptedDataParams> parameters, EncryptedData encryptedData, String secretName,
-      UsageRestrictions usageRestrictions) {
+  public EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret,
+      EncryptedData encryptedData, SecretText secretText) {
     throw new UnsupportedOperationException();
   }
 
@@ -193,7 +191,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
 
   @Override
   public boolean updateUsageRestrictionsForSecretOrFile(
-      String accountId, String uuId, UsageRestrictions usageRestrictions) {
+      String accountId, String uuId, UsageRestrictions usageRestrictions, boolean scopedToAccount) {
     throw new UnsupportedOperationException();
   }
 
@@ -214,13 +212,14 @@ public class NoOpSecretManagerImpl implements SecretManager {
 
   @Override
   public String saveFile(String accountId, String kmsId, String name, long fileSize,
-      UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
+      UsageRestrictions usageRestrictions, BoundedInputStream inputStream, boolean scopedToAccount) {
     throw new UnsupportedOperationException();
   }
 
   @Override
   public String saveFile(String accountId, String kmsId, String name, long fileSize,
-      UsageRestrictions usageRestrictions, BoundedInputStream inputStream, Map<String, String> runtimeParameters) {
+      UsageRestrictions usageRestrictions, BoundedInputStream inputStream, Map<String, String> runtimeParameters,
+      boolean scopedToAccount) {
     throw new UnsupportedOperationException();
   }
 
@@ -236,13 +235,14 @@ public class NoOpSecretManagerImpl implements SecretManager {
 
   @Override
   public boolean updateFile(String accountId, String name, String uuid, long fileSize,
-      UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
+      UsageRestrictions usageRestrictions, BoundedInputStream inputStream, boolean scopedToAccount) {
     return false;
   }
 
   @Override
   public boolean updateFile(String accountId, String name, String uuid, long fileSize,
-      UsageRestrictions usageRestrictions, BoundedInputStream inputStream, Map<String, String> runtimeParameters) {
+      UsageRestrictions usageRestrictions, BoundedInputStream inputStream, Map<String, String> runtimeParameters,
+      boolean scopedToAccount) {
     throw new UnsupportedOperationException();
   }
 

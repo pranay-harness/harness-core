@@ -72,6 +72,7 @@ public class EncryptedTextController {
             .value(secretValue)
             .path(path)
             .usageRestrictions(usageScopeController.populateUsageRestrictions(encryptedText.getUsageScope(), accountId))
+            .scopedToAccount(false)
             .build();
     return secretManager.saveSecret(accountId, secretText);
   }
@@ -128,8 +129,13 @@ public class EncryptedTextController {
       QLUsageScope usageScopeUpdate = encryptedTextUpdate.getUsageScope().getValue().orElse(null);
       usageRestrictions = usageScopeController.populateUsageRestrictions(usageScopeUpdate, accountId);
     }
-    SecretText secretText =
-        SecretText.builder().name(name).value(value).path(secretReference).usageRestrictions(usageRestrictions).build();
+    SecretText secretText = SecretText.builder()
+                                .name(name)
+                                .value(value)
+                                .path(secretReference)
+                                .usageRestrictions(usageRestrictions)
+                                .scopedToAccount(false)
+                                .build();
     secretManager.updateSecret(accountId, encryptedTextId, secretText);
   }
 }

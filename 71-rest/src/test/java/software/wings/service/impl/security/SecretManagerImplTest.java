@@ -137,8 +137,9 @@ public class SecretManagerImplTest extends WingsBaseTest {
     when(gcpKmsService.encrypt(
              eq(secretValue), eq(account.getUuid()), any(GcpKmsConfig.class), any(EncryptedData.class)))
         .thenReturn(encryptedData);
-    EncryptedData savedEncryptedData = secretManager.encrypt(
-        account.getUuid(), SettingVariableTypes.GCP_KMS, secretValue.toCharArray(), null, null, null, secretName, null);
+    EncryptedData savedEncryptedData = secretManager.encrypt(account.getUuid(), SettingVariableTypes.GCP_KMS,
+        secretValue.toCharArray(), null, SecretText.builder().name(secretName).build());
+
     assertThat(savedEncryptedData.getKmsId()).isEqualTo(gcpKmsConfig.getUuid());
     assertThat(savedEncryptedData.getEncryptionType()).isEqualTo(gcpKmsConfig.getEncryptionType());
   }
@@ -584,6 +585,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
                                       .encryptedValue("Dummy Value".toCharArray())
                                       .base64Encoded(false)
                                       .name("Dummy record")
+                                      .scopedToAccount(true)
                                       .type(SettingVariableTypes.SECRET_TEXT)
                                       .build();
     String secretId = ((SecretManagerImpl) secretManager).saveEncryptedData(encryptedData);
@@ -660,6 +662,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
             .build());
     UsageRestrictions usageRestrictions = UsageRestrictions.builder().appEnvRestrictions(appEnvRestrictions).build();
     encryptedDataInDB.setUsageRestrictions(usageRestrictions);
+    encryptedDataInDB.setScopedToAccount(false);
 
     String editedSecretId = ((SecretManagerImpl) secretManager).saveEncryptedData(encryptedDataInDB);
 
