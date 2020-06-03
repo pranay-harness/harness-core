@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -91,6 +92,7 @@ public class AuthServiceTest extends WingsBaseTest {
   private final String EXPIRED_TOKEN = "EXPIRED_TOKEN";
   private final String NOT_AVAILABLE_TOKEN = "NOT_AVAILABLE_TOKEN";
   private final String AUTH_SECRET = "AUTH_SECRET";
+  private static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   @Mock private GenericDbCache cache;
   @Mock private static CacheManager cacheManager;
@@ -98,13 +100,13 @@ public class AuthServiceTest extends WingsBaseTest {
   @Mock private Cache<String, AuthToken> authTokenCache;
   @Mock private HPersistence persistence;
   @Mock private AdvancedDatastore advancedDatastore;
-
   @Mock private AccountService accountService;
   @Mock private SegmentHandler segmentHandler;
   @Mock FeatureFlagService featureFlagService;
   @Mock PortalConfig portalConfig;
   @Inject MainConfiguration mainConfiguration;
   @Inject @InjectMocks private AuthService authService;
+
   private Builder userBuilder = anUser().appId(APP_ID).email(USER_EMAIL).name(USER_NAME).password(PASSWORD);
   private String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
 
@@ -274,6 +276,29 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void shouldNotValidateDelegateToken() {
+    TokenGenerator tokenGenerator = new TokenGenerator(GLOBAL_ACCOUNT_ID, accountKey);
+    assertThatThrownBy(()
+                           -> authService.validateDelegateToken(
+                               GLOBAL_ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Access denied");
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void shouldThrowDenyAccessWhenAccountIdNullForDelegate() {
+    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
+    assertThatThrownBy(
+        () -> authService.validateDelegateToken(null, tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Access denied");
+  }
+
+  @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldThrowDenyAccessWhenAccountIdNotFoundForDelegate() {
@@ -281,8 +306,8 @@ public class AuthServiceTest extends WingsBaseTest {
     assertThatThrownBy(()
                            -> authService.validateDelegateToken(
                                ACCOUNT_ID + "1", tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.ACCESS_DENIED.name());
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Access denied");
   }
 
   @Test
