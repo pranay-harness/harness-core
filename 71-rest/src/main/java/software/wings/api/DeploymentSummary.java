@@ -55,6 +55,15 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
 
       @Index(fields =
           {
+            @Field(DeploymentSummaryKeys.infraMappingId)
+            , @Field(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_KEY),
+                @Field(DeploymentSummaryKeys.RELEASE_NUMBER_K8S_DEPLOYMENT_KEY),
+                @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
+          },
+          options = @IndexOptions(name = "infraMappingId_k8sDeploymentKeyReleaseNameAndNumber", background = true)),
+
+      @Index(fields =
+          {
             @Field(DeploymentSummaryKeys.accountId)
             , @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.ASC)
           },
@@ -146,6 +155,8 @@ public class DeploymentSummary extends Base {
         "deploymentInfo.containerSvcName";
     public static final String CLUSTER_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES = "deploymentInfo.clusterName";
     public static final String RELEASE_NAME_K8S_DEPLOYMENT_INFO = "deploymentInfo.releaseName";
+    public static final String RELEASE_NAME_K8S_DEPLOYMENT_KEY = "k8sDeploymentKey.releaseName";
+    public static final String RELEASE_NUMBER_K8S_DEPLOYMENT_KEY = "k8sDeploymentKey.releaseNumber";
     public static final String CONTAINER_KEY_SERVICE_NAME = "containerDeploymentKey.containerServiceName";
     public static final String CONTAINER_KEY_LABELS = "containerDeploymentKey.labels";
     public static final String CONTAINER_KEY_NEW_VERSION = "containerDeploymentKey.newVersion";
