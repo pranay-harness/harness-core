@@ -1,11 +1,9 @@
 package io.harness.serializer.morphia;
 
-import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.iterator.TestCronIterableEntity;
 import io.harness.iterator.TestIrregularIterableEntity;
 import io.harness.iterator.TestIterableEntity;
 import io.harness.iterator.TestRegularIterableEntity;
-import io.harness.limits.impl.model.RateLimit;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.MorphiaClass;
 import io.harness.persistence.TestHolderEntity;
@@ -32,9 +30,5 @@ public class TestPersistenceMorphiaRegistrar implements MorphiaRegistrar {
   public void registerImplementationClasses(HelperPut h, HelperPut w) {
     // from commons
     h.put("persistence.MorphiaOldClass", MorphiaClass.class);
-    h.put("limits.impl.model.RateLimit", RateLimit.class);
-
-    // from api-service
-    h.put("globalcontex.AuditGlobalContextData", AuditGlobalContextData.class);
   }
 }
