@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ANKIT;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.serializer.morphia.NextGenMorphiaClassesRegistrar;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
