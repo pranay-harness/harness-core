@@ -34,6 +34,7 @@ import migrations.all.AddValidUntilToSecretUsageLogs;
 import migrations.all.AddValidUntilToWorkflowExecution;
 import migrations.all.AmendCorruptedEncryptedServiceVariable;
 import migrations.all.ApiKeysSetNameMigration;
+import migrations.all.CleanUpDirectK8sInfraMappingEncryptedFieldsMigration;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
 import migrations.all.CreatePrimiryProfileForAllAccounts;
@@ -217,6 +218,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(126, DeleteInvalidServiceGuardConfigs.class))
         .add(Pair.of(127, AddAccountIdToTimeSeriesAnomaliesRecordMigration.class))
         .add(Pair.of(128, AddAccountidToTimeSeriesMLScores.class))
+        .add(Pair.of(129, CleanUpDirectK8sInfraMappingEncryptedFieldsMigration.class))
         .build();
   }
 }

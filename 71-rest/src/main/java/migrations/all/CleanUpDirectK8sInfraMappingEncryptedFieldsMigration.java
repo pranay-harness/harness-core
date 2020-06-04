@@ -1,0 +1,51 @@
+package migrations.all;
+
+import static java.util.Arrays.asList;
+
+import com.google.common.collect.Iterables;
+import com.google.inject.Inject;
+
+import lombok.extern.slf4j.Slf4j;
+import migrations.Migration;
+import org.mongodb.morphia.query.Criteria;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
+import software.wings.dl.WingsPersistence;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Slf4j
+public class CleanUpDirectK8sInfraMappingEncryptedFieldsMigration implements Migration {
+  static final List<String> ENCRYPTED_FIELDS = asList("encryptedPassword", "encryptedCaCert", "encryptedClientCert",
+      "encryptedClientKey", "encryptedClientKeyPassphrase", "encryptedServiceAccountToken");
+
+  @Inject private WingsPersistence wingsPersistence;
+
+  @Override
+  public void migrate() {
+    logger.info("Start - Clean up software.wings.beans.DirectKubernetesInfrastructureMapping encrypted fields");
+
+    try {
+      Query<DirectKubernetesInfrastructureMapping> filterQuery =
+          wingsPersistence.createQuery(DirectKubernetesInfrastructureMapping.class).disableValidation();
+      UpdateOperations<DirectKubernetesInfrastructureMapping> updates =
+          wingsPersistence.createUpdateOperations(DirectKubernetesInfrastructureMapping.class).disableValidation();
+
+      filterQuery.or(Iterables.toArray(
+          ENCRYPTED_FIELDS.stream().map(filterQuery::criteria).map(FieldEnd::exists).collect(Collectors.toSet()),
+          Criteria.class));
+      ENCRYPTED_FIELDS.forEach(updates::unset);
+
+      UpdateResults updateResults = wingsPersistence.update(filterQuery, updates);
+      logger.info("Cleaned up encrypted fields for {} entities", updateResults.getUpdatedCount());
+    } catch (Exception e) {
+      logger.error("Error running migration CleanUpDirectK8sInfraMappingEncryptedFieldsMigration", e);
+    }
+
+    logger.info("Completed - Clean up software.wings.beans.DirectKubernetesInfrastructureMapping encrypted fields");
+  }
+}
