@@ -6,7 +6,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
-import io.harness.resource.Graph;
+import io.harness.presentation.Graph;
 
 @OwnedBy(CDC)
 @Redesign

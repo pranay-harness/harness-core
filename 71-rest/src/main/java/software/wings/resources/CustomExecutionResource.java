@@ -8,8 +8,8 @@ import com.google.inject.Inject;
 import io.harness.annotations.Redesign;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
+import io.harness.presentation.Graph;
 import io.harness.redesign.services.CustomExecutionService;
-import io.harness.resource.Graph;
 import io.harness.rest.RestResponse;
 import software.wings.security.annotations.AuthRule;
 

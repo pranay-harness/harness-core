@@ -3,6 +3,7 @@ package io.harness.engine;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
@@ -11,12 +12,13 @@ import com.google.inject.Inject;
 import io.harness.OrchestrationTest;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.services.NodeExecutionService;
+import io.harness.engine.services.OutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.plan.PlanNode;
-import io.harness.resource.GraphVertex;
+import io.harness.presentation.GraphVertex;
 import io.harness.rule.Owner;
 import io.harness.state.core.dummy.DummyStep;
 import io.harness.state.core.fork.ForkStep;
@@ -24,6 +26,8 @@ import io.harness.state.core.fork.ForkStepParameters;
 import io.harness.state.core.section.SectionStep;
 import io.harness.state.core.section.SectionStepParameters;
 import io.harness.state.io.StepParameters;
+import io.harness.utils.DummyOutcome;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -41,7 +45,14 @@ public class GraphGeneratorTest extends OrchestrationTest {
   private static final String STARTING_EXECUTION_NODE_ID = "startID";
 
   @Mock private NodeExecutionService nodeExecutionService;
+  @Mock private OutcomeService outcomeService;
   @InjectMocks @Inject private GraphGenerator graphGenerator;
+
+  @Before
+  public void setUp() {
+    when(outcomeService.findAllByRuntimeId(anyString(), anyString()))
+        .thenReturn(Collections.singletonList(DummyOutcome.builder().test("outcome").build()));
+  }
 
   @Test
   @Owner(developers = ALEXEI)

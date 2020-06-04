@@ -14,13 +14,14 @@ import io.harness.engine.ExecutionEngine;
 import io.harness.engine.GraphGenerator;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
+import io.harness.engine.services.PlanExecutionService;
 import io.harness.exception.GeneralException;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
 import io.harness.plan.input.InputArgs;
-import io.harness.resource.Graph;
+import io.harness.presentation.Graph;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
@@ -35,6 +36,7 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Inject private InterruptManager interruptManager;
   @Inject private GraphGenerator graphGenerator;
   @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
+  @Inject private PlanExecutionService planExecutionService;
 
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
   private static final String APP_ID = "d9cTupsyQjWqbhUmZ8XPdQ";
@@ -103,12 +105,14 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
 
   @Override
   public Graph getGraph(String planExecutionId) {
-    return Graph.builder().graphVertex(graphGenerator.generateGraphVertex(planExecutionId)).build();
-  }
-
-  private EmbeddedUser getEmbeddedUser() {
-    User user = UserThreadLocal.get();
-    return EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
+    PlanExecution planExecution = planExecutionService.get(planExecutionId);
+    return Graph.builder()
+        .planExecutionId(planExecution.getUuid())
+        .startTs(planExecution.getStartTs())
+        .endTs(planExecution.getEndTs())
+        .status(planExecution.getStatus())
+        .graphVertex(graphGenerator.generateGraphVertex(planExecution.getUuid()))
+        .build();
   }
 
   @Override
@@ -122,6 +126,11 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
     } catch (IOException e) {
       throw new GeneralException("error while testing execution plan", e);
     }
+  }
+
+  private EmbeddedUser getEmbeddedUser() {
+    User user = UserThreadLocal.get();
+    return EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
   }
 
   private InputArgs getInputArgs() {

@@ -1,10 +1,12 @@
 package io.harness.engine.services.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.mongodb.DuplicateKeyException;
@@ -24,13 +26,16 @@ import io.harness.references.RefObject;
 import io.harness.resolvers.ResolverUtils;
 import org.mongodb.morphia.query.Sort;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Redesign
+@Singleton
 public class OutcomeServiceImpl implements OutcomeService {
   @Inject @Named("enginePersistence") HPersistence hPersistence;
 
@@ -108,5 +113,19 @@ public class OutcomeServiceImpl implements OutcomeService {
                                    .order(Sort.descending(OutcomeInstanceKeys.createdAt))
                                    .get();
     return Optional.ofNullable(instance).map(OutcomeInstance::getOutcome);
+  }
+
+  @Override
+  public List<Outcome> findAllByRuntimeId(String planExecutionId, String runtimeId) {
+    List<OutcomeInstance> outcomeInstances = hPersistence.createQuery(OutcomeInstance.class, excludeAuthority)
+                                                 .filter(OutcomeInstanceKeys.planExecutionId, planExecutionId)
+                                                 .filter(OutcomeInstanceKeys.runtimeId, runtimeId)
+                                                 .asList();
+
+    if (isEmpty(outcomeInstances)) {
+      return Collections.emptyList();
+    }
+
+    return outcomeInstances.stream().map(OutcomeInstance::getOutcome).collect(Collectors.toList());
   }
 }

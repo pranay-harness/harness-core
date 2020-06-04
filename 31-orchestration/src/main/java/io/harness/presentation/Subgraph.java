@@ -1,4 +1,4 @@
-package io.harness.resource;
+package io.harness.presentation;
 
 import io.harness.facilitator.modes.ExecutionMode;
 import lombok.Data;

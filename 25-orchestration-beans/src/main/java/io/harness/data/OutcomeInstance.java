@@ -18,6 +18,7 @@ import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -62,5 +63,10 @@ public class OutcomeInstance implements PersistentEntity, UuidAware, CreatedAtAw
   @PrePersist
   void populateLevelRuntimeIdIdx() {
     levelRuntimeIdIdx = ResolverUtils.prepareLevelRuntimeIdIdx(levels);
+  }
+
+  @UtilityClass
+  public static class OutcomeInstanceKeys {
+    public final String runtimeId = OutcomeInstanceKeys.producedBy + "." + LevelKeys.runtimeId;
   }
 }

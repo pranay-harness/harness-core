@@ -15,11 +15,12 @@ import com.google.inject.Singleton;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.services.NodeExecutionService;
+import io.harness.engine.services.OutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
-import io.harness.resource.GraphVertex;
-import io.harness.resource.Subgraph;
+import io.harness.presentation.GraphVertex;
+import io.harness.presentation.Subgraph;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -31,6 +32,7 @@ import java.util.Map;
 @Singleton
 public class GraphGenerator {
   @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private OutcomeService outcomeService;
 
   public GraphVertex generateGraphVertex(String planExecutionId) {
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutions(planExecutionId);
@@ -67,7 +69,7 @@ public class GraphGenerator {
         .collect(groupingBy(NodeExecution::getParentId, mapping(NodeExecution::getUuid, toList())));
   }
 
-  private static class GraphGeneratorSession {
+  private class GraphGeneratorSession {
     private final Map<String, NodeExecution> nodeExIdMap;
     private final Map<String, List<String>> parentIdMap;
 
@@ -82,14 +84,20 @@ public class GraphGenerator {
         throw new UnexpectedException("The node with id [" + nodeExId + "] is not found");
       }
 
-      GraphVertex graphVertex = GraphVertex.builder()
-                                    .uuid(currentNode.getUuid())
-                                    .name(currentNode.getNode().getName())
-                                    .startTs(currentNode.getStartTs())
-                                    .endTs(currentNode.getEndTs())
-                                    .stepType(currentNode.getNode().getStepType().getType())
-                                    .status(currentNode.getStatus())
-                                    .build();
+      GraphVertex graphVertex =
+          GraphVertex.builder()
+              .uuid(currentNode.getUuid())
+              .name(currentNode.getNode().getName())
+              .startTs(currentNode.getStartTs())
+              .endTs(currentNode.getEndTs())
+              .initialWaitDuration(currentNode.getInitialWaitDuration())
+              .lastUpdatedAt(currentNode.getLastUpdatedAt())
+              .stepType(currentNode.getNode().getStepType().getType())
+              .status(currentNode.getStatus())
+              .failureInfo(currentNode.getFailureInfo())
+              .interruptHistories(currentNode.getInterruptHistories())
+              .outcomes(outcomeService.findAllByRuntimeId(currentNode.getPlanExecutionId(), currentNode.getUuid()))
+              .build();
 
       if (parentIdMap.containsKey(currentNode.getUuid())) {
         graphVertex.setSubgraph(new Subgraph(currentNode.getMode()));
