@@ -16,12 +16,8 @@ import javax.validation.constraints.NotNull;
 @JsonTypeName("kubernetes-gcp")
 public class K8sGCPInfraYaml implements Infrastructure {
   private String type;
+  private String previousStageIdentifier;
   private Spec spec;
-
-  @Override
-  public String getPreviousStageIdentifier() {
-    return null; // TODO: this is to unblock broken master. implement the right method
-  }
 
   @Data
   @Builder
