@@ -991,13 +991,17 @@ public class SecretManagerImpl implements SecretManager {
       EncryptionType toEncryptionType, String toSecretManagerId,
       Map<String, String> runtimeParametersForSourceSecretManager,
       Map<String, String> runtimeParametersForDestinationSecretManager) {
-    SecretManagerConfig sourceSecretManagerConfig = getSecretManager(accountId, fromSecretManagerId);
-    SecretManagerConfig destinationSecretManagerConfig = getSecretManager(accountId, toSecretManagerId);
-    if (SecretManagerConfig.isTemplatized(sourceSecretManagerConfig)) {
-      updateRuntimeParameters(sourceSecretManagerConfig, runtimeParametersForSourceSecretManager);
+    if (!StringUtils.isEmpty(fromSecretManagerId)) {
+      SecretManagerConfig sourceSecretManagerConfig = getSecretManager(accountId, fromSecretManagerId);
+      if (SecretManagerConfig.isTemplatized(sourceSecretManagerConfig)) {
+        updateRuntimeParameters(sourceSecretManagerConfig, runtimeParametersForSourceSecretManager);
+      }
     }
-    if (SecretManagerConfig.isTemplatized(destinationSecretManagerConfig)) {
-      updateRuntimeParameters(destinationSecretManagerConfig, runtimeParametersForDestinationSecretManager);
+    if (!StringUtils.isEmpty(toSecretManagerId)) {
+      SecretManagerConfig destinationSecretManagerConfig = getSecretManager(accountId, toSecretManagerId);
+      if (SecretManagerConfig.isTemplatized(destinationSecretManagerConfig)) {
+        updateRuntimeParameters(destinationSecretManagerConfig, runtimeParametersForDestinationSecretManager);
+      }
     }
     return transitionSecrets(accountId, fromEncryptionType, fromSecretManagerId, toEncryptionType, toSecretManagerId);
   }
@@ -1789,9 +1793,11 @@ public class SecretManagerImpl implements SecretManager {
   public String saveFile(String accountId, String kmsId, String name, long fileSize,
       UsageRestrictions usageRestrictions, BoundedInputStream inputStream, Map<String, String> runtimeParameters,
       boolean scopedToAccount) {
-    SecretManagerConfig secretManagerConfig = getSecretManager(accountId, kmsId);
-    if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
-      updateRuntimeParameters(secretManagerConfig, runtimeParameters);
+    if (!StringUtils.isEmpty(kmsId)) {
+      SecretManagerConfig secretManagerConfig = getSecretManager(accountId, kmsId);
+      if (SecretManagerConfig.isTemplatized(secretManagerConfig)) {
+        updateRuntimeParameters(secretManagerConfig, runtimeParameters);
+      }
     }
     return saveFile(accountId, kmsId, name, fileSize, usageRestrictions, inputStream, scopedToAccount);
   }
