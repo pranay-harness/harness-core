@@ -110,11 +110,13 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   private GitConfigHelperService gitConfigHelperService;
   private AuthService authService;
   private YamlGitConfigService yamlGitConfigService;
+  private GitSyncRBACHelper gitSyncRBACHelper;
 
   @Inject
   public GitSyncErrorServiceImpl(WingsPersistence wingsPersistence, YamlGitService yamlGitService,
       YamlService yamlService, GitSyncService gitSyncService, AlertsUtils alertsUtils, AuthService authService,
-      YamlGitConfigService yamlGitConfigService, GitConfigHelperService gitConfigHelperService) {
+      YamlGitConfigService yamlGitConfigService, GitConfigHelperService gitConfigHelperService,
+      GitSyncRBACHelper gitSyncRBACHelper) {
     this.wingsPersistence = wingsPersistence;
     this.yamlGitService = yamlGitService;
     this.yamlService = yamlService;
@@ -123,6 +125,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     this.gitConfigHelperService = gitConfigHelperService;
     this.authService = authService;
     this.yamlGitConfigService = yamlGitConfigService;
+    this.gitSyncRBACHelper = gitSyncRBACHelper;
   }
 
   private Query<GitSyncError> addGitToHarnessErrorFilter(Query<GitSyncError> gitSyncErrorQuery) {
@@ -371,7 +374,12 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     List<GitSyncError> allGitSyncErrors = query.asList(new FindOptions().skip(offset).limit(limit));
     List<GitSyncError> filteredErrorsAfterRemovingNewAppsIfNotRequired =
         removeNewAppErrorsInCaseOfSetupFilter(allGitSyncErrors, appId);
-    if (isEmpty(filteredErrorsAfterRemovingNewAppsIfNotRequired)) {
+    List<GitSyncError> errorFilesAccessibleToUser = filteredErrorsAfterRemovingNewAppsIfNotRequired;
+    if (whetherWeCanHaveAccountLevelFile(appId)) {
+      errorFilesAccessibleToUser = gitSyncRBACHelper.populateUserHasPermissionForFileFieldInErrors(
+          filteredErrorsAfterRemovingNewAppsIfNotRequired, accountId);
+    }
+    if (isEmpty(errorFilesAccessibleToUser)) {
       // Ideally this case won't happen, but if somehow the number of errors
       // in a commit becomes 0, we will return a empty response
       logger.info("The gitcommitId {} of account {} has zero git sync errors", gitCommitId, accountId);
@@ -394,6 +402,10 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         .withOffset(String.valueOf(offset))
         .withResponse(allErrosGeneratedInThatCommits)
         .build();
+  }
+
+  private boolean whetherWeCanHaveAccountLevelFile(String appId) {
+    return isEmpty(appId) || GLOBAL_APP_ID.equals(appId);
   }
 
   @Override
@@ -428,7 +440,12 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
                                                                .collect(toList());
     List<GitSyncError> filteredErrorsWithConnectorName =
         filterErrorsWithValidConnectorAndPopulateConnectorName(errorsWithoutPreviousErrorsFields, accountId);
-    allErrorsResponse.setResponse(filteredErrorsWithConnectorName);
+    List<GitSyncError> errorsAccessibleToUser = filteredErrorsWithConnectorName;
+    if (whetherWeCanHaveAccountLevelFile(appId)) {
+      errorsAccessibleToUser =
+          gitSyncRBACHelper.populateUserHasPermissionForFileFieldInErrors(filteredErrorsWithConnectorName, accountId);
+    }
+    allErrorsResponse.setResponse(errorsAccessibleToUser);
     return allErrorsResponse;
   }
 
@@ -671,9 +688,11 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     List<GitSyncError> allGitSyncErrors = emptyIfNull(query.asList(new FindOptions().skip(offset).limit(limit)));
     List<GitSyncError> filteredErrors =
         filterErrorsWithValidConnectorAndPopulateConnectorName(allGitSyncErrors, accountId);
+    List<GitSyncError> errorsAccessibleToUser =
+        gitSyncRBACHelper.populateUserHasPermissionForFileFieldInErrors(filteredErrors, accountId);
     return aPageResponse()
         .withTotal(query.count())
-        .withResponse(filteredErrors)
+        .withResponse(errorsAccessibleToUser)
         .withLimit(String.valueOf(limit))
         .withOffset(String.valueOf(offset))
         .build();

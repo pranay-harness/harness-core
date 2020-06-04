@@ -125,6 +125,7 @@ public class GitSyncErrorServiceImplTest extends WingsBaseTest {
     final GitSyncError gitSyncError = GitSyncError.builder()
                                           .accountId(accountId)
                                           .gitSyncDirection(GIT_TO_HARNESS.name())
+                                          .yamlFilePath("Setup/Applications/settingAttribute2.yaml")
                                           .additionalErrorDetails(gitSyncErrorDetails)
                                           .build();
     gitSyncError.setCreatedAt(System.currentTimeMillis());
