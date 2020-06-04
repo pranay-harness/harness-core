@@ -646,7 +646,7 @@ public class GitSyncServiceImpl implements GitSyncService {
       changeSetsWithProcessingStatus = Collections.emptyList();
     } else {
       changeSetsWithProcessingStatus = yamlChangeSetService.getChangeSetsWithStatus(
-          accountId, appId, yamlGitConfig, displayCount, processingStatuses, gitToHarness);
+          accountId, appId, yamlGitConfig, displayCount, processingStatuses, true);
     }
 
     return changeSetsWithProcessingStatus.stream()
