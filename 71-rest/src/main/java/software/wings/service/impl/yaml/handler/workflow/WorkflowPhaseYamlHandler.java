@@ -159,7 +159,8 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
                                       .statefulSet(yaml.isStatefulSet())
                                       .variableOverrides(yaml.getServiceVariableOverrides())
                                       .build();
-    workflowServiceHelper.validateService(workflowPhase, yaml.getServiceName());
+    workflowServiceHelper.validateService(
+        workflowPhase, yaml.getServiceName(), (Boolean) context.getProperties().get("IS_BUILD"));
     return workflowPhase;
   }
 

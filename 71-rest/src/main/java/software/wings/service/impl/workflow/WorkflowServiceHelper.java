@@ -2767,7 +2767,10 @@ public class WorkflowServiceHelper {
     }
   }
 
-  public void validateService(WorkflowPhase phase, String serviceName) {
+  public void validateService(WorkflowPhase phase, String serviceName, Boolean isBuild) {
+    if (isBuild) {
+      return;
+    }
     if (!phase.checkServiceTemplatized() && phase.getServiceId() == null) {
       throw new InvalidRequestException("Service Cannot be Empty for name :" + serviceName);
     }
