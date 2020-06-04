@@ -13,6 +13,7 @@ import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.beans.AwsS3BucketDetails;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.settings.SettingValue;
@@ -51,9 +52,12 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
         AwsCrossAccountAttributes awsCrossAccountAttributes =
             ((CEAwsConfig) settingAttribute.getValue()).getAwsCrossAccountAttributes();
         CEAwsConfig ceAwsConfig = (CEAwsConfig) settingAttribute.getValue();
+        AwsS3BucketDetails s3BucketDetails = ceAwsConfig.getS3BucketDetails();
         s3SyncRecordBuilder.billingAccountId(ceAwsConfig.getAwsMasterAccountId());
-        s3SyncRecordBuilder.billingBucketPath("s3://" + ceAwsConfig.getS3BucketDetails().getS3BucketName());
-        s3SyncRecordBuilder.billingBucketRegion(ceAwsConfig.getS3BucketDetails().getRegion());
+        s3SyncRecordBuilder.curReportName(ceAwsConfig.getCurReportName());
+        s3SyncRecordBuilder.billingBucketPath(String.join("/", "s3://" + s3BucketDetails.getS3BucketName(),
+            s3BucketDetails.getS3Prefix(), ceAwsConfig.getCurReportName()));
+        s3SyncRecordBuilder.billingBucketRegion(s3BucketDetails.getRegion());
         s3SyncRecordBuilder.externalId(awsCrossAccountAttributes.getExternalId());
         s3SyncRecordBuilder.roleArn(awsCrossAccountAttributes.getCrossAccountRoleArn());
         awsS3SyncService.syncBuckets(s3SyncRecordBuilder.build());

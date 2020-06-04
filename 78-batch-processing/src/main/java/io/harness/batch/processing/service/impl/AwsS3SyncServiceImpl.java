@@ -42,8 +42,8 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
     ImmutableMap<String, String> envVariables = ImmutableMap.of(AWS_ACCESS_KEY_ID, awsCredentials.getAwsAccessKey(),
         AWS_SECRET_ACCESS_KEY, awsCredentials.getAwsSecretKey(), AWS_DEFAULT_REGION, awsCredentials.getRegion());
 
-    String destinationBucketPath = String.join(
-        "/", "s3://" + awsCredentials.getAwsS3BucketName(), s3SyncRecord.getAccountId(), s3SyncRecord.getSettingId());
+    String destinationBucketPath = String.join("/", "s3://" + awsCredentials.getAwsS3BucketName(),
+        s3SyncRecord.getAccountId(), s3SyncRecord.getSettingId(), s3SyncRecord.getCurReportName());
 
     try {
       final ArrayList<String> assumeRoleCmd =

@@ -40,6 +40,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.beans.ce.CEAwsConfig;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 
@@ -54,7 +55,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class HealthStatusServiceImpl implements HealthStatusService {
   private static final String SUCCEEDED = "SUCCEEDED";
-  private static final String DEFAULT_TIME_ZONE = "GMT";
   @Inject SettingsService settingsService;
   @Inject CCMSettingService ccmSettingService;
   @Inject ClusterRecordService clusterRecordService;
@@ -114,6 +114,12 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     boolean dataTransferJobStatus;
     boolean preAggregatedJobStatus;
     boolean awsFallbackTableJob = true;
+    String s3SyncHealthStatus = null;
+    long lastS3SyncTimestamp = 0L;
+    boolean isAWSConnector = false;
+    if (cloudProvider.getValue() instanceof CEAwsConfig) {
+      isAWSConnector = true;
+    }
 
     Instant connectorCreationInstantDayTruncated =
         Instant.ofEpochMilli(cloudProvider.getCreatedAt()).truncatedTo(ChronoUnit.DAYS);
@@ -126,36 +132,47 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         billingDataPipelineRecordDao.fetchBillingPipelineRecord(cloudProvider.getAccountId(), cloudProvider.getUuid());
 
     if (timeDifference == 0 || billingDataPipelineRecord == null) {
-      return serialiseHealthStatusToPOJO(true, Collections.singletonList(SETTING_ATTRIBUTE_CREATED.getMessage()), 0L);
+      return serialiseHealthStatusToPOJO(
+          true, Collections.singletonList(SETTING_ATTRIBUTE_CREATED.getMessage()), lastS3SyncTimestamp);
     }
 
-    String s3SyncHealthStatus = getS3SyncHealthStatus(billingDataPipelineRecord);
-    long lastS3SyncTimestamp = billingDataPipelineRecord.getLastSuccessfulS3Sync().toEpochMilli();
+    if (isAWSConnector) {
+      s3SyncHealthStatus = getS3SyncHealthStatus(billingDataPipelineRecord);
+      lastS3SyncTimestamp = billingDataPipelineRecord.getLastSuccessfulS3Sync().toEpochMilli();
+    }
 
     if (timeDifference == ChronoUnit.DAYS.getDuration().toMillis()) {
       boolean isBillingDataPipelineCreationSuccessful = billingDataPipelineRecord.getDataSetId() != null;
-      List<String> messages =
-          Arrays.asList(isBillingDataPipelineCreationSuccessful ? BILLING_PIPELINE_CREATION_SUCCESSFUL.getMessage()
-                                                                : BILLING_PIPELINE_CREATION_FAILED.getMessage(),
-              s3SyncHealthStatus);
+      List<String> messages = new ArrayList<>();
+      messages.add(isBillingDataPipelineCreationSuccessful ? BILLING_PIPELINE_CREATION_SUCCESSFUL.getMessage()
+                                                           : BILLING_PIPELINE_CREATION_FAILED.getMessage());
+      if (isAWSConnector) {
+        messages.add(s3SyncHealthStatus);
+      }
       return serialiseHealthStatusToPOJO(isBillingDataPipelineCreationSuccessful, messages, lastS3SyncTimestamp);
     }
 
     if (billingDataPipelineRecord.getDataSetId() == null) {
-      return serialiseHealthStatusToPOJO(
-          true, Arrays.asList(BILLING_PIPELINE_CREATION_FAILED.getMessage(), s3SyncHealthStatus), lastS3SyncTimestamp);
+      List<String> messages = new ArrayList<>();
+      messages.add(BILLING_PIPELINE_CREATION_FAILED.getMessage());
+      if (isAWSConnector) {
+        messages.add(s3SyncHealthStatus);
+      }
+      return serialiseHealthStatusToPOJO(true, messages, lastS3SyncTimestamp);
     }
 
     dataTransferJobStatus = billingDataPipelineRecord.getDataTransferJobStatus().equals(SUCCEEDED);
     preAggregatedJobStatus = billingDataPipelineRecord.getPreAggregatedScheduledQueryStatus().equals(SUCCEEDED);
-    if (cloudProvider.getValue().getType().equals(SettingValue.SettingVariableTypes.CE_AWS.toString())) {
+    if (isAWSConnector) {
       awsFallbackTableJob = billingDataPipelineRecord.getAwsFallbackTableScheduledQueryStatus().equals(SUCCEEDED);
     }
 
     boolean healthStatus = dataTransferJobStatus && preAggregatedJobStatus && awsFallbackTableJob;
-    List<String> messages = Arrays.asList(
-        healthStatus ? BILLING_DATA_PIPELINE_SUCCESS.getMessage() : BILLING_DATA_PIPELINE_ERROR.getMessage(),
-        s3SyncHealthStatus);
+    List<String> messages = new ArrayList<>();
+    messages.add(healthStatus ? BILLING_DATA_PIPELINE_SUCCESS.getMessage() : BILLING_DATA_PIPELINE_ERROR.getMessage());
+    if (isAWSConnector) {
+      messages.add(s3SyncHealthStatus);
+    }
     return serialiseHealthStatusToPOJO(healthStatus, messages, lastS3SyncTimestamp);
   }
 

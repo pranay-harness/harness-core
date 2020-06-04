@@ -69,7 +69,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   private static final String WRITE_TRUNCATE_VALUE = "WRITE_TRUNCATE";
   protected static final String PARENT_TEMPLATE = "projects/%s";
   protected static final String PARENT_TEMPLATE_WITH_LOCATION = "projects/%s/locations/%s";
-  private static final String DATA_PATH_TEMPLATE = "%s/%s/%s/*/*/*/*/*.csv.gz";
+  private static final String DATA_PATH_TEMPLATE = "%s/%s/%s/%s/*/*.csv.gz";
   private static final String TRANSFER_JOB_NAME_TEMPLATE = "gcsToBigQueryTransferJob_%s";
   private static final String SCHEDULED_QUERY_TEMPLATE = "scheduledQuery_%s";
   private static final String AWS_PRE_AGG_QUERY_TEMPLATE = "awsPreAggQuery_%s";
@@ -261,8 +261,8 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
     executeDataTransferJobCreate(request, client);
   }
 
-  public String createDataTransferJobFromGCS(
-      String destinationDataSetId, String settingId, String accountId, String accountName) throws IOException {
+  public String createDataTransferJobFromGCS(String destinationDataSetId, String settingId, String accountId,
+      String accountName, String curReportName) throws IOException {
     DataTransferServiceClient dataTransferServiceClient = getDataTransferClient();
     String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
     String parent = String.format(PARENT_TEMPLATE, gcpProjectId);
@@ -272,23 +272,23 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
     TransferConfig transferConfig =
         TransferConfig.newBuilder()
             .setDisplayName(transferJobName)
-            .setParams(
-                Struct.newBuilder()
-                    .putFields(DATA_PATH_TEMPLATE_CONST,
-                        Value.newBuilder()
-                            .setStringValue(String.format(DATA_PATH_TEMPLATE,
-                                mainConfig.getBillingDataPipelineConfig().getGcsBasePath(), accountId, settingId))
-                            .build())
-                    .putFields(FILE_FORMAT_CONST, Value.newBuilder().setStringValue("CSV").build())
-                    .putFields(IGNORE_UNKNOWN_VALUES_CONST, Value.newBuilder().setBoolValue(true).build())
-                    .putFields(FIELD_DELIMITER_CONST, Value.newBuilder().setStringValue(",").build())
-                    .putFields(SKIP_LEADING_ROWS_CONST, Value.newBuilder().setStringValue("1").build())
-                    .putFields(ALLOWS_QUOTED_NEWLINES_CONST, Value.newBuilder().setBoolValue(true).build())
-                    .putFields(ALLOWS_JAGGED_ROWS_CONST, Value.newBuilder().setBoolValue(true).build())
-                    .putFields(DELETE_SOURCE_FILES_CONST, Value.newBuilder().setBoolValue(true).build())
-                    .putFields(
-                        DEST_TABLE_NAME_CONST, Value.newBuilder().setStringValue(TEMP_DEST_TABLE_NAME_VALUE).build())
-                    .build())
+            .setParams(Struct.newBuilder()
+                           .putFields(DATA_PATH_TEMPLATE_CONST,
+                               Value.newBuilder()
+                                   .setStringValue(String.format(DATA_PATH_TEMPLATE,
+                                       mainConfig.getBillingDataPipelineConfig().getGcsBasePath(), accountId, settingId,
+                                       curReportName))
+                                   .build())
+                           .putFields(FILE_FORMAT_CONST, Value.newBuilder().setStringValue("CSV").build())
+                           .putFields(IGNORE_UNKNOWN_VALUES_CONST, Value.newBuilder().setBoolValue(true).build())
+                           .putFields(FIELD_DELIMITER_CONST, Value.newBuilder().setStringValue(",").build())
+                           .putFields(SKIP_LEADING_ROWS_CONST, Value.newBuilder().setStringValue("1").build())
+                           .putFields(ALLOWS_QUOTED_NEWLINES_CONST, Value.newBuilder().setBoolValue(true).build())
+                           .putFields(ALLOWS_JAGGED_ROWS_CONST, Value.newBuilder().setBoolValue(true).build())
+                           .putFields(DELETE_SOURCE_FILES_CONST, Value.newBuilder().setBoolValue(true).build())
+                           .putFields(DEST_TABLE_NAME_CONST,
+                               Value.newBuilder().setStringValue(TEMP_DEST_TABLE_NAME_VALUE).build())
+                           .build())
             .setDestinationDatasetId(destinationDataSetId)
             .setScheduleOptions(ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(6, 0)).build())
             .setDataSourceId(GCS_DATA_SOURCE_ID)

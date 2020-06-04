@@ -54,6 +54,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   private static final String PASSWORD = "PASSWORD";
   private static final String S3_REGION = "us-east-1";
   private static final String S3_BUCKET_NAME = "ceBucket";
+  private static final String S3_BUCKET_PREFIX = "prefix";
   private static final String ROLE_ARN = "arn:aws:iam::830767422336:role/harnessCERole";
 
   @Mock private ApplicationManifestService applicationManifestService;
@@ -79,13 +80,19 @@ public class SettingsServiceImplTest extends WingsBaseTest {
             .awsCrossAccountAttributes(AwsCrossAccountAttributes.builder().crossAccountRoleArn(ROLE_ARN).build())
             .build();
     attribute.setValue(ceAwsConfig);
-    doReturn(S3_REGION).when(awsCeConfigService).validateCURReportAccessAndReturnS3Region(ceAwsConfig);
+    doReturn(AwsS3BucketDetails.builder().s3Prefix(S3_BUCKET_PREFIX).region(S3_REGION).build())
+        .when(awsCeConfigService)
+        .validateCURReportAccessAndReturnS3Config(ceAwsConfig);
     settingsService.validateAndUpdateCEDetails(attribute);
     CEAwsConfig modifiedConfig = (CEAwsConfig) attribute.getValue();
     assertThat(modifiedConfig.getAwsAccountId()).isEqualTo("830767422336");
     assertThat(modifiedConfig.getAwsMasterAccountId()).isEqualTo("830767422336");
     assertThat(modifiedConfig.getS3BucketDetails())
-        .isEqualTo(AwsS3BucketDetails.builder().s3BucketName(S3_BUCKET_NAME).region(S3_REGION).build());
+        .isEqualTo(AwsS3BucketDetails.builder()
+                       .s3BucketName(S3_BUCKET_NAME)
+                       .s3Prefix(S3_BUCKET_PREFIX)
+                       .region(S3_REGION)
+                       .build());
   }
 
   @Test

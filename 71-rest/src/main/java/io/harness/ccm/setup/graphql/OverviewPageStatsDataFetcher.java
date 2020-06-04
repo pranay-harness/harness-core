@@ -111,7 +111,7 @@ public class OverviewPageStatsDataFetcher
           modifyOverviewStatsBuilder(row, overviewStatsDataBuilder);
         }
       } else {
-        overviewStatsDataBuilder.awsConnectorsPresent(false).gcpConnectorsPresent(false);
+        overviewStatsDataBuilder.awsConnectorsPresent(Boolean.FALSE).gcpConnectorsPresent(Boolean.FALSE);
       }
     } catch (InterruptedException e) {
       logger.error("Failed to get OverviewPageStatsDataFetcher {}", e);

@@ -50,7 +50,7 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
   private static final String validationFailureKey = "Validation Failed";
 
   @Override
-  public String validateCURReportAccessAndReturnS3Region(CEAwsConfig awsConfig) {
+  public AwsS3BucketDetails validateCURReportAccessAndReturnS3Config(CEAwsConfig awsConfig) {
     AwsCrossAccountAttributes awsCrossAccountAttributes = awsConfig.getAwsCrossAccountAttributes();
     AWSCredentialsProvider credentialsProvider = getCredentialProvider(awsCrossAccountAttributes);
     AWSCostAndUsageReport awsCostAndUsageReportClient = AWSCostAndUsageReportClientBuilder.standard()
@@ -65,7 +65,7 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
     return validateReportAndGetS3Region(report, awsConfig);
   }
 
-  private String validateReportAndGetS3Region(ReportDefinition report, CEAwsConfig awsConfig) {
+  private AwsS3BucketDetails validateReportAndGetS3Region(ReportDefinition report, CEAwsConfig awsConfig) {
     if (!report.getS3Bucket().equals(awsConfig.getS3BucketDetails().getS3BucketName())) {
       throw new InvalidArgumentsException(ImmutablePair.of(curReportConfigKey, "S3 Bucket Name Mismatch"));
     }
@@ -83,7 +83,7 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
       throw new InvalidArgumentsException(
           ImmutablePair.of(curReportConfigKey, "Data Refresh setting should be Automatic"));
     }
-    return report.getS3Region();
+    return AwsS3BucketDetails.builder().region(report.getS3Region()).s3Prefix(report.getS3Prefix()).build();
   }
 
   @VisibleForTesting

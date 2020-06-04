@@ -54,6 +54,7 @@ public class AwsBillingDataPipelineWriterTest extends CategoryTest {
   private static final String masterAccountId = "masterAccountId";
   private static final String accountId = "accountId";
   private static final String accountName = "accountName";
+  private static final String curReportName = "curReportName";
   private static final String dataSetId = "datasetId";
   private static final String transferJobName = "transferJobName";
   private static final Instant instant = Instant.now();
@@ -67,7 +68,8 @@ public class AwsBillingDataPipelineWriterTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     SettingAttribute settingAttribute = new SettingAttribute();
     settingAttribute.setUuid(settingId);
-    settingAttribute.setValue(CEAwsConfig.builder().awsMasterAccountId(masterAccountId).build());
+    settingAttribute.setValue(
+        CEAwsConfig.builder().curReportName(curReportName).awsMasterAccountId(masterAccountId).build());
     Map<String, JobParameter> parameters = new HashMap<>();
     parameters.put(CCMJobConstants.JOB_START_DATE, new JobParameter(String.valueOf(startTime), true));
     parameters.put(CCMJobConstants.JOB_END_DATE, new JobParameter(String.valueOf(endTime), true));
@@ -84,7 +86,8 @@ public class AwsBillingDataPipelineWriterTest extends CategoryTest {
              endTime))
         .thenReturn(Collections.singletonList(settingAttribute));
     when(billingDataPipelineService.createDataSet(any())).thenReturn(dataSetId);
-    when(billingDataPipelineService.createDataTransferJobFromGCS(dataSetId, settingId, accountId, accountName))
+    when(billingDataPipelineService.createDataTransferJobFromGCS(
+             dataSetId, settingId, accountId, accountName, curReportName))
         .thenReturn(transferJobName);
     HashMap<String, String> scheduledQueryJobsMap = new HashMap<>();
     scheduledQueryJobsMap.put(scheduledQueryKey, scheduledQueryName);

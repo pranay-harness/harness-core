@@ -8,4 +8,5 @@ import lombok.Data;
 public class AwsS3BucketDetails {
   private String region;
   private String s3BucketName;
+  private String s3Prefix;
 }
