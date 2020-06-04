@@ -221,6 +221,10 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
     return validVariableNamePattern.matcher(name).matches();
   }
 
+  public static String createExpression(String expr) {
+    return expr == null ? null : "${" + expr + "}";
+  }
+
   private static class IdentityStrLookup extends StrLookup<String> {
     @Override
     public String lookup(String key) {

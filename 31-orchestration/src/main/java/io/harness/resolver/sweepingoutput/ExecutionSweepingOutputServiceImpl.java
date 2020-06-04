@@ -5,6 +5,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
@@ -14,12 +15,16 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutput;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.engine.expressions.EngineAmbianceExpressionEvaluator;
+import io.harness.engine.expressions.functors.NodeExecutionEntityType;
+import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.persistence.HPersistence;
 import io.harness.references.RefObject;
 import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputInstance.ExecutionSweepingOutputKeys;
 import io.harness.resolvers.ResolverUtils;
 
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 
 @OwnedBy(CDC)
@@ -27,6 +32,7 @@ import java.util.List;
 @Singleton
 public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutputService {
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
+  @Inject private Injector injector;
 
   @Override
   public String consumeInternal(Ambiance ambiance, String name, SweepingOutput value, int levelsToKeep) {
@@ -48,6 +54,22 @@ public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutp
 
   @Override
   public SweepingOutput resolve(Ambiance ambiance, RefObject refObject) {
+    if (!refObject.getName().contains(".")) {
+      // It is not an expression-like ref-object.
+      return resolveUsingRuntimeId(ambiance, refObject);
+    }
+
+    EngineAmbianceExpressionEvaluator evaluator = EngineAmbianceExpressionEvaluator.builder()
+                                                      .ambiance(ambiance)
+                                                      .entityTypes(EnumSet.of(NodeExecutionEntityType.SWEEPING_OUTPUT))
+                                                      .refObjectSpecific(true)
+                                                      .build();
+    injector.injectMembers(evaluator);
+    Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
+    return (value instanceof SweepingOutput) ? (SweepingOutput) value : null;
+  }
+
+  private SweepingOutput resolveUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
     String name = refObject.getName();
     List<ExecutionSweepingOutputInstance> instances =
         hPersistence.createQuery(ExecutionSweepingOutputInstance.class, excludeAuthority)

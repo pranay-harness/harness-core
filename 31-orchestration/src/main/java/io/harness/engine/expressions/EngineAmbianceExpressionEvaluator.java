@@ -13,6 +13,7 @@ import io.harness.engine.AmbianceHelper;
 import io.harness.engine.expressions.functors.ExecutionSweepingOutputFunctor;
 import io.harness.engine.expressions.functors.NodeExecutionAncestorFunctor;
 import io.harness.engine.expressions.functors.NodeExecutionChildFunctor;
+import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.engine.expressions.functors.NodeExecutionQualifiedFunctor;
 import io.harness.engine.expressions.functors.OutcomeFunctor;
 import io.harness.engine.services.NodeExecutionService;
@@ -25,6 +26,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
@@ -38,22 +40,35 @@ public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator
   @Inject private NodeExecutionService nodeExecutionService;
 
   private final Ambiance ambiance;
+  private final Set<NodeExecutionEntityType> entityTypes;
+  private final boolean refObjectSpecific;
 
   @Builder
-  public EngineAmbianceExpressionEvaluator(Ambiance ambiance, VariableResolverTracker variableResolverTracker) {
+  public EngineAmbianceExpressionEvaluator(VariableResolverTracker variableResolverTracker, Ambiance ambiance,
+      Set<NodeExecutionEntityType> entityTypes, boolean refObjectSpecific) {
     super(variableResolverTracker);
     this.ambiance = ambiance;
+    this.entityTypes = entityTypes == null ? NodeExecutionEntityType.allEntities() : entityTypes;
+    this.refObjectSpecific = refObjectSpecific;
   }
 
   @Override
   protected void initialize() {
-    super.initialize();
-    addToContext("outcome", OutcomeFunctor.builder().ambiance(ambiance).outcomeService(outcomeService).build());
-    addToContext("output",
-        ExecutionSweepingOutputFunctor.builder()
-            .executionSweepingOutputService(executionSweepingOutputService)
-            .ambiance(ambiance)
-            .build());
+    if (!refObjectSpecific) {
+      super.initialize();
+    }
+
+    if (entityTypes.contains(NodeExecutionEntityType.OUTCOME)) {
+      addToContext("outcome", OutcomeFunctor.builder().ambiance(ambiance).outcomeService(outcomeService).build());
+    }
+
+    if (entityTypes.contains(NodeExecutionEntityType.SWEEPING_OUTPUT)) {
+      addToContext("output",
+          ExecutionSweepingOutputFunctor.builder()
+              .executionSweepingOutputService(executionSweepingOutputService)
+              .ambiance(ambiance)
+              .build());
+    }
 
     PlanExecution planExecution = ambianceHelper.obtainExecutionInstance(ambiance);
     if (planExecution == null) {
@@ -68,6 +83,7 @@ public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator
             .outcomeService(outcomeService)
             .executionSweepingOutputService(executionSweepingOutputService)
             .ambiance(ambiance)
+            .entityTypes(entityTypes)
             .build());
     // Access StepParameters and Outcomes of ancestors.
     addToContext("ancestor",
@@ -76,6 +92,7 @@ public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator
             .outcomeService(outcomeService)
             .executionSweepingOutputService(executionSweepingOutputService)
             .ambiance(ambiance)
+            .entityTypes(entityTypes)
             .build());
     // Access StepParameters and Outcomes using fully qualified names.
     addToContext("qualified",
@@ -84,12 +101,21 @@ public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator
             .outcomeService(outcomeService)
             .executionSweepingOutputService(executionSweepingOutputService)
             .ambiance(ambiance)
+            .entityTypes(entityTypes)
             .build());
   }
 
   @Override
   @NotNull
   protected List<String> fetchPrefixes() {
-    return ImmutableList.of("outcome", "output", "child", "ancestor", "qualified", "");
+    ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
+    if (entityTypes.contains(NodeExecutionEntityType.OUTCOME)) {
+      listBuilder.add("outcome");
+    }
+    if (entityTypes.contains(NodeExecutionEntityType.SWEEPING_OUTPUT)) {
+      listBuilder.add("output");
+    }
+
+    return listBuilder.add("child").add("ancestor").add("qualified").add("").build();
   }
 }

@@ -13,6 +13,8 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+import java.util.Set;
+
 @OwnedBy(CDC)
 @Value
 @Builder
@@ -22,6 +24,7 @@ public class NodeExecutionAncestorFunctor extends LateBindingMap {
   transient OutcomeService outcomeService;
   transient ExecutionSweepingOutputService executionSweepingOutputService;
   transient Ambiance ambiance;
+  transient Set<NodeExecutionEntityType> entityTypes;
 
   @Override
   public synchronized Object get(Object key) {
@@ -37,6 +40,7 @@ public class NodeExecutionAncestorFunctor extends LateBindingMap {
                                             .executionSweepingOutputService(executionSweepingOutputService)
                                             .ambiance(ambiance)
                                             .startNodeExecution(startNodeExecution)
+                                            .entityTypes(entityTypes)
                                             .build()
                                             .bind();
   }
