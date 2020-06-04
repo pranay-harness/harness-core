@@ -10,7 +10,12 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.beans.sso.SSOSettings.SSOSettingsKeys;
 
 import javax.validation.constraints.NotNull;
 
@@ -19,6 +24,11 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "SSOSettingsKeys")
 @Entity(value = "ssoSettings")
 @HarnessEntity(exportable = true)
+@Indexes({
+  @Index(options = @IndexOptions(name = "accountIdTypeIdx"), fields = {
+    @Field("accountId"), @Field(SSOSettingsKeys.type)
+  })
+})
 public abstract class SSOSettings extends Base implements AccountAccess {
   @NotNull protected SSOType type;
   @NotEmpty protected String displayName;
