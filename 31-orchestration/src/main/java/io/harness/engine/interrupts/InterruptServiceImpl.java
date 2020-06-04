@@ -18,7 +18,6 @@ import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
-import io.harness.state.io.StepTransput;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -36,8 +35,7 @@ public class InterruptServiceImpl implements InterruptService {
   @Inject private ResumeAllHandler resumeAllHandler;
 
   @Override
-  public InterruptCheck checkAndHandleInterruptsBeforeNodeStart(
-      Ambiance ambiance, List<StepTransput> additionalInputs) {
+  public InterruptCheck checkAndHandleInterruptsBeforeNodeStart(Ambiance ambiance) {
     List<Interrupt> interrupts = fetchActivePlanLevelInterrupts(ambiance.getPlanExecutionId());
     if (isEmpty(interrupts)) {
       return InterruptCheck.builder().proceed(true).reason("[InterruptCheck] No Interrupts Found").build();
@@ -50,10 +48,10 @@ public class InterruptServiceImpl implements InterruptService {
 
     switch (interrupt.getType()) {
       case PAUSE_ALL:
-        pauseAllHandler.handleInterrupt(interrupt, ambiance, additionalInputs);
+        pauseAllHandler.handleInterrupt(interrupt, ambiance);
         return InterruptCheck.builder().proceed(false).reason("[InterruptCheck] PAUSE_ALL interrupt found").build();
       case RESUME_ALL:
-        resumeAllHandler.handleInterrupt(interrupt, ambiance, additionalInputs);
+        resumeAllHandler.handleInterrupt(interrupt, ambiance);
         return InterruptCheck.builder().proceed(true).reason("[InterruptCheck] RESUME_ALL interrupt found").build();
       default:
         throw new InvalidRequestException("No Handler Present for interrupt type: " + interrupt.getType());

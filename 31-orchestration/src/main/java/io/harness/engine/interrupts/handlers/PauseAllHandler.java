@@ -28,7 +28,6 @@ import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.persistence.HPersistence;
-import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
 
 import java.util.List;
@@ -65,7 +64,7 @@ public class PauseAllHandler implements InterruptHandler {
   }
 
   @Override
-  public Interrupt handleInterrupt(Interrupt interrupt, Ambiance ambiance, List<StepTransput> additionalInputs) {
+  public Interrupt handleInterrupt(Interrupt interrupt, Ambiance ambiance) {
     String nodeExecutionId = ambiance.obtainCurrentRuntimeId();
 
     // Update status
@@ -84,9 +83,8 @@ public class PauseAllHandler implements InterruptHandler {
                                                   .interruptId(interrupt.getUuid())
                                                   .status(Status.PAUSED)
                                                   .build());
-    waitNotifyEngine.waitForAllOn(ORCHESTRATION,
-        EngineResumeAllCallback.builder().ambiance(ambiance).additionalInputs(additionalInputs).build(),
-        interrupt.getUuid());
+    waitNotifyEngine.waitForAllOn(
+        ORCHESTRATION, EngineResumeAllCallback.builder().ambiance(ambiance).build(), interrupt.getUuid());
     return interrupt;
   }
 }
