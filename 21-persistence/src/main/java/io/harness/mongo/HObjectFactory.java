@@ -1,8 +1,5 @@
 package io.harness.mongo;
 
-import static io.harness.morphia.MorphiaRegistrar.PKG_HARNESS;
-import static io.harness.morphia.MorphiaRegistrar.PKG_WINGS;
-
 import com.mongodb.DBObject;
 import io.harness.exception.GeneralException;
 import io.harness.exception.UnexpectedException;
@@ -41,14 +38,16 @@ public class HObjectFactory extends DefaultCreator {
 
   private static synchronized Map<String, Class> collectMorphiaInterfaceImplementers() {
     Map<String, Class> morphiaInterfaceImplementers = new ConcurrentHashMap<>();
-
-    HelperPut h = (name, clazz) -> morphiaInterfaceImplementers.merge(PKG_HARNESS + name, clazz, (x, y) -> {
-      throw new GeneralException("Duplicated");
+    HelperPut g = (name, clazz) -> morphiaInterfaceImplementers.merge(name, clazz, (v1, v2) -> {
+      if (v1.equals(v2)) {
+        throw new GeneralException("Do not register the same value twice");
+      } else {
+        throw new GeneralException("Registering different class for the same name is very dangerous");
+      }
     });
 
-    HelperPut w = (name, clazz) -> morphiaInterfaceImplementers.merge(PKG_WINGS + name, clazz, (x, y) -> {
-      throw new GeneralException("Duplicated");
-    });
+    HelperPut h = (name, clazz) -> g.put("io.harness." + name, clazz);
+    HelperPut w = (name, clazz) -> g.put("software.wings." + name, clazz);
 
     try {
       Reflections reflections = new Reflections("io.harness.serializer.morphia");

@@ -11,9 +11,6 @@ import java.util.Set;
 public interface MorphiaRegistrar {
   interface NotFoundClass {}
 
-  String PKG_WINGS = "software.wings.";
-  String PKG_HARNESS = "io.harness.";
-
   interface HelperPut {
     void put(String path, Class clazz);
   }
@@ -36,11 +33,16 @@ public interface MorphiaRegistrar {
   default void testImplementationClassesModule() {
     final Map<String, Class> map = new HashMap<>();
 
-    HelperPut h =
-        (name, clazz) -> map.merge(PKG_HARNESS + name, clazz, (x, y) -> { throw new GeneralException("Duplicated"); });
+    HelperPut g = (name, clazz) -> map.merge(name, clazz, (v1, v2) -> {
+      if (v1.equals(v2)) {
+        throw new GeneralException("Do not register the same value twice");
+      } else {
+        throw new GeneralException("Registering different class for the same name is very dangerous");
+      }
+    });
 
-    HelperPut w =
-        (name, clazz) -> map.merge(PKG_WINGS + name, clazz, (x, y) -> { throw new GeneralException("Duplicated"); });
+    HelperPut h = (name, clazz) -> g.put("io.harness." + name, clazz);
+    HelperPut w = (name, clazz) -> g.put("software.wings." + name, clazz);
 
     registerImplementationClasses(h, w);
 
