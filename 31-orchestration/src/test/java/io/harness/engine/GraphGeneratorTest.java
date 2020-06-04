@@ -25,6 +25,7 @@ import io.harness.state.core.fork.ForkStep;
 import io.harness.state.core.fork.ForkStepParameters;
 import io.harness.state.core.section.SectionStep;
 import io.harness.state.core.section.SectionStepParameters;
+import io.harness.state.core.section.chain.SectionChainStep;
 import io.harness.state.io.StepParameters;
 import io.harness.utils.DummyOutcome;
 import org.junit.Before;
@@ -177,7 +178,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                       .planExecutionId(PLAN_EXECUTION_ID)
                                       .mode(ExecutionMode.SYNC)
                                       .node(PlanNode.builder()
-                                                .uuid("parallel_node_1")
+                                                .uuid("parallel_plan_node_1")
                                                 .name("name_children_1")
                                                 .stepType(DummyStep.STEP_TYPE)
                                                 .identifier("name_children_1")
@@ -189,7 +190,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                       .planExecutionId(PLAN_EXECUTION_ID)
                                       .mode(ExecutionMode.SYNC)
                                       .node(PlanNode.builder()
-                                                .uuid("parallel_node_2")
+                                                .uuid("parallel_plan_node_2")
                                                 .name("name_children_2")
                                                 .stepType(DummyStep.STEP_TYPE)
                                                 .identifier("name_children_2")
@@ -209,5 +210,120 @@ public class GraphGeneratorTest extends OrchestrationTest {
     assertThat(graphVertex.getSubgraph()).isNotNull();
     assertThat(graphVertex.getSubgraph().getVertices().stream().map(GraphVertex::getUuid).collect(Collectors.toList()))
         .containsExactlyInAnyOrder(parallelNode1.getUuid(), parallelNode2.getUuid());
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldGenerateGraphWithChildChain() {
+    String dummyNode1Uuid = "dummyNode1";
+    String dummyNode2Uuid = "dummyNode2";
+
+    NodeExecution sectionChainParentNode = NodeExecution.builder()
+                                               .uuid("section_chain_start")
+                                               .planExecutionId(PLAN_EXECUTION_ID)
+                                               .mode(ExecutionMode.CHILD_CHAIN)
+                                               .node(PlanNode.builder()
+                                                         .uuid("section_chain_plan_node")
+                                                         .name("name_section_chain")
+                                                         .identifier("name_section_chain")
+                                                         .stepType(SectionChainStep.STEP_TYPE)
+                                                         .build())
+                                               .build();
+
+    NodeExecution sectionChain1 = NodeExecution.builder()
+                                      .uuid("section_chain_child1")
+                                      .planExecutionId(PLAN_EXECUTION_ID)
+                                      .mode(ExecutionMode.TASK)
+                                      .node(PlanNode.builder()
+                                                .uuid("section_chain_child1_plan_node")
+                                                .name("name_section_chain_child1_plan_node")
+                                                .identifier("name_section_chain_child1_plan_node")
+                                                .stepType(DummyStep.STEP_TYPE)
+                                                .build())
+                                      .parentId(sectionChainParentNode.getUuid())
+                                      .nextId(dummyNode1Uuid)
+                                      .build();
+
+    NodeExecution sectionChain2 = NodeExecution.builder()
+                                      .uuid("section_chain_child2")
+                                      .planExecutionId(PLAN_EXECUTION_ID)
+                                      .mode(ExecutionMode.TASK)
+                                      .node(PlanNode.builder()
+                                                .uuid("section_chain_child2_plan_node")
+                                                .name("name_section_chain_child2_plan_node")
+                                                .identifier("name_section_chain_child2_plan_node")
+                                                .stepType(DummyStep.STEP_TYPE)
+                                                .build())
+                                      .parentId(sectionChainParentNode.getUuid())
+                                      .nextId(dummyNode2Uuid)
+                                      .build();
+
+    NodeExecution dummyNode1 = NodeExecution.builder()
+                                   .uuid(dummyNode1Uuid)
+                                   .planExecutionId(PLAN_EXECUTION_ID)
+                                   .mode(ExecutionMode.SYNC)
+                                   .node(PlanNode.builder()
+                                             .uuid("dummy_plan_node_1")
+                                             .name("name_dummy_node_1")
+                                             .stepType(DummyStep.STEP_TYPE)
+                                             .identifier("name_dummy_node_1")
+                                             .build())
+                                   .parentId(sectionChainParentNode.getUuid())
+                                   .previousId(sectionChain1.getUuid())
+                                   .build();
+
+    NodeExecution dummyNode2 = NodeExecution.builder()
+                                   .uuid(dummyNode2Uuid)
+                                   .planExecutionId(PLAN_EXECUTION_ID)
+                                   .mode(ExecutionMode.SYNC)
+                                   .node(PlanNode.builder()
+                                             .uuid("dummy_plan_node_2")
+                                             .name("name_dummy_node_2")
+                                             .stepType(DummyStep.STEP_TYPE)
+                                             .identifier("name_dummy_node_2")
+                                             .build())
+                                   .parentId(sectionChainParentNode.getUuid())
+                                   .previousId(sectionChain2.getUuid())
+                                   .build();
+
+    List<NodeExecution> nodeExecutions =
+        Lists.newArrayList(sectionChainParentNode, sectionChain1, sectionChain2, dummyNode1, dummyNode2);
+
+    when(nodeExecutionService.fetchNodeExecutions(PLAN_EXECUTION_ID)).thenReturn(nodeExecutions);
+
+    GraphVertex graphVertex = graphGenerator.generateGraphVertex(PLAN_EXECUTION_ID);
+
+    assertThat(graphVertex).isNotNull();
+    assertThat(graphVertex.getNext()).isNull();
+    assertThat(graphVertex.getUuid()).isEqualTo(sectionChainParentNode.getUuid());
+
+    assertThat(graphVertex.getSubgraph()).isNotNull();
+    assertThat(graphVertex.getSubgraph().getMode()).isEqualTo(sectionChainParentNode.getMode());
+    assertThat(graphVertex.getSubgraph().getVertices().size()).isEqualTo(1);
+
+    GraphVertex sectionChain1Vertex = graphVertex.getSubgraph().getVertices().get(0);
+    assertThat(sectionChain1Vertex).isNotNull();
+    assertThat(sectionChain1Vertex.getUuid()).isEqualTo(sectionChain1.getUuid());
+    assertThat(sectionChain1Vertex.getSubgraph()).isNull();
+    assertThat(sectionChain1Vertex.getNext()).isNotNull();
+
+    GraphVertex sectionChain1ChildVertex = sectionChain1Vertex.getNext();
+    assertThat(sectionChain1ChildVertex).isNotNull();
+    assertThat(sectionChain1ChildVertex.getUuid()).isEqualTo(dummyNode1.getUuid());
+    assertThat(sectionChain1ChildVertex.getSubgraph()).isNull();
+    assertThat(sectionChain1ChildVertex.getNext()).isNotNull();
+
+    GraphVertex sectionChain2Vertex = sectionChain1ChildVertex.getNext();
+    assertThat(sectionChain2Vertex).isNotNull();
+    assertThat(sectionChain2Vertex.getUuid()).isEqualTo(sectionChain2.getUuid());
+    assertThat(sectionChain2Vertex.getSubgraph()).isNull();
+    assertThat(sectionChain2Vertex.getNext()).isNotNull();
+
+    GraphVertex sectionChain2ChildVertex = sectionChain2Vertex.getNext();
+    assertThat(sectionChain2ChildVertex).isNotNull();
+    assertThat(sectionChain2ChildVertex.getUuid()).isEqualTo(dummyNode2.getUuid());
+    assertThat(sectionChain2ChildVertex.getSubgraph()).isNull();
+    assertThat(sectionChain2ChildVertex.getNext()).isNull();
   }
 }

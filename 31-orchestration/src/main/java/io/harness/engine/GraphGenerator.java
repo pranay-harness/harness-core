@@ -19,10 +19,12 @@ import io.harness.engine.services.OutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
+import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.presentation.GraphVertex;
 import io.harness.presentation.Subgraph;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -66,6 +68,7 @@ public class GraphGenerator {
   private Map<String, List<String>> obtainParentIdMap(List<NodeExecution> nodeExecutions) {
     return nodeExecutions.stream()
         .filter(node -> isNotEmpty(node.getParentId()) && isEmpty(node.getPreviousId()))
+        .sorted(Comparator.comparingLong(NodeExecution::getCreatedAt))
         .collect(groupingBy(NodeExecution::getParentId, mapping(NodeExecution::getUuid, toList())));
   }
 
@@ -101,9 +104,17 @@ public class GraphGenerator {
 
       if (parentIdMap.containsKey(currentNode.getUuid())) {
         graphVertex.setSubgraph(new Subgraph(currentNode.getMode()));
-        for (String nextNodeExId : parentIdMap.get(currentNode.getUuid())) {
-          GraphVertex subgraph = generateGraph(nextNodeExId);
-          graphVertex.getSubgraph().getVertices().add(subgraph);
+        if (currentNode.getMode() == ExecutionMode.CHILD_CHAIN) {
+          GraphVertex subgraph = new GraphVertex();
+          for (String nextChainNodeId : parentIdMap.get(currentNode.getUuid())) {
+            generateChain(subgraph, nextChainNodeId);
+          }
+          graphVertex.getSubgraph().getVertices().add(subgraph.getNext());
+        } else {
+          for (String nextNodeExId : parentIdMap.get(currentNode.getUuid())) {
+            GraphVertex subgraph = generateGraph(nextNodeExId);
+            graphVertex.getSubgraph().getVertices().add(subgraph);
+          }
         }
       }
 
@@ -113,6 +124,15 @@ public class GraphGenerator {
       }
 
       return graphVertex;
+    }
+
+    private void generateChain(GraphVertex vertex, String nextChainNodeId) {
+      GraphVertex currentVertex = vertex;
+      while (currentVertex.getNext() != null) {
+        currentVertex = currentVertex.getNext();
+      }
+
+      currentVertex.setNext(generateGraph(nextChainNodeId));
     }
   }
 }
