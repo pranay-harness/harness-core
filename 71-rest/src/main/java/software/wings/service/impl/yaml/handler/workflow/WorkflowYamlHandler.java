@@ -49,6 +49,7 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.yaml.workflow.BuildWorkflowYaml;
 import software.wings.yaml.workflow.StepYaml;
 import software.wings.yaml.workflow.WorkflowYaml;
 
@@ -123,6 +124,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                             ChangeContext clonedContext = clonedContextBuilder.build();
                             clonedContext.getEntityIdMap().put(EntityType.ENVIRONMENT.name(), envId);
                             clonedContext.getProperties().put(YamlConstants.IS_ROLLBACK, false);
+                            clonedContext.getProperties().put("IS_BUILD", yaml instanceof BuildWorkflowYaml);
 
                             WorkflowPhase workflowPhase =
                                 phaseYamlHandler.upsertFromYaml(clonedContext, changeContextList);
@@ -154,6 +156,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                     ChangeContext clonedContext = clonedContextBuilder.build();
                     clonedContext.getEntityIdMap().put(EntityType.ENVIRONMENT.name(), envId);
                     clonedContext.getProperties().put(YamlConstants.IS_ROLLBACK, true);
+                    clonedContext.getProperties().put("IS_BUILD", yaml instanceof BuildWorkflowYaml);
 
                     WorkflowPhase workflowPhase = phaseYamlHandler.upsertFromYaml(clonedContext, changeContextList);
                     String workflowPhaseId = getPreviousWorkflowPhaseId(workflowPhase.getName(), previous);
