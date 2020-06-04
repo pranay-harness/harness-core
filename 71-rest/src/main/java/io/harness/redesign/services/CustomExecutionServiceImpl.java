@@ -13,6 +13,7 @@ import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.GraphGenerator;
 import io.harness.engine.interrupts.InterruptManager;
+import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.exception.GeneralException;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
@@ -93,7 +94,11 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
 
   @Override
   public Interrupt registerInterrupt(String planExecutionId) {
-    return interruptManager.register(planExecutionId, ABORT_ALL, getEmbeddedUser(), null);
+    return interruptManager.register(InterruptPackage.builder()
+                                         .planExecutionId(planExecutionId)
+                                         .interruptType(ABORT_ALL)
+                                         .embeddedUser(getEmbeddedUser())
+                                         .build());
   }
 
   @Override

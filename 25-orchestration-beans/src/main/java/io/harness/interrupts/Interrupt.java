@@ -12,6 +12,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAccess;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAccess;
+import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Setter;
@@ -37,7 +38,8 @@ public class Interrupt implements PersistentEntity, UuidAccess, CreatedAtAccess,
   @NonNull ExecutionInterruptType type;
   @NonNull String planExecutionId;
   String nodeExecutionId;
-  @NonNull EmbeddedUser createdBy;
+  StepParameters parameters;
+  EmbeddedUser createdBy;
   @NonFinal @Setter long lastUpdatedAt;
   @NonFinal @Setter long createdAt;
   @NonFinal @Setter @Builder.Default State state = State.REGISTERED;
