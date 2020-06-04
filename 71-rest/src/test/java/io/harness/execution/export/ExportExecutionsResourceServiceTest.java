@@ -26,6 +26,10 @@ import io.harness.execution.export.request.ExportExecutionsRequestService;
 import io.harness.execution.export.request.ExportExecutionsRequestSummary;
 import io.harness.execution.export.request.ExportExecutionsUserParams;
 import io.harness.execution.export.request.RequestTestUtils;
+import io.harness.limits.ActionType;
+import io.harness.limits.ConfiguredLimit;
+import io.harness.limits.configuration.LimitConfigurationService;
+import io.harness.limits.impl.model.StaticLimit;
 import io.harness.rule.Owner;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,6 +62,7 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
   @Mock private ExportExecutionsRequestHelper exportExecutionsRequestHelper;
   @Mock private UserGroupService userGroupService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private LimitConfigurationService limitConfigurationService;
   @Inject @InjectMocks private ExportExecutionsResourceService exportExecutionsResourceService;
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -85,6 +90,10 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
         .isInstanceOf(InvalidRequestException.class);
 
     enableFeatureFlag();
+    when(limitConfigurationService.getOrDefault(eq(ACCOUNT_ID), eq(ActionType.EXPORT_EXECUTIONS_REQUEST)))
+        .thenReturn(new ConfiguredLimit(ACCOUNT_ID, new StaticLimit(25), ActionType.EXPORT_EXECUTIONS_REQUEST));
+    when(exportExecutionsRequestService.getTotalRequestsInLastDay(ACCOUNT_ID)).thenReturn(5L);
+
     ExportExecutionsUserParams userParams = ExportExecutionsUserParams.builder()
                                                 .notifyOnlyTriggeringUser(true)
                                                 .userGroupIds(Collections.singletonList("uid"))
@@ -117,6 +126,10 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
         .queueExportExecutionRequest(eq(ACCOUNT_ID), eq(query), eq(userParams));
     verify(exportExecutionsRequestService, times(2)).get(eq(ACCOUNT_ID), anyString());
     verify(exportExecutionsRequestHelper, times(2)).prepareSummary(any());
+
+    when(exportExecutionsRequestService.getTotalRequestsInLastDay(ACCOUNT_ID)).thenReturn(25L);
+    assertThatThrownBy(() -> exportExecutionsResourceService.export(ACCOUNT_ID, query, userParams))
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

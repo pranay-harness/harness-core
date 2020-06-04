@@ -12,5 +12,7 @@ public interface DefaultLimitsService {
 
   int GRAPHQL_RATE_LIMIT_DURATION_IN_MINUTE = 1;
 
+  int EXPORT_EXECUTIONS_LIMIT_PER_DAY = 25;
+
   Limit get(ActionType actionType, String accountType);
 }
