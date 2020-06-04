@@ -42,7 +42,7 @@ public class TaskExecutableInvoker implements ExecutableInvoker {
     NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
     TaskExecutor taskExecutor = taskExecutorMap.get(task.getTaskIdentifier());
     String taskId = Preconditions.checkNotNull(taskExecutor.queueTask(ambiance, task));
-    NotifyCallback callback = EngineResumeCallback.builder().nodeInstanceId(nodeExecution.getUuid()).build();
+    NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, task.getWaitId());
 
     // Update Execution Node Instance state to TASK_WAITING

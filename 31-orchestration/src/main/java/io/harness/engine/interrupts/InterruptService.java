@@ -1,6 +1,5 @@
 package io.harness.engine.interrupts;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
 
@@ -17,5 +16,5 @@ public interface InterruptService {
 
   List<Interrupt> fetchActivePlanLevelInterrupts(String planExecutionId);
 
-  InterruptCheck checkAndHandleInterruptsBeforeNodeStart(Ambiance ambiance);
+  InterruptCheck checkAndHandleInterruptsBeforeNodeStart(String planExecutionId, String nodeExecutionId);
 }

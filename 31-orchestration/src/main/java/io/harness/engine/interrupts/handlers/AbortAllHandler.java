@@ -67,7 +67,7 @@ public class AbortAllHandler implements InterruptHandler {
     String savedInterruptId = validateAndSave(interrupt);
     Interrupt savedInterrupt =
         hPersistence.createQuery(Interrupt.class).filter(InterruptKeys.uuid, savedInterruptId).get();
-    return handleInterrupt(savedInterrupt, null);
+    return handleInterrupt(savedInterrupt);
   }
 
   private String validateAndSave(@Valid @NonNull Interrupt interrupt) {
@@ -86,7 +86,12 @@ public class AbortAllHandler implements InterruptHandler {
   }
 
   @Override
-  public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt, Ambiance ambiance) {
+  public Interrupt handleInterruptForNodeExecution(Interrupt interrupt, String nodeExecutionId) {
+    throw new UnsupportedOperationException("ABORT_ALL handling Not required for node individually");
+  }
+
+  @Override
+  public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt) {
     interruptService.markProcessing(interrupt.getUuid());
     if (!markAbortingState(interrupt, Status.finalizableStatuses())) {
       return interrupt;

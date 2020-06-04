@@ -21,15 +21,15 @@ import java.util.Map;
 public class EngineResumeCallback implements NotifyCallback {
   @Inject ExecutionEngine executionEngine;
 
-  String nodeInstanceId;
+  String nodeExecutionId;
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    executionEngine.resume(nodeInstanceId, response, false);
+    executionEngine.resume(nodeExecutionId, response, false);
   }
 
   @Override
   public void notifyError(Map<String, ResponseData> response) {
-    executionEngine.resume(nodeInstanceId, response, true);
+    executionEngine.resume(nodeExecutionId, response, true);
   }
 }

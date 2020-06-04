@@ -122,14 +122,22 @@ public class ExecutionEngine implements Engine {
     triggerExecution(ambiance, planNode);
     return instance;
   }
+  public void startNodeExecution(String nodeExecutionId) {
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
+    facilitateAndStartStep(ambiance, nodeExecution);
+  }
 
   public void startNodeExecution(Ambiance ambiance) {
+    NodeExecution nodeExecution = nodeExecutionService.get(ambiance.obtainCurrentRuntimeId());
+    facilitateAndStartStep(ambiance, nodeExecution);
+  }
+
+  private void facilitateAndStartStep(Ambiance ambiance, NodeExecution nodeExecution) {
     try (AutoLogContext ignore = ambiance.autoLogContext()) {
-      NodeExecution nodeExecution = hPersistence.createQuery(NodeExecution.class)
-                                        .filter(NodeExecutionKeys.uuid, ambiance.obtainCurrentRuntimeId())
-                                        .get();
       logger.info("Checking Interrupts before Node Start");
-      InterruptCheck check = interruptService.checkAndHandleInterruptsBeforeNodeStart(ambiance);
+      InterruptCheck check = interruptService.checkAndHandleInterruptsBeforeNodeStart(
+          ambiance.getPlanExecutionId(), ambiance.obtainCurrentRuntimeId());
       if (!check.isProceed()) {
         logger.info("Suspending Execution. Reason : {}", check.getReason());
         return;
@@ -321,7 +329,7 @@ public class ExecutionEngine implements Engine {
     NodeExecution nodeExecution =
         hPersistence.createQuery(NodeExecution.class).filter(NodeExecutionKeys.uuid, nodeInstanceId).get();
     Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
-    try {
+    try (AutoLogContext ignore = ambiance.autoLogContext()) {
       if (!resumableStatuses().contains(nodeExecution.getStatus())) {
         logger.warn("NodeExecution is no longer in RESUMABLE state Uuid: {} Status {} ", nodeExecution.getUuid(),
             nodeExecution.getStatus());
