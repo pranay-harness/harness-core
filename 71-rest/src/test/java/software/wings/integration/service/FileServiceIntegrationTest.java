@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -23,7 +24,6 @@ import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
 import java.io.FileInputStream;

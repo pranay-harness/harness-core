@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.delegate.service.DelegateAgentFileService;
 import io.harness.stream.BoundedInputStream;
 import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
@@ -13,7 +14,7 @@ import java.util.Map;
 /**
  * The Interface FileService.
  */
-public interface FileService {
+public interface FileService extends DelegateAgentFileService {
   String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket);
 
   boolean updateParentEntityIdAndVersion(Class entityClass, String entityId, Integer version, String fileId,
@@ -40,48 +41,4 @@ public interface FileService {
   String uploadFromStream(String filename, BoundedInputStream in, FileBucket fileBucket, Map<String, Object> metaData);
 
   void deleteAllFilesForEntity(String entityId, FileBucket fileBucket);
-
-  enum FileBucket {
-    LOB,
-    ARTIFACTS,
-    AUDITS,
-    CONFIGS,
-    LOGS,
-    PLATFORMS,
-    TERRAFORM_STATE,
-    PROFILE_RESULTS,
-    TERRAFORM_PLAN,
-    EXPORT_EXECUTIONS;
-
-    private int chunkSize;
-
-    /**
-     * Instantiates a new file bucket.
-     *
-     * @param chunkSize  the chunk size
-     */
-    FileBucket(int chunkSize) {
-      this.chunkSize = chunkSize;
-    }
-
-    /**
-     * Instantiates a new file bucket.
-     */
-    FileBucket() {
-      this(1000 * 1000);
-    }
-
-    public String representationName() {
-      return name().toLowerCase();
-    }
-
-    /**
-     * Gets chunk size.
-     *
-     * @return the chunk size
-     */
-    public int getChunkSize() {
-      return chunkSize;
-    }
-  }
 }

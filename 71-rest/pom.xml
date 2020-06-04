@@ -762,6 +762,11 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>70-delegate-agent</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>xml-apis</groupId>
             <artifactId>xml-apis</artifactId>
         </dependency>

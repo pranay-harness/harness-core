@@ -19,6 +19,7 @@ import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.eraro.ResponseMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
@@ -30,7 +31,6 @@ import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.utils.ExecutionLogWriter;
 
 import java.io.ByteArrayOutputStream;

@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.exception.ArtifactServerException;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.UnknownArtifactStreamTypeException;
 import io.harness.waiter.ListNotifyResponseData;
@@ -42,7 +43,6 @@ import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.impl.jenkins.JenkinsUtils;
-import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.FileNotFoundException;

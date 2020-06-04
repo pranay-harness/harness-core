@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -24,7 +25,6 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmExecutor;
 import software.wings.delegatetasks.DelegateConfigService;
 import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;

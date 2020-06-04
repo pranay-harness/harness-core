@@ -1,9 +1,9 @@
 package software.wings.resources;
 
+import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.PLATFORMS;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.ResourceType.APP_STACK;
-import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import com.google.inject.Inject;
 

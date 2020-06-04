@@ -2,10 +2,10 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.PLATFORMS;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.atteo.evo.inflector.English.plural;
-import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import com.google.common.io.Files;
 import com.google.inject.Inject;
@@ -15,6 +15,7 @@ import com.google.inject.name.Named;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.scheduler.PersistentScheduler;
 import org.mongodb.morphia.mapping.Mapper;
@@ -25,7 +26,6 @@ import software.wings.scheduler.PruneFileJob;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.FileType;
 import software.wings.utils.FileTypeDetector;

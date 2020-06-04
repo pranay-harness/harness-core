@@ -2,12 +2,12 @@ package software.wings.service.intfc;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.AppContainer;
-import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.io.File;

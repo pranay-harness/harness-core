@@ -2,18 +2,19 @@ package software.wings.sm.states.provision;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.TERRAFORM_STATE;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEOUT_IN_MINUTES;
-import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
 
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Getter;
@@ -33,7 +34,6 @@ import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCom
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
 import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.beans.infrastructure.TerraformConfig.TerraformConfigKeys;
-import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;

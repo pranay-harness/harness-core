@@ -23,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 import com.google.inject.Inject;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
@@ -51,7 +52,6 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 

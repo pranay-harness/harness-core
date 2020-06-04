@@ -13,6 +13,7 @@ import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.tasks.TaskExecutor;
 import io.harness.validation.Create;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -21,7 +22,6 @@ import software.wings.beans.Delegate;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
-import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.io.File;

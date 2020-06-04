@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.ARTIFACTS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static java.util.Arrays.asList;
@@ -27,7 +28,6 @@ import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.BAST
 import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.KEY_AUTH;
 import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.PASSWORD_AUTH;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
-import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
