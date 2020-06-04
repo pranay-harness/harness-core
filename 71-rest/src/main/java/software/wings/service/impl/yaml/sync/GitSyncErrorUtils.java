@@ -55,4 +55,11 @@ public class GitSyncErrorUtils {
         "The commitMessage is specific to the git to harness error, it should not be called for harness to git");
     return EMPTY_STR;
   }
+
+  public static void setYamlContent(GitSyncError error) {
+    if (isGitToHarnessSyncError(error)) {
+      GitToHarnessErrorDetails gitToHarnessErrorDetails = (GitToHarnessErrorDetails) error.getAdditionalErrorDetails();
+      gitToHarnessErrorDetails.setYamlContent(null);
+    }
+  }
 }

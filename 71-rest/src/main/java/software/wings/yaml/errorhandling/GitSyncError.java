@@ -21,6 +21,8 @@ import software.wings.service.impl.yaml.GitSyncErrorStatus;
 import software.wings.yaml.errorhandling.GitToHarnessErrorDetails.GitToHarnessErrorDetailsKeys;
 import software.wings.yaml.errorhandling.HarnessToGitErrorDetails.HarnessToGitErrorDetailsKeys;
 
+import javax.ws.rs.DefaultValue;
+
 /**
  * @author rktummala on 12/15/17
  */
@@ -66,12 +68,13 @@ public class GitSyncError extends Base implements PersistentRegularIterable {
   @Deprecated private Long commitTime;
   private GitSyncErrorDetails additionalErrorDetails;
   private String gitSyncDirection;
+  @Transient @DefaultValue("false") private boolean userDoesNotHavePermForFile;
 
   @Builder
   public GitSyncError(String accountId, String yamlFilePath, String changeType, String failureReason,
       String gitConnectorId, String branchName, String yamlGitConfigId, GitSyncErrorDetails additionalErrorDetails,
       String gitSyncDirection, Long commitTime, String lastAttemptedYaml, boolean fullSyncPath, String yamlContent,
-      String gitCommitId, GitSyncErrorStatus status) {
+      String gitCommitId, GitSyncErrorStatus status, boolean userDoesNotHavePermForFile) {
     this.accountId = accountId;
     this.yamlFilePath = yamlFilePath;
     this.changeType = changeType;
@@ -88,6 +91,7 @@ public class GitSyncError extends Base implements PersistentRegularIterable {
     this.yamlContent = yamlContent;
     this.gitCommitId = gitCommitId;
     this.status = status;
+    this.userDoesNotHavePermForFile = userDoesNotHavePermForFile;
   }
 
   @Override

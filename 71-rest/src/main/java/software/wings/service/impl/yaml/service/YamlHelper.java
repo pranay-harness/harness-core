@@ -7,17 +7,26 @@ import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.HELM_CHART_OVERRIDE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.PCF_OVERRIDES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER;
+import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_STREAM;
 import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER;
+import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.COLLABORATION_PROVIDER;
+import static software.wings.beans.yaml.YamlType.GLOBAL_TEMPLATE_LIBRARY;
+import static software.wings.beans.yaml.YamlType.LOADBALANCER_PROVIDER;
+import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,6 +35,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
@@ -84,6 +94,7 @@ import java.util.regex.Pattern;
  */
 @OwnedBy(CDC)
 @Singleton
+@Slf4j
 public class YamlHelper {
   @Inject ServiceResourceService serviceResourceService;
   @Inject AppService appService;
@@ -123,7 +134,7 @@ public class YamlHelper {
   }
 
   public SettingAttribute getCollaborationProvider(String accountId, String yamlFilePath) {
-    return getSettingAttribute(accountId, YamlType.COLLABORATION_PROVIDER, yamlFilePath);
+    return getSettingAttribute(accountId, COLLABORATION_PROVIDER, yamlFilePath);
   }
 
   public SettingAttribute getSourceRepoProvider(String accountId, String yamlFilePath) {
@@ -131,11 +142,11 @@ public class YamlHelper {
   }
 
   public SettingAttribute getVerificationProvider(String accountId, String yamlFilePath) {
-    return getSettingAttribute(accountId, YamlType.VERIFICATION_PROVIDER, yamlFilePath);
+    return getSettingAttribute(accountId, VERIFICATION_PROVIDER, yamlFilePath);
   }
 
   public SettingAttribute getLoadBalancerProvider(String accountId, String yamlFilePath) {
-    return getSettingAttribute(accountId, YamlType.LOADBALANCER_PROVIDER, yamlFilePath);
+    return getSettingAttribute(accountId, LOADBALANCER_PROVIDER, yamlFilePath);
   }
 
   public SettingAttribute getSettingAttribute(String accountId, YamlType yamlType, String yamlFilePath) {
@@ -380,22 +391,22 @@ public class YamlHelper {
     if (matchWithRegex(ARTIFACT_STREAM.getPathExpression(), yamlFilePath)) {
       return ARTIFACT_STREAM;
     }
-    if (matchWithRegex(YamlType.ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE.getPathExpression(), yamlFilePath)) {
-      return YamlType.ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE;
+    if (matchWithRegex(ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE.getPathExpression(), yamlFilePath)) {
+      return ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE;
     }
-    if (matchWithRegex(YamlType.CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE.getPathExpression(), yamlFilePath)) {
-      return YamlType.CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE;
+    if (matchWithRegex(CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE.getPathExpression(), yamlFilePath)) {
+      return CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE;
     }
     return null;
   }
 
   private YamlType getSettingAttributeType(String yamlFilePath) {
-    if (matchWithRegex(YamlType.ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE.getPathExpression(), yamlFilePath)
+    if (matchWithRegex(ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE.getPathExpression(), yamlFilePath)
         || matchWithRegex(YamlType.ARTIFACT_SERVER_OVERRIDE.getPathExpression(), yamlFilePath)) {
       return YamlType.ARTIFACT_SERVER_OVERRIDE;
     }
 
-    if (matchWithRegex(YamlType.CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE.getPathExpression(), yamlFilePath)
+    if (matchWithRegex(CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE.getPathExpression(), yamlFilePath)
         || matchWithRegex(CLOUD_PROVIDER_OVERRIDE.getPathExpression(), yamlFilePath)) {
       return YamlType.CLOUD_PROVIDER_OVERRIDE;
     }
@@ -430,7 +441,46 @@ public class YamlHelper {
     if (matchWithRegex(CLOUD_PROVIDER_OVERRIDE.getPathExpression(), yamlFilePath)) {
       return CLOUD_PROVIDER_OVERRIDE;
     }
+
     return null;
+  }
+
+  public YamlType getYamlTypeOfAccountLevelEntity(String yamlFilePath) {
+    YamlType yamlType = null;
+    YamlType settingAttributeYamlType = getYamlTypeFromSettingAttributePath(yamlFilePath);
+    if (settingAttributeYamlType == null) {
+      if (matchWithRegex(COLLABORATION_PROVIDER.getPathExpression(), yamlFilePath)) {
+        return COLLABORATION_PROVIDER;
+      }
+
+      if (matchWithRegex(LOADBALANCER_PROVIDER.getPathExpression(), yamlFilePath)) {
+        return LOADBALANCER_PROVIDER;
+      }
+
+      if (matchWithRegex(VERIFICATION_PROVIDER.getPathExpression(), yamlFilePath)) {
+        return VERIFICATION_PROVIDER;
+      }
+
+      if (matchWithRegex(ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE.getPathExpression(), yamlFilePath)) {
+        yamlType = ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE;
+      }
+
+      if (matchWithRegex(CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE.getPathExpression(), yamlFilePath)) {
+        yamlType = CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE;
+      }
+
+      if (matchWithRegex(GLOBAL_TEMPLATE_LIBRARY.getPathExpression(), yamlFilePath)) {
+        yamlType = GLOBAL_TEMPLATE_LIBRARY;
+      }
+
+    } else {
+      yamlType = settingAttributeYamlType;
+    }
+    return yamlType;
+  }
+
+  public boolean isAccountLevelEntity(String yamlFilePath) {
+    return !yamlFilePath.startsWith(SETUP_FOLDER + PATH_DELIMITER + APPLICATIONS_FOLDER);
   }
 
   public ServiceCommand getServiceCommand(String accountId, String yamlFilePath) {
@@ -819,5 +869,23 @@ public class YamlHelper {
     }
     throw new InvalidRequestException(
         String.format("Could not find Yaml Type for file path : [%s]", yamlFilePath), USER);
+  }
+
+  public SettingAttribute.SettingCategory getSettingAttributeCategoryFromYamlType(YamlType yamlType) {
+    switch (yamlType) {
+      case CLOUD_PROVIDER_OVERRIDE:
+      case CLOUD_PROVIDER:
+        return SettingAttribute.SettingCategory.CLOUD_PROVIDER;
+      case ARTIFACT_SERVER:
+      case ARTIFACT_SERVER_OVERRIDE:
+      case LOADBALANCER_PROVIDER:
+      case COLLABORATION_PROVIDER:
+      case VERIFICATION_PROVIDER:
+        return SettingAttribute.SettingCategory.CONNECTOR;
+      default:
+        logger.info(GIT_YAML_LOG_PREFIX + " Cannot determine the type of setting attribute category for yamlType [{}]",
+            yamlType);
+        return null;
+    }
   }
 }

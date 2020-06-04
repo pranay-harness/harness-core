@@ -17,6 +17,9 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.yaml.Change.ChangeType;
+
+import javax.ws.rs.DefaultValue;
+
 /**
  * @author vardanb
  */
@@ -58,6 +61,7 @@ public class GitFileActivity implements PersistentEntity, UuidAware, CreatedAtAw
   private String gitConnectorId;
   private String branchName;
   @Transient private String connectorName;
+  @Transient @DefaultValue("false") private boolean userDoesNotHavePermForFile;
 
   public enum Status { SUCCESS, FAILED, DISCARDED, EXPIRED, SKIPPED, QUEUED }
 

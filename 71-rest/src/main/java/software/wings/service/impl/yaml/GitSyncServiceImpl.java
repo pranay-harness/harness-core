@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.aggregation.Group.first;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
@@ -56,6 +57,7 @@ import software.wings.service.impl.yaml.gitsync.ChangesetInformation;
 import software.wings.service.impl.yaml.gitsync.QueuedChangesetInformation;
 import software.wings.service.impl.yaml.gitsync.RunningChangesetInformation;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.impl.yaml.sync.GitSyncRBACHelper;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
@@ -99,6 +101,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   @Inject private YamlService yamlService;
   @Inject private YamlHelper yamlHelper;
   @Inject private YamlSuccessfulChangeServiceImpl yamlSuccessfulChangeService;
+  @Inject private GitSyncRBACHelper gitSyncRBACHelper;
 
   private static final String UNKNOWN_GIT_CONNECTOR = "Unknown Git Connector";
 
@@ -113,13 +116,22 @@ public class GitSyncServiceImpl implements GitSyncService {
     }
     PageResponse<GitFileActivity> response = wingsPersistence.query(GitFileActivity.class, req);
     List<GitFileActivity> gitFileActivities = response.getResponse();
+    List<GitFileActivity> gitFileActivitiesFilteredByAccountRBAC = gitFileActivities;
+    if (isSetupFilterSelected(appId)) {
+      gitFileActivitiesFilteredByAccountRBAC =
+          gitSyncRBACHelper.populateUserHasPermissionForFileField(gitFileActivities, accountId);
+    }
     List<GitFileActivity> fileHistoryWithValidConnectorName =
-        populateConnectorNameInFileHistory(gitFileActivities, accountId);
+        populateConnectorNameInFileHistory(gitFileActivitiesFilteredByAccountRBAC, accountId);
     if (!activityForFileHistory) {
       sortGitFileActivityInProcessingOrder(fileHistoryWithValidConnectorName);
     }
     response.setResponse(fileHistoryWithValidConnectorName);
     return response;
+  }
+
+  private boolean isSetupFilterSelected(String appId) {
+    return isNotBlank(appId) && GLOBAL_APP_ID.equals(appId);
   }
 
   private void sortGitFileActivityInProcessingOrder(List<GitFileActivity> gitFileActivities) {
