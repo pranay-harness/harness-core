@@ -18,6 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.PlanRepo;
 import io.harness.engine.interrupts.InterruptManager;
+import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptTestHelper;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
@@ -60,7 +61,11 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 
     // Issue Pause Interrupt
-    Interrupt handledPauseInterrupt = interruptManager.register(execution.getUuid(), PAUSE_ALL, EMBEDDED_USER, null);
+    Interrupt handledPauseInterrupt = interruptManager.register(InterruptPackage.builder()
+                                                                    .planExecutionId(execution.getUuid())
+                                                                    .interruptType(PAUSE_ALL)
+                                                                    .embeddedUser(EMBEDDED_USER)
+                                                                    .build());
     assertThat(handledPauseInterrupt).isNotNull();
     assertThat(handledPauseInterrupt.getState()).isEqualTo(PROCESSING);
 
@@ -72,7 +77,11 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
     assertThat(pausedPlanExecution.getStatus()).isEqualTo(PAUSED);
 
     // Issue Resume Interrupt
-    Interrupt handledResumeInterrupt = interruptManager.register(execution.getUuid(), RESUME_ALL, EMBEDDED_USER, null);
+    Interrupt handledResumeInterrupt = interruptManager.register(InterruptPackage.builder()
+                                                                     .planExecutionId(execution.getUuid())
+                                                                     .interruptType(RESUME_ALL)
+                                                                     .embeddedUser(EMBEDDED_USER)
+                                                                     .build());
     assertThat(handledResumeInterrupt).isNotNull();
 
     // Wait for Plan To be complete
