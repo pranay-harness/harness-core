@@ -9,7 +9,6 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS_MIGRATION;
-import static software.wings.beans.FeatureName.SECRET_PARENTS_MIGRATED;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_REFERENCES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.APM_VERIFICATION;
@@ -54,10 +53,6 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
   @Inject private FeatureFlagService featureFlagService;
 
   public void registerIterators() {
-    if (!featureFlagService.isGlobalEnabled(SECRET_PARENTS_MIGRATED)) {
-      return;
-    }
-
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("SettingAttributesSecretsMigrationHandler")

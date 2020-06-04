@@ -28,7 +28,6 @@ import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 import static io.harness.validation.Validator.equalCheck;
-import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.mongodb.morphia.aggregation.Group.grouping;
@@ -37,9 +36,9 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.FeatureName.USE_SCOPED_TO_ACCOUNT_SECRETS;
-import static software.wings.beans.ServiceVariable.ENCRYPTED_VALUE_KEY;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
+import static software.wings.security.encryption.EncryptedData.PARENT_ID_KEY;
 import static software.wings.service.impl.security.AbstractSecretServiceImpl.checkNotNull;
 import static software.wings.service.impl.security.AbstractSecretServiceImpl.checkState;
 import static software.wings.service.intfc.security.VaultService.DEFAULT_BASE_PATH;
@@ -95,7 +94,6 @@ import software.wings.beans.CyberArkConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
@@ -115,7 +113,6 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.EncryptedDataParent;
-import software.wings.security.encryption.EncryptedDataParent.EncryptedDataParentKeys;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretChangeLog.SecretChangeLogKeys;
 import software.wings.security.encryption.SecretUsageLog;
@@ -704,15 +701,9 @@ public class SecretManagerImpl implements SecretManager {
 
     // 2. Fetch children encrypted records associated with these setting attributes in a batch
     Map<String, EncryptedData> encryptedDataMap = new HashMap<>();
-    String parentIdKey;
-    if (featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)) {
-      parentIdKey = String.format("%s.%s", EncryptedDataKeys.parents, EncryptedDataParentKeys.id);
-    } else {
-      parentIdKey = EncryptedDataKeys.parentIds;
-    }
     try (HIterator<EncryptedData> query = new HIterator<>(wingsPersistence.createQuery(EncryptedData.class)
                                                               .filter(ACCOUNT_ID_KEY, accountId)
-                                                              .field(parentIdKey)
+                                                              .field(PARENT_ID_KEY)
                                                               .in(settingAttributeIds)
                                                               .fetch())) {
       for (EncryptedData encryptedData : query) {
@@ -1728,22 +1719,10 @@ public class SecretManagerImpl implements SecretManager {
       throw new SecretManagementException(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
 
-    if (featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)) {
-      Set<SecretSetupUsage> secretSetupUsages = getSecretUsage(accountId, secretId);
-      if (!secretSetupUsages.isEmpty()) {
-        String reason = "Can not delete secret because it is still being used. See setup usage(s) of the secret.";
-        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, USER);
-      }
-    } else {
-      List<ServiceVariable> serviceVariables = wingsPersistence.createQuery(ServiceVariable.class)
-                                                   .filter(ACCOUNT_ID_KEY, accountId)
-                                                   .filter(ENCRYPTED_VALUE_KEY, secretId)
-                                                   .asList();
-      if (!serviceVariables.isEmpty()) {
-        String reason = "Can not delete secret because it is still being used in service variable(s): "
-            + serviceVariables.stream().map(ServiceVariable::getName).collect(joining(", "));
-        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, USER);
-      }
+    Set<SecretSetupUsage> secretSetupUsages = getSecretUsage(accountId, secretId);
+    if (!secretSetupUsages.isEmpty()) {
+      String reason = "Can not delete secret because it is still being used. See setup usage(s) of the secret.";
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, USER);
     }
 
     EncryptionType encryptionType = encryptedData.getEncryptionType();

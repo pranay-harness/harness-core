@@ -2,10 +2,6 @@ package software.wings.security.encryption;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SERVICE_VARIABLE;
-
-import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -34,8 +30,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
-import software.wings.beans.FeatureName;
-import software.wings.service.intfc.FeatureFlagService;
+import software.wings.security.encryption.EncryptedDataParent.EncryptedDataParentKeys;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.usage.scope.ScopedEntity;
@@ -47,7 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -71,7 +65,8 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
 public class EncryptedData
     extends Base implements EncryptedRecord, NameAccess, PersistentRegularIterable, AccountAccess, ScopedEntity {
-  @Inject @SchemaIgnore @Transient private static FeatureFlagService featureFlagService;
+  public static final String PARENT_ID_KEY =
+      String.format("%s.%s", EncryptedDataKeys.parents, EncryptedDataParentKeys.id);
 
   @NotEmpty @Indexed private String name;
 
@@ -86,8 +81,6 @@ public class EncryptedData
   private Set<EncryptedDataParams> parameters;
 
   @NotEmpty private SettingVariableTypes type;
-
-  @NotEmpty @Default @Indexed private Set<String> parentIds = new HashSet<>();
 
   @NotEmpty @Default @Indexed private Set<EncryptedDataParent> parents = new HashSet<>();
 
@@ -139,48 +132,17 @@ public class EncryptedData
 
   @SchemaIgnore @Indexed private List<String> keywords;
 
-  @Deprecated
-  public Set<String> getParentIds() {
-    return parentIds;
-  }
-
-  public boolean areParentIdsEquivalentToParent() {
-    Set<String> derivedParentIds = parents.stream().map(EncryptedDataParent::getId).collect(Collectors.toSet());
-    return derivedParentIds.equals(parentIds);
-  }
-
   public void addParent(@NotNull EncryptedDataParent encryptedDataParent) {
-    if (!featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)) {
-      parentIds.add(encryptedDataParent.getId());
-    }
     parents.add(encryptedDataParent);
   }
 
   public void removeParent(@NotNull EncryptedDataParent encryptedDataParent) {
-    if (!featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)) {
-      parentIds.remove(encryptedDataParent.getId());
-    }
     parents.remove(encryptedDataParent);
   }
 
   public boolean containsParent(@NotNull String id, @NotNull SettingVariableTypes type) {
-    if (featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)) {
-      return parents.stream().anyMatch(
-          encryptedDataParent -> encryptedDataParent.getId().equals(id) && encryptedDataParent.getType() == type);
-    }
-    return parentIds.contains(id);
-  }
-
-  public Set<EncryptedDataParent> getParents() {
-    if (featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)) {
-      return parents;
-    }
-    return parentIds.stream()
-        .map(id -> {
-          SettingVariableTypes settingType = type == SECRET_TEXT ? SERVICE_VARIABLE : type;
-          return EncryptedDataParent.builder().id(id).type(settingType).build();
-        })
-        .collect(Collectors.toSet());
+    return parents.stream().anyMatch(
+        encryptedDataParent -> encryptedDataParent.getId().equals(id) && encryptedDataParent.getType() == type);
   }
 
   @Override

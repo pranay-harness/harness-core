@@ -2,6 +2,7 @@ package software.wings.integration.security;
 
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.security.encryption.EncryptedData.PARENT_ID_KEY;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
@@ -64,10 +65,10 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
       testUpdateSecretText(savedKmsConfig);
     } finally {
       wingsPersistence.delete(
-          wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(globalKmsConfigId));
+          wingsPersistence.createQuery(EncryptedData.class).field(PARENT_ID_KEY).hasThisOne(globalKmsConfigId));
       wingsPersistence.delete(SecretManagerConfig.class, globalKmsConfigId);
       wingsPersistence.delete(
-          wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(backupGlobalKmsConfigId));
+          wingsPersistence.createQuery(EncryptedData.class).field(PARENT_ID_KEY).hasThisOne(backupGlobalKmsConfigId));
       wingsPersistence.delete(SecretManagerConfig.class, backupGlobalKmsConfigId);
     }
   }

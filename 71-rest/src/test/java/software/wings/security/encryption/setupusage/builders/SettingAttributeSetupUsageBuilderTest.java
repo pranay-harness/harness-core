@@ -26,7 +26,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedData;
@@ -101,31 +100,7 @@ public class SettingAttributeSetupUsageBuilderTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
-  public void testBuildSecretSetupUsage_featureFlagDisabled() {
-    PageResponse<SettingAttribute> settingAttributePageResponse = mock(PageResponse.class);
-    when(settingAttributePageResponse.getResponse()).thenReturn(Collections.singletonList(settingAttribute));
-    when(settingsService.list(any(), eq(null), eq(null))).thenReturn(settingAttributePageResponse);
-
-    Map<String, Set<EncryptedDataParent>> parentByParentIds = new HashMap<>();
-    parentByParentIds.put(settingAttribute.getUuid(), getEncryptedDataParents());
-
-    Set<SecretSetupUsage> returnedSetupUsages = settingAttributeSetupUsageBuilder.buildSecretSetupUsages(
-        account.getUuid(), encryptedData.getUuid(), parentByParentIds, encryptionDetail);
-
-    assertThat(returnedSetupUsages).hasSize(1);
-    SecretSetupUsage secretSetupUsage = returnedSetupUsages.iterator().next();
-    assertThat(secretSetupUsage.getEntityId()).isEqualTo(settingAttribute.getUuid());
-    assertThat(secretSetupUsage.getType()).isEqualTo(SettingVariableTypes.KUBERNETES_CLUSTER);
-    assertThat(secretSetupUsage.getEntity()).isEqualTo(settingAttribute);
-    assertThat(secretSetupUsage.getFieldName()).isNull();
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void testBuildSecretSetupUsage_featureFlagEnabled() {
-    featureFlagService.enableAccount(FeatureName.SECRET_PARENTS_MIGRATED, account.getUuid());
-
+  public void testBuildSecretSetupUsage() {
     PageResponse<SettingAttribute> settingAttributePageResponse = mock(PageResponse.class);
     when(settingAttributePageResponse.getResponse()).thenReturn(Collections.singletonList(settingAttribute));
     when(settingsService.list(any(), eq(null), eq(null))).thenReturn(settingAttributePageResponse);

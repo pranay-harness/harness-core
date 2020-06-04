@@ -30,7 +30,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
-import software.wings.beans.FeatureName;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.EncryptionDetail;
@@ -120,49 +119,7 @@ public class SecretSetupUsageServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
-  public void testGetSecretUsage_featureFlagDisabled() {
-    EncryptedDataParent encryptedDataParent1 =
-        new EncryptedDataParent(UUIDGenerator.generateUuid(), SERVICE_VARIABLE, null);
-    EncryptedDataParent encryptedDataParent2 =
-        new EncryptedDataParent(UUIDGenerator.generateUuid(), SERVICE_VARIABLE, null);
-
-    encryptedData.addParent(encryptedDataParent1);
-    encryptedData.addParent(encryptedDataParent2);
-    wingsPersistence.save(encryptedData);
-
-    Map<String, Set<EncryptedDataParent>> expectedParentIdByParentsMap = new HashMap<>();
-    expectedParentIdByParentsMap.put(encryptedDataParent1.getId(), Sets.newHashSet(encryptedDataParent1));
-    expectedParentIdByParentsMap.put(encryptedDataParent2.getId(), Sets.newHashSet(encryptedDataParent2));
-
-    SecretSetupUsage mockUsage1 =
-        SecretSetupUsage.builder().entityId(encryptedDataParent1.getId()).type(SERVICE_VARIABLE).build();
-    SecretSetupUsage mockUsage2 =
-        SecretSetupUsage.builder().entityId(encryptedDataParent2.getId()).type(SERVICE_VARIABLE).build();
-
-    when(secretSetupUsageBuilder.buildSecretSetupUsages(
-             account.getUuid(), encryptedData.getUuid(), expectedParentIdByParentsMap, encryptionDetail))
-        .thenReturn(Sets.newHashSet(mockUsage1, mockUsage2));
-
-    Set<SecretSetupUsage> expectedResponse = Sets.newHashSet(mockUsage1, mockUsage2);
-
-    Set<SecretSetupUsage> secretSetupUsages =
-        secretSetupUsageService.getSecretUsage(account.getUuid(), encryptedData.getUuid());
-
-    assertThat(secretSetupUsages).isEqualTo(expectedResponse);
-
-    verify(secretManagerConfigService, times(1)).getSecretManagerName(any(), any(), any());
-    verify(secretSetupUsageBuilderRegistry, times(1)).getSecretSetupUsageBuilder(SERVICE_VARIABLE);
-    verify(secretSetupUsageBuilder, times(1))
-        .buildSecretSetupUsages(
-            account.getUuid(), encryptedData.getUuid(), expectedParentIdByParentsMap, encryptionDetail);
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
   public void testGetSecretUsage_featureFlagEnabled() {
-    featureFlagService.enableAccount(FeatureName.SECRET_PARENTS_MIGRATED, account.getUuid());
-
     String commonUuid = UUIDGenerator.generateUuid();
     EncryptedDataParent encryptedDataParent1 =
         new EncryptedDataParent(UUIDGenerator.generateUuid(), SERVICE_VARIABLE, "randomFieldName1");

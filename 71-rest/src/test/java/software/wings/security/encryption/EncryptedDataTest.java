@@ -16,15 +16,11 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.powermock.reflect.Whitebox;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
@@ -37,11 +33,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-@RunWith(Parameterized.class)
 public class EncryptedDataTest extends WingsBaseTest {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private WingsPersistence wingsPersistence;
-  @Parameter public boolean secretMigrationComplete;
   private static final Random random = new Random();
   private EncryptedData encryptedData;
   private SettingVariableTypes encryptedDataType;
@@ -55,11 +49,6 @@ public class EncryptedDataTest extends WingsBaseTest {
   public void setup() throws Exception {
     Account account = getAccount(AccountType.PAID);
     account.setUuid(wingsPersistence.save(account));
-
-    if (secretMigrationComplete) {
-      featureFlagService.enableAccount(FeatureName.SECRET_PARENTS_MIGRATED, account.getUuid());
-    }
-
     KmsConfig kmsConfig = KmsConfig.builder()
                               .kmsArn("kmsArn")
                               .accessKey("accessKey")
@@ -86,16 +75,8 @@ public class EncryptedDataTest extends WingsBaseTest {
     assertThat(parents).hasSize(1);
     EncryptedDataParent returnedParent = parents.iterator().next();
     assertThat(returnedParent.getId()).isEqualTo(id);
-
-    if (secretMigrationComplete) {
-      assertThat(returnedParent.getFieldName()).isEqualTo(fieldName);
-      assertThat(returnedParent.getType()).isEqualTo(type);
-      assertThat(encryptedData.areParentIdsEquivalentToParent()).isFalse();
-    } else {
-      assertThat(returnedParent.getType()).isEqualTo(encryptedDataType);
-      assertThat(returnedParent.getFieldName()).isNull();
-      assertThat(encryptedData.areParentIdsEquivalentToParent()).isTrue();
-    }
+    assertThat(returnedParent.getFieldName()).isEqualTo(fieldName);
+    assertThat(returnedParent.getType()).isEqualTo(type);
   }
 
   @Test

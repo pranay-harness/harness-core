@@ -14,7 +14,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS_MIGRATION;
-import static software.wings.beans.FeatureName.SECRET_PARENTS_MIGRATED;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_REFERENCES;
@@ -82,7 +81,6 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testRegisterIterators_featureFlagEnabled() {
-    featureFlagService.enableGlobally(SECRET_PARENTS_MIGRATED);
     ArgumentCaptor<MongoPersistenceIteratorBuilder> captor =
         ArgumentCaptor.forClass(MongoPersistenceIteratorBuilder.class);
     settingAttributesSecretsMigrationHandler.registerIterators();
@@ -90,16 +88,6 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
         .createPumpIteratorWithDedicatedThreadPool(any(), eq(SettingAttribute.class), captor.capture());
     MongoPersistenceIteratorBuilder mongoPersistenceIteratorBuilder = captor.getValue();
     assertThat(mongoPersistenceIteratorBuilder).isNotNull();
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void testRegisterIterators_featureFlagDisabled() {
-    ArgumentCaptor<MongoPersistenceIteratorBuilder> captor =
-        ArgumentCaptor.forClass(MongoPersistenceIteratorBuilder.class);
-    settingAttributesSecretsMigrationHandler.registerIterators();
-    verify(persistenceIteratorFactory, times(0)).createPumpIteratorWithDedicatedThreadPool(any(), any(), any());
   }
 
   @Test
@@ -153,7 +141,6 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
   @Category(UnitTests.class)
   public void testHandle_shouldSucceed() {
     createSettingAttribute();
-    featureFlagService.enableAccount(SECRET_PARENTS_MIGRATED, settingAttribute.getAccountId());
     featureFlagService.enableAccount(CONNECTORS_REF_SECRETS_MIGRATION, settingAttribute.getAccountId());
     settingAttributesSecretsMigrationHandler.handle(settingAttribute);
     SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
@@ -173,7 +160,6 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
   @Category(UnitTests.class)
   public void testHandle_shouldFail_FeatureFlagDisabled() {
     createSettingAttribute();
-    featureFlagService.enableAccount(SECRET_PARENTS_MIGRATED, settingAttribute.getAccountId());
     settingAttributesSecretsMigrationHandler.handle(settingAttribute);
     SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
     assertThat(updatedSettingAttribute).isNotNull();
@@ -192,7 +178,6 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
   @Category(UnitTests.class)
   public void testHandle_shouldPass_secretAlreadyMigrated() {
     createSettingAttribute();
-    featureFlagService.enableAccount(SECRET_PARENTS_MIGRATED, settingAttribute.getAccountId());
     featureFlagService.enableAccount(CONNECTORS_REF_SECRETS_MIGRATION, settingAttribute.getAccountId());
     encryptedData.setType(SECRET_TEXT);
     wingsPersistence.save(encryptedData);
@@ -215,7 +200,6 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
   @Category(UnitTests.class)
   public void testHandle_shouldPass_secretNotFound() {
     createSettingAttribute();
-    featureFlagService.enableAccount(SECRET_PARENTS_MIGRATED, settingAttribute.getAccountId());
     featureFlagService.enableAccount(CONNECTORS_REF_SECRETS_MIGRATION, settingAttribute.getAccountId());
     ((AppDynamicsConfig) settingAttribute.getValue()).setEncryptedPassword(generateUuid());
     wingsPersistence.save(settingAttribute);
@@ -317,7 +301,6 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
     assertThat(keyValues.isEncrypted()).isFalse();
 
     featureFlagService.enableAccount(CONNECTORS_REF_SECRETS_MIGRATION, settingAttribute.getAccountId());
-    featureFlagService.enableAccount(SECRET_PARENTS_MIGRATED, settingAttribute.getAccountId());
     settingAttributesSecretsMigrationHandler.handle(savedSettingAttribute);
 
     encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority).asList();

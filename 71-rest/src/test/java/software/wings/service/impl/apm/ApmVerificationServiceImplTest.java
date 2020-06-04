@@ -63,7 +63,6 @@ public class ApmVerificationServiceImplTest extends WingsBaseTest {
                             .getResource();
       secretTextIds.add(secretId);
     }
-    featureFlagService.enableAccount(FeatureName.SECRET_PARENTS_MIGRATED, accountId);
     featureFlagService.enableAccount(FeatureName.CONNECTORS_REF_SECRETS, accountId);
 
     doNothing()

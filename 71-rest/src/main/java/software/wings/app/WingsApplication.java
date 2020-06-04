@@ -157,7 +157,6 @@ import software.wings.security.AuthenticationFilter;
 import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.security.encryption.migration.EncryptedDataAwsToGcpKmsMigrationHandler;
-import software.wings.security.encryption.migration.EncryptedDataMigrationHandler;
 import software.wings.security.encryption.migration.SettingAttributesSecretReferenceFeatureFlagJob;
 import software.wings.security.encryption.migration.SettingAttributesSecretsMigrationHandler;
 import software.wings.service.impl.AccountServiceImpl;
@@ -741,7 +740,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(DisconnectedDelegateHandler.class).registerIterators();
     injector.getInstance(BudgetHandler.class).registerIterators();
     injector.getInstance(VaultSecretManagerRenewalHandler.class).registerIterators();
-    injector.getInstance(EncryptedDataMigrationHandler.class).registerIterators();
     injector.getInstance(EncryptedDataAwsToGcpKmsMigrationHandler.class).registerIterators();
     injector.getInstance(SettingAttributesSecretsMigrationHandler.class).registerIterators();
     injector.getInstance(GitSyncEntitiesExpiryHandler.class).registerIterators();

@@ -16,6 +16,7 @@ import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.security.encryption.EncryptedData.PARENT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.ENCRYPTION_TYPE_KEY;
@@ -267,7 +268,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     }
 
     Query<EncryptedData> deleteQuery =
-        wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(kmsConfigId);
+        wingsPersistence.createQuery(EncryptedData.class).field(PARENT_ID_KEY).hasThisOne(kmsConfigId);
     wingsPersistence.delete(deleteQuery);
 
     return deleteSecretManagerAndGenerateAudit(accountId, kmsConfig);
