@@ -126,6 +126,7 @@ import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request.Builder;
+import okhttp3.Response;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
@@ -830,10 +831,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         jarRelativePath = substringAfter(delegateMatadata, " ").trim();
         delegateJarDownloadUrl = delegateStorageUrl + "/" + jarRelativePath;
       }
-      int responseCode = Http.getUnsafeOkHttpClient(delegateJarDownloadUrl, 10, 10)
-                             .newCall(new Builder().url(delegateJarDownloadUrl).head().build())
-                             .execute()
-                             .code();
+      int responseCode = -1;
+      try (Response response = Http.getUnsafeOkHttpClient(delegateJarDownloadUrl, 10, 10)
+                                   .newCall(new Builder().url(delegateJarDownloadUrl).head().build())
+                                   .execute()) {
+        responseCode = response.code();
+      }
       logger.info("HEAD on downloadUrl got statusCode {}", responseCode);
       jarFileExists = responseCode == 200;
       logger.info("jarFileExists [{}]", jarFileExists);
