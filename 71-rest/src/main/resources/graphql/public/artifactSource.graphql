@@ -4,6 +4,8 @@ interface ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 
 type ACRArtifactSource implements ArtifactSource {
@@ -12,6 +14,8 @@ type ACRArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 type AmazonS3ArtifactSource implements ArtifactSource {
   #Artifact Source Id
@@ -19,6 +23,8 @@ type AmazonS3ArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 type AMIArtifactSource implements ArtifactSource {
   #Artifact Source Id
@@ -26,6 +32,8 @@ type AMIArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 type ArtifactoryArtifactSource implements ArtifactSource {
   #Artifact Source Id
@@ -33,6 +41,8 @@ type ArtifactoryArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 type AzureAtifactsArtifactSource implements ArtifactSource {
   #Artifact Source Id
@@ -40,6 +50,8 @@ type AzureAtifactsArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 type BambooArtifactSource implements ArtifactSource {
   #Artifact Source Id
@@ -47,6 +59,8 @@ type BambooArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 type CustomArtifactSource implements ArtifactSource {
   #Artifact Source Id
@@ -54,6 +68,8 @@ type CustomArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 type DockerArtifactSource implements ArtifactSource {
   #Artifact Source Id
@@ -61,6 +77,8 @@ type DockerArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 type ECRArtifactSource implements ArtifactSource {
   #Artifact Source Id
@@ -68,6 +86,8 @@ type ECRArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 type GCRArtifactSource implements ArtifactSource {
   #Artifact Source Id
@@ -75,6 +95,8 @@ type GCRArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 type GCSArtifactSource implements ArtifactSource {
   #Artifact Source Id
@@ -82,6 +104,8 @@ type GCSArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 type JenkinsArtifactSource implements ArtifactSource {
   #Artifact Source Id
@@ -89,6 +113,8 @@ type JenkinsArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 type NexusArtifactSource implements ArtifactSource {
   #Artifact Source Id
@@ -96,6 +122,8 @@ type NexusArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 type SFTPArtifactSource implements ArtifactSource {
   #Artifact Source Id
@@ -103,6 +131,8 @@ type SFTPArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
 
 type SMBArtifactSource implements ArtifactSource {
@@ -111,4 +141,6 @@ type SMBArtifactSource implements ArtifactSource {
   # Artifact source display name
   name: String
   createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }

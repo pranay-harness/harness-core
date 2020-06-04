@@ -1,6 +1,21 @@
 extend type Query {
   # Get details about an artifact.
   artifact(artifactId: String!): Artifact @dataFetcher(name: artifact)
+
+  # Get details about one or multiple Artifacts.
+  artifacts(filters: [ArtifactFilter], limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection)
+}
+
+input ArtifactFilter {
+  artifact: IdFilter
+  artifactSource: IdFilter
+  artifactStreamType: IdFilter
+}
+
+type ArtifactConnection {
+  pageInfo: PageInfo
+  nodes: [Artifact]
 }
 
 type Artifact {
