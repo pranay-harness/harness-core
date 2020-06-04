@@ -63,6 +63,8 @@ import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -136,6 +138,7 @@ public class GitCommandCallback implements NotifyCallback {
         if (gitCommandResult.getGitCommandType() == COMMIT_AND_PUSH) {
           GitCommitAndPushResult gitCommitAndPushResult = (GitCommitAndPushResult) gitCommandResult;
           YamlChangeSet yamlChangeSet = yamlChangeSetService.get(accountId, changeSetId);
+          List<GitFileChange> filesCommited = Collections.emptyList();
           if (yamlChangeSet != null) {
             yamlChangeSetService.updateStatus(accountId, changeSetId, Status.COMPLETED);
             if (gitCommitAndPushResult.getGitCommitResult().getCommitId() != null) {
@@ -146,14 +149,15 @@ public class GitCommandCallback implements NotifyCallback {
               saveCommitFromHarness(gitCommitAndPushResult, yamlChangeSet, yamlGitConfigIds, yamlSetIdsProcessed);
               final String processingCommitId = gitCommitAndPushResult.getGitCommitResult().getCommitId();
               final String processingCommitMessage = gitCommitAndPushResult.getGitCommitResult().getCommitMessage();
-              final List<GitFileChange> filesCommited = emptyIfNull(gitCommitAndPushResult.getFilesCommitedToGit());
+              filesCommited = emptyIfNull(gitCommitAndPushResult.getFilesCommitedToGit());
               addYamlChangeSetToFilesCommited(filesCommited, gitCommitAndPushResult.getYamlGitConfig());
               gitSyncService.logActivityForGitOperation(filesCommited, GitFileActivity.Status.SUCCESS, false,
                   yamlChangeSet.isFullSync(), "", processingCommitId, processingCommitMessage);
               gitSyncService.createGitFileActivitySummaryForCommit(
                   processingCommitId, accountId, false, GitCommit.Status.COMPLETED);
             }
-            yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.getGitFileChanges(), false);
+            yamlGitService.removeGitSyncErrors(
+                accountId, getAllFilesSuccessFullyProccessed(yamlChangeSet.getGitFileChanges(), filesCommited), false);
           }
         } else if (gitCommandResult.getGitCommandType() == DIFF) {
           try {
@@ -389,5 +393,22 @@ public class GitCommandCallback implements NotifyCallback {
                              .gitCommandResult(null)
                              .fileProcessingSummary(null)
                              .build());
+  }
+
+  @VisibleForTesting
+  List<GitFileChange> getAllFilesSuccessFullyProccessed(
+      List<GitFileChange> fileChangesPartOfYamlChangeSet, List<GitFileChange> filesCommited) {
+    List<GitFileChange> allFilesProcessed = new ArrayList<>(fileChangesPartOfYamlChangeSet);
+    if (isEmpty(filesCommited)) {
+      return allFilesProcessed;
+    }
+    Set<String> nameOfFilesProcessed =
+        fileChangesPartOfYamlChangeSet.stream().map(change -> change.getFilePath()).collect(Collectors.toSet());
+    filesCommited.forEach(change -> {
+      if (!nameOfFilesProcessed.contains(change.getFilePath())) {
+        allFilesProcessed.add(change);
+      }
+    });
+    return allFilesProcessed;
   }
 }

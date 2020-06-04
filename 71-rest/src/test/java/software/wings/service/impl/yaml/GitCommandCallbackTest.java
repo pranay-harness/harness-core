@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -264,5 +265,21 @@ public class GitCommandCallbackTest extends CategoryTest {
     verify(yamlGitService, times(1)).saveCommit(any(GitCommit.class));
     verify(gitSyncService, times(1))
         .createGitFileSummaryForFailedOrSkippedCommit(any(GitCommit.class), any(Boolean.class));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void test_getAllFilesSuccessFullYProccessed() {
+    GitFileChange gitFileChange1 = aGitFileChange().withFilePath("a").build();
+    GitFileChange gitFileChange2 = aGitFileChange().withFilePath("a").build();
+    GitFileChange gitFileChange3 = aGitFileChange().withFilePath("b").build();
+    GitFileChange gitFileChange4 = aGitFileChange().withFilePath("c").build();
+
+    List<GitFileChange> fileChangesPartOfYamlChangeSet = Arrays.asList(gitFileChange1, gitFileChange3);
+    List<GitFileChange> filesCommited = Arrays.asList(gitFileChange2, gitFileChange4);
+    List<GitFileChange> allFilesProcessed =
+        commandCallback.getAllFilesSuccessFullyProccessed(fileChangesPartOfYamlChangeSet, filesCommited);
+    assertThat(allFilesProcessed.size()).isEqualTo(3);
   }
 }
