@@ -12,6 +12,8 @@ import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.Set;
+
 @OwnedBy(CDC)
 @Value
 @Builder
@@ -20,6 +22,7 @@ public class NodeExecutionChildFunctor implements LateBindingValue {
   OutcomeService outcomeService;
   ExecutionSweepingOutputService executionSweepingOutputService;
   Ambiance ambiance;
+  Set<NodeExecutionEntityType> entityTypes;
 
   @Override
   public Object bind() {
@@ -39,6 +42,7 @@ public class NodeExecutionChildFunctor implements LateBindingValue {
         .executionSweepingOutputService(executionSweepingOutputService)
         .ambiance(ambiance)
         .startNodeExecution(nodeExecution)
+        .entityTypes(entityTypes)
         .build()
         .bind();
   }

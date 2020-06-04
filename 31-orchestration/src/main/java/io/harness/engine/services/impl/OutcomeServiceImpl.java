@@ -6,6 +6,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
@@ -19,8 +20,11 @@ import io.harness.data.Outcome;
 import io.harness.data.OutcomeInstance;
 import io.harness.data.OutcomeInstance.OutcomeInstanceKeys;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.engine.expressions.EngineAmbianceExpressionEvaluator;
+import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.engine.services.OutcomeException;
 import io.harness.engine.services.OutcomeService;
+import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.persistence.HPersistence;
 import io.harness.references.RefObject;
 import io.harness.resolvers.ResolverUtils;
@@ -28,8 +32,8 @@ import org.mongodb.morphia.query.Sort;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
@@ -37,7 +41,8 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @Singleton
 public class OutcomeServiceImpl implements OutcomeService {
-  @Inject @Named("enginePersistence") HPersistence hPersistence;
+  @Inject @Named("enginePersistence") private HPersistence hPersistence;
+  @Inject private Injector injector;
 
   @Override
   public String consumeInternal(Ambiance ambiance, String name, Outcome value, int levelsToKeep) {
@@ -64,7 +69,19 @@ public class OutcomeServiceImpl implements OutcomeService {
     if (EmptyPredicate.isNotEmpty(refObject.getProducerId())) {
       return resolveUsingProducerId(ambiance, refObject);
     }
-    return resolveUsingScope(ambiance, refObject);
+    if (!refObject.getName().contains(".")) {
+      // It is not an expression-like ref-object.
+      return resolveUsingRuntimeId(ambiance, refObject);
+    }
+
+    EngineAmbianceExpressionEvaluator evaluator = EngineAmbianceExpressionEvaluator.builder()
+                                                      .ambiance(ambiance)
+                                                      .entityTypes(EnumSet.of(NodeExecutionEntityType.OUTCOME))
+                                                      .refObjectSpecific(true)
+                                                      .build();
+    injector.injectMembers(evaluator);
+    Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
+    return (value instanceof Outcome) ? (Outcome) value : null;
   }
 
   private Outcome resolveUsingProducerId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
@@ -84,7 +101,7 @@ public class OutcomeServiceImpl implements OutcomeService {
     return instances.get(0).getOutcome();
   }
 
-  private Outcome resolveUsingScope(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
+  private Outcome resolveUsingRuntimeId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
     String name = refObject.getName();
     List<OutcomeInstance> instances = hPersistence.createQuery(OutcomeInstance.class, excludeAuthority)
                                           .filter(OutcomeInstanceKeys.planExecutionId, ambiance.getPlanExecutionId())
@@ -101,18 +118,6 @@ public class OutcomeServiceImpl implements OutcomeService {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
     return instance.getOutcome();
-  }
-
-  @Override
-  public Optional<Outcome> find(Ambiance ambiance, String setupId, String runtimeId, String name) {
-    OutcomeInstance instance = hPersistence.createQuery(OutcomeInstance.class, excludeAuthority)
-                                   .filter(OutcomeInstanceKeys.planExecutionId, ambiance.getPlanExecutionId())
-                                   .filter(OutcomeInstanceKeys.name, name)
-                                   .filter(OutcomeInstanceKeys.producedBy + "." + LevelKeys.setupId, setupId)
-                                   .filter(OutcomeInstanceKeys.producedBy + "." + LevelKeys.runtimeId, runtimeId)
-                                   .order(Sort.descending(OutcomeInstanceKeys.createdAt))
-                                   .get();
-    return Optional.ofNullable(instance).map(OutcomeInstance::getOutcome);
   }
 
   @Override

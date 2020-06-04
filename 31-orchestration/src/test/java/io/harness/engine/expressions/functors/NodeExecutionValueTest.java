@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -12,7 +11,6 @@ import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.expressions.NodeExecutionsCache;
-import io.harness.engine.expressions.functors.NodeExecutionValue.NodeExecutionMap;
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.services.OutcomeService;
 import io.harness.execution.NodeExecution;
@@ -33,7 +31,6 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.util.Collections;
-import java.util.Optional;
 
 public class NodeExecutionValueTest extends CategoryTest {
   @Mock NodeExecutionService nodeExecutionService;
@@ -108,15 +105,6 @@ public class NodeExecutionValueTest extends CategoryTest {
         .thenReturn(asList(nodeExecution4, nodeExecution5));
     when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, nodeExecution4.getUuid()))
         .thenReturn(Collections.singletonList(nodeExecution6));
-
-    when(outcomeService.find(any(), any(), any(), any())).thenAnswer(invocation -> {
-      String setupId = invocation.getArgumentAt(1, String.class);
-      String name = invocation.getArgumentAt(3, String.class);
-      if (setupId.equals(nodeExecution2.getUuid())) {
-        return Optional.of(name);
-      }
-      return Optional.empty();
-    });
   }
 
   @Test
