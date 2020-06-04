@@ -104,6 +104,7 @@ import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.logging.DelegateStackdriverLogAppender;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.TaskLogContext;
@@ -172,7 +173,6 @@ import software.wings.delegatetasks.GenericLogSanitizer;
 import software.wings.delegatetasks.LogSanitizer;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
-import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.BufferedWriter;

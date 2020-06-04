@@ -4,6 +4,7 @@ import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import static io.harness.globalcontex.AuditGlobalContextData.AUDIT_ID;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -16,7 +17,6 @@ import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static org.mongodb.morphia.query.Sort.descending;
-import static software.wings.service.intfc.FileService.FileBucket;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;

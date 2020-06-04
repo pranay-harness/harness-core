@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.fail;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
 import io.harness.rest.RestResponse;
@@ -25,7 +26,6 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.impl.security.vault.SecretEngineSummary;
-import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.settings.SettingValue.SettingVariableTypes;

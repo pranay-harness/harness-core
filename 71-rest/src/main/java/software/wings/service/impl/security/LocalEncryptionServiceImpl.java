@@ -2,9 +2,9 @@ package software.wings.service.impl.security;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
-import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;

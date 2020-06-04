@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.ExportExecutionsException;
 import io.harness.rule.Owner;
 import org.junit.Rule;
@@ -27,7 +28,6 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.FileMetadata;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
 import java.io.OutputStream;

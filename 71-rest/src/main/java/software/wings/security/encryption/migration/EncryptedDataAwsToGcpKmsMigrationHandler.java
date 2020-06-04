@@ -1,5 +1,6 @@
 package software.wings.security.encryption.migration;
 
+import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.persistence.UpdatedAtAware.LAST_UPDATED_AT_KEY;
 import static io.harness.security.SimpleEncryption.CHARSET;
@@ -8,7 +9,6 @@ import static io.harness.security.encryption.EncryptionType.KMS;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.FeatureName.ACTIVE_MIGRATION_FROM_AWS_TO_GCP_KMS;
-import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.service.intfc.security.SecretManager.ID_KEY;
 
 import com.google.common.io.Files;

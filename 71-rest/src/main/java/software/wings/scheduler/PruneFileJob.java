@@ -5,6 +5,7 @@ import static java.time.Duration.ofSeconds;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
@@ -20,7 +21,6 @@ import software.wings.beans.AppContainer;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.FileService.FileBucket;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;

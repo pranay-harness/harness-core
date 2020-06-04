@@ -61,6 +61,7 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.FileCreationException;
@@ -101,7 +102,6 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
-import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
 import java.io.FileOutputStream;

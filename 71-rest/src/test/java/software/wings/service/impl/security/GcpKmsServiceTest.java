@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -11,7 +12,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.common.io.Files;
 import com.google.inject.Inject;

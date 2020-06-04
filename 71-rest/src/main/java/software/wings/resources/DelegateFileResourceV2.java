@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentResult;
@@ -34,7 +35,6 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
 import java.io.InputStream;

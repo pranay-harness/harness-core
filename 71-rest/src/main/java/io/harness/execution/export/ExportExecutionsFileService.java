@@ -9,11 +9,11 @@ import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.ExportExecutionsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.FileMetadata;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
 import java.io.FileInputStream;

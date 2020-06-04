@@ -1,8 +1,8 @@
 package software.wings.delegatetasks;
 
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.IOException;
 import java.io.InputStream;

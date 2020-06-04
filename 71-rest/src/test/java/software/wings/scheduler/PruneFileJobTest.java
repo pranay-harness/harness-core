@@ -14,6 +14,7 @@ import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
@@ -31,7 +32,6 @@ import software.wings.beans.Base;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.FileService.FileBucket;
 
 import java.util.Date;
 

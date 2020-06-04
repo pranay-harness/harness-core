@@ -1,8 +1,8 @@
 package software.wings.integration.service;
 
+import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.AUDITS;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.service.intfc.FileService.FileBucket.AUDITS;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.DeprecatedIntegrationTests;

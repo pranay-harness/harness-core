@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.configuration.DelegateConfiguration;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.DelegateAgentManagerClient;
@@ -33,7 +34,6 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
-import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
 import java.io.FileInputStream;

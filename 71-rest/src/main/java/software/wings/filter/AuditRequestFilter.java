@@ -8,6 +8,7 @@ import static java.util.Arrays.asList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,6 @@ import software.wings.common.AuditHelper;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.IOException;
 import java.nio.charset.Charset;

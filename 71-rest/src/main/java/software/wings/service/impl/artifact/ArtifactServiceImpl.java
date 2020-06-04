@@ -8,6 +8,7 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.ARTIFACTS;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
@@ -39,7 +40,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.service.impl.artifact.ArtifactCollectionUtils.getArtifactKeyFn;
-import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.ArtifactType.DOCKER;
 
 import com.google.common.io.Files;
