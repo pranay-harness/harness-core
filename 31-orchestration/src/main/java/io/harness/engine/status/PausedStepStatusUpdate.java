@@ -11,12 +11,11 @@ import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.services.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.PlanExecution.PlanExecutionKeys;
+import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
 
-import java.util.Date;
 import java.util.List;
 
 public class PausedStepStatusUpdate implements StepStatusUpdate {
@@ -28,8 +27,7 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
   public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
     boolean pausePlan = pauseParents(stepStatusUpdateInfo.getNodeExecutionId(), stepStatusUpdateInfo.getInterruptId());
     if (pausePlan) {
-      planExecutionService.update(
-          stepStatusUpdateInfo.getPlanExecutionId(), ops -> ops.set(PlanExecutionKeys.status, PAUSED));
+      planExecutionService.updateStatusWithOps(stepStatusUpdateInfo.getPlanExecutionId(), PAUSED, null);
     }
   }
 
@@ -38,6 +36,7 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
     if (nodeExecution.getParentId() == null) {
       return true;
     }
+
     List<NodeExecution> flowingChildren = hPersistence.createQuery(NodeExecution.class, HQuery.excludeAuthority)
                                               .filter(NodeExecutionKeys.parentId, nodeExecution.getParentId())
                                               .field(NodeExecutionKeys.status)
@@ -45,11 +44,15 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
                                               .project(NodeExecutionKeys.uuid, true)
                                               .asList();
     if (isEmpty(flowingChildren)) {
-      nodeExecutionService.update(nodeExecution.getParentId(),
+      // Update Status
+      nodeExecutionService.updateStatusWithOps(nodeExecution.getParentId(), PAUSED,
           ops
-          -> ops.set(NodeExecutionKeys.status, PAUSED)
-                 .addToSet(NodeExecutionKeys.interruptHistories,
-                     InterruptEffect.builder().interruptId(interruptId).tookEffectAt(new Date()).build()));
+          -> ops.addToSet(NodeExecutionKeys.interruptHistories,
+              InterruptEffect.builder()
+                  .interruptId(interruptId)
+                  .tookEffectAt(System.currentTimeMillis())
+                  .interruptType(ExecutionInterruptType.PAUSE_ALL)
+                  .build()));
       return pauseParents(nodeExecution.getParentId(), interruptId);
     } else {
       return false;

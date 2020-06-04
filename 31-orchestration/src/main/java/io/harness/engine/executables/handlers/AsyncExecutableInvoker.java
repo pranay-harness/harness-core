@@ -18,6 +18,7 @@ import io.harness.engine.services.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.async.AsyncExecutable;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.plan.PlanNode;
@@ -54,7 +55,7 @@ public class AsyncExecutableInvoker implements ExecutableInvoker {
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, response.getCallbackIds().toArray(new String[0]));
 
     // Update Execution Node Instance state to TASK_WAITING
-    nodeExecutionService.update(
-        nodeExecution.getUuid(), ops -> ops.addToSet(NodeExecutionKeys.executableResponses, response));
+    nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), Status.ASYNC_WAITING,
+        ops -> ops.addToSet(NodeExecutionKeys.executableResponses, response));
   }
 }

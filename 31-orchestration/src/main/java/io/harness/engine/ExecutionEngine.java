@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.execution.status.Status.RUNNING;
 import static io.harness.execution.status.Status.resumableStatuses;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
@@ -41,13 +42,11 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.facilitator.PassThroughData;
-import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.Plan;
@@ -75,7 +74,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -145,7 +143,6 @@ public class ExecutionEngine implements Engine {
           (StepParameters) engineExpressionService.resolve(ambiance, node.getStepParameters());
       nodeExecution = Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),
           ops -> setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters)));
-      nodeExecution.setResolvedStepParameters(resolvedStepParameters);
       facilitateExecution(ambiance, nodeExecution, inputs);
     } catch (Exception exception) {
       handleError(ambiance, exception);
@@ -198,14 +195,12 @@ public class ExecutionEngine implements Engine {
     }
     Preconditions.checkNotNull(facilitatorResponse,
         "No execution mode detected for State. Name: " + node.getName() + "Type : " + node.getStepType());
-    ExecutionMode mode = facilitatorResponse.getExecutionMode();
-    Consumer<UpdateOperations<NodeExecution>> ops = op -> op.set(NodeExecutionKeys.mode, mode);
     if (facilitatorResponse.getInitialWait() != null && facilitatorResponse.getInitialWait().getSeconds() != 0) {
       FacilitatorResponse finalFacilitatorResponse = facilitatorResponse;
-      Preconditions.checkNotNull(nodeExecutionService.update(ambiance.obtainCurrentRuntimeId(),
-          ops.andThen(op
-              -> op.set(NodeExecutionKeys.status, Status.WAITING)
-                     .set(NodeExecutionKeys.initialWaitDuration, finalFacilitatorResponse.getInitialWait()))));
+      // Update Status
+      Preconditions.checkNotNull(
+          nodeExecutionService.updateStatusWithOps(ambiance.obtainCurrentRuntimeId(), Status.WAITING,
+              ops -> ops.set(NodeExecutionKeys.initialWaitDuration, finalFacilitatorResponse.getInitialWait())));
       String resumeId =
           delayEventHelper.delay(finalFacilitatorResponse.getInitialWait().getSeconds(), Collections.emptyMap());
       waitNotifyEngine.waitForAllOn(ORCHESTRATION,
@@ -215,15 +210,15 @@ public class ExecutionEngine implements Engine {
               .inputs(inputs)
               .build(),
           resumeId);
-    } else {
-      Preconditions.checkNotNull(nodeExecutionService.update(
-          ambiance.obtainCurrentRuntimeId(), ops.andThen(op -> op.set(NodeExecutionKeys.status, Status.RUNNING))));
-      invokeState(ambiance, facilitatorResponse, inputs);
+      return;
     }
+    invokeState(ambiance, facilitatorResponse, inputs);
   }
 
   public void invokeState(Ambiance ambiance, FacilitatorResponse facilitatorResponse, List<StepTransput> inputs) {
-    NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
+    NodeExecution nodeExecution =
+        Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(ambiance.obtainCurrentRuntimeId(),
+            Status.RUNNING, ops -> ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode())));
     PlanNode node = nodeExecution.getNode();
     Step currentStep = stepRegistry.obtain(node.getStepType());
     ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(facilitatorResponse.getExecutionMode());
@@ -311,8 +306,7 @@ public class ExecutionEngine implements Engine {
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
       logger.info("Ending Execution");
-      planExecutionService.update(
-          nodeExecution.getPlanExecutionId(), ops -> ops.set(PlanExecutionKeys.status, nodeExecution.getStatus()));
+      planExecutionService.updateStatusWithOps(nodeExecution.getPlanExecutionId(), nodeExecution.getStatus(), null);
     }
   }
 
@@ -325,28 +319,28 @@ public class ExecutionEngine implements Engine {
   public void resume(String nodeInstanceId, Map<String, ResponseData> response, boolean asyncError) {
     NodeExecution nodeExecution =
         hPersistence.createQuery(NodeExecution.class).filter(NodeExecutionKeys.uuid, nodeInstanceId).get();
-    if (!resumableStatuses().contains(nodeExecution.getStatus())) {
-      logger.warn("NodeExecution is no longer in RESUMABLE state Uuid: {} Status {} ", nodeExecution.getUuid(),
-          nodeExecution.getStatus());
-      return;
-    }
-
     Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
-    StepParameters resolvedStepParameters =
-        (StepParameters) engineExpressionService.resolve(ambiance, nodeExecution.getResolvedStepParameters());
-    NodeExecution updatedNodeExecution = Preconditions.checkNotNull(nodeExecutionService.update(nodeInstanceId, ops -> {
-      ops.set(NodeExecutionKeys.status, Status.RUNNING);
-      setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters);
-    }));
-    executorService.execute(EngineResumeExecutor.builder()
-                                .nodeExecution(updatedNodeExecution)
-                                .ambiance(ambiance)
-                                .response(response)
-                                .asyncError(asyncError)
-                                .executionEngine(this)
-                                .stepRegistry(stepRegistry)
-                                .injector(injector)
-                                .build());
+    try {
+      if (!resumableStatuses().contains(nodeExecution.getStatus())) {
+        logger.warn("NodeExecution is no longer in RESUMABLE state Uuid: {} Status {} ", nodeExecution.getUuid(),
+            nodeExecution.getStatus());
+        return;
+      }
+      if (nodeExecution.getStatus() != RUNNING) {
+        nodeExecution = Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(nodeInstanceId, RUNNING));
+      }
+      executorService.execute(EngineResumeExecutor.builder()
+                                  .nodeExecution(nodeExecution)
+                                  .ambiance(ambiance)
+                                  .response(response)
+                                  .asyncError(asyncError)
+                                  .executionEngine(this)
+                                  .stepRegistry(stepRegistry)
+                                  .injector(injector)
+                                  .build());
+    } catch (Exception exception) {
+      handleError(ambiance, exception);
+    }
   }
 
   public void triggerLink(Step step, Ambiance ambiance, NodeExecution nodeExecution, PassThroughData passThroughData,

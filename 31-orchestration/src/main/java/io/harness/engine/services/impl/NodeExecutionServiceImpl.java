@@ -86,9 +86,38 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
         hPersistence.createQuery(NodeExecution.class).filter(NodeExecutionKeys.uuid, nodeExecutionId);
     UpdateOperations<NodeExecution> operations = hPersistence.createUpdateOperations(NodeExecution.class);
     ops.accept(operations);
-    NodeExecution updated = hPersistence.findAndModify(findQuery, operations, HPersistence.upsertReturnNewOptions);
+    NodeExecution updated = hPersistence.findAndModify(findQuery, operations, HPersistence.returnNewOptions);
     if (updated == null) {
       throw new InvalidRequestException("Node Execution Cannot be updated with provided operations" + nodeExecutionId);
+    }
+    return updated;
+  }
+
+  /**
+   * Always use this method while updating statuses. This guarantees we a hopping from correct statuses.
+   * As we don't have transactions it is possible that you node execution state is manipulated by some other thread and
+   * your transition is no longer valid.
+   *
+   * Like your workflow is aborted but some other thread try to set it to running. Same logic applied to plan execution
+   * status as well
+   */
+
+  @Override
+  public NodeExecution updateStatusWithOps(
+      @NonNull String nodeExecutionId, @NonNull Status status, Consumer<UpdateOperations<NodeExecution>> ops) {
+    EnumSet<Status> allowedStartStatuses = Status.obtainAllowedStartSet(status);
+    Query<NodeExecution> findQuery = hPersistence.createQuery(NodeExecution.class)
+                                         .filter(NodeExecutionKeys.uuid, nodeExecutionId)
+                                         .field(NodeExecutionKeys.status)
+                                         .in(allowedStartStatuses);
+    UpdateOperations<NodeExecution> operations =
+        hPersistence.createUpdateOperations(NodeExecution.class).set(NodeExecutionKeys.status, status);
+    if (ops != null) {
+      ops.accept(operations);
+    }
+    NodeExecution updated = hPersistence.findAndModify(findQuery, operations, HPersistence.returnNewOptions);
+    if (updated == null) {
+      logger.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
     }
     return updated;
   }
