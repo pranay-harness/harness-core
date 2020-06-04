@@ -18,8 +18,13 @@ import io.harness.execution.export.request.ExportExecutionsRequestLimitChecks;
 import io.harness.execution.export.request.ExportExecutionsRequestService;
 import io.harness.execution.export.request.ExportExecutionsRequestSummary;
 import io.harness.execution.export.request.ExportExecutionsUserParams;
+import io.harness.limits.ActionType;
+import io.harness.limits.ConfiguredLimit;
+import io.harness.limits.configuration.LimitConfigurationService;
+import io.harness.limits.impl.model.StaticLimit;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
@@ -38,12 +43,14 @@ import javax.ws.rs.core.StreamingOutput;
 
 @OwnedBy(CDC)
 @Singleton
+@Slf4j
 public class ExportExecutionsResourceService {
   @Inject private ExportExecutionsRequestService exportExecutionsRequestService;
   @Inject private ExportExecutionsFileService exportExecutionsFileService;
   @Inject private ExportExecutionsRequestHelper exportExecutionsRequestHelper;
   @Inject private UserGroupService userGroupService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private LimitConfigurationService limitConfigurationService;
 
   private final JsonFormatter jsonFormatter = new JsonFormatter();
 
@@ -59,10 +66,11 @@ public class ExportExecutionsResourceService {
       @NotNull String accountId, @NotNull Query<WorkflowExecution> query, ExportExecutionsUserParams userParams) {
     // The query passed to this function must be an authorized query:
     // 1. If the request comes from UI we convert the page request to query and authorize that query
-    // 1. If the request comes from GraphQL we use WingsPersistence::createAuthorizedQuery to create a new query
+    // 2. If the request comes from GraphQL we use WingsPersistence::createAuthorizedQuery to create a new query
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      checkFeatureEnabled(accountId);
       validateUserParams(userParams);
+      checkFeatureEnabled(accountId);
+      checkRateLimits(accountId);
       String requestId = exportExecutionsRequestService.queueExportExecutionRequest(accountId, query, userParams);
       try (AutoLogContext ignore2 = new ExportExecutionsRequestLogContext(requestId, OVERRIDE_ERROR)) {
         return getStatus(accountId, requestId);
@@ -144,6 +152,21 @@ public class ExportExecutionsResourceService {
   private void checkFeatureEnabled(String accountId) {
     if (!featureFlagService.isEnabled(FeatureName.EXPORT_EXECUTION_LOGS, accountId)) {
       throw new InvalidRequestException("Export execution logs feature is disabled right now");
+    }
+  }
+
+  private void checkRateLimits(@NotNull String accountId) {
+    ConfiguredLimit<StaticLimit> configuredLimit =
+        limitConfigurationService.getOrDefault(accountId, ActionType.EXPORT_EXECUTIONS_REQUEST);
+    if (configuredLimit == null) {
+      logger.error("No export executions request rate limit configured");
+      return;
+    }
+
+    long requestsInLastDay = exportExecutionsRequestService.getTotalRequestsInLastDay(accountId);
+    if (requestsInLastDay >= configuredLimit.getLimit().getCount()) {
+      throw new InvalidRequestException(
+          "Number of export executions requests from this account has reached its daily limit");
     }
   }
 }

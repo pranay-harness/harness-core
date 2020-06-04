@@ -83,6 +83,16 @@ public class DefaultLimitsServiceImpl implements DefaultLimitsService {
     defaultLimits.put(
         new LimitKey(ActionType.CREATE_WORKFLOW, AccountType.ESSENTIALS), new StaticLimit(MAX_APP_COUNT * 10));
 
+    // Export executions request limits
+    defaultLimits.put(new LimitKey(ActionType.EXPORT_EXECUTIONS_REQUEST, AccountType.TRIAL),
+        new StaticLimit(EXPORT_EXECUTIONS_LIMIT_PER_DAY));
+    defaultLimits.put(new LimitKey(ActionType.EXPORT_EXECUTIONS_REQUEST, AccountType.PAID),
+        new StaticLimit(EXPORT_EXECUTIONS_LIMIT_PER_DAY));
+    defaultLimits.put(new LimitKey(ActionType.EXPORT_EXECUTIONS_REQUEST, AccountType.COMMUNITY),
+        new StaticLimit(EXPORT_EXECUTIONS_LIMIT_PER_DAY));
+    defaultLimits.put(new LimitKey(ActionType.EXPORT_EXECUTIONS_REQUEST, AccountType.ESSENTIALS),
+        new StaticLimit(EXPORT_EXECUTIONS_LIMIT_PER_DAY));
+
     // Infrastructure Provisioner Limits
     defaultLimits.put(
         new LimitKey(ActionType.CREATE_INFRA_PROVISIONER, AccountType.TRIAL), new StaticLimit(MAX_APP_COUNT * 10));

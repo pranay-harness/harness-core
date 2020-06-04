@@ -16,6 +16,7 @@ import io.harness.execution.export.request.ExportExecutionsRequest.ExportExecuti
 import io.harness.execution.export.request.ExportExecutionsRequest.OutputFormat;
 import io.harness.execution.export.request.ExportExecutionsRequest.Status;
 import io.harness.rule.Owner;
+import io.harness.testlib.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -62,6 +63,7 @@ public class ExportExecutionsRequestServiceTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = GARVIT)
+  @RealMongo
   @Category(UnitTests.class)
   public void testQueueExportExecutionRequest() {
     saveWorkflowExecution();
@@ -103,6 +105,7 @@ public class ExportExecutionsRequestServiceTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = GARVIT)
+  @RealMongo
   @Category(UnitTests.class)
   public void testPrepareLimitChecks() {
     saveWorkflowExecution();

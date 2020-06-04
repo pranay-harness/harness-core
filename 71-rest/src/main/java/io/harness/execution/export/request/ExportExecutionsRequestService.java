@@ -7,6 +7,7 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.ReadPreference;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.ExecutionStatus;
@@ -26,6 +27,8 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -111,11 +114,13 @@ public class ExportExecutionsRequestService {
     long currQueuedRequests = wingsPersistence.createQuery(ExportExecutionsRequest.class)
                                   .filter(ExportExecutionsRequestKeys.accountId, accountId)
                                   .filter(ExportExecutionsRequestKeys.status, Status.QUEUED)
-                                  .count();
+                                  .count(new CountOptions().readPreference(ReadPreference.secondaryPreferred()));
 
     query = updateQuery(accountId, query);
     // Only count till a max of MAX_WORKFLOW_EXECUTIONS * 5. Otherwise the count query will be expensive.
-    long totalWorkflowExecutions = query.count(new CountOptions().limit((int) MAX_WORKFLOW_EXECUTIONS * 5));
+    long totalWorkflowExecutions = query.count(new CountOptions()
+                                                   .limit((int) MAX_WORKFLOW_EXECUTIONS * 5)
+                                                   .readPreference(ReadPreference.secondaryPreferred()));
     return ExportExecutionsRequestLimitChecks.builder()
         .queuedRequests(LimitCheck.builder().limit(MAX_QUEUED_REQUESTS).value(currQueuedRequests).build())
         .executionCount(LimitCheck.builder().limit(MAX_WORKFLOW_EXECUTIONS).value(totalWorkflowExecutions).build())
@@ -202,5 +207,13 @@ public class ExportExecutionsRequestService {
     notNullCheck("Export executions request has null accountId", request.getAccountId());
     notNullCheck("Export executions request has null output format", request.getOutputFormat());
     notNullCheck("Export executions request has null query", request.getQuery());
+  }
+
+  public long getTotalRequestsInLastDay(@NotNull String accountId) {
+    return wingsPersistence.createQuery(ExportExecutionsRequest.class)
+        .filter(ExportExecutionsRequestKeys.accountId, accountId)
+        .field(ExportExecutionsRequestKeys.createdAt)
+        .greaterThan(Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli())
+        .count(new CountOptions().readPreference(ReadPreference.secondaryPreferred()));
   }
 }
