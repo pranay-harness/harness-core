@@ -1797,6 +1797,7 @@ public class VaultTest extends WingsBaseTest {
       return;
     }
 
+    long currentTime = System.currentTimeMillis();
     VaultConfig vaultConfig = getVaultConfigWithAppRole("appRoleId", "secretId");
     vaultConfig.setAccountId(accountId);
     String initialToken = "initialToken";
@@ -1813,6 +1814,28 @@ public class VaultTest extends WingsBaseTest {
     vaultService.renewAppRoleClientToken(encryptedVaultConfig);
     vaultConfig = vaultService.getVaultConfig(accountId, vaultConfigId);
     assertThat(vaultConfig.getAuthToken()).isEqualTo(renewedToken);
+    assertThat(vaultConfig.getRenewedAt()).isGreaterThan(currentTime);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testRenewToken_shouldSucceed() {
+    if (isKmsEnabled) {
+      return;
+    }
+
+    VaultConfig vaultConfig = getVaultConfigWithAuthToken();
+    vaultConfig.setAccountId(accountId);
+    vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
+
+    VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
+    assertThat(savedVaultConfig.getRenewedAt()).isEqualTo(0);
+
+    long currentTime = System.currentTimeMillis();
+    vaultService.renewToken(savedVaultConfig);
+    savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
+    assertThat(savedVaultConfig.getRenewedAt()).isGreaterThan(currentTime);
   }
 
   @Test

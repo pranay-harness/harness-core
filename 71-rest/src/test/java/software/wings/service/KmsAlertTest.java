@@ -1,8 +1,6 @@
 package software.wings.service;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -11,9 +9,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.PageRequest;
-import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -23,22 +18,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.alerts.AlertStatus;
 import software.wings.beans.Account;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
-import software.wings.beans.alert.Alert;
-import software.wings.beans.alert.AlertType;
-import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.SecretManagementException;
-import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.service.intfc.security.SecretManager;
-import software.wings.service.intfc.security.VaultService;
 
 import java.util.UUID;
 
@@ -49,10 +37,7 @@ import java.util.UUID;
 public class KmsAlertTest extends WingsBaseTest {
   private static String VAULT_TOKEN = System.getProperty("vault.token");
 
-  @Inject private VaultService vaultService;
   @Inject private KmsService kmsService;
-  @Inject private AlertService alertService;
-  @Inject private SecretManager secretManager;
   @Inject private WingsPersistence wingsPersistence;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private SecretManagementDelegateService mockDelegateServiceOK;
@@ -75,50 +60,12 @@ public class KmsAlertTest extends WingsBaseTest {
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     when(mockDelegateServiceEx.renewVaultToken(any(VaultConfig.class)))
         .thenThrow(new SecretManagementException("reason"));
-    FieldUtils.writeField(vaultService, "delegateProxyFactory", delegateProxyFactory, true);
     FieldUtils.writeField(kmsService, "delegateProxyFactory", delegateProxyFactory, true);
     FieldUtils.writeField(secretManager, "kmsService", kmsService, true);
     FieldUtils.writeField(wingsPersistence, "secretManager", secretManager, true);
-    FieldUtils.writeField(vaultService, "kmsService", kmsService, true);
-    FieldUtils.writeField(secretManager, "vaultService", vaultService, true);
 
     accountId =
         wingsPersistence.save(Account.Builder.anAccount().withAccountName(UUID.randomUUID().toString()).build());
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testAlertFiredForVaultRenewal() throws InterruptedException {
-    VaultConfig vaultConfig = getVaultConfigWithAuthToken();
-    vaultConfig.setRenewIntervalHours(1);
-    vaultConfig.setRenewedAt(0);
-    vaultConfig.setAccountId(accountId);
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
-    vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig);
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
-    vaultService.renewTokens(vaultConfig);
-
-    PageResponse<Alert> alerts = listOpenAlerts(accountId);
-    assertThat(alerts).hasSize(1);
-    Alert alert = alerts.get(0);
-    assertThat(alert.getAccountId()).isEqualTo(accountId);
-    assertThat(alert.getType()).isEqualTo(AlertType.InvalidKMS);
-    assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
-    KmsSetupAlert alertData = (KmsSetupAlert) alert.getAlertData();
-    assertThat(alertData.getKmsId()).isEqualTo(vaultConfig.getUuid());
-
-    VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
-    assertThat(savedVaultConfig.getRenewedAt()).isEqualTo(0);
-
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
-    vaultService.renewTokens(savedVaultConfig);
-    Thread.sleep(2000);
-    assertThat(listOpenAlerts(accountId)).isEmpty();
-    savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
-    assertThat(savedVaultConfig.getRenewedAt() > 0).isTrue();
-
-    assertThat(listClosedAlerts(accountId)).hasSize(1);
   }
 
   @Test(expected = SecretManagementException.class)
@@ -131,21 +78,5 @@ public class KmsAlertTest extends WingsBaseTest {
     kmsService.saveKmsConfig(accountId, kmsConfig);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
     kmsService.saveKmsConfig(accountId, kmsConfig);
-  }
-
-  private PageResponse<Alert> listOpenAlerts(String accountId) {
-    return listAlerts(accountId, AlertStatus.Open);
-  }
-
-  private PageResponse<Alert> listClosedAlerts(String accountId) {
-    return listAlerts(accountId, AlertStatus.Closed);
-  }
-
-  private PageResponse<Alert> listAlerts(String accountId, AlertStatus alertStatus) {
-    PageRequest<Alert> pageRequest = aPageRequest()
-                                         .addFilter("status", Operator.EQ, alertStatus)
-                                         .addFilter("accountId", Operator.EQ, accountId)
-                                         .build();
-    return alertService.list(pageRequest);
   }
 }

@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.SecretString.SECRET_MASK;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -51,6 +52,8 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
 
   @Attributes(title = "Renew token interval", required = true) private int renewIntervalHours;
 
+  @Attributes(title = "Token Renewal Interval in minutes", required = true) private long renewalInterval;
+
   @Attributes(title = "Is Vault Read Only") private boolean isReadOnly;
 
   /**
@@ -63,6 +66,8 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
   @Default private String secretEngineName = "secret";
 
   private long renewedAt;
+
+  public enum AccessType { APP_ROLE, TOKEN }
 
   @JsonIgnore
   @SchemaIgnore
@@ -92,5 +97,16 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
   public void maskSecrets() {
     this.authToken = SECRET_MASK;
     this.secretId = SECRET_MASK;
+  }
+
+  public long calculateRenewalInterval(long defaultRenewalInterval) {
+    if (getAccessType() == AccessType.APP_ROLE && renewalInterval <= 0) {
+      return defaultRenewalInterval;
+    }
+    return renewalInterval;
+  }
+
+  public AccessType getAccessType() {
+    return isNotEmpty(appRoleId) ? AccessType.APP_ROLE : AccessType.TOKEN;
   }
 }

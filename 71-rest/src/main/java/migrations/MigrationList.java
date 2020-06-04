@@ -138,6 +138,7 @@ import migrations.all.UpdateGitSyncErrorMigration;
 import migrations.all.UpdatePipelineParallelIndexes;
 import migrations.all.UsageRestrictionsMigration;
 import migrations.all.UserPermissionReadMigration;
+import migrations.all.VaultConfigRenewalIntervalMigration;
 import migrations.all.VerificationMetricJobMigration;
 import migrations.all.YamlGitConfigAppMigration;
 import migrations.all.YamlGitConfigMigration;
@@ -339,6 +340,7 @@ public class MigrationList {
         .add(Pair.of(311, StackdriverMetricServiceGuardJsonMigration.class))
         .add(Pair.of(312, DropUniqueIndexOnImportedTemplate.class))
         .add(Pair.of(313, PipelineWorkflowExecutionActionMigration.class))
+        .add(Pair.of(314, VaultConfigRenewalIntervalMigration.class))
         .build();
   }
 }

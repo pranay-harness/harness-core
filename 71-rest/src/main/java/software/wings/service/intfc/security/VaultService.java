@@ -41,7 +41,7 @@ public interface VaultService {
 
   VaultConfig getVaultConfigByName(String accountId, String name);
 
-  void renewTokens(VaultConfig vaultConfig);
+  void renewToken(VaultConfig vaultConfig);
 
   void renewAppRoleClientToken(VaultConfig vaultConfig);
 
