@@ -18,6 +18,7 @@ import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.approval.Criteria;
 import software.wings.beans.security.UserGroup;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.intfc.UserGroupService;
@@ -68,6 +69,8 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
   /** ServiceNow Approval */
   private String ticketUrl;
   private ServiceNowTicketType ticketType;
+  private Criteria snowApproval;
+  private Criteria snowRejection;
 
   /** Slack approval */
   private boolean approvalFromSlack;
@@ -113,7 +116,7 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
         executionDetails, "issueUrl", ExecutionDataValue.builder().displayName("Issue URL").value(issueUrl).build());
 
     if (ticketUrl != null && ticketType != null) {
-      putNotNull(executionDetails, "ticketUrl",
+      putNotNull(executionDetails, "issueUrl",
           ExecutionDataValue.builder().displayName(ticketType.getDisplayName() + " URL").value(ticketUrl).build());
     }
 
@@ -147,13 +150,17 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
               .build());
     }
 
+    if (snowApproval != null) {
+      putNotNull(executionDetails, "approvalCriteria",
+          ExecutionDataValue.builder().displayName("Approval Criteria").value(snowApproval.conditionsString()).build());
+    }
+
     if (EmptyPredicate.isNotEmpty(currentStatus)) {
+      String statusString = approvalStateType == ApprovalStateType.SERVICENOW
+          ? currentStatus
+          : StringUtils.capitalize(approvalField) + " is equal to '" + StringUtils.capitalize(currentStatus) + "'";
       putNotNull(executionDetails, "currentStatus",
-          ExecutionDataValue.builder()
-              .displayName("Current value")
-              .value(StringUtils.capitalize(approvalField) + " is equal to '" + StringUtils.capitalize(currentStatus)
-                  + "'")
-              .build());
+          ExecutionDataValue.builder().displayName("Current value").value(statusString).build());
     }
 
     if (EmptyPredicate.isNotEmpty(rejectionField) && EmptyPredicate.isNotEmpty(rejectionValue)) {
@@ -162,6 +169,14 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
               .displayName("Rejection Criteria")
               .value(StringUtils.capitalize(rejectionField) + " should be '" + StringUtils.capitalize(rejectionValue)
                   + "'")
+              .build());
+    }
+
+    if (snowRejection != null) {
+      putNotNull(executionDetails, "rejectionCriteria",
+          ExecutionDataValue.builder()
+              .displayName("Rejection Criteria")
+              .value(snowRejection.conditionsString())
               .build());
     }
 

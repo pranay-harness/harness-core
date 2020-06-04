@@ -55,6 +55,16 @@ public class ServiceNowResource {
   }
 
   @GET
+  @Path("{connectorId}/approvalstates")
+  @Timed
+  @ExceptionMetered
+  public RestResponse getApprovalValues(@QueryParam("appId") String appId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("ticketType") ServiceNowTicketType ticketType,
+      @PathParam("connectorId") String connectorId) {
+    return new RestResponse<>(serviceNowService.getApprovalValues(ticketType, accountId, connectorId, appId));
+  }
+
+  @GET
   @Path("{connectorId}/createMeta")
   @Timed
   @ExceptionMetered

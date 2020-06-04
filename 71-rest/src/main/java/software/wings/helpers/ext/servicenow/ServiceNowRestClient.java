@@ -95,4 +95,9 @@ public interface ServiceNowRestClient {
   @GET("api/now/doc/table/schema/{ticketType}")
   Call<JsonNode> getAdditionalFields(
       @Header("Authorization") String authorization, @Path("ticketType") String ticketType);
+
+  @GET(
+      "/api/now/table/sys_choice?sysparm_query=elementSTARTSWITHapproval%5EnameSTARTSWITHtask%5EinactiveSTARTSWITHfalse%5ElanguageSTARTSWITHen")
+  Call<JsonNode>
+  getChangeApprovalTypes(@Header("Authorization") String authorization);
 }

@@ -17,15 +17,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ServiceNowExecutionData;
+import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.approval.ApprovalPollingJobEntity;
+import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -35,6 +39,7 @@ import software.wings.service.intfc.servicenow.ServiceNowService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -43,6 +48,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   @Inject WorkflowExecutionService workflowExecutionService;
   @Inject WaitNotifyEngine waitNotifyEngine;
   @Inject StateExecutionService stateExecutionService;
+  @Inject FeatureFlagService featureFlagService;
 
   private static final String WORKFLOW_EXECUTION_ID = "workflow-execution-id";
   private static final String APP_ID = "app-id";
@@ -88,6 +94,26 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   @Override
   public List<ServiceNowMetaDTO> getStates(
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId) {
+    ServiceNowTaskParameters taskParameters = getServiceNowTaskParameters(ticketType, accountId, connectorId, appId);
+
+    SyncTaskContext snowTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+
+    return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getStates(taskParameters);
+  }
+
+  public List<ServiceNowMetaDTO> getApprovalValues(
+      ServiceNowTicketType ticketType, String accountId, String connectorId, String appId) {
+    ServiceNowTaskParameters taskParameters = getServiceNowTaskParameters(ticketType, accountId, connectorId, appId);
+
+    SyncTaskContext snowTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+
+    return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getApprovalStates(taskParameters);
+  }
+
+  private ServiceNowTaskParameters getServiceNowTaskParameters(
+      ServiceNowTicketType ticketType, String accountId, String connectorId, String appId) {
     ServiceNowConfig serviceNowConfig;
     try {
       serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
@@ -97,18 +123,12 @@ public class ServiceNowServiceImpl implements ServiceNowService {
           "Error getting ServiceNow connector " + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
 
-    ServiceNowTaskParameters taskParameters =
-        ServiceNowTaskParameters.builder()
-            .accountId(accountId)
-            .ticketType(ticketType)
-            .serviceNowConfig(serviceNowConfig)
-            .encryptionDetails(secretManager.getEncryptionDetails(serviceNowConfig, appId, WORKFLOW_EXECUTION_ID))
-            .build();
-
-    SyncTaskContext snowTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
-
-    return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getStates(taskParameters);
+    return ServiceNowTaskParameters.builder()
+        .accountId(accountId)
+        .ticketType(ticketType)
+        .serviceNowConfig(serviceNowConfig)
+        .encryptionDetails(secretManager.getEncryptionDetails(serviceNowConfig, appId, WORKFLOW_EXECUTION_ID))
+        .build();
   }
 
   @Override
@@ -160,19 +180,19 @@ public class ServiceNowServiceImpl implements ServiceNowService {
 
   @Override
   public ServiceNowExecutionData getIssueUrl(
-      String issueNumber, String connectorId, ServiceNowTicketType ticketType, String appId, String accountId) {
+      String appId, String accountId, ServiceNowApprovalParams approvalParams, boolean snowMultiConditions) {
     ServiceNowConfig serviceNowConfig;
     try {
-      serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
+      serviceNowConfig = (ServiceNowConfig) settingService.get(approvalParams.getSnowConnectorId()).getValue();
     } catch (Exception e) {
-      logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
+      logger.error("Error getting ServiceNow connector for ID: {}", approvalParams.getSnowConnectorId());
       throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
 
     ServiceNowTaskParameters taskParameters =
         ServiceNowTaskParameters.builder()
-            .ticketType(ticketType)
-            .issueNumber(issueNumber)
+            .ticketType(approvalParams.getTicketType())
+            .issueNumber(approvalParams.getIssueNumber())
             .serviceNowConfig(serviceNowConfig)
             .encryptionDetails(secretManager.getEncryptionDetails(serviceNowConfig, appId, WORKFLOW_EXECUTION_ID))
             .build();
@@ -180,48 +200,36 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     SyncTaskContext snowTaskContext =
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
 
-    return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getIssueUrl(taskParameters);
+    return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext)
+        .getIssueUrl(taskParameters, approvalParams, snowMultiConditions);
   }
 
   // Todo: Cleanup this method after about 6 months. Keeping it for older approval jobs only.
   @Override
-  public ServiceNowExecutionData getApprovalStatus(String connectorId, String accountId, String appId,
-      String issueNumber, String approvalField, String approvalValue, String rejectionField, String rejectionValue,
-      String ticketType) {
+  public Map<String, String> getIssueStatus(ServiceNowApprovalParams approvalParams, String accountId, String appId) {
     ServiceNowConfig serviceNowConfig;
     try {
-      serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
+      serviceNowConfig = (ServiceNowConfig) settingService.get(approvalParams.getSnowConnectorId()).getValue();
     } catch (Exception e) {
-      logger.error("Error getting ServiceNow connector for ID: {}", connectorId);
+      logger.error("Error getting ServiceNow connector for ID: {}", approvalParams.getSnowConnectorId());
       throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
     }
     ServiceNowTaskParameters taskParameters =
         ServiceNowTaskParameters.builder()
             .accountId(accountId)
-            .issueNumber(issueNumber)
+            .issueNumber(approvalParams.getIssueNumber())
             .serviceNowConfig(serviceNowConfig)
-            .ticketType(ServiceNowTicketType.valueOf(ticketType))
+            .ticketType(approvalParams.getTicketType())
             .encryptionDetails(secretManager.getEncryptionDetails(serviceNowConfig, appId, WORKFLOW_EXECUTION_ID))
             .build();
 
     SyncTaskContext snowTaskContext =
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
 
-    String issueStatus =
-        delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getIssueStatus(taskParameters);
-    if (approvalValue != null && approvalValue.equalsIgnoreCase(issueStatus)) {
-      return ServiceNowExecutionData.builder()
-          .executionStatus(ExecutionStatus.SUCCESS)
-          .currentState(issueStatus)
-          .build();
-    }
-    if (rejectionValue != null && rejectionValue.equalsIgnoreCase(issueStatus)) {
-      return ServiceNowExecutionData.builder()
-          .executionStatus(ExecutionStatus.REJECTED)
-          .currentState(issueStatus)
-          .build();
-    }
-    return null;
+    // Considering only approval field on the assumption that both approval and rejection fields are equal.
+    // Would need to pass rejection field too if we decide to support different fields in the future.
+    return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext)
+        .getIssueStatus(taskParameters, approvalParams.getAllCriteriaFields());
   }
 
   @Override
@@ -250,8 +258,39 @@ public class ServiceNowServiceImpl implements ServiceNowService {
                                           .build();
 
     try {
-      String issueStatus =
-          delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext).getIssueStatus(taskParameters);
+      // Considering only approval field on the assumption that both approval and rejection fields are equal.
+      // Would need to pass rejection field too if we decide to support different fields in the future.
+      ServiceNowDelegateService serviceNowDelegateService =
+          delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext);
+
+      if (featureFlagService.isGlobalEnabled(FeatureName.SERVICENOW_MULTIPLE_CONDITIONS)) {
+        Map<String, String> currentStatus =
+            serviceNowDelegateService.getIssueStatus(taskParameters, approvalPollingJobEntity.getAllServiceNowFields());
+
+        String issueStatus =
+            currentStatus.entrySet()
+                .stream()
+                .map(status -> StringUtils.capitalize(status.getKey()) + " is equal to " + status.getValue())
+                .collect(Collectors.joining(",\n"));
+
+        if (approvalPollingJobEntity.getApproval() != null
+            && approvalPollingJobEntity.getApproval().satisfied(currentStatus)) {
+          return ServiceNowExecutionData.builder()
+              .executionStatus(ExecutionStatus.SUCCESS)
+              .currentState(issueStatus)
+              .build();
+        }
+        if (approvalPollingJobEntity.getRejection() != null
+            && approvalPollingJobEntity.getRejection().satisfied(currentStatus)) {
+          return ServiceNowExecutionData.builder()
+              .executionStatus(ExecutionStatus.REJECTED)
+              .currentState(issueStatus)
+              .build();
+        }
+      }
+
+      String issueStatus = serviceNowDelegateService.getIssueFieldStatus(taskParameters, "state");
+
       if (approvalPollingJobEntity.getApprovalValue() != null
           && approvalPollingJobEntity.getApprovalValue().equalsIgnoreCase(issueStatus)) {
         return ServiceNowExecutionData.builder()
