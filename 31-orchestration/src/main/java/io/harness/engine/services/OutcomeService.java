@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.resolvers.Resolver;
 
+import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
@@ -14,4 +15,6 @@ import javax.validation.constraints.NotNull;
 public interface OutcomeService extends Resolver<Outcome> {
   Optional<Outcome> find(
       @NotNull Ambiance ambiance, @NotNull String setupId, @NotNull String runtimeId, @NotNull String name);
+
+  List<Outcome> findAllByRuntimeId(String planExecutionId, String runtimeId);
 }

@@ -1,26 +1,36 @@
-package io.harness.resource;
+package io.harness.presentation;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.harness.data.Outcome;
 import io.harness.execution.status.Status;
+import io.harness.interrupts.InterruptEffect;
+import io.harness.state.io.FailureInfo;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Duration;
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class GraphVertex {
   private String uuid;
   private String name;
   private Long startTs;
   private Long endTs;
+  private Duration initialWaitDuration;
+  private Long lastUpdatedAt;
   private String stepType;
   private Status status;
+  private FailureInfo failureInfo;
+
+  private List<InterruptEffect> interruptHistories;
+  private List<Outcome> outcomes;
 
   private Subgraph subgraph;
   private GraphVertex next;

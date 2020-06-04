@@ -5,6 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
@@ -13,18 +16,23 @@ import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
-import io.harness.resource.Graph;
-import io.harness.resource.GraphVertex;
+import io.harness.presentation.Graph;
+import io.harness.presentation.GraphVertex;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.state.core.dummy.DummyStep;
 import io.harness.state.core.fork.ForkStep;
 import io.harness.state.core.section.SectionStep;
 import io.harness.testframework.framework.Setup;
+import io.restassured.config.ObjectMapperConfig;
+import io.restassured.config.RestAssuredConfig;
+import io.restassured.config.SSLConfig;
 import io.restassured.http.ContentType;
+import io.restassured.mapper.ObjectMapperType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.Application;
 
 import java.util.HashMap;
@@ -55,14 +63,12 @@ public class GraphGeneratorFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ALEXEI)
   @Category(FunctionalTests.class)
-  public void shouldGenerateGraphFromHttpSwitchPlan() {
+  public void shouldGenerateGraph() {
     PlanExecution planExecutionResponse =
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
     assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
 
     Graph response = requestGraph(planExecutionResponse.getUuid());
-    System.out.println(response);
-
     assertThat(response).isNotNull();
 
     // start dummy node
@@ -71,6 +77,7 @@ public class GraphGeneratorFunctionalTest extends AbstractFunctionalTest {
     assertThat(dummyNode.getSubgraph()).isNull();
     assertThat(dummyNode.getNext()).isNotNull();
     assertThat(dummyNode.getStepType()).isEqualTo(DummyStep.STEP_TYPE.getType());
+    assertThat(dummyNode.getOutcomes()).isEmpty();
 
     // fork node
     GraphVertex fork1 = response.getGraphVertex().getNext();
@@ -80,6 +87,7 @@ public class GraphGeneratorFunctionalTest extends AbstractFunctionalTest {
     assertThat(fork1.getSubgraph().getMode()).isEqualTo(ExecutionMode.CHILDREN);
     assertThat(fork1.getSubgraph().getVertices().size()).isEqualTo(2);
     assertThat(fork1.getNext()).isNotNull();
+    assertThat(fork1.getOutcomes()).isEmpty();
 
     // section 1 node
     GraphVertex section1 = fork1.getSubgraph()
@@ -92,6 +100,7 @@ public class GraphGeneratorFunctionalTest extends AbstractFunctionalTest {
     assertThat(section1.getSubgraph()).isNotNull();
     assertThat(section1.getSubgraph().getVertices().size()).isEqualTo(1);
     assertThat(section1.getStepType()).isEqualTo(SectionStep.STEP_TYPE.getType());
+    assertThat(section1.getOutcomes()).isEmpty();
 
     // section 2 node
     GraphVertex section2 = fork1.getSubgraph()
@@ -104,6 +113,7 @@ public class GraphGeneratorFunctionalTest extends AbstractFunctionalTest {
     assertThat(section2.getSubgraph()).isNotNull();
     assertThat(section2.getSubgraph().getVertices().size()).isEqualTo(1);
     assertThat(section2.getStepType()).isEqualTo(SectionStep.STEP_TYPE.getType());
+    assertThat(section2.getOutcomes()).isEmpty();
 
     // section 1 child node (fork2)
     GraphVertex section1Child = section1.getSubgraph().getVertices().get(0);
@@ -112,6 +122,7 @@ public class GraphGeneratorFunctionalTest extends AbstractFunctionalTest {
     assertThat(section1Child.getSubgraph()).isNotNull();
     assertThat(section1Child.getSubgraph().getMode()).isEqualTo(ExecutionMode.CHILDREN);
     assertThat(section1Child.getSubgraph().getVertices().size()).isEqualTo(2);
+    assertThat(section1Child.getOutcomes()).isEmpty();
 
     // section 1 child subgraph fork node (http1)
     GraphVertex section1ChildHttp1 = section1Child.getSubgraph()
@@ -124,6 +135,10 @@ public class GraphGeneratorFunctionalTest extends AbstractFunctionalTest {
     assertThat(section1ChildHttp1.getNext()).isNull();
     assertThat(section1ChildHttp1.getSubgraph()).isNull();
     assertThat(section1ChildHttp1.getStepType()).isEqualTo(BASIC_HTTP_STEP_TYPE);
+    assertThat(section1ChildHttp1.getOutcomes().size()).isEqualTo(1);
+    assertThat(section1ChildHttp1.getOutcomes().get(0)).isInstanceOf(HttpStateExecutionData.class);
+    assertThat(((HttpStateExecutionData) section1ChildHttp1.getOutcomes().get(0)).getStatus())
+        .isEqualTo(ExecutionStatus.SUCCESS);
 
     // section 1 child subgraph fork node (http2)
     GraphVertex section1ChildHttp2 = section1Child.getSubgraph()
@@ -136,6 +151,10 @@ public class GraphGeneratorFunctionalTest extends AbstractFunctionalTest {
     assertThat(section1ChildHttp2.getNext()).isNull();
     assertThat(section1ChildHttp2.getSubgraph()).isNull();
     assertThat(section1ChildHttp2.getStepType()).isEqualTo(BASIC_HTTP_STEP_TYPE);
+    assertThat(section1ChildHttp2.getOutcomes().size()).isEqualTo(1);
+    assertThat(section1ChildHttp2.getOutcomes().get(0)).isInstanceOf(HttpStateExecutionData.class);
+    assertThat(((HttpStateExecutionData) section1ChildHttp2.getOutcomes().get(0)).getStatus())
+        .isEqualTo(ExecutionStatus.SUCCESS);
 
     // section 2 child node (http switch)
     GraphVertex section2Child = section2.getSubgraph().getVertices().get(0);
@@ -143,6 +162,10 @@ public class GraphGeneratorFunctionalTest extends AbstractFunctionalTest {
     assertThat(section2Child.getStepType()).isEqualTo(BASIC_HTTP_STEP_TYPE);
     assertThat(section2Child.getNext()).isNotNull();
     assertThat(section2Child.getSubgraph()).isNull();
+    assertThat(section2Child.getOutcomes().size()).isEqualTo(1);
+    assertThat(section2Child.getOutcomes().get(0)).isInstanceOf(HttpStateExecutionData.class);
+    assertThat(((HttpStateExecutionData) section2Child.getOutcomes().get(0)).getStatus())
+        .isEqualTo(ExecutionStatus.SUCCESS);
 
     // section 2 child next node (http)
     GraphVertex section2ChildNextNode = section2Child.getNext();
@@ -150,6 +173,7 @@ public class GraphGeneratorFunctionalTest extends AbstractFunctionalTest {
     assertThat(section2ChildNextNode.getNext()).isNull();
     assertThat(section2ChildNextNode.getSubgraph()).isNull();
     assertThat(section2ChildNextNode.getStepType()).isEqualTo(DummyStep.STEP_TYPE.getType());
+    assertThat(section2ChildNextNode.getOutcomes()).isEmpty();
 
     // final dummy node
     GraphVertex finalDummyNode = fork1.getNext();
@@ -157,6 +181,7 @@ public class GraphGeneratorFunctionalTest extends AbstractFunctionalTest {
     assertThat(finalDummyNode.getSubgraph()).isNull();
     assertThat(finalDummyNode.getNext()).isNull();
     assertThat(finalDummyNode.getStepType()).isEqualTo(DummyStep.STEP_TYPE.getType());
+    assertThat(finalDummyNode.getOutcomes()).isEmpty();
   }
 
   private Graph requestGraph(String planExecutionId) {
@@ -167,13 +192,21 @@ public class GraphGeneratorFunctionalTest extends AbstractFunctionalTest {
     queryParams.put("appId", application.getAppId());
     queryParams.put("planExecutionId", planExecutionId);
 
-    RestResponse<Graph> response = Setup.portal()
-                                       .auth()
-                                       .oauth2(bearerToken)
-                                       .queryParams(queryParams)
-                                       .contentType(ContentType.JSON)
-                                       .get("/execute2/get-graph")
-                                       .as(returnType.getType());
+    RestResponse<Graph> response =
+        Setup.portal()
+            .config(RestAssuredConfig.config()
+                        .objectMapperConfig(new ObjectMapperConfig().jackson2ObjectMapperFactory((cls, charset) -> {
+                          ObjectMapper mapper = new ObjectMapper();
+                          mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                          return mapper;
+                        }))
+                        .sslConfig(new SSLConfig().relaxedHTTPSValidation()))
+            .auth()
+            .oauth2(bearerToken)
+            .queryParams(queryParams)
+            .contentType(ContentType.JSON)
+            .get("/execute2/get-graph")
+            .as(returnType.getType(), ObjectMapperType.JACKSON_2);
 
     return response.getResource();
   }

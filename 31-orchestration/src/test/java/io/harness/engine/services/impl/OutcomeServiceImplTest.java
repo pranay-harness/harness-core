@@ -1,5 +1,6 @@
 package io.harness.engine.services.impl;
 
+import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,6 +18,8 @@ import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.DummyOutcome;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.util.List;
 
 public class OutcomeServiceImplTest extends OrchestrationTest {
   @Inject private OutcomeService outcomeService;
@@ -55,5 +58,23 @@ public class OutcomeServiceImplTest extends OrchestrationTest {
 
     Outcome outcome = outcomeService.resolve(ambiance, OutcomeRefObject.builder().name(outcomeName).build());
     assertThat(outcome).isNull();
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldFetchAllOutcomesByRuntimeId() {
+    Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
+    String outcomeName = "outcome";
+    Ambiance ambiance1 = AmbianceTestUtils.buildAmbiance();
+    String outcomeName1 = "outcome1";
+
+    outcomeService.consume(ambiance, outcomeName, DummyOutcome.builder().test("test").build(), null);
+    outcomeService.consume(ambiance1, outcomeName1, DummyOutcome.builder().test("test1").build(), null);
+
+    List<Outcome> outcomes =
+        outcomeService.findAllByRuntimeId(ambiance.getPlanExecutionId(), ambiance.obtainCurrentRuntimeId());
+    assertThat(outcomes.size()).isEqualTo(2);
   }
 }
