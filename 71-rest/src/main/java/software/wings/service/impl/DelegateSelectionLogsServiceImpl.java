@@ -87,7 +87,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
         retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
 
     batch.append(delegateSelectionLogBuilder.conclusion(SELECTED)
-                     .message("Successfully matched scopes and selectors")
+                     .message("Successfully matched required delegate capabilities")
                      .eventTimestamp(System.currentTimeMillis())
                      .groupId(CAN_ASSIGN_GROUP_ID)
                      .build());
