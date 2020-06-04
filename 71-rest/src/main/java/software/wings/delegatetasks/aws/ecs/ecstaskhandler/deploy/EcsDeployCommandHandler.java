@@ -97,8 +97,12 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
         if (resizeParams.isRollbackAllPhases()) {
           // Roll back to original counts
           executionLogCallback.saveExecutionLog("** Rolling back all phases at once **\n");
-          if (isNotEmpty(newInstanceDataList)) {
-            ecsDeployCommandTaskHelper.setDesiredToOriginal(newInstanceDataList, originalServiceCounts);
+          if (isNotEmpty(originalServiceCounts)) {
+            newInstanceDataList = new ArrayList<>();
+            for (Map.Entry<String, Integer> entry : originalServiceCounts.entrySet()) {
+              newInstanceDataList.add(
+                  ContainerServiceData.builder().desiredCount(entry.getValue()).name(entry.getKey()).build());
+            }
           }
 
           if (isNotEmpty(oldInstanceDataList)) {
