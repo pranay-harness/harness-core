@@ -19,8 +19,8 @@ import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.cluster.entities.GcpKubernetesCluster;
 import io.harness.perpetualtask.PerpetualTaskService;
-import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
+import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskClientParams;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
@@ -96,10 +96,10 @@ public class CEPerpetualTaskManager {
 
   public boolean createPerpetualTasks(ClusterRecord clusterRecord) {
     Cluster cluster = clusterRecord.getCluster();
-    PerpetualTaskServiceClient client = null;
+    PerpetualTaskServiceInprocClient client = null;
     switch (cluster.getClusterType()) {
       case DIRECT_KUBERNETES:
-        client = clientRegistry.getClient(PerpetualTaskType.K8S_WATCH);
+        client = clientRegistry.getInprocClient(PerpetualTaskType.K8S_WATCH);
         String watcherTaskId = client.create(clusterRecord.getAccountId(),
             K8sWatchPerpetualTaskServiceClient.from(
                 cluster, clusterRecord.getUuid(), ((DirectKubernetesCluster) cluster).getClusterName()));
@@ -107,7 +107,7 @@ public class CEPerpetualTaskManager {
         break;
       case AWS_ECS:
         EcsCluster ecsCluster = (EcsCluster) cluster;
-        client = clientRegistry.getClient(PerpetualTaskType.ECS_CLUSTER);
+        client = clientRegistry.getInprocClient(PerpetualTaskType.ECS_CLUSTER);
         if (null != ecsCluster.getRegion() && null != ecsCluster.getClusterName()) {
           EcsPerpetualTaskClientParams ecsPerpetualTaskClientParams =
               new EcsPerpetualTaskClientParams(ecsCluster.getRegion(), ecsCluster.getCloudProviderId(),
@@ -120,7 +120,7 @@ public class CEPerpetualTaskManager {
         break;
       case GCP_KUBERNETES:
         GcpKubernetesCluster gcpKubernetesCluster = (GcpKubernetesCluster) cluster;
-        client = clientRegistry.getClient(PerpetualTaskType.K8S_WATCH);
+        client = clientRegistry.getInprocClient(PerpetualTaskType.K8S_WATCH);
         String gcpK8STaskId = client.create(clusterRecord.getAccountId(),
             K8sWatchPerpetualTaskServiceClient.from(
                 cluster, clusterRecord.getUuid(), gcpKubernetesCluster.getClusterName()));
@@ -128,7 +128,7 @@ public class CEPerpetualTaskManager {
         break;
       case AZURE_KUBERNETES:
         AzureKubernetesCluster azureKubernetesCluster = (AzureKubernetesCluster) cluster;
-        client = clientRegistry.getClient(PerpetualTaskType.K8S_WATCH);
+        client = clientRegistry.getInprocClient(PerpetualTaskType.K8S_WATCH);
         String azureK8STaskId = client.create(clusterRecord.getAccountId(),
             K8sWatchPerpetualTaskServiceClient.from(
                 cluster, clusterRecord.getUuid(), azureKubernetesCluster.getClusterName()));

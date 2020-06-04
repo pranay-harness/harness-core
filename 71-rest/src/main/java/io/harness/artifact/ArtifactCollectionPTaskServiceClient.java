@@ -15,6 +15,7 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
+import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams;
 import io.harness.serializer.KryoUtils;
@@ -28,7 +29,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Slf4j
 public class ArtifactCollectionPTaskServiceClient
-    implements PerpetualTaskServiceClient<ArtifactCollectionPTaskClientParams> {
+    implements PerpetualTaskServiceClient, PerpetualTaskServiceInprocClient<ArtifactCollectionPTaskClientParams> {
   private static final String ARTIFACT_STREAM_ID = "artifactStreamId";
 
   @Inject private PerpetualTaskService perpetualTaskService;

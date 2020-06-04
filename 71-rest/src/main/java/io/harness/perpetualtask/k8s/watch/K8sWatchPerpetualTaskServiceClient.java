@@ -14,6 +14,7 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
+import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class K8sWatchPerpetualTaskServiceClient
-    implements PerpetualTaskServiceClient<K8WatchPerpetualTaskClientParams> {
+    implements PerpetualTaskServiceClient, PerpetualTaskServiceInprocClient<K8WatchPerpetualTaskClientParams> {
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private K8sClusterConfigFactory k8sClusterConfigFactory;
 

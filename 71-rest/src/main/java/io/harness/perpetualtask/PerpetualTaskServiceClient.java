@@ -6,11 +6,8 @@ import io.harness.beans.DelegateTask;
 
 /**
  * Used on the manager side to handle CRUD of a specific type of perpetual tasks.
- * @param <T> The params type of the perpetual task type being managed.
  */
-public interface PerpetualTaskServiceClient<T extends PerpetualTaskClientParams> {
-  String create(String accountId, T clientParams);
-
+public interface PerpetualTaskServiceClient {
   Message getTaskParams(PerpetualTaskClientContext clientContext);
 
   void onTaskStateChange(

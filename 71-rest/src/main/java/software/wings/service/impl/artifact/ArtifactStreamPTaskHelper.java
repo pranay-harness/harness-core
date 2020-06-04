@@ -12,8 +12,8 @@ import io.harness.artifact.ArtifactCollectionPTaskClientParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
 import io.harness.perpetualtask.PerpetualTaskService;
-import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
+import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.persistence.AccountLogContext;
 import io.harness.validation.Validator;
@@ -32,8 +32,8 @@ public class ArtifactStreamPTaskHelper {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private PerpetualTaskService perpetualTaskService;
 
-  private PerpetualTaskServiceClient<ArtifactCollectionPTaskClientParams> getClient() {
-    return (PerpetualTaskServiceClient<ArtifactCollectionPTaskClientParams>) clientRegistry.getClient(
+  private PerpetualTaskServiceInprocClient<ArtifactCollectionPTaskClientParams> getClient() {
+    return (PerpetualTaskServiceInprocClient<ArtifactCollectionPTaskClientParams>) clientRegistry.getClient(
         PerpetualTaskType.ARTIFACT_COLLECTION);
   }
 
@@ -46,7 +46,7 @@ public class ArtifactStreamPTaskHelper {
 
     try (AutoLogContext ignore1 = new AccountLogContext(artifactStream.getAccountId(), OVERRIDE_ERROR);
          AutoLogContext ignore2 = new ArtifactStreamLogContext(artifactStream.getUuid(), OVERRIDE_ERROR)) {
-      PerpetualTaskServiceClient<ArtifactCollectionPTaskClientParams> client = getClient();
+      PerpetualTaskServiceInprocClient<ArtifactCollectionPTaskClientParams> client = getClient();
       ArtifactCollectionPTaskClientParams artifactCollectionPTaskClientParams =
           ArtifactCollectionPTaskClientParams.builder().artifactStreamId(artifactStream.getUuid()).build();
       logger.info("Creating perpetual task");

@@ -33,6 +33,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
+import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.SecretManager;
@@ -43,10 +44,11 @@ import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ElkAnalysisServiceImplTest extends WingsBaseTest {
-  @InjectMocks ElkAnalysisServiceImpl service;
+  @Mock private MLServiceUtils mlServiceUtils;
   @Mock SettingsService settingService;
   @Mock SecretManager secretManager;
   @Mock DelegateProxyFactory delegateProxyFactory;
+  @InjectMocks ElkAnalysisServiceImpl service;
 
   @Before
   public void setup() {

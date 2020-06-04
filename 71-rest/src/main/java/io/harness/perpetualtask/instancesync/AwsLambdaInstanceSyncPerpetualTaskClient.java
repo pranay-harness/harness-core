@@ -22,6 +22,7 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
+import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
@@ -45,7 +46,8 @@ import java.util.concurrent.TimeUnit;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AwsLambdaInstanceSyncPerpetualTaskClient
-    implements PerpetualTaskServiceClient<AwsLambdaInstanceSyncPerpetualTaskClientParams> {
+    implements PerpetualTaskServiceClient,
+               PerpetualTaskServiceInprocClient<AwsLambdaInstanceSyncPerpetualTaskClientParams> {
   public static final String FUNCTION_NAME = "functionName";
   public static final String QUALIFIER = "qualifier";
   public static final String START_DATE = "startDate";

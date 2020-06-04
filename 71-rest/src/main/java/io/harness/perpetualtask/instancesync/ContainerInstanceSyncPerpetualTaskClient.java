@@ -25,6 +25,7 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
+import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
@@ -59,7 +60,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ContainerInstanceSyncPerpetualTaskClient
-    implements PerpetualTaskServiceClient<ContainerInstanceSyncPerpetualTaskClientParams> {
+    implements PerpetualTaskServiceClient,
+               PerpetualTaskServiceInprocClient<ContainerInstanceSyncPerpetualTaskClientParams> {
   static final boolean ALLOW_DUPLICATE = false;
   @Inject PerpetualTaskService perpetualTaskService;
   @Inject InfrastructureMappingService infraMappingService;

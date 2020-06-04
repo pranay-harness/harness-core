@@ -106,8 +106,9 @@ public class CEPerpetualTaskManagerTest extends CategoryTest {
     when(clusterRecordService.list(eq(accountId), eq(null), eq(cloudProviderId))).thenReturn(response);
     when(clusterRecordService.attachPerpetualTaskId(eq(clusterRecord), anyString())).thenReturn(clusterRecord);
     when(clusterRecordService.removePerpetualTaskId(isA(ClusterRecord.class), anyString())).thenReturn(clusterRecord);
-    when(clientRegistry.getClient(eq(PerpetualTaskType.K8S_WATCH))).thenReturn(k8sWatchPerpetualTaskServiceClient);
-    when(clientRegistry.getClient(eq(PerpetualTaskType.ECS_CLUSTER))).thenReturn(ecsPerpetualTaskServiceClient);
+    when(clientRegistry.getInprocClient(eq(PerpetualTaskType.K8S_WATCH)))
+        .thenReturn(k8sWatchPerpetualTaskServiceClient);
+    when(clientRegistry.getInprocClient(eq(PerpetualTaskType.ECS_CLUSTER))).thenReturn(ecsPerpetualTaskServiceClient);
     when(perpetualTaskService.getPerpetualTaskType(anyString())).thenReturn(K8S_WATCH);
   }
 
