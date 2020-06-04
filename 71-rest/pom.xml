@@ -453,6 +453,10 @@
             <artifactId>gson-fire</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.harness.cv</groupId>
+            <artifactId>DataCollectionDSL</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
         </dependency>

@@ -885,6 +885,11 @@
                 <version>1.8.3</version>
             </dependency>
             <dependency>
+                <groupId>io.harness.cv</groupId>
+                <artifactId>DataCollectionDSL</artifactId>
+                <version>1.0-RELEASE</version>
+            </dependency>
+            <dependency>
                 <groupId>io.kubernetes</groupId>
                 <artifactId>client-java</artifactId>
                 <version>7.0.0-harness-patch-2</version>
@@ -1612,6 +1617,11 @@
             <id>harness</id>
             <name>harness-releases</name>
             <url>https://harness.jfrog.io/harness/thirdparty-annonymous</url>
+        </repository>
+        <repository>
+            <id>harness-internal</id>
+            <name>harness-internal-releases</name>
+            <url>https://harness.jfrog.io/harness/datacollection-dsl</url>
         </repository>
         <repository>
             <id>spring-io</id>
