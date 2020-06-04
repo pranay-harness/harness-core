@@ -40,6 +40,8 @@ public class S3SyncEventWriterTest extends CategoryTest {
   private final String BILLING_ACCOUNT_ID = "S3_SYNC_BILLING_ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String BILLING_BUCKET_PATH = "S3_SYNC_BILLING_BUCKET_PATH_" + this.getClass().getSimpleName();
   private final String BILLING_BUCKET_REGION = "S3_SYNC_BILLING_BUCKET_REGION_ID_" + this.getClass().getSimpleName();
+  private final String BILLING_BUCKET_PREFIX = "S3_SYNC_BILLING_BUCKET_PREFIX_" + this.getClass().getSimpleName();
+  private final String CUR_REPORT_NAME = "CUR_REPORT_NAME_" + this.getClass().getSimpleName();
   private final String EXTERNAL_ID = "EXTERNAL_ID" + this.getClass().getSimpleName();
   private final String ROLE_ARN = "ROLE_ARN" + this.getClass().getSimpleName();
   private final String MASTER = "MASTER";
@@ -50,13 +52,17 @@ public class S3SyncEventWriterTest extends CategoryTest {
   public void setS3SyncEventWriterTest() {
     AwsCrossAccountAttributes awsCrossAccountAttributes =
         AwsCrossAccountAttributes.builder().externalId(EXTERNAL_ID).crossAccountRoleArn(ROLE_ARN).build();
-    AwsS3BucketDetails s3BucketDetails =
-        AwsS3BucketDetails.builder().s3BucketName(BILLING_BUCKET_PATH).region(BILLING_BUCKET_REGION).build();
+    AwsS3BucketDetails s3BucketDetails = AwsS3BucketDetails.builder()
+                                             .s3Prefix(BILLING_BUCKET_PREFIX)
+                                             .s3BucketName(BILLING_BUCKET_PATH)
+                                             .region(BILLING_BUCKET_REGION)
+                                             .build();
     SettingValue settingValue = CEAwsConfig.builder()
                                     .s3BucketDetails(s3BucketDetails)
                                     .awsCrossAccountAttributes(awsCrossAccountAttributes)
                                     .awsAccountId(BILLING_ACCOUNT_ID)
                                     .awsAccountType(MASTER)
+                                    .curReportName(CUR_REPORT_NAME)
                                     .build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                                             .withAccountId(TEST_ACCOUNT_ID)

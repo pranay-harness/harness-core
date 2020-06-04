@@ -61,8 +61,8 @@ public class AwsBillingDataPipelineWriter extends EventWriter implements ItemWri
           String dataSetId = billingDataPipelineService.createDataSet(account);
           String dataTransferJobName;
           HashMap<String, String> scheduledQueryJobsMap;
-          dataTransferJobName =
-              billingDataPipelineService.createDataTransferJobFromGCS(dataSetId, settingId, accountId, accountName);
+          dataTransferJobName = billingDataPipelineService.createDataTransferJobFromGCS(
+              dataSetId, settingId, accountId, accountName, awsConfig.getCurReportName());
           scheduledQueryJobsMap =
               billingDataPipelineService.createScheduledQueriesForAWS(dataSetId, accountId, accountName);
 

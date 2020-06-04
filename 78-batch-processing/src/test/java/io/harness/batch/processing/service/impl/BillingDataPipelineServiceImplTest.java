@@ -48,6 +48,7 @@ public class BillingDataPipelineServiceImplTest {
   private static final String accountId = "accountId";
   private static final String accountName = "accountName";
   private static final String dataSetId = "datasetId";
+  private static final String curReportName = "curReportName";
   private static final String transferJobName = "gcsToBigQueryTransferJob_accountname_accountid";
   private static final String scheduledQueryName = "scheduledQuery_accountname_accountid";
   private static final String preAggQueryName = "awsPreAggQuery_accountname_accountid";
@@ -109,8 +110,8 @@ public class BillingDataPipelineServiceImplTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void shouldCreateDataTransferJob() throws IOException {
-    String dataTransferJob =
-        billingDataPipelineService.createDataTransferJobFromGCS(dataSetId, settingId, accountId, accountName);
+    String dataTransferJob = billingDataPipelineService.createDataTransferJobFromGCS(
+        dataSetId, settingId, accountId, accountName, curReportName);
     assertThat(dataTransferJob).isEqualTo(transferJobName);
   }
 

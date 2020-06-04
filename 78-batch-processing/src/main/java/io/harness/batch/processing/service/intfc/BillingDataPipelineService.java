@@ -9,8 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public interface BillingDataPipelineService {
-  String createDataTransferJobFromGCS(
-      String destinationDataSetId, String settingId, String accountId, String accountName) throws IOException;
+  String createDataTransferJobFromGCS(String destinationDataSetId, String settingId, String accountId,
+      String accountName, String curReportName) throws IOException;
   void createDataTransferJobFromBQ(String jobName, String srcProjectId, String srcDatasetId, String dstProjectId,
       String dstDatasetId, String impersonatedServiceAccount) throws IOException;
   void createScheduledQueriesForGCP(String scheduledQueryName, String dstDataSetId) throws IOException;

@@ -42,6 +42,7 @@ public class AWSCEConfigValidationServiceImplTest {
   private static final String AWS_ACCOUNT_ID = "awsAccount";
   private static final String s3Region = "us-east-1";
   private static final String compression = "GZIP";
+  private static final String s3Prefix = "prefix";
   private static final String timeGranularity = "HOURLY";
   private static final String reportVersioning = "OVERWRITE_REPORT";
   private static final String invalidValue = "invalidValue";
@@ -66,6 +67,7 @@ public class AWSCEConfigValidationServiceImplTest {
     reportDefinition.setTimeUnit(timeGranularity);
     reportDefinition.setS3Bucket(S3_BUCKET_NAME);
     reportDefinition.setS3Region(s3Region);
+    reportDefinition.setS3Prefix(s3Prefix);
     reportDefinition.setReportName(CUR_REPORT_NAME);
     reportDefinition.setRefreshClosedReports(true);
   }
@@ -79,8 +81,9 @@ public class AWSCEConfigValidationServiceImplTest {
         .when(awsceConfigValidationService)
         .getCredentialProvider(ceAwsConfig.getAwsCrossAccountAttributes());
     doReturn(reportDefinition).when(awsceConfigValidationService).getReportDefinitionIfPresent(any(), anyString());
-    String s3BucketRegion = awsceConfigValidationService.validateCURReportAccessAndReturnS3Region(ceAwsConfig);
-    assertThat(s3BucketRegion).isEqualTo(s3Region);
+    AwsS3BucketDetails s3Config = awsceConfigValidationService.validateCURReportAccessAndReturnS3Config(ceAwsConfig);
+    assertThat(s3Config.getRegion()).isEqualTo(s3Region);
+    assertThat(s3Config.getS3Prefix()).isEqualTo(s3Prefix);
   }
 
   @Test
@@ -93,7 +96,7 @@ public class AWSCEConfigValidationServiceImplTest {
         .getCredentialProvider(ceAwsConfig.getAwsCrossAccountAttributes());
     exceptionParamsMap.put("args", "CUR Report: Invalid CUR Report Name");
     doReturn(null).when(awsceConfigValidationService).getReportDefinitionIfPresent(any(), anyString());
-    assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Region(ceAwsConfig))
+    assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Config(ceAwsConfig))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasFieldOrPropertyWithValue("params", exceptionParamsMap);
   }
@@ -110,7 +113,7 @@ public class AWSCEConfigValidationServiceImplTest {
     doReturn(reportDefinition).when(awsceConfigValidationService).getReportDefinitionIfPresent(any(), anyString());
 
     exceptionParamsMap.put("args", "CUR Report Config: S3 Bucket Name Mismatch");
-    assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Region(ceAwsConfig))
+    assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Config(ceAwsConfig))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasFieldOrPropertyWithValue("params", exceptionParamsMap);
   }
@@ -127,7 +130,7 @@ public class AWSCEConfigValidationServiceImplTest {
     doReturn(reportDefinition).when(awsceConfigValidationService).getReportDefinitionIfPresent(any(), anyString());
 
     exceptionParamsMap.put("args", "CUR Report Config: Compression is not GZIP");
-    assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Region(ceAwsConfig))
+    assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Config(ceAwsConfig))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasFieldOrPropertyWithValue("params", exceptionParamsMap);
   }
@@ -144,7 +147,7 @@ public class AWSCEConfigValidationServiceImplTest {
     doReturn(reportDefinition).when(awsceConfigValidationService).getReportDefinitionIfPresent(any(), anyString());
 
     exceptionParamsMap.put("args", "CUR Report Config: Time Granularity is not Hourly");
-    assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Region(ceAwsConfig))
+    assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Config(ceAwsConfig))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasFieldOrPropertyWithValue("params", exceptionParamsMap);
   }
@@ -161,7 +164,7 @@ public class AWSCEConfigValidationServiceImplTest {
     doReturn(reportDefinition).when(awsceConfigValidationService).getReportDefinitionIfPresent(any(), anyString());
 
     exceptionParamsMap.put("args", "CUR Report Config: Report versioning should be OVERWRITE_REPORT");
-    assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Region(ceAwsConfig))
+    assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Config(ceAwsConfig))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasFieldOrPropertyWithValue("params", exceptionParamsMap);
   }
@@ -178,7 +181,7 @@ public class AWSCEConfigValidationServiceImplTest {
     doReturn(reportDefinition).when(awsceConfigValidationService).getReportDefinitionIfPresent(any(), anyString());
 
     exceptionParamsMap.put("args", "CUR Report Config: Data Refresh setting should be Automatic");
-    assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Region(ceAwsConfig))
+    assertThatThrownBy(() -> awsceConfigValidationService.validateCURReportAccessAndReturnS3Config(ceAwsConfig))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasFieldOrPropertyWithValue("params", exceptionParamsMap);
   }

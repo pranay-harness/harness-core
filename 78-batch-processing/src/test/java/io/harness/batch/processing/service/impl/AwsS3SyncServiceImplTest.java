@@ -31,6 +31,7 @@ public class AwsS3SyncServiceImplTest extends CategoryTest {
   private static final String AWS_SECRET_KEY = "awsSecretKey";
   private static final String AWS_REGION = "awsRegion";
   private static final String AWS_S3_BASE_PATH = "baseS3BucketPath";
+  private final String CUR_REPORT_NAME = "CUR_REPORT_NAME_" + this.getClass().getSimpleName();
   private final String TEST_ACCOUNT_ID = "S3_SYNC_ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String TEST_SETTING_ID = "S3_SYNC_ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String BILLING_ACCOUNT_ID = "S3_SYNC_BILLING_ACCOUNT_ID_" + this.getClass().getSimpleName();
@@ -56,6 +57,7 @@ public class AwsS3SyncServiceImplTest extends CategoryTest {
                        .billingBucketRegion(BILLING_BUCKET_REGION)
                        .billingBucketPath(BILLING_BUCKET_PATH)
                        .billingAccountId(BILLING_ACCOUNT_ID)
+                       .curReportName(CUR_REPORT_NAME)
                        .roleArn(ROLE_ARN)
                        .externalId(EXTERNAL_ID)
                        .build();
