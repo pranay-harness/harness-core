@@ -21,6 +21,7 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
+import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import lombok.AccessLevel;
@@ -45,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PcfInstanceSyncPerpetualTaskClient
-    implements PerpetualTaskServiceClient<PcfInstanceSyncPerpetualTaskClientParams> {
+    implements PerpetualTaskServiceClient, PerpetualTaskServiceInprocClient<PcfInstanceSyncPerpetualTaskClientParams> {
   public static final String PCF_APPLICATION_NAME = "pcfApplicationName";
 
   @Inject PerpetualTaskService perpetualTaskService;

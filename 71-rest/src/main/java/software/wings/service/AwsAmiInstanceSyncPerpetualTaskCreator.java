@@ -26,6 +26,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AwsAmiInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
+  public static final String ASG_NAME = "asgName";
+
   @Inject InstanceService instanceService;
   @Inject AwsAmiInstanceSyncPerpetualTaskClient awsAmiInstanceSyncPerpetualTaskClient;
 

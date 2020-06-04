@@ -40,7 +40,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class AwsCodeDeployInstanceSyncPerpetualTaskClient
-    implements PerpetualTaskServiceClient<AwsCodeDeployInstanceSyncPerpetualTaskClientParams> {
+    implements PerpetualTaskServiceClient,
+               PerpetualTaskServiceInprocClient<AwsCodeDeployInstanceSyncPerpetualTaskClientParams> {
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private InfrastructureMappingService infraMappingService;
   @Inject private ServiceResourceService serviceResourceService;

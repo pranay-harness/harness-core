@@ -7,12 +7,14 @@ import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
+import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 
 @Slf4j
-public class SamplePerpetualTaskServiceClient implements PerpetualTaskServiceClient<SamplePerpetualTaskClientParams> {
+public class SamplePerpetualTaskServiceClient
+    implements PerpetualTaskServiceClient, PerpetualTaskServiceInprocClient<SamplePerpetualTaskClientParams> {
   @Inject private PerpetualTaskService perpetualTaskService;
 
   private static final String COUNTRY_NAME = "countryName";

@@ -82,8 +82,8 @@ public class PerpetualTaskWorker {
     try {
       List<PerpetualTaskAssignDetails> assignedTasks = fetchAssignedTask();
       Set<PerpetualTaskId> stopTasks = new HashSet<>();
-      List<PerpetualTaskAssignDetails> startTasks = new ArrayList();
-      List<PerpetualTaskAssignDetails> updatedTasks = new ArrayList();
+      List<PerpetualTaskAssignDetails> startTasks = new ArrayList<>();
+      List<PerpetualTaskAssignDetails> updatedTasks = new ArrayList<>();
       synchronized (runningTaskMap) {
         splitTasks(runningTaskMap, assignedTasks, stopTasks, startTasks, updatedTasks);
       }
@@ -94,7 +94,7 @@ public class PerpetualTaskWorker {
       }
 
       for (PerpetualTaskAssignDetails task : startTasks) {
-        if (firstFillUp.get()) {
+        if (!firstFillUp.get()) {
           logPullDelay(task, "first poll from this delegate for task");
         }
         startTask(task);
@@ -215,7 +215,6 @@ public class PerpetualTaskWorker {
       PerpetualTaskWorkerService perpetualTaskWorkerService = this.svcHolder.get();
       perpetualTaskWorkerService.stopAsync().awaitTerminated();
       while (true) {
-        PerpetualTaskId taskId;
         synchronized (runningTaskMap) {
           Iterator<PerpetualTaskId> iterator = runningTaskMap.keySet().iterator();
           if (!iterator.hasNext()) {

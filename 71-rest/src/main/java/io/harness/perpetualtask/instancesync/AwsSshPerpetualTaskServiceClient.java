@@ -20,6 +20,7 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
+import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
@@ -45,7 +46,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class AwsSshPerpetualTaskServiceClient implements PerpetualTaskServiceClient<AwsSshPTClientParams> {
+public class AwsSshPerpetualTaskServiceClient
+    implements PerpetualTaskServiceClient, PerpetualTaskServiceInprocClient<AwsSshPTClientParams> {
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private SecretManager secretManager;
   @Inject private InfrastructureMappingService infrastructureMappingService;

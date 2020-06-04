@@ -21,6 +21,7 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
+import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
@@ -45,7 +46,8 @@ import java.util.concurrent.TimeUnit;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SpotinstAmiInstanceSyncPerpetualTaskClient
-    implements PerpetualTaskServiceClient<SpotinstAmiInstanceSyncPerpetualTaskClientParams> {
+    implements PerpetualTaskServiceClient,
+               PerpetualTaskServiceInprocClient<SpotinstAmiInstanceSyncPerpetualTaskClientParams> {
   public static final String ELASTIGROUP_ID = "elastigroupId";
   @Inject PerpetualTaskService perpetualTaskService;
   @Inject InfrastructureMappingService infraMappingService;

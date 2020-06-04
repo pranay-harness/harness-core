@@ -39,7 +39,8 @@ import java.util.concurrent.TimeUnit;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AwsAmiInstanceSyncPerpetualTaskClient
-    implements PerpetualTaskServiceClient<AwsAmiInstanceSyncPerpetualTaskClientParams> {
+    implements PerpetualTaskServiceClient,
+               PerpetualTaskServiceInprocClient<AwsAmiInstanceSyncPerpetualTaskClientParams> {
   public static final String ASG_NAME = "asgName";
   @Inject PerpetualTaskService perpetualTaskService;
   @Inject SecretManager secretManager;

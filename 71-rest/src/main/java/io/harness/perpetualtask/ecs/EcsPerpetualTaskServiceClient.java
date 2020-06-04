@@ -15,6 +15,7 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
+import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
@@ -33,7 +34,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient<EcsPerpetualTaskClientParams> {
+public class EcsPerpetualTaskServiceClient
+    implements PerpetualTaskServiceClient, PerpetualTaskServiceInprocClient<EcsPerpetualTaskClientParams> {
   @Inject private SecretManager secretManager;
   @Inject private SettingsService settingsService;
   @Inject private PerpetualTaskService perpetualTaskService;
