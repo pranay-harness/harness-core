@@ -178,7 +178,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(SELECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
-        .isEqualTo("Successfully matched scopes and selectors");
+        .isEqualTo("Successfully matched required delegate capabilities");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(CAN_ASSIGN_GROUP_ID);
   }
