@@ -98,15 +98,22 @@ NOTE: the data from it is used for every git operation github does on you behave
 
    (Optional) Follow https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
    to setup your SSH keys. You can then use SSH to interact with git
-   
-2. Go to `portal` directory and run
+
+2. Update your maven settings file
+    a. Download the credentials for the Datacollection artifact from here : https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/cv/datacollection-artifactory
+    b. Copy the settings.xml file present under tools/build/custom-settings.xml and paste this file into ~/.m2/settings.xml (Remember to rename the file to settings.xml)
+    c. Edit the file and replace the text "REPLACE_USERNAME_HERE" with the username from vault secret 
+    d. Replace "REPLACE_PASSWORD_HERE" with the encrypted password that was present in the vault secret
+    
+
+3. Go to `portal` directory and run
 
     (Optional) this is needed only if there is a change in the protobuf files
     `./scripts/jenkins/build-protos.sh`
     
     `mvn clean install`
 
-3. If Global Search is not required:
+4. If Global Search is not required:
 
     Install and start MongoDB Docker Image (v3.6):
     ```
@@ -116,7 +123,7 @@ NOTE: the data from it is used for every git operation github does on you behave
     
     Install & use [RoboMongo](https://robomongo.org/download) client to test MongoDB connection.
 
-4. If Global search has to be enabled (OPTIONAL):
+5. If Global search has to be enabled (OPTIONAL):
 
     Install and start Elasticsearch Docker Image for Search(v7.3):
     ```
@@ -153,7 +160,7 @@ NOTE: the data from it is used for every git operation github does on you behave
     In config.yml set `mongo.uri` to `mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness`.
     Do the same in `config-datagen.yml` and `verification-config.yml`.
 
-5. If TimeScaleDB has to be enabled (Optional for now) 
+6. If TimeScaleDB has to be enabled (Optional for now) 
    
    a. Start TimeScaleDB using the following docker command: `docker run -d --name harness-timescaledb -v ~/timescaledb/data:/var/lib/postgresql/data -p 5432:5432 --rm -e POSTGRES_USER=admin -e POSTGRES_DB=harness -e POSTGRES_PASSWORD=password timescale/timescaledb`
   
