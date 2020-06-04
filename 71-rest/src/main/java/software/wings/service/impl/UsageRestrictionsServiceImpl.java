@@ -116,14 +116,10 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions,
       Map<String, Set<String>> appEnvMapFromPermissions, Map<String, List<Base>> appIdEnvMap,
       boolean isScopedToAccount) {
-    if (isScopedToAccount) {
-      return isAccountAdmin || hasAllEnvAccess(restrictionsFromUserPermissions);
-    }
-
     boolean hasNoRestrictions = hasNoRestrictions(entityUsageRestrictions);
 
     if (isNotEmpty(appIdFromRequest) && !appIdFromRequest.equals(GLOBAL_APP_ID)) {
-      if (hasNoRestrictions) {
+      if (hasNoRestrictions || isScopedToAccount) {
         return false;
       }
 
@@ -147,6 +143,10 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
       if (user == null) {
         return true;
+      }
+
+      if (isScopedToAccount) {
+        return isAccountAdmin || hasAllEnvAccess(restrictionsFromUserPermissions);
       }
 
       if (hasNoRestrictions) {

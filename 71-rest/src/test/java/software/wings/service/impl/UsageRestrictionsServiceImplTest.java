@@ -354,18 +354,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
-  public void testHasAccess_When_AdminUser_And_ScopedToAccount() {
+  public void testHasAccess_When_RequestViaAppId_And_ScopedToAccount() {
     boolean isAccountAdmin = true;
-    boolean hasAccess = usageRestrictionsService.hasAccess(
-        ACCOUNT_ID, isAccountAdmin, APP_ID_1, ENV_ID_1, null, null, null, null, true);
-    assertThat(hasAccess).isTrue();
-  }
-
-  @Test
-  @Owner(developers = VIKAS)
-  @Category(UnitTests.class)
-  public void testHasAccess_When_NonAdminUser_And_ScopedToAccount() {
-    boolean isAccountAdmin = false;
     boolean hasAccess = usageRestrictionsService.hasAccess(
         ACCOUNT_ID, isAccountAdmin, APP_ID_1, ENV_ID_1, null, null, null, null, true);
     assertThat(hasAccess).isFalse();
@@ -374,18 +364,99 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
-  public void testHasAccess_When_AllEnvAccess_And_ScopedToAccount() {
-    boolean isAccountAdmin = false;
-    GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
-    Set<String> envFilters = newHashSet(NON_PROD, PROD);
-    EnvFilter envFilter = EnvFilter.builder().filterTypes(envFilters).build();
-    AppEnvRestriction appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
-    UsageRestrictions usageRestrictions = new UsageRestrictions();
-    usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-
-    boolean hasAccess = usageRestrictionsService.hasAccess(
-        ACCOUNT_ID, isAccountAdmin, APP_ID_1, ENV_ID_1, null, usageRestrictions, null, null, true);
+  public void testHasAccess_When_AdminUser_And_ScopedToAccount() {
+    boolean isAccountAdmin = true;
+    boolean hasAccess =
+        usageRestrictionsService.hasAccess(ACCOUNT_ID, isAccountAdmin, null, null, null, null, null, null, true);
     assertThat(hasAccess).isTrue();
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testHasAccess_When_NonAdminUser_And_ScopedToAccount() {
+    try {
+      List<String> appIds = asList(APP_ID_1);
+      List<String> envIds = asList(ENV_ID_1);
+
+      AppPermission allAppPermissions = AppPermission.builder()
+                                            .permissionType(ALL_APP_ENTITIES)
+                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .actions(newHashSet(allActions))
+                                            .build();
+      AppPermission prodAppPermission = AppPermission.builder()
+                                            .permissionType(ENV)
+                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .actions(newHashSet(allActions))
+                                            .entityFilter(EnvFilter.builder().filterTypes(newHashSet(PROD)).build())
+                                            .build();
+      AppPermission nonProdAppPermission =
+          AppPermission.builder()
+              .permissionType(ENV)
+              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+              .actions(newHashSet(allActions))
+              .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
+              .build();
+      List<UserGroup> userGroups =
+          setUserGroupMocks(asList(allAppPermissions, prodAppPermission, nonProdAppPermission), appIds);
+      Set<Action> actions = allActions;
+
+      setPermissions(appIds, envIds, actions, false, userGroups);
+      boolean isAccountAdmin = false;
+      boolean hasAccess =
+          usageRestrictionsService.hasAccess(ACCOUNT_ID, isAccountAdmin, null, null, null, null, null, null, true);
+      assertThat(hasAccess).isFalse();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testHasAccess_When_AllEnvAccess_And_ScopedToAccount() {
+    try {
+      List<String> appIds = asList(APP_ID_1);
+      List<String> envIds = asList(ENV_ID_1);
+
+      AppPermission allAppPermissions = AppPermission.builder()
+                                            .permissionType(ALL_APP_ENTITIES)
+                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .actions(newHashSet(allActions))
+                                            .build();
+      AppPermission prodAppPermission = AppPermission.builder()
+                                            .permissionType(ENV)
+                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .actions(newHashSet(allActions))
+                                            .entityFilter(EnvFilter.builder().filterTypes(newHashSet(PROD)).build())
+                                            .build();
+      AppPermission nonProdAppPermission =
+          AppPermission.builder()
+              .permissionType(ENV)
+              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+              .actions(newHashSet(allActions))
+              .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
+              .build();
+      List<UserGroup> userGroups =
+          setUserGroupMocks(asList(allAppPermissions, prodAppPermission, nonProdAppPermission), appIds);
+      Set<Action> actions = allActions;
+
+      setPermissions(appIds, envIds, actions, false, userGroups);
+      boolean isAccountAdmin = false;
+      GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+      Set<String> envFilters = newHashSet(NON_PROD, PROD);
+      EnvFilter envFilter = EnvFilter.builder().filterTypes(envFilters).build();
+      AppEnvRestriction appEnvRestriction =
+          AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+      UsageRestrictions usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+
+      boolean hasAccess = usageRestrictionsService.hasAccess(
+          ACCOUNT_ID, isAccountAdmin, null, null, null, usageRestrictions, null, null, true);
+      assertThat(hasAccess).isTrue();
+    } finally {
+      UserThreadLocal.unset();
+    }
   }
 
   @Test
