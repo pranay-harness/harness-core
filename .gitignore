@@ -35,6 +35,7 @@ event-server*.log
 batch-processing*.log
 ci-manager*.log
 delegate.log
+delegate.*.log
 python/**/*-checkpoint.ipynb
 python/**/*.pyc
 python/**/.pyenv

@@ -9,12 +9,15 @@ import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.text.WordUtils;
 import retrofit2.Call;
@@ -24,6 +27,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.ServiceNowConfig;
+import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.beans.servicenow.ServiceNowFields;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
 import software.wings.helpers.ext.servicenow.ServiceNowRestClient;
@@ -38,6 +42,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
@@ -98,6 +103,22 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
             "Invalid ticket type : " + taskParameters.getTicketType(), SERVICENOW_ERROR, USER);
     }
 
+    return executeRequest(request, taskParameters.getTicketType().name());
+  }
+
+  @Override
+  public List<ServiceNowMetaDTO> getApprovalStates(ServiceNowTaskParameters taskParameters) {
+    if (taskParameters.getTicketType() != ServiceNowServiceImpl.ServiceNowTicketType.CHANGE_REQUEST) {
+      throw new InvalidRequestException("Approval states are only valid for issue type Change");
+    }
+    final Call<JsonNode> request;
+    request = getRestClient(taskParameters)
+                  .getChangeApprovalTypes(Credentials.basic(taskParameters.getServiceNowConfig().getUsername(),
+                      new String(taskParameters.getServiceNowConfig().getPassword())));
+    return executeRequest(request, taskParameters.getTicketType().name());
+  }
+
+  private List<ServiceNowMetaDTO> executeRequest(Call<JsonNode> request, String ticketType) {
     Response<JsonNode> response = null;
     try {
       response = request.execute();
@@ -106,7 +127,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
       List<ServiceNowMetaDTO> responseStates = new ArrayList<>();
 
       JsonNode responseObj = response.body().get("result");
-      if (responseObj.isArray()) {
+      if (responseObj != null && responseObj.isArray()) {
         for (JsonNode stateObj : responseObj) {
           ServiceNowMetaDTO serviceNowMetaDTO = ServiceNowMetaDTO.builder()
                                                     .id(stateObj.get("value").textValue())
@@ -118,7 +139,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
         // todo: Check this error message with srinivas
         throw new WingsException(SERVICENOW_ERROR, USER).addParam("message", "");
       }
-      logger.info("States for ticketType {}: {}", taskParameters.getTicketType(), responseStates);
+      logger.info("States for ticketType {}: {}", ticketType, responseStates);
       return responseStates;
     } catch (WingsException e) {
       throw e;
@@ -307,18 +328,49 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
   }
 
   @Override
-  public ServiceNowExecutionData getIssueUrl(ServiceNowTaskParameters taskParameters) {
+  public ServiceNowExecutionData getIssueUrl(
+      ServiceNowTaskParameters taskParameters, ServiceNowApprovalParams approvalParams, boolean snowMultiConditions) {
     JsonNode issueObj = getIssue(taskParameters);
     String issueId = issueObj.get("sys_id").get("display_value").asText();
     String issueUrl = getBaseUrl(taskParameters.getServiceNowConfig()) + "nav_to.do?uri=/"
         + taskParameters.getTicketType().toString().toLowerCase() + ".do?sys_id=" + issueId;
-    String state = issueObj.get("state").get("display_value").asText();
-    return ServiceNowExecutionData.builder().issueUrl(issueUrl).currentState(state).build();
+
+    if (snowMultiConditions) {
+      return ServiceNowExecutionData.builder()
+          .issueUrl(issueUrl)
+          .currentState(extractCurrentStatusFromIssue(issueObj, approvalParams))
+          .currentStatus(approvalParams.getAllCriteriaFields().stream().collect(
+              Collectors.toMap(field -> field, field -> issueObj.get(field).get("display_value").asText())))
+          .build();
+    }
+
+    return ServiceNowExecutionData.builder()
+        .issueUrl(issueUrl)
+        .currentState(issueObj.get("state").get("display_value").asText())
+        .build();
   }
 
   @Override
-  public String getIssueStatus(ServiceNowTaskParameters taskParameters) {
+  public String getIssueFieldStatus(ServiceNowTaskParameters taskParameters, String field) {
     JsonNode issueObj = getIssue(taskParameters);
+    return issueObj.get(field).get("display_value").asText();
+  }
+
+  @Override
+  public Map<String, String> getIssueStatus(ServiceNowTaskParameters taskParameters, Set<String> criteriaFields) {
+    JsonNode issueObj = getIssue(taskParameters);
+    return criteriaFields.stream().collect(
+        Collectors.toMap(field -> field, field -> issueObj.get(field).get("display_value").asText()));
+  }
+
+  private String extractCurrentStatusFromIssue(JsonNode issueObj, ServiceNowApprovalParams approvalParams) {
+    Set<String> criteriaFields = approvalParams.getAllCriteriaFields();
+    if (EmptyPredicate.isNotEmpty(criteriaFields)) {
+      return criteriaFields.stream()
+          .map(field
+              -> StringUtils.capitalize(field) + " is equal to " + issueObj.get(field).get("display_value").asText())
+          .collect(Collectors.joining(",\n"));
+    }
     return issueObj.get("state").get("display_value").asText();
   }
 

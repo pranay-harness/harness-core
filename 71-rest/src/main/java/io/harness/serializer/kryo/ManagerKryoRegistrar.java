@@ -235,6 +235,9 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.approval.ConditionalOperator;
+import software.wings.beans.approval.Criteria;
+import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -1622,5 +1625,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ScriptType.class, 7386);
     kryo.register(SplunkSampleResponse.class, 7387);
     kryo.register(AwsLambdaDetailsMetricsResponse.class, 7388);
+    kryo.register(ServiceNowApprovalParams.class, 7389);
+    kryo.register(Criteria.class, 7382);
+    kryo.register(ConditionalOperator.class, 7383);
   }
 }

@@ -8,6 +8,7 @@ import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -96,6 +97,7 @@ import software.wings.service.impl.JiraHelperService;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApprovalPolingService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
@@ -144,6 +146,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Mock private JiraHelperService jiraHelperService;
   @Mock private ServiceNowService serviceNowService;
   @Mock private ApprovalPolingService approvalPolingService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks private ApprovalState approvalState = new ApprovalState("ApprovalState");
 
@@ -218,6 +221,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(notificationMessageResolver.getPlaceholderValues(
              any(), any(), any(Long.class), any(Long.class), any(), any(), any(), any(), any()))
         .thenReturn(placeholders);
+
+    when(featureFlagService.isGlobalEnabled(any())).thenReturn(false);
   }
 
   @Test
@@ -670,12 +675,37 @@ public class ApprovalStateTest extends WingsBaseTest {
     String approvalValue = "DONE";
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), anyString(), anyString()))
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(false)))
         .thenReturn(ServiceNowExecutionData.builder().currentState(approvalValue).build());
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
     serviceNowApprovalParams.setIssueNumber("issueNumber");
+    serviceNowApprovalParams.setApprovalValue(approvalValue);
+    approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalStateType(ApprovalStateType.SERVICENOW).build();
+
+    ExecutionResponse executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testExecuteSnowApprovalIfAlreadyApprovedWithApprovalField() {
+    String approvalValue = "Approved";
+    when(context.renderExpression(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(false)))
+        .thenReturn(ServiceNowExecutionData.builder().currentState(approvalValue).build());
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
+    serviceNowApprovalParams.setIssueNumber("issueNumber");
+    serviceNowApprovalParams.setApprovalField("approval");
     serviceNowApprovalParams.setApprovalValue(approvalValue);
     approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
     approvalState.setApprovalStateParams(approvalStateParams);
@@ -694,7 +724,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     String rejectionValue = "REJECTED";
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), anyString(), anyString()))
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(false)))
         .thenReturn(ServiceNowExecutionData.builder().currentState(rejectionValue).build());
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
@@ -717,12 +747,41 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void testExecuteSnowApprovalWithPollingService() {
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), anyString(), anyString()))
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(false)))
         .thenReturn(ServiceNowExecutionData.builder().currentState("TODO").build());
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
     serviceNowApprovalParams.setIssueNumber("issueNumber");
+    serviceNowApprovalParams.setApprovalValue("DONE");
+    approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalStateType(ApprovalStateType.SERVICENOW).build();
+
+    ExecutionResponse executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+
+    when(approvalPolingService.save(any())).thenThrow(new UnexpectedException());
+    executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testExecuteSnowApprovalWithPollingServiceWithApprovalField() {
+    when(context.renderExpression(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(false)))
+        .thenReturn(ServiceNowExecutionData.builder().currentState("REQUESTED").build());
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
+    serviceNowApprovalParams.setIssueNumber("issueNumber");
+    serviceNowApprovalParams.setApprovalField("approval");
     serviceNowApprovalParams.setApprovalValue("DONE");
     approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
     approvalState.setApprovalStateParams(approvalStateParams);
