@@ -22,9 +22,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.ServiceVariable.ENCRYPTED_VALUE_KEY;
 import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTED_FIELD_MASK;
-import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
@@ -65,7 +63,6 @@ import org.mongodb.morphia.query.QueryImpl;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.EntityType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
@@ -97,7 +94,6 @@ import software.wings.settings.UsageRestrictions;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -567,7 +563,6 @@ public class SecretManagerTest extends CategoryTest {
     when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
     when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
         .thenReturn(true);
-    when(featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)).thenReturn(true);
     when(secretSetupUsageService.getSecretUsage(accountId, secretId)).thenReturn(new HashSet<>());
     when(wingsPersistence.delete(EncryptedData.class, secretId)).thenReturn(false);
 
@@ -576,7 +571,6 @@ public class SecretManagerTest extends CategoryTest {
 
     verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
     verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
-    verify(featureFlagService, times(1)).isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId);
     verify(secretSetupUsageService, times(1)).getSecretUsage(accountId, secretId);
     verify(wingsPersistence, times(1)).delete(EncryptedData.class, secretId);
     verify(auditServiceHelper, times(0)).reportDeleteForAuditingUsingAccountId(accountId, encryptedData);
@@ -609,7 +603,6 @@ public class SecretManagerTest extends CategoryTest {
 
     verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
     verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
-    verify(featureFlagService, times(0)).isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId);
     verify(secretSetupUsageService, times(0)).getSecretUsage(accountId, secretId);
     verify(wingsPersistence, times(0)).delete(EncryptedData.class, secretId);
     verify(auditServiceHelper, times(0)).reportDeleteForAuditingUsingAccountId(accountId, encryptedData);
@@ -618,7 +611,7 @@ public class SecretManagerTest extends CategoryTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
-  public void test_deleteSecret_shouldPass_featureFlagEnabled() {
+  public void test_deleteSecret_shouldPass() {
     String accountId = "accountId";
     String secretId = "secretId";
     EncryptedData encryptedData = mock(EncryptedData.class);
@@ -632,7 +625,6 @@ public class SecretManagerTest extends CategoryTest {
     when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
     when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
         .thenReturn(true);
-    when(featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)).thenReturn(true);
     when(secretSetupUsageService.getSecretUsage(accountId, secretId)).thenReturn(new HashSet<>());
     when(wingsPersistence.delete(EncryptedData.class, secretId)).thenReturn(true);
 
@@ -641,7 +633,6 @@ public class SecretManagerTest extends CategoryTest {
 
     verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
     verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
-    verify(featureFlagService, times(1)).isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId);
     verify(secretSetupUsageService, times(1)).getSecretUsage(accountId, secretId);
     verify(wingsPersistence, times(1)).delete(EncryptedData.class, secretId);
     verify(auditServiceHelper, times(1)).reportDeleteForAuditingUsingAccountId(accountId, encryptedData);
@@ -650,7 +641,7 @@ public class SecretManagerTest extends CategoryTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
-  public void test_deleteSecret_shouldFail_featureFlagEnabled() {
+  public void test_deleteSecret_shouldFail_1() {
     String accountId = "accountId";
     String secretId = "secretId";
     EncryptedData encryptedData = mock(EncryptedData.class);
@@ -665,7 +656,6 @@ public class SecretManagerTest extends CategoryTest {
     when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
     when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
         .thenReturn(true);
-    when(featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)).thenReturn(true);
     when(secretSetupUsageService.getSecretUsage(accountId, secretId)).thenReturn(Sets.newHashSet(secretSetupUsage));
 
     try {
@@ -677,82 +667,7 @@ public class SecretManagerTest extends CategoryTest {
 
     verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
     verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
-    verify(featureFlagService, times(1)).isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId);
     verify(secretSetupUsageService, times(1)).getSecretUsage(accountId, secretId);
-    verify(wingsPersistence, times(0)).delete(EncryptedData.class, secretId);
-    verify(auditServiceHelper, times(0)).reportDeleteForAuditingUsingAccountId(accountId, encryptedData);
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void test_deleteSecret_shouldPass_featureFlagDisabled() {
-    String accountId = "accountId";
-    String secretId = "secretId";
-    EncryptedData encryptedData = mock(EncryptedData.class);
-    UsageRestrictions usageRestrictions = mock(UsageRestrictions.class);
-    when(encryptedData.getUuid()).thenReturn(secretId);
-    when(encryptedData.getEncryptionType()).thenReturn(EncryptionType.AZURE_VAULT);
-    when(encryptedData.getType()).thenReturn(SECRET_TEXT);
-    when(encryptedData.getPath()).thenReturn("path");
-    when(encryptedData.getUsageRestrictions()).thenReturn(usageRestrictions);
-
-    Query<ServiceVariable> mockQuery = mock(Query.class);
-    when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
-        .thenReturn(true);
-    when(featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)).thenReturn(false);
-    when(wingsPersistence.createQuery(ServiceVariable.class)).thenReturn(mockQuery);
-    when(mockQuery.filter(ACCOUNT_ID_KEY, accountId)).thenReturn(mockQuery);
-    when(mockQuery.filter(ENCRYPTED_VALUE_KEY, secretId)).thenReturn(mockQuery);
-    when(mockQuery.asList()).thenReturn(new ArrayList<>());
-    when(wingsPersistence.delete(EncryptedData.class, secretId)).thenReturn(true);
-
-    boolean isDeleted = secretManager.deleteSecret(accountId, secretId);
-    assertThat(isDeleted).isTrue();
-
-    verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
-    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
-    verify(featureFlagService, times(1)).isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId);
-    verify(wingsPersistence, times(1)).delete(EncryptedData.class, secretId);
-    verify(auditServiceHelper, times(1)).reportDeleteForAuditingUsingAccountId(accountId, encryptedData);
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
-  public void test_deleteSecret_shouldFail_featureFlagDisabled() {
-    String accountId = "accountId";
-    String secretId = "secretId";
-    EncryptedData encryptedData = mock(EncryptedData.class);
-    UsageRestrictions usageRestrictions = mock(UsageRestrictions.class);
-    when(encryptedData.getUuid()).thenReturn(secretId);
-    when(encryptedData.getEncryptionType()).thenReturn(EncryptionType.AZURE_VAULT);
-    when(encryptedData.getType()).thenReturn(SECRET_TEXT);
-    when(encryptedData.getPath()).thenReturn("path");
-    when(encryptedData.getUsageRestrictions()).thenReturn(usageRestrictions);
-
-    Query<ServiceVariable> mockQuery = mock(Query.class);
-    ServiceVariable mockServiceVariable = mock(ServiceVariable.class);
-    when(wingsPersistence.get(EncryptedData.class, secretId)).thenReturn(encryptedData);
-    when(usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, usageRestrictions, false))
-        .thenReturn(true);
-    when(featureFlagService.isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId)).thenReturn(false);
-    when(wingsPersistence.createQuery(ServiceVariable.class)).thenReturn(mockQuery);
-    when(mockQuery.filter(ACCOUNT_ID_KEY, accountId)).thenReturn(mockQuery);
-    when(mockQuery.filter(ENCRYPTED_VALUE_KEY, secretId)).thenReturn(mockQuery);
-    when(mockQuery.asList()).thenReturn(Collections.singletonList(mockServiceVariable));
-
-    try {
-      secretManager.deleteSecret(accountId, secretId);
-      fail("Should not have succeeded");
-    } catch (SecretManagementException e) {
-      assertThat(e).isNotNull();
-    }
-
-    verify(wingsPersistence, times(1)).get(EncryptedData.class, secretId);
-    verify(usageRestrictionsService, times(1)).userHasPermissionsToChangeEntity(accountId, usageRestrictions, false);
-    verify(featureFlagService, times(1)).isEnabled(FeatureName.SECRET_PARENTS_MIGRATED, accountId);
     verify(wingsPersistence, times(0)).delete(EncryptedData.class, secretId);
     verify(auditServiceHelper, times(0)).reportDeleteForAuditingUsingAccountId(accountId, encryptedData);
   }

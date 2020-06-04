@@ -26,6 +26,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+import static software.wings.security.encryption.EncryptedData.PARENT_ID_KEY;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 
 import com.google.common.collect.Lists;
@@ -715,7 +716,7 @@ public class VaultTest extends WingsBaseTest {
     assertThat(isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword())).isFalse();
 
     Query<EncryptedData> query =
-        wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(settingAttribute.getUuid());
+        wingsPersistence.createQuery(EncryptedData.class).field(PARENT_ID_KEY).hasThisOne(settingAttribute.getUuid());
     assertThat(query.count()).isEqualTo(1);
     EncryptedData encryptedData = query.get();
     assertThat(encryptedData.getKmsId()).isEqualTo(vaultConfig.getUuid());
@@ -788,7 +789,7 @@ public class VaultTest extends WingsBaseTest {
     assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(numOfEncRecords + 1);
 
     Query<EncryptedData> query =
-        wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
+        wingsPersistence.createQuery(EncryptedData.class).field(PARENT_ID_KEY).hasThisOne(savedAttributeId);
     assertThat(query.count()).isEqualTo(1);
     EncryptedData encryptedData = query.get();
     assertThat(encryptedData.getKmsId()).isEqualTo(vaultConfig.getUuid());
@@ -816,7 +817,7 @@ public class VaultTest extends WingsBaseTest {
     ((AppDynamicsConfig) savedAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
     wingsPersistence.save(savedAttribute);
 
-    query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
+    query = wingsPersistence.createQuery(EncryptedData.class).field(PARENT_ID_KEY).hasThisOne(savedAttributeId);
     assertThat(query.count()).isEqualTo(1);
 
     changeLogs = secretManager.getChangeLogs(accountId, savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
@@ -860,7 +861,7 @@ public class VaultTest extends WingsBaseTest {
     assertThat(savedAttribute).isEqualTo(settingAttribute);
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                                     .field(EncryptedDataKeys.parentIds)
+                                     .field(PARENT_ID_KEY)
                                      .hasThisOne(savedAttributeId);
     assertThat(query.count()).isEqualTo(1);
 
@@ -881,7 +882,7 @@ public class VaultTest extends WingsBaseTest {
     assertThat(updatedAttribute.getAppId()).isEqualTo(updatedAppId);
 
     query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                .field(EncryptedDataKeys.parentIds)
+                .field(PARENT_ID_KEY)
                 .hasThisOne(savedAttributeId);
     assertThat(query.count()).isEqualTo(1);
 
@@ -920,7 +921,7 @@ public class VaultTest extends WingsBaseTest {
         .isEqualTo(numOfEncRecords + 1);
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                                     .field("parentIds")
+                                     .field(PARENT_ID_KEY)
                                      .hasThisOne(savedAttributeId);
     assertThat(query.count()).isEqualTo(1);
 
@@ -950,7 +951,7 @@ public class VaultTest extends WingsBaseTest {
     wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);
 
     query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                .field("parentIds")
+                .field(PARENT_ID_KEY)
                 .hasThisOne(savedAttributeId);
     assertThat(query.count()).isEqualTo(1);
     EncryptedData encryptedData = query.get();
@@ -990,7 +991,7 @@ public class VaultTest extends WingsBaseTest {
     wingsPersistence.updateFields(SettingAttribute.class, savedAttributeId, keyValuePairs);
 
     query = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                .field("parentIds")
+                .field(PARENT_ID_KEY)
                 .hasThisOne(savedAttributeId);
     assertThat(query.count()).isEqualTo(1);
     encryptedData = query.get();
@@ -1070,7 +1071,7 @@ public class VaultTest extends WingsBaseTest {
     assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(numOfEncRecords + 2);
 
     Query<EncryptedData> query =
-        wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
+        wingsPersistence.createQuery(EncryptedData.class).field(PARENT_ID_KEY).hasThisOne(savedAttributeId);
     assertThat(query.count()).isEqualTo(1);
 
     // decrypt and verify
