@@ -17,6 +17,7 @@ public interface NameService {
   String pipeline = "Pipeline";
   String instanceType = "InstanceType";
   String artifactType = "ArtifactType";
+  String artifactSource = "ArtifactSource";
   String connector = "Connector";
   String deployment = "Deployment";
   String instance = "Instance";

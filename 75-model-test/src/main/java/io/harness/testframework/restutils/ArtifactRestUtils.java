@@ -44,4 +44,11 @@ public class ArtifactRestUtils {
         () -> fetchArtifactByArtifactStream(bearerToken, appId, artifactStreamId), new ArtifactMatcher(), null);
     return artifacts.get(artifactIndex);
   }
+
+  public static List<Artifact> waitAndFetchArtifactListByArtfactStream(
+      String bearerToken, String appId, String artifactStreamId) {
+    Retry retry = new Retry(80, 10000);
+    return (List<Artifact>) retry.executeWithRetry(
+        () -> fetchArtifactByArtifactStream(bearerToken, appId, artifactStreamId), new ArtifactMatcher(), null);
+  }
 }

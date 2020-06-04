@@ -3,6 +3,7 @@ enum DataFetcherEnum {
   applicationConnection
   applicationStats
   artifact
+  artifactConnection
   billingJobProcessed
   billingStatsEntity
   billingStatsFilterValues
