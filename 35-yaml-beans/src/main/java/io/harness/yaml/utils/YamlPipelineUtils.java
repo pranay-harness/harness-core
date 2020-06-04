@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -34,7 +33,6 @@ public class YamlPipelineUtils {
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     mapper.setSubtypeResolver(new JsonSubtypeResolver(mapper.getSubtypeResolver()));
-    mapper.setPropertyNamingStrategy(PropertyNamingStrategy.KEBAB_CASE);
     mapper.registerModule(new Jdk8Module());
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new JavaTimeModule());
