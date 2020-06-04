@@ -13,7 +13,6 @@ import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.engine.AmbianceHelper;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
@@ -69,13 +68,18 @@ public class ResumeAllHandler implements InterruptHandler {
   }
 
   @Override
-  public Interrupt handleInterrupt(Interrupt interrupt, Ambiance ambiance) {
-    NodeExecution nodeExecution = ambianceHelper.obtainNodeExecution(ambiance);
+  public Interrupt handleInterrupt(Interrupt interrupt) {
+    throw new UnsupportedOperationException("RESUME_ALL handling Not required for overall Plan");
+  }
+
+  @Override
+  public Interrupt handleInterruptForNodeExecution(Interrupt interrupt, String nodeExecutionId) {
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     if (nodeExecution.getStatus() != Status.PAUSED) {
       return interrupt;
     }
     // Update status
-    nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), Status.QUEUED,
+    nodeExecutionService.updateStatusWithOps(nodeExecutionId, Status.QUEUED,
         ops
         -> ops.addToSet(NodeExecutionKeys.interruptHistories,
             InterruptEffect.builder()
@@ -86,7 +90,7 @@ public class ResumeAllHandler implements InterruptHandler {
 
     resumeStepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
                                                   .planExecutionId(interrupt.getPlanExecutionId())
-                                                  .nodeExecutionId(ambiance.obtainCurrentRuntimeId())
+                                                  .nodeExecutionId(nodeExecutionId)
                                                   .interruptId(interrupt.getUuid())
                                                   .status(Status.QUEUED)
                                                   .build());

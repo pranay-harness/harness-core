@@ -10,7 +10,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.engine.interrupts.handlers.PauseAllHandler;
 import io.harness.engine.interrupts.handlers.ResumeAllHandler;
 import io.harness.exception.InvalidRequestException;
@@ -35,8 +34,8 @@ public class InterruptServiceImpl implements InterruptService {
   @Inject private ResumeAllHandler resumeAllHandler;
 
   @Override
-  public InterruptCheck checkAndHandleInterruptsBeforeNodeStart(Ambiance ambiance) {
-    List<Interrupt> interrupts = fetchActivePlanLevelInterrupts(ambiance.getPlanExecutionId());
+  public InterruptCheck checkAndHandleInterruptsBeforeNodeStart(String planExecutionId, String nodeExecutionId) {
+    List<Interrupt> interrupts = fetchActivePlanLevelInterrupts(planExecutionId);
     if (isEmpty(interrupts)) {
       return InterruptCheck.builder().proceed(true).reason("[InterruptCheck] No Interrupts Found").build();
     }
@@ -48,10 +47,10 @@ public class InterruptServiceImpl implements InterruptService {
 
     switch (interrupt.getType()) {
       case PAUSE_ALL:
-        pauseAllHandler.handleInterrupt(interrupt, ambiance);
+        pauseAllHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
         return InterruptCheck.builder().proceed(false).reason("[InterruptCheck] PAUSE_ALL interrupt found").build();
       case RESUME_ALL:
-        resumeAllHandler.handleInterrupt(interrupt, ambiance);
+        resumeAllHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
         return InterruptCheck.builder().proceed(true).reason("[InterruptCheck] RESUME_ALL interrupt found").build();
       default:
         throw new InvalidRequestException("No Handler Present for interrupt type: " + interrupt.getType());

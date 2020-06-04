@@ -62,7 +62,7 @@ public class TaskChainExecutableInvoker implements ExecutableInvoker {
                 .chainEnd(taskChainResponse.isChainEnd())
                 .passThroughData(taskChainResponse.getPassThroughData())
                 .build()));
-    NotifyCallback callback = EngineResumeCallback.builder().nodeInstanceId(nodeExecution.getUuid()).build();
+    NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, task.getWaitId());
   }
 }

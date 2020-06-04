@@ -14,7 +14,6 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.resume.EngineResumeAllCallback;
@@ -64,9 +63,12 @@ public class PauseAllHandler implements InterruptHandler {
   }
 
   @Override
-  public Interrupt handleInterrupt(Interrupt interrupt, Ambiance ambiance) {
-    String nodeExecutionId = ambiance.obtainCurrentRuntimeId();
+  public Interrupt handleInterrupt(Interrupt interrupt) {
+    throw new UnsupportedOperationException("PAUSE_ALL handling Not required for overall Plan");
+  }
 
+  @Override
+  public Interrupt handleInterruptForNodeExecution(Interrupt interrupt, String nodeExecutionId) {
     // Update status
     nodeExecutionService.updateStatusWithOps(nodeExecutionId, Status.PAUSED,
         ops
@@ -84,7 +86,7 @@ public class PauseAllHandler implements InterruptHandler {
                                                   .status(Status.PAUSED)
                                                   .build());
     waitNotifyEngine.waitForAllOn(
-        ORCHESTRATION, EngineResumeAllCallback.builder().ambiance(ambiance).build(), interrupt.getUuid());
+        ORCHESTRATION, EngineResumeAllCallback.builder().nodeExecutionId(nodeExecutionId).build(), interrupt.getUuid());
     return interrupt;
   }
 }
