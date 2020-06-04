@@ -15,10 +15,14 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.User.UserKeys;
 import software.wings.beans.loginSettings.UserLockoutInfo;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.utm.UtmInfo;
@@ -42,6 +46,10 @@ import javax.security.auth.Subject;
 @Entity(value = "users", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "UserKeys")
+@Indexes({
+  @Index(options = @IndexOptions(name = "accountsIdx"), fields = { @Field(UserKeys.accounts) })
+  , @Index(options = @IndexOptions(name = "pendingAccountsIdx"), fields = { @Field(UserKeys.pendingAccounts) })
+})
 public class User extends Base implements Principal {
   public static final String EMAIL_KEY = "email";
   public static final String ROLES_KEY = "roles";
