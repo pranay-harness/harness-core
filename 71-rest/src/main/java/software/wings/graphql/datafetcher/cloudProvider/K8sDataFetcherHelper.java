@@ -58,7 +58,7 @@ public class K8sDataFetcherHelper {
                     configBuilder.authType(KubernetesClusterAuthType.OIDC);
                     clusterDetails.getOidcToken().getValue().ifPresent(auth -> {
                       auth.getIdentityProviderUrl().getValue().ifPresent(configBuilder::oidcIdentityProviderUrl);
-                      auth.getUserName().getValue().ifPresent(configBuilder::username);
+                      auth.getUserName().getValue().ifPresent(configBuilder::oidcUsername);
 
                       auth.getPasswordSecretId().getValue().ifPresent(configBuilder::encryptedOidcPassword);
                       auth.getClientIdSecretId().getValue().ifPresent(configBuilder::encryptedOidcClientId);
@@ -158,7 +158,7 @@ public class K8sDataFetcherHelper {
                     config.setAuthType(KubernetesClusterAuthType.OIDC);
                     clusterDetails.getOidcToken().getValue().ifPresent(auth -> {
                       auth.getIdentityProviderUrl().getValue().ifPresent(config::setOidcIdentityProviderUrl);
-                      auth.getUserName().getValue().ifPresent(config::setUsername);
+                      auth.getUserName().getValue().ifPresent(config::setOidcUsername);
 
                       auth.getPasswordSecretId().getValue().ifPresent(config::setEncryptedOidcPassword);
                       auth.getClientIdSecretId().getValue().ifPresent(config::setEncryptedOidcClientId);
