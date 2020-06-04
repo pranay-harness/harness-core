@@ -10,12 +10,8 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
-import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.facilitator.modes.ExecutionMode;
-import io.harness.facilitator.modes.child.ChildExecutableResponse;
-import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
@@ -58,33 +54,5 @@ public class EngineObtainmentHelper {
     }
     Plan plan = instance.getPlan();
     return plan.fetchNode(nodeId);
-  }
-
-  public List<StepTransput> fetchAdditionalInputs(NodeExecution nodeExecution, PlanNode node) {
-    List<StepTransput> additionalInputs = new ArrayList<>();
-    if (nodeExecution.getParentId() != null) {
-      NodeExecution parent = nodeExecutionService.get(nodeExecution.getParentId());
-      if (parent.getMode() == ExecutionMode.CHILD) {
-        ChildExecutableResponse parentResponse = (ChildExecutableResponse) parent.obtainLatestExecutableResponse();
-        if (parentResponse != null && parentResponse.getChildNodeId().equals(node.getUuid())
-            && parentResponse.getAdditionalInputs() != null) {
-          additionalInputs.addAll(parentResponse.getAdditionalInputs());
-        }
-      } else if (parent.getMode() == ExecutionMode.CHILDREN) {
-        ChildrenExecutableResponse parentResponse =
-            (ChildrenExecutableResponse) parent.obtainLatestExecutableResponse();
-        if (parentResponse != null) {
-          ChildrenExecutableResponse.Child child = parentResponse.getChildren()
-                                                       .stream()
-                                                       .filter(child1 -> child1.getChildNodeId().equals(node.getUuid()))
-                                                       .findFirst()
-                                                       .orElse(null);
-          if (child != null && child.getAdditionalInputs() != null) {
-            additionalInputs.addAll(child.getAdditionalInputs());
-          }
-        }
-      }
-    }
-    return additionalInputs;
   }
 }

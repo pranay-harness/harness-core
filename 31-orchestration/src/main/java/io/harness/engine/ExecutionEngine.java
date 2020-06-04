@@ -123,22 +123,23 @@ public class ExecutionEngine implements Engine {
     return instance;
   }
 
-  public void startNodeExecution(Ambiance ambiance, List<StepTransput> additionalInputs) {
+  public void startNodeExecution(Ambiance ambiance) {
     try (AutoLogContext ignore = ambiance.autoLogContext()) {
+      NodeExecution nodeExecution = hPersistence.createQuery(NodeExecution.class)
+                                        .filter(NodeExecutionKeys.uuid, ambiance.obtainCurrentRuntimeId())
+                                        .get();
       logger.info("Checking Interrupts before Node Start");
-      InterruptCheck check = interruptService.checkAndHandleInterruptsBeforeNodeStart(ambiance, additionalInputs);
+      InterruptCheck check = interruptService.checkAndHandleInterruptsBeforeNodeStart(ambiance);
       if (!check.isProceed()) {
         logger.info("Suspending Execution. Reason : {}", check.getReason());
         return;
       }
       logger.info("Proceeding with  Execution. Reason : {}", check.getReason());
 
-      NodeExecution nodeExecution = hPersistence.createQuery(NodeExecution.class)
-                                        .filter(NodeExecutionKeys.uuid, ambiance.obtainCurrentRuntimeId())
-                                        .get();
       PlanNode node = nodeExecution.getNode();
       // Facilitate and execute
-      List<StepTransput> inputs = engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), additionalInputs);
+      List<StepTransput> inputs =
+          engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
       StepParameters resolvedStepParameters =
           (StepParameters) engineExpressionService.resolve(ambiance, node.getStepParameters());
       nodeExecution = Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),
@@ -346,8 +347,8 @@ public class ExecutionEngine implements Engine {
   public void triggerLink(Step step, Ambiance ambiance, NodeExecution nodeExecution, PassThroughData passThroughData,
       Map<String, ResponseData> response) {
     PlanNode node = nodeExecution.getNode();
-    List<StepTransput> additionalInputs = engineObtainmentHelper.fetchAdditionalInputs(nodeExecution, node);
-    List<StepTransput> inputs = engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), additionalInputs);
+    List<StepTransput> inputs =
+        engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
     ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(nodeExecution.getMode());
     invoker.invokeExecutable(InvokerPackage.builder()
                                  .step(step)

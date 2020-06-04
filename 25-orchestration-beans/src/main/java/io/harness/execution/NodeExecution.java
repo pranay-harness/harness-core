@@ -20,6 +20,7 @@ import io.harness.persistence.converters.DurationConverter;
 import io.harness.plan.PlanNode;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepParameters;
+import io.harness.state.io.StepTransput;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -73,11 +74,9 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   private Long expiryTs;
 
   @Singular List<ExecutableResponse> executableResponses;
-
   @Singular List<String> retryIds;
-
   @Singular private List<InterruptEffect> interruptHistories;
-
+  @Singular List<StepTransput> additionalInputs;
   FailureInfo failureInfo;
 
   public boolean isRetry() {

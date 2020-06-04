@@ -29,7 +29,6 @@ import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.persistence.HPersistence;
 import io.harness.state.io.StatusNotifyResponseData;
-import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
 
 import java.util.List;
@@ -70,7 +69,7 @@ public class ResumeAllHandler implements InterruptHandler {
   }
 
   @Override
-  public Interrupt handleInterrupt(Interrupt interrupt, Ambiance ambiance, List<StepTransput> additionalInputs) {
+  public Interrupt handleInterrupt(Interrupt interrupt, Ambiance ambiance) {
     NodeExecution nodeExecution = ambianceHelper.obtainNodeExecution(ambiance);
     if (nodeExecution.getStatus() != Status.PAUSED) {
       return interrupt;
