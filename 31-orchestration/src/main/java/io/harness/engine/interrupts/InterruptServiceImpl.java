@@ -12,6 +12,7 @@ import com.google.inject.name.Named;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.engine.interrupts.handlers.PauseAllHandler;
+import io.harness.engine.interrupts.handlers.ResumeAllHandler;
 import io.harness.exception.InvalidRequestException;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 public class InterruptServiceImpl implements InterruptService {
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private PauseAllHandler pauseAllHandler;
+  @Inject private ResumeAllHandler resumeAllHandler;
 
   @Override
   public InterruptCheck checkAndHandleInterruptsBeforeNodeStart(
@@ -51,6 +53,7 @@ public class InterruptServiceImpl implements InterruptService {
         pauseAllHandler.handleInterrupt(interrupt, ambiance, additionalInputs);
         return InterruptCheck.builder().proceed(false).reason("[InterruptCheck] PAUSE_ALL interrupt found").build();
       case RESUME_ALL:
+        resumeAllHandler.handleInterrupt(interrupt, ambiance, additionalInputs);
         return InterruptCheck.builder().proceed(true).reason("[InterruptCheck] RESUME_ALL interrupt found").build();
       default:
         throw new InvalidRequestException("No Handler Present for interrupt type: " + interrupt.getType());

@@ -47,7 +47,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -91,7 +90,7 @@ public class AbortAllHandler implements InterruptHandler {
   public Interrupt handleInterrupt(
       @NonNull @Valid Interrupt interrupt, Ambiance ambiance, List<StepTransput> additionalInputs) {
     interruptService.markProcessing(interrupt.getUuid());
-    if (!markAbortingState(interrupt, Status.abortableStatuses())) {
+    if (!markAbortingState(interrupt, Status.finalizableStatuses())) {
       return interrupt;
     }
 
@@ -165,7 +164,12 @@ public class AbortAllHandler implements InterruptHandler {
     UpdateOperations<NodeExecution> ops = hPersistence.createUpdateOperations(NodeExecution.class);
     ops.set(NodeExecutionKeys.status, DISCONTINUING);
     ops.addToSet(NodeExecutionKeys.interruptHistories,
-        InterruptEffect.builder().interruptId(interrupt.getUuid()).tookEffectAt(new Date()).build());
+        InterruptEffect.builder()
+            .interruptId(interrupt.getUuid())
+            .tookEffectAt(System.currentTimeMillis())
+            .interruptType(interrupt.getType())
+            .build());
+
     Query<NodeExecution> query = hPersistence.createQuery(NodeExecution.class, excludeAuthority)
                                      .filter(NodeExecutionKeys.planExecutionId, interrupt.getPlanExecutionId())
                                      .field(NodeExecutionKeys.uuid)

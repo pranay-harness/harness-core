@@ -25,4 +25,11 @@ public interface NodeExecutionService {
   List<NodeExecution> fetchNodeExecutionsByStatuses(@NonNull String planExecutionId, EnumSet<Status> statuses);
 
   NodeExecution update(@NonNull String nodeExecutionId, @NonNull Consumer<UpdateOperations<NodeExecution>> ops);
+
+  NodeExecution updateStatusWithOps(
+      @NonNull String nodeExecutionId, @NonNull Status targetStatus, Consumer<UpdateOperations<NodeExecution>> ops);
+
+  default NodeExecution updateStatusWithOps(@NonNull String nodeExecutionId, @NonNull Status targetStatus) {
+    return updateStatusWithOps(nodeExecutionId, targetStatus, null);
+  }
 }

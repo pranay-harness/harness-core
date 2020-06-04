@@ -1,6 +1,5 @@
 package io.harness.engine.interrupts.handlers;
 
-import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.data.structure.CollectionUtils.isPresent;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.PAUSE_ALL_ALREADY;
@@ -27,6 +26,7 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.status.Status;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
+import io.harness.interrupts.InterruptEffect;
 import io.harness.persistence.HPersistence;
 import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
@@ -67,7 +67,17 @@ public class PauseAllHandler implements InterruptHandler {
   @Override
   public Interrupt handleInterrupt(Interrupt interrupt, Ambiance ambiance, List<StepTransput> additionalInputs) {
     String nodeExecutionId = ambiance.obtainCurrentRuntimeId();
-    nodeExecutionService.update(nodeExecutionId, ops -> ops.set(NodeExecutionKeys.status, PAUSED));
+
+    // Update status
+    nodeExecutionService.updateStatusWithOps(nodeExecutionId, Status.PAUSED,
+        ops
+        -> ops.addToSet(NodeExecutionKeys.interruptHistories,
+            InterruptEffect.builder()
+                .interruptId(interrupt.getUuid())
+                .tookEffectAt(System.currentTimeMillis())
+                .interruptType(interrupt.getType())
+                .build()));
+
     pausedStepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
                                                   .planExecutionId(interrupt.getPlanExecutionId())
                                                   .nodeExecutionId(nodeExecutionId)

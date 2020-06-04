@@ -13,6 +13,7 @@ import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.facilitator.modes.task.TaskExecutableResponse;
 import io.harness.tasks.Task;
@@ -45,7 +46,7 @@ public class TaskExecutableInvoker implements ExecutableInvoker {
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, task.getWaitId());
 
     // Update Execution Node Instance state to TASK_WAITING
-    nodeExecutionService.update(nodeExecution.getUuid(),
+    nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), Status.TASK_WAITING,
         ops
         -> ops.addToSet(NodeExecutionKeys.executableResponses,
             TaskExecutableResponse.builder().taskId(taskId).taskIdentifier(task.getTaskIdentifier()).build()));

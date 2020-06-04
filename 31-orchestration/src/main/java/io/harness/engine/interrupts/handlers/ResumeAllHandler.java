@@ -14,14 +14,19 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.engine.AmbianceHelper;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
+import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.status.ResumeStepStatusUpdate;
 import io.harness.engine.status.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
+import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.status.Status;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
+import io.harness.interrupts.InterruptEffect;
 import io.harness.persistence.HPersistence;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepTransput;
@@ -33,8 +38,10 @@ import java.util.Optional;
 public class ResumeAllHandler implements InterruptHandler {
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private InterruptService interruptService;
+  @Inject private NodeExecutionService nodeExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private ResumeStepStatusUpdate resumeStepStatusUpdate;
+  @Inject private AmbianceHelper ambianceHelper;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
@@ -54,10 +61,6 @@ public class ResumeAllHandler implements InterruptHandler {
       throw new InvalidRequestException("Interrupt RESUME_ALL already present", RESUME_ALL_ALREADY, USER);
     }
     Interrupt pauseAllInterrupt = pauseAllOptional.get();
-    resumeStepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
-                                                  .planExecutionId(interrupt.getPlanExecutionId())
-                                                  .interruptId(interrupt.getUuid())
-                                                  .build());
     interruptService.markProcessed(
         pauseAllInterrupt.getUuid(), pauseAllInterrupt.getState() == PROCESSING ? PROCESSED_SUCCESSFULLY : DISCARDED);
     waitNotifyEngine.doneWith(
@@ -68,6 +71,26 @@ public class ResumeAllHandler implements InterruptHandler {
 
   @Override
   public Interrupt handleInterrupt(Interrupt interrupt, Ambiance ambiance, List<StepTransput> additionalInputs) {
-    throw new UnsupportedOperationException("No Handling required for RESUME_ALL interrupt");
+    NodeExecution nodeExecution = ambianceHelper.obtainNodeExecution(ambiance);
+    if (nodeExecution.getStatus() != Status.PAUSED) {
+      return interrupt;
+    }
+    // Update status
+    nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), Status.QUEUED,
+        ops
+        -> ops.addToSet(NodeExecutionKeys.interruptHistories,
+            InterruptEffect.builder()
+                .interruptId(interrupt.getUuid())
+                .tookEffectAt(System.currentTimeMillis())
+                .interruptType(interrupt.getType())
+                .build()));
+
+    resumeStepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
+                                                  .planExecutionId(interrupt.getPlanExecutionId())
+                                                  .nodeExecutionId(ambiance.obtainCurrentRuntimeId())
+                                                  .interruptId(interrupt.getUuid())
+                                                  .status(Status.QUEUED)
+                                                  .build());
+    return interrupt;
   }
 }

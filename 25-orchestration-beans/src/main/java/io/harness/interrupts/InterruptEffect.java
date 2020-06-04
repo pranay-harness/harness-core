@@ -7,7 +7,6 @@ import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Value;
 
-import java.util.Date;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
@@ -16,5 +15,6 @@ import javax.validation.constraints.NotNull;
 @Redesign
 public class InterruptEffect {
   @NotNull String interruptId;
-  @NotNull Date tookEffectAt;
+  @NotNull long tookEffectAt;
+  @NotNull ExecutionInterruptType interruptType;
 }
