@@ -219,6 +219,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(127, AddAccountIdToTimeSeriesAnomaliesRecordMigration.class))
         .add(Pair.of(128, AddAccountidToTimeSeriesMLScores.class))
         .add(Pair.of(129, CleanUpDirectK8sInfraMappingEncryptedFieldsMigration.class))
+        .add(Pair.of(130, InfraMappingToDefinitionMigration.class))
         .build();
   }
 }
