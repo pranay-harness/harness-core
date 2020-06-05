@@ -14,6 +14,7 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.STARTING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
+import static io.harness.beans.ExecutionStatus.activeStatuses;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
@@ -2493,7 +2494,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                      .addFilter("appId", EQ, appId)
                                                      .addFilter("workflowId", EQ, workflowId)
                                                      .addFilter("workflowType", EQ, workflowType)
-                                                     .addFilter("status", IN, NEW, RUNNING)
+                                                     .addFilter("status", IN, activeStatuses())
                                                      .addFieldsIncluded("uuid")
                                                      .build();
 
@@ -2502,6 +2503,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public boolean runningExecutionsPresent(String appId, String workflowId) {
+    List<WorkflowExecution> runningExecutions = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                    .filter(WorkflowExecutionKeys.appId, appId)
+                                                    .filter(WorkflowExecutionKeys.workflowId, workflowId)
+                                                    .field(WorkflowExecutionKeys.status)
+                                                    .in(ExecutionStatus.activeStatuses())
+                                                    .project(WorkflowExecutionKeys.uuid, true)
+                                                    .asList();
+    return !isEmpty(runningExecutions);
   }
 
   @Override
