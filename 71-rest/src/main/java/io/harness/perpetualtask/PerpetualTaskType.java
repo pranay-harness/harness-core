@@ -1,35 +1,17 @@
 package io.harness.perpetualtask;
 
-import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
-import io.harness.perpetualtask.ecs.EcsPerpetualTaskServiceClient;
-import io.harness.perpetualtask.example.SamplePerpetualTaskServiceClient;
-import io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskClient;
-import io.harness.perpetualtask.instancesync.AwsSshPerpetualTaskServiceClient;
-import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClient;
-import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient;
-import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClient;
-import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
+public final class PerpetualTaskType {
+  public static final String K8S_WATCH = "K8S_WATCH";
+  public static final String ECS_CLUSTER = "ECS_CLUSTER";
+  public static final String SAMPLE = "SAMPLE";
+  public static final String ARTIFACT_COLLECTION = "ARTIFACT_COLLECTION";
+  public static final String PCF_INSTANCE_SYNC = "PCF_INSTANCE_SYNC";
+  public static final String AWS_SSH_INSTANCE_SYNC = "AWS_SSH_INSTANCE_SYNC";
+  public static final String AWS_AMI_INSTANCE_SYNC = "AWS_AMI_INSTANCE_SYNC";
+  public static final String AWS_CODE_DEPLOY_INSTANCE_SYNC = "AWS_CODE_DEPLOY_INSTANCE_SYNC";
+  public static final String SPOT_INST_AMI_INSTANCE_SYNC = "SPOT_INST_AMI_INSTANCE_SYNC";
+  public static final String CONTAINER_INSTANCE_SYNC = "CONTAINER_INSTANCE_SYNC";
+  public static final String AWS_LAMBDA_INSTANCE_SYNC = "AWS_LAMBDA_INSTANCE_SYNC";
 
-public enum PerpetualTaskType {
-  K8S_WATCH(K8sWatchPerpetualTaskServiceClient.class),
-  ECS_CLUSTER(EcsPerpetualTaskServiceClient.class),
-  SAMPLE(SamplePerpetualTaskServiceClient.class),
-  ARTIFACT_COLLECTION(ArtifactCollectionPTaskServiceClient.class),
-  PCF_INSTANCE_SYNC(PcfInstanceSyncPerpetualTaskClient.class),
-  AWS_SSH_INSTANCE_SYNC(AwsSshPerpetualTaskServiceClient.class),
-  AWS_AMI_INSTANCE_SYNC(AwsAmiInstanceSyncPerpetualTaskClient.class),
-  AWS_CODE_DEPLOY_INSTANCE_SYNC(AwsCodeDeployInstanceSyncPerpetualTaskClient.class),
-  SPOT_INST_AMI_INSTANCE_SYNC(SpotinstAmiInstanceSyncPerpetualTaskClient.class),
-  CONTAINER_INSTANCE_SYNC(ContainerInstanceSyncPerpetualTaskClient.class),
-  AWS_LAMBDA_INSTANCE_SYNC(AwsLambdaInstanceSyncPerpetualTaskClient.class);
-
-  private final Class<? extends PerpetualTaskServiceClient> perpetualTaskServiceClientClass;
-
-  PerpetualTaskType(Class<? extends PerpetualTaskServiceClient> perpetualTaskServiceClientClass) {
-    this.perpetualTaskServiceClientClass = perpetualTaskServiceClientClass;
-  }
-
-  public Class<? extends PerpetualTaskServiceClient> getPerpetualTaskServiceClientClass() {
-    return perpetualTaskServiceClientClass;
-  }
+  private PerpetualTaskType() {}
 }

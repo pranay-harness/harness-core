@@ -70,8 +70,8 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   }
 
   @Override
-  public String createTask(PerpetualTaskType perpetualTaskType, String accountId,
-      PerpetualTaskClientContext clientContext, PerpetualTaskSchedule schedule, boolean allowDuplicate) {
+  public String createTask(String perpetualTaskType, String accountId, PerpetualTaskClientContext clientContext,
+      PerpetualTaskSchedule schedule, boolean allowDuplicate) {
     try (AutoLogContext ignore0 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       if (!allowDuplicate) {
         Optional<PerpetualTaskRecord> perpetualTaskMaybe =
@@ -142,7 +142,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   }
 
   @Override
-  public PerpetualTaskType getPerpetualTaskType(String taskId) {
+  public String getPerpetualTaskType(String taskId) {
     PerpetualTaskRecord perpetualTaskRecord = getTaskRecord(taskId);
     return perpetualTaskRecord.getPerpetualTaskType();
   }

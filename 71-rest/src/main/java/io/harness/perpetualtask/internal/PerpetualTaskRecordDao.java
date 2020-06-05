@@ -3,7 +3,6 @@ package io.harness.perpetualtask.internal;
 import com.google.inject.Inject;
 
 import io.harness.perpetualtask.PerpetualTaskClientContext;
-import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -76,7 +75,7 @@ public class PerpetualTaskRecordDao {
   }
 
   public Optional<PerpetualTaskRecord> getExistingPerpetualTask(
-      String accountId, PerpetualTaskType perpetualTaskType, PerpetualTaskClientContext clientContext) {
+      String accountId, String perpetualTaskType, PerpetualTaskClientContext clientContext) {
     PerpetualTaskRecord perpetualTaskRecord = persistence.createQuery(PerpetualTaskRecord.class)
                                                   .field(PerpetualTaskRecordKeys.accountId)
                                                   .equal(accountId)
