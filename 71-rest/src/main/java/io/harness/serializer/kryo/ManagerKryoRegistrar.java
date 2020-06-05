@@ -1620,13 +1620,13 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CustomSecretsManagerShellScript.class, 7379);
     kryo.register(StackDriverMetricDefinition.Aggregation.class, 7380);
     kryo.register(SplunkSavedSearch.class, 7381);
+    kryo.register(Criteria.class, 7382);
+    kryo.register(ConditionalOperator.class, 7383);
     kryo.register(ContainerSyncResponse.class, 7384);
     kryo.register(BasicHttpChainStepParameters.class, 7385);
     kryo.register(ScriptType.class, 7386);
     kryo.register(SplunkSampleResponse.class, 7387);
     kryo.register(AwsLambdaDetailsMetricsResponse.class, 7388);
     kryo.register(ServiceNowApprovalParams.class, 7389);
-    kryo.register(Criteria.class, 7382);
-    kryo.register(ConditionalOperator.class, 7383);
   }
 }

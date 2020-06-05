@@ -807,9 +807,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           System.currentTimeMillis() - startTime);
       return secret.value().toCharArray();
     } catch (Exception ex) {
-      String message = format("Failed to decrypt Azure secret %s in vault %s in account %s",
-          parsedSecretReference.getSecretName(), azureConfig.getName(), azureConfig.getAccountId());
-      throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, ex, USER);
+      logger.error("Failed to decrypt azure secret in vault due to exception", ex);
+      String message = format("Failed to decrypt Azure secret %s in vault %s in account %s due to error %s",
+          parsedSecretReference.getSecretName(), azureConfig.getName(), azureConfig.getAccountId(), ex.getMessage());
+      throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, USER);
     }
   }
 
