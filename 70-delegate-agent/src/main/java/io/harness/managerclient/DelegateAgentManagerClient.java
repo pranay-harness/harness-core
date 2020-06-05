@@ -8,14 +8,18 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.service.DelegateAgentFileService;
 import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
+import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Headers;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -40,6 +44,27 @@ public interface DelegateAgentManagerClient {
   Call<RestResponse<DelegateProfileParams>> checkForProfile(@Path("delegateId") String delegateId,
       @Query("accountId") String accountId, @Query("profileId") String profileId,
       @Query("lastUpdatedAt") Long lastUpdatedAt);
+
+  @Multipart
+  @POST("agent/delegateFiles/{delegateId}/profile-result")
+  Call<RestResponse> saveProfileResult(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
+      @Query("error") boolean error, @Query("fileBucket") DelegateAgentFileService.FileBucket bucket,
+      @Part MultipartBody.Part file);
+
+  @Multipart
+  @POST("agent/delegateFiles/{delegateId}/tasks/{taskId}")
+  Call<RestResponse<String>> uploadFile(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
+      @Query("accountId") String accountId, @Query("fileBucket") DelegateAgentFileService.FileBucket bucket,
+      @Part MultipartBody.Part file);
+
+  @GET("agent/delegateFiles/fileId")
+  Call<RestResponse<String>> getFileIdByVersion(@Query("entityId") String entityId,
+      @Query("fileBucket") DelegateAgentFileService.FileBucket fileBucket, @Query("version") int version,
+      @Query("accountId") String accountId);
+
+  @GET("agent/delegateFiles/download")
+  Call<ResponseBody> downloadFile(@Query("fileId") String fileId,
+      @Query("fileBucket") DelegateAgentFileService.FileBucket fileBucket, @Query("accountId") String accountId);
 
   @KryoResponse
   @GET("agent/delegates/{delegateId}/tasks/{taskId}/fail")

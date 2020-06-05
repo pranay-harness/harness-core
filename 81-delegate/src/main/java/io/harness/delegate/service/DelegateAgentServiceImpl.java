@@ -980,7 +980,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     // MultipartBody.Part is used to send also the actual file name
     Part part = Part.createFormData("file", profileResult.getName(), requestFile);
     timeLimiter.callWithTimeout(()
-                                    -> execute(managerClient.saveProfileResult(
+                                    -> execute(delegateAgentManagerClient.saveProfileResult(
                                         delegateId, accountId, exitCode != 0, FileBucket.PROFILE_RESULTS, part)),
         15L, TimeUnit.SECONDS, true);
   }
