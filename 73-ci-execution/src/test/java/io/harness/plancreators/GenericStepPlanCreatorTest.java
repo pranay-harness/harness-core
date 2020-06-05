@@ -14,6 +14,7 @@ import io.harness.executionplan.CIExecutionTest;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
+import io.harness.executionplan.plancreator.GenericStepPlanCreator;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
@@ -50,8 +51,8 @@ public class GenericStepPlanCreatorTest extends CIExecutionTest {
     CreateExecutionPlanResponse plan = genericStepPlanCreator.createPlan(stepInfo, createExecutionPlanContext);
     assertThat(plan.getPlanNodes()).isNotNull();
     PlanNode planNode = plan.getPlanNodes().get(0);
-    assertThat(planNode.getUuid()).isEqualTo(stepInfo.getStepMetadata().getUuid());
-    assertThat(planNode.getName()).isEqualTo(stepInfo.getStepMetadata().getUuid());
+    assertThat(planNode.getUuid()).isNotNull();
+    assertThat(planNode.getName()).isEqualTo("testName");
     assertThat(planNode.getIdentifier()).isEqualTo(stepInfo.getIdentifier());
     assertThat(planNode.getStepType()).isEqualTo(stepInfo.getNonYamlInfo().getStepType());
     assertThat(planNode.getStepParameters()).isEqualTo(stepInfo);

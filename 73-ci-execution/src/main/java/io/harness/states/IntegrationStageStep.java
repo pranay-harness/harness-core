@@ -25,7 +25,7 @@ import java.util.Map;
 @Slf4j
 public class IntegrationStageStep implements Step, ChildExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("INTEGRATION_STAGE_STEP").build();
-  public static final String CHILD_PLAN_START_NODE_NAME = "execution";
+  public static final String CHILD_PLAN_START_NODE = "execution";
 
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Override
@@ -36,7 +36,7 @@ public class IntegrationStageStep implements Step, ChildExecutable {
 
     final Map<String, String> fieldToExecutionNodeIdMap = parameters.getFieldToExecutionNodeIdMap();
 
-    final String executionNodeId = fieldToExecutionNodeIdMap.get(CHILD_PLAN_START_NODE_NAME);
+    final String executionNodeId = fieldToExecutionNodeIdMap.get(CHILD_PLAN_START_NODE);
 
     return ChildExecutableResponse.builder().childNodeId(executionNodeId).build();
   }

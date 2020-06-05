@@ -3,7 +3,7 @@ package io.harness.plancreators;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.CIPlanCreatorType.EXECUTION_PLAN_CREATOR;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGE_PLAN_CREATOR;
-import static io.harness.states.IntegrationStageStep.CHILD_PLAN_START_NODE_NAME;
+import static io.harness.states.IntegrationStageStep.CHILD_PLAN_START_NODE;
 import static software.wings.common.CICommonPodConstants.POD_NAME;
 
 import com.google.common.collect.ImmutableMap;
@@ -67,11 +67,11 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
         .name(integrationStage.getIdentifier())
         .identifier(integrationStage.getIdentifier())
         .stepType(IntegrationStageStep.STEP_TYPE)
-        .stepParameters(IntegrationStageStepParameters.builder()
-                            .integrationStage(integrationStage)
-                            .fieldToExecutionNodeIdMap(
-                                ImmutableMap.of(CHILD_PLAN_START_NODE_NAME, planForExecution.getStartingNodeId()))
-                            .build())
+        .stepParameters(
+            IntegrationStageStepParameters.builder()
+                .integrationStage(integrationStage)
+                .fieldToExecutionNodeIdMap(ImmutableMap.of(CHILD_PLAN_START_NODE, planForExecution.getStartingNodeId()))
+                .build())
         .facilitatorObtainment(
             FacilitatorObtainment.builder().type(FacilitatorType.builder().type(FacilitatorType.CHILD).build()).build())
         .build();

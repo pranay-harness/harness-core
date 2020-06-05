@@ -7,6 +7,10 @@ import lombok.Value;
 
 import javax.validation.constraints.NotNull;
 
+/**
+ * Each stepInfo will bind to some step
+ * Reason for binding While using execution framework we have to give step type from stepInfo beans
+ */
 @Value
 @Builder
 public class TypeInfo implements NonYamlInfo {

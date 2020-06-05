@@ -1,9 +1,5 @@
 package io.harness.registrars;
 
-import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
-import io.harness.beans.steps.stepinfo.BuildStepInfo;
-import io.harness.beans.steps.stepinfo.CleanupStepInfo;
-import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.Step;
 import io.harness.state.StepType;
@@ -19,10 +15,10 @@ import java.util.Set;
 public class ExecutionRegistrar implements StepRegistrar {
   @Override
   public void register(Set<Pair<StepType, Class<? extends Step>>> stateClasses) {
-    stateClasses.add(Pair.of(BuildEnvSetupStepInfo.typeInfo.getStepType(), BuildEnvSetupStep.class));
-    stateClasses.add(Pair.of(CleanupStepInfo.typeInfo.getStepType(), CleanupStep.class));
-    stateClasses.add(Pair.of(BuildStepInfo.typeInfo.getStepType(), BuildStep.class));
-    stateClasses.add(Pair.of(GitCloneStepInfo.typeInfo.getStepType(), GitCloneStep.class));
+    stateClasses.add(Pair.of(BuildEnvSetupStep.STEP_TYPE, BuildEnvSetupStep.class));
+    stateClasses.add(Pair.of(CleanupStep.STEP_TYPE, CleanupStep.class));
+    stateClasses.add(Pair.of(BuildStep.STEP_TYPE, BuildStep.class));
+    stateClasses.add(Pair.of(GitCloneStep.STEP_TYPE, GitCloneStep.class));
     stateClasses.add(Pair.of(IntegrationStageStep.STEP_TYPE, IntegrationStageStep.class));
   }
 }
