@@ -1,5 +1,7 @@
 package io.harness.cvng;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
@@ -16,15 +18,15 @@ import javax.validation.constraints.NotNull;
 public class CVConfigServiceImpl implements CVConfigService {
   @Inject HPersistence hPersistence;
   @Override
-  public CVConfig save(@NotNull String accountId, CVConfig cvConfig) {
+  public CVConfig save(CVConfig cvConfig) {
     Preconditions.checkArgument(cvConfig.getUuid() == null, "UUID should be null when creating CVConfig");
     hPersistence.save(cvConfig);
     return cvConfig;
   }
 
   @Override
-  public List<CVConfig> save(String accountId, List<CVConfig> cvConfigs) {
-    return cvConfigs.stream().map(cvConfig -> save(accountId, cvConfig)).collect(Collectors.toList());
+  public List<CVConfig> save(List<CVConfig> cvConfigs) {
+    return cvConfigs.stream().map(this ::save).collect(Collectors.toList());
   }
 
   @Nullable
@@ -62,5 +64,21 @@ public class CVConfigServiceImpl implements CVConfigService {
                                 .filter(CVConfigKeys.accountId, accountId)
                                 .filter(CVConfigKeys.connectorId, connectorId);
     return query.asList();
+  }
+
+  @Override
+  public List<String> getProductNames(String accountId, String connectorId) {
+    Preconditions.checkNotNull(accountId, "accountId can not be null");
+    Preconditions.checkNotNull(connectorId, "ConnectorId can not be null");
+    return hPersistence.createQuery(CVConfig.class)
+        .filter(CVConfigKeys.connectorId, connectorId)
+        .filter(CVConfigKeys.accountId, accountId)
+        .project(CVConfigKeys.productName, true)
+        .asList()
+        .stream()
+        .map(cvConfig -> cvConfig.getProductName())
+        .distinct()
+        .sorted()
+        .collect(toList());
   }
 }
