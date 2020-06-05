@@ -3,6 +3,7 @@ package io.harness.registrars;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.artifact.state.ArtifactStep;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
@@ -31,6 +32,7 @@ public class WingsStepRegistrar implements StepRegistrar {
     stateClasses.add(Pair.of(BasicHttpChainStep.STEP_TYPE, BasicHttpChainStep.class));
 
     // Add CDNG steps here
+    stateClasses.add(Pair.of(ArtifactStep.STEP_TYPE, ArtifactStep.class));
     stateClasses.add(Pair.of(PipelineSetupStep.STEP_TYPE, PipelineSetupStep.class));
     stateClasses.add(Pair.of(InfrastructureSectionStep.STEP_TYPE, InfrastructureSectionStep.class));
     stateClasses.add(Pair.of(InfrastructureStep.STEP_TYPE, InfrastructureStep.class));

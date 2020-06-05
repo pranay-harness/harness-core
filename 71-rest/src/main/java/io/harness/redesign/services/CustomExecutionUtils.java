@@ -14,6 +14,11 @@ import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.artifact.bean.yaml.ArtifactConfig;
+import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
+import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
+import io.harness.cdng.artifact.state.ArtifactStep;
+import io.harness.cdng.artifact.state.ArtifactStepParameters;
 import io.harness.cdng.infra.beans.K8sDirectInfraDefinition;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
@@ -1057,6 +1062,61 @@ public class CustomExecutionUtils {
                   .uuid(dummuNodeId)
                   .identifier("dummy-final")
                   .name("dummy-final")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .build();
+  }
+
+  public Plan provideArtifactStateTestPlan() {
+    String planId = generateUuid();
+    String sectionNodeId = generateUuid();
+    String dummyNodeId = generateUuid();
+    String artifactNodeId = generateUuid();
+
+    DockerHubArtifactConfig.DockerSpec dockerSpec = DockerHubArtifactConfig.DockerSpec.builder()
+                                                        .dockerhubConnector("https://registry.hub.docker.com/")
+                                                        .imagePath("library/ubuntu")
+                                                        .tag("latest")
+                                                        .build();
+    ArtifactConfig artifactConfig =
+        DockerHubArtifactConfig.builder().identifier("ARTIFACT_YAML").sourceType("dockerhub").spec(dockerSpec).build();
+    ArtifactListConfig listConfig = ArtifactListConfig.builder().primary(artifactConfig).build();
+    ArtifactStepParameters stepParameters = ArtifactStepParameters.builder().artifactListConfig(listConfig).build();
+    return Plan.builder()
+        .startingNodeId(sectionNodeId)
+        .uuid(planId)
+        .node(PlanNode.builder()
+                  .uuid(artifactNodeId)
+                  .name("ARTIFACT_STEP")
+                  .identifier("ARTIFACT_STEP1")
+                  .stepType(ArtifactStep.STEP_TYPE)
+                  .stepParameters(stepParameters)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                             .build())
+                  .build())
+        .node(
+            PlanNode.builder()
+                .uuid(sectionNodeId)
+                .name("Section")
+                .stepType(StepType.builder().type("SECTION").build())
+                .identifier("section_1")
+                .stepParameters(SectionStepParameters.builder().childNodeId(artifactNodeId).build())
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
+                                       .build())
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                           .build())
+                .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNodeId)
+                  .name("Dummy Node 1")
+                  .identifier("dummy")
                   .stepType(DUMMY_STEP_TYPE)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())

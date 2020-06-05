@@ -626,6 +626,7 @@ public class DelegateModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(TimeModule.getInstance(), VersionModule.getInstance());
+    return ImmutableSet.<DependencyModule>of(
+        TimeModule.getInstance(), VersionModule.getInstance(), NGDelegateModule.getInstance());
   }
 }

@@ -60,5 +60,6 @@ public enum TaskGroup {
   HELM_VALUES_FETCH_TASK,
   GUARD_24x7,
   CI,
-  SLACK
+  SLACK,
+  ARTIFACT_COLLECT
 }
