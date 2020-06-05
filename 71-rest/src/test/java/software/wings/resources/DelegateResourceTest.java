@@ -53,6 +53,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
+import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateScopeService;
@@ -87,6 +88,7 @@ public class DelegateResourceTest extends CategoryTest {
   private static WingsPersistence wingsPersistence = mock(WingsPersistence.class);
   private static DelegateRequestRateLimiter delegateRequestRateLimiter = mock(DelegateRequestRateLimiter.class);
   private static SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
+  private static DelegateConnectionDao delegateConnectionDao = mock(DelegateConnectionDao.class);
 
   @Parameter public String apiUrl;
 
@@ -99,7 +101,7 @@ public class DelegateResourceTest extends CategoryTest {
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
           .addResource(new DelegateResource(DELEGATE_SERVICE, DELEGATE_SCOPE_SERVICE, DOWNLOAD_TOKEN_SERVICE,
-              accountService, wingsPersistence, delegateRequestRateLimiter, subdomainUrlHelper))
+              accountService, wingsPersistence, delegateRequestRateLimiter, subdomainUrlHelper, delegateConnectionDao))
           .addResource(new AbstractBinder() {
             @Override
             protected void configure() {

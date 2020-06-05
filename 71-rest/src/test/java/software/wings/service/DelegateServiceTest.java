@@ -111,7 +111,6 @@ import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnection;
-import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskPackage;
@@ -135,6 +134,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.rules.Cache;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -214,6 +214,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ConfigurationController configurationController;
   @Mock private AuditServiceHelper auditServiceHelper;
+  @Inject private DelegateConnectionDao delegateConnectionDao;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
@@ -1538,23 +1539,11 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldDoConnectionHeartbeat() {
-    delegateService.doConnectionHeartbeat(
-        ACCOUNT_ID, DELEGATE_ID, DelegateConnectionHeartbeat.builder().version("1.0.1").build());
-    DelegateConnection connection = wingsPersistence.createQuery(DelegateConnection.class)
-                                        .filter(DelegateConnectionKeys.accountId, ACCOUNT_ID)
-                                        .get();
-    assertThat(connection.getVersion()).isEqualTo("1.0.1");
-  }
-
-  @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void testDelegateConnectionLost() {
+  public void testDelegateDisconnected() {
     String delegateConnectionId = generateUuid();
-    delegateService.doConnectionHeartbeat(ACCOUNT_ID, DELEGATE_ID,
+    delegateConnectionDao.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID,
         DelegateConnectionHeartbeat.builder()
             .delegateConnectionId(delegateConnectionId)
             .version(versionInfoManager.getVersionInfo().getVersion())
@@ -1562,7 +1551,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     assertThat(delegateService.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isTrue();
 
-    delegateService.delegateConnectionLost(ACCOUNT_ID, delegateConnectionId);
+    delegateConnectionDao.delegateDisconnected(ACCOUNT_ID, delegateConnectionId);
 
     assertThat(delegateService.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isFalse();
   }

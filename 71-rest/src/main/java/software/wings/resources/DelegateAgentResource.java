@@ -36,6 +36,7 @@ import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.AccountService;
@@ -71,12 +72,13 @@ public class DelegateAgentResource {
   private SubdomainUrlHelperIntfc subdomainUrlHelper;
   private ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
   private InstanceHelper instanceHelper;
+  private DelegateConnectionDao delegateConnectionDao;
 
   @Inject
   public DelegateAgentResource(DelegateService delegateService, AccountService accountService,
       WingsPersistence wingsPersistence, DelegateRequestRateLimiter delegateRequestRateLimiter,
       SubdomainUrlHelperIntfc subdomainUrlHelper, ArtifactCollectionResponseHandler artifactCollectionResponseHandler,
-      InstanceHelper instanceHelper) {
+      InstanceHelper instanceHelper, DelegateConnectionDao delegateConnectionDao) {
     this.instanceHelper = instanceHelper;
     this.delegateService = delegateService;
     this.accountService = accountService;
@@ -84,6 +86,7 @@ public class DelegateAgentResource {
     this.delegateRequestRateLimiter = delegateRequestRateLimiter;
     this.subdomainUrlHelper = subdomainUrlHelper;
     this.artifactCollectionResponseHandler = artifactCollectionResponseHandler;
+    this.delegateConnectionDao = delegateConnectionDao;
   }
 
   @DelegateAuth
@@ -139,7 +142,7 @@ public class DelegateAgentResource {
       @PathParam("delegateId") String delegateId, DelegateConnectionHeartbeat connectionHeartbeat) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateService.doConnectionHeartbeat(accountId, delegateId, connectionHeartbeat);
+      delegateConnectionDao.registerHeartbeat(accountId, delegateId, connectionHeartbeat);
     }
   }
 

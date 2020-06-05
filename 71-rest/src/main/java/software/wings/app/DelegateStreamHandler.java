@@ -28,6 +28,7 @@ import org.atmosphere.handler.AtmosphereHandlerAdapter;
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
+import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;
 
@@ -45,6 +46,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
 
   @Inject private AuthService authService;
   @Inject private DelegateService delegateService;
+  @Inject private DelegateConnectionDao delegateConnectionDao;
 
   @Override
   public void onRequest(AtmosphereResource resource) throws IOException {
@@ -70,7 +72,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
         updateIfEcsDelegate(delegate, sequenceNum, delegateToken);
 
         delegateService.register(delegate);
-        delegateService.doConnectionHeartbeat(accountId, delegateId,
+        delegateConnectionDao.registerHeartbeat(accountId, delegateId,
             DelegateConnectionHeartbeat.builder()
                 .delegateConnectionId(delegateConnectionId)
                 .version(delegateVersion)
@@ -82,7 +84,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
             try (AccountLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
               Delegate delegate = delegateService.get(accountId, delegateId, true);
               delegateService.register(delegate);
-              delegateService.delegateConnectionLost(accountId, delegateConnectionId);
+              delegateConnectionDao.delegateDisconnected(accountId, delegateConnectionId);
             }
           }
         });
@@ -103,7 +105,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
 
       Delegate delegate = JsonUtils.asObject(CharStreams.toString(req.getReader()), Delegate.class);
       delegateService.register(delegate);
-      delegateService.doConnectionHeartbeat(accountId, delegateId,
+      delegateConnectionDao.registerHeartbeat(accountId, delegateId,
           DelegateConnectionHeartbeat.builder()
               .delegateConnectionId(delegateConnectionId)
               .version(delegateVersion)

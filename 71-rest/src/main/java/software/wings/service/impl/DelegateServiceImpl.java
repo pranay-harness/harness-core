@@ -28,6 +28,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingInt;
@@ -39,7 +40,6 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.DelegateConnection.DEFAULT_EXPIRY_TIME_IN_MINUTES;
 import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
@@ -79,7 +79,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
-import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
@@ -136,15 +135,12 @@ import org.atmosphere.cpr.BroadcasterFactory;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
-import software.wings.beans.DelegateConnection;
-import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateSequenceConfig;
 import software.wings.beans.DelegateSequenceConfig.DelegateSequenceConfigKeys;
@@ -209,11 +205,9 @@ import java.io.StringWriter;
 import java.math.BigInteger;
 import java.time.Clock;
 import java.time.Duration;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -430,51 +424,40 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public DelegateStatus getDelegateStatus(String accountId) {
     DelegateConfiguration delegateConfiguration = accountService.getDelegateConfiguration(accountId);
+
     List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class)
                                    .filter(DelegateKeys.accountId, accountId)
                                    .field(DelegateKeys.status)
                                    .notEqual(Status.DELETED)
                                    .asList();
-    List<DelegateConnection> delegateConnections = wingsPersistence.createQuery(DelegateConnection.class)
-                                                       .filter(DelegateConnectionKeys.accountId, accountId)
-                                                       .project(DelegateConnectionKeys.delegateId, true)
-                                                       .project(DelegateConnectionKeys.version, true)
-                                                       .project(DelegateConnectionKeys.lastHeartbeat, true)
-                                                       .asList();
+
+    Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> perDelegateConnections =
+        delegateConnectionDao.obtainActiveDelegateConnections(accountId);
 
     return DelegateStatus.builder()
         .publishedVersions(delegateConfiguration.getDelegateVersions())
-        .delegates(delegates.stream()
-                       .map(delegate
-                           -> DelegateStatus.DelegateInner.builder()
-                                  .uuid(delegate.getUuid())
-                                  .delegateName(delegate.getDelegateName())
-                                  .description(delegate.getDescription())
-                                  .hostName(delegate.getHostName())
-                                  .delegateGroupName(delegate.getDelegateGroupName())
-                                  .ip(delegate.getIp())
-                                  .status(delegate.getStatus())
-                                  .lastHeartBeat(delegate.getLastHeartBeat())
-                                  .delegateProfileId(delegate.getDelegateProfileId())
-                                  .excludeScopes(delegate.getExcludeScopes())
-                                  .includeScopes(delegate.getIncludeScopes())
-                                  .tags(delegate.getTags())
-                                  .profileExecutedAt(delegate.getProfileExecutedAt())
-                                  .profileError(delegate.isProfileError())
-                                  .sampleDelegate(delegate.isSampleDelegate())
-                                  .connections(delegateConnections.stream()
-                                                   .filter(delegateConnection
-                                                       -> StringUtils.equals(
-                                                           delegateConnection.getDelegateId(), delegate.getUuid()))
-                                                   .map(delegateConnection
-                                                       -> DelegateStatus.DelegateInner.DelegateConnectionInner.builder()
-                                                              .uuid(delegateConnection.getUuid())
-                                                              .lastHeartbeat(delegateConnection.getLastHeartbeat())
-                                                              .version(delegateConnection.getVersion())
-                                                              .build())
-                                                   .collect(Collectors.toList()))
-                                  .build())
-                       .collect(Collectors.toList()))
+        .delegates(
+            delegates.stream()
+                .map(delegate
+                    -> DelegateStatus.DelegateInner.builder()
+                           .uuid(delegate.getUuid())
+                           .delegateName(delegate.getDelegateName())
+                           .description(delegate.getDescription())
+                           .hostName(delegate.getHostName())
+                           .delegateGroupName(delegate.getDelegateGroupName())
+                           .ip(delegate.getIp())
+                           .status(delegate.getStatus())
+                           .lastHeartBeat(delegate.getLastHeartBeat())
+                           .delegateProfileId(delegate.getDelegateProfileId())
+                           .excludeScopes(delegate.getExcludeScopes())
+                           .includeScopes(delegate.getIncludeScopes())
+                           .tags(delegate.getTags())
+                           .profileExecutedAt(delegate.getProfileExecutedAt())
+                           .profileError(delegate.isProfileError())
+                           .sampleDelegate(delegate.isSampleDelegate())
+                           .connections(perDelegateConnections.computeIfAbsent(delegate.getUuid(), uuid -> emptyList()))
+                           .build())
+                .collect(Collectors.toList()))
         .build();
   }
 
@@ -1753,37 +1736,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public void delegateConnectionLost(String accountId, String delegateConnectionId) {
-    logger.info("Removing delegate connection delegateConnectionId: {}", delegateConnectionId);
-    wingsPersistence.delete(accountId, DelegateConnection.class, delegateConnectionId);
-  }
-
-  @Override
-  public void doConnectionHeartbeat(String accountId, String delegateId, DelegateConnectionHeartbeat heartbeat) {
-    UpdateResults updated = wingsPersistence.update(wingsPersistence.createQuery(DelegateConnection.class)
-                                                        .filter(DelegateConnectionKeys.accountId, accountId)
-                                                        .filter(ID_KEY, heartbeat.getDelegateConnectionId()),
-        wingsPersistence.createUpdateOperations(DelegateConnection.class)
-            .set(DelegateConnectionKeys.lastHeartbeat, currentTimeMillis())
-            .set(DelegateConnectionKeys.validUntil,
-                Date.from(OffsetDateTime.now().plusMinutes(DEFAULT_EXPIRY_TIME_IN_MINUTES).toInstant())));
-
-    if (updated != null && updated.getWriteResult() != null && updated.getWriteResult().getN() == 0) {
-      // connection does not exist. Create one.
-      DelegateConnection connection =
-          DelegateConnection.builder()
-              .accountId(accountId)
-              .delegateId(delegateId)
-              .version(heartbeat.getVersion())
-              .lastHeartbeat(currentTimeMillis())
-              .validUntil(Date.from(OffsetDateTime.now().plusMinutes(DEFAULT_EXPIRY_TIME_IN_MINUTES).toInstant()))
-              .build();
-      connection.setUuid(heartbeat.getDelegateConnectionId());
-      wingsPersistence.save(connection);
-    }
-  }
-
-  @Override
   public String queueTask(DelegateTask task) {
     task.getData().setAsync(true);
     saveDelegateTask(task);
@@ -1924,7 +1876,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       DelegateTaskPackage delegateTaskPackage = getDelegatePackageWithEncryptionConfig(task);
       CapabilityHelper.embedCapabilitiesInDelegateTask(task,
           delegateTaskPackage == null || isEmpty(delegateTaskPackage.getEncryptionConfigs())
-              ? Collections.emptyList()
+              ? emptyList()
               : delegateTaskPackage.getEncryptionConfigs().values());
 
       if (isNotEmpty(task.getExecutionCapabilities())) {
