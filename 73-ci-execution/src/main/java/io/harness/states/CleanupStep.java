@@ -1,8 +1,8 @@
 package io.harness.states;
 
-import static software.wings.common.CICommonPodConstants.CLUSTER_EXPRESSION;
-import static software.wings.common.CICommonPodConstants.NAMESPACE_EXPRESSION;
-import static software.wings.common.CICommonPodConstants.POD_NAME_EXPRESSION;
+import static software.wings.common.CICommonPodConstants.CLUSTER_NAME;
+import static software.wings.common.CICommonPodConstants.NAMESPACE;
+import static software.wings.common.CICommonPodConstants.PODNAME;
 
 import com.google.inject.Inject;
 
@@ -39,9 +39,9 @@ public class CleanupStep implements Step, SyncExecutable {
       Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
     try {
       // TODO Use k8 connector from element input, handle response
-      String clusterName = engineExpressionService.renderExpression(ambiance, CLUSTER_EXPRESSION);
-      String namespace = engineExpressionService.renderExpression(ambiance, NAMESPACE_EXPRESSION);
-      String podName = engineExpressionService.renderExpression(ambiance, POD_NAME_EXPRESSION);
+      final String namespace = (String) ambiance.getInputArgs().get(NAMESPACE);
+      final String clusterName = (String) ambiance.getInputArgs().get(CLUSTER_NAME);
+      final String podName = (String) ambiance.getInputArgs().get(PODNAME);
 
       SafeHttpCall.execute(managerCIResource.podCleanupTask(clusterName, namespace, podName));
 

@@ -81,7 +81,7 @@ public class CIExecutionPlanTestHelper {
   }
 
   public CIPipeline getCIPipeline() {
-    return CIPipeline.builder().stages(getStages()).build();
+    return CIPipeline.builder().identifier("testPipelineIdentifier").stages(getStages()).build();
   }
 
   private List<Stage> getStages() {
@@ -130,6 +130,7 @@ public class CIExecutionPlanTestHelper {
         .artifact(getArtifact())
         .infrastructure(getInfrastructure())
         .type("integration")
+        .identifier("intStageIdentifier")
         .build();
   }
 }

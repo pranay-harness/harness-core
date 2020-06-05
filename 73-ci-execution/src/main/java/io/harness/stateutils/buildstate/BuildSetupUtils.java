@@ -1,8 +1,8 @@
 package io.harness.stateutils.buildstate;
 
 import static io.harness.govern.Switch.unhandled;
-import static software.wings.common.CICommonPodConstants.CLUSTER_EXPRESSION;
-import static software.wings.common.CICommonPodConstants.NAMESPACE_EXPRESSION;
+import static software.wings.common.CICommonPodConstants.CLUSTER_NAME;
+import static software.wings.common.CICommonPodConstants.NAMESPACE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -33,8 +33,8 @@ public class BuildSetupUtils {
     switch (buildEnvSetupStepInfo.getBuildJobEnvInfo().getType()) {
       case K8:
         try {
-          final String clusterName = engineExpressionService.renderExpression(ambiance, CLUSTER_EXPRESSION);
-          final String namespace = engineExpressionService.renderExpression(ambiance, NAMESPACE_EXPRESSION);
+          final String namespace = (String) ambiance.getInputArgs().get(NAMESPACE);
+          final String clusterName = (String) ambiance.getInputArgs().get(CLUSTER_NAME);
           K8BuildJobEnvInfo k8BuildJobEnvInfo = (K8BuildJobEnvInfo) buildEnvSetupStepInfo.getBuildJobEnvInfo();
           // Supporting single pod currently
           Optional<PodSetupInfo> podSetupInfoOpt =

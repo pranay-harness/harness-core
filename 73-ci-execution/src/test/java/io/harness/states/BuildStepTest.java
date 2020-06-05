@@ -11,11 +11,13 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.ambiance.Ambiance;
 import io.harness.beans.steps.stepinfo.BuildStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
+import io.harness.plan.input.InputArgs;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -32,7 +34,8 @@ public class BuildStepTest extends CIExecutionTest {
   @Inject private BuildStep buildStep;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Mock private ManagerCIResource managerCIResource;
-
+  @Mock private Ambiance ambiance;
+  @Mock private InputArgs inputArgs;
   @Before
   public void setUp() {
     on(buildStep).set("managerCIResource", managerCIResource);
@@ -47,8 +50,9 @@ public class BuildStepTest extends CIExecutionTest {
     when(requestCall.execute())
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(managerCIResource.podCommandExecutionTask(any(), any())).thenReturn(requestCall);
-
-    buildStep.executeSync(null,
+    when(ambiance.getInputArgs()).thenReturn(inputArgs);
+    when(inputArgs.get(any())).thenReturn("abc");
+    buildStep.executeSync(ambiance,
         BuildStepInfo.builder().scriptInfos(ciExecutionPlanTestHelper.getBuildCommandSteps()).build(), null, null);
 
     verify(managerCIResource, times(1)).podCommandExecutionTask(any(), any());
@@ -64,7 +68,10 @@ public class BuildStepTest extends CIExecutionTest {
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(managerCIResource.podCommandExecutionTask(any(), any())).thenThrow(new RuntimeException());
 
-    buildStep.executeSync(null,
+    when(ambiance.getInputArgs()).thenReturn(inputArgs);
+    when(inputArgs.get(any())).thenReturn("abc");
+
+    buildStep.executeSync(ambiance,
         BuildStepInfo.builder().scriptInfos(ciExecutionPlanTestHelper.getBuildCommandSteps()).build(), null, null);
 
     verify(managerCIResource, times(1)).podCommandExecutionTask(any(), any());
