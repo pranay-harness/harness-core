@@ -40,7 +40,6 @@ import static software.wings.beans.EntityType.SSH_USER;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
-import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
@@ -62,7 +61,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
-import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -708,9 +706,9 @@ public class PipelineServiceTest extends WingsBaseTest {
   public void shouldDeletePipeline() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
-
     mockPipeline();
     when(wingsPersistence.delete(Pipeline.class, APP_ID, PIPELINE_ID)).thenReturn(true);
+    when(workflowExecutionService.runningExecutionsPresent(APP_ID, PIPELINE_ID)).thenReturn(false);
 
     assertThat(pipelineService.deletePipeline(APP_ID, PIPELINE_ID)).isTrue();
   }
@@ -720,11 +718,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void deletePipelineExecutionInProgress() {
     mockPipeline();
-    PipelineExecution pipelineExecution = aPipelineExecution().withStatus(ExecutionStatus.RUNNING).build();
-    PageResponse pageResponse = aPageResponse().withResponse(asList(pipelineExecution)).build();
-    when(wingsPersistence.query(PipelineExecution.class,
-             aPageRequest().addFilter("appId", EQ, APP_ID).addFilter("pipelineId", EQ, PIPELINE_ID).build()))
-        .thenReturn(pageResponse);
+    when(workflowExecutionService.runningExecutionsPresent(APP_ID, PIPELINE_ID)).thenReturn(true);
     pipelineService.deletePipeline(APP_ID, PIPELINE_ID);
   }
 

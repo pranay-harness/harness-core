@@ -33,7 +33,6 @@ import static software.wings.beans.EntityType.NEWRELIC_CONFIGID;
 import static software.wings.beans.EntityType.NEWRELIC_MARKER_CONFIGID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SPLUNK_CONFIGID;
-import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.expression.ManagerExpressionEvaluator.getName;
 import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
 import static software.wings.service.impl.pipeline.PipelineServiceValidator.checkUniqueApprovalPublishedVariable;
@@ -47,7 +46,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -81,7 +79,6 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
-import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
@@ -363,16 +360,10 @@ public class PipelineServiceImpl implements PipelineService {
     return referencedPipelines;
   }
 
-  // TODO: Add unit tests for this function
   private void ensurePipelineSafeToDelete(Pipeline pipeline) {
-    PageRequest<PipelineExecution> pageRequest = aPageRequest()
-                                                     .addFilter(PipelineKeys.appId, EQ, pipeline.getAppId())
-                                                     .addFilter(PIPELINE_ID_KEY, EQ, pipeline.getUuid())
-                                                     .build();
-    PageResponse<PipelineExecution> pageResponse = wingsPersistence.query(PipelineExecution.class, pageRequest);
-    if (pageResponse == null || isEmpty(pageResponse.getResponse())
-        || pageResponse.getResponse().stream().allMatch(
-               pipelineExecution -> ExecutionStatus.isFinalStatus(pipelineExecution.getStatus()))) {
+    boolean runningExecutions =
+        workflowExecutionService.runningExecutionsPresent(pipeline.getAppId(), pipeline.getUuid());
+    if (!runningExecutions) {
       List<String> triggerNames;
       List<Trigger> triggers = triggerService.getTriggersHasPipelineAction(pipeline.getAppId(), pipeline.getUuid());
       if (isEmpty(triggers)) {

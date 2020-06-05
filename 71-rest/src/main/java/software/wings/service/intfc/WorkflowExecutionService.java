@@ -159,6 +159,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   boolean workflowExecutionsRunning(WorkflowType workflowType, String appId, String workflowId);
 
+  boolean runningExecutionsPresent(String appId, String pipelineId);
+
   void updateStartStatus(String appId, String workflowExecutionId, ExecutionStatus status);
 
   void updateWorkflowElementWithLastGoodReleaseInfo(
