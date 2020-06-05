@@ -113,6 +113,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ElementNotifyResponseData.ElementNotifyResponseDataBuilder;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
+import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
@@ -298,6 +299,9 @@ public class StateMachineExecutor implements StateInspectionListener {
       stateExecutionInstance.setPipelineStageElementId(envState.getPipelineStageElementId());
       stateExecutionInstance.setPipelineStageParallelIndex(envState.getPipelineStageParallelIndex());
       stateExecutionInstance.setStageName(envState.getStageName());
+    } else if (state instanceof ApprovalState) {
+      ApprovalState approvalState = (ApprovalState) state;
+      stateExecutionInstance.setStageName(approvalState.getStageName());
     }
 
     if (state instanceof PhaseStepSubWorkflow) {

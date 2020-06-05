@@ -37,6 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -76,9 +77,6 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.NameValuePairKeys;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.NotificationRule.NotificationRuleBuilder;
-import software.wings.beans.Pipeline;
-import software.wings.beans.PipelineStage;
-import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ApprovalNeededAlert;
@@ -104,7 +102,6 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApprovalPolingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
-import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
@@ -144,6 +141,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Getter @Setter private List<String> userGroups = new ArrayList<>();
   @Getter @Setter private boolean disable;
   @Getter @Setter private String disableAssertion;
+  @Setter @SchemaIgnore private String stageName;
 
   public enum ApprovalStateType { JIRA, USER_GROUP, SHELL_SCRIPT, SERVICENOW }
   public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
@@ -158,7 +156,6 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Inject private transient WorkflowNotificationHelper workflowNotificationHelper;
   @Inject private ApprovalPolingService approvalPolingService;
   @Inject private SecretManager secretManager;
-  @Inject private PipelineService pipelineService;
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private UserGroupService userGroupService;
   @Inject private FeatureFlagService featureFlagService;
@@ -179,6 +176,10 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Getter @Setter List<NameValuePair> variables;
   public ApprovalState(String name) {
     super(name, StateType.APPROVAL.name());
+  }
+
+  public String getStageName() {
+    return stageName;
   }
 
   @Override
@@ -614,8 +615,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
     boolean isPipeline = context.getWorkflowType() == WorkflowType.PIPELINE;
     if (isPipeline) {
-      Pipeline pipeline = pipelineService.readPipeline(context.getAppId(), context.getWorkflowId(), true);
-      pausedStageName = getPipelineStageName(pipeline, getName());
+      pausedStageName = context.getPipelineStageName();
     } else {
       pausedStageName = context.getStateExecutionInstanceName();
     }
@@ -683,20 +683,6 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     placeHolderValues.put(SlackApprovalMessageKeys.SLACK_APPROVAL_PARAMS, buttonValue);
     placeHolderValues.put(SlackApprovalMessageKeys.APPROVAL_MESSAGE, displayText);
     placeHolderValues.put(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER, "suppressTraditionalNotificationOnSlack");
-  }
-
-  private String getPipelineStageName(Pipeline pipeline, String pipelineApprovalStageName) {
-    List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
-    for (PipelineStage pipelineStage : pipelineStages) {
-      List<PipelineStageElement> pipelineStageElements = pipelineStage.getPipelineStageElements();
-      for (PipelineStageElement pipelineStageElement : pipelineStageElements) {
-        if (pipelineStageElement.getName().equals(pipelineApprovalStageName)) {
-          return pipelineStage.getName() == null ? SlackApprovalMessageKeys.PAUSED_STAGE_NAME_DEFAULT
-                                                 : pipelineStage.getName();
-        }
-      }
-    }
-    return null;
   }
 
   @Override
