@@ -418,6 +418,16 @@ public class DelegateModule extends DependencyModule {
     return taskPollExecutorService;
   }
 
+  @Provides
+  @Singleton
+  @Named("jenkinsExecutor")
+  public ExecutorService jenkinsExecutor() {
+    ExecutorService jenkinsExecutor = ThreadPool.create(1, 40, 1, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("jenkins-%d").setPriority(Thread.NORM_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { jenkinsExecutor.shutdownNow(); }));
+    return jenkinsExecutor;
+  }
+
   @Override
   protected void configure() {
     bind(DelegateAgentService.class).to(DelegateAgentServiceImpl.class);
