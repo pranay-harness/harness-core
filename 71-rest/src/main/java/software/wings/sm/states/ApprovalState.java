@@ -219,8 +219,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       approvalStateType = USER_GROUP;
     }
     try {
-      workflowNotificationHelper.sendApprovalNotification(
-          app.getAccountId(), WORKFLOW_PAUSE_NOTIFICATION, placeholderValues, context, approvalStateType);
+      workflowNotificationHelper.sendApprovalNotification(app.getAccountId(), WORKFLOW_PAUSE_NOTIFICATION,
+          new HashMap<>(placeholderValues), context, approvalStateType);
     } catch (Exception e) {
       // catch exception so that failure to send notification doesn't affect rest of execution
       logger.error("Error sending approval notification. accountId={}", app.getAccountId(), e);
