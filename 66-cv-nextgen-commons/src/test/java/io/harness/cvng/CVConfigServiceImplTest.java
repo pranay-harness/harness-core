@@ -19,6 +19,7 @@ import org.junit.experimental.categories.Category;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -26,9 +27,11 @@ import java.util.stream.IntStream;
 public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   @Inject CVConfigService cvConfigService;
   private String accountId;
+  private String connectorId;
   @Before
   public void setup() {
     this.accountId = generateUuid();
+    this.connectorId = generateUuid();
   }
 
   @Test
@@ -36,9 +39,13 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   @Category(UnitTests.class)
   public void testSave() {
     CVConfig cvConfig = createCVConfig();
-    CVConfig updated = cvConfigService.save(generateUuid(), cvConfig);
+    CVConfig updated = save(cvConfig);
     CVConfig saved = cvConfigService.get(updated.getUuid());
     assertCommons(saved, cvConfig);
+  }
+
+  private CVConfig save(CVConfig cvConfig) {
+    return cvConfigService.save(cvConfig);
   }
 
   @Test
@@ -46,8 +53,12 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   @Category(UnitTests.class)
   public void testSave_batchAPI() {
     List<CVConfig> cvConfigs = createCVConfigs(5);
-    cvConfigService.save(generateUuid(), cvConfigs);
+    save(cvConfigs);
     cvConfigs.forEach(cvConfig -> assertCommons(cvConfigService.get(cvConfig.getUuid()), cvConfig));
+  }
+
+  private List<CVConfig> save(List<CVConfig> cvConfigs) {
+    return cvConfigService.save(cvConfigs);
   }
 
   @Test
@@ -56,7 +67,7 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   public void testSave_batchAPIIfUUIDIsDefined() {
     List<CVConfig> cvConfigs = createCVConfigs(5);
     cvConfigs.forEach(cvConfig -> cvConfig.setUuid(generateUuid()));
-    assertThatThrownBy(() -> cvConfigService.save(generateUuid(), cvConfigs))
+    assertThatThrownBy(() -> save(cvConfigs))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("UUID should be null when creating CVConfig");
   }
@@ -66,7 +77,7 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   @Category(UnitTests.class)
   public void testGet() {
     CVConfig cvConfig = createCVConfig();
-    CVConfig updated = cvConfigService.save(generateUuid(), cvConfig);
+    CVConfig updated = save(cvConfig);
     CVConfig saved = cvConfigService.get(updated.getUuid());
     assertCommons(saved, cvConfig);
   }
@@ -76,7 +87,7 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   @Category(UnitTests.class)
   public void testDelete() {
     CVConfig cvConfig = createCVConfig();
-    CVConfig updated = cvConfigService.save(generateUuid(), cvConfig);
+    CVConfig updated = save(cvConfig);
     cvConfigService.delete(updated.getUuid());
     assertThat(cvConfigService.get(cvConfig.getUuid())).isEqualTo(null);
   }
@@ -86,7 +97,7 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   @Category(UnitTests.class)
   public void testDelete_batchAPI() {
     List<CVConfig> cvConfigs = createCVConfigs(3);
-    cvConfigs.forEach(cvConfig -> cvConfigService.save(generateUuid(), cvConfig));
+    cvConfigs.forEach(cvConfig -> save(cvConfig));
     cvConfigService.delete(cvConfigs.stream().map(cvConfig -> cvConfig.getUuid()).collect(Collectors.toList()));
     cvConfigs.forEach(cvConfig -> assertThat(cvConfigService.get(cvConfig.getUuid())).isEqualTo(null));
   }
@@ -96,7 +107,7 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   @Category(UnitTests.class)
   public void testUpdate_withMultipleCVConfig() {
     CVConfig cvConfig = createCVConfig();
-    cvConfigService.save(generateUuid(), cvConfig);
+    save(cvConfig);
     CVConfig updated = cvConfigService.get(cvConfig.getUuid());
     updated.setName("this is updated config name");
     cvConfigService.update(Lists.newArrayList(updated));
@@ -120,7 +131,7 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   @Category(UnitTests.class)
   public void testList_findSingleCVConfig() {
     CVConfig cvConfig = createCVConfig();
-    cvConfigService.save(generateUuid(), cvConfig);
+    save(cvConfig);
     List<CVConfig> cvConfigs = cvConfigService.list(accountId, cvConfig.getConnectorId());
     assertCommons(cvConfigs.get(0), cvConfig);
   }
@@ -130,7 +141,7 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   @Category(UnitTests.class)
   public void testList_zeroMatch() {
     CVConfig cvConfig = createCVConfig();
-    cvConfigService.save(generateUuid(), cvConfig);
+    save(cvConfig);
     List<CVConfig> cvConfigs = cvConfigService.list(accountId, generateUuid());
     assertThat(cvConfigs).hasSize(0);
   }
@@ -143,18 +154,36 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
     String connectorId1 = generateUuid();
     cvConfigs1.forEach(cvConfig -> {
       cvConfig.setConnectorId(connectorId1);
-      cvConfigService.save(generateUuid(), cvConfig);
+      save(cvConfig);
     });
 
     List<CVConfig> cvConfigs2 = createCVConfigs(7);
     String connectorId2 = generateUuid();
     cvConfigs2.forEach(cvConfig -> {
       cvConfig.setConnectorId(connectorId2);
-      cvConfigService.save(generateUuid(), cvConfig);
+      save(cvConfig);
     });
 
     assertThat(cvConfigService.list(accountId, connectorId1)).hasSize(5);
     assertThat(cvConfigService.list(accountId, connectorId2)).hasSize(7);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetProjectsNames_whenNoConfigsPresent() {
+    assertThat(cvConfigService.getProductNames(accountId, generateUuid())).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetProjectsNames_withMultipleDuplicateProjectNames() {
+    List<CVConfig> cvConfigs = createCVConfigs(5);
+    List<String> projectNames = Arrays.asList("p2", "p1", "p2", "p3", "p3");
+    IntStream.range(0, 5).forEach(index -> cvConfigs.get(index).setProductName(projectNames.get(index)));
+    save(cvConfigs);
+    assertThat(cvConfigService.getProductNames(accountId, connectorId)).isEqualTo(Lists.newArrayList("p1", "p2", "p3"));
   }
 
   private void assertCommons(CVConfig actual, CVConfig expected) {
@@ -181,7 +210,7 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   }
 
   private void fillCommon(CVConfig cvConfig) {
-    cvConfig.setConnectorId(generateUuid());
+    cvConfig.setConnectorId(connectorId);
     cvConfig.setCategory("Performance");
     cvConfig.setAccountId(accountId);
     cvConfig.setEnvId(generateUuid());

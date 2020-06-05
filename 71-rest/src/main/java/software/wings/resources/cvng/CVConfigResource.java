@@ -43,7 +43,7 @@ public class CVConfigResource {
   @ExceptionMetered
   public RestResponse<CVConfig> saveCVConfig(
       @QueryParam("accountId") @Valid final String accountId, @Body CVConfig cvConfig) {
-    return new RestResponse<>(cvConfigService.save(accountId, cvConfig));
+    return new RestResponse<>(cvConfigService.save(cvConfig));
   }
 
   @POST
@@ -52,7 +52,7 @@ public class CVConfigResource {
   @ExceptionMetered
   public RestResponse<List<CVConfig>> saveCVConfig(
       @QueryParam("accountId") @Valid final String accountId, @Body List<CVConfig> cvConfigs) {
-    return new RestResponse<>(cvConfigService.save(accountId, cvConfigs));
+    return new RestResponse<>(cvConfigService.save(cvConfigs));
   }
 
   @PUT
@@ -104,5 +104,14 @@ public class CVConfigResource {
       @QueryParam("accountId") @Valid final String accountId, @QueryParam("connectorId") String connectorId) {
     // keeping it simple for now. We will improve and evolve it based on more requirement on list api.
     return new RestResponse<>(cvConfigService.list(accountId, connectorId));
+  }
+
+  @GET
+  @Path("/product-names")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getProductNames(
+      @QueryParam("accountId") @Valid final String accountId, @QueryParam("connectorId") String connectorId) {
+    return new RestResponse<>(cvConfigService.getProductNames(accountId, connectorId));
   }
 }
