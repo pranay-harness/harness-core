@@ -48,6 +48,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.HttpClientBuilder;
 import software.wings.common.BuildDetailsComparator;
 import software.wings.exception.InvalidArtifactServerException;
@@ -645,7 +646,12 @@ public class JenkinsImpl implements Jenkins {
   }
 
   private HttpClientBuilder getUnSafeBuilder(String jenkinsUrl) {
+    RequestConfig.Builder requestBuilder = RequestConfig.custom();
+    requestBuilder.setConnectTimeout(150 * 1000);
+    requestBuilder.setConnectionRequestTimeout(150 * 1000);
+
     HttpClientBuilder builder = HttpClientBuilder.create();
+    builder.setDefaultRequestConfig(requestBuilder.build());
     try {
       // Set ssl context
       builder.setSSLContext(Http.getSslContext());

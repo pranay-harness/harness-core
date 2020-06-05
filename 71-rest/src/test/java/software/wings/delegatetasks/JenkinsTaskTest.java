@@ -61,6 +61,7 @@ import software.wings.sm.states.JenkinsState;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Created by rishi on 12/16/16.
@@ -74,6 +75,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Mock private EncryptionService encryptionService;
   @Mock private DelegateLogService logService;
   @Inject @InjectMocks JenkinsUtils jenkinsUtil;
+  @Inject @InjectMocks ExecutorService jenkinsExecutor;
   @Captor private ArgumentCaptor<Log> logsCaptor;
   @Captor private ArgumentCaptor<String> activityCaptor;
 
@@ -107,6 +109,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
     when(build.details()).thenReturn(buildWithDetails);
     when(buildWithDetails.isBuilding()).thenReturn(false);
     when(buildWithDetails.getConsoleOutputText()).thenReturn("console output");
+    on(jenkinsTask).set("jenkinsExecutor", jenkinsExecutor);
   }
 
   @Test

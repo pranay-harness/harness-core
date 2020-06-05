@@ -12,6 +12,7 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.service.impl.LogServiceImpl.NUM_OF_LOGS_TO_KEEP;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
@@ -30,6 +31,7 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.httpclient.ConnectTimeoutException;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.client.HttpResponseException;
 import software.wings.beans.DelegateTaskPackage;
@@ -44,7 +46,13 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.time.Duration;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -58,6 +66,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService logService;
   @Inject private JenkinsUtils jenkinsUtil;
+  @Inject @Named("jenkinsExecutor") private ExecutorService jenkinsExecutor;
 
   public JenkinsTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
@@ -244,19 +253,32 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     do {
       logger.info("Waiting for Job  {} to finish execution", jenkinsBuild.getUrl());
       sleep(Duration.ofSeconds(5));
+      Future<BuildWithDetails> jenkinsBuildWithDetailsFuture = null;
+      Future<Void> saveConsoleLogs = null;
       try {
-        jenkinsBuildWithDetails = jenkinsBuild.details();
-        saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, unitName, RUNNING, appId);
-      } catch (IOException e) {
-        if (e instanceof HttpResponseException) {
-          if (((HttpResponseException) e).getStatusCode() == 404) {
-            throw new HttpResponseException(((HttpResponseException) e).getStatusCode(),
-                "Job [" + jenkinsBuild.getUrl()
-                    + "] not found. Job might have been deleted from Jenkins Server between polling intervals");
-          }
-        }
-        logger.error("Error occurred while waiting for Job {} to finish execution. Reasonn {}. Retrying.",
+        jenkinsBuildWithDetailsFuture = jenkinsExecutor.submit(() -> jenkinsBuild.details());
+        jenkinsBuildWithDetails = jenkinsBuildWithDetailsFuture.get(180, TimeUnit.SECONDS);
+        BuildWithDetails finalJenkinsBuildWithDetails = jenkinsBuildWithDetails;
+        saveConsoleLogs = jenkinsExecutor.submit(() -> {
+          saveConsoleLogsAsync(
+              jenkinsBuild, finalJenkinsBuildWithDetails, consoleLogsSent, activityId, unitName, appId);
+          return null;
+        });
+        saveConsoleLogs.get(180, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        logger.error("Thread interrupted while waiting for Job {} to finish execution. Reason {}. Retrying.",
             jenkinsBuild.getUrl(), ExceptionUtils.getMessage(e));
+      } catch (ExecutionException | TimeoutException e) {
+        logger.error("Exception occurred while waiting for Job {} to finish execution. Reason {}. Retrying.",
+            jenkinsBuild.getUrl(), ExceptionUtils.getMessage(e));
+      } finally {
+        if (jenkinsBuildWithDetailsFuture != null) {
+          jenkinsBuildWithDetailsFuture.cancel(true);
+        }
+        if (saveConsoleLogs != null) {
+          saveConsoleLogs.cancel(true);
+        }
       }
 
     } while (jenkinsBuildWithDetails == null || jenkinsBuildWithDetails.isBuilding());
@@ -309,6 +331,27 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         logService.save(getAccountId(), log);
         consoleLogsAlreadySent.incrementAndGet();
       }
+    }
+  }
+
+  private void saveConsoleLogsAsync(Build jenkinsBuild, BuildWithDetails jenkinsBuildWithDetails,
+      AtomicInteger consoleLogsSent, String activityId, String stateName, String appId) throws HttpResponseException {
+    try {
+      saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, stateName, RUNNING, appId);
+    } catch (SocketTimeoutException | ConnectTimeoutException e) {
+      logger.error("Timeout exception occurred while waiting for Job {} to finish execution. Reason {}. Retrying.",
+          jenkinsBuild.getUrl(), ExceptionUtils.getMessage(e));
+    } catch (HttpResponseException e) {
+      if (e.getStatusCode() == 404) {
+        logger.error("Error occurred while waiting for Job {} to finish execution. Reason {}. Retrying.",
+            jenkinsBuild.getUrl(), ExceptionUtils.getMessage(e), e);
+        throw new HttpResponseException(e.getStatusCode(),
+            "Job [" + jenkinsBuild.getUrl()
+                + "] not found. Job might have been deleted from Jenkins Server between polling intervals");
+      }
+    } catch (IOException e) {
+      logger.error("Error occurred while waiting for Job {} to finish execution. Reason {}. Retrying.",
+          jenkinsBuild.getUrl(), ExceptionUtils.getMessage(e));
     }
   }
 
