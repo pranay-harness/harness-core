@@ -22,4 +22,9 @@ public interface AwsConstants {
   // ECS Sweeping output constants
   String ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME = "setupSweepingOutputEcs";
   String ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME = "deploySweepingOutputEcs";
+
+  String MIN_INSTANCES = "minInstances";
+  String MAX_INSTANCES = "maxInstances";
+  String DESIRED_INSTANCES = "desiredInstances";
+  String AUTO_SCALING_TIMEOUT = "autoScalingSteadyStateTimeout";
 }

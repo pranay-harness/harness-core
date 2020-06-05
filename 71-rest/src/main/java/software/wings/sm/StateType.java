@@ -99,10 +99,14 @@ import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ArtifactCheckState;
 import software.wings.sm.states.ArtifactCollectionState;
 import software.wings.sm.states.AwsAmiRollbackSwitchRoutesState;
+import software.wings.sm.states.AwsAmiRollbackTrafficShiftAlbSwitchRoutesState;
 import software.wings.sm.states.AwsAmiServiceDeployState;
 import software.wings.sm.states.AwsAmiServiceRollback;
 import software.wings.sm.states.AwsAmiServiceSetup;
+import software.wings.sm.states.AwsAmiServiceTrafficShiftAlbDeployState;
+import software.wings.sm.states.AwsAmiServiceTrafficShiftAlbSetup;
 import software.wings.sm.states.AwsAmiSwitchRoutesState;
+import software.wings.sm.states.AwsAmiTrafficShiftAlbSwitchRoutesState;
 import software.wings.sm.states.AwsCodeDeployRollback;
 import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.AwsLambdaRollback;
@@ -472,17 +476,33 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(AMI_AUTOSCALING_GROUP_SETUP),
       ORCHESTRATION_STENCILS),
 
+  ASG_AMI_SERVICE_ALB_SHIFT_SETUP(AwsAmiServiceTrafficShiftAlbSetup.class, CLOUD,
+      WorkflowServiceHelper.ASG_AMI_ALB_SHIFT_SETUP, Lists.newArrayList(InfrastructureMappingType.AWS_AMI),
+      asList(AMI_AUTOSCALING_GROUP_SETUP), ORCHESTRATION_STENCILS),
+
   AWS_AMI_SERVICE_DEPLOY(AwsAmiServiceDeployState.class, COMMANDS, UPGRADE_AUTOSCALING_GROUP,
       Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(AMI_DEPLOY_AUTOSCALING_GROUP),
       ORCHESTRATION_STENCILS),
+
+  ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY(AwsAmiServiceTrafficShiftAlbDeployState.class, COMMANDS,
+      WorkflowServiceHelper.ASG_AMI_ALB_SHIFT_DEPLOY, Lists.newArrayList(InfrastructureMappingType.AWS_AMI),
+      asList(AMI_DEPLOY_AUTOSCALING_GROUP), ORCHESTRATION_STENCILS),
 
   AWS_AMI_SWITCH_ROUTES(AwsAmiSwitchRoutesState.class, FLOW_CONTROLS, UPGRADE_AUTOSCALING_GROUP_ROUTE,
       Lists.newArrayList(InfrastructureMappingType.AWS_AMI), singletonList(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES),
       ORCHESTRATION_STENCILS),
 
+  ASG_AMI_ALB_SHIFT_SWITCH_ROUTES(AwsAmiTrafficShiftAlbSwitchRoutesState.class, FLOW_CONTROLS,
+      UPGRADE_AUTOSCALING_GROUP_ROUTE, Lists.newArrayList(InfrastructureMappingType.AWS_AMI),
+      singletonList(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES), ORCHESTRATION_STENCILS),
+
   AWS_AMI_ROLLBACK_SWITCH_ROUTES(AwsAmiRollbackSwitchRoutesState.class, FLOW_CONTROLS, ROLLBACK_AUTOSCALING_GROUP_ROUTE,
       Lists.newArrayList(InfrastructureMappingType.AWS_AMI), singletonList(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES),
       ORCHESTRATION_STENCILS),
+
+  ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES(AwsAmiRollbackTrafficShiftAlbSwitchRoutesState.class, FLOW_CONTROLS,
+      ROLLBACK_AUTOSCALING_GROUP_ROUTE, Lists.newArrayList(InfrastructureMappingType.AWS_AMI),
+      singletonList(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES), ORCHESTRATION_STENCILS),
 
   AWS_AMI_SERVICE_ROLLBACK(AwsAmiServiceRollback.class, COMMANDS, ROLLBACK_AWS_AMI_CLUSTER,
       Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(AMI_DEPLOY_AUTOSCALING_GROUP),

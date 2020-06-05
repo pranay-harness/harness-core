@@ -122,10 +122,14 @@ import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ArtifactCheckState;
 import software.wings.sm.states.ArtifactCollectionState;
 import software.wings.sm.states.AwsAmiRollbackSwitchRoutesState;
+import software.wings.sm.states.AwsAmiRollbackTrafficShiftAlbSwitchRoutesState;
 import software.wings.sm.states.AwsAmiServiceDeployState;
 import software.wings.sm.states.AwsAmiServiceRollback;
 import software.wings.sm.states.AwsAmiServiceSetup;
+import software.wings.sm.states.AwsAmiServiceTrafficShiftAlbDeployState;
+import software.wings.sm.states.AwsAmiServiceTrafficShiftAlbSetup;
 import software.wings.sm.states.AwsAmiSwitchRoutesState;
+import software.wings.sm.states.AwsAmiTrafficShiftAlbSwitchRoutesState;
 import software.wings.sm.states.AwsCodeDeployRollback;
 import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.AwsLambdaRollback;
@@ -282,9 +286,18 @@ public enum StepType {
   // AMI
   AWS_AMI_SERVICE_SETUP(AwsAmiServiceSetup.class, AMI_SETUP_COMMAND_NAME, asList(WorkflowStepType.AWS_AMI),
       asList(AMI_AUTOSCALING_GROUP_SETUP), Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK)),
+  ASG_AMI_SERVICE_ALB_SHIFT_SETUP(AwsAmiServiceTrafficShiftAlbSetup.class,
+      WorkflowServiceHelper.ASG_AMI_ALB_SHIFT_SETUP, asList(WorkflowStepType.AWS_AMI),
+      asList(AMI_AUTOSCALING_GROUP_SETUP), Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK)),
   AWS_AMI_SERVICE_DEPLOY(AwsAmiServiceDeployState.class, UPGRADE_AUTOSCALING_GROUP, asList(WorkflowStepType.AWS_AMI),
       asList(AMI_DEPLOY_AUTOSCALING_GROUP), Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK)),
+  ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY(AwsAmiServiceTrafficShiftAlbDeployState.class,
+      WorkflowServiceHelper.ASG_AMI_ALB_SHIFT_DEPLOY, asList(WorkflowStepType.AWS_AMI),
+      asList(AMI_DEPLOY_AUTOSCALING_GROUP), Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK)),
   AWS_AMI_SWITCH_ROUTES(AwsAmiSwitchRoutesState.class, UPGRADE_AUTOSCALING_GROUP_ROUTE,
+      asList(WorkflowStepType.AWS_AMI), singletonList(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES),
+      Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+  ASG_AMI_ALB_SHIFT_SWITCH_ROUTES(AwsAmiTrafficShiftAlbSwitchRoutesState.class, UPGRADE_AUTOSCALING_GROUP_ROUTE,
       asList(WorkflowStepType.AWS_AMI), singletonList(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES),
       Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
   AWS_AMI_SERVICE_ROLLBACK(AwsAmiServiceRollback.class, ROLLBACK_AWS_AMI_CLUSTER, asList(WorkflowStepType.AWS_AMI),
@@ -292,6 +305,10 @@ public enum StepType {
   AWS_AMI_ROLLBACK_SWITCH_ROUTES(AwsAmiRollbackSwitchRoutesState.class, ROLLBACK_AUTOSCALING_GROUP_ROUTE,
       asList(WorkflowStepType.AWS_AMI), singletonList(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES),
       Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.ROLLBACK)),
+  ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES(AwsAmiRollbackTrafficShiftAlbSwitchRoutesState.class,
+      ROLLBACK_AUTOSCALING_GROUP_ROUTE, asList(WorkflowStepType.AWS_AMI),
+      singletonList(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES), Lists.newArrayList(DeploymentType.AMI),
+      asList(PhaseType.ROLLBACK)),
 
   // ECS
   ECS_SERVICE_SETUP(EcsServiceSetup.class, WorkflowServiceHelper.ECS_SERVICE_SETUP, asList(WorkflowStepType.ECS),

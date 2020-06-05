@@ -28,6 +28,7 @@ import static software.wings.api.DeploymentType.PCF;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.FeatureName.ASG_AMI_TRAFFIC_SHIFT;
 import static software.wings.beans.FeatureName.AWS_TRAFFIC_SHIFT;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PCF_PCF;
@@ -52,6 +53,10 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.StateType.ARTIFACT_CHECK;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StateType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES;
+import static software.wings.sm.StateType.ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES;
+import static software.wings.sm.StateType.ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY;
+import static software.wings.sm.StateType.ASG_AMI_SERVICE_ALB_SHIFT_SETUP;
 import static software.wings.sm.StateType.AWS_AMI_ROLLBACK_SWITCH_ROUTES;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_ROLLBACK;
@@ -133,6 +138,7 @@ import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfraMappingInfrastructureProvider;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PhysicalInfra;
+import software.wings.service.impl.aws.model.AwsConstants;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
@@ -190,6 +196,7 @@ public class WorkflowServiceHelper {
   public static final String UPGRADE_AUTOSCALING_GROUP_ROUTE = "Switch AutoScaling Group Route";
   public static final String AWS_CODE_DEPLOY = "AWS CodeDeploy";
   public static final String UPGRADE_AUTOSCALING_GROUP = "Upgrade AutoScaling Group";
+  public static final String UPGRADE_TRAFFIC_SHIFT_AUTOSCALING_GROUP = "Upgrade Traffic Shift AutoScaling Group";
   public static final String WRAP_UP = "Wrap Up";
   public static final String PREPARE_STEPS = "Prepare Steps";
   public static final String UPGRADE_CONTAINERS = "Upgrade Containers";
@@ -208,6 +215,8 @@ public class WorkflowServiceHelper {
   public static final String SETUP = "Setup";
   public static final String PCF_SETUP = "App Setup";
   public static final String PCF_PLUGIN = "CF Command";
+  public static final String ASG_AMI_ALB_SHIFT_SETUP = "Asg AMI ALB Shift Setup";
+  public static final String ASG_AMI_ALB_SHIFT_DEPLOY = "Asg AMI ALB Shift Deploy";
   public static final String SPOTINST_SETUP = "Elastigroup Setup";
   public static final String SPOTINST_ALB_SHIFT_SETUP = "Elastigroup ALB Shift Setup";
   public static final String SPOTINST_DEPLOY = "Elastigroup Deploy";
@@ -784,6 +793,51 @@ public class WorkflowServiceHelper {
                                     .build())
                        .build());
 
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
+  }
+
+  @VisibleForTesting
+  void generateNewWorkflowPhaseStepsForAsgAmiAlbTrafficShiftBlueGreen(String appId, WorkflowPhase workflowPhase) {
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
+    Map<String, Object> defaultData = new HashMap<>();
+    defaultData.put(AwsConstants.MIN_INSTANCES, AwsConstants.DEFAULT_AMI_ASG_MIN_INSTANCES);
+    defaultData.put(AwsConstants.MAX_INSTANCES, AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES);
+    defaultData.put(AwsConstants.DESIRED_INSTANCES, AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES);
+    defaultData.put(AwsConstants.AUTO_SCALING_TIMEOUT, AwsConstants.DEFAULT_AMI_ASG_TIMEOUT_MIN);
+    phaseSteps.add(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, SETUP_AUTOSCALING_GROUP)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(ASG_AMI_SERVICE_ALB_SHIFT_SETUP.name())
+                                    .name(WorkflowServiceHelper.ASG_AMI_ALB_SHIFT_SETUP)
+                                    .properties(defaultData)
+                                    .build())
+                       .build());
+
+    phaseSteps.add(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, DEPLOY_SERVICE)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY.name())
+                                    .name(UPGRADE_TRAFFIC_SHIFT_AUTOSCALING_GROUP)
+                                    .build())
+                       .build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_STAGING)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
+
+    Map<String, Object> defaultDataSwitchRoutes = new HashMap<>();
+    defaultDataSwitchRoutes.put("downsizeOldAsg", Boolean.TRUE);
+    phaseSteps.add(aPhaseStep(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES, SWAP_AUTOSCALING_GROUP_ROUTE)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(ASG_AMI_ALB_SHIFT_SWITCH_ROUTES.name())
+                                    .name(SPOTINST_ALB_SHIFT_LISTENER_UPDATE)
+                                    .properties(defaultDataSwitchRoutes)
+                                    .build())
+                       .build());
     phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
@@ -1630,6 +1684,29 @@ public class WorkflowServiceHelper {
                                             .id(generateUuid())
                                             .type(AWS_AMI_ROLLBACK_SWITCH_ROUTES.name())
                                             .name(ROLLBACK_AUTOSCALING_GROUP_ROUTE)
+                                            .rollback(true)
+                                            .build())
+                               .withPhaseStepNameForRollback(DEPLOY_SERVICE)
+                               .withStatusForRollback(SUCCESS)
+                               .withRollback(true)
+                               .build(),
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                .withRollback(true)
+                .withPhaseStepNameForRollback(DEPLOY_SERVICE)
+                .withStatusForRollback(SUCCESS)
+                .withRollback(true)
+                .build(),
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
+        .build();
+  }
+
+  public WorkflowPhase generateRollbackWorkflowPhaseForAsgAmiTrafficShiftBlueGreen(WorkflowPhase workflowPhase) {
+    return rollbackWorkflow(workflowPhase)
+        .phaseSteps(asList(aPhaseStep(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES, ROLLBACK_SERVICE)
+                               .addStep(GraphNode.builder()
+                                            .id(generateUuid())
+                                            .type(ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES.name())
+                                            .name(SPOTINST_ALB_SHIFT_LISTENER_UPDATE_ROLLBACK)
                                             .rollback(true)
                                             .build())
                                .withPhaseStepNameForRollback(DEPLOY_SERVICE)
@@ -2540,8 +2617,8 @@ public class WorkflowServiceHelper {
         }
       } else {
         if (BLUE_GREEN == orchestrationWorkflowType) {
-          generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(
-              appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure);
+          generateNewWfPhaseStepsForAwsAmiBlueGreen(
+              creationFlags, accountId, appId, workflowPhase, serviceRepeat, isDynamicInfrastructure);
         } else {
           generateNewWorkflowPhaseStepsForAWSAmi(
               appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure, orchestrationWorkflowType);
@@ -2565,6 +2642,20 @@ public class WorkflowServiceHelper {
     } else {
       generateNewWorkflowPhaseStepsForSpotInstBlueGreen(appId, workflowPhase, !serviceRepeat);
     }
+  }
+
+  private void generateNewWfPhaseStepsForAwsAmiBlueGreen(WorkflowCreationFlags creationFlags, String accountId,
+      String appId, WorkflowPhase workflowPhase, boolean serviceRepeat, boolean isDynamicInfrastructure) {
+    if (isAsgAmiAlbTrafficShiftType(creationFlags, accountId)) {
+      generateNewWorkflowPhaseStepsForAsgAmiAlbTrafficShiftBlueGreen(appId, workflowPhase);
+    } else {
+      generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure);
+    }
+  }
+
+  private boolean isAsgAmiAlbTrafficShiftType(WorkflowCreationFlags flags, String accountId) {
+    return featureFlagService.isEnabled(ASG_AMI_TRAFFIC_SHIFT, accountId) && flags != null
+        && flags.isAwsTrafficShiftAlbType();
   }
 
   private boolean isAlbTrafficShiftType(WorkflowCreationFlags flags, String accountId) {
@@ -2607,7 +2698,7 @@ public class WorkflowServiceHelper {
         }
       } else {
         if (BLUE_GREEN == orchestrationWorkflowType) {
-          return generateRollbackWorkflowPhaseForAwsAmiBlueGreen(workflowPhase);
+          return generateRollbackWfPhaseForAwsAmiBlueGreen(workflowPhase, creationFlags, accountId);
         } else {
           return generateRollbackWorkflowPhaseForAwsAmi(workflowPhase);
         }
@@ -2631,6 +2722,15 @@ public class WorkflowServiceHelper {
       return generateRollbackWorkflowPhaseForSpotinstAlbTrafficShift(workflowPhase);
     } else {
       return generateRollbackWorkflowPhaseForSpotInstBlueGreen(workflowPhase);
+    }
+  }
+
+  private WorkflowPhase generateRollbackWfPhaseForAwsAmiBlueGreen(
+      WorkflowPhase workflowPhase, WorkflowCreationFlags creationFlags, String accountId) {
+    if (isAsgAmiAlbTrafficShiftType(creationFlags, accountId)) {
+      return generateRollbackWorkflowPhaseForAsgAmiTrafficShiftBlueGreen(workflowPhase);
+    } else {
+      return generateRollbackWorkflowPhaseForAwsAmiBlueGreen(workflowPhase);
     }
   }
 
