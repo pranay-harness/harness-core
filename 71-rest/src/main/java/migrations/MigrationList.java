@@ -132,6 +132,7 @@ import migrations.all.TimeSeriesAnalysisRecordsMigration;
 import migrations.all.TimeSeriesMLAnalysisCompressionSaveMigration;
 import migrations.all.TimeSeriesMLAnalysisDeleteUncompressedMigration;
 import migrations.all.TimeSeriesMLScoresMigration;
+import migrations.all.TrimURLsForAPMVerificationSettings;
 import migrations.all.UnregisteredUserNameMigration;
 import migrations.all.UpdateBitBucketTriggers;
 import migrations.all.UpdateGitSyncErrorMigration;
@@ -341,6 +342,7 @@ public class MigrationList {
         .add(Pair.of(312, DropUniqueIndexOnImportedTemplate.class))
         .add(Pair.of(313, PipelineWorkflowExecutionActionMigration.class))
         .add(Pair.of(314, VaultConfigRenewalIntervalMigration.class))
+        .add(Pair.of(315, TrimURLsForAPMVerificationSettings.class))
         .build();
   }
 }

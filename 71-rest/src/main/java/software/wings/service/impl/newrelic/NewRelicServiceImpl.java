@@ -97,6 +97,10 @@ public class NewRelicServiceImpl implements NewRelicService {
         throw new VerificationOperationException(
             ErrorCode.APM_CONFIGURATION_ERROR, "The validation path must not begin with a / (forward slash)");
       }
+      if (config.getBaseUrl().trim().length() != config.getBaseUrl().length()) {
+        throw new VerificationOperationException(
+            ErrorCode.APM_CONFIGURATION_ERROR, "The base URL can not have leading or trailing spaces.");
+      }
     } else {
       throw new VerificationOperationException(
           ErrorCode.APM_CONFIGURATION_ERROR, "The Base URL and validation path must not be empty");
