@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -19,7 +20,9 @@ import static software.wings.beans.Log.Builder.aLog;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
+import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExportExecutionsException;
 import io.harness.execution.export.metadata.ActivityCommandUnitMetadata;
 import io.harness.execution.export.metadata.ApprovalMetadata;
@@ -30,24 +33,43 @@ import io.harness.execution.export.metadata.PipelineStageExecutionMetadata;
 import io.harness.execution.export.metadata.WorkflowExecutionMetadata;
 import io.harness.execution.export.processor.ActivityLogsProcessor.ActivityIdsVisitor;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.Log;
+import software.wings.beans.Log.LogKeys;
+import software.wings.service.impl.MongoDataStoreServiceImpl;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.LogService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class ActivityLogsProcessorTest extends CategoryTest {
   @Mock private LogService logService;
+  private DataStoreService dataStoreService;
+  private ExecutorService gdsExecutorService;
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+
+  @Before
+  public void setup() {
+    dataStoreService = mock(MongoDataStoreServiceImpl.class);
+    gdsExecutorService = Executors.newFixedThreadPool(1);
+  }
 
   @Test
   @Owner(developers = GARVIT)
@@ -114,7 +136,7 @@ public class ActivityLogsProcessorTest extends CategoryTest {
     ZipOutputStream zipOutputStream = mock(ZipOutputStream.class);
     ActivityLogsProcessor activityLogsProcessor =
         new ActivityLogsProcessor(zipOutputStream, ImmutableMap.of("id1", "fn1", "id2", "fn2"), new HashMap<>());
-    activityLogsProcessor.setLogService(logService);
+    setupProcessor(activityLogsProcessor);
 
     activityLogsProcessor.process();
     verify(logService, never()).list(anyString(), any());
@@ -204,7 +226,7 @@ public class ActivityLogsProcessorTest extends CategoryTest {
         .thenReturn(aPageResponse().withResponse(Collections.emptyList()).build());
 
     activityLogsProcessor.process();
-    verify(logService, times(3)).list(anyString(), any());
+    verify(logService, times(2)).list(anyString(), any());
     assertThat(commandUnit11.getExecutionLogFile()).isEqualTo("2");
     assertThat(commandUnit12.getExecutionLogFile()).isEqualTo("1");
     assertThat(commandUnit21.getExecutionLogFile()).isEqualTo("1");
@@ -220,6 +242,66 @@ public class ActivityLogsProcessorTest extends CategoryTest {
 
     doThrow(IOException.class).when(zipOutputStream).closeEntry();
     assertThatThrownBy(activityLogsProcessor::process).isInstanceOf(ExportExecutionsException.class);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetAllLogs() {
+    ZipOutputStream zipOutputStream = mock(ZipOutputStream.class);
+    ActivityLogsProcessor activityLogsProcessor =
+        new ActivityLogsProcessor(zipOutputStream, Collections.emptyMap(), new HashMap<>());
+    setupProcessor(activityLogsProcessor);
+    on(activityLogsProcessor)
+        .set("activityIdToExecutionDetailsMap",
+            ImmutableMap.of("aid1", WorkflowExecutionMetadata.builder().build(), "aid2",
+                WorkflowExecutionMetadata.builder().build(), "aid3", WorkflowExecutionMetadata.builder().build()));
+
+    Map<String, List<Log>> map = ImmutableMap.of("aid1",
+        asList(aLog().withActivityId("aid1").withCommandUnitName("cu11").build(),
+            aLog().withActivityId("aid1").withCommandUnitName("cu12").build()),
+        "aid2",
+        asList(aLog().withActivityId("aid2").withCommandUnitName("cu21").build(),
+            aLog().withActivityId("aid2").withCommandUnitName("cu22").build()),
+        "aid3",
+        asList(aLog().withActivityId("aid3").withCommandUnitName("cu31").build(),
+            aLog().withActivityId("aid3").withCommandUnitName("cu32").build()));
+
+    when(logService.list(anyString(), any())).thenAnswer(invocation -> {
+      PageRequest<Log> pageRequest = invocation.getArgumentAt(1, PageRequest.class);
+      if (pageRequest == null
+          || (EmptyPredicate.isNotEmpty(pageRequest.getOffset()) && !"0".equals(pageRequest.getOffset()))) {
+        return aPageResponse().withResponse(Collections.emptyList()).build();
+      }
+
+      List<String> activityIds = new ArrayList<>();
+      pageRequest.getFilters().forEach(filter -> {
+        if (LogKeys.activityId.equals(filter.getFieldName())) {
+          for (Object activityId : filter.getFieldValues()) {
+            activityIds.add((String) activityId);
+          }
+        }
+      });
+
+      List<Log> logs = new ArrayList<>();
+      for (String activityId : activityIds) {
+        logs.addAll(map.getOrDefault(activityId, Collections.emptyList()));
+      }
+      return aPageResponse().withResponse(logs).build();
+    });
+
+    List<Log> logs = activityLogsProcessor.getAllLogs();
+    assertThat(logs).isNotNull();
+    assertThat(logs.size()).isEqualTo(6);
+
+    when(dataStoreService.supportsInOperator()).thenReturn(false);
+    List<Log> gdsLogs = activityLogsProcessor.getAllLogs();
+    assertThat(gdsLogs).isNotNull();
+    assertThat(gdsLogs.size()).isEqualTo(6);
+
+    logs.sort(Comparator.comparing(Log::getCommandUnitName));
+    gdsLogs.sort(Comparator.comparing(Log::getCommandUnitName));
+    assertThat(logs).isEqualTo(gdsLogs);
   }
 
   @Test
@@ -251,5 +333,12 @@ public class ActivityLogsProcessorTest extends CategoryTest {
                     .build()))
             .build());
     assertThat(activityIdsVisitor.getActivityIdToNodeMetadataMap().keySet()).containsExactly("id1", "id3");
+  }
+
+  private void setupProcessor(ActivityLogsProcessor processor) {
+    processor.setLogService(logService);
+    processor.setDataStoreService(dataStoreService);
+    processor.setGdsExecutorService(gdsExecutorService);
+    when(dataStoreService.supportsInOperator()).thenReturn(true);
   }
 }

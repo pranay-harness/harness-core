@@ -108,4 +108,9 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
   public void purgeOlderRecords() {
     // do nothing
   }
+
+  @Override
+  public boolean supportsInOperator() {
+    return true;
+  }
 }

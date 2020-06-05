@@ -18,4 +18,6 @@ public interface DataStoreService {
   void purgeByActivity(String appId, String activityId);
 
   void purgeOlderRecords();
+
+  boolean supportsInOperator();
 }

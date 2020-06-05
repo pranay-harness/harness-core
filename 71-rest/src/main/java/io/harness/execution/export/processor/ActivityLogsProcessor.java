@@ -8,7 +8,9 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
@@ -26,17 +28,20 @@ import io.harness.persistence.CreatedAtAware;
 import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.Log;
 import software.wings.beans.Log.LogKeys;
 import software.wings.service.impl.LogServiceImpl;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.LogService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,16 +49,22 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 @OwnedBy(CDC)
 @Value
+@Slf4j
 public class ActivityLogsProcessor implements ExportExecutionsProcessor {
   private static final int LOGS_BATCH_SIZE = 500;
 
   @Inject @NonFinal @Setter LogService logService;
+  @Inject @NonFinal @Setter DataStoreService dataStoreService;
+  @Inject @Named("gdsExecutor") @NonFinal @Setter ExecutorService gdsExecutorService;
 
   Map<String, ExecutionDetailsMetadata> activityIdToExecutionDetailsMap;
   Map<String, String> activityIdToExecutionIdMap;
@@ -186,13 +197,45 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
     }
   }
 
-  private List<Log> getAllLogs() {
-    PageRequest<Log> pageRequest =
-        aPageRequest()
-            .addFilter(LogKeys.activityId, Operator.IN, activityIdToExecutionDetailsMap.keySet().toArray())
-            .addOrder(CreatedAtAware.CREATED_AT_KEY, OrderType.ASC)
-            .build();
+  @VisibleForTesting
+  List<Log> getAllLogs() {
+    // If the dataStoreService used is backed by Google Data Store, we need to have specials logic, because Google Data
+    // Store doesn't support the IN filter. So we have to EQ filters in that case and run queries in parallel because
+    // spawning a request for each activityId sequentially will be slow.
+    if (dataStoreService.supportsInOperator()) {
+      return getPageRequestLogs(
+          aPageRequest()
+              .addFilter(LogKeys.activityId, Operator.IN, activityIdToExecutionDetailsMap.keySet().toArray())
+              .addOrder(CreatedAtAware.CREATED_AT_KEY, OrderType.ASC)
+              .build());
+    } else {
+      return getAllLogsGoogleDataStore();
+    }
+  }
 
+  private List<Log> getAllLogsGoogleDataStore() {
+    // Create a completable future for each activityId.
+    List<CompletableFuture<List<Log>>> futures = new ArrayList<>();
+    for (String activityId : activityIdToExecutionDetailsMap.keySet()) {
+      CompletableFuture<List<Log>> future = CompletableFuture.supplyAsync(
+          ()
+              -> getPageRequestLogs(aPageRequest()
+                                        .addFilter(LogKeys.activityId, Operator.EQ, activityId)
+                                        .addOrder(CreatedAtAware.CREATED_AT_KEY, OrderType.ASC)
+                                        .build()),
+          gdsExecutorService);
+      futures.add(future);
+    }
+
+    // Wait for all the completable futures to complete.
+    CompletableFuture<Void> allFuturesResult = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+    return allFuturesResult
+        .thenApply(
+            v -> futures.stream().map(CompletableFuture::join).flatMap(Collection::stream).collect(Collectors.toList()))
+        .join();
+  }
+
+  private List<Log> getPageRequestLogs(PageRequest<Log> pageRequest) {
     // We don't want the count as it will increase the number of queries.
     pageRequest.setOptions(Collections.singletonList(PageRequest.Option.LIST));
 
@@ -206,6 +249,9 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
       }
 
       logs.addAll(pageResponse.getResponse());
+      if (pageResponse.getResponse().size() < LOGS_BATCH_SIZE) {
+        break;
+      }
     }
 
     return logs;

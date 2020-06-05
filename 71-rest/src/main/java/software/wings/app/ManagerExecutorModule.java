@@ -43,5 +43,9 @@ public class ManagerExecutorModule extends AbstractModule {
                 .setNameFormat("alternative-validation-task-%d")
                 .setPriority(Thread.MIN_PRIORITY)
                 .build()));
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("gdsExecutor"))
+        .toInstance(ThreadPool.create(
+            2, 10, 5, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("gds-log-fetcher-%d").build()));
   }
 }

@@ -264,4 +264,9 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
         throw new IllegalArgumentException("Not supported filter: " + searchFilter);
     }
   }
+
+  @Override
+  public boolean supportsInOperator() {
+    return false;
+  }
 }
