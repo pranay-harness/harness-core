@@ -11,6 +11,7 @@ import io.harness.states.BuildEnvSetupStep;
 import io.harness.states.BuildStep;
 import io.harness.states.CleanupStep;
 import io.harness.states.GitCloneStep;
+import io.harness.states.IntegrationStageStep;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Set;
@@ -22,5 +23,6 @@ public class ExecutionRegistrar implements StepRegistrar {
     stateClasses.add(Pair.of(CleanupStepInfo.typeInfo.getStepType(), CleanupStep.class));
     stateClasses.add(Pair.of(BuildStepInfo.typeInfo.getStepType(), BuildStep.class));
     stateClasses.add(Pair.of(GitCloneStepInfo.typeInfo.getStepType(), GitCloneStep.class));
+    stateClasses.add(Pair.of(IntegrationStageStep.STEP_TYPE, IntegrationStageStep.class));
   }
 }

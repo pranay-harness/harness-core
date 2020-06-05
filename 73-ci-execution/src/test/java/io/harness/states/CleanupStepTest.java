@@ -11,11 +11,13 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.ambiance.Ambiance;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
+import io.harness.plan.input.InputArgs;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -32,6 +34,8 @@ public class CleanupStepTest extends CIExecutionTest {
   @Inject private CleanupStep cleanupStep;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Mock private ManagerCIResource managerCIResource;
+  @Mock private Ambiance ambiance;
+  @Mock private InputArgs inputArgs;
 
   @Before
   public void setUp() {
@@ -47,8 +51,9 @@ public class CleanupStepTest extends CIExecutionTest {
     when(requestCall.execute())
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(managerCIResource.podCleanupTask(any(), any(), any())).thenReturn(requestCall);
-
-    cleanupStep.executeSync(null, CleanupStepInfo.builder().build(), null, null);
+    when(ambiance.getInputArgs()).thenReturn(inputArgs);
+    when(inputArgs.get(any())).thenReturn("abc");
+    cleanupStep.executeSync(ambiance, CleanupStepInfo.builder().build(), null, null);
 
     verify(managerCIResource, times(1)).podCleanupTask(any(), any(), any());
   }
@@ -62,8 +67,10 @@ public class CleanupStepTest extends CIExecutionTest {
     when(requestCall.execute())
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(managerCIResource.podCleanupTask(any(), any(), any())).thenThrow(new RuntimeException());
+    when(ambiance.getInputArgs()).thenReturn(inputArgs);
+    when(inputArgs.get(any())).thenReturn("abc");
 
-    cleanupStep.executeSync(null, CleanupStepInfo.builder().build(), null, null);
+    cleanupStep.executeSync(ambiance, CleanupStepInfo.builder().build(), null, null);
 
     verify(managerCIResource, times(1)).podCleanupTask(any(), any(), any());
   }

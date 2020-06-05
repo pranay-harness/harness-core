@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
 
+import io.harness.persistence.Store;
 import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceSecretKeyKeys;
 import software.wings.common.VerificationConstants;
@@ -18,7 +19,8 @@ public class CIServiceAuthSecretKeyImpl implements CIServiceAuthSecretKey {
     if (isNotEmpty(verificationServiceSecret)) {
       return verificationServiceSecret;
     }
-    return wingsPersistence.createQuery(ServiceSecretKey.class)
+    return wingsPersistence.getDatastore(Store.builder().name("harness").build())
+        .createQuery(ServiceSecretKey.class)
         .filter(ServiceSecretKeyKeys.serviceType, ServiceSecretKey.ServiceType.LEARNING_ENGINE)
         .get()
         .getServiceSecret();

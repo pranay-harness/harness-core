@@ -16,6 +16,7 @@ import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
+import io.harness.plan.input.InputArgs;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -34,7 +35,8 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
   @Mock private ManagerCIResource managerCIResource;
   @Mock private EngineExpressionService engineExpressionService;
-
+  @Mock private Ambiance ambiance;
+  @Mock private InputArgs inputArgs;
   private static final String CLUSTER_NAME = "K8";
 
   @Before
@@ -53,9 +55,9 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(managerCIResource.createK8PodTask(any(), any(), any(), any())).thenReturn(requestCall);
     when(engineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
-
-    buildSetupUtils.executeCISetupTask(
-        ciExecutionPlanTestHelper.getBuildEnvSetupStepInfo(), Ambiance.builder().build());
+    when(ambiance.getInputArgs()).thenReturn(inputArgs);
+    when(inputArgs.get(any())).thenReturn("abc");
+    buildSetupUtils.executeCISetupTask(ciExecutionPlanTestHelper.getBuildEnvSetupStepInfo(), ambiance);
 
     verify(managerCIResource, times(1)).createK8PodTask(any(), any(), any(), any());
   }

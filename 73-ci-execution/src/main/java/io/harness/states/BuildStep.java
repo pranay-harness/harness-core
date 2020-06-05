@@ -1,11 +1,11 @@
 package io.harness.states;
 
 import static java.util.stream.Collectors.toList;
-import static software.wings.common.CICommonPodConstants.CLUSTER_EXPRESSION;
+import static software.wings.common.CICommonPodConstants.CLUSTER_NAME;
 import static software.wings.common.CICommonPodConstants.CONTAINER_NAME;
 import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
-import static software.wings.common.CICommonPodConstants.NAMESPACE_EXPRESSION;
-import static software.wings.common.CICommonPodConstants.POD_NAME_EXPRESSION;
+import static software.wings.common.CICommonPodConstants.NAMESPACE;
+import static software.wings.common.CICommonPodConstants.PODNAME;
 import static software.wings.common.CICommonPodConstants.REL_STDERR_FILE_PATH;
 import static software.wings.common.CICommonPodConstants.REL_STDOUT_FILE_PATH;
 
@@ -48,9 +48,9 @@ public class BuildStep implements Step, SyncExecutable {
   public StepResponse executeSync(
       Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
     try {
-      final String clusterName = engineExpressionService.renderExpression(ambiance, CLUSTER_EXPRESSION);
-      final String namespace = engineExpressionService.renderExpression(ambiance, NAMESPACE_EXPRESSION);
-      final String podName = engineExpressionService.renderExpression(ambiance, POD_NAME_EXPRESSION);
+      final String namespace = (String) ambiance.getInputArgs().get(NAMESPACE);
+      final String clusterName = (String) ambiance.getInputArgs().get(CLUSTER_NAME);
+      final String podName = (String) ambiance.getInputArgs().get(PODNAME);
 
       BuildStepInfo buildStepInfo = (BuildStepInfo) stepParameters;
 

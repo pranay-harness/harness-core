@@ -2,6 +2,7 @@ package io.harness;
 
 import com.google.common.collect.ImmutableSet;
 
+import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.DependencyModule;
 import io.harness.impl.CIPipelineExecutionService;
 import io.harness.impl.CIPipelineExecutionServiceImpl;
@@ -25,6 +26,7 @@ public class CIExecutionServiceModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of(RegistryModule.getInstance());
+    return ImmutableSet.of(
+        RegistryModule.getInstance(), ExecutionPlanModule.getInstance(), OrchestrationModule.getInstance());
   }
 }

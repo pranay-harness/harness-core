@@ -10,11 +10,13 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.ambiance.Ambiance;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
+import io.harness.plan.input.InputArgs;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
@@ -33,6 +35,8 @@ public class BuildEnvSetupStepTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Mock private ManagerCIResource managerCIResource;
   @Mock private BuildSetupUtils buildSetupUtils;
+  @Mock private Ambiance ambiance;
+  @Mock private InputArgs inputArgs;
 
   @Before
   public void setUp() {
@@ -51,6 +55,8 @@ public class BuildEnvSetupStepTest extends CIExecutionTest {
     when(requestCall.execute())
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(buildSetupUtils.executeCISetupTask(any(), any())).thenReturn(restResponse);
+    when(ambiance.getInputArgs()).thenReturn(inputArgs);
+    when(inputArgs.get(any())).thenReturn("abc");
 
     buildEnvSetupStep.executeSync(null, BuildEnvSetupStepInfo.builder().build(), null, null);
 
@@ -65,8 +71,10 @@ public class BuildEnvSetupStepTest extends CIExecutionTest {
     when(requestCall.execute())
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(buildSetupUtils.executeCISetupTask(any(), any())).thenThrow(new RuntimeException());
+    when(ambiance.getInputArgs()).thenReturn(inputArgs);
+    when(inputArgs.get(any())).thenReturn("abc");
 
-    buildEnvSetupStep.executeSync(null, BuildEnvSetupStepInfo.builder().build(), null, null);
+    buildEnvSetupStep.executeSync(ambiance, BuildEnvSetupStepInfo.builder().build(), null, null);
 
     verify(buildSetupUtils, times(1)).executeCISetupTask(any(), any());
   }

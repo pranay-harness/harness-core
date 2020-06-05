@@ -15,6 +15,7 @@ import io.harness.beans.CIPipeline;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.ExecutionEngine;
 import io.harness.execution.PlanExecution;
+import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
@@ -27,9 +28,11 @@ public class CIPipelineExecutionServiceImplTest extends CIExecutionTest {
   @Mock private ExecutionEngine engine;
   @Inject CIPipelineExecutionService ciPipelineExecutionService;
   @Inject CIExecutionPlanTestHelper executionPlanTestHelper;
+  @Inject private CIExecutionPlanCreatorRegistrar ciExecutionPlanCreatorRegistrar;
 
   @Before
   public void setUp() {
+    ciExecutionPlanCreatorRegistrar.register();
     on(ciPipelineExecutionService).set("engine", engine);
   }
 
