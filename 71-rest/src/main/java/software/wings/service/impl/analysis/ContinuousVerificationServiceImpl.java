@@ -2664,9 +2664,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private boolean isDemoPath(StateExecutionInstance stateExecutionInstance) {
     String accountId = appService.getAccountIdByAppId(stateExecutionInstance.getAppId());
     if (featureFlagService.isEnabled(FeatureName.CV_DEMO, accountId)) {
-      SettingAttribute settingAttribute = settingsService.get(
-          ((VerificationStateAnalysisExecutionData) stateExecutionInstance.fetchStateExecutionData())
-              .getServerConfigId());
+      StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
+      if (stateExecutionData == null || stateExecutionData instanceof SkipStateExecutionData) {
+        return false;
+      }
+      SettingAttribute settingAttribute =
+          settingsService.get(((VerificationStateAnalysisExecutionData) stateExecutionData).getServerConfigId());
       if (settingAttribute.getName().toLowerCase().endsWith("dev")
           || settingAttribute.getName().toLowerCase().endsWith("prod")) {
         return true;
