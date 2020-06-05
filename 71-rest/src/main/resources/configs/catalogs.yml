@@ -465,6 +465,8 @@ TASK_TYPES:
       value: TRIGGER
     - name: Continuous Integration
       value: CI
+    - name: Artifact Collection In Pipeline
+      value: ARTIFACT_COLLECT
 
 EXECUTION_STATUS:
     - name: Aborted

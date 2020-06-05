@@ -33,6 +33,7 @@ import io.harness.ccm.config.CCMSettingServiceImpl;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.ccm.health.HealthStatusServiceImpl;
 import io.harness.ccm.setup.CESetupServiceModule;
+import io.harness.cdng.NGModule;
 import io.harness.commandlibrary.common.service.CommandLibraryService;
 import io.harness.commandlibrary.common.service.impl.CommandLibraryServiceImpl;
 import io.harness.config.PipelineConfig;
@@ -1243,7 +1244,8 @@ public class WingsModule extends DependencyModule implements ServersModule {
   @Override
   public Set<DependencyModule> dependencies() {
     return ImmutableSet.<DependencyModule>of(TimeModule.getInstance(), VersionModule.getInstance(),
-        OrchestrationModule.getInstance(), PersistentLockModule.getInstance(), ExecutionPlanModule.getInstance());
+        OrchestrationModule.getInstance(), PersistentLockModule.getInstance(), ExecutionPlanModule.getInstance(),
+        NGModule.getInstance());
   }
 
   @Provides

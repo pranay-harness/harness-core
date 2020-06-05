@@ -95,6 +95,12 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
+  public PlanExecution testArtifactState() {
+    return engine.startExecution(
+        CustomExecutionUtils.provideArtifactStateTestPlan(), getInputArgs(), getEmbeddedUser());
+  }
+
+  @Override
   public Interrupt registerInterrupt(String planExecutionId) {
     return interruptManager.register(InterruptPackage.builder()
                                          .planExecutionId(planExecutionId)

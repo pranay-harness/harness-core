@@ -33,6 +33,8 @@ public interface CustomExecutionService {
 
   Graph getGraph(String executionPlanId);
 
+  PlanExecution testArtifactState();
+
   // Interrupts
 
   Interrupt registerInterrupt(String planExecutionId);

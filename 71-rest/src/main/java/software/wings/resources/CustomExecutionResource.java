@@ -119,4 +119,11 @@ public class CustomExecutionResource {
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, String pipelineYaml) {
     return new RestResponse<>(customExecutionService.testExecutionPlanCreator(pipelineYaml, accountId, appId));
   }
+
+  @GET
+  @Path("/test-artifact-state")
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<PlanExecution> testArtifactStep() {
+    return new RestResponse<>(customExecutionService.testArtifactState());
+  }
 }
