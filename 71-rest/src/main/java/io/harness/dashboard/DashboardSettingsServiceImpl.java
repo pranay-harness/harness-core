@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Arrays.asList;
+import static software.wings.beans.ResourceConstraint.ACCOUNT_ID_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -59,6 +60,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
   public DashboardSettings createDashboardSettings(
       @NotNull @AccountId String accountId, @NotNull DashboardSettings dashboardSettings) {
     dashboardSettings.setAccountId(accountId);
+    assertThatNameIsUnique(accountId, dashboardSettings.getName());
     DashboardSettings savedDashboardSettings = get(accountId, persistence.save(dashboardSettings));
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, savedDashboardSettings, Type.CREATE);
     Map<String, String> properties = new HashMap<>();
@@ -204,5 +206,16 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
             ? Integer.toString(Integer.min(Integer.parseInt(pageRequest.getLimit()), DEFAULT_UNLIMITED))
             : Integer.toString(DEFAULT_PAGE_SIZE));
     return pageRequest;
+  }
+
+  private void assertThatNameIsUnique(String accountId, String name) {
+    DashboardSettings dashboardSettings = persistence.createQuery(DashboardSettings.class)
+                                              .filter(ACCOUNT_ID_KEY, accountId)
+                                              .filter(keys.name, name)
+                                              .get();
+    if (dashboardSettings == null) {
+      return;
+    }
+    throw new InvalidRequestException("Dashboard already exists with the name " + name);
   }
 }
