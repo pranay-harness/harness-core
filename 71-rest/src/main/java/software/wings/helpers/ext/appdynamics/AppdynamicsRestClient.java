@@ -48,7 +48,7 @@ public interface AppdynamicsRestClient {
    */
   @GET("rest/applications/{appdynamicsAppId}/tiers/{tierId}/nodes?output=json")
   Call<List<AppdynamicsNode>> listNodes(@Header("Authorization") String authorization,
-      @Path("appdynamicsAppId") long appdynamicsAppId, @Path("tierId") long tierId);
+      @Path("appdynamicsAppId") long appdynamicsAppId, @Path("tierId") long tierId, @Query("hosts") List<String> hosts);
 
   /**
    * Get all the details of a tier

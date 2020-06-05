@@ -169,12 +169,12 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Override
   public Set<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) {
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog, List<String> hosts) {
     Preconditions.checkNotNull(apiCallLog);
     apiCallLog.setTitle("Fetching node list for app: " + appdynamicsAppId + " tier: " + tierId);
     final Call<List<AppdynamicsNode>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
-            .listNodes(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierId);
+            .listNodes(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierId, hosts);
     return new HashSet<>(requestExecutor.executeRequest(apiCallLog, request));
   }
 

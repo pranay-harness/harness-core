@@ -32,7 +32,7 @@ public interface AppdynamicsDelegateService {
       List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog);
 
   Set<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog);
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog, List<String> hosts);
 
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_TIER_MAP)
   Set<AppdynamicsTier> getTierDependencies(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
