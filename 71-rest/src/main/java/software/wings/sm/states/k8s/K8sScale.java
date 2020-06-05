@@ -77,6 +77,11 @@ public class K8sScale extends State {
   @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
 
   @Override
+  public Integer getTimeoutMillis() {
+    return K8sStateHelper.getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
+  }
+
+  @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
       ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);

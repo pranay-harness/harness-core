@@ -19,5 +19,8 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
 
     state.setStateTimeoutInMinutes(5);
     assertThat(state.getTimeoutMillis()).isEqualTo(300000);
+
+    state.setStateTimeoutInMinutes(Integer.MAX_VALUE);
+    assertThat(state.getTimeoutMillis()).isNull();
   }
 }

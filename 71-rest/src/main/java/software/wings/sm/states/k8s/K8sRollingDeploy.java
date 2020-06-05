@@ -69,7 +69,7 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
 
   @Override
   public Integer getTimeoutMillis() {
-    return getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
+    return K8sStateHelper.getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
   }
 
   public K8sRollingDeploy(String name) {

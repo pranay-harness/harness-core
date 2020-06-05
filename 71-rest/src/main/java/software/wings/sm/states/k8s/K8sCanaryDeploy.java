@@ -78,7 +78,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
 
   @Override
   public Integer getTimeoutMillis() {
-    return getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
+    return K8sStateHelper.getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
   }
 
   @Override

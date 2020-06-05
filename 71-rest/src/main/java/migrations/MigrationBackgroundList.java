@@ -54,7 +54,7 @@ import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
 import migrations.all.InitServiceCounters;
 import migrations.all.InitWorkflowCounters;
-import migrations.all.K8sBGTimeoutMigration;
+import migrations.all.K8sStatesTimeoutMigration;
 import migrations.all.LogAnalysisAddExecutionIdMigration;
 import migrations.all.LogAnalysisBaselineMigration;
 import migrations.all.MarkSendMailFlagAsTrueInUserGroup;
@@ -182,7 +182,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(90, BaseMigration.class))
         .add(Pair.of(91, BaseMigration.class))
         .add(Pair.of(92, UpdateInstanceInfoWithLastArtifactIdMigration.class))
-        .add(Pair.of(93, K8sBGTimeoutMigration.class))
+        .add(Pair.of(93, K8sStatesTimeoutMigration.class))
         .add(Pair.of(94, BaseMigration.class))
         .add(Pair.of(95, GitSyncErrorGitDetailsMigration.class))
         .add(Pair.of(96, AddCommitTimeToGitSyncError.class))
@@ -220,6 +220,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(128, AddAccountidToTimeSeriesMLScores.class))
         .add(Pair.of(129, CleanUpDirectK8sInfraMappingEncryptedFieldsMigration.class))
         .add(Pair.of(130, InfraMappingToDefinitionMigration.class))
+        .add(Pair.of(131, K8sStatesTimeoutMigration.class))
         .build();
   }
 }

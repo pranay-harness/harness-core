@@ -13,6 +13,7 @@ import static io.harness.k8s.manifest.ManifestHelper.normalizeFolderPath;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
+import static java.time.Duration.ofMinutes;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -24,6 +25,7 @@ import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -171,6 +173,18 @@ public class K8sStateHelper {
   @Inject private OpenShiftManagerService openShiftManagerService;
 
   private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
+
+  public static Integer getTimeoutMillisFromMinutes(Integer timeoutMinutes) {
+    if (timeoutMinutes == null) {
+      return null;
+    }
+    try {
+      return Ints.checkedCast(ofMinutes(timeoutMinutes).toMillis());
+    } catch (Exception e) {
+      logger.warn("Could not convert {} minutes to millis, falling back to default timeout", timeoutMinutes);
+      return null;
+    }
+  }
 
   public Activity createK8sActivity(ExecutionContext executionContext, String commandName, String stateType,
       ActivityService activityService, List<CommandUnit> commandUnits) {

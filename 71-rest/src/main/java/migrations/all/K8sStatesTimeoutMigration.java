@@ -1,9 +1,8 @@
 package migrations.all;
 
 import static software.wings.beans.Base.APP_ID_KEY;
-import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
-import static software.wings.sm.StateType.K8S_SCALE;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
@@ -17,22 +16,28 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StepType;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
-public class K8sBGTimeoutMigration implements Migration {
+public class K8sStatesTimeoutMigration implements Migration {
   private static final String stateTimeoutInMinutes = "stateTimeoutInMinutes";
   private static final int minTimeoutInMs = 60000;
+
+  private static final Set<String> eligibleStates = ImmutableSet.of(StepType.K8S_SCALE.name(),
+      StepType.K8S_APPLY.name(), StepType.K8S_CANARY_DEPLOY.name(), StepType.K8S_BLUE_GREEN_DEPLOY.name(),
+      StepType.K8S_DEPLOYMENT_ROLLING_ROLLBACK.name(), StepType.K8S_DEPLOYMENT_ROLLING.name());
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
 
   @Override
   public void migrate() {
-    logger.info("Running HelmStateTimeoutMigration");
+    logger.info("Running K8sStatesTimeoutMigration");
     logger.info("Retrieving applications");
 
     try (HIterator<Application> apps = new HIterator<>(wingsPersistence.createQuery(Application.class).fetch())) {
@@ -51,7 +56,7 @@ public class K8sBGTimeoutMigration implements Migration {
       }
     }
 
-    logger.info("Completed HelmStateTimeoutMigration");
+    logger.info("Completed K8sStatesTimeoutMigration");
   }
 
   private void updateTimeoutInWorkflow(Workflow workflow) {
@@ -68,7 +73,9 @@ public class K8sBGTimeoutMigration implements Migration {
     }
 
     List<WorkflowPhase> workflowPhaseList = new ArrayList<>();
-    for (WorkflowPhase workflowPhase : coWorkflow.getWorkflowPhases()) {
+    final List<WorkflowPhase> workflowPhases = new ArrayList<>(coWorkflow.getWorkflowPhases());
+    workflowPhases.addAll(coWorkflow.getRollbackWorkflowPhaseIdMap().values());
+    for (WorkflowPhase workflowPhase : workflowPhases) {
       workflowPhaseList.add(workflowPhase);
 
       for (WorkflowPhase phase : workflowPhaseList) {
@@ -95,18 +102,20 @@ public class K8sBGTimeoutMigration implements Migration {
   private boolean updateGraphNode(GraphNode node, Workflow workflow) {
     boolean workflowModified = false;
 
-    if (K8S_BLUE_GREEN_DEPLOY.name().equals(node.getType()) || K8S_SCALE.name().equals(node.getType())) {
+    if (isEligible(node)) {
       Map<String, Object> properties = node.getProperties();
       if (properties != null && properties.containsKey(stateTimeoutInMinutes)) {
         Object timeOutObject = properties.get(stateTimeoutInMinutes);
         if (timeOutObject != null) {
           try {
             int timeout = (int) timeOutObject;
-            int updatedTimeout = timeout > minTimeoutInMs ? (timeout / minTimeoutInMs) : 1;
-            workflowModified = true;
-            properties.put(stateTimeoutInMinutes, updatedTimeout);
-            logger.info("Updating the timeout from {} to {} for state {} in workflowId {}", timeout, updatedTimeout,
-                node.getType(), workflow.getUuid());
+            if (timeout > minTimeoutInMs) {
+              int updatedTimeout = timeout / minTimeoutInMs;
+              workflowModified = true;
+              properties.put(stateTimeoutInMinutes, updatedTimeout);
+              logger.info("Updating the timeout from {} to {} for state {} in workflowId {}", timeout, updatedTimeout,
+                  node.getType(), workflow.getUuid());
+            }
 
           } catch (ClassCastException ex) {
             logger.info("Failed to convert timeout to integer for workflowId {}", workflow.getUuid());
@@ -115,5 +124,9 @@ public class K8sBGTimeoutMigration implements Migration {
       }
     }
     return workflowModified;
+  }
+
+  private boolean isEligible(GraphNode node) {
+    return eligibleStates.contains(node.getType());
   }
 }
