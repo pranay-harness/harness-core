@@ -58,6 +58,7 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
+import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.AccountService;
@@ -86,6 +87,7 @@ public class DelegateAgentResourceTest {
   private static InstanceHelper instanceSyncResponseHandler = mock(InstanceHelper.class);
   private static ArtifactCollectionResponseHandler artifactCollectionResponseHandler =
       mock(ArtifactCollectionResponseHandler.class);
+  private static DelegateConnectionDao delegateConnectionDao = mock(DelegateConnectionDao.class);
 
   @Parameter public String apiUrl;
 
@@ -97,9 +99,9 @@ public class DelegateAgentResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(
-              new DelegateAgentResource(delegateService, accountService, wingsPersistence, delegateRequestRateLimiter,
-                  subdomainUrlHelper, artifactCollectionResponseHandler, instanceSyncResponseHandler))
+          .addResource(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
+              delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler,
+              instanceSyncResponseHandler, delegateConnectionDao))
           .addResource(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -141,7 +143,8 @@ public class DelegateAgentResourceTest {
                                             .request()
                                             .post(entity(delegateConnectionHeartbeat, MediaType.APPLICATION_JSON),
                                                 new GenericType<RestResponse<String>>() {});
-    verify(delegateService, atLeastOnce()).doConnectionHeartbeat(ACCOUNT_ID, DELEGATE_ID, delegateConnectionHeartbeat);
+    verify(delegateConnectionDao, atLeastOnce())
+        .registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, delegateConnectionHeartbeat);
   }
 
   @Test

@@ -1,11 +1,8 @@
 package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
-import static java.util.stream.Collectors.toSet;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.ManagerConfiguration.MATCH_ALL_VERSION;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -14,8 +11,6 @@ import com.google.inject.name.Named;
 
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.query.Query;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -25,15 +20,14 @@ import org.quartz.TriggerBuilder;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
-import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
-import software.wings.beans.ManagerConfiguration;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.InvalidSMTPConfigAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.intfc.AlertService;
 import software.wings.utils.EmailHelperUtils;
 
@@ -60,6 +54,7 @@ public class AlertCheckJob implements Job {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EmailHelperUtils emailHelperUtils;
   @Inject private MainConfiguration mainConfiguration;
+  @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private Clock clock;
 
@@ -141,17 +136,7 @@ public class AlertCheckJob implements Job {
   }
 
   private void checkIfAnyDelegatesAreDown(String accountId, List<Delegate> delegates) {
-    Query<DelegateConnection> query =
-        wingsPersistence.createQuery(DelegateConnection.class).filter(DelegateConnectionKeys.accountId, accountId);
-    String primaryVersion = wingsPersistence.createQuery(ManagerConfiguration.class).get().getPrimaryVersion();
-    if (isNotEmpty(primaryVersion) && !StringUtils.equals(primaryVersion, MATCH_ALL_VERSION)) {
-      query.filter(DelegateConnectionKeys.version, primaryVersion);
-    }
-    Set<String> primaryConnections = query.project(DelegateConnectionKeys.delegateId, true)
-                                         .asList()
-                                         .stream()
-                                         .map(DelegateConnection::getDelegateId)
-                                         .collect(toSet());
+    Set<String> primaryConnections = delegateConnectionDao.obtainDisconnectedDelegates(accountId);
 
     for (Delegate delegate : delegates) {
       AlertData alertData = DelegatesDownAlert.builder()

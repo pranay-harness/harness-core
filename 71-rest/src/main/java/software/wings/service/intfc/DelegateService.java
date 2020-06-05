@@ -4,7 +4,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateApproval;
-import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
@@ -88,10 +87,6 @@ public interface DelegateService extends OwnedByAccount, TaskExecutor {
       InputStream uploadedInputStream, FormDataContentDisposition fileDetail);
 
   String getProfileResult(String accountId, String delegateId);
-
-  void delegateConnectionLost(String accountId, String delegateConnectionId);
-
-  void doConnectionHeartbeat(String accountId, String delegateId, DelegateConnectionHeartbeat heartbeat);
 
   @ValidationGroups(Create.class) String queueTask(@Valid DelegateTask task);
 
