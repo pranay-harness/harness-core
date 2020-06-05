@@ -32,7 +32,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
 
   private final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID_" + this.getClass().getSimpleName();
 
-  private final PerpetualTaskType DEFAULT_TASK_TYPE = PerpetualTaskType.ECS_CLUSTER;
+  private final String DEFAULT_TASK_TYPE = PerpetualTaskType.ECS_CLUSTER;
   private final PerpetualTaskSchedule TASK_SCHEDULE = PerpetualTaskSchedule.newBuilder()
                                                           .setInterval(Durations.fromSeconds(1))
                                                           .setTimeout(Durations.fromMillis(1000))

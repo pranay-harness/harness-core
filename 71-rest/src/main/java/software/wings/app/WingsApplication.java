@@ -47,6 +47,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.ccm.CEPerpetualTaskHandler;
 import io.harness.ccm.budget.BudgetHandler;
 import io.harness.ccm.cluster.ClusterRecordHandler;
@@ -82,10 +83,22 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.QuartzCleaner;
+import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
+import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskServiceImpl;
+import io.harness.perpetualtask.PerpetualTaskType;
+import io.harness.perpetualtask.ecs.EcsPerpetualTaskServiceClient;
+import io.harness.perpetualtask.example.SamplePerpetualTaskServiceClient;
+import io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskClient;
+import io.harness.perpetualtask.instancesync.AwsSshPerpetualTaskServiceClient;
+import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClient;
+import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient;
+import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.internal.DisconnectedDelegateHandler;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
+import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.queue.QueueListener;
@@ -398,6 +411,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerObservers(injector);
 
+    registerInprocPerpetualTaskServiceClients(injector);
+
     registerCronJobs(injector);
 
     registerCorsFilter(configuration, environment);
@@ -484,6 +499,34 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     logger.info("Starting app done");
     logger.info("Manager is running on JRE: {}", System.getProperty("java.version"));
+  }
+
+  private void registerInprocPerpetualTaskServiceClients(Injector injector) {
+    PerpetualTaskServiceClientRegistry clientRegistry =
+        injector.getInstance(Key.get(PerpetualTaskServiceClientRegistry.class));
+
+    clientRegistry.registerClient(
+        PerpetualTaskType.K8S_WATCH, injector.getInstance(K8sWatchPerpetualTaskServiceClient.class));
+    clientRegistry.registerClient(
+        PerpetualTaskType.ECS_CLUSTER, injector.getInstance(EcsPerpetualTaskServiceClient.class));
+    clientRegistry.registerClient(
+        PerpetualTaskType.SAMPLE, injector.getInstance(SamplePerpetualTaskServiceClient.class));
+    clientRegistry.registerClient(
+        PerpetualTaskType.ARTIFACT_COLLECTION, injector.getInstance(ArtifactCollectionPTaskServiceClient.class));
+    clientRegistry.registerClient(
+        PerpetualTaskType.PCF_INSTANCE_SYNC, injector.getInstance(PcfInstanceSyncPerpetualTaskClient.class));
+    clientRegistry.registerClient(
+        PerpetualTaskType.AWS_SSH_INSTANCE_SYNC, injector.getInstance(AwsSshPerpetualTaskServiceClient.class));
+    clientRegistry.registerClient(
+        PerpetualTaskType.AWS_AMI_INSTANCE_SYNC, injector.getInstance(AwsAmiInstanceSyncPerpetualTaskClient.class));
+    clientRegistry.registerClient(PerpetualTaskType.AWS_CODE_DEPLOY_INSTANCE_SYNC,
+        injector.getInstance(AwsCodeDeployInstanceSyncPerpetualTaskClient.class));
+    clientRegistry.registerClient(PerpetualTaskType.SPOT_INST_AMI_INSTANCE_SYNC,
+        injector.getInstance(SpotinstAmiInstanceSyncPerpetualTaskClient.class));
+    clientRegistry.registerClient(PerpetualTaskType.CONTAINER_INSTANCE_SYNC,
+        injector.getInstance(ContainerInstanceSyncPerpetualTaskClient.class));
+    clientRegistry.registerClient(PerpetualTaskType.AWS_LAMBDA_INSTANCE_SYNC,
+        injector.getInstance(AwsLambdaInstanceSyncPerpetualTaskClient.class));
   }
 
   private void registerDatadogPublisherIfEnabled(MainConfiguration configuration) {

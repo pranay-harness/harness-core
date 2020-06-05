@@ -5,7 +5,7 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import java.util.List;
 
 public interface PerpetualTaskService {
-  String createTask(PerpetualTaskType perpetualTaskType, String accountId, PerpetualTaskClientContext clientContext,
+  String createTask(String perpetualTaskType, String accountId, PerpetualTaskClientContext clientContext,
       PerpetualTaskSchedule schedule, boolean allowDuplicate);
 
   boolean resetTask(String accountId, String taskId);
@@ -16,7 +16,7 @@ public interface PerpetualTaskService {
 
   PerpetualTaskRecord getTaskRecord(String taskId);
 
-  PerpetualTaskType getPerpetualTaskType(String taskId);
+  String getPerpetualTaskType(String taskId);
 
   PerpetualTaskExecutionContext perpetualTaskContext(String taskId);
 

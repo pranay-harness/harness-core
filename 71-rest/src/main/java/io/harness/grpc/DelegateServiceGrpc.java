@@ -25,7 +25,6 @@ import io.harness.delegate.TaskProgressUpdatesResponse;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskService;
-import io.harness.perpetualtask.PerpetualTaskType;
 
 @Singleton
 public class DelegateServiceGrpc extends DelegateServiceImplBase {
@@ -72,7 +71,6 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
   @Override
   public void createPerpetualTask(
       CreatePerpetualTaskRequest request, StreamObserver<CreatePerpetualTaskResponse> responseObserver) {
-    PerpetualTaskType type = PerpetualTaskType.valueOf(request.getType());
     String accountId = request.getAccountId().getId();
 
     PerpetualTaskClientContext context = new PerpetualTaskClientContext(request.getContext().getTaskClientParamsMap());
@@ -80,8 +78,8 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
       context.setLastContextUpdated(Timestamps.toMillis(request.getContext().getLastContextUpdated()));
     }
 
-    String perpetualTaskId =
-        perpetualTaskService.createTask(type, accountId, context, request.getSchedule(), request.getAllowDuplicate());
+    String perpetualTaskId = perpetualTaskService.createTask(
+        request.getType(), accountId, context, request.getSchedule(), request.getAllowDuplicate());
 
     responseObserver.onNext(CreatePerpetualTaskResponse.newBuilder()
                                 .setPerpetualTaskId(PerpetualTaskId.newBuilder().setId(perpetualTaskId).build())

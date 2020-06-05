@@ -124,7 +124,7 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
   public void testRegisterPerpetualTaskClientEntrypoint() {
     try {
       delegateServiceGrpcClient.registerPerpetualTaskClientEntrypoint(
-          PerpetualTaskType.SAMPLE.name(), PerpetualTaskClientEntrypoint.newBuilder().build());
+          PerpetualTaskType.SAMPLE, PerpetualTaskClientEntrypoint.newBuilder().build());
     } catch (Exception e) {
       fail("Should not have thrown any exception");
     }
@@ -135,7 +135,7 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
   @Category(UnitTests.class)
   public void testCreatePerpetualTask() {
     String accountId = generateUuid();
-    PerpetualTaskType type = PerpetualTaskType.SAMPLE;
+    String type = PerpetualTaskType.SAMPLE;
     long lastContextUpdated = 1000L;
     String taskId = generateUuid();
 
@@ -157,7 +157,7 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
         .thenReturn(taskId);
 
     PerpetualTaskId perpetualTaskId = delegateServiceGrpcClient.createPerpetualTask(
-        AccountId.newBuilder().setId(accountId).build(), type.name(), schedule, contextDetails, false);
+        AccountId.newBuilder().setId(accountId).build(), type, schedule, contextDetails, false);
 
     assertThat(perpetualTaskId).isNotNull();
     assertThat(perpetualTaskId.getId()).isEqualTo(taskId);

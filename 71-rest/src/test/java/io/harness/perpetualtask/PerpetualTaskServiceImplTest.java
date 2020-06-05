@@ -9,6 +9,7 @@ import com.google.protobuf.util.Durations;
 
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.perpetualtask.ecs.EcsPerpetualTaskServiceClient;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.rule.Owner;
@@ -43,7 +44,10 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setup() throws IllegalAccessException {
+    PerpetualTaskServiceClientRegistry clientRegistry = new PerpetualTaskServiceClientRegistry();
+    clientRegistry.registerClient(PerpetualTaskType.ECS_CLUSTER, new EcsPerpetualTaskServiceClient());
     FieldUtils.writeField(perpetualTaskService, "broadcastAggregateSet", testBroadcastAggregateSet, true);
+    FieldUtils.writeField(perpetualTaskService, "clientRegistry", clientRegistry, true);
   }
 
   @Test

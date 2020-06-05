@@ -22,7 +22,6 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskState;
-import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +65,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
   public void handle(PerpetualTaskRecord taskRecord) {
     try (AutoLogContext ignore0 = new AccountLogContext(taskRecord.getAccountId(), OVERRIDE_ERROR)) {
       String taskId = taskRecord.getUuid();
-      PerpetualTaskType taskType = taskRecord.getPerpetualTaskType();
+      String taskType = taskRecord.getPerpetualTaskType();
       logger.info("Assigning Delegate to the inactive {} perpetual task with id={}.", taskType, taskId);
       PerpetualTaskServiceClient client = clientRegistry.getClient(taskRecord.getPerpetualTaskType());
       DelegateTask validationTask = client.getValidationTask(taskRecord.getClientContext(), taskRecord.getAccountId());
