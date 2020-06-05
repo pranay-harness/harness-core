@@ -1,5 +1,7 @@
 package io.harness.limits.checker;
 
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
@@ -111,7 +113,7 @@ public class MongoStaticLimitChecker implements StaticLimitCheckerWithDecrement 
                              .lessThan(limit.getCount());
 
       UpdateOperations<Counter> updateOp = persistence.createUpdateOperations(Counter.class).inc("value", change);
-      return persistence.upsert(q, updateOp, HPersistence.upsertReturnNewOptions);
+      return persistence.upsert(q, updateOp, upsertReturnNewOptions);
     } catch (MongoCommandException e) {
       if (e.getErrorCode() == MongoError.DUPLICATE_KEY.getErrorCode()) {
         log.info(

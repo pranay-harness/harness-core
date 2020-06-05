@@ -1,6 +1,8 @@
 package io.harness.ccm.cluster.dao;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.persistence.HPersistence.returnNewOptions;
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.persistence.HQuery.excludeValidate;
 
 import com.google.common.base.Preconditions;
@@ -13,7 +15,6 @@ import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -64,8 +65,7 @@ public class ClusterRecordDao {
         persistence.createUpdateOperations(ClusterRecord.class)
             .set(ClusterRecordKeys.accountId, clusterRecord.getAccountId())
             .set(ClusterRecordKeys.cluster, clusterRecord.getCluster());
-    FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
-    return persistence.upsert(query, updateOperations, findAndModifyOptions);
+    return persistence.upsert(query, updateOperations, upsertReturnNewOptions);
   }
 
   public boolean delete(ClusterRecord clusterRecord) {
@@ -90,23 +90,20 @@ public class ClusterRecordDao {
                                      .equal(cloudProviderId);
     UpdateOperations<ClusterRecord> updateOperations =
         persistence.createUpdateOperations(ClusterRecord.class).set(ClusterRecordKeys.isDeactivated, isDeactivated);
-    FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(false).returnNew(true);
-    return persistence.upsert(query, updateOperations, findAndModifyOptions);
+    return persistence.findAndModify(query, updateOperations, returnNewOptions);
   }
 
   public ClusterRecord insertTask(ClusterRecord clusterRecord, String taskId) {
     Query<ClusterRecord> query = getQuery(clusterRecord);
     UpdateOperations<ClusterRecord> updateOperations =
         persistence.createUpdateOperations(ClusterRecord.class).addToSet(ClusterRecordKeys.perpetualTaskIds, taskId);
-    FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(false).returnNew(true);
-    return persistence.upsert(query, updateOperations, findAndModifyOptions);
+    return persistence.findAndModify(query, updateOperations, returnNewOptions);
   }
 
   public ClusterRecord removeTask(ClusterRecord clusterRecord, String taskId) {
     Query<ClusterRecord> query = getQuery(clusterRecord);
     UpdateOperations<ClusterRecord> updateOperations =
         persistence.createUpdateOperations(ClusterRecord.class).removeAll(ClusterRecordKeys.perpetualTaskIds, taskId);
-    FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(false).returnNew(true);
-    return persistence.upsert(query, updateOperations, findAndModifyOptions);
+    return persistence.findAndModify(query, updateOperations, returnNewOptions);
   }
 }

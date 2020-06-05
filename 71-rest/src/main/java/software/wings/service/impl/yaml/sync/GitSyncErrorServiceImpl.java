@@ -10,7 +10,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.CreatedAtAware.CREATED_AT_KEY;
-import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
@@ -574,7 +573,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
             .set(APP_ID_KEY, appId);
     populateGitDetails(failedUpdateOperations, failedGitFileChange, appId);
     fetchQuery.project(GitSyncError.ID_KEY, true);
-    wingsPersistence.upsert(fetchQuery, failedUpdateOperations, upsertReturnNewOptions);
+    wingsPersistence.upsert(fetchQuery, failedUpdateOperations);
   }
 
   private <T extends Change> void upsertGitToHarnessError(T failedChange, String errorMessage) {
@@ -633,7 +632,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     }
     failedUpdateOperations.set(GitSyncErrorKeys.additionalErrorDetails, gitToHarnessErrorDetails);
     fetchQuery.project(GitSyncError.ID_KEY, true);
-    wingsPersistence.upsert(fetchQuery, failedUpdateOperations, upsertReturnNewOptions);
+    wingsPersistence.upsert(fetchQuery, failedUpdateOperations);
   }
 
   private HarnessToGitErrorDetails getHarnessToGitErrorDetails(GitFileChange failedChange, boolean fullSyncPath) {

@@ -222,6 +222,17 @@ public interface HPersistence extends HealthMonitor {
    * @param updateOperations the update operations
    * @return the entity
    */
+  default<T extends PersistentEntity> void upsert(Query<T> query, UpdateOperations<T> updateOperations) {
+    upsert(query, updateOperations, upsertReturnNewOptions);
+  }
+
+  /**
+   * Upsert.
+   *
+   * @param query            the query
+   * @param updateOperations the update operations
+   * @return the entity
+   */
   <T extends PersistentEntity> T upsert(
       Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions options);
 

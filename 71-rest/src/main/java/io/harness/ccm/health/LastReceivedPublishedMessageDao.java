@@ -1,5 +1,7 @@
 package io.harness.ccm.health;
 
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
+
 import com.google.inject.Inject;
 
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
@@ -31,7 +33,7 @@ public class LastReceivedPublishedMessageDao {
             .set(LastReceivedPublishedMessageKeys.accountId, accountId)
             .set(LastReceivedPublishedMessageKeys.identifier, identifier)
             .set(LastReceivedPublishedMessageKeys.lastReceivedAt, Instant.now().toEpochMilli()),
-        HPersistence.upsertReturnNewOptions);
+        upsertReturnNewOptions);
   }
 
   public LastReceivedPublishedMessage get(String accountId, String identifier) {

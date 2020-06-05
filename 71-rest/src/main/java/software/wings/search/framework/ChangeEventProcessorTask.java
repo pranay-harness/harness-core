@@ -1,8 +1,9 @@
 package software.wings.search.framework;
 
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -74,7 +75,7 @@ public class ChangeEventProcessorTask implements Runnable {
             .set(SearchSourceEntitySyncStateKeys.lastSyncedToken, token);
 
     SearchSourceEntitySyncState searchSourceEntitySyncState =
-        wingsPersistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
+        wingsPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
     if (searchSourceEntitySyncState == null || !searchSourceEntitySyncState.getLastSyncedToken().equals(token)) {
       logger.error(
           String.format("Search Entity %s token %s could not be updated", sourceClass.getCanonicalName(), token));
