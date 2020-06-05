@@ -5,6 +5,9 @@ extend type Query {
   # Get details about Cloud Providers.
   cloudProviders(filters: [CloudProviderFilter], limit: Int!, offset: Int): CloudProviderConnection
     @dataFetcher(name: cloudProviderConnection)
+
+  # Beta
+  cloudProviderByName(name: String!): CloudProvider @dataFetcher(name: cloudProvider)
 }
 
 input CloudProviderFilter {

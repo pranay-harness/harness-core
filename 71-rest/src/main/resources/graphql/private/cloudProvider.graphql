@@ -1,12 +1,13 @@
-extend type Query {
-  cloudProviderByName(name: String!): CloudProvider @dataFetcher(name: cloudProvider)
-}
-
 extend type Mutation {
+  # Beta
   createCloudProvider(input: CreateCloudProviderInput!): CreateCloudProviderPayload
     @dataFetcher(name: createCloudProvider)
+
+  # Beta
   updateCloudProvider(input: UpdateCloudProviderInput!): UpdateCloudProviderPayload
     @dataFetcher(name: updateCloudProvider)
+
+  # Beta
   deleteCloudProvider(input: DeleteCloudProviderInput!): DeleteCloudProviderPayload
     @dataFetcher(name: deleteCloudProvider)
 }
