@@ -266,7 +266,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         logger.info(application.toString());
         Set<AppdynamicsNode> nodes = appdynamicsDelegateService.getNodes(appDynamicsConfig, application.getId(),
             tier.getId(), secretManager.getEncryptionDetails(appDynamicsConfig, null, null),
-            createApiCallLog(appDynamicsConfig.getAccountId(), null));
+            createApiCallLog(appDynamicsConfig.getAccountId(), null), null);
 
         for (AppdynamicsNode node : new TreeSet<>(nodes).descendingSet()) {
           AppdynamicsSetupTestNodeData testNodeData =

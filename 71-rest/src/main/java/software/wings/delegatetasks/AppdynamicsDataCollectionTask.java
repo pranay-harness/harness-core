@@ -396,7 +396,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       if (!dataCollectionInfo.isNodeIdsMapped() && isNotEmpty(dataCollectionInfo.getHosts())) {
         final Set<AppdynamicsNode> nodes = appdynamicsDelegateService.getNodes(appDynamicsConfig,
             dataCollectionInfo.getAppId(), dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails(),
-            createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+            createApiCallLog(dataCollectionInfo.getStateExecutionId()),
+            new ArrayList<String>(dataCollectionInfo.getHosts().keySet()));
         Map<String, String> hosts = new HashMap<>();
         dataCollectionInfo.getHosts().forEach((hostName, groupName) -> nodes.forEach(appdynamicsNode -> {
           if (appdynamicsNode.getName().toLowerCase().equals(hostName.toLowerCase())) {
