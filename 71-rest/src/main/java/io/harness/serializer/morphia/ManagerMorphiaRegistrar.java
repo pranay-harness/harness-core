@@ -606,10 +606,14 @@ import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ArtifactCheckState;
 import software.wings.sm.states.ArtifactCollectionState;
 import software.wings.sm.states.AwsAmiRollbackSwitchRoutesState;
+import software.wings.sm.states.AwsAmiRollbackTrafficShiftAlbSwitchRoutesState;
 import software.wings.sm.states.AwsAmiServiceDeployState;
 import software.wings.sm.states.AwsAmiServiceRollback;
 import software.wings.sm.states.AwsAmiServiceSetup;
+import software.wings.sm.states.AwsAmiServiceTrafficShiftAlbDeployState;
+import software.wings.sm.states.AwsAmiServiceTrafficShiftAlbSetup;
 import software.wings.sm.states.AwsAmiSwitchRoutesState;
+import software.wings.sm.states.AwsAmiTrafficShiftAlbSwitchRoutesState;
 import software.wings.sm.states.AwsCodeDeployRollback;
 import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.AwsLambdaRollback;
@@ -1430,6 +1434,11 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.AwsAmiServiceRollback", AwsAmiServiceRollback.class);
     w.put("sm.states.AwsAmiServiceSetup", AwsAmiServiceSetup.class);
     w.put("sm.states.AwsAmiSwitchRoutesState", AwsAmiSwitchRoutesState.class);
+    w.put("sm.states.AwsAmiServiceTrafficShiftAlbSetup", AwsAmiServiceTrafficShiftAlbSetup.class);
+    w.put("sm.states.AwsAmiServiceTrafficShiftAlbDeployState", AwsAmiServiceTrafficShiftAlbDeployState.class);
+    w.put("sm.states.AwsAmiTrafficShiftAlbSwitchRoutesState", AwsAmiTrafficShiftAlbSwitchRoutesState.class);
+    w.put("sm.states.AwsAmiRollbackTrafficShiftAlbSwitchRoutesState",
+        AwsAmiRollbackTrafficShiftAlbSwitchRoutesState.class);
     w.put("sm.states.AwsCodeDeployRollback", AwsCodeDeployRollback.class);
     w.put("sm.states.AwsCodeDeployState", AwsCodeDeployState.class);
     w.put("sm.states.AwsLambdaRollback", AwsLambdaRollback.class);

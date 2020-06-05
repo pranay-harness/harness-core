@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
@@ -180,6 +181,8 @@ import static software.wings.sm.StateType.SUB_WORKFLOW;
 import static software.wings.sm.StateType.WAIT;
 import static software.wings.sm.StepType.APPROVAL;
 import static software.wings.sm.StepType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_SETUP;
+import static software.wings.sm.StepType.AWS_AMI_SERVICE_SETUP;
 import static software.wings.sm.StepType.AZURE_NODE_SELECT;
 import static software.wings.sm.StepType.BAMBOO;
 import static software.wings.sm.StepType.BARRIER;
@@ -4660,6 +4663,21 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(finalSteps).isNotNull();
     assertThat(finalSteps.size()).isEqualTo(1);
     assertThat(finalSteps.get(0)).isEqualTo(SPOTINST_SETUP);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testFilterAsgAmiStepsForTrafficShift() {
+    WorkflowServiceImpl service = spy(WorkflowServiceImpl.class);
+    FeatureFlagService mockFF = mock(FeatureFlagService.class);
+    on(service).set("featureFlagService", mockFF);
+    doReturn(false).when(mockFF).isEnabled(any(), anyString());
+    List<StepType> initialSteps = Arrays.asList(AWS_AMI_SERVICE_SETUP, ASG_AMI_SERVICE_ALB_SHIFT_SETUP);
+    List<StepType> finalSteps = service.filterAsgAmiStepsForTrafficShift(initialSteps, ACCOUNT_ID);
+    assertThat(finalSteps).isNotNull();
+    assertThat(finalSteps.size()).isEqualTo(1);
+    assertThat(finalSteps.get(0)).isEqualTo(AWS_AMI_SERVICE_SETUP);
   }
 
   @Test
