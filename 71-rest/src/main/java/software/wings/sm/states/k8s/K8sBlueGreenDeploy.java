@@ -65,7 +65,7 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
 
   @Override
   public Integer getTimeoutMillis() {
-    return getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
+    return K8sStateHelper.getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
   }
 
   public K8sBlueGreenDeploy(String name) {

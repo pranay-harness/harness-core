@@ -1,6 +1,7 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -86,5 +87,19 @@ public class K8sScaleTest extends WingsBaseTest {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(executionResponse.getStateExecutionData().getErrorMsg()).isEqualTo(ERROR_MESSAGE);
     verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testTimeoutValue() {
+    K8sScale state = new K8sScale("k8s-scale");
+    assertThat(state.getTimeoutMillis()).isNull();
+
+    state.setStateTimeoutInMinutes(5);
+    assertThat(state.getTimeoutMillis()).isEqualTo(300000);
+
+    state.setStateTimeoutInMinutes(Integer.MAX_VALUE);
+    assertThat(state.getTimeoutMillis()).isNull();
   }
 }
