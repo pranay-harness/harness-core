@@ -27,7 +27,7 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
   @Autowired protected LastReceivedPublishedMessageDao lastReceivedPublishedMessageDao;
 
   private static final int MAX_HOURLY_DATA = 16;
-  private static final int MAX_EVENTS_DATA = 10;
+  private static final int MAX_EVENTS_DATA = 15;
 
   @Override
   public boolean create(BatchJobScheduledData batchJobScheduledData) {
