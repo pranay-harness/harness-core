@@ -49,6 +49,7 @@ import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloud
 import software.wings.graphql.schema.type.cloudProvider.QLPcfCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLPhysicalDataCenterCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLSpotInstCloudProvider;
+import software.wings.graphql.schema.type.cloudProvider.aws.QLAwsCredentialsType;
 import software.wings.graphql.schema.type.cloudProvider.k8s.QLClusterDetailsType;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
@@ -392,13 +393,14 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
         QLUpdateCloudProviderInput.builder()
             .cloudProviderId(CLOUD_PROVIDER_ID)
             .cloudProviderType(QLCloudProviderType.AWS)
-            .awsCloudProvider(QLAwsCloudProviderInput.builder()
-                                  .name(RequestField.ofNullable("AWS"))
-                                  .usageScope(RequestField.ofNullable(usageScope()))
-                                  .useEc2IamCredentials(RequestField.ofNullable(Boolean.TRUE))
-                                  .ec2IamCredentials(RequestField.ofNullable(
-                                      QLEc2IamCredentials.builder().tag(RequestField.ofNullable("DELEGATE")).build()))
-                                  .build())
+            .awsCloudProvider(
+                QLAwsCloudProviderInput.builder()
+                    .name(RequestField.ofNullable("AWS"))
+                    .usageScope(RequestField.ofNullable(usageScope()))
+                    .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.EC2_IAM))
+                    .ec2IamCredentials(RequestField.ofNullable(
+                        QLEc2IamCredentials.builder().delegateSelector(RequestField.ofNullable("DELEGATE")).build()))
+                    .build())
             .build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());
 

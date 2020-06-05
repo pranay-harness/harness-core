@@ -12,5 +12,5 @@ import software.wings.security.annotations.Scope;
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class QLEc2IamCredentials {
-  private RequestField<String> tag;
+  private RequestField<String> delegateSelector;
 }

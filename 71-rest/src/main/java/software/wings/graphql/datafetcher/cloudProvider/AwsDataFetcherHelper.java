@@ -12,8 +12,8 @@ import software.wings.beans.AwsCrossAccountAttributes.AwsCrossAccountAttributesB
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsCloudProviderInput;
-import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsCrossAccountAttributes;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsManualCredentials;
+import software.wings.graphql.schema.mutation.cloudProvider.aws.QLEc2IamCredentials;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 
 @Singleton
@@ -23,49 +23,49 @@ public class AwsDataFetcherHelper {
   public SettingAttribute toSettingAttribute(QLAwsCloudProviderInput input, String accountId) {
     AwsConfigBuilder configBuilder = AwsConfig.builder().accountId(accountId);
 
-    if (input.getUseEc2IamCredentials().isPresent()) {
-      input.getUseEc2IamCredentials().getValue().ifPresent(useEc2 -> {
-        configBuilder.useEc2IamCredentials(useEc2);
-        if (useEc2) {
-          configBuilder.tag(
-              input.getEc2IamCredentials()
-                  .getValue()
-                  .orElseThrow(() -> new InvalidRequestException("No ec2IamCredentials provided with the request."))
-                  .getTag()
-                  .getValue()
-                  .orElseThrow(() -> new InvalidRequestException("No delegate tag provided with the request.")));
-        } else {
-          QLAwsManualCredentials credentials = input.getManualCredentials().getValue().orElseThrow(
-              () -> new InvalidRequestException("No manualCredentials provided with the request."));
+    if (input.getCredentialsType().isPresent() && input.getCredentialsType().getValue().isPresent()) {
+      input.getCredentialsType().getValue().ifPresent(credentialsType -> {
+        switch (credentialsType) {
+          case EC2_IAM: {
+            QLEc2IamCredentials credentials = input.getEc2IamCredentials().getValue().orElseThrow(
+                () -> new InvalidRequestException("No ec2IamCredentials provided with the request."));
 
-          configBuilder.accessKey(credentials.getAccessKey().getValue().orElseThrow(
-              () -> new InvalidRequestException("No accessKey provided with the request.")));
-          configBuilder.encryptedSecretKey(credentials.getSecretKeySecretId().getValue().orElseThrow(
-              () -> new InvalidRequestException("No secretKeySecretId provided with the request.")));
+            configBuilder.useEc2IamCredentials(true);
+            configBuilder.tag(credentials.getDelegateSelector().getValue().orElseThrow(
+                () -> new InvalidRequestException("No delegateSelector provided with the request.")));
+          } break;
+          case MANUAL: {
+            QLAwsManualCredentials credentials = input.getManualCredentials().getValue().orElseThrow(
+                () -> new InvalidRequestException("No manualCredentials provided with the request."));
+
+            configBuilder.useEc2IamCredentials(false);
+            configBuilder.accessKey(credentials.getAccessKey().getValue().orElseThrow(
+                () -> new InvalidRequestException("No accessKey provided with the request.")));
+            configBuilder.encryptedSecretKey(credentials.getSecretKeySecretId().getValue().orElseThrow(
+                () -> new InvalidRequestException("No secretKeySecretId provided with the request.")));
+          } break;
+          default:
+            throw new InvalidRequestException("Invalid credentials type");
         }
       });
     } else {
-      throw new InvalidRequestException("No useEc2IamCredentials provided with the request.");
+      throw new InvalidRequestException("No credentialsType provided with the request.");
     }
 
-    if (input.getAssumeCrossAccountRole().isPresent()) {
-      input.getAssumeCrossAccountRole().getValue().ifPresent(assumeCrossAccountRole -> {
-        configBuilder.assumeCrossAccountRole(assumeCrossAccountRole);
+    if (input.getCrossAccountAttributes().isPresent()) {
+      input.getCrossAccountAttributes().getValue().ifPresent(crossAccountAttributes -> {
+        configBuilder.assumeCrossAccountRole(crossAccountAttributes.getAssumeCrossAccountRole().getValue().orElseThrow(
+            () -> new InvalidRequestException("No assumeCrossAccountRole provided with the request.")));
 
-        if (assumeCrossAccountRole) {
-          AwsCrossAccountAttributesBuilder builder = AwsCrossAccountAttributes.builder();
+        AwsCrossAccountAttributesBuilder builder = AwsCrossAccountAttributes.builder();
 
-          QLAwsCrossAccountAttributes crossAccountAttributes = input.getCrossAccountAttributes().getValue().orElseThrow(
-              () -> new InvalidRequestException("No crossAccountAttributes provided with the request."));
+        builder.crossAccountRoleArn(crossAccountAttributes.getCrossAccountRoleArn().getValue().orElseThrow(
+            () -> new InvalidRequestException("No crossAccountRoleArn provided with the request.")));
 
-          builder.crossAccountRoleArn(crossAccountAttributes.getCrossAccountRoleArn().getValue().orElseThrow(
-              () -> new InvalidRequestException("No crossAccountRoleArn provided with the request.")));
+        builder.externalId(crossAccountAttributes.getExternalId().getValue().orElseThrow(
+            () -> new InvalidRequestException("No externalId provided with the request.")));
 
-          builder.externalId(crossAccountAttributes.getExternalId().getValue().orElseThrow(
-              () -> new InvalidRequestException("No externalId provided with the request.")));
-
-          configBuilder.crossAccountAttributes(builder.build());
-        }
+        configBuilder.crossAccountAttributes(builder.build());
       });
     }
 
@@ -74,8 +74,10 @@ public class AwsDataFetcherHelper {
                                                            .withAccountId(accountId)
                                                            .withCategory(SettingAttribute.SettingCategory.SETTING);
 
-    if (input.getName().isPresent()) {
+    if (input.getName().isPresent() && input.getName().getValue().isPresent()) {
       input.getName().getValue().ifPresent(settingAttributeBuilder::withName);
+    } else {
+      throw new InvalidRequestException("No name provided with the request.");
     }
 
     if (input.getUsageScope().isPresent()) {
@@ -90,39 +92,44 @@ public class AwsDataFetcherHelper {
       SettingAttribute settingAttribute, QLAwsCloudProviderInput input, String accountId) {
     AwsConfig config = (AwsConfig) settingAttribute.getValue();
 
-    if (input.getUseEc2IamCredentials().isPresent()) {
-      input.getUseEc2IamCredentials().getValue().ifPresent(useEc2 -> {
-        config.setUseEc2IamCredentials(useEc2);
-        if (useEc2) {
-          input.getEc2IamCredentials()
-              .getValue()
-              .flatMap(credentials -> credentials.getTag().getValue())
-              .ifPresent(config::setTag);
-        } else {
-          input.getManualCredentials().getValue().ifPresent(credentials -> {
-            credentials.getAccessKey().getValue().ifPresent(config::setAccessKey);
-            credentials.getSecretKeySecretId().getValue().ifPresent(config::setEncryptedSecretKey);
-          });
+    if (input.getCredentialsType().isPresent() && input.getCredentialsType().getValue().isPresent()) {
+      input.getCredentialsType().getValue().ifPresent(credentialsType -> {
+        switch (credentialsType) {
+          case EC2_IAM: {
+            config.setUseEc2IamCredentials(true);
+            config.setAccessKey(null);
+            config.setEncryptedSecretKey(null);
+            input.getEc2IamCredentials()
+                .getValue()
+                .flatMap(credentials -> credentials.getDelegateSelector().getValue())
+                .ifPresent(config::setTag);
+          } break;
+          case MANUAL: {
+            config.setUseEc2IamCredentials(false);
+            config.setTag(null);
+            input.getManualCredentials().getValue().ifPresent(credentials -> {
+              credentials.getAccessKey().getValue().ifPresent(config::setAccessKey);
+              credentials.getSecretKeySecretId().getValue().ifPresent(config::setEncryptedSecretKey);
+            });
+          } break;
+          default:
+            throw new InvalidRequestException("Invalid credentials type");
         }
       });
     }
 
-    if (input.getAssumeCrossAccountRole().isPresent()) {
-      input.getAssumeCrossAccountRole().getValue().ifPresent(assumeCrossAccountRole -> {
-        config.setAssumeCrossAccountRole(assumeCrossAccountRole);
+    if (input.getCrossAccountAttributes().isPresent()) {
+      input.getCrossAccountAttributes().getValue().ifPresent(crossAccountAttributes -> {
+        crossAccountAttributes.getAssumeCrossAccountRole().getValue().ifPresent(config::setAssumeCrossAccountRole);
 
-        if (assumeCrossAccountRole) {
-          AwsCrossAccountAttributes awsCrossAccountAttributes = ObjectUtils.defaultIfNull(
-              config.getCrossAccountAttributes(), AwsCrossAccountAttributes.builder().build());
+        AwsCrossAccountAttributes awsCrossAccountAttributes =
+            ObjectUtils.defaultIfNull(config.getCrossAccountAttributes(), AwsCrossAccountAttributes.builder().build());
 
-          input.getCrossAccountAttributes().getValue().ifPresent(crossAccountAttributes -> {
-            crossAccountAttributes.getCrossAccountRoleArn().getValue().ifPresent(
-                awsCrossAccountAttributes::setCrossAccountRoleArn);
-            crossAccountAttributes.getExternalId().getValue().ifPresent(awsCrossAccountAttributes::setExternalId);
-          });
+        crossAccountAttributes.getCrossAccountRoleArn().getValue().ifPresent(
+            awsCrossAccountAttributes::setCrossAccountRoleArn);
+        crossAccountAttributes.getExternalId().getValue().ifPresent(awsCrossAccountAttributes::setExternalId);
 
-          config.setCrossAccountAttributes(awsCrossAccountAttributes);
-        }
+        config.setCrossAccountAttributes(awsCrossAccountAttributes);
       });
     }
 

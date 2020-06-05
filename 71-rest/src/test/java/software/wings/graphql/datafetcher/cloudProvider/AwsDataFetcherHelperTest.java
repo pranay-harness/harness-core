@@ -21,6 +21,7 @@ import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsCrossAccountAttributes;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsManualCredentials;
+import software.wings.graphql.schema.type.cloudProvider.aws.QLAwsCredentialsType;
 
 import java.sql.SQLException;
 
@@ -50,16 +51,17 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
         QLAwsCloudProviderInput.builder()
             .name(RequestField.ofNullable(NAME))
             .usageScope(RequestField.ofNullable(usageScope()))
-            .useEc2IamCredentials(RequestField.ofNullable(Boolean.FALSE))
+            .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.MANUAL))
             .manualCredentials(RequestField.ofNullable(QLAwsManualCredentials.builder()
                                                            .accessKey(RequestField.ofNullable(ACCESS_KEY))
                                                            .secretKeySecretId(RequestField.ofNullable(SECRET_KEY))
                                                            .build()))
-            .assumeCrossAccountRole(RequestField.ofNullable(Boolean.TRUE))
-            .crossAccountAttributes(RequestField.ofNullable(QLAwsCrossAccountAttributes.builder()
-                                                                .crossAccountRoleArn(RequestField.ofNullable(ARN))
-                                                                .externalId(RequestField.ofNullable(EXTERN_ID))
-                                                                .build()))
+            .crossAccountAttributes(
+                RequestField.ofNullable(QLAwsCrossAccountAttributes.builder()
+                                            .assumeCrossAccountRole(RequestField.ofNullable(Boolean.TRUE))
+                                            .crossAccountRoleArn(RequestField.ofNullable(ARN))
+                                            .externalId(RequestField.ofNullable(EXTERN_ID))
+                                            .build()))
             .build();
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
@@ -82,9 +84,9 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
     QLAwsCloudProviderInput input = QLAwsCloudProviderInput.builder()
                                         .name(RequestField.absent())
                                         .usageScope(RequestField.absent())
-                                        .useEc2IamCredentials(RequestField.ofNullable(Boolean.TRUE))
+                                        .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.EC2_IAM))
                                         .ec2IamCredentials(RequestField.ofNull())
-                                        .assumeCrossAccountRole(RequestField.absent())
+                                        .crossAccountAttributes(RequestField.absent())
                                         .build();
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
@@ -99,9 +101,9 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
     QLAwsCloudProviderInput input = QLAwsCloudProviderInput.builder()
                                         .name(RequestField.absent())
                                         .usageScope(RequestField.absent())
-                                        .useEc2IamCredentials(RequestField.ofNullable(Boolean.FALSE))
+                                        .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.MANUAL))
                                         .manualCredentials(RequestField.ofNull())
-                                        .assumeCrossAccountRole(RequestField.absent())
+                                        .crossAccountAttributes(RequestField.absent())
                                         .build();
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
@@ -116,8 +118,8 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
     QLAwsCloudProviderInput input = QLAwsCloudProviderInput.builder()
                                         .name(RequestField.absent())
                                         .usageScope(RequestField.absent())
-                                        .useEc2IamCredentials(RequestField.absent())
-                                        .assumeCrossAccountRole(RequestField.ofNullable(Boolean.TRUE))
+                                        .credentialsType(RequestField.absent())
+                                        .crossAccountAttributes(RequestField.ofNull())
                                         .build();
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
@@ -133,16 +135,17 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
         QLAwsCloudProviderInput.builder()
             .name(RequestField.ofNullable(NAME))
             .usageScope(RequestField.ofNullable(usageScope()))
-            .useEc2IamCredentials(RequestField.ofNullable(Boolean.FALSE))
+            .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.MANUAL))
             .manualCredentials(RequestField.ofNullable(QLAwsManualCredentials.builder()
                                                            .accessKey(RequestField.ofNullable(ACCESS_KEY))
                                                            .secretKeySecretId(RequestField.ofNullable(SECRET_KEY))
                                                            .build()))
-            .assumeCrossAccountRole(RequestField.ofNullable(Boolean.TRUE))
-            .crossAccountAttributes(RequestField.ofNullable(QLAwsCrossAccountAttributes.builder()
-                                                                .crossAccountRoleArn(RequestField.ofNullable(ARN))
-                                                                .externalId(RequestField.ofNullable(EXTERN_ID))
-                                                                .build()))
+            .crossAccountAttributes(
+                RequestField.ofNullable(QLAwsCrossAccountAttributes.builder()
+                                            .assumeCrossAccountRole(RequestField.ofNullable(Boolean.TRUE))
+                                            .crossAccountRoleArn(RequestField.ofNullable(ARN))
+                                            .externalId(RequestField.ofNullable(EXTERN_ID))
+                                            .build()))
             .build();
 
     SettingAttribute setting =
@@ -167,11 +170,10 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
     QLAwsCloudProviderInput input = QLAwsCloudProviderInput.builder()
                                         .name(RequestField.absent())
                                         .usageScope(RequestField.absent())
-                                        .assumeCrossAccountRole(RequestField.absent())
                                         .crossAccountAttributes(RequestField.absent())
                                         .ec2IamCredentials(RequestField.absent())
                                         .manualCredentials(RequestField.absent())
-                                        .useEc2IamCredentials(RequestField.absent())
+                                        .credentialsType(RequestField.absent())
                                         .build();
 
     SettingAttribute setting =

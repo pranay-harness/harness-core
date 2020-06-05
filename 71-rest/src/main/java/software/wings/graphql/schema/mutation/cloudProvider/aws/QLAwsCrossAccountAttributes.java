@@ -12,6 +12,7 @@ import software.wings.security.annotations.Scope;
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class QLAwsCrossAccountAttributes {
+  private RequestField<Boolean> assumeCrossAccountRole;
   private RequestField<String> crossAccountRoleArn;
   private RequestField<String> externalId;
 }
