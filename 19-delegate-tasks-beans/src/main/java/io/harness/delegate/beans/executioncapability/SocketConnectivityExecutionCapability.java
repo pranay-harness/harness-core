@@ -37,6 +37,6 @@ public class SocketConnectivityExecutionCapability implements ExecutionCapabilit
   }
 
   private boolean shouldUseOriginalUrl() {
-    return isBlank(scheme) && isBlank(hostName);
+    return isBlank(scheme) || isBlank(hostName);
   }
 }
