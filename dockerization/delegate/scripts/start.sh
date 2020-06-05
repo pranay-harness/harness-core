@@ -232,6 +232,15 @@ else
   sed -i.bak "s|^cdnUrl:.*$|cdnUrl: $CDN_URL|" config-delegate.yml
 fi
 
+if [ ! -z "$HELM3_PATH" ] && ! `grep helm3Path config-delegate.yml > /dev/null` ; then
+  echo "helm3Path: $HELM3_PATH" >> config-delegate.yml
+fi
+
+if [ ! -z "$HELM_PATH" ] && ! `grep helmPath config-delegate.yml > /dev/null` ; then
+  echo "helmPath: $HELM_PATH" >> config-delegate.yml
+fi
+
+
 rm -f -- *.bak
 
 export HOSTNAME
