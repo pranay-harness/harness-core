@@ -27,4 +27,6 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e USE_CDN=${useCdn} \
 -e CDN_URL=${cdnUrl} \
 -e JRE_VERSION=${jreVersion} \
+-e HELM3_PATH= \
+-e HELM_PATH= \
 ${delegateDockerImage}

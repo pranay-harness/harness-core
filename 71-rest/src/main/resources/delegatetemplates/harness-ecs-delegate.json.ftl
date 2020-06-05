@@ -77,6 +77,14 @@
         {
           "name": "JRE_VERSION",
           "value": "${jreVersion}"
+        },
+        {
+          "name": "HELM3_PATH",
+          "value": ""
+        },
+        {
+          "name": "HELM_PATH",
+          "value": ""
         }
       ],
       "memory": 6144,
