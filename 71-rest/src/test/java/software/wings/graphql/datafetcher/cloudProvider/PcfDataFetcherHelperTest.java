@@ -18,6 +18,7 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLPcfCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLUpdatePcfCloudProviderInput;
 
 import java.sql.SQLException;
 
@@ -81,13 +82,13 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributePerformance() {
-    QLPcfCloudProviderInput input = QLPcfCloudProviderInput.builder()
-                                        .name(RequestField.ofNullable(NAME))
-                                        .usageScope(RequestField.ofNullable(usageScope()))
-                                        .endpointUrl(RequestField.ofNullable(URL))
-                                        .userName(RequestField.ofNullable(USERNAME))
-                                        .passwordSecretId(RequestField.ofNullable(PASSWORD))
-                                        .build();
+    QLUpdatePcfCloudProviderInput input = QLUpdatePcfCloudProviderInput.builder()
+                                              .name(RequestField.ofNullable(NAME))
+                                              .usageScope(RequestField.ofNullable(usageScope()))
+                                              .endpointUrl(RequestField.ofNullable(URL))
+                                              .userName(RequestField.ofNullable(USERNAME))
+                                              .passwordSecretId(RequestField.ofNullable(PASSWORD))
+                                              .build();
 
     SettingAttribute setting =
         SettingAttribute.Builder.aSettingAttribute().withValue(PcfConfig.builder().build()).build();
@@ -106,13 +107,13 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributeWithEmptyInput() {
-    QLPcfCloudProviderInput input = QLPcfCloudProviderInput.builder()
-                                        .name(RequestField.ofNull())
-                                        .usageScope(RequestField.ofNull())
-                                        .endpointUrl(RequestField.ofNull())
-                                        .userName(RequestField.ofNull())
-                                        .passwordSecretId(RequestField.ofNull())
-                                        .build();
+    QLUpdatePcfCloudProviderInput input = QLUpdatePcfCloudProviderInput.builder()
+                                              .name(RequestField.ofNull())
+                                              .usageScope(RequestField.ofNull())
+                                              .endpointUrl(RequestField.ofNull())
+                                              .userName(RequestField.ofNull())
+                                              .passwordSecretId(RequestField.ofNull())
+                                              .build();
 
     SettingAttribute setting =
         SettingAttribute.Builder.aSettingAttribute().withValue(PcfConfig.builder().build()).build();

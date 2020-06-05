@@ -18,6 +18,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLGcpCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateGcpCloudProviderInput;
 
 import java.sql.SQLException;
 
@@ -73,11 +74,11 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributePerformance() {
-    QLGcpCloudProviderInput input = QLGcpCloudProviderInput.builder()
-                                        .name(RequestField.ofNullable(NAME))
-                                        .serviceAccountKeySecretId(RequestField.ofNullable(KEY))
-                                        .usageScope(RequestField.ofNullable(usageScope()))
-                                        .build();
+    QLUpdateGcpCloudProviderInput input = QLUpdateGcpCloudProviderInput.builder()
+                                              .name(RequestField.ofNullable(NAME))
+                                              .serviceAccountKeySecretId(RequestField.ofNullable(KEY))
+                                              .usageScope(RequestField.ofNullable(usageScope()))
+                                              .build();
 
     SettingAttribute setting =
         SettingAttribute.Builder.aSettingAttribute().withValue(GcpConfig.builder().build()).build();
@@ -94,11 +95,11 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributeWithEmptyInput() {
-    QLGcpCloudProviderInput input = QLGcpCloudProviderInput.builder()
-                                        .name(RequestField.ofNull())
-                                        .usageScope(RequestField.ofNull())
-                                        .serviceAccountKeySecretId(RequestField.ofNull())
-                                        .build();
+    QLUpdateGcpCloudProviderInput input = QLUpdateGcpCloudProviderInput.builder()
+                                              .name(RequestField.ofNull())
+                                              .usageScope(RequestField.ofNull())
+                                              .serviceAccountKeySecretId(RequestField.ofNull())
+                                              .build();
 
     SettingAttribute setting =
         SettingAttribute.Builder.aSettingAttribute().withValue(GcpConfig.builder().build()).build();

@@ -1,12 +1,12 @@
 input K8sCloudProviderInput {
-  name: String
+  name: String!
   usageScope: UsageScopeInput
 
-  clusterDetailsType: ClusterDetailsType
+  clusterDetailsType: ClusterDetailsType!
   inheritClusterDetails: InheritClusterDetails
   manualClusterDetails: ManualClusterDetails
 
-  skipValidation: Boolean
+  skipValidation: Boolean!
 }
 
 enum ClusterDetailsType {
@@ -15,13 +15,13 @@ enum ClusterDetailsType {
 }
 
 input InheritClusterDetails {
-  delegateName: String
+  delegateName: String!
 }
 
 input ManualClusterDetails {
-  masterUrl: String
+  masterUrl: String!
 
-  type: ManualClusterDetailsAuthenticationType
+  type: ManualClusterDetailsAuthenticationType!
   usernameAndPassword: UsernameAndPasswordAuthentication
   serviceAccountToken: ServiceAccountToken
   oidcToken: OIDCToken
@@ -37,15 +37,67 @@ enum ManualClusterDetailsAuthenticationType {
 }
 
 input UsernameAndPasswordAuthentication {
+  userName: String!
+  passwordSecretId: String!
+}
+
+input ServiceAccountToken {
+  serviceAccountTokenSecretId: String!
+}
+
+input OIDCToken {
+  identityProviderUrl: String!
+  userName: String!
+  passwordSecretId: String!
+  clientIdSecretId: String!
+  clientSecretSecretId: String!
+  scopes: String!
+}
+
+input None {
+  userName: String!
+  passwordSecretId: String!
+  caCertificateSecretId: String!
+  clientCertificateSecretId: String!
+  clientKeySecretId: String!
+  clientKeyPassphraseSecretId: String!
+  clientKeyAlgorithm: String!
+  serviceAccountTokenSecretId: String!
+}
+
+input UpdateK8sCloudProviderInput {
+  name: String
+  usageScope: UsageScopeInput
+  clusterDetailsType: ClusterDetailsType
+  inheritClusterDetails: UpdateInheritClusterDetails
+  manualClusterDetails: UpdateManualClusterDetails
+
+  skipValidation: Boolean
+}
+
+input UpdateInheritClusterDetails {
+  delegateName: String
+}
+
+input UpdateManualClusterDetails {
+  masterUrl: String
+  type: ManualClusterDetailsAuthenticationType
+  usernameAndPassword: UpdateUsernameAndPasswordAuthentication
+  serviceAccountToken: UpdateServiceAccountToken
+  oidcToken: UpdateOIDCToken
+  none: UpdateNone
+}
+
+input UpdateUsernameAndPasswordAuthentication {
   userName: String
   passwordSecretId: String
 }
 
-input ServiceAccountToken {
+input UpdateServiceAccountToken {
   serviceAccountTokenSecretId: String
 }
 
-input OIDCToken {
+input UpdateOIDCToken {
   identityProviderUrl: String
   userName: String
   passwordSecretId: String
@@ -54,7 +106,7 @@ input OIDCToken {
   scopes: String
 }
 
-input None {
+input UpdateNone {
   userName: String
   passwordSecretId: String
   caCertificateSecretId: String

@@ -30,17 +30,17 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.mutation.cloudProvider.QLAzureCloudProviderInput;
-import software.wings.graphql.schema.mutation.cloudProvider.QLGcpCloudProviderInput;
-import software.wings.graphql.schema.mutation.cloudProvider.QLPcfCloudProviderInput;
-import software.wings.graphql.schema.mutation.cloudProvider.QLPhysicalDataCenterCloudProviderInput;
-import software.wings.graphql.schema.mutation.cloudProvider.QLSpotInstCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateAzureCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderPayload;
-import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsCloudProviderInput;
-import software.wings.graphql.schema.mutation.cloudProvider.aws.QLEc2IamCredentials;
-import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLInheritClusterDetails;
-import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLK8sCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateGcpCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLUpdatePcfCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLUpdatePhysicalDataCenterCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateSpotInstCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateAwsCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateEc2IamCredentials;
+import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLUpdateInheritClusterDetails;
+import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLUpdateK8sCloudProviderInput;
 import software.wings.graphql.schema.type.QLCloudProviderType;
 import software.wings.graphql.schema.type.cloudProvider.QLAwsCloudProvider;
 import software.wings.graphql.schema.type.cloudProvider.QLAzureCloudProvider;
@@ -91,7 +91,8 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
 
     doNothing()
         .when(pcfDataFetcherHelper)
-        .updateSettingAttribute(isA(SettingAttribute.class), isA(QLPcfCloudProviderInput.class), isA(String.class));
+        .updateSettingAttribute(
+            isA(SettingAttribute.class), isA(QLUpdatePcfCloudProviderInput.class), isA(String.class));
 
     doReturn(SettingAttribute.Builder.aSettingAttribute()
                  .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
@@ -108,7 +109,7 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
         dataFetcher.mutateAndFetch(QLUpdateCloudProviderInput.builder()
                                        .cloudProviderId(CLOUD_PROVIDER_ID)
                                        .cloudProviderType(QLCloudProviderType.PCF)
-                                       .pcfCloudProvider(QLPcfCloudProviderInput.builder()
+                                       .pcfCloudProvider(QLUpdatePcfCloudProviderInput.builder()
                                                              .name(RequestField.ofNullable("NAME"))
                                                              .endpointUrl(RequestField.ofNullable("URL"))
                                                              .userName(RequestField.ofNullable("USER"))
@@ -154,7 +155,7 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
         QLUpdateCloudProviderInput.builder()
             .cloudProviderId(CLOUD_PROVIDER_ID)
             .cloudProviderType(QLCloudProviderType.SPOT_INST)
-            .spotInstCloudProvider(QLSpotInstCloudProviderInput.builder()
+            .spotInstCloudProvider(QLUpdateSpotInstCloudProviderInput.builder()
                                        .name(RequestField.ofNullable("NAME"))
                                        .accountId(RequestField.ofNullable("SpotInstAccountId"))
                                        .tokenSecretId(RequestField.ofNullable("SpotInstToken"))
@@ -200,7 +201,7 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
         dataFetcher.mutateAndFetch(QLUpdateCloudProviderInput.builder()
                                        .cloudProviderId(CLOUD_PROVIDER_ID)
                                        .cloudProviderType(QLCloudProviderType.GCP)
-                                       .gcpCloudProvider(QLGcpCloudProviderInput.builder()
+                                       .gcpCloudProvider(QLUpdateGcpCloudProviderInput.builder()
                                                              .name(RequestField.ofNullable("NAME"))
                                                              .serviceAccountKeySecretId(RequestField.ofNullable("Key"))
                                                              .usageScope(RequestField.ofNullable(usageScope()))
@@ -246,13 +247,15 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
             .cloudProviderId(CLOUD_PROVIDER_ID)
             .cloudProviderType(QLCloudProviderType.KUBERNETES_CLUSTER)
             .k8sCloudProvider(
-                QLK8sCloudProviderInput.builder()
+                QLUpdateK8sCloudProviderInput.builder()
                     .name(RequestField.ofNullable("K8S"))
                     .usageScope(RequestField.ofNullable(usageScope()))
                     .skipValidation(RequestField.ofNullable(Boolean.TRUE))
                     .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.INHERIT_CLUSTER_DETAILS))
-                    .inheritClusterDetails(RequestField.ofNullable(
-                        QLInheritClusterDetails.builder().delegateName(RequestField.ofNullable("DELEGATE")).build()))
+                    .inheritClusterDetails(
+                        RequestField.ofNullable(QLUpdateInheritClusterDetails.builder()
+                                                    .delegateName(RequestField.ofNullable("DELEGATE"))
+                                                    .build()))
                     .build())
             .build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());
@@ -284,7 +287,7 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
     doNothing()
         .when(physicalDataCenterDataFetcherHelper)
         .updateSettingAttribute(
-            isA(SettingAttribute.class), isA(QLPhysicalDataCenterCloudProviderInput.class), isA(String.class));
+            isA(SettingAttribute.class), isA(QLUpdatePhysicalDataCenterCloudProviderInput.class), isA(String.class));
 
     doReturn(SettingAttribute.Builder.aSettingAttribute()
                  .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
@@ -299,16 +302,16 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
         .when(settingServiceHelper)
         .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
 
-    QLUpdateCloudProviderPayload payload =
-        dataFetcher.mutateAndFetch(QLUpdateCloudProviderInput.builder()
-                                       .cloudProviderId(CLOUD_PROVIDER_ID)
-                                       .cloudProviderType(QLCloudProviderType.PHYSICAL_DATA_CENTER)
-                                       .physicalDataCenterCloudProvider(QLPhysicalDataCenterCloudProviderInput.builder()
-                                                                            .name(RequestField.ofNullable("NAME"))
-                                                                            .usageScope(RequestField.ofNull())
-                                                                            .build())
-                                       .build(),
-            MutationContext.builder().accountId(ACCOUNT_ID).build());
+    QLUpdateCloudProviderPayload payload = dataFetcher.mutateAndFetch(
+        QLUpdateCloudProviderInput.builder()
+            .cloudProviderId(CLOUD_PROVIDER_ID)
+            .cloudProviderType(QLCloudProviderType.PHYSICAL_DATA_CENTER)
+            .physicalDataCenterCloudProvider(QLUpdatePhysicalDataCenterCloudProviderInput.builder()
+                                                 .name(RequestField.ofNullable("NAME"))
+                                                 .usageScope(RequestField.ofNull())
+                                                 .build())
+            .build(),
+        MutationContext.builder().accountId(ACCOUNT_ID).build());
 
     verify(settingsService, times(1)).getByAccount(ACCOUNT_ID, CLOUD_PROVIDER_ID);
     verify(settingsService, times(1)).updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
@@ -346,7 +349,7 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
         dataFetcher.mutateAndFetch(QLUpdateCloudProviderInput.builder()
                                        .cloudProviderId(CLOUD_PROVIDER_ID)
                                        .cloudProviderType(QLCloudProviderType.AZURE)
-                                       .azureCloudProvider(QLAzureCloudProviderInput.builder()
+                                       .azureCloudProvider(QLUpdateAzureCloudProviderInput.builder()
                                                                .name(RequestField.ofNullable("Azure"))
                                                                .usageScope(RequestField.ofNullable(usageScope()))
                                                                .clientId(RequestField.ofNullable("CLIENT_ID"))
@@ -393,14 +396,15 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
         QLUpdateCloudProviderInput.builder()
             .cloudProviderId(CLOUD_PROVIDER_ID)
             .cloudProviderType(QLCloudProviderType.AWS)
-            .awsCloudProvider(
-                QLAwsCloudProviderInput.builder()
-                    .name(RequestField.ofNullable("AWS"))
-                    .usageScope(RequestField.ofNullable(usageScope()))
-                    .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.EC2_IAM))
-                    .ec2IamCredentials(RequestField.ofNullable(
-                        QLEc2IamCredentials.builder().delegateSelector(RequestField.ofNullable("DELEGATE")).build()))
-                    .build())
+            .awsCloudProvider(QLUpdateAwsCloudProviderInput.builder()
+                                  .name(RequestField.ofNullable("AWS"))
+                                  .usageScope(RequestField.ofNullable(usageScope()))
+                                  .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.EC2_IAM))
+                                  .ec2IamCredentials(
+                                      RequestField.ofNullable(QLUpdateEc2IamCredentials.builder()
+                                                                  .delegateSelector(RequestField.ofNullable("DELEGATE"))
+                                                                  .build()))
+                                  .build())
             .build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());
 
@@ -423,7 +427,7 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
     dataFetcher.mutateAndFetch(QLUpdateCloudProviderInput.builder()
                                    .cloudProviderId(CLOUD_PROVIDER_ID)
                                    .cloudProviderType(QLCloudProviderType.PCF)
-                                   .pcfCloudProvider(QLPcfCloudProviderInput.builder()
+                                   .pcfCloudProvider(QLUpdatePcfCloudProviderInput.builder()
                                                          .name(RequestField.ofNullable("NAME"))
                                                          .endpointUrl(RequestField.ofNullable("URL"))
                                                          .userName(RequestField.ofNullable("USER"))

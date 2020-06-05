@@ -18,6 +18,7 @@ import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLPhysicalDataCenterCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLUpdatePhysicalDataCenterCloudProviderInput;
 import software.wings.settings.SettingValue;
 
 import java.sql.SQLException;
@@ -71,10 +72,10 @@ public class PhysicalDataCenterDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributePerformance() {
-    QLPhysicalDataCenterCloudProviderInput input = QLPhysicalDataCenterCloudProviderInput.builder()
-                                                       .name(RequestField.ofNullable(NAME))
-                                                       .usageScope(RequestField.ofNullable(usageScope()))
-                                                       .build();
+    QLUpdatePhysicalDataCenterCloudProviderInput input = QLUpdatePhysicalDataCenterCloudProviderInput.builder()
+                                                             .name(RequestField.ofNullable(NAME))
+                                                             .usageScope(RequestField.ofNullable(usageScope()))
+                                                             .build();
 
     SettingAttribute setting =
         SettingAttribute.Builder.aSettingAttribute()
@@ -95,10 +96,10 @@ public class PhysicalDataCenterDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributeWithEmptyInput() {
-    QLPhysicalDataCenterCloudProviderInput input = QLPhysicalDataCenterCloudProviderInput.builder()
-                                                       .name(RequestField.ofNull())
-                                                       .usageScope(RequestField.ofNull())
-                                                       .build();
+    QLUpdatePhysicalDataCenterCloudProviderInput input = QLUpdatePhysicalDataCenterCloudProviderInput.builder()
+                                                             .name(RequestField.ofNull())
+                                                             .usageScope(RequestField.ofNull())
+                                                             .build();
 
     SettingAttribute setting =
         SettingAttribute.Builder.aSettingAttribute()

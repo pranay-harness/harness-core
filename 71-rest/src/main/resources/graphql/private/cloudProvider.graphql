@@ -28,13 +28,13 @@ input UpdateCloudProviderInput {
   clientMutationId: String
   cloudProviderId: String!
   cloudProviderType: CloudProviderType!
-  pcfCloudProvider: PcfCloudProviderInput
-  spotInstCloudProvider: SpotInstCloudProviderInput
-  gcpCloudProvider: GcpCloudProviderInput
-  k8sCloudProvider: K8sCloudProviderInput
-  physicalDataCenterCloudProvider: PhysicalDataCenterCloudProviderInput
-  azureCloudProvider: AzureCloudProviderInput
-  awsCloudProvider: AwsCloudProviderInput
+  pcfCloudProvider: UpdatePcfCloudProviderInput
+  spotInstCloudProvider: UpdateSpotInstCloudProviderInput
+  gcpCloudProvider: UpdateGcpCloudProviderInput
+  k8sCloudProvider: UpdateK8sCloudProviderInput
+  physicalDataCenterCloudProvider: UpdatePhysicalDataCenterCloudProviderInput
+  azureCloudProvider: UpdateAzureCloudProviderInput
+  awsCloudProvider: UpdateAwsCloudProviderInput
 }
 
 input DeleteCloudProviderInput {
@@ -57,6 +57,44 @@ type DeleteCloudProviderPayload {
 }
 
 input PcfCloudProviderInput {
+  name: String!
+  usageScope: UsageScopeInput
+
+  endpointUrl: String!
+  userName: String!
+  passwordSecretId: String!
+}
+
+input SpotInstCloudProviderInput {
+  name: String!
+  usageScope: UsageScopeInput
+
+  accountId: String!
+  tokenSecretId: String!
+}
+
+input GcpCloudProviderInput {
+  name: String!
+  usageScope: UsageScopeInput
+
+  serviceAccountKeySecretId: String!
+}
+
+input PhysicalDataCenterCloudProviderInput {
+  name: String!
+  usageScope: UsageScopeInput
+}
+
+input AzureCloudProviderInput {
+  name: String!
+  usageScope: UsageScopeInput
+
+  clientId: String!
+  tenantId: String!
+  keySecretId: String!
+}
+
+input UpdatePcfCloudProviderInput {
   name: String
   usageScope: UsageScopeInput
 
@@ -65,7 +103,7 @@ input PcfCloudProviderInput {
   passwordSecretId: String
 }
 
-input SpotInstCloudProviderInput {
+input UpdateSpotInstCloudProviderInput {
   name: String
   usageScope: UsageScopeInput
 
@@ -73,19 +111,19 @@ input SpotInstCloudProviderInput {
   tokenSecretId: String
 }
 
-input GcpCloudProviderInput {
+input UpdateGcpCloudProviderInput {
   name: String
   usageScope: UsageScopeInput
 
   serviceAccountKeySecretId: String
 }
 
-input PhysicalDataCenterCloudProviderInput {
+input UpdatePhysicalDataCenterCloudProviderInput {
   name: String
   usageScope: UsageScopeInput
 }
 
-input AzureCloudProviderInput {
+input UpdateAzureCloudProviderInput {
   name: String
   usageScope: UsageScopeInput
 

@@ -14,6 +14,7 @@ import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsManualCredentials;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLEc2IamCredentials;
+import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateAwsCloudProviderInput;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 
 @Singleton
@@ -89,7 +90,7 @@ public class AwsDataFetcherHelper {
   }
 
   public void updateSettingAttribute(
-      SettingAttribute settingAttribute, QLAwsCloudProviderInput input, String accountId) {
+      SettingAttribute settingAttribute, QLUpdateAwsCloudProviderInput input, String accountId) {
     AwsConfig config = (AwsConfig) settingAttribute.getValue();
 
     if (input.getCredentialsType().isPresent() && input.getCredentialsType().getValue().isPresent()) {

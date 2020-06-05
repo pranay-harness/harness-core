@@ -8,6 +8,7 @@ import software.wings.beans.PcfConfig.PcfConfigBuilder;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLPcfCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLUpdatePcfCloudProviderInput;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 
 @Singleton
@@ -45,7 +46,7 @@ public class PcfDataFetcherHelper {
   }
 
   public void updateSettingAttribute(
-      SettingAttribute settingAttribute, QLPcfCloudProviderInput input, String accountId) {
+      SettingAttribute settingAttribute, QLUpdatePcfCloudProviderInput input, String accountId) {
     PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
 
     if (input.getEndpointUrl().isPresent()) {

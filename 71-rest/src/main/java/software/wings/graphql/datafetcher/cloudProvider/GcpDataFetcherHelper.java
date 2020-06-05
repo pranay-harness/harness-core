@@ -8,6 +8,7 @@ import software.wings.beans.GcpConfig.GcpConfigBuilder;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLGcpCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateGcpCloudProviderInput;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 
 @Singleton
@@ -39,7 +40,7 @@ public class GcpDataFetcherHelper {
   }
 
   public void updateSettingAttribute(
-      SettingAttribute settingAttribute, QLGcpCloudProviderInput input, String accountId) {
+      SettingAttribute settingAttribute, QLUpdateGcpCloudProviderInput input, String accountId) {
     GcpConfig config = (GcpConfig) settingAttribute.getValue();
 
     if (input.getServiceAccountKeySecretId().isPresent()) {
