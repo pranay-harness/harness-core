@@ -2,15 +2,11 @@ package io.harness.managerclient;
 
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.rest.RestResponse;
-import okhttp3.MultipartBody;
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
-import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
-import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import software.wings.beans.ConfigFile;
@@ -29,16 +25,6 @@ import software.wings.sm.StateType;
 import java.util.List;
 
 public interface ManagerClient {
-  @Multipart
-  @POST("agent/delegateFiles/{delegateId}/tasks/{taskId}")
-  Call<RestResponse<String>> uploadFile(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
-      @Query("accountId") String accountId, @Query("fileBucket") FileBucket bucket, @Part MultipartBody.Part file);
-
-  @Multipart
-  @POST("agent/delegateFiles/{delegateId}/profile-result")
-  Call<RestResponse> saveProfileResult(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
-      @Query("error") boolean error, @Query("fileBucket") FileBucket bucket, @Part MultipartBody.Part file);
-
   @GET("service-templates/{templateId}/compute-files")
   Call<RestResponse<List<ConfigFile>>> getConfigFiles(@Path("templateId") String templateId,
       @Query("accountId") String accountId, @Query("appId") String appId, @Query("envId") String envId,
@@ -58,14 +44,6 @@ public interface ManagerClient {
       @Query("workflowExecutionId") String workflowExecutionId, @Query("serviceId") String serviceId,
       @Query("clusterLevel") ClusterLevel clusterLevel, @Query("delegateTaskId") String delegateTaskId,
       @Query("stateType") StateType stateType, @Body List<LogElement> metricData);
-
-  @GET("agent/delegateFiles/fileId")
-  Call<RestResponse<String>> getFileIdByVersion(@Query("entityId") String entityId,
-      @Query("fileBucket") FileBucket fileBucket, @Query("version") int version, @Query("accountId") String accountId);
-
-  @GET("agent/delegateFiles/download")
-  Call<ResponseBody> downloadFile(
-      @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
 
   @GET("agent/delegateFiles/metainfo")
   Call<RestResponse<DelegateFile>> getMetaInfo(

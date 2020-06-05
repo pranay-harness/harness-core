@@ -180,14 +180,15 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   @Override
   public String getFileIdByVersion(FileBucket fileBucket, String entityId, int version, String accountId)
       throws IOException {
-    return execute(managerClient.getFileIdByVersion(entityId, fileBucket, version, accountId)).getResource();
+    return execute(delegateAgentManagerClient.getFileIdByVersion(entityId, fileBucket, version, accountId))
+        .getResource();
   }
 
   @Override
   public InputStream downloadByFileId(FileBucket bucket, String fileId, String accountId) throws IOException {
     Response<ResponseBody> response = null;
     try {
-      response = managerClient.downloadFile(fileId, bucket, accountId).execute();
+      response = delegateAgentManagerClient.downloadFile(fileId, bucket, accountId).execute();
       if (response.body() == null) {
         return null;
       }
@@ -262,7 +263,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
 
     // MultipartBody.Part is used to send also the actual file name
     Part part = Part.createFormData("file", delegateFile.getFileName(), requestFile);
-    Response<RestResponse<String>> response = managerClient
+    Response<RestResponse<String>> response = delegateAgentManagerClient
                                                   .uploadFile(delegateFile.getDelegateId(), delegateFile.getTaskId(),
                                                       delegateFile.getAccountId(), delegateFile.getBucket(), part)
                                                   .execute();
