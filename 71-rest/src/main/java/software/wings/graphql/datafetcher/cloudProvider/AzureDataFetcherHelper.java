@@ -10,6 +10,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLAzureCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateAzureCloudProviderInput;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 
 @Singleton
@@ -53,7 +54,7 @@ public class AzureDataFetcherHelper {
   }
 
   public void updateSettingAttribute(
-      SettingAttribute settingAttribute, QLAzureCloudProviderInput input, String accountId) {
+      SettingAttribute settingAttribute, QLUpdateAzureCloudProviderInput input, String accountId) {
     AzureConfig config = (AzureConfig) settingAttribute.getValue();
 
     if (input.getClientId().isPresent()) {

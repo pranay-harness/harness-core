@@ -1,5 +1,5 @@
 input AwsCloudProviderInput {
-  name: String
+  name: String!
   usageScope: UsageScopeInput
 
   credentialsType: AwsCredentialsType
@@ -15,15 +15,41 @@ enum AwsCredentialsType {
 }
 
 input Ec2IamCredentials {
-  delegateSelector: String
+  delegateSelector: String!
 }
 
 input AwsManualCredentials {
+  accessKey: String!
+  secretKeySecretId: String!
+}
+
+input AwsCrossAccountAttributes {
+  assumeCrossAccountRole: Boolean!
+  crossAccountRoleArn: String
+  externalId: String
+}
+
+input UpdateAwsCloudProviderInput {
+  name: String
+  usageScope: UsageScopeInput
+
+  credentialsType: AwsCredentialsType
+  ec2IamCredentials: UpdateEc2IamCredentials
+  manualCredentials: UpdateAwsManualCredentials
+
+  crossAccountAttributes: UpdateAwsCrossAccountAttributes
+}
+
+input UpdateEc2IamCredentials {
+  delegateSelector: String
+}
+
+input UpdateAwsManualCredentials {
   accessKey: String
   secretKeySecretId: String
 }
 
-input AwsCrossAccountAttributes {
+input UpdateAwsCrossAccountAttributes {
   assumeCrossAccountRole: Boolean
   crossAccountRoleArn: String
   externalId: String

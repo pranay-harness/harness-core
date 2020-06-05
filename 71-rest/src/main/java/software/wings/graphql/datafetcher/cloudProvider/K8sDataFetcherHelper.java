@@ -10,6 +10,7 @@ import software.wings.beans.KubernetesClusterConfig.KubernetesClusterConfigBuild
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLK8sCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLUpdateK8sCloudProviderInput;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 
 @Singleton
@@ -115,7 +116,7 @@ public class K8sDataFetcherHelper {
   }
 
   public void updateSettingAttribute(
-      SettingAttribute settingAttribute, QLK8sCloudProviderInput input, String accountId) {
+      SettingAttribute settingAttribute, QLUpdateK8sCloudProviderInput input, String accountId) {
     KubernetesClusterConfig config = (KubernetesClusterConfig) settingAttribute.getValue();
 
     if (input.getSkipValidation().isPresent()) {

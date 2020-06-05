@@ -21,6 +21,9 @@ import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsCrossAccountAttributes;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsManualCredentials;
+import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateAwsCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateAwsCrossAccountAttributes;
+import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateAwsManualCredentials;
 import software.wings.graphql.schema.type.cloudProvider.aws.QLAwsCredentialsType;
 
 import java.sql.SQLException;
@@ -131,17 +134,17 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributePerformance() {
-    QLAwsCloudProviderInput input =
-        QLAwsCloudProviderInput.builder()
+    QLUpdateAwsCloudProviderInput input =
+        QLUpdateAwsCloudProviderInput.builder()
             .name(RequestField.ofNullable(NAME))
             .usageScope(RequestField.ofNullable(usageScope()))
             .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.MANUAL))
-            .manualCredentials(RequestField.ofNullable(QLAwsManualCredentials.builder()
+            .manualCredentials(RequestField.ofNullable(QLUpdateAwsManualCredentials.builder()
                                                            .accessKey(RequestField.ofNullable(ACCESS_KEY))
                                                            .secretKeySecretId(RequestField.ofNullable(SECRET_KEY))
                                                            .build()))
             .crossAccountAttributes(
-                RequestField.ofNullable(QLAwsCrossAccountAttributes.builder()
+                RequestField.ofNullable(QLUpdateAwsCrossAccountAttributes.builder()
                                             .assumeCrossAccountRole(RequestField.ofNullable(Boolean.TRUE))
                                             .crossAccountRoleArn(RequestField.ofNullable(ARN))
                                             .externalId(RequestField.ofNullable(EXTERN_ID))
@@ -167,14 +170,14 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributeWithEmptyInput() {
-    QLAwsCloudProviderInput input = QLAwsCloudProviderInput.builder()
-                                        .name(RequestField.absent())
-                                        .usageScope(RequestField.absent())
-                                        .crossAccountAttributes(RequestField.absent())
-                                        .ec2IamCredentials(RequestField.absent())
-                                        .manualCredentials(RequestField.absent())
-                                        .credentialsType(RequestField.absent())
-                                        .build();
+    QLUpdateAwsCloudProviderInput input = QLUpdateAwsCloudProviderInput.builder()
+                                              .name(RequestField.absent())
+                                              .usageScope(RequestField.absent())
+                                              .crossAccountAttributes(RequestField.absent())
+                                              .ec2IamCredentials(RequestField.absent())
+                                              .manualCredentials(RequestField.absent())
+                                              .credentialsType(RequestField.absent())
+                                              .build();
 
     SettingAttribute setting =
         SettingAttribute.Builder.aSettingAttribute().withValue(AwsConfig.builder().build()).build();

@@ -8,6 +8,7 @@ import software.wings.beans.SpotInstConfig;
 import software.wings.beans.SpotInstConfig.SpotInstConfigBuilder;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLSpotInstCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateSpotInstCloudProviderInput;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 
 @Singleton
@@ -42,7 +43,7 @@ public class SpotInstDataFetcherHelper {
   }
 
   public void updateSettingAttribute(
-      SettingAttribute settingAttribute, QLSpotInstCloudProviderInput input, String accountId) {
+      SettingAttribute settingAttribute, QLUpdateSpotInstCloudProviderInput input, String accountId) {
     SpotInstConfig config = (SpotInstConfig) settingAttribute.getValue();
 
     if (input.getAccountId().isPresent()) {

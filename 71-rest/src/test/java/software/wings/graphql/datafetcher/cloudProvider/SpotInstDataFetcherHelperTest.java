@@ -18,6 +18,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLSpotInstCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateSpotInstCloudProviderInput;
 
 import java.sql.SQLException;
 
@@ -77,12 +78,12 @@ public class SpotInstDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributePerformance() {
-    final QLSpotInstCloudProviderInput input = QLSpotInstCloudProviderInput.builder()
-                                                   .name(RequestField.ofNullable(NAME))
-                                                   .accountId(RequestField.ofNullable(SPOT_INST_ACCOUNT_ID))
-                                                   .tokenSecretId(RequestField.ofNullable(SPOT_INST_TOKEN))
-                                                   .usageScope(RequestField.ofNullable(usageScope()))
-                                                   .build();
+    final QLUpdateSpotInstCloudProviderInput input = QLUpdateSpotInstCloudProviderInput.builder()
+                                                         .name(RequestField.ofNullable(NAME))
+                                                         .accountId(RequestField.ofNullable(SPOT_INST_ACCOUNT_ID))
+                                                         .tokenSecretId(RequestField.ofNullable(SPOT_INST_TOKEN))
+                                                         .usageScope(RequestField.ofNullable(usageScope()))
+                                                         .build();
 
     SettingAttribute setting =
         SettingAttribute.Builder.aSettingAttribute().withValue(SpotInstConfig.builder().build()).build();
@@ -100,12 +101,12 @@ public class SpotInstDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributeWithEmptyInput() {
-    QLSpotInstCloudProviderInput input = QLSpotInstCloudProviderInput.builder()
-                                             .name(RequestField.ofNull())
-                                             .accountId(RequestField.ofNull())
-                                             .tokenSecretId(RequestField.ofNull())
-                                             .usageScope(RequestField.ofNull())
-                                             .build();
+    QLUpdateSpotInstCloudProviderInput input = QLUpdateSpotInstCloudProviderInput.builder()
+                                                   .name(RequestField.ofNull())
+                                                   .accountId(RequestField.ofNull())
+                                                   .tokenSecretId(RequestField.ofNull())
+                                                   .usageScope(RequestField.ofNull())
+                                                   .build();
 
     SettingAttribute setting =
         SettingAttribute.Builder.aSettingAttribute().withValue(SpotInstConfig.builder().build()).build();

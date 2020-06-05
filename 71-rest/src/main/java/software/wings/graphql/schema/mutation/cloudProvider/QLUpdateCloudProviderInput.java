@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Value;
 import software.wings.graphql.schema.mutation.QLMutationInput;
-import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsCloudProviderInput;
-import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLK8sCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateAwsCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLUpdateK8sCloudProviderInput;
 import software.wings.graphql.schema.type.QLCloudProviderType;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
@@ -19,11 +19,11 @@ public class QLUpdateCloudProviderInput implements QLMutationInput {
 
   private String cloudProviderId;
   private QLCloudProviderType cloudProviderType;
-  private QLPcfCloudProviderInput pcfCloudProvider;
-  private QLSpotInstCloudProviderInput spotInstCloudProvider;
-  private QLGcpCloudProviderInput gcpCloudProvider;
-  private QLK8sCloudProviderInput k8sCloudProvider;
-  private QLPhysicalDataCenterCloudProviderInput physicalDataCenterCloudProvider;
-  private QLAzureCloudProviderInput azureCloudProvider;
-  private QLAwsCloudProviderInput awsCloudProvider;
+  private QLUpdatePcfCloudProviderInput pcfCloudProvider;
+  private QLUpdateSpotInstCloudProviderInput spotInstCloudProvider;
+  private QLUpdateGcpCloudProviderInput gcpCloudProvider;
+  private QLUpdateK8sCloudProviderInput k8sCloudProvider;
+  private QLUpdatePhysicalDataCenterCloudProviderInput physicalDataCenterCloudProvider;
+  private QLUpdateAzureCloudProviderInput azureCloudProvider;
+  private QLUpdateAwsCloudProviderInput awsCloudProvider;
 }

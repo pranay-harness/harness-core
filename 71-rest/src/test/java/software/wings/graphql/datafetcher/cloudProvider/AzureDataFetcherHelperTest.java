@@ -19,6 +19,7 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLAzureCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateAzureCloudProviderInput;
 
 import java.sql.SQLException;
 
@@ -116,13 +117,13 @@ public class AzureDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributePerformance() {
-    QLAzureCloudProviderInput input = QLAzureCloudProviderInput.builder()
-                                          .name(RequestField.ofNullable(NAME))
-                                          .usageScope(RequestField.ofNullable(usageScope()))
-                                          .clientId(RequestField.ofNullable(CLIENT_ID))
-                                          .tenantId(RequestField.ofNullable(TENANT_ID))
-                                          .keySecretId(RequestField.ofNullable(KEY))
-                                          .build();
+    QLUpdateAzureCloudProviderInput input = QLUpdateAzureCloudProviderInput.builder()
+                                                .name(RequestField.ofNullable(NAME))
+                                                .usageScope(RequestField.ofNullable(usageScope()))
+                                                .clientId(RequestField.ofNullable(CLIENT_ID))
+                                                .tenantId(RequestField.ofNullable(TENANT_ID))
+                                                .keySecretId(RequestField.ofNullable(KEY))
+                                                .build();
 
     SettingAttribute setting =
         SettingAttribute.Builder.aSettingAttribute().withValue(AzureConfig.builder().build()).build();
@@ -141,13 +142,13 @@ public class AzureDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributeWithEmptyInput() {
-    QLAzureCloudProviderInput input = QLAzureCloudProviderInput.builder()
-                                          .name(RequestField.ofNull())
-                                          .usageScope(RequestField.ofNull())
-                                          .clientId(RequestField.ofNull())
-                                          .tenantId(RequestField.ofNull())
-                                          .keySecretId(RequestField.ofNull())
-                                          .build();
+    QLUpdateAzureCloudProviderInput input = QLUpdateAzureCloudProviderInput.builder()
+                                                .name(RequestField.ofNull())
+                                                .usageScope(RequestField.ofNull())
+                                                .clientId(RequestField.ofNull())
+                                                .tenantId(RequestField.ofNull())
+                                                .keySecretId(RequestField.ofNull())
+                                                .build();
 
     SettingAttribute setting =
         SettingAttribute.Builder.aSettingAttribute().withValue(AzureConfig.builder().build()).build();

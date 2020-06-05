@@ -20,6 +20,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLInheritClusterDetails;
 import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLK8sCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLUpdateInheritClusterDetails;
+import software.wings.graphql.schema.mutation.cloudProvider.k8s.QLUpdateK8sCloudProviderInput;
 import software.wings.graphql.schema.type.cloudProvider.k8s.QLClusterDetailsType;
 
 import java.sql.SQLException;
@@ -103,14 +105,14 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributePerformance() {
-    final QLK8sCloudProviderInput input =
-        QLK8sCloudProviderInput.builder()
+    final QLUpdateK8sCloudProviderInput input =
+        QLUpdateK8sCloudProviderInput.builder()
             .name(RequestField.ofNullable(NAME))
             .usageScope(RequestField.ofNullable(usageScope()))
             .skipValidation(RequestField.ofNullable(Boolean.TRUE))
             .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.INHERIT_CLUSTER_DETAILS))
             .inheritClusterDetails(RequestField.ofNullable(
-                QLInheritClusterDetails.builder().delegateName(RequestField.ofNullable(DELEGATE)).build()))
+                QLUpdateInheritClusterDetails.builder().delegateName(RequestField.ofNullable(DELEGATE)).build()))
             .build();
 
     SettingAttribute setting =
@@ -130,14 +132,14 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributeWithEmptyInput() {
-    final QLK8sCloudProviderInput input = QLK8sCloudProviderInput.builder()
-                                              .name(RequestField.ofNull())
-                                              .usageScope(RequestField.ofNull())
-                                              .skipValidation(RequestField.ofNull())
-                                              .clusterDetailsType(RequestField.absent())
-                                              .inheritClusterDetails(RequestField.ofNull())
-                                              .manualClusterDetails(RequestField.ofNull())
-                                              .build();
+    final QLUpdateK8sCloudProviderInput input = QLUpdateK8sCloudProviderInput.builder()
+                                                    .name(RequestField.ofNull())
+                                                    .usageScope(RequestField.ofNull())
+                                                    .skipValidation(RequestField.ofNull())
+                                                    .clusterDetailsType(RequestField.absent())
+                                                    .inheritClusterDetails(RequestField.ofNull())
+                                                    .manualClusterDetails(RequestField.ofNull())
+                                                    .build();
 
     SettingAttribute setting =
         SettingAttribute.Builder.aSettingAttribute().withValue(KubernetesClusterConfig.builder().build()).build();
@@ -150,14 +152,14 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributeWithClusterDetailsType() {
-    final QLK8sCloudProviderInput input = QLK8sCloudProviderInput.builder()
-                                              .name(RequestField.ofNull())
-                                              .usageScope(RequestField.ofNull())
-                                              .skipValidation(RequestField.ofNull())
-                                              .clusterDetailsType(RequestField.ofNull())
-                                              .inheritClusterDetails(RequestField.ofNull())
-                                              .manualClusterDetails(RequestField.ofNull())
-                                              .build();
+    final QLUpdateK8sCloudProviderInput input = QLUpdateK8sCloudProviderInput.builder()
+                                                    .name(RequestField.ofNull())
+                                                    .usageScope(RequestField.ofNull())
+                                                    .skipValidation(RequestField.ofNull())
+                                                    .clusterDetailsType(RequestField.ofNull())
+                                                    .inheritClusterDetails(RequestField.ofNull())
+                                                    .manualClusterDetails(RequestField.ofNull())
+                                                    .build();
 
     SettingAttribute setting =
         SettingAttribute.Builder.aSettingAttribute().withValue(KubernetesClusterConfig.builder().build()).build();
