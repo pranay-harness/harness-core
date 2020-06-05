@@ -1,11 +1,12 @@
 package io.harness.ccm.config;
 
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
+
 import com.google.inject.Inject;
 
 import io.harness.ccm.config.GcpOrganization.GcpOrganizationKeys;
 import io.harness.persistence.HPersistence;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -30,8 +31,7 @@ public class GcpOrganizationDao {
     if (null != gcpOrganization.getServiceAccountEmail()) {
       updateOperations.set(GcpOrganizationKeys.serviceAccountEmail, gcpOrganization.getServiceAccountEmail());
     }
-    FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
-    return persistence.upsert(query, updateOperations, findAndModifyOptions);
+    return persistence.upsert(query, updateOperations, upsertReturnNewOptions);
   }
 
   public String save(GcpOrganization organization) {

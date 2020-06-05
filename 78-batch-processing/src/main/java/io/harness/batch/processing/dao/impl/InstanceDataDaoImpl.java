@@ -1,5 +1,7 @@
 package io.harness.batch.processing.dao.impl;
 
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
+import static io.harness.persistence.HPersistence.upsertReturnOldOptions;
 import static java.util.Objects.isNull;
 
 import com.google.inject.Inject;
@@ -16,7 +18,6 @@ import io.harness.batch.processing.processor.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -68,8 +69,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
           break;
       }
       if (updateRequired) {
-        FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(false);
-        return hPersistence.upsert(query, updateOperations, findAndModifyOptions);
+        return hPersistence.upsert(query, updateOperations, upsertReturnOldOptions);
       } else {
         return instanceData;
       }
@@ -122,9 +122,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
         updateOperations.set(InstanceDataKeys.harnessServiceInfo, instanceInfo.getHarnessServiceInfo());
       }
 
-      FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
-
-      InstanceData savedInstanceData = hPersistence.upsert(query, updateOperations, findAndModifyOptions);
+      InstanceData savedInstanceData = hPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
 
       if (savedInstanceData.getHarnessServiceInfo() != null) {
         try {
@@ -174,8 +172,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
                                     .filter(InstanceDataKeys.clusterId, instanceData.getClusterId())
                                     .filter(InstanceDataKeys.instanceId, instanceData.getInstanceId());
 
-    FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(false);
-    return hPersistence.upsert(query, instanceDataUpdateOperations, findAndModifyOptions) != null;
+    return hPersistence.upsert(query, instanceDataUpdateOperations, upsertReturnOldOptions) != null;
   }
 
   @Override

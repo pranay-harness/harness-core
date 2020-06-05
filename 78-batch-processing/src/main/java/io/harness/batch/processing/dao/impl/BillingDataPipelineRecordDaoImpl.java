@@ -1,5 +1,6 @@
 package io.harness.batch.processing.dao.impl;
 
+import static io.harness.persistence.HPersistence.returnNewOptions;
 import static java.util.Objects.isNull;
 
 import com.google.inject.Inject;
@@ -9,7 +10,6 @@ import io.harness.ccm.cluster.entities.BillingDataPipelineRecord;
 import io.harness.ccm.cluster.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,7 +91,6 @@ public class BillingDataPipelineRecordDaoImpl implements BillingDataPipelineReco
           BillingDataPipelineRecordKeys.lastSuccessfulS3Sync, billingDataPipelineRecord.getLastSuccessfulS3Sync());
     }
 
-    FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().returnNew(true);
-    return hPersistence.upsert(query, updateOperations, findAndModifyOptions);
+    return hPersistence.findAndModify(query, updateOperations, returnNewOptions);
   }
 }

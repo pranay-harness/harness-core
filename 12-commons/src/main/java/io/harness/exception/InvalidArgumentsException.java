@@ -33,6 +33,11 @@ public class InvalidArgumentsException extends WingsException {
         ARGS_ARG, Stream.of(arg1, arg2).map(pair -> pair.getKey() + ": " + pair.getValue()).collect(joining("; ")));
   }
 
+  public InvalidArgumentsException(String message) {
+    super(message, null, INVALID_ARGUMENT, Level.ERROR, null, null);
+    super.param(ARGS_ARG, message);
+  }
+
   public InvalidArgumentsException(String message, EnumSet<ReportTarget> reportTargets) {
     super(message, null, INVALID_ARGUMENT, Level.ERROR, reportTargets, null);
     super.param(ARGS_ARG, message);

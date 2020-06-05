@@ -16,6 +16,7 @@ import com.google.inject.name.Named;
 import com.mongodb.DBCollection;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -306,6 +307,10 @@ public class MongoPersistence implements HPersistence {
   @Override
   public <T extends PersistentEntity> T upsert(
       Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions options) {
+    if (!options.isUpsert()) {
+      throw new InvalidArgumentsException("The options do not have the upsert flag set");
+    }
+
     // TODO: add encryption handling; right now no encrypted classes use upsert
     // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
 

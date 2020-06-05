@@ -2,13 +2,13 @@ package io.harness.ccm.config;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
 import com.google.inject.Inject;
 
 import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
 import io.harness.persistence.HPersistence;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -72,8 +72,7 @@ public class GcpBillingAccountDao {
       updateOperations.set(GcpBillingAccountKeys.bqDatasetId, billingAccount.getBqDatasetId());
     }
 
-    FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
-    return persistence.upsert(query, updateOperations, findAndModifyOptions);
+    return persistence.upsert(query, updateOperations, upsertReturnNewOptions);
   }
 
   public void update(String uuid, GcpBillingAccount billingAccount) {

@@ -1,9 +1,10 @@
 package software.wings.search.framework;
 
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
+
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
-import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -64,7 +65,7 @@ public class ElasticsearchBulkSyncTask {
             .set(SearchEntityIndexStateKeys.recreateIndex, false);
 
     SearchEntityIndexState searchEntityIndexState =
-        wingsPersistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
+        wingsPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
     if (searchEntityIndexState == null
         || !searchEntityIndexState.getIndexName().equals(elasticsearchBulkMigrationJob.getNewIndexName())) {
       logger.error("Search entitiy {} index state did not update", elasticsearchBulkMigrationJob.getEntityClass());

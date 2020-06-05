@@ -1,5 +1,7 @@
 package io.harness.limits.checker.rate;
 
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
+
 import com.mongodb.BasicDBObject;
 import io.harness.limits.Action;
 import io.harness.limits.impl.model.RateLimit;
@@ -71,7 +73,7 @@ public class MongoSlidingWindowRateLimitChecker implements RateLimitChecker, Rat
     UpdateOperations<UsageBucket> update =
         persistence.createUpdateOperations(UsageBucket.class).push("accessTimes", now);
 
-    return persistence.upsert(query, update, HPersistence.upsertReturnNewOptions);
+    return persistence.upsert(query, update, upsertReturnNewOptions);
   }
 
   @Override
