@@ -35,6 +35,7 @@ import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.api.SkipStateExecutionData;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
@@ -70,6 +71,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -538,10 +540,12 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       logger.error("State execution instance not found for {}", stateExecutionId);
       throw new WingsException(ErrorCode.STATE_EXECUTION_INSTANCE_NOT_FOUND, stateExecutionId);
     }
-
+    StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
+    if (stateExecutionData == null || stateExecutionData instanceof SkipStateExecutionData) {
+      return null;
+    }
     SettingAttribute settingAttribute =
-        settingsService.get(((VerificationStateAnalysisExecutionData) stateExecutionInstance.fetchStateExecutionData())
-                                .getServerConfigId());
+        settingsService.get(((VerificationStateAnalysisExecutionData) stateExecutionData).getServerConfigId());
 
     if (settingAttribute.getName().toLowerCase().endsWith("dev")
         || settingAttribute.getName().toLowerCase().endsWith("prod")) {
