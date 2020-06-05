@@ -2,16 +2,20 @@ input AwsCloudProviderInput {
   name: String
   usageScope: UsageScopeInput
 
-  useEc2IamCredentials: Boolean
+  credentialsType: AwsCredentialsType
   ec2IamCredentials: Ec2IamCredentials
   manualCredentials: AwsManualCredentials
 
-  assumeCrossAccountRole: Boolean
   crossAccountAttributes: AwsCrossAccountAttributes
 }
 
+enum AwsCredentialsType {
+  EC2_IAM
+  MANUAL
+}
+
 input Ec2IamCredentials {
-  tag: String
+  delegateSelector: String
 }
 
 input AwsManualCredentials {
@@ -20,6 +24,7 @@ input AwsManualCredentials {
 }
 
 input AwsCrossAccountAttributes {
+  assumeCrossAccountRole: Boolean
   crossAccountRoleArn: String
   externalId: String
 }

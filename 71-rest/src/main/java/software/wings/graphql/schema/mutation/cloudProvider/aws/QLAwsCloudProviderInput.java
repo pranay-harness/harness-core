@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.utils.RequestField;
 import lombok.Builder;
 import lombok.Value;
+import software.wings.graphql.schema.type.cloudProvider.aws.QLAwsCredentialsType;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
@@ -16,10 +17,9 @@ public class QLAwsCloudProviderInput {
   private RequestField<String> name;
   private RequestField<QLUsageScope> usageScope;
 
-  private RequestField<Boolean> useEc2IamCredentials;
+  private RequestField<QLAwsCredentialsType> credentialsType;
   private RequestField<QLEc2IamCredentials> ec2IamCredentials;
   private RequestField<QLAwsManualCredentials> manualCredentials;
 
-  private RequestField<Boolean> assumeCrossAccountRole;
   private RequestField<QLAwsCrossAccountAttributes> crossAccountAttributes;
 }
