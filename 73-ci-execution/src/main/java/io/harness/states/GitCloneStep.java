@@ -4,11 +4,13 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
+import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.state.Step;
+import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
@@ -26,6 +28,7 @@ import java.util.List;
 public class GitCloneStep implements Step, SyncExecutable {
   @Inject private ManagerCIResource managerCIResource;
   @Inject private BuildSetupUtils buildSetupUtils;
+  public static final StepType STEP_TYPE = GitCloneStepInfo.typeInfo.getStepType();
 
   @Override
   public StepResponse executeSync(

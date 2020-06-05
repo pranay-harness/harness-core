@@ -22,6 +22,7 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.network.SafeHttpCall;
 import io.harness.state.Step;
+import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
@@ -41,6 +42,8 @@ import java.util.List;
 public class BuildStep implements Step, SyncExecutable {
   @Inject private ManagerCIResource managerCIResource;
   @Inject EngineExpressionService engineExpressionService;
+  public static final StepType STEP_TYPE = BuildStepInfo.typeInfo.getStepType();
+
   // TODO Async can not be supported at this point. We have to build polling framework on CI manager.
   //     Async will be supported once we will have delegate microservice ready.
 

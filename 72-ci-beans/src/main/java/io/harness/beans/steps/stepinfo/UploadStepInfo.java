@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.beans.steps.AbstractStepWithMetaInfo;
 import io.harness.beans.steps.StepInfoType;
 import io.harness.beans.steps.TypeInfo;
+import io.harness.executionplan.GenericStepInfo;
+import io.harness.facilitator.FacilitatorType;
 import io.harness.state.StepType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +22,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("upload")
-public class UploadStepInfo extends AbstractStepWithMetaInfo {
+public class UploadStepInfo extends AbstractStepWithMetaInfo implements GenericStepInfo {
   @JsonView(JsonViews.Internal.class)
   @NotNull
   public static final TypeInfo typeInfo = TypeInfo.builder()
@@ -49,5 +51,15 @@ public class UploadStepInfo extends AbstractStepWithMetaInfo {
     private String filePattern;
     private String destination;
     private String connector;
+  }
+
+  @Override
+  public StepType getStepType() {
+    return typeInfo.getStepType();
+  }
+
+  @Override
+  public String getFacilitatorType() {
+    return FacilitatorType.SYNC;
   }
 }

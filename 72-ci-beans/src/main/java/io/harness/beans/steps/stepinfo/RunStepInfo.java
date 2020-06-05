@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.beans.steps.AbstractStepWithMetaInfo;
 import io.harness.beans.steps.StepInfoType;
 import io.harness.beans.steps.TypeInfo;
+import io.harness.executionplan.GenericStepInfo;
+import io.harness.facilitator.FacilitatorType;
 import io.harness.state.StepType;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +22,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("run")
-public class RunStepInfo extends AbstractStepWithMetaInfo {
+public class RunStepInfo extends AbstractStepWithMetaInfo implements GenericStepInfo {
   @JsonView(JsonViews.Internal.class)
   @NotNull
   public static final TypeInfo typeInfo = TypeInfo.builder()
@@ -51,5 +53,15 @@ public class RunStepInfo extends AbstractStepWithMetaInfo {
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
+  }
+
+  @Override
+  public StepType getStepType() {
+    return typeInfo.getStepType();
+  }
+
+  @Override
+  public String getFacilitatorType() {
+    return FacilitatorType.SYNC;
   }
 }
