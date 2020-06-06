@@ -58,7 +58,6 @@ type DeleteCloudProviderPayload {
 
 input PcfCloudProviderInput {
   name: String!
-  usageScope: UsageScopeInput
 
   endpointUrl: String!
   userName: String!
@@ -67,7 +66,6 @@ input PcfCloudProviderInput {
 
 input SpotInstCloudProviderInput {
   name: String!
-  usageScope: UsageScopeInput
 
   accountId: String!
   tokenSecretId: String!
@@ -75,7 +73,6 @@ input SpotInstCloudProviderInput {
 
 input GcpCloudProviderInput {
   name: String!
-  usageScope: UsageScopeInput
 
   serviceAccountKeySecretId: String!
 }
@@ -87,7 +84,6 @@ input PhysicalDataCenterCloudProviderInput {
 
 input AzureCloudProviderInput {
   name: String!
-  usageScope: UsageScopeInput
 
   clientId: String!
   tenantId: String!
@@ -96,7 +92,6 @@ input AzureCloudProviderInput {
 
 input UpdatePcfCloudProviderInput {
   name: String
-  usageScope: UsageScopeInput
 
   endpointUrl: String
   userName: String
@@ -105,7 +100,6 @@ input UpdatePcfCloudProviderInput {
 
 input UpdateSpotInstCloudProviderInput {
   name: String
-  usageScope: UsageScopeInput
 
   accountId: String
   tokenSecretId: String
@@ -113,7 +107,6 @@ input UpdateSpotInstCloudProviderInput {
 
 input UpdateGcpCloudProviderInput {
   name: String
-  usageScope: UsageScopeInput
 
   serviceAccountKeySecretId: String
 }
@@ -125,7 +118,6 @@ input UpdatePhysicalDataCenterCloudProviderInput {
 
 input UpdateAzureCloudProviderInput {
   name: String
-  usageScope: UsageScopeInput
 
   clientId: String
   tenantId: String

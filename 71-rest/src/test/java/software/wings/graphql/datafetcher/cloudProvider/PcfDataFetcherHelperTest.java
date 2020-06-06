@@ -1,7 +1,6 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.IGOR;
-import static software.wings.graphql.datafetcher.cloudProvider.CreateCloudProviderDataFetcherTest.usageScope;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -44,7 +43,6 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
   public void toSettingAttributeReturnValue() {
     QLPcfCloudProviderInput input = QLPcfCloudProviderInput.builder()
                                         .name(RequestField.ofNullable(NAME))
-                                        .usageScope(RequestField.ofNullable(usageScope()))
                                         .endpointUrl(RequestField.ofNullable(URL))
                                         .userName(RequestField.ofNullable(USERNAME))
                                         .passwordSecretId(RequestField.ofNullable(PASSWORD))
@@ -67,7 +65,6 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
   public void toSettingAttributeWithEmptyInput() {
     QLPcfCloudProviderInput input = QLPcfCloudProviderInput.builder()
                                         .name(RequestField.ofNull())
-                                        .usageScope(RequestField.ofNull())
                                         .endpointUrl(RequestField.ofNull())
                                         .userName(RequestField.ofNull())
                                         .passwordSecretId(RequestField.ofNull())
@@ -84,7 +81,6 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
   public void updateSettingAttributePerformance() {
     QLUpdatePcfCloudProviderInput input = QLUpdatePcfCloudProviderInput.builder()
                                               .name(RequestField.ofNullable(NAME))
-                                              .usageScope(RequestField.ofNullable(usageScope()))
                                               .endpointUrl(RequestField.ofNullable(URL))
                                               .userName(RequestField.ofNullable(USERNAME))
                                               .passwordSecretId(RequestField.ofNullable(PASSWORD))
@@ -109,7 +105,6 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
   public void updateSettingAttributeWithEmptyInput() {
     QLUpdatePcfCloudProviderInput input = QLUpdatePcfCloudProviderInput.builder()
                                               .name(RequestField.ofNull())
-                                              .usageScope(RequestField.ofNull())
                                               .endpointUrl(RequestField.ofNull())
                                               .userName(RequestField.ofNull())
                                               .passwordSecretId(RequestField.ofNull())

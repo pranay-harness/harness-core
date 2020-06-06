@@ -1,7 +1,6 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.IGOR;
-import static software.wings.graphql.datafetcher.cloudProvider.CreateCloudProviderDataFetcherTest.usageScope;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -43,7 +42,6 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
     QLGcpCloudProviderInput input = QLGcpCloudProviderInput.builder()
                                         .name(RequestField.ofNullable(NAME))
                                         .serviceAccountKeySecretId(RequestField.ofNullable(KEY))
-                                        .usageScope(RequestField.ofNullable(usageScope()))
                                         .build();
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
@@ -61,7 +59,6 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
   public void toSettingAttributeWithEmptyInput() {
     QLGcpCloudProviderInput input = QLGcpCloudProviderInput.builder()
                                         .name(RequestField.ofNull())
-                                        .usageScope(RequestField.ofNull())
                                         .serviceAccountKeySecretId(RequestField.ofNull())
                                         .build();
 
@@ -77,7 +74,6 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
     QLUpdateGcpCloudProviderInput input = QLUpdateGcpCloudProviderInput.builder()
                                               .name(RequestField.ofNullable(NAME))
                                               .serviceAccountKeySecretId(RequestField.ofNullable(KEY))
-                                              .usageScope(RequestField.ofNullable(usageScope()))
                                               .build();
 
     SettingAttribute setting =
@@ -97,7 +93,6 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
   public void updateSettingAttributeWithEmptyInput() {
     QLUpdateGcpCloudProviderInput input = QLUpdateGcpCloudProviderInput.builder()
                                               .name(RequestField.ofNull())
-                                              .usageScope(RequestField.ofNull())
                                               .serviceAccountKeySecretId(RequestField.ofNull())
                                               .build();
 

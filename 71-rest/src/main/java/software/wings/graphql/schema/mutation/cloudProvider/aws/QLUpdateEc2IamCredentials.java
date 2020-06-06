@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.utils.RequestField;
 import lombok.Builder;
 import lombok.Value;
+import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
@@ -13,4 +14,5 @@ import software.wings.security.annotations.Scope;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class QLUpdateEc2IamCredentials {
   private RequestField<String> delegateSelector;
+  private RequestField<QLUsageScope> usageScope;
 }

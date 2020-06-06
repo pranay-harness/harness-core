@@ -1,6 +1,5 @@
 input K8sCloudProviderInput {
   name: String!
-  usageScope: UsageScopeInput
 
   clusterDetailsType: ClusterDetailsType!
   inheritClusterDetails: InheritClusterDetails
@@ -16,6 +15,7 @@ enum ClusterDetailsType {
 
 input InheritClusterDetails {
   delegateName: String!
+  usageScope: UsageScopeInput
 }
 
 input ManualClusterDetails {
@@ -63,11 +63,11 @@ input None {
   clientKeyPassphraseSecretId: String!
   clientKeyAlgorithm: String!
   serviceAccountTokenSecretId: String!
+  usageScope: UsageScopeInput
 }
 
 input UpdateK8sCloudProviderInput {
   name: String
-  usageScope: UsageScopeInput
   clusterDetailsType: ClusterDetailsType
   inheritClusterDetails: UpdateInheritClusterDetails
   manualClusterDetails: UpdateManualClusterDetails
@@ -115,4 +115,5 @@ input UpdateNone {
   clientKeyPassphraseSecretId: String
   clientKeyAlgorithm: String
   serviceAccountTokenSecretId: String
+  usageScope: UsageScopeInput
 }

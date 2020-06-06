@@ -1,7 +1,6 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.IGOR;
-import static software.wings.graphql.datafetcher.cloudProvider.CreateCloudProviderDataFetcherTest.usageScope;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -53,7 +52,6 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
     QLAwsCloudProviderInput input =
         QLAwsCloudProviderInput.builder()
             .name(RequestField.ofNullable(NAME))
-            .usageScope(RequestField.ofNullable(usageScope()))
             .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.MANUAL))
             .manualCredentials(RequestField.ofNullable(QLAwsManualCredentials.builder()
                                                            .accessKey(RequestField.ofNullable(ACCESS_KEY))
@@ -86,7 +84,6 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
   public void toSettingAttributeWithEmptyEc2Input() {
     QLAwsCloudProviderInput input = QLAwsCloudProviderInput.builder()
                                         .name(RequestField.absent())
-                                        .usageScope(RequestField.absent())
                                         .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.EC2_IAM))
                                         .ec2IamCredentials(RequestField.ofNull())
                                         .crossAccountAttributes(RequestField.absent())
@@ -103,7 +100,6 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
   public void toSettingAttributeWithEmptyManualInput() {
     QLAwsCloudProviderInput input = QLAwsCloudProviderInput.builder()
                                         .name(RequestField.absent())
-                                        .usageScope(RequestField.absent())
                                         .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.MANUAL))
                                         .manualCredentials(RequestField.ofNull())
                                         .crossAccountAttributes(RequestField.absent())
@@ -120,7 +116,6 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
   public void toSettingAttributeWithEmptyXAccountRoleInput() {
     QLAwsCloudProviderInput input = QLAwsCloudProviderInput.builder()
                                         .name(RequestField.absent())
-                                        .usageScope(RequestField.absent())
                                         .credentialsType(RequestField.absent())
                                         .crossAccountAttributes(RequestField.ofNull())
                                         .build();
@@ -137,7 +132,6 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
     QLUpdateAwsCloudProviderInput input =
         QLUpdateAwsCloudProviderInput.builder()
             .name(RequestField.ofNullable(NAME))
-            .usageScope(RequestField.ofNullable(usageScope()))
             .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.MANUAL))
             .manualCredentials(RequestField.ofNullable(QLUpdateAwsManualCredentials.builder()
                                                            .accessKey(RequestField.ofNullable(ACCESS_KEY))
@@ -172,7 +166,6 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
   public void updateSettingAttributeWithEmptyInput() {
     QLUpdateAwsCloudProviderInput input = QLUpdateAwsCloudProviderInput.builder()
                                               .name(RequestField.absent())
-                                              .usageScope(RequestField.absent())
                                               .crossAccountAttributes(RequestField.absent())
                                               .ec2IamCredentials(RequestField.absent())
                                               .manualCredentials(RequestField.absent())

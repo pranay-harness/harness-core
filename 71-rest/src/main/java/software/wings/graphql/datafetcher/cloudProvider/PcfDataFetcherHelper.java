@@ -9,7 +9,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLPcfCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdatePcfCloudProviderInput;
-import software.wings.graphql.schema.type.secrets.QLUsageScope;
 
 @Singleton
 public class PcfDataFetcherHelper {
@@ -37,11 +36,6 @@ public class PcfDataFetcherHelper {
       input.getName().getValue().ifPresent(settingAttributeBuilder::withName);
     }
 
-    if (input.getUsageScope().isPresent()) {
-      settingAttributeBuilder.withUsageRestrictions(
-          usageScopeController.populateUsageRestrictions(input.getUsageScope().getValue().orElse(null), accountId));
-    }
-
     return settingAttributeBuilder.build();
   }
 
@@ -62,11 +56,6 @@ public class PcfDataFetcherHelper {
 
     if (input.getName().isPresent()) {
       input.getName().getValue().ifPresent(settingAttribute::setName);
-    }
-
-    if (input.getUsageScope().isPresent()) {
-      QLUsageScope usageScope = input.getUsageScope().getValue().orElse(null);
-      settingAttribute.setUsageRestrictions(usageScopeController.populateUsageRestrictions(usageScope, accountId));
     }
   }
 }

@@ -9,7 +9,6 @@ import software.wings.beans.SpotInstConfig.SpotInstConfigBuilder;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLSpotInstCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateSpotInstCloudProviderInput;
-import software.wings.graphql.schema.type.secrets.QLUsageScope;
 
 @Singleton
 public class SpotInstDataFetcherHelper {
@@ -34,11 +33,6 @@ public class SpotInstDataFetcherHelper {
       input.getName().getValue().ifPresent(settingAttributeBuilder::withName);
     }
 
-    if (input.getUsageScope().isPresent()) {
-      settingAttributeBuilder.withUsageRestrictions(
-          usageScopeController.populateUsageRestrictions(input.getUsageScope().getValue().orElse(null), accountId));
-    }
-
     return settingAttributeBuilder.build();
   }
 
@@ -56,11 +50,6 @@ public class SpotInstDataFetcherHelper {
 
     if (input.getName().isPresent()) {
       input.getName().getValue().ifPresent(settingAttribute::setName);
-    }
-
-    if (input.getUsageScope().isPresent()) {
-      QLUsageScope usageScope = input.getUsageScope().getValue().orElse(null);
-      settingAttribute.setUsageRestrictions(usageScopeController.populateUsageRestrictions(usageScope, accountId));
     }
   }
 }

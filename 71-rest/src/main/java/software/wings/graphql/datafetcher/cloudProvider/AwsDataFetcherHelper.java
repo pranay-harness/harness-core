@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.utils.RequestField;
 import org.apache.commons.lang3.ObjectUtils;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsConfig.AwsConfigBuilder;
@@ -15,6 +16,7 @@ import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsCloudProvid
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsManualCredentials;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLEc2IamCredentials;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateAwsCloudProviderInput;
+import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateEc2IamCredentials;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 
 @Singleton
@@ -23,6 +25,10 @@ public class AwsDataFetcherHelper {
 
   public SettingAttribute toSettingAttribute(QLAwsCloudProviderInput input, String accountId) {
     AwsConfigBuilder configBuilder = AwsConfig.builder().accountId(accountId);
+
+    SettingAttribute.Builder settingAttributeBuilder =
+        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withCategory(
+            SettingAttribute.SettingCategory.SETTING);
 
     if (input.getCredentialsType().isPresent() && input.getCredentialsType().getValue().isPresent()) {
       input.getCredentialsType().getValue().ifPresent(credentialsType -> {
@@ -34,6 +40,11 @@ public class AwsDataFetcherHelper {
             configBuilder.useEc2IamCredentials(true);
             configBuilder.tag(credentials.getDelegateSelector().getValue().orElseThrow(
                 () -> new InvalidRequestException("No delegateSelector provided with the request.")));
+            RequestField<QLUsageScope> usageRestrictions = credentials.getUsageScope();
+            if (usageRestrictions != null && usageRestrictions.isPresent()) {
+              settingAttributeBuilder.withUsageRestrictions(
+                  usageScopeController.populateUsageRestrictions(usageRestrictions.getValue().orElse(null), accountId));
+            }
           } break;
           case MANUAL: {
             QLAwsManualCredentials credentials = input.getManualCredentials().getValue().orElseThrow(
@@ -69,21 +80,12 @@ public class AwsDataFetcherHelper {
         configBuilder.crossAccountAttributes(builder.build());
       });
     }
-
-    SettingAttribute.Builder settingAttributeBuilder = SettingAttribute.Builder.aSettingAttribute()
-                                                           .withValue(configBuilder.build())
-                                                           .withAccountId(accountId)
-                                                           .withCategory(SettingAttribute.SettingCategory.SETTING);
+    settingAttributeBuilder.withValue(configBuilder.build());
 
     if (input.getName().isPresent() && input.getName().getValue().isPresent()) {
       input.getName().getValue().ifPresent(settingAttributeBuilder::withName);
     } else {
       throw new InvalidRequestException("No name provided with the request.");
-    }
-
-    if (input.getUsageScope().isPresent()) {
-      settingAttributeBuilder.withUsageRestrictions(
-          usageScopeController.populateUsageRestrictions(input.getUsageScope().getValue().orElse(null), accountId));
     }
 
     return settingAttributeBuilder.build();
@@ -104,6 +106,15 @@ public class AwsDataFetcherHelper {
                 .getValue()
                 .flatMap(credentials -> credentials.getDelegateSelector().getValue())
                 .ifPresent(config::setTag);
+            QLUpdateEc2IamCredentials ec2IamCredentials = input.getEc2IamCredentials().getValue().orElseThrow(
+                () -> new InvalidRequestException("No EC2 IAM Credentials provided"));
+            if (ec2IamCredentials != null) {
+              RequestField<QLUsageScope> usageRestrictions = ec2IamCredentials.getUsageScope();
+              if (usageRestrictions != null && usageRestrictions.isPresent()) {
+                settingAttribute.setUsageRestrictions(usageScopeController.populateUsageRestrictions(
+                    usageRestrictions.getValue().orElse(null), accountId));
+              }
+            }
           } break;
           case MANUAL: {
             config.setUseEc2IamCredentials(false);
@@ -138,11 +149,6 @@ public class AwsDataFetcherHelper {
 
     if (input.getName().isPresent()) {
       input.getName().getValue().ifPresent(settingAttribute::setName);
-    }
-
-    if (input.getUsageScope().isPresent()) {
-      QLUsageScope usageScope = input.getUsageScope().getValue().orElse(null);
-      settingAttribute.setUsageRestrictions(usageScopeController.populateUsageRestrictions(usageScope, accountId));
     }
   }
 }

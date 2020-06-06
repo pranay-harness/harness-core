@@ -1,7 +1,6 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.IGOR;
-import static software.wings.graphql.datafetcher.cloudProvider.CreateCloudProviderDataFetcherTest.usageScope;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -45,7 +44,6 @@ public class AzureDataFetcherHelperTest extends WingsBaseTest {
   public void toSettingAttributeReturnValue() {
     QLAzureCloudProviderInput input = QLAzureCloudProviderInput.builder()
                                           .name(RequestField.ofNullable(NAME))
-                                          .usageScope(RequestField.ofNullable(usageScope()))
                                           .clientId(RequestField.ofNullable(CLIENT_ID))
                                           .tenantId(RequestField.ofNullable(TENANT_ID))
                                           .keySecretId(RequestField.ofNullable(KEY))
@@ -68,7 +66,6 @@ public class AzureDataFetcherHelperTest extends WingsBaseTest {
   public void toSettingAttributeWithEmptyClientIdInput() {
     QLAzureCloudProviderInput input = QLAzureCloudProviderInput.builder()
                                           .name(RequestField.ofNull())
-                                          .usageScope(RequestField.ofNull())
                                           .clientId(RequestField.ofNull())
                                           .tenantId(RequestField.ofNull())
                                           .keySecretId(RequestField.ofNull())
@@ -85,7 +82,6 @@ public class AzureDataFetcherHelperTest extends WingsBaseTest {
   public void toSettingAttributeWithEmptyTenantIdInput() {
     QLAzureCloudProviderInput input = QLAzureCloudProviderInput.builder()
                                           .name(RequestField.ofNull())
-                                          .usageScope(RequestField.ofNull())
                                           .clientId(RequestField.ofNull())
                                           .tenantId(RequestField.ofNull())
                                           .keySecretId(RequestField.ofNull())
@@ -102,7 +98,6 @@ public class AzureDataFetcherHelperTest extends WingsBaseTest {
   public void toSettingAttributeWithEmptyKeySecretIdInput() {
     QLAzureCloudProviderInput input = QLAzureCloudProviderInput.builder()
                                           .name(RequestField.ofNull())
-                                          .usageScope(RequestField.ofNull())
                                           .clientId(RequestField.ofNull())
                                           .tenantId(RequestField.ofNull())
                                           .keySecretId(RequestField.ofNull())
@@ -119,7 +114,6 @@ public class AzureDataFetcherHelperTest extends WingsBaseTest {
   public void updateSettingAttributePerformance() {
     QLUpdateAzureCloudProviderInput input = QLUpdateAzureCloudProviderInput.builder()
                                                 .name(RequestField.ofNullable(NAME))
-                                                .usageScope(RequestField.ofNullable(usageScope()))
                                                 .clientId(RequestField.ofNullable(CLIENT_ID))
                                                 .tenantId(RequestField.ofNullable(TENANT_ID))
                                                 .keySecretId(RequestField.ofNullable(KEY))
@@ -144,7 +138,6 @@ public class AzureDataFetcherHelperTest extends WingsBaseTest {
   public void updateSettingAttributeWithEmptyInput() {
     QLUpdateAzureCloudProviderInput input = QLUpdateAzureCloudProviderInput.builder()
                                                 .name(RequestField.ofNull())
-                                                .usageScope(RequestField.ofNull())
                                                 .clientId(RequestField.ofNull())
                                                 .tenantId(RequestField.ofNull())
                                                 .keySecretId(RequestField.ofNull())

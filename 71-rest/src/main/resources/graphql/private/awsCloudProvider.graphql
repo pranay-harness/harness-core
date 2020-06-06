@@ -1,6 +1,5 @@
 input AwsCloudProviderInput {
   name: String!
-  usageScope: UsageScopeInput
 
   credentialsType: AwsCredentialsType
   ec2IamCredentials: Ec2IamCredentials
@@ -16,6 +15,7 @@ enum AwsCredentialsType {
 
 input Ec2IamCredentials {
   delegateSelector: String!
+  usageScope: UsageScopeInput
 }
 
 input AwsManualCredentials {
@@ -31,7 +31,6 @@ input AwsCrossAccountAttributes {
 
 input UpdateAwsCloudProviderInput {
   name: String
-  usageScope: UsageScopeInput
 
   credentialsType: AwsCredentialsType
   ec2IamCredentials: UpdateEc2IamCredentials
@@ -42,6 +41,7 @@ input UpdateAwsCloudProviderInput {
 
 input UpdateEc2IamCredentials {
   delegateSelector: String
+  usageScope: UsageScopeInput
 }
 
 input UpdateAwsManualCredentials {
