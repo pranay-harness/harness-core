@@ -269,7 +269,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
           + "$DecodedString = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\""
           + encodedFile + "\"))\n"
           + "Write-Host \"Decoding config file on the host.\"\n"
-          + "$decodedFile = \'" + configFileMetaData.getFilename() + "\'\n"
+          + "$decodedFile = \'" + configFileMetaData.getDestinationDirectoryPath() + "\\"
+          + configFileMetaData.getFilename() + "\'\n"
           + "[IO.File]::WriteAllText($decodedFile, $DecodedString) \n"
           + "Write-Host \"Copied config file to the host.\"\n";
 

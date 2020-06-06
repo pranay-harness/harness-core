@@ -1206,10 +1206,8 @@ public class CommandState extends State {
         flattenCommandUnitList.add(new CleanupSshCommandUnit());
       }
     } else if (DeploymentType.WINRM.name().equals(deploymentType)) {
-      if (getScriptType(flattenCommandUnitList) == ScriptType.POWERSHELL) {
-        flattenCommandUnitList.add(0, new InitPowerShellCommandUnit());
-        flattenCommandUnitList.add(new CleanupPowerShellCommandUnit());
-      }
+      flattenCommandUnitList.add(0, new InitPowerShellCommandUnit());
+      flattenCommandUnitList.add(new CleanupPowerShellCommandUnit());
     }
     // }
     return flattenCommandUnitList;
