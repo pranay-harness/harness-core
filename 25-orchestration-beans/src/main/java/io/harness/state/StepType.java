@@ -9,12 +9,13 @@ import io.harness.registries.RegistryKey;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Value;
 
 @OwnedBy(CDC)
 @Redesign
-@NoArgsConstructor
+@Value
+@Builder(buildMethodName = "internalBuild")
 @EqualsAndHashCode
 public class StepType implements RegistryKey {
   // Provided From the orchestration layer system states
@@ -23,12 +24,6 @@ public class StepType implements RegistryKey {
 
   @Getter @NonNull String type;
   @EqualsAndHashCode.Exclude @Getter @NonNull String group;
-
-  @Builder(buildMethodName = "internalBuild")
-  public StepType(@NonNull String type, @NonNull String group) {
-    this.type = type;
-    this.group = group;
-  }
 
   public static class StepTypeBuilder {
     public StepType build() {

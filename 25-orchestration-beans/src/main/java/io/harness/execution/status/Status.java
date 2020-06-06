@@ -27,6 +27,7 @@ public enum Status {
   ABORTED,
   ERRORED,
   FAILED,
+  EXPIRED,
   SUCCEEDED;
 
   // Status Groups
@@ -42,6 +43,8 @@ public enum Status {
 
   private static final EnumSet<Status> FLOWING_STATUSES =
       EnumSet.of(RUNNING, ASYNC_WAITING, TASK_WAITING, WAITING, DISCONTINUING);
+
+  private static final EnumSet<Status> RETRYABLE_STATUSES = EnumSet.of(FAILED, ERRORED, EXPIRED);
 
   public static EnumSet<Status> finalizableStatuses() {
     return FINALIZABLE_STATUSES;
@@ -61,6 +64,10 @@ public enum Status {
 
   public static EnumSet<Status> flowingStatuses() {
     return FLOWING_STATUSES;
+  }
+
+  public static EnumSet<Status> retryableStatuses() {
+    return RETRYABLE_STATUSES;
   }
 
   public static EnumSet<Status> obtainAllowedStartSet(Status status) {

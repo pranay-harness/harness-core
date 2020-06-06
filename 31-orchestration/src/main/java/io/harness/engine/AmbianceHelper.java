@@ -8,28 +8,31 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.services.NodeExecutionService;
+import io.harness.engine.services.PlanExecutionService;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.persistence.HPersistence;
 
 @OwnedBy(CDC)
 @Redesign
 public class AmbianceHelper {
-  @Inject private HPersistence hPersistence;
+  @Inject private PlanExecutionService planExecutionService;
+  @Inject private NodeExecutionService nodeExecutionService;
 
   public NodeExecution obtainNodeExecution(Ambiance ambiance) {
-    String nodeInstanceId = ambiance == null ? null : ambiance.obtainCurrentRuntimeId();
-    if (nodeInstanceId == null) {
+    String nodeExecutionId = ambiance == null ? null : ambiance.obtainCurrentRuntimeId();
+    if (nodeExecutionId == null) {
       return null;
     }
-    return hPersistence.createQuery(NodeExecution.class).filter(NodeExecutionKeys.uuid, nodeInstanceId).get();
+    return nodeExecutionService.get(nodeExecutionId);
   }
 
   public PlanExecution obtainExecutionInstance(Ambiance ambiance) {
-    String executionId = ambiance == null ? null : ambiance.getPlanExecutionId();
-    return hPersistence.createQuery(PlanExecution.class).filter(PlanExecutionKeys.uuid, executionId).get();
+    String planExecutionId = ambiance == null ? null : ambiance.getPlanExecutionId();
+    if (planExecutionId == null) {
+      return null;
+    }
+    return planExecutionService.get(planExecutionId);
   }
 
   public Ambiance fetchAmbiance(NodeExecution nodeExecution) {
@@ -37,10 +40,13 @@ public class AmbianceHelper {
       return null;
     }
 
-    PlanExecution planExecution = hPersistence.createQuery(PlanExecution.class)
-                                      .filter(PlanExecutionKeys.uuid, nodeExecution.getPlanExecutionId())
-                                      .get();
+    PlanExecution planExecution = planExecutionService.get(nodeExecution.getPlanExecutionId());
     Preconditions.checkNotNull(planExecution);
     return Ambiance.fromNodeExecution(planExecution.getInputArgs(), nodeExecution);
+  }
+
+  public Ambiance fetchAmbianceForRetry(NodeExecution nodeExecution) {
+    Ambiance ambiance = fetchAmbiance(nodeExecution);
+    return ambiance.cloneForFinish();
   }
 }

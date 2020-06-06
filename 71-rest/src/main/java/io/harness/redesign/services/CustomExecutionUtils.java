@@ -3,6 +3,7 @@ package io.harness.redesign.services;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.adviser.AdviserObtainment;
@@ -31,6 +32,7 @@ import io.harness.cdng.service.Service;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
+import io.harness.interrupts.RepairActionCode;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviser;
@@ -60,8 +62,6 @@ import io.harness.state.io.StepParameters;
 import lombok.experimental.UtilityClass;
 import software.wings.sm.states.ShellScriptState;
 
-import java.util.Collections;
-
 @OwnedBy(CDC)
 @Redesign
 @ExcludeRedesign
@@ -69,6 +69,7 @@ import java.util.Collections;
 public class CustomExecutionUtils {
   private static final String BASIC_HTTP_STATE_URL_404 = "http://httpstat.us/404";
   private static final String BASIC_HTTP_STATE_URL_200 = "http://httpstat.us/200";
+  private static final String BASIC_HTTP_STATE_URL_500 = "http://httpstat.us/500";
   private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
   private static final StepType BASIC_HTTP_STEP_TYPE = StepType.builder().type("BASIC_HTTP").build();
 
@@ -327,15 +328,16 @@ public class CustomExecutionUtils {
 
   public static Plan provideHttpRetryPlan() {
     String httpNodeId = generateUuid();
+    String dummyNodeId = generateUuid();
     BasicHttpStepParameters basicHttpStateParameters =
-        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
     return Plan.builder()
         .uuid(generateUuid())
         .startingNodeId(httpNodeId)
         .node(PlanNode.builder()
                   .uuid(httpNodeId)
                   .name("Basic Http 1")
-                  .stepType(BASIC_HTTP_STEP_TYPE)
+                  .stepType(BasicHttpStep.STEP_TYPE)
                   .identifier("dummy")
                   .stepParameters(basicHttpStateParameters)
                   .facilitatorObtainment(FacilitatorObtainment.builder()
@@ -344,10 +346,21 @@ public class CustomExecutionUtils {
                   .adviserObtainment(AdviserObtainment.builder()
                                          .type(AdviserType.builder().type(AdviserType.RETRY).build())
                                          .parameters(RetryAdviserParameters.builder()
-                                                         .retryCount(1)
-                                                         .waitInterval(Collections.singletonList(0))
+                                                         .retryCount(2)
+                                                         .waitIntervalList(ImmutableList.of(2, 5))
+                                                         .repairActionCodeAfterRetry(RepairActionCode.IGNORE)
+                                                         .nextNodeId(dummyNodeId)
                                                          .build())
                                          .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNodeId)
+                  .name("Dummy Node 1")
+                  .identifier("dummy")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
                   .build())
         .build();
   }
