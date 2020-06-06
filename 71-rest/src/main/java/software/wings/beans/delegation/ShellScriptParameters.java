@@ -1,6 +1,5 @@
 package software.wings.beans.delegation;
 
-import static io.harness.govern.Switch.unhandled;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
@@ -9,8 +8,6 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
-import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
-import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.expression.Expression;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -29,7 +26,7 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
+import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
@@ -176,22 +173,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
       }
       return executionCapabilities;
     }
-    switch (connectionType) {
-      case SSH:
-        executionCapabilities.addAll(
-            CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(keyEncryptedDataDetails));
-        executionCapabilities.add(
-            SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(host + ":" + port));
-        return executionCapabilities;
-      case WINRM:
-        executionCapabilities.addAll(
-            CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(winrmConnectionEncryptedDataDetails));
-        executionCapabilities.add(SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(
-            host, Integer.toString(winrmConnectionAttributes.getPort())));
-        return executionCapabilities;
-      default:
-        unhandled(connectionType);
-        return null;
-    }
+    executionCapabilities.add(ShellConnectionCapability.builder().shellScriptParameters(this).build());
+    return executionCapabilities;
   }
 }
