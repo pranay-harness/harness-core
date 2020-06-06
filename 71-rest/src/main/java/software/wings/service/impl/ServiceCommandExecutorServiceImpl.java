@@ -76,7 +76,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       Command command, CommandExecutionContext context, String deploymentType) {
     CommandUnitExecutorService commandUnitExecutorService = commandUnitExecutorServiceMap.get(deploymentType);
     List<CommandUnit> flattenedCommandUnits = getFlattenCommandUnitList(command);
-    ScriptType scriptType = getScriptType(flattenedCommandUnits);
+    ScriptType scriptType = getScriptType(flattenedCommandUnits, deploymentType);
     try {
       if (scriptType == ScriptType.BASH) {
         if (context.isInlineSshCommand()) {
@@ -116,11 +116,12 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
         .collect(toList());
   }
 
-  private ScriptType getScriptType(List<CommandUnit> commandUnits) {
-    if (commandUnits.stream().anyMatch(unit
+  private ScriptType getScriptType(List<CommandUnit> commandUnits, String deploymentType) {
+    if ((commandUnits.stream().anyMatch(unit
             -> (unit.getCommandUnitType() == CommandUnitType.EXEC
                    || unit.getCommandUnitType() == CommandUnitType.DOWNLOAD_ARTIFACT)
-                && ((ExecCommandUnit) unit).getScriptType() == ScriptType.POWERSHELL)) {
+                && ((ExecCommandUnit) unit).getScriptType() == ScriptType.POWERSHELL))
+        || (DeploymentType.WINRM.name().equals(deploymentType))) {
       return ScriptType.POWERSHELL;
     } else {
       return ScriptType.BASH;
