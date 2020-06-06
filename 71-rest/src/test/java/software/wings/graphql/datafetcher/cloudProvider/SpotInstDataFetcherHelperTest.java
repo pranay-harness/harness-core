@@ -1,7 +1,6 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.IGOR;
-import static software.wings.graphql.datafetcher.cloudProvider.CreateCloudProviderDataFetcherTest.usageScope;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -45,7 +44,6 @@ public class SpotInstDataFetcherHelperTest extends WingsBaseTest {
                                                    .name(RequestField.ofNullable(NAME))
                                                    .accountId(RequestField.ofNullable(SPOT_INST_ACCOUNT_ID))
                                                    .tokenSecretId(RequestField.ofNullable(SPOT_INST_TOKEN))
-                                                   .usageScope(RequestField.ofNullable(usageScope()))
                                                    .build();
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
@@ -66,7 +64,6 @@ public class SpotInstDataFetcherHelperTest extends WingsBaseTest {
                                              .name(RequestField.ofNull())
                                              .accountId(RequestField.ofNull())
                                              .tokenSecretId(RequestField.ofNull())
-                                             .usageScope(RequestField.ofNull())
                                              .build();
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
@@ -82,7 +79,6 @@ public class SpotInstDataFetcherHelperTest extends WingsBaseTest {
                                                          .name(RequestField.ofNullable(NAME))
                                                          .accountId(RequestField.ofNullable(SPOT_INST_ACCOUNT_ID))
                                                          .tokenSecretId(RequestField.ofNullable(SPOT_INST_TOKEN))
-                                                         .usageScope(RequestField.ofNullable(usageScope()))
                                                          .build();
 
     SettingAttribute setting =
@@ -105,7 +101,6 @@ public class SpotInstDataFetcherHelperTest extends WingsBaseTest {
                                                    .name(RequestField.ofNull())
                                                    .accountId(RequestField.ofNull())
                                                    .tokenSecretId(RequestField.ofNull())
-                                                   .usageScope(RequestField.ofNull())
                                                    .build();
 
     SettingAttribute setting =

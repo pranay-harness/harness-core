@@ -8,7 +8,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.graphql.datafetcher.cloudProvider.CreateCloudProviderDataFetcherTest.usageScope;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -114,7 +113,6 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                                              .endpointUrl(RequestField.ofNullable("URL"))
                                                              .userName(RequestField.ofNullable("USER"))
                                                              .passwordSecretId(RequestField.ofNullable("PASS"))
-                                                             .usageScope(RequestField.ofNull())
                                                              .build())
                                        .build(),
             MutationContext.builder().accountId(ACCOUNT_ID).build());
@@ -159,7 +157,6 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                        .name(RequestField.ofNullable("NAME"))
                                        .accountId(RequestField.ofNullable("SpotInstAccountId"))
                                        .tokenSecretId(RequestField.ofNullable("SpotInstToken"))
-                                       .usageScope(RequestField.ofNullable(usageScope()))
                                        .build())
             .build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());
@@ -204,7 +201,6 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                        .gcpCloudProvider(QLUpdateGcpCloudProviderInput.builder()
                                                              .name(RequestField.ofNullable("NAME"))
                                                              .serviceAccountKeySecretId(RequestField.ofNullable("Key"))
-                                                             .usageScope(RequestField.ofNullable(usageScope()))
                                                              .build())
                                        .build(),
             MutationContext.builder().accountId(ACCOUNT_ID).build());
@@ -249,7 +245,6 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
             .k8sCloudProvider(
                 QLUpdateK8sCloudProviderInput.builder()
                     .name(RequestField.ofNullable("K8S"))
-                    .usageScope(RequestField.ofNullable(usageScope()))
                     .skipValidation(RequestField.ofNullable(Boolean.TRUE))
                     .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.INHERIT_CLUSTER_DETAILS))
                     .inheritClusterDetails(
@@ -351,7 +346,6 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                        .cloudProviderType(QLCloudProviderType.AZURE)
                                        .azureCloudProvider(QLUpdateAzureCloudProviderInput.builder()
                                                                .name(RequestField.ofNullable("Azure"))
-                                                               .usageScope(RequestField.ofNullable(usageScope()))
                                                                .clientId(RequestField.ofNullable("CLIENT_ID"))
                                                                .tenantId(RequestField.ofNullable("TENANT_ID"))
                                                                .keySecretId(RequestField.ofNullable("KEY"))
@@ -398,7 +392,6 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
             .cloudProviderType(QLCloudProviderType.AWS)
             .awsCloudProvider(QLUpdateAwsCloudProviderInput.builder()
                                   .name(RequestField.ofNullable("AWS"))
-                                  .usageScope(RequestField.ofNullable(usageScope()))
                                   .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.EC2_IAM))
                                   .ec2IamCredentials(
                                       RequestField.ofNullable(QLUpdateEc2IamCredentials.builder()
@@ -432,7 +425,6 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                                          .endpointUrl(RequestField.ofNullable("URL"))
                                                          .userName(RequestField.ofNullable("USER"))
                                                          .passwordSecretId(RequestField.ofNullable("PASS"))
-                                                         .usageScope(RequestField.ofNull())
                                                          .build())
                                    .build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());

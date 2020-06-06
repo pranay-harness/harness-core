@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.utils.RequestField;
 import lombok.Builder;
 import lombok.Value;
+import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
@@ -20,4 +21,5 @@ public class QLUpdateNone {
   private RequestField<String> clientKeyPassphraseSecretId;
   private RequestField<String> clientKeyAlgorithm;
   private RequestField<String> serviceAccountTokenSecretId;
+  private RequestField<QLUsageScope> usageScope;
 }

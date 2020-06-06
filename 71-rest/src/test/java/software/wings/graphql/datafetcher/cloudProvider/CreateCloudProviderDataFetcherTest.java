@@ -113,7 +113,6 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                                              .endpointUrl(RequestField.ofNullable("URL"))
                                                              .userName(RequestField.ofNullable("USER"))
                                                              .passwordSecretId(RequestField.ofNullable("PASS"))
-                                                             .usageScope(RequestField.ofNull())
                                                              .build())
                                        .build(),
             MutationContext.builder().accountId(ACCOUNT_ID).build());
@@ -156,7 +155,6 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                        .name(RequestField.ofNullable("NAME"))
                                        .accountId(RequestField.ofNullable("SpotInstAccountId"))
                                        .tokenSecretId(RequestField.ofNullable("SpotInstToken"))
-                                       .usageScope(RequestField.ofNullable(usageScope()))
                                        .build())
             .build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());
@@ -199,7 +197,6 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                        .gcpCloudProvider(QLGcpCloudProviderInput.builder()
                                                              .name(RequestField.ofNullable("NAME"))
                                                              .serviceAccountKeySecretId(RequestField.ofNullable("Key"))
-                                                             .usageScope(RequestField.ofNullable(usageScope()))
                                                              .build())
                                        .build(),
             MutationContext.builder().accountId(ACCOUNT_ID).build());
@@ -242,7 +239,6 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
             .k8sCloudProvider(
                 QLK8sCloudProviderInput.builder()
                     .name(RequestField.ofNullable("K8S"))
-                    .usageScope(RequestField.ofNullable(usageScope()))
                     .skipValidation(RequestField.ofNullable(Boolean.TRUE))
                     .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.INHERIT_CLUSTER_DETAILS))
                     .inheritClusterDetails(RequestField.ofNullable(
@@ -331,7 +327,6 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
                                        .cloudProviderType(QLCloudProviderType.AZURE)
                                        .azureCloudProvider(QLAzureCloudProviderInput.builder()
                                                                .name(RequestField.ofNullable("AZURE"))
-                                                               .usageScope(RequestField.ofNullable(usageScope()))
                                                                .clientId(RequestField.ofNullable("CLIENT_ID"))
                                                                .tenantId(RequestField.ofNullable("TENANT_ID"))
                                                                .keySecretId(RequestField.ofNullable("KEY"))
@@ -377,7 +372,6 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
             .awsCloudProvider(
                 QLAwsCloudProviderInput.builder()
                     .name(RequestField.ofNullable("AWS"))
-                    .usageScope(RequestField.ofNullable(usageScope()))
                     .credentialsType(RequestField.ofNullable(QLAwsCredentialsType.EC2_IAM))
                     .ec2IamCredentials(RequestField.ofNullable(
                         QLEc2IamCredentials.builder().delegateSelector(RequestField.ofNullable("DELEGATE")).build()))

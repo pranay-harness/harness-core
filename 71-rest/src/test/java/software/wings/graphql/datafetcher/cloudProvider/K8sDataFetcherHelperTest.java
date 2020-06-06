@@ -1,7 +1,6 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.IGOR;
-import static software.wings.graphql.datafetcher.cloudProvider.CreateCloudProviderDataFetcherTest.usageScope;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -47,7 +46,6 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
     final QLK8sCloudProviderInput input =
         QLK8sCloudProviderInput.builder()
             .name(RequestField.ofNullable(NAME))
-            .usageScope(RequestField.ofNullable(usageScope()))
             .skipValidation(RequestField.ofNullable(Boolean.TRUE))
             .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.INHERIT_CLUSTER_DETAILS))
             .inheritClusterDetails(RequestField.ofNullable(
@@ -71,7 +69,6 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
   public void toSettingAttributeWithEmptyInput() {
     final QLK8sCloudProviderInput input = QLK8sCloudProviderInput.builder()
                                               .name(RequestField.ofNull())
-                                              .usageScope(RequestField.ofNull())
                                               .skipValidation(RequestField.ofNull())
                                               .clusterDetailsType(RequestField.absent())
                                               .inheritClusterDetails(RequestField.ofNull())
@@ -89,7 +86,6 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
   public void toSettingAttributeWithNoClusterDatailsType() {
     final QLK8sCloudProviderInput input = QLK8sCloudProviderInput.builder()
                                               .name(RequestField.ofNull())
-                                              .usageScope(RequestField.ofNull())
                                               .skipValidation(RequestField.ofNull())
                                               .clusterDetailsType(RequestField.ofNull())
                                               .inheritClusterDetails(RequestField.ofNull())
@@ -108,7 +104,6 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
     final QLUpdateK8sCloudProviderInput input =
         QLUpdateK8sCloudProviderInput.builder()
             .name(RequestField.ofNullable(NAME))
-            .usageScope(RequestField.ofNullable(usageScope()))
             .skipValidation(RequestField.ofNullable(Boolean.TRUE))
             .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.INHERIT_CLUSTER_DETAILS))
             .inheritClusterDetails(RequestField.ofNullable(
@@ -134,7 +129,6 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
   public void updateSettingAttributeWithEmptyInput() {
     final QLUpdateK8sCloudProviderInput input = QLUpdateK8sCloudProviderInput.builder()
                                                     .name(RequestField.ofNull())
-                                                    .usageScope(RequestField.ofNull())
                                                     .skipValidation(RequestField.ofNull())
                                                     .clusterDetailsType(RequestField.absent())
                                                     .inheritClusterDetails(RequestField.ofNull())
@@ -154,7 +148,6 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
   public void updateSettingAttributeWithClusterDetailsType() {
     final QLUpdateK8sCloudProviderInput input = QLUpdateK8sCloudProviderInput.builder()
                                                     .name(RequestField.ofNull())
-                                                    .usageScope(RequestField.ofNull())
                                                     .skipValidation(RequestField.ofNull())
                                                     .clusterDetailsType(RequestField.ofNull())
                                                     .inheritClusterDetails(RequestField.ofNull())
