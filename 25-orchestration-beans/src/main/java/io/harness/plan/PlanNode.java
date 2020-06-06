@@ -11,31 +11,30 @@ import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Singular;
 
 import java.util.List;
 
+@Getter
 @OwnedBy(CDC)
 @Redesign
-@NoArgsConstructor
 public class PlanNode {
   // Identifiers
-  @NonNull @Getter String uuid;
-  @NonNull @Getter String name;
-  @NonNull @Getter StepType stepType;
-  @NonNull @Getter String identifier;
+  @NonNull String uuid;
+  @NonNull String name;
+  @NonNull StepType stepType;
+  @NonNull String identifier;
 
   // Input/Outputs
-  @Getter StepParameters stepParameters;
-  @Singular @Getter List<RefObject> refObjects;
+  StepParameters stepParameters;
+  @Singular List<RefObject> refObjects;
 
   // Hooks
-  @Singular @Getter List<AdviserObtainment> adviserObtainments;
-  @Singular @Getter List<FacilitatorObtainment> facilitatorObtainments;
+  @Singular List<AdviserObtainment> adviserObtainments;
+  @Singular List<FacilitatorObtainment> facilitatorObtainments;
 
-  @Getter boolean skipExpressionChain;
+  boolean skipExpressionChain;
 
   @Builder
   public PlanNode(@NonNull String uuid, @NonNull String name, @NonNull StepType stepType, @NonNull String identifier,

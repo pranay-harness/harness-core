@@ -6,16 +6,15 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution;
 import io.harness.logging.AutoLogContext;
 import io.harness.plan.input.InputArgs;
+import io.harness.serializer.KryoUtils;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
 import java.util.ArrayList;
@@ -27,7 +26,6 @@ import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Redesign
-@NoArgsConstructor
 @FieldNameConstants(innerTypeName = "AmbianceKeys")
 @EqualsAndHashCode
 public class Ambiance {
@@ -58,9 +56,11 @@ public class Ambiance {
   }
 
   public Ambiance cloneForFinish() {
-    Ambiance cloned = deepCopy();
-    cloned.levels.remove(levels.size() - 1);
-    return cloned;
+    return clone(levels.size() - 1);
+  }
+
+  public Ambiance cloneForChild() {
+    return clone(levels.size());
   }
 
   public Ambiance clone(int levelsToKeep) {
@@ -69,10 +69,6 @@ public class Ambiance {
       cloned.levels.subList(levelsToKeep, cloned.levels.size()).clear();
     }
     return cloned;
-  }
-
-  public Ambiance cloneForChild() {
-    return deepCopy();
   }
 
   public String obtainCurrentRuntimeId() {
@@ -89,8 +85,7 @@ public class Ambiance {
 
   @VisibleForTesting
   Ambiance deepCopy() {
-    Kryo kryo = new Kryo();
-    return kryo.copy(this);
+    return KryoUtils.clone(this);
   }
 
   public static Ambiance fromNodeExecution(@NotNull InputArgs inputArgs, @NotNull NodeExecution nodeExecution) {

@@ -67,6 +67,7 @@ public class OutcomeInstance implements PersistentEntity, UuidAware, CreatedAtAw
 
   @UtilityClass
   public static class OutcomeInstanceKeys {
-    public final String runtimeId = OutcomeInstanceKeys.producedBy + "." + LevelKeys.runtimeId;
+    public final String producedByRuntimeId = OutcomeInstanceKeys.producedBy + "." + LevelKeys.runtimeId;
+    public final String producedBySetupId = OutcomeInstanceKeys.producedBy + "." + LevelKeys.setupId;
   }
 }

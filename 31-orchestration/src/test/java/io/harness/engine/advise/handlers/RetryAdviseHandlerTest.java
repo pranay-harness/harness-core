@@ -11,9 +11,11 @@ import io.harness.OrchestrationTest;
 import io.harness.adviser.impl.retry.RetryAdvise;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.PlanNode;
@@ -23,16 +25,24 @@ import io.harness.testlib.RealMongo;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 
-public class RetryHandlerTest extends OrchestrationTest {
-  @Inject RetryHandler retryHandler;
+public class RetryAdviseHandlerTest extends OrchestrationTest {
+  @InjectMocks @Inject private RetryAdviseHandler retryAdviseHandler;
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
+
+  @Mock @Named("EngineExecutorService") private ExecutorService executorService;
 
   private static final String PLAN_EXECUTION_ID = generateUuid();
   private static final String NODE_EXECUTION_ID = generateUuid();
   private static final String NODE_SETUP_ID = generateUuid();
+
+  private static final EmbeddedUser EMBEDDED_USER = new EmbeddedUser(generateUuid(), PRASHANT, PRASHANT);
 
   private Ambiance ambiance;
   private RetryAdvise advise;
@@ -44,6 +54,8 @@ public class RetryHandlerTest extends OrchestrationTest {
                    .levels(Collections.singletonList(
                        Level.builder().runtimeId(NODE_EXECUTION_ID).setupId(NODE_SETUP_ID).build()))
                    .build();
+
+    hPersistence.save(PlanExecution.builder().uuid(PLAN_EXECUTION_ID).createdBy(EMBEDDED_USER).build());
 
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .uuid(NODE_EXECUTION_ID)
@@ -67,11 +79,15 @@ public class RetryHandlerTest extends OrchestrationTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleAdvise() {
-    retryHandler.handleAdvise(ambiance, advise);
+    retryAdviseHandler.handleAdvise(ambiance, advise);
+    List<NodeExecution> executions = hPersistence.createQuery(NodeExecution.class)
+                                         .filter(NodeExecutionKeys.planExecutionId, PLAN_EXECUTION_ID)
+                                         .asList();
+    assertThat(executions).hasSize(2);
     NodeExecution newNodeExecution =
-        hPersistence.createQuery(NodeExecution.class).filter(NodeExecutionKeys.uuid, NODE_EXECUTION_ID).get();
+        executions.stream().filter(ex -> !ex.getUuid().equals(NODE_EXECUTION_ID)).findFirst().orElse(null);
     assertThat(newNodeExecution).isNotNull();
     assertThat(newNodeExecution.getRetryIds()).hasSize(1);
-    assertThat(newNodeExecution.getRetryIds()).doesNotContain(NODE_EXECUTION_ID);
+    assertThat(newNodeExecution.getRetryIds()).containsExactly(NODE_EXECUTION_ID);
   }
 }

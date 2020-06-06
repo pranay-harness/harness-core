@@ -16,6 +16,8 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
+import io.harness.interrupts.Interrupt;
+import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.multiline.MultilineStringMixin;
 import io.harness.rest.RestResponse;
 import io.harness.rule.FunctionalTestRule;
@@ -38,6 +40,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
+import org.mongodb.morphia.query.Sort;
 import software.wings.beans.Account;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
@@ -232,6 +235,14 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   public List<NodeExecution> getNodeExecutions(String planExecutionId) {
     return wingsPersistence.createQuery(NodeExecution.class, excludeAuthority)
         .filter(NodeExecutionKeys.planExecutionId, planExecutionId)
+        .order(Sort.descending(NodeExecutionKeys.createdAt))
+        .asList();
+  }
+
+  public List<Interrupt> getPlanInterrupts(String planExecutionId) {
+    return wingsPersistence.createQuery(Interrupt.class, excludeAuthority)
+        .filter(InterruptKeys.planExecutionId, planExecutionId)
+        .order(Sort.descending(InterruptKeys.createdAt))
         .asList();
   }
 

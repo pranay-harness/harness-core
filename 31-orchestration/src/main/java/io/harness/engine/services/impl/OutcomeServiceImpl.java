@@ -124,7 +124,7 @@ public class OutcomeServiceImpl implements OutcomeService {
   public List<Outcome> findAllByRuntimeId(String planExecutionId, String runtimeId) {
     List<OutcomeInstance> outcomeInstances = hPersistence.createQuery(OutcomeInstance.class, excludeAuthority)
                                                  .filter(OutcomeInstanceKeys.planExecutionId, planExecutionId)
-                                                 .filter(OutcomeInstanceKeys.runtimeId, runtimeId)
+                                                 .filter(OutcomeInstanceKeys.producedByRuntimeId, runtimeId)
                                                  .asList();
 
     if (isEmpty(outcomeInstances)) {

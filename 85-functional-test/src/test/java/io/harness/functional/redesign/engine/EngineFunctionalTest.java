@@ -3,6 +3,7 @@ package io.harness.functional.redesign.engine;
 import static io.harness.execution.status.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -16,17 +17,20 @@ import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
+import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.interrupts.Interrupt;
+import io.harness.redesign.states.http.BasicHttpStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.rule.Owner;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class ExecutionEngineTest extends AbstractFunctionalTest {
+public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
 
@@ -73,14 +77,31 @@ public class ExecutionEngineTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ALEXEI)
+  @Owner(developers = PRASHANT)
   @Category(FunctionalTests.class)
-  @Ignore(value = "Remove ignore when Retry flow is fixed")
   public void shouldExecuteHttpRetryPlan() {
-    PlanExecution httpForkResponse =
+    PlanExecution httpRetryResponse =
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-retry");
 
-    assertThat(httpForkResponse.getStatus()).isEqualTo(SUCCEEDED);
+    assertThat(httpRetryResponse.getStatus()).isEqualTo(SUCCEEDED);
+    List<NodeExecution> nodeExecutions = getNodeExecutions(httpRetryResponse.getUuid());
+    assertThat(nodeExecutions).hasSize(4);
+
+    List<NodeExecution> retriedNodeExecutions =
+        nodeExecutions.stream()
+            .filter(ex -> ex.getNode().getStepType().equals(BasicHttpStep.STEP_TYPE))
+            .collect(Collectors.toList());
+
+    assertThat(retriedNodeExecutions).hasSize(3);
+
+    // Pick Latest created one
+    assertThat(retriedNodeExecutions.get(0).getRetryIds())
+        .containsExactlyInAnyOrder(retriedNodeExecutions.get(1).getUuid(), retriedNodeExecutions.get(2).getUuid());
+
+    List<Interrupt> interrupts = getPlanInterrupts(httpRetryResponse.getUuid());
+    assertThat(interrupts).hasSize(2);
+    assertThat(interrupts.stream().map(Interrupt::getType).collect(Collectors.toList()))
+        .containsExactly(ExecutionInterruptType.RETRY, ExecutionInterruptType.RETRY);
   }
 
   @Test

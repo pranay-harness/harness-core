@@ -2,9 +2,7 @@ package io.harness.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.esotericsoftware.kryo.Kryo;
 import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
@@ -18,13 +16,12 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.persistence.converters.DurationConverter;
 import io.harness.plan.PlanNode;
+import io.harness.serializer.KryoUtils;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Converters;
@@ -42,8 +39,6 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @FieldNameConstants(innerTypeName = "NodeExecutionKeys")
 @Converters({DurationConverter.class})
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity(value = "nodeExecutions")
 public final class NodeExecution implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   // Immutable
@@ -74,13 +69,15 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   private Long expiryTs;
 
   @Singular List<ExecutableResponse> executableResponses;
-  @Singular List<String> retryIds;
   @Singular private List<InterruptEffect> interruptHistories;
   @Singular List<StepTransput> additionalInputs;
   FailureInfo failureInfo;
 
+  @Singular List<String> retryIds;
+  boolean oldRetry;
+
   public boolean isRetry() {
-    return isNotEmpty(retryIds);
+    return !isEmpty(retryIds);
   }
 
   public int retryCount() {
@@ -91,8 +88,9 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   }
 
   public boolean isChildSpawningMode() {
-    return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN;
+    return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN || mode == ExecutionMode.CHILD_CHAIN;
   }
+
   public boolean isTaskSpawningMode() {
     return mode == ExecutionMode.TASK || mode == ExecutionMode.TASK_CHAIN;
   }
@@ -105,7 +103,6 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   }
 
   public NodeExecution deepCopy() {
-    Kryo kryo = new Kryo();
-    return kryo.copy(this);
+    return KryoUtils.clone(this);
   }
 }

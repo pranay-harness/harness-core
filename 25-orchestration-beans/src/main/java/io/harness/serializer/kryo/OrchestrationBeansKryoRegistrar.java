@@ -3,14 +3,37 @@ package io.harness.serializer.kryo;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.adviser.AdviserObtainment;
+import io.harness.adviser.AdviserType;
+import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.Level;
+import io.harness.ambiance.LevelType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.OutcomeInstance;
+import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
+import io.harness.facilitator.DefaultFacilitatorParams;
+import io.harness.facilitator.FacilitatorObtainment;
+import io.harness.facilitator.FacilitatorType;
+import io.harness.facilitator.modes.ExecutionMode;
+import io.harness.facilitator.modes.async.AsyncExecutableResponse;
+import io.harness.facilitator.modes.chain.child.ChildChainResponse;
+import io.harness.facilitator.modes.chain.task.TaskChainExecutableResponse;
+import io.harness.facilitator.modes.child.ChildExecutableResponse;
+import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
+import io.harness.facilitator.modes.task.TaskExecutableResponse;
 import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.interrupts.RepairActionCode;
+import io.harness.plan.PlanNode;
+import io.harness.plan.input.InputArgs;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponseNotifyData;
+
+import java.time.Duration;
 
 /**
  * We are trying to remain as independent from Kryo as possible.
@@ -24,9 +47,32 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     // Add new Classes Here
     kryo.register(Status.class, 2501);
     kryo.register(StatusNotifyResponseData.class, 2502);
+    kryo.register(Ambiance.class, 2503);
+    kryo.register(Level.class, 2504);
+    kryo.register(LevelType.class, 2505);
+    kryo.register(NodeExecution.class, 2506);
+    kryo.register(PlanNode.class, 2508);
+    kryo.register(StepType.class, 2509);
+    kryo.register(ExecutionMode.class, 2510);
+    kryo.register(AdviserObtainment.class, 2511);
+    kryo.register(FacilitatorObtainment.class, 2512);
+    kryo.register(AdviserType.class, 2513);
+    kryo.register(FacilitatorType.class, 2514);
+    kryo.register(DefaultFacilitatorParams.class, 2515);
+    kryo.register(Duration.class, 2516);
+    kryo.register(OutcomeInstance.class, 2517);
+    kryo.register(InputArgs.class, 2518);
     kryo.register(StepResponseNotifyData.class, 2519);
     kryo.register(FailureInfo.class, 2520);
     kryo.register(StepOutcome.class, 2521);
+
+    kryo.register(AsyncExecutableResponse.class, 2522);
+    kryo.register(ChildExecutableResponse.class, 2523);
+    kryo.register(ChildrenExecutableResponse.class, 2524);
+    kryo.register(ChildChainResponse.class, 2525);
+    kryo.register(TaskExecutableResponse.class, 2526);
+    kryo.register(TaskChainExecutableResponse.class, 2527);
+    kryo.register(RepairActionCode.class, 2528);
 
     // Add moved/old classes here
     // Keeping the same id for moved classes

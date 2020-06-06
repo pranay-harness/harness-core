@@ -13,7 +13,6 @@ import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import io.harness.engine.AmbianceHelper;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.services.NodeExecutionService;
@@ -39,7 +38,6 @@ public class ResumeAllHandler implements InterruptHandler {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private ResumeStepStatusUpdate resumeStepStatusUpdate;
-  @Inject private AmbianceHelper ambianceHelper;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {

@@ -18,7 +18,7 @@ import java.util.Set;
 @Builder
 @Redesign
 public class RetryAdviserParameters implements AdviserParameters {
-  List<Integer> waitInterval;
+  List<Integer> waitIntervalList;
   int retryCount;
   RepairActionCode repairActionCodeAfterRetry;
   Set<FailureType> applicableFailureTypes;
