@@ -462,6 +462,7 @@ import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapabil
 import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.SftpCapability;
+import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
@@ -1336,6 +1337,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("delegatetasks.validation.capabilities.SmtpCapability", SmtpCapability.class);
     w.put("delegatetasks.validation.capabilities.SSHHostValidationCapability", SSHHostValidationCapability.class);
     w.put("delegatetasks.validation.capabilities.WinrmHostValidationCapability", WinrmHostValidationCapability.class);
+    w.put("delegatetasks.validation.capabilities.ShellConnectionCapability", ShellConnectionCapability.class);
     w.put("helpers.ext.ecs.request.EcsBGListenerUpdateRequest", EcsBGListenerUpdateRequest.class);
     w.put("helpers.ext.ecs.response.EcsBGRoute53DNSWeightUpdateResponse", EcsBGRoute53DNSWeightUpdateResponse.class);
     w.put("helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse", EcsBGRoute53ServiceSetupResponse.class);

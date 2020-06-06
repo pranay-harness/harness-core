@@ -403,6 +403,7 @@ import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapabil
 import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.SftpCapability;
+import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.exception.InvalidArtifactServerException;
@@ -1628,5 +1629,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SplunkSampleResponse.class, 7387);
     kryo.register(AwsLambdaDetailsMetricsResponse.class, 7388);
     kryo.register(ServiceNowApprovalParams.class, 7389);
+    kryo.register(ShellConnectionCapability.class, 7390);
   }
 }

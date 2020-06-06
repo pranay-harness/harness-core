@@ -19,6 +19,7 @@ import software.wings.delegatetasks.validation.capabilitycheck.PcfAutoScalarCapa
 import software.wings.delegatetasks.validation.capabilitycheck.PcfConnectivityCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SSHHostValidationCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SftpCapabilityCheck;
+import software.wings.delegatetasks.validation.capabilitycheck.ShellConnectionCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SmtpCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.WinrmHostValidationCapabilityCheck;
 
@@ -40,6 +41,7 @@ public class CapabilityCheckFactory {
   @Inject HelmInstallationCapabilityCheck helmInstallationCapabilityCheck;
   @Inject ChartMuseumCapabilityCheck chartMuseumCapabilityCheck;
   @Inject ClusterMasterUrlCapabilityCheck clusterMasterUrlCapabilityCheck;
+  @Inject ShellConnectionCapabilityCheck shellConnectionCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     switch (capabilityCheckType) {
@@ -75,6 +77,8 @@ public class CapabilityCheckFactory {
         return chartMuseumCapabilityCheck;
       case CLUSTER_MASTER_URL:
         return clusterMasterUrlCapabilityCheck;
+      case SHELL_CONNECTION:
+        return shellConnectionCapabilityCheck;
       default:
         return null;
     }
