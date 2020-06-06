@@ -1,7 +1,7 @@
 set -x
 
 export VERSION=`cat destination/dist/${SERVICE}/version.txt`
-export JDK=`cat destination/dist/jdk.txt 2>/dev/null`
+export JDK=`cat destination/dist/${SERVICE}/jdk.txt 2>/dev/null`
 
 
 export PURPOSE=`cat destination/dist/${SERVICE}/purpose.txt 2>/dev/null`

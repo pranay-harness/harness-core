@@ -2,10 +2,7 @@
 
 mkdir -p dist ;
 cd dist
-if [ ! -z ${JDK} ]
-then
-    echo ${JDK} > jdk.txt
-fi
+
 cp -R ../scripts/jenkins/ .
 cd ..
 
@@ -26,6 +23,7 @@ cp ../../tools/monitoring/datadog/dd-java-agent.jar .
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/manager/scripts/ .
+echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
 then
@@ -46,6 +44,7 @@ cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
 cp ../../dockerization/cv-nextgen/Dockerfile-verification-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/cv-nextgen/Dockerfile-verification-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -R ../../dockerization/cv-nextgen/scripts/ .
+echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
 then
@@ -66,6 +65,7 @@ cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
 cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -R ../../dockerization/verification/scripts/ .
+echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
 then
@@ -86,6 +86,7 @@ cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
 cp ../../dockerization/command-library-server/Dockerfile-command-library-server-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/command-library-server/Dockerfile-command-library-server-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -R ../../dockerization/command-library-server/scripts/ .
+echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
 then
@@ -103,6 +104,7 @@ cp ../../72-event-server/event-service-config.yml .
 cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8-openjdk Dockerfile
 cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8-gcr-openjdk Dockerfile-gcr
 cp -r ../../dockerization/event-server/scripts/ .
+echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
 then
@@ -117,6 +119,7 @@ cp ../../78-batch-processing/batch-processing-config.yml .
 cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-openjdk Dockerfile
 cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-gcr-openjdk Dockerfile-gcr
 cp -r ../../dockerization/batch-processing/scripts/ .
+echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
 then
@@ -167,6 +170,7 @@ cp ../../dockerization/delegate-proxy/setup.sh .
 cp ../../dockerization/delegate-proxy/Dockerfile .
 cp ../../dockerization/delegate-proxy/Dockerfile-gcr .
 cp ../../dockerization/delegate-proxy/nginx.conf .
+echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
 then
