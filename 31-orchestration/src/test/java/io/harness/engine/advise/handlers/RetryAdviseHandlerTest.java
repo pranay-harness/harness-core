@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.OrchestrationTest;
-import io.harness.adviser.impl.retry.RetryAdvise;
+import io.harness.adviser.advise.RetryAdvise;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.beans.EmbeddedUser;

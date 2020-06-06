@@ -1,7 +1,9 @@
-package io.harness.adviser;
+package io.harness.adviser.advise;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.adviser.Advise;
+import io.harness.adviser.AdviseType;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
