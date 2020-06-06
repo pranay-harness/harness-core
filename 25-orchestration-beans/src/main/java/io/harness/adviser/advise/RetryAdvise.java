@@ -1,4 +1,4 @@
-package io.harness.adviser.impl.retry;
+package io.harness.adviser.advise;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

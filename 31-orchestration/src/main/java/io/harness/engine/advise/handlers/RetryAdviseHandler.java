@@ -5,7 +5,7 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.inject.Inject;
 
-import io.harness.adviser.impl.retry.RetryAdvise;
+import io.harness.adviser.advise.RetryAdvise;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.DelayEventHelper;
