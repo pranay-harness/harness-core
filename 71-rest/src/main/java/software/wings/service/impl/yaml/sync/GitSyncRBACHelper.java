@@ -4,6 +4,8 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.beans.SettingAttribute.SettingCategory.AZURE_ARTIFACTS;
+import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.security.UserGroup.ACCOUNT_ID_KEY;
 import static software.wings.beans.yaml.YamlConstants.GIT_SETUP_RBAC_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -194,14 +196,22 @@ public class GitSyncRBACHelper {
       if (settingCategoryList == null) {
         settingCategoryList = new ArrayList<>();
         settingCategoryList.add(settingAttribute.getCategory());
+        handleTheCaseOfAzureArtifactStream(settingCategoryList, settingAttribute.getCategory());
         nameSettingCategoryMap.put(name, settingCategoryList);
       } else {
         // add if item is not already in list
         if (!settingCategoryList.contains(settingAttribute.getCategory())) {
+          handleTheCaseOfAzureArtifactStream(settingCategoryList, settingAttribute.getCategory());
           settingCategoryList.add(settingAttribute.getCategory());
         }
       }
     }
     return nameSettingCategoryMap;
+  }
+
+  private void handleTheCaseOfAzureArtifactStream(List<SettingCategory> settingCategoryList, SettingCategory category) {
+    if (AZURE_ARTIFACTS.equals(category)) {
+      settingCategoryList.add(CONNECTOR);
+    }
   }
 }
