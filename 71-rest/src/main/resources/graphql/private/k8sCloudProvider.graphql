@@ -5,7 +5,7 @@ input K8sCloudProviderInput {
   inheritClusterDetails: InheritClusterDetails
   manualClusterDetails: ManualClusterDetails
 
-  skipValidation: Boolean!
+  skipValidation: Boolean
 }
 
 enum ClusterDetailsType {
@@ -33,7 +33,7 @@ enum ManualClusterDetailsAuthenticationType {
   CLIENT_KEY_AND_CERTIFICATE
   SERVICE_ACCOUNT_TOKEN
   OIDC_TOKEN
-  NONE
+  CUSTOM
 }
 
 input UsernameAndPasswordAuthentication {
