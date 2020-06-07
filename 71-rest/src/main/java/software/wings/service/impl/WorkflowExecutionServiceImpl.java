@@ -94,8 +94,6 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
-import io.harness.cache.Distributable;
-import io.harness.cache.Ordinal;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
@@ -116,10 +114,8 @@ import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoUtils;
 import io.harness.serializer.MapperUtils;
 import io.harness.waiter.WaitNotifyEngine;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.CriteriaContainerImpl;
@@ -218,7 +214,7 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.ArtifactStreamHelper;
-import software.wings.service.impl.WorkflowExecutionServiceImpl.Tree.TreeBuilder;
+import software.wings.service.impl.WorkflowTree.WorkflowTreeBuilder;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.deployment.checks.DeploymentCtx;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeChecker;
@@ -289,7 +285,6 @@ import software.wings.sm.status.StateStatusUpdateInfo;
 import software.wings.sm.status.WorkflowStatusPropagator;
 import software.wings.sm.status.WorkflowStatusPropagatorFactory;
 
-import java.io.ObjectStreamClass;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -880,46 +875,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  @Value
-  @Builder
-  public static class Tree implements Distributable, Ordinal {
-    public static final long STRUCTURE_HASH = ObjectStreamClass.lookup(Tree.class).getSerialVersionUID();
-
-    private long contextOrder;
-    private String key;
-    private List<String> params;
-
-    private ExecutionStatus overrideStatus;
-    private GraphNode graph;
-    private long lastUpdatedAt = System.currentTimeMillis();
-
-    @Override
-    public long structureHash() {
-      return STRUCTURE_HASH;
-    }
-
-    @Override
-    public long algorithmId() {
-      return GraphRenderer.algorithmId;
-    }
-
-    @Override
-    public long contextOrder() {
-      return contextOrder;
-    }
-
-    @Override
-    public String key() {
-      return key;
-    }
-
-    @Override
-    public List<String> parameters() {
-      return params;
-    }
-  }
-
-  private Tree calculateTree(String appId, String workflowExecutionId) {
+  private WorkflowTree calculateTree(String appId, String workflowExecutionId) {
     Map<String, StateExecutionInstance> allInstancesIdMap =
         stateExecutionService.executionStatesMap(appId, workflowExecutionId);
     Long lastUpdate = allInstancesIdMap.values()
@@ -929,36 +885,38 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                           .orElseGet(() -> Long.valueOf(0));
 
     List<String> params = getParamsForTree();
-    Tree tree = mongoStore.get(GraphRenderer.algorithmId, Tree.STRUCTURE_HASH, workflowExecutionId, params);
+    WorkflowTree tree =
+        mongoStore.get(GraphRenderer.algorithmId, WorkflowTree.STRUCTURE_HASH, workflowExecutionId, params);
     if (tree != null && tree.getContextOrder() >= lastUpdate) {
       return tree;
     }
 
-    TreeBuilder treeBuilder = Tree.builder().key(workflowExecutionId).params(params).contextOrder(lastUpdate);
+    WorkflowTreeBuilder workflowTreeBuilder =
+        WorkflowTree.builder().key(workflowExecutionId).params(params).contextOrder(lastUpdate);
     if (featureFlagService.isEnabled(WE_STATUS_UPDATE, appService.getAccountIdByAppId(appId))) {
       if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
-        treeBuilder.overrideStatus(ExecutionStatus.WAITING);
+        workflowTreeBuilder.overrideStatus(ExecutionStatus.WAITING);
       }
     } else {
       if (allInstancesIdMap.values().stream().anyMatch(
               i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
-        treeBuilder.overrideStatus(ExecutionStatus.PAUSED);
+        workflowTreeBuilder.overrideStatus(ExecutionStatus.PAUSED);
       } else if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
-        treeBuilder.overrideStatus(ExecutionStatus.WAITING);
+        workflowTreeBuilder.overrideStatus(ExecutionStatus.WAITING);
       } else {
         List<ExecutionInterrupt> executionInterrupts =
             executionInterruptManager.checkForExecutionInterrupt(appId, workflowExecutionId);
         if (executionInterrupts != null
             && executionInterrupts.stream().anyMatch(
                    e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL && !e.isSeized())) {
-          treeBuilder.overrideStatus(ExecutionStatus.PAUSED);
+          workflowTreeBuilder.overrideStatus(ExecutionStatus.PAUSED);
         }
       }
     }
 
-    treeBuilder.graph(graphRenderer.generateHierarchyNode(allInstancesIdMap));
+    workflowTreeBuilder.graph(graphRenderer.generateHierarchyNode(allInstancesIdMap));
 
-    Tree cacheTree = treeBuilder.build();
+    WorkflowTree cacheTree = workflowTreeBuilder.build();
     executorService.submit(() -> { mongoStore.upsert(cacheTree, ofDays(30)); });
     return cacheTree;
   }
@@ -983,14 +941,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return;
     }
 
-    Tree tree = null;
+    WorkflowTree tree = null;
     List<String> params = null;
     params = getParamsForTree();
     if (!upToDate) {
-      tree = mongoStore.<Tree>get(GraphRenderer.algorithmId, Tree.STRUCTURE_HASH, workflowExecution.getUuid(), params);
+      tree = mongoStore.<WorkflowTree>get(
+          GraphRenderer.algorithmId, WorkflowTree.STRUCTURE_HASH, workflowExecution.getUuid(), params);
     }
 
-    if (upToDate || tree == null || tree.lastUpdatedAt < (System.currentTimeMillis() - 5000)) {
+    if (upToDate || tree == null || tree.getLastUpdatedAt() < (System.currentTimeMillis() - 5000)) {
       tree = calculateTree(workflowExecution.getAppId(), workflowExecution.getUuid());
     }
 

@@ -522,8 +522,8 @@ import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.MasterUrlFetchTaskParameter;
 import software.wings.service.impl.SlackMessageSenderImpl;
 import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowExecutionUpdate;
+import software.wings.service.impl.WorkflowTree;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -1297,7 +1297,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(StackDriverSetupTestNodeData.class, 5592);
     kryo.register(SumoDataCollectionInfo.class, 5173);
     kryo.register(ThirdPartyApiCallLog.class, 5377);
-    kryo.register(WorkflowExecutionServiceImpl.Tree.class, 5369);
+    kryo.register(WorkflowTree.class, 5369);
     kryo.register(WorkflowExecutionUpdate.class, 5126);
     kryo.register(SettingValue.SettingVariableTypes.class, 5131);
     kryo.register(UsageRestrictions.AppEnvRestriction.class, 5248);
