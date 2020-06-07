@@ -5,18 +5,13 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import com.jayway.jsonpath.DocumentContext;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.serializer.JsonUtilsTest.Base.BaseType;
 import io.harness.serializer.JsonUtilsTest.CustomResponse.Result;
+import io.harness.serializer.TestJsonBase.BaseType;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.jsonunit.fluent.JsonFluentAssert;
 import org.junit.Test;
@@ -83,27 +78,27 @@ public class JsonUtilsTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnCorrectObjectInCaseOfInheritence() {
-    BaseA baseA = new BaseA();
+    TestJsonA baseA = new TestJsonA();
     String jsona = JsonUtils.asJson(baseA);
 
     JsonFluentAssert.assertThatJson(jsona).isEqualTo(
-        "{\"baseType\":\"A\",\"name\":\"io.harness.serializer.JsonUtilsTest$BaseA\"}");
+        "{\"baseType\":\"A\",\"name\":\"io.harness.serializer.TestJsonA\"}");
 
-    BaseB baseB = new BaseB();
+    TestJsonB baseB = new TestJsonB();
     String jsonb = JsonUtils.asJson(baseB);
 
     JsonFluentAssert.assertThatJson(jsonb).isEqualTo(
-        "{\"baseType\":\"B\",\"name\":\"io.harness.serializer.JsonUtilsTest$BaseB\"}");
+        "{\"baseType\":\"B\",\"name\":\"io.harness.serializer.TestJsonB\"}");
 
     assertThat(
-        JsonUtils.asObject("{\"baseType\":\"A\",\"name\":\"io.harness.serializer.JsonUtilsTest$BaseA\"}", Base.class))
-        .isInstanceOf(BaseA.class)
-        .extracting(Base::getBaseType)
+        JsonUtils.asObject("{\"baseType\":\"A\",\"name\":\"io.harness.serializer.TestJsonA\"}", TestJsonBase.class))
+        .isInstanceOf(TestJsonA.class)
+        .extracting(TestJsonBase::getBaseType)
         .isEqualTo(BaseType.A);
     assertThat(
-        JsonUtils.asObject("{\"baseType\":\"B\",\"name\":\"io.harness.serializer.JsonUtilsTest$BaseB\"}", Base.class))
-        .isInstanceOf(BaseB.class)
-        .extracting(Base::getBaseType)
+        JsonUtils.asObject("{\"baseType\":\"B\",\"name\":\"io.harness.serializer.TestJsonB\"}", TestJsonBase.class))
+        .isInstanceOf(TestJsonB.class)
+        .extracting(TestJsonBase::getBaseType)
         .isEqualTo(BaseType.B);
   }
 
@@ -111,25 +106,25 @@ public class JsonUtilsTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnCorrectObjectInCaseOfInheritanceWithoutInterface() {
-    TypeA typeA = new TypeA();
+    TestJsonTypeA typeA = new TestJsonTypeA();
     typeA.setX("A");
     String jsona = JsonUtils.asJson(typeA);
 
     JsonFluentAssert.assertThatJson(jsona).isEqualTo("{\"eventType\":\"A\", \"x\": \"A\"}");
 
-    TypeB typeB = new TypeB();
+    TestJsonTypeB typeB = new TestJsonTypeB();
     typeB.setX("B");
     String jsonb = JsonUtils.asJson(typeB);
 
     JsonFluentAssert.assertThatJson(jsonb).isEqualTo("{\"eventType\":\"B\", \"x\": \"B\"}");
 
-    assertThat(JsonUtils.asObject("{\"eventType\":\"A\", \"x\": \"A\"}", TypeA.class))
-        .isInstanceOf(TypeA.class)
-        .extracting(TypeA::getX)
+    assertThat(JsonUtils.asObject("{\"eventType\":\"A\", \"x\": \"A\"}", TestJsonTypeA.class))
+        .isInstanceOf(TestJsonTypeA.class)
+        .extracting(TestJsonTypeA::getX)
         .isEqualTo("A");
-    assertThat(JsonUtils.asObject("{\"eventType\":\"B\", \"x\": \"B\"}", TypeA.class))
-        .isInstanceOf(TypeB.class)
-        .extracting(TypeA::getX)
+    assertThat(JsonUtils.asObject("{\"eventType\":\"B\", \"x\": \"B\"}", TestJsonTypeA.class))
+        .isInstanceOf(TestJsonTypeB.class)
+        .extracting(TestJsonTypeA::getX)
         .isEqualTo("B");
   }
 
@@ -137,28 +132,28 @@ public class JsonUtilsTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldUseClassNameWhenUsingMapperForCloning() {
-    BaseA baseA = new BaseA();
+    TestJsonA baseA = new TestJsonA();
     String jsona = JsonUtils.asJson(new Object[] {baseA}, JsonUtils.mapperForCloning);
 
     JsonFluentAssert.assertThatJson(jsona).isEqualTo(
-        "[[\"io.harness.serializer.JsonUtilsTest$BaseA\",{\"baseType\":\"A\",\"name\":\"io.harness.serializer.JsonUtilsTest$BaseA\"}]]");
+        "[[\"io.harness.serializer.TestJsonA\",{\"baseType\":\"A\",\"name\":\"io.harness.serializer.TestJsonA\"}]]");
 
-    BaseB baseB = new BaseB();
+    TestJsonB baseB = new TestJsonB();
     String jsonb = JsonUtils.asJson(new Object[] {baseB}, JsonUtils.mapperForCloning);
 
     JsonFluentAssert.assertThatJson(jsonb).isEqualTo(
-        "[[\"io.harness.serializer.JsonUtilsTest$BaseB\",{\"baseType\":\"B\",\"name\":\"io.harness.serializer.JsonUtilsTest$BaseB\"}]]");
+        "[[\"io.harness.serializer.TestJsonB\",{\"baseType\":\"B\",\"name\":\"io.harness.serializer.TestJsonB\"}]]");
 
     assertThat(JsonUtils.asObject(jsona, new TypeReference<Object[]>() {}, JsonUtils.mapperForCloning))
         .hasSize(1)
-        .hasOnlyElementsOfType(BaseA.class)
-        .extracting(o -> ((Base) o).getBaseType())
+        .hasOnlyElementsOfType(TestJsonA.class)
+        .extracting(o -> ((TestJsonBase) o).getBaseType())
         .containsExactly(BaseType.A);
 
     assertThat(JsonUtils.asObject(jsonb, new TypeReference<Object[]>() {}, JsonUtils.mapperForCloning))
         .hasSize(1)
-        .hasOnlyElementsOfType(BaseB.class)
-        .extracting(o -> ((Base) o).getBaseType())
+        .hasOnlyElementsOfType(TestJsonB.class)
+        .extracting(o -> ((TestJsonBase) o).getBaseType())
         .containsExactly(BaseType.B);
   }
 
@@ -169,7 +164,7 @@ public class JsonUtilsTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGenerateJsonSchema() {
-    JsonFluentAssert.assertThatJson(JsonUtils.jsonSchema(BaseA.class))
+    JsonFluentAssert.assertThatJson(JsonUtils.jsonSchema(TestJsonA.class))
         .isEqualTo(
             "{\"type\":\"object\",\"properties\":{\"baseType\":{\"enum\":[\"A\",\"B\",\"C\"],\"type\":\"string\"},\"name\":{\"type\":\"string\"}},"
             + "\"title\":\"BaseA\",\"required\":[\"name\"]}");
@@ -269,197 +264,4 @@ public class JsonUtilsTest extends CategoryTest {
       }
     }
   }
-
-  /**
-   * The Class Base.
-   */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "baseType", include = As.EXISTING_PROPERTY)
-  public static class Base {
-    private BaseType baseType;
-
-    @SchemaIgnore private String x;
-
-    /**
-     * Gets base type.
-     *
-     * @return the base type
-     */
-    public BaseType getBaseType() {
-      return baseType;
-    }
-
-    /**
-     * Sets base type.
-     *
-     * @param baseType the base type
-     */
-    public void setBaseType(BaseType baseType) {
-      this.baseType = baseType;
-    }
-
-    /**
-     * Gets x.
-     *
-     * @return the x
-     */
-    @SchemaIgnore
-    public String getX() {
-      return x;
-    }
-
-    /**
-     * Sets x.
-     *
-     * @param x the x
-     */
-    @SchemaIgnore
-    public void setX(String x) {
-      this.x = x;
-    }
-
-    /**
-     * The Enum BaseType.
-     */
-    public enum BaseType {
-      /**
-       * A base type.
-       */
-      A,
-      /**
-       * B base type.
-       */
-      B,
-      /**
-       * C base type.
-       */
-      C
-    }
-  }
-
-  /**
-   * The Class BaseA.
-   */
-  @JsonTypeName("A")
-  @Attributes(title = "BaseA")
-  public static class BaseA extends Base {
-    @Attributes(required = true) private String name = BaseA.class.getName();
-
-    /**
-     * Instantiates a new base a.
-     */
-    public BaseA() {
-      setBaseType(BaseType.A);
-    }
-
-    /**
-     * Gets name.
-     *
-     * @return the name
-     */
-    public String getName() {
-      return name;
-    }
-
-    /**
-     * Sets name.
-     *
-     * @param name the name
-     */
-    public void setName(String name) {
-      this.name = name;
-    }
-  }
-
-  /**
-   * The Class BaseB.
-   */
-  @JsonTypeName("B")
-  public static class BaseB extends Base {
-    private String name = BaseB.class.getName();
-
-    /**
-     * Instantiates a new base b.
-     */
-    public BaseB() {
-      setBaseType(BaseType.B);
-    }
-
-    /**
-     * Gets name.
-     *
-     * @return the name
-     */
-    public String getName() {
-      return name;
-    }
-
-    /**
-     * Sets name.
-     *
-     * @param name the name
-     */
-    public void setName(String name) {
-      this.name = name;
-    }
-  }
-
-  /**
-   * The Class BaseC.
-   */
-  @JsonTypeName("C")
-  public static class BaseC extends Base {
-    private String name = BaseC.class.getName();
-
-    /**
-     * Instantiates a new base c.
-     */
-    public BaseC() {
-      setBaseType(BaseType.C);
-    }
-
-    /**
-     * Gets name.
-     *
-     * @return the name
-     */
-    public String getName() {
-      return name;
-    }
-
-    /**
-     * Sets name.
-     *
-     * @param name the name
-     */
-    public void setName(String name) {
-      this.name = name;
-    }
-  }
-
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "eventType", include = As.PROPERTY)
-  @JsonTypeName("A")
-  public static class TypeA {
-    private String x;
-
-    /**
-     * Getter for property 'x'.
-     *
-     * @return Value for property 'x'.
-     */
-    public String getX() {
-      return x;
-    }
-
-    /**
-     * Setter for property 'x'.
-     *
-     * @param x Value to set for property 'x'.
-     */
-    public void setX(String x) {
-      this.x = x;
-    }
-  }
-
-  @JsonTypeName("B")
-  public static class TypeB extends TypeA {}
 }
