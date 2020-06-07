@@ -66,6 +66,7 @@ public class WorkflowServiceTemplateHelper {
   private static final String HELM_GITCONFIG_VAR_DESC = "Variable for Helm Git Config entity";
   private static final String SSH_CONNECTION_ATTRIBUTE_DESC = "Variable for SSH Connection Attribute entity";
   private static final String WINRM_CONNECTION_ATTRIBUTE_DESC = "Variable for WINRM Connection Attribute entity";
+  private static final String TIMEOUT_PROPERTY_KEY = "timeoutMillis";
 
   @Inject private TemplateService templateService;
   @Inject private TemplateHelper templateHelper;
@@ -122,6 +123,10 @@ public class WorkflowServiceTemplateHelper {
           List<String> templateProperties = templateService.fetchTemplateProperties(template);
           if (templateProperties != null) {
             if (!"COMMAND".equals(step.getType())) {
+              if ("SHELL_SCRIPT".equals(step.getType()) && step.getProperties().containsKey(TIMEOUT_PROPERTY_KEY)) {
+                templateProperties.remove(TIMEOUT_PROPERTY_KEY);
+                templateStep.getProperties().remove(TIMEOUT_PROPERTY_KEY);
+              }
               step.getProperties().keySet().removeAll(templateProperties);
               step.getProperties().putAll(templateStep.getProperties());
             }
