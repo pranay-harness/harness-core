@@ -336,6 +336,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.beans.concurrency.ConcurrencyStrategy.UnitType;
 import software.wings.beans.peronalization.Personalization;
+import software.wings.beans.peronalization.PersonalizationSteps;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.template.Template;
@@ -4766,7 +4767,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     recents.add(StepType.EMAIL.getType());
     when(personalizationService.fetch(anyString(), anyString(), any()))
         .thenReturn(Personalization.builder()
-                        .steps(Personalization.Steps.builder().favorites(favorites).recent(recents).build())
+                        .steps(PersonalizationSteps.builder().favorites(favorites).recent(recents).build())
                         .build());
     when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
     when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
