@@ -25,12 +25,14 @@ public class AmbianceTestUtils {
     Level phaseLevel = Level.builder()
                            .runtimeId(PHASE_RUNTIME_ID)
                            .setupId(PHASE_SETUP_ID)
-                           .stepType(StepType.builder().type("DEPLOY_PHASE").group("PHASE").build())
+                           .stepType(StepType.builder().type("DEPLOY_PHASE").build())
+                           .group("PHASE")
                            .build();
     Level sectionLevel = Level.builder()
                              .runtimeId(SECTION_RUNTIME_ID)
                              .setupId(SECTION_SETUP_ID)
-                             .stepType(StepType.builder().type("DEPLOY_SECTION").group("SECTION").build())
+                             .stepType(StepType.builder().type("DEPLOY_SECTION").build())
+                             .group("SECTION")
                              .build();
     List<Level> levels = new ArrayList<>();
     levels.add(phaseLevel);

@@ -309,7 +309,7 @@ public class ExecutionEngine implements Engine {
               .stepOutcomes(stepResponse != null ? stepResponse.getStepOutcomes() : new ArrayList<>())
               .failureInfo(stepResponse != null ? stepResponse.getFailureInfo() : null)
               .identifier(planNode.getIdentifier())
-              .group(planNode.getStepType().getGroup())
+              .group(planNode.getGroup())
               .status(status)
               .build();
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);

@@ -596,6 +596,7 @@ public class CustomExecutionUtils {
                 .name("Section 1")
                 .identifier("section1")
                 .stepType(DummySectionStep.STEP_TYPE)
+                .group("SECTION")
                 .stepParameters(
                     DummySectionStepParameters.builder()
                         .childNodeId(section11NodeId)
@@ -616,6 +617,7 @@ public class CustomExecutionUtils {
                 .name("Section 11")
                 .identifier("sectionChild")
                 .stepType(DummySectionStep.STEP_TYPE)
+                .group("SECTION")
                 .stepParameters(
                     DummySectionStepParameters.builder()
                         .childNodeId(shellScript11NodeId)
@@ -632,6 +634,7 @@ public class CustomExecutionUtils {
                 .name("Section 2")
                 .identifier("section2")
                 .stepType(DummySectionStep.STEP_TYPE)
+                .group("SECTION")
                 .stepParameters(
                     DummySectionStepParameters.builder()
                         .childNodeId(section21NodeId)
@@ -647,6 +650,7 @@ public class CustomExecutionUtils {
                 .name("Section 21")
                 .identifier("sectionChild")
                 .stepType(DummySectionStep.STEP_TYPE)
+                .group("SECTION")
                 .stepParameters(
                     DummySectionStepParameters.builder()
                         .childNodeId(shellScript2NodeId)
