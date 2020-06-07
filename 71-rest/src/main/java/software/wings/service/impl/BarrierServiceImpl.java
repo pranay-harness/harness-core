@@ -38,6 +38,8 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.BarrierInstance;
 import software.wings.beans.BarrierInstance.BarrierInstanceKeys;
+import software.wings.beans.BarrierInstancePipeline;
+import software.wings.beans.BarrierInstanceWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
@@ -98,7 +100,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   @Builder
   private static class BarrierDetail {
     private String name;
-    private BarrierInstance.Workflow workflow;
+    private BarrierInstanceWorkflow workflow;
   }
 
   @Override
@@ -114,9 +116,9 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     }
 
     // First lets try to fill up all the missing data that is available already
-    final BarrierInstance.Pipeline pipeline = barrierInstance.getPipeline();
+    final BarrierInstancePipeline pipeline = barrierInstance.getPipeline();
     for (int index = 0; index < pipeline.getWorkflows().size(); ++index) {
-      BarrierInstance.Workflow workflow = pipeline.getWorkflows().get(index);
+      BarrierInstanceWorkflow workflow = pipeline.getWorkflows().get(index);
       if (workflow.getPipelineStageExecutionId() == null) {
         try (HKeyIterator<StateExecutionInstance> keys = new HKeyIterator(
                  wingsPersistence.createQuery(StateExecutionInstance.class)
@@ -220,7 +222,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   }
 
   private Forcer buildForcer(BarrierInstance barrierInstance) {
-    final BarrierInstance.Pipeline pipeline = barrierInstance.getPipeline();
+    final BarrierInstancePipeline pipeline = barrierInstance.getPipeline();
     final String appId = barrierInstance.getAppId();
     return Forcer.builder()
         .id(new ForcerId(pipeline.getExecutionId()))
@@ -394,7 +396,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
               BarrierInstance.builder()
                   .name(entry.getKey())
                   .state(STANDING.name())
-                  .pipeline(BarrierInstance.Pipeline.builder()
+                  .pipeline(BarrierInstancePipeline.builder()
                                 .executionId(pipelineExecutionId)
                                 .parallelIndex(parallelIndex)
                                 .workflows(entry.getValue().stream().map(BarrierDetail::getWorkflow).collect(toList()))
@@ -413,7 +415,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
     return BarrierDetail.builder()
         .name((String) node.getProperties().get("identifier"))
-        .workflow(BarrierInstance.Workflow.builder()
+        .workflow(BarrierInstanceWorkflow.builder()
                       .uuid(workflow.getWorkflowId())
                       .pipelineStageId(workflow.getPipelineStageId())
                       .phaseUuid(phaseUuid)

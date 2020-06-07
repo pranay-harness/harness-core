@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BarrierInstance;
+import software.wings.beans.BarrierInstancePipeline;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStepType;
@@ -42,8 +43,8 @@ public class BarrierServiceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldSave() {
-    final BarrierInstance.Pipeline barrierPipeline =
-        BarrierInstance.Pipeline.builder().executionId(generateUuid()).build();
+    final BarrierInstancePipeline barrierPipeline =
+        BarrierInstancePipeline.builder().executionId(generateUuid()).build();
     final BarrierInstance barrierInstance = BarrierInstance.builder().name("foo").pipeline(barrierPipeline).build();
 
     final String uuid = barrierService.save(barrierInstance);

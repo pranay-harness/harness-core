@@ -9,7 +9,6 @@ import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
@@ -19,12 +18,11 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
-import software.wings.beans.BarrierInstance.Pipeline.PipelineKeys;
-import software.wings.beans.BarrierInstance.Workflow.WorkflowKeys;
+import software.wings.beans.BarrierInstancePipeline.BarrierInstancePipelineKeys;
+import software.wings.beans.BarrierInstanceWorkflow.BarrierInstanceWorkflowKeys;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
-import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Indexes({
@@ -60,34 +58,7 @@ public class BarrierInstance implements PersistentEntity, UuidAware, PersistentR
     this.nextIteration = nextIteration;
   }
 
-  @Data
-  @Builder
-  @FieldNameConstants(innerTypeName = "WorkflowKeys")
-  public static class Workflow {
-    private String uuid;
-
-    private String pipelineStageId;
-    private String pipelineStageExecutionId;
-
-    private String workflowExecutionId;
-
-    private String phaseUuid;
-    private String phaseExecutionId;
-
-    private String stepUuid;
-    private String stepExecutionId;
-  }
-
-  @Value
-  @Builder
-  @FieldNameConstants(innerTypeName = "PipelineKeys")
-  public static class Pipeline {
-    private String executionId;
-    private int parallelIndex;
-    List<Workflow> workflows;
-  }
-
-  private Pipeline pipeline;
+  private BarrierInstancePipeline pipeline;
 
   @JsonIgnore
   @SchemaIgnore
@@ -97,9 +68,9 @@ public class BarrierInstance implements PersistentEntity, UuidAware, PersistentR
 
   @UtilityClass
   public static final class BarrierInstanceKeys {
-    public static final String pipeline_executionId = pipeline + "." + PipelineKeys.executionId;
-    public static final String pipeline_parallelIndex = pipeline + "." + PipelineKeys.parallelIndex;
+    public static final String pipeline_executionId = pipeline + "." + BarrierInstancePipelineKeys.executionId;
+    public static final String pipeline_parallelIndex = pipeline + "." + BarrierInstancePipelineKeys.parallelIndex;
     public static final String pipeline_workflows_pipelineStageId =
-        pipeline + "." + PipelineKeys.workflows + "." + WorkflowKeys.pipelineStageId;
+        pipeline + "." + BarrierInstancePipelineKeys.workflows + "." + BarrierInstanceWorkflowKeys.pipelineStageId;
   }
 }
