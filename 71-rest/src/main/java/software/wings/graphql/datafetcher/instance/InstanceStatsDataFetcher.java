@@ -37,7 +37,7 @@ import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagFilt
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagType;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import software.wings.graphql.utils.nameservice.NameService;
-import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
+import software.wings.service.impl.instance.FlatEntitySummaryStats;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -65,7 +65,6 @@ import software.wings.beans.instance.dashboard.ServiceSummary;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.EnvInfo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.instance.ServerlessDashboardService;
