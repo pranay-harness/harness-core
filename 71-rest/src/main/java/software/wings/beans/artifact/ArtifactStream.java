@@ -153,6 +153,16 @@ public abstract class ArtifactStream
     return !this.sourceName.equals(artifactStream.getSourceName());
   }
 
+  public boolean artifactServerChanged(ArtifactStream artifactStream) {
+    if (settingId == null) {
+      if (artifactStream.getSettingId() == null) {
+        return false;
+      }
+      return true;
+    }
+    return !this.settingId.equals(artifactStream.getSettingId());
+  }
+
   public boolean shouldValidate() {
     return false;
   }
@@ -231,6 +241,7 @@ public abstract class ArtifactStream
   public static final class ArtifactStreamKeys {
     // Temporary
     public static final String appId = "appId";
+    public static final String accountId = "accountId";
     public static final String uuid = "uuid";
     public static final String settingId = "settingId";
     public static final String repositoryFormat = "repositoryFormat";

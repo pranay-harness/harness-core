@@ -692,7 +692,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     yamlPushService.pushYamlChangeSet(artifactStream.getAccountId(), existingArtifactStream, finalArtifactStream,
         Type.UPDATE, artifactStream.isSyncFromGit(), isRename);
 
-    if (shouldDeleteArtifactsOnSourceChanged(existingArtifactStream, finalArtifactStream)) {
+    if (shouldDeleteArtifactsOnSourceChanged(existingArtifactStream, finalArtifactStream)
+        || shouldDeleteArtifactsOnServerChanged(existingArtifactStream, finalArtifactStream)) {
       // Mark the collection status as unstable (for non-custom) because the artifact source has changed. We will again
       // do a fresh artifact collection.
       if (!CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
@@ -883,6 +884,15 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         throw new InvalidRequestException(
             "Artifact source changed check not covered for Artifact Stream Type [" + artifactStreamType + "]");
     }
+  }
+
+  private boolean shouldDeleteArtifactsOnServerChanged(
+      ArtifactStream oldArtifactStream, ArtifactStream updatedArtifactStream) {
+    ArtifactStreamType artifactStreamType = ArtifactStreamType.valueOf(oldArtifactStream.getArtifactStreamType());
+    if (artifactStreamType != CUSTOM) {
+      return oldArtifactStream.artifactServerChanged(oldArtifactStream);
+    }
+    return false;
   }
 
   private void validateArtifactSourceData(ArtifactStream artifactStream) {
