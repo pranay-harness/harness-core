@@ -1,6 +1,7 @@
 package io.harness.serializer.morphia;
 
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.morphia.MorphiaRegistrarHelperPut;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
@@ -13,7 +14,7 @@ public class CommandLibraryServerMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(HelperPut h, HelperPut w) {
+  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     //   add command library service specific classes here
   }
 }

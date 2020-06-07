@@ -13,6 +13,7 @@ import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.resume.EngineWaitRetryCallback;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputInstance;
 import io.harness.state.core.dummy.DummySectionOutcome;
 import io.harness.state.core.dummy.DummySectionStepParameters;
@@ -44,7 +45,7 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(HelperPut h, HelperPut w) {
+  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     h.put("state.inspection.ExpressionVariableUsage", ExpressionVariableUsage.class);
     h.put("waiter.ListNotifyResponseData", ListNotifyResponseData.class);
 

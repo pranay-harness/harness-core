@@ -26,6 +26,7 @@ import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.execution.export.request.ExportExecutionsRequest;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
@@ -1057,7 +1058,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(HelperPut h, HelperPut w) {
+  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     h.put("ccm.budget.entities.ApplicationBudgetScope", ApplicationBudgetScope.class);
     h.put("ccm.budget.entities.ClusterBudgetScope", ClusterBudgetScope.class);
     h.put("ccm.cluster.entities.AzureKubernetesCluster", AzureKubernetesCluster.class);
@@ -1568,7 +1569,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put(cf + "response.CloudFormationCommandExecutionResponse", CloudFormationCommandExecutionResponse.class);
     w.put(cf + "response.CloudFormationCreateStackResponse", CloudFormationCreateStackResponse.class);
 
-    HelperPut sm = (name, clazz) -> w.put("sm.states.spotinst." + name, clazz);
+    MorphiaRegistrarHelperPut sm = (name, clazz) -> w.put("sm.states.spotinst." + name, clazz);
 
     sm.put("SpotinstDeployExecutionSummary", SpotinstDeployExecutionSummary.class);
     sm.put("SpotInstDeployState", SpotInstDeployState.class);

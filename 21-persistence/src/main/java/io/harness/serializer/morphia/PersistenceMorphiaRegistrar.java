@@ -8,6 +8,7 @@ import io.harness.iterator.PersistentRegularIterable;
 import io.harness.migration.MigrationJobInstance;
 import io.harness.mongo.MorphiaMove;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -54,7 +55,7 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(HelperPut h, HelperPut w) {
+  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     // no classes to register
   }
 }
