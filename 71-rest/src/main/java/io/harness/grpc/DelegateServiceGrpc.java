@@ -22,16 +22,22 @@ import io.harness.delegate.TaskProgressRequest;
 import io.harness.delegate.TaskProgressResponse;
 import io.harness.delegate.TaskProgressUpdatesRequest;
 import io.harness.delegate.TaskProgressUpdatesResponse;
+import io.harness.perpetualtask.HttpsPerpetualTaskServiceClient;
+import io.harness.perpetualtask.HttpsPerpetualTaskServiceClientImpl;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 
 @Singleton
 public class DelegateServiceGrpc extends DelegateServiceImplBase {
+  private PerpetualTaskServiceClientRegistry perpetualTaskServiceClientRegistry;
   private PerpetualTaskService perpetualTaskService;
 
   @Inject
-  public DelegateServiceGrpc(PerpetualTaskService perpetualTaskService) {
+  public DelegateServiceGrpc(PerpetualTaskServiceClientRegistry perpetualTaskServiceClientRegistry,
+      PerpetualTaskService perpetualTaskService) {
+    this.perpetualTaskServiceClientRegistry = perpetualTaskServiceClientRegistry;
     this.perpetualTaskService = perpetualTaskService;
   }
 
@@ -64,6 +70,11 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
   @Override
   public void registerPerpetualTaskClientEntrypoint(RegisterPerpetualTaskClientEntrypointRequest request,
       StreamObserver<RegisterPerpetualTaskClientEntrypointResponse> responseObserver) {
+    HttpsPerpetualTaskServiceClient httpsClient =
+        new HttpsPerpetualTaskServiceClientImpl(request.getPerpetualTaskClientEntrypoint().getHttpsEntrypoint());
+
+    perpetualTaskServiceClientRegistry.registerClient(request.getType(), httpsClient);
+
     responseObserver.onNext(RegisterPerpetualTaskClientEntrypointResponse.newBuilder().build());
     responseObserver.onCompleted();
   }

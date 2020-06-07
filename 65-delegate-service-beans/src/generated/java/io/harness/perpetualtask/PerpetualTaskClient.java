@@ -27,6 +27,10 @@ public final class PerpetualTaskClient {
       .Descriptor internal_static_io_harness_perpetualtask_HttpsPerpetualTaskClientEntrypoint_descriptor;
   static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_io_harness_perpetualtask_HttpsPerpetualTaskClientEntrypoint_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_perpetualtask_BasicAuthCredentials_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_perpetualtask_BasicAuthCredentials_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -47,8 +51,13 @@ public final class PerpetualTaskClient {
         + "lTaskClientEntrypoint\022i\n\020https_entrypoin"
         + "t\030\001 \001(\0132<.io.harness.perpetualtask.Https"
         + "PerpetualTaskClientEntrypointH\000R\017httpsEn"
-        + "trypointB\r\n\013entrypoints\"6\n\"HttpsPerpetua"
-        + "lTaskClientEntrypoint\022\020\n\003url\030\001 \001(\tR\003urlB"
+        + "trypointB\r\n\013entrypoints\"\255\001\n\"HttpsPerpetu"
+        + "alTaskClientEntrypoint\022\020\n\003url\030\001 \001(\tR\003url"
+        + "\022f\n\026basic_auth_credentials\030\002 \001(\0132..io.ha"
+        + "rness.perpetualtask.BasicAuthCredentials"
+        + "H\000R\024basicAuthCredentialsB\r\n\013credentials\""
+        + "N\n\024BasicAuthCredentials\022\032\n\010username\030\001 \001("
+        + "\tR\010username\022\032\n\010password\030\002 \001(\tR\010passwordB"
         + "\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
@@ -88,6 +97,16 @@ public final class PerpetualTaskClient {
             internal_static_io_harness_perpetualtask_HttpsPerpetualTaskClientEntrypoint_descriptor,
             new java.lang.String[] {
                 "Url",
+                "BasicAuthCredentials",
+                "Credentials",
+            });
+    internal_static_io_harness_perpetualtask_BasicAuthCredentials_descriptor = getDescriptor().getMessageTypes().get(3);
+    internal_static_io_harness_perpetualtask_BasicAuthCredentials_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_perpetualtask_BasicAuthCredentials_descriptor,
+            new java.lang.String[] {
+                "Username",
+                "Password",
             });
     com.google.protobuf.TimestampProto.getDescriptor();
   }

@@ -53,6 +53,19 @@ public final class HttpsPerpetualTaskClientEntrypoint extends com.google.protobu
             url_ = s;
             break;
           }
+          case 18: {
+            io.harness.perpetualtask.BasicAuthCredentials.Builder subBuilder = null;
+            if (credentialsCase_ == 2) {
+              subBuilder = ((io.harness.perpetualtask.BasicAuthCredentials) credentials_).toBuilder();
+            }
+            credentials_ = input.readMessage(io.harness.perpetualtask.BasicAuthCredentials.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom((io.harness.perpetualtask.BasicAuthCredentials) credentials_);
+              credentials_ = subBuilder.buildPartial();
+            }
+            credentialsCase_ = 2;
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -82,6 +95,44 @@ public final class HttpsPerpetualTaskClientEntrypoint extends com.google.protobu
         .internal_static_io_harness_perpetualtask_HttpsPerpetualTaskClientEntrypoint_fieldAccessorTable
         .ensureFieldAccessorsInitialized(io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.class,
             io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.Builder.class);
+  }
+
+  private int credentialsCase_ = 0;
+  private java.lang.Object credentials_;
+  public enum CredentialsCase implements com
+  .google.protobuf.Internal.EnumLite, com.google.protobuf.AbstractMessage.InternalOneOfEnum {
+    BASIC_AUTH_CREDENTIALS(2), CREDENTIALS_NOT_SET(0);
+    private final int value;
+    private CredentialsCase(int value) {
+      this.value = value;
+    }
+    /**
+     * @param value The number of the enum to look for.
+     * @return The enum associated with the given number.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static CredentialsCase valueOf(int value) {
+      return forNumber(value);
+    }
+
+    public static CredentialsCase forNumber(int value) {
+      switch (value) {
+        case 2:
+          return BASIC_AUTH_CREDENTIALS;
+        case 0:
+          return CREDENTIALS_NOT_SET;
+        default:
+          return null;
+      }
+    }
+    public int getNumber() {
+      return this.value;
+    }
+  };
+
+  public CredentialsCase getCredentialsCase() {
+    return CredentialsCase.forNumber(credentialsCase_);
   }
 
   public static final int URL_FIELD_NUMBER = 1;
@@ -116,6 +167,37 @@ public final class HttpsPerpetualTaskClientEntrypoint extends com.google.protobu
     }
   }
 
+  public static final int BASIC_AUTH_CREDENTIALS_FIELD_NUMBER = 2;
+  /**
+   * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+   * "basicAuthCredentials"];</code>
+   * @return Whether the basicAuthCredentials field is set.
+   */
+  public boolean hasBasicAuthCredentials() {
+    return credentialsCase_ == 2;
+  }
+  /**
+   * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+   * "basicAuthCredentials"];</code>
+   * @return The basicAuthCredentials.
+   */
+  public io.harness.perpetualtask.BasicAuthCredentials getBasicAuthCredentials() {
+    if (credentialsCase_ == 2) {
+      return (io.harness.perpetualtask.BasicAuthCredentials) credentials_;
+    }
+    return io.harness.perpetualtask.BasicAuthCredentials.getDefaultInstance();
+  }
+  /**
+   * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+   * "basicAuthCredentials"];</code>
+   */
+  public io.harness.perpetualtask.BasicAuthCredentialsOrBuilder getBasicAuthCredentialsOrBuilder() {
+    if (credentialsCase_ == 2) {
+      return (io.harness.perpetualtask.BasicAuthCredentials) credentials_;
+    }
+    return io.harness.perpetualtask.BasicAuthCredentials.getDefaultInstance();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -134,6 +216,9 @@ public final class HttpsPerpetualTaskClientEntrypoint extends com.google.protobu
     if (!getUrlBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 1, url_);
     }
+    if (credentialsCase_ == 2) {
+      output.writeMessage(2, (io.harness.perpetualtask.BasicAuthCredentials) credentials_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -146,6 +231,10 @@ public final class HttpsPerpetualTaskClientEntrypoint extends com.google.protobu
     size = 0;
     if (!getUrlBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, url_);
+    }
+    if (credentialsCase_ == 2) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(
+          2, (io.harness.perpetualtask.BasicAuthCredentials) credentials_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -165,6 +254,16 @@ public final class HttpsPerpetualTaskClientEntrypoint extends com.google.protobu
 
     if (!getUrl().equals(other.getUrl()))
       return false;
+    if (!getCredentialsCase().equals(other.getCredentialsCase()))
+      return false;
+    switch (credentialsCase_) {
+      case 2:
+        if (!getBasicAuthCredentials().equals(other.getBasicAuthCredentials()))
+          return false;
+        break;
+      case 0:
+      default:
+    }
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -179,6 +278,14 @@ public final class HttpsPerpetualTaskClientEntrypoint extends com.google.protobu
     hash = (19 * hash) + getDescriptor().hashCode();
     hash = (37 * hash) + URL_FIELD_NUMBER;
     hash = (53 * hash) + getUrl().hashCode();
+    switch (credentialsCase_) {
+      case 2:
+        hash = (37 * hash) + BASIC_AUTH_CREDENTIALS_FIELD_NUMBER;
+        hash = (53 * hash) + getBasicAuthCredentials().hashCode();
+        break;
+      case 0:
+      default:
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -296,6 +403,8 @@ public final class HttpsPerpetualTaskClientEntrypoint extends com.google.protobu
       super.clear();
       url_ = "";
 
+      credentialsCase_ = 0;
+      credentials_ = null;
       return this;
     }
 
@@ -328,6 +437,14 @@ public final class HttpsPerpetualTaskClientEntrypoint extends com.google.protobu
       io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint result =
           new io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint(this);
       result.url_ = url_;
+      if (credentialsCase_ == 2) {
+        if (basicAuthCredentialsBuilder_ == null) {
+          result.credentials_ = credentials_;
+        } else {
+          result.credentials_ = basicAuthCredentialsBuilder_.build();
+        }
+      }
+      result.credentialsCase_ = credentialsCase_;
       onBuilt();
       return result;
     }
@@ -374,6 +491,15 @@ public final class HttpsPerpetualTaskClientEntrypoint extends com.google.protobu
         url_ = other.url_;
         onChanged();
       }
+      switch (other.getCredentialsCase()) {
+        case BASIC_AUTH_CREDENTIALS: {
+          mergeBasicAuthCredentials(other.getBasicAuthCredentials());
+          break;
+        }
+        case CREDENTIALS_NOT_SET: {
+          break;
+        }
+      }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
       return this;
@@ -398,6 +524,18 @@ public final class HttpsPerpetualTaskClientEntrypoint extends com.google.protobu
           mergeFrom(parsedMessage);
         }
       }
+      return this;
+    }
+    private int credentialsCase_ = 0;
+    private java.lang.Object credentials_;
+    public CredentialsCase getCredentialsCase() {
+      return CredentialsCase.forNumber(credentialsCase_);
+    }
+
+    public Builder clearCredentials() {
+      credentialsCase_ = 0;
+      credentials_ = null;
+      onChanged();
       return this;
     }
 
@@ -468,6 +606,156 @@ public final class HttpsPerpetualTaskClientEntrypoint extends com.google.protobu
       url_ = value;
       onChanged();
       return this;
+    }
+
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.BasicAuthCredentials,
+        io.harness.perpetualtask.BasicAuthCredentials.Builder, io.harness.perpetualtask.BasicAuthCredentialsOrBuilder>
+        basicAuthCredentialsBuilder_;
+    /**
+     * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+     * "basicAuthCredentials"];</code>
+     * @return Whether the basicAuthCredentials field is set.
+     */
+    public boolean hasBasicAuthCredentials() {
+      return credentialsCase_ == 2;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+     * "basicAuthCredentials"];</code>
+     * @return The basicAuthCredentials.
+     */
+    public io.harness.perpetualtask.BasicAuthCredentials getBasicAuthCredentials() {
+      if (basicAuthCredentialsBuilder_ == null) {
+        if (credentialsCase_ == 2) {
+          return (io.harness.perpetualtask.BasicAuthCredentials) credentials_;
+        }
+        return io.harness.perpetualtask.BasicAuthCredentials.getDefaultInstance();
+      } else {
+        if (credentialsCase_ == 2) {
+          return basicAuthCredentialsBuilder_.getMessage();
+        }
+        return io.harness.perpetualtask.BasicAuthCredentials.getDefaultInstance();
+      }
+    }
+    /**
+     * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+     * "basicAuthCredentials"];</code>
+     */
+    public Builder setBasicAuthCredentials(io.harness.perpetualtask.BasicAuthCredentials value) {
+      if (basicAuthCredentialsBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        credentials_ = value;
+        onChanged();
+      } else {
+        basicAuthCredentialsBuilder_.setMessage(value);
+      }
+      credentialsCase_ = 2;
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+     * "basicAuthCredentials"];</code>
+     */
+    public Builder setBasicAuthCredentials(io.harness.perpetualtask.BasicAuthCredentials.Builder builderForValue) {
+      if (basicAuthCredentialsBuilder_ == null) {
+        credentials_ = builderForValue.build();
+        onChanged();
+      } else {
+        basicAuthCredentialsBuilder_.setMessage(builderForValue.build());
+      }
+      credentialsCase_ = 2;
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+     * "basicAuthCredentials"];</code>
+     */
+    public Builder mergeBasicAuthCredentials(io.harness.perpetualtask.BasicAuthCredentials value) {
+      if (basicAuthCredentialsBuilder_ == null) {
+        if (credentialsCase_ == 2
+            && credentials_ != io.harness.perpetualtask.BasicAuthCredentials.getDefaultInstance()) {
+          credentials_ = io.harness.perpetualtask.BasicAuthCredentials
+                             .newBuilder((io.harness.perpetualtask.BasicAuthCredentials) credentials_)
+                             .mergeFrom(value)
+                             .buildPartial();
+        } else {
+          credentials_ = value;
+        }
+        onChanged();
+      } else {
+        if (credentialsCase_ == 2) {
+          basicAuthCredentialsBuilder_.mergeFrom(value);
+        }
+        basicAuthCredentialsBuilder_.setMessage(value);
+      }
+      credentialsCase_ = 2;
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+     * "basicAuthCredentials"];</code>
+     */
+    public Builder clearBasicAuthCredentials() {
+      if (basicAuthCredentialsBuilder_ == null) {
+        if (credentialsCase_ == 2) {
+          credentialsCase_ = 0;
+          credentials_ = null;
+          onChanged();
+        }
+      } else {
+        if (credentialsCase_ == 2) {
+          credentialsCase_ = 0;
+          credentials_ = null;
+        }
+        basicAuthCredentialsBuilder_.clear();
+      }
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+     * "basicAuthCredentials"];</code>
+     */
+    public io.harness.perpetualtask.BasicAuthCredentials.Builder getBasicAuthCredentialsBuilder() {
+      return getBasicAuthCredentialsFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+     * "basicAuthCredentials"];</code>
+     */
+    public io.harness.perpetualtask.BasicAuthCredentialsOrBuilder getBasicAuthCredentialsOrBuilder() {
+      if ((credentialsCase_ == 2) && (basicAuthCredentialsBuilder_ != null)) {
+        return basicAuthCredentialsBuilder_.getMessageOrBuilder();
+      } else {
+        if (credentialsCase_ == 2) {
+          return (io.harness.perpetualtask.BasicAuthCredentials) credentials_;
+        }
+        return io.harness.perpetualtask.BasicAuthCredentials.getDefaultInstance();
+      }
+    }
+    /**
+     * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+     * "basicAuthCredentials"];</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.BasicAuthCredentials,
+        io.harness.perpetualtask.BasicAuthCredentials.Builder, io.harness.perpetualtask.BasicAuthCredentialsOrBuilder>
+    getBasicAuthCredentialsFieldBuilder() {
+      if (basicAuthCredentialsBuilder_ == null) {
+        if (!(credentialsCase_ == 2)) {
+          credentials_ = io.harness.perpetualtask.BasicAuthCredentials.getDefaultInstance();
+        }
+        basicAuthCredentialsBuilder_ =
+            new com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.BasicAuthCredentials,
+                io.harness.perpetualtask.BasicAuthCredentials.Builder,
+                io.harness.perpetualtask.BasicAuthCredentialsOrBuilder>(
+                (io.harness.perpetualtask.BasicAuthCredentials) credentials_, getParentForChildren(), isClean());
+        credentials_ = null;
+      }
+      credentialsCase_ = 2;
+      onChanged();
+      ;
+      return basicAuthCredentialsBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

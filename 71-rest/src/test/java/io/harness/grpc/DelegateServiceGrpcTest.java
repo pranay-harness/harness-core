@@ -25,12 +25,15 @@ import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
 import io.harness.delegate.TaskSetupAbstractions;
+import io.harness.perpetualtask.BasicAuthCredentials;
+import io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
 import io.harness.perpetualtask.PerpetualTaskClientEntrypoint;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -53,6 +56,7 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
   private io.harness.grpc.DelegateServiceGrpc delegateServiceGrpc;
 
   private PerpetualTaskService perpetualTaskService;
+  private PerpetualTaskServiceClientRegistry perpetualTaskServiceClientRegistry;
   private Server server;
   private Logger mockClientLogger;
   private Logger mockServerLogger;
@@ -71,8 +75,10 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
         DelegateServiceGrpc.newBlockingStub(channel);
     delegateServiceGrpcClient = new DelegateServiceGrpcClient(delegateServiceBlockingStub);
 
+    perpetualTaskServiceClientRegistry = mock(PerpetualTaskServiceClientRegistry.class);
     perpetualTaskService = mock(PerpetualTaskService.class);
-    delegateServiceGrpc = new io.harness.grpc.DelegateServiceGrpc(perpetualTaskService);
+    delegateServiceGrpc =
+        new io.harness.grpc.DelegateServiceGrpc(perpetualTaskServiceClientRegistry, perpetualTaskService);
 
     server =
         InProcessServerBuilder.forName(serverName).directExecutor().addService(delegateServiceGrpc).build().start();
@@ -123,8 +129,15 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
   @Category(UnitTests.class)
   public void testRegisterPerpetualTaskClientEntrypoint() {
     try {
-      delegateServiceGrpcClient.registerPerpetualTaskClientEntrypoint(
-          PerpetualTaskType.SAMPLE, PerpetualTaskClientEntrypoint.newBuilder().build());
+      delegateServiceGrpcClient.registerPerpetualTaskClientEntrypoint(PerpetualTaskType.SAMPLE,
+          PerpetualTaskClientEntrypoint.newBuilder()
+              .setHttpsEntrypoint(
+                  HttpsPerpetualTaskClientEntrypoint.newBuilder()
+                      .setUrl("https://localhost:9999")
+                      .setBasicAuthCredentials(
+                          BasicAuthCredentials.newBuilder().setUsername("test@harness.io").setPassword("test").build())
+                      .build())
+              .build());
     } catch (Exception e) {
       fail("Should not have thrown any exception");
     }
