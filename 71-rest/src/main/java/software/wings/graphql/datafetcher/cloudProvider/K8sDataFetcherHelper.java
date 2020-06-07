@@ -1,7 +1,5 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
-import static software.wings.graphql.schema.type.cloudProvider.k8s.QLClusterDetailsType.MANUAL_CLUSTER_DETAILS;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -83,7 +81,7 @@ public class K8sDataFetcherHelper {
                       auth.getScopes().getValue().ifPresent(configBuilder::oidcScopes);
                     });
                     break;
-                  case NONE:
+                  case CUSTOM:
                     configBuilder.authType(KubernetesClusterAuthType.NONE);
 
                     clusterDetails.getNone().getValue().ifPresent(auth -> {
@@ -190,7 +188,7 @@ public class K8sDataFetcherHelper {
                       auth.getScopes().getValue().ifPresent(config::setOidcScopes);
                     });
                     break;
-                  case NONE:
+                  case CUSTOM:
                     config.setAuthType(KubernetesClusterAuthType.NONE);
                     clusterDetails.getNone().getValue().ifPresent(auth -> {
                       auth.getUserName().getValue().ifPresent(config::setUsername);

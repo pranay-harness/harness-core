@@ -7,7 +7,7 @@ public enum QLManualClusterDetailsAuthenticationType implements QLEnum {
   CLIENT_KEY_AND_CERTIFICATE,
   SERVICE_ACCOUNT_TOKEN,
   OIDC_TOKEN,
-  NONE;
+  CUSTOM;
 
   @Override
   public String getStringValue() {
