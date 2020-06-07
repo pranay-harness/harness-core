@@ -4,6 +4,7 @@ import io.harness.context.MdcGlobalContextData;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.security.SimpleEncryption;
 
 import java.util.Set;
@@ -15,7 +16,7 @@ public class CommonMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(HelperPut h, HelperPut w) {
+  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     h.put("context.MdcGlobalContextData", MdcGlobalContextData.class);
     h.put("limits.impl.model.RateLimit", RateLimit.class);
     h.put("limits.impl.model.StaticLimit", StaticLimit.class);

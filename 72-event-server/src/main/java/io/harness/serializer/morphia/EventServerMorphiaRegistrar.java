@@ -2,6 +2,7 @@ package io.harness.serializer.morphia;
 
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import java.util.Set;
 
@@ -12,7 +13,7 @@ public class EventServerMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(HelperPut h, HelperPut w) {
+  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     // no classes to register
   }
 }

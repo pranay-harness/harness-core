@@ -1,6 +1,7 @@
 package io.harness.serializer.morphia;
 
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.utils.DummyOutcome;
 import io.harness.utils.steps.TestStepParameters;
 
@@ -11,7 +12,7 @@ public class OrchestrationTestMorphiaRegistrar implements MorphiaRegistrar {
   public void registerClasses(Set<Class> set) {}
 
   @Override
-  public void registerImplementationClasses(HelperPut h, HelperPut w) {
+  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     h.put("utils.DummyOutcome", DummyOutcome.class);
     h.put("utils.steps.TestStepParameters", TestStepParameters.class);
   }

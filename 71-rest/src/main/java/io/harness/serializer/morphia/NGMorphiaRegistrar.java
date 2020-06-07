@@ -13,6 +13,7 @@ import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraDefinition;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import java.util.Set;
 
@@ -31,7 +32,7 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(HelperPut h, HelperPut w) {
+  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     h.put("cdng.artifact.state.ArtifactStepParameters", ArtifactStepParameters.class);
     h.put("cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes", DockerArtifactSourceAttributes.class);
     h.put("cdng.artifact.bean.yaml.DockerHubArtifactConfig", DockerHubArtifactConfig.class);

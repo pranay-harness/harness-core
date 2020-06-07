@@ -1,13 +1,14 @@
 package io.harness.mongo;
 
+import static io.harness.morphia.MorphiaRegistrar.putClass;
+
 import com.mongodb.DBObject;
-import io.harness.exception.GeneralException;
 import io.harness.exception.UnexpectedException;
 import io.harness.logging.AutoLogRemoveContext;
 import io.harness.mongo.MorphiaMove.MorphiaMoveKeys;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.morphia.MorphiaRegistrar.HelperPut;
 import io.harness.morphia.MorphiaRegistrar.NotFoundClass;
+import io.harness.morphia.MorphiaRegistrarHelperPut;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,17 +38,9 @@ public class HObjectFactory extends DefaultCreator {
   @Setter private AdvancedDatastore datastore;
 
   private static synchronized Map<String, Class> collectMorphiaInterfaceImplementers() {
-    Map<String, Class> morphiaInterfaceImplementers = new ConcurrentHashMap<>();
-    HelperPut g = (name, clazz) -> morphiaInterfaceImplementers.merge(name, clazz, (v1, v2) -> {
-      if (v1.equals(v2)) {
-        throw new GeneralException("Do not register the same value twice");
-      } else {
-        throw new GeneralException("Registering different class for the same name is very dangerous");
-      }
-    });
-
-    HelperPut h = (name, clazz) -> g.put("io.harness." + name, clazz);
-    HelperPut w = (name, clazz) -> g.put("software.wings." + name, clazz);
+    Map<String, Class> map = new ConcurrentHashMap<>();
+    MorphiaRegistrarHelperPut h = (name, clazz) -> putClass(map, "io.harness." + name, clazz);
+    MorphiaRegistrarHelperPut w = (name, clazz) -> putClass(map, "software.wings." + name, clazz);
 
     try {
       Reflections reflections = new Reflections("io.harness.serializer.morphia");
@@ -62,7 +55,7 @@ public class HObjectFactory extends DefaultCreator {
       System.exit(1);
     }
 
-    return morphiaInterfaceImplementers;
+    return map;
   }
 
   @Getter private Map<String, Class> morphiaInterfaceImplementers = collectMorphiaInterfaceImplementers();

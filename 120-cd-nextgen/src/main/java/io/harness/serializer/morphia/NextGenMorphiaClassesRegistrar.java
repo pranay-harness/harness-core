@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.ng.core.entities.Project;
 
 import java.util.Set;
@@ -11,7 +12,7 @@ public class NextGenMorphiaClassesRegistrar implements io.harness.morphia.Morphi
   }
 
   @Override
-  public void registerImplementationClasses(HelperPut h, HelperPut w) {
+  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     // Nothing to register
   }
 }

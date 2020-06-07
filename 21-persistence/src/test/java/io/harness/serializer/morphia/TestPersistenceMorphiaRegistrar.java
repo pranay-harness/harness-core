@@ -5,6 +5,7 @@ import io.harness.iterator.TestIrregularIterableEntity;
 import io.harness.iterator.TestIterableEntity;
 import io.harness.iterator.TestRegularIterableEntity;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.persistence.MorphiaClass;
 import io.harness.persistence.TestHolderEntity;
 import io.harness.queue.TestInternalEntity;
@@ -27,7 +28,7 @@ public class TestPersistenceMorphiaRegistrar implements MorphiaRegistrar {
   }
 
   @Override
-  public void registerImplementationClasses(HelperPut h, HelperPut w) {
+  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     // from commons
     h.put("persistence.MorphiaOldClass", MorphiaClass.class);
   }
