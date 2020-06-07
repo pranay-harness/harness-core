@@ -46,6 +46,7 @@ public class RetryHelper {
                           .runtimeId(newUuid)
                           .stepType(node.getStepType())
                           .identifier(node.getIdentifier())
+                          .group(node.getGroup())
                           .build());
     NodeExecution newNodeExecution = cloneForRetry(nodeExecution);
     newNodeExecution.setUuid(newUuid);

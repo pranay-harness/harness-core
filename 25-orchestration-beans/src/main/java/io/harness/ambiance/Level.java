@@ -8,7 +8,6 @@ import io.harness.plan.PlanNode;
 import io.harness.state.StepType;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 
@@ -27,10 +26,11 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode
 @FieldNameConstants(innerTypeName = "LevelKeys")
 public class Level {
-  @Getter String setupId;
-  @Getter String runtimeId;
-  @Getter String identifier;
-  @Getter StepType stepType;
+  String setupId;
+  String runtimeId;
+  String identifier;
+  StepType stepType;
+  String group;
 
   public static Level fromPlanNode(@NotNull String nodeExecutionId, @NotNull PlanNode node) {
     return Level.builder()
@@ -38,6 +38,7 @@ public class Level {
         .runtimeId(nodeExecutionId)
         .identifier(node.getIdentifier())
         .stepType(node.getStepType())
+        .group(node.getGroup())
         .build();
   }
 }

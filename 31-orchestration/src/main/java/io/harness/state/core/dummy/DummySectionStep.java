@@ -22,7 +22,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Produces(Step.class)
 public class DummySectionStep implements Step, ChildExecutable {
-  public static final StepType STEP_TYPE = StepType.builder().type("DUMMY_SECTION").group("SECTION").build();
+  public static final StepType STEP_TYPE = StepType.builder().type("DUMMY_SECTION").build();
 
   @Override
   public ChildExecutableResponse obtainChild(

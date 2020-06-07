@@ -36,7 +36,7 @@ public interface Resolver<T extends StepTransput> extends RegistrableEntity {
     List<Level> levels = ambiance.getLevels();
     for (int i = levels.size() - 1; i >= 0; i--) {
       Level level = levels.get(i);
-      if (groupName.equals(level.getStepType().getGroup())) {
+      if (groupName.equals(level.getGroup())) {
         return consumeInternal(ambiance, name, value, i + 1);
       }
     }
