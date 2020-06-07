@@ -18,4 +18,24 @@ public interface HttpsPerpetualTaskClientEntrypointOrBuilder extends
    * @return The bytes for url.
    */
   com.google.protobuf.ByteString getUrlBytes();
+
+  /**
+   * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+   * "basicAuthCredentials"];</code>
+   * @return Whether the basicAuthCredentials field is set.
+   */
+  boolean hasBasicAuthCredentials();
+  /**
+   * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+   * "basicAuthCredentials"];</code>
+   * @return The basicAuthCredentials.
+   */
+  io.harness.perpetualtask.BasicAuthCredentials getBasicAuthCredentials();
+  /**
+   * <code>.io.harness.perpetualtask.BasicAuthCredentials basic_auth_credentials = 2[json_name =
+   * "basicAuthCredentials"];</code>
+   */
+  io.harness.perpetualtask.BasicAuthCredentialsOrBuilder getBasicAuthCredentialsOrBuilder();
+
+  public io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.CredentialsCase getCredentialsCase();
 }
