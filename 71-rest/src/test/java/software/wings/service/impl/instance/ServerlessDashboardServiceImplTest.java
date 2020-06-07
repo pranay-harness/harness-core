@@ -56,7 +56,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.EnvInfo;
 import software.wings.service.impl.instance.ServerlessDashboardServiceImpl.ArtifactInfo;
 import software.wings.service.impl.instance.ServerlessDashboardServiceImpl.EnvType;
 import software.wings.service.impl.instance.ServerlessDashboardServiceImpl.FlatEntitySummaryStats;

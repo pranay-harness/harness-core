@@ -32,7 +32,7 @@ import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.impl.AggregateFunctionLogContext;
 import software.wings.service.impl.FilterLogContext;
 import software.wings.service.impl.GroupByLogContext;
-import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
+import software.wings.service.impl.instance.FlatEntitySummaryStats;
 import software.wings.service.intfc.HarnessTagService;
 
 import java.lang.reflect.ParameterizedType;

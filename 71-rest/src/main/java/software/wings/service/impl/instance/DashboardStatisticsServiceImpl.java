@@ -48,13 +48,10 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.time.EpochUtils;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.aggregation.Group;
-import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import software.wings.beans.Application;
@@ -96,7 +93,7 @@ import software.wings.features.DeploymentHistoryFeature;
 import software.wings.features.api.RestrictedFeature;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.ServiceInstanceCount.EnvType;
+import software.wings.service.impl.instance.ServiceInstanceCount.EnvType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -257,12 +254,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private EntitySummaryStats getEntitySummaryStats(FlatEntitySummaryStats flatEntitySummaryStats, String entityType) {
     EntitySummary entitySummary = EntitySummary.builder()
-                                      .id(flatEntitySummaryStats.entityId)
-                                      .name(flatEntitySummaryStats.entityName)
+                                      .id(flatEntitySummaryStats.getEntityId())
+                                      .name(flatEntitySummaryStats.getEntityName())
                                       .type(entityType)
                                       .build();
     return EntitySummaryStats.Builder.anEntitySummaryStats()
-        .count(flatEntitySummaryStats.count)
+        .count(flatEntitySummaryStats.getCount())
         .entitySummary(entitySummary)
         .build();
   }
@@ -648,8 +645,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private InstanceStatsByArtifact getInstanceStatsByArtifact(ArtifactInfo artifactInfo, InstanceStats instanceStats) {
     ArtifactSummaryBuilder builder = ArtifactSummary.builder();
-    builder.buildNo(artifactInfo.buildNo)
-        .artifactSourceName(artifactInfo.sourceName)
+    builder.buildNo(artifactInfo.getBuildNo())
+        .artifactSourceName(artifactInfo.getSourceName())
         .name(artifactInfo.getName())
         .type(ARTIFACT.name())
         .id(artifactInfo.getId());
@@ -722,7 +719,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     long prodCount = 0;
     long nonprodCount = 0;
 
-    List<EnvType> envTypeList = serviceInstanceCount.envTypeList;
+    List<EnvType> envTypeList = serviceInstanceCount.getEnvTypeList();
     for (EnvType envType : envTypeList) {
       if (EnvironmentType.PROD.name().equals(envType.getType())) {
         ++prodCount;
@@ -1150,103 +1147,5 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     query.filter("accountId", accountId);
     query.filter("serviceId", serviceId);
     return query;
-  }
-
-  @Data
-  @NoArgsConstructor
-  public static final class ServiceInstanceCount {
-    @Id private String serviceId;
-    private long count;
-    private List<EnvType> envTypeList;
-    private EntitySummary appInfo;
-    private EntitySummary serviceInfo;
-
-    @Data
-    @NoArgsConstructor
-    public static final class EnvType {
-      private String type;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  public static final class ServiceAggregationInfo {
-    @Id private ID _id;
-    private EntitySummary appInfo;
-    private EntitySummary infraMappingInfo;
-    private EnvInfo envInfo;
-    private ArtifactInfo artifactInfo;
-    private List<EntitySummary> instanceInfoList;
-
-    @Data
-    @NoArgsConstructor
-    public static final class ID {
-      private String envId;
-      private String lastArtifactId;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  protected static final class EnvInfo {
-    private String id;
-    private String name;
-    private String type;
-  }
-
-  @Data
-  @NoArgsConstructor
-  protected static final class ArtifactInfo {
-    private String id;
-    private String name;
-    private String buildNo;
-    private String streamId;
-    private String streamName;
-    private long deployedAt;
-    private String sourceName;
-    private String lastWorkflowExecutionId;
-  }
-
-  @Data
-  @NoArgsConstructor
-  public static final class AggregationInfo {
-    @Id private ID _id;
-    private long count;
-    private EntitySummary appInfo;
-    private EntitySummary serviceInfo;
-    private EntitySummary infraMappingInfo;
-    private EnvInfo envInfo;
-    private ArtifactInfo artifactInfo;
-    private List<EntitySummary> instanceInfoList;
-
-    @Data
-    @NoArgsConstructor
-    public static final class ID {
-      private String serviceId;
-      private String envId;
-      private String lastArtifactId;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  public static class FlatEntitySummaryStats {
-    private String entityId;
-    private String entityName;
-    private String entityVersion;
-    private int count;
-  }
-
-  @Data
-  @NoArgsConstructor
-  public static class EnvironmentSummaryStats {
-    private String envType;
-    private int count;
-  }
-
-  @Data
-  @NoArgsConstructor
-  public static class InstanceCount {
-    private int count;
   }
 }

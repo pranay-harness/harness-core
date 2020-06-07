@@ -25,7 +25,7 @@ import software.wings.graphql.schema.type.aggregation.QLStackedData;
 import software.wings.graphql.schema.type.aggregation.QLStackedDataPoint;
 import software.wings.graphql.utils.nameservice.NameResult;
 import software.wings.graphql.utils.nameservice.NameService;
-import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
+import software.wings.service.impl.instance.FlatEntitySummaryStats;
 
 import java.util.ArrayList;
 import java.util.List;
