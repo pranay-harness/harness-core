@@ -8,7 +8,6 @@ import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.aggregation.Group.first;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
@@ -117,7 +116,7 @@ public class GitSyncServiceImpl implements GitSyncService {
     PageResponse<GitFileActivity> response = wingsPersistence.query(GitFileActivity.class, req);
     List<GitFileActivity> gitFileActivities = response.getResponse();
     List<GitFileActivity> gitFileActivitiesFilteredByAccountRBAC = gitFileActivities;
-    if (isSetupFilterSelected(appId)) {
+    if (whetherWeCanHaveAccountLevelFile(appId)) {
       gitFileActivitiesFilteredByAccountRBAC =
           gitSyncRBACHelper.populateUserHasPermissionForFileField(gitFileActivities, accountId);
     }
@@ -130,8 +129,8 @@ public class GitSyncServiceImpl implements GitSyncService {
     return response;
   }
 
-  private boolean isSetupFilterSelected(String appId) {
-    return isNotBlank(appId) && GLOBAL_APP_ID.equals(appId);
+  private boolean whetherWeCanHaveAccountLevelFile(String appId) {
+    return isEmpty(appId) || GLOBAL_APP_ID.equals(appId);
   }
 
   private void sortGitFileActivityInProcessingOrder(List<GitFileActivity> gitFileActivities) {
