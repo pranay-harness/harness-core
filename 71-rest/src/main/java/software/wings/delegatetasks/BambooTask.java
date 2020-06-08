@@ -25,8 +25,8 @@ import software.wings.sm.states.ParameterEntry;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Created by sgurubelli on 8/29/17.
@@ -36,8 +36,8 @@ import java.util.function.Supplier;
 public class BambooTask extends AbstractDelegateRunnableTask {
   @Inject private BambooService bambooService;
 
-  public BambooTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
-      Supplier<Boolean> preExecute) {
+  public BambooTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
     super(delegateTaskPackage, postExecute, preExecute);
   }
 

@@ -22,16 +22,16 @@ import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @OwnedBy(CDC)
 @Slf4j
 public class AzureArtifactsCollectionTask extends AbstractDelegateRunnableTask {
   @Inject private AzureArtifactsService azureArtifactsService;
 
-  public AzureArtifactsCollectionTask(DelegateTaskPackage delegateTaskPackage,
-      Consumer<DelegateTaskResponse> postExecute, Supplier<Boolean> preExecute) {
+  public AzureArtifactsCollectionTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
     super(delegateTaskPackage, postExecute, preExecute);
   }
 

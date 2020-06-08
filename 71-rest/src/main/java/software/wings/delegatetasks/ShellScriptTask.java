@@ -10,15 +10,15 @@ import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.delegation.ShellScriptParameters;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class ShellScriptTask extends AbstractDelegateRunnableTask {
   @Inject private ShellScriptTaskHandler shellScriptTaskHandler;
 
-  public ShellScriptTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
-      Supplier<Boolean> preExecute) {
+  public ShellScriptTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
     super(delegateTaskPackage, postExecute, preExecute);
   }
 

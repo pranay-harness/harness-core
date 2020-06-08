@@ -30,8 +30,8 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -46,7 +46,7 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
   @Inject private HelmTaskHelper helmTaskHelper;
 
   public HelmRepoConfigValidationTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

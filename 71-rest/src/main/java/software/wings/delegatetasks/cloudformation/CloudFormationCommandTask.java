@@ -19,8 +19,8 @@ import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRe
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class CloudFormationCommandTask extends AbstractDelegateRunnableTask {
@@ -29,7 +29,7 @@ public class CloudFormationCommandTask extends AbstractDelegateRunnableTask {
   @Inject private CloudFormationListStacksHandler listStacksHandler;
 
   public CloudFormationCommandTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

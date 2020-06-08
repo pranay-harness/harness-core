@@ -21,8 +21,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends AbstractDataCollectionTask<T> {
@@ -31,7 +31,7 @@ public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends Ab
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
 
   public LogDataCollectionTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

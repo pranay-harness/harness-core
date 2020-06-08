@@ -23,15 +23,15 @@ import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class AwsAmiAsyncTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;
   @Inject private AwsAmiHelperServiceDelegate awsAmiHelperServiceDelegate;
 
   public AwsAmiAsyncTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

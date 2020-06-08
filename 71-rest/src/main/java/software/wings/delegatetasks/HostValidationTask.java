@@ -16,15 +16,15 @@ import software.wings.beans.SettingAttribute;
 import software.wings.utils.HostValidationService;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class HostValidationTask extends AbstractDelegateRunnableTask {
   @Inject private HostValidationService hostValidationService;
 
   public HostValidationTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

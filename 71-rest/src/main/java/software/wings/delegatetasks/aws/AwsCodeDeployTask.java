@@ -28,15 +28,15 @@ import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsCodeDeployHelperServiceDelegate;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class AwsCodeDeployTask extends AbstractDelegateRunnableTask {
   @Inject private AwsCodeDeployHelperServiceDelegate awsCodeDeployHelperServiceDelegate;
 
   public AwsCodeDeployTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

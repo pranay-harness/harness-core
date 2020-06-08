@@ -38,8 +38,8 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
@@ -49,7 +49,7 @@ public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
 
   public ShellScriptProvisionTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

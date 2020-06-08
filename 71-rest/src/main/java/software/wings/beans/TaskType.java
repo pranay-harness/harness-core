@@ -128,8 +128,8 @@ import software.wings.delegatetasks.validation.TerraformValidation;
 import software.wings.delegatetasks.validation.TriggerValidation;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public enum TaskType {
   COMMAND(TaskGroup.COMMAND, CommandTask.class, CommandValidation.class),
@@ -425,8 +425,8 @@ public enum TaskType {
     return taskGroup;
   }
 
-  public DelegateRunnableTask getDelegateRunnableTask(DelegateTaskPackage delegateTaskPackage,
-      Consumer<DelegateTaskResponse> postExecute, Supplier<Boolean> preExecute) {
+  public DelegateRunnableTask getDelegateRunnableTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
     return on(delegateRunnableTaskClass).create(delegateTaskPackage, postExecute, preExecute).get();
   }
 

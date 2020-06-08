@@ -23,15 +23,15 @@ import software.wings.service.intfc.aws.delegate.AwsIamHelperServiceDelegate;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class AwsIamTask extends AbstractDelegateRunnableTask {
   @Inject private AwsIamHelperServiceDelegate iAmServiceDelegate;
 
   public AwsIamTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

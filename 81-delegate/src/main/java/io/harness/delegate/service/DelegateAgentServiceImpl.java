@@ -213,8 +213,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -1856,7 +1856,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return secrets;
   }
 
-  private Supplier<Boolean> getPreExecutionFunction(
+  private BooleanSupplier getPreExecutionFunction(
       @NotNull DelegateTaskPackage delegateTaskPackage, LogSanitizer sanitizer) {
     return () -> {
       logger.info("Starting pre-execution for task");

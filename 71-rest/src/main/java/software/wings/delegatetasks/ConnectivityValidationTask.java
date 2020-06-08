@@ -38,15 +38,15 @@ import software.wings.settings.validation.WinRmConnectivityValidationAttributes;
 import software.wings.utils.HostValidationService;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
   @Inject private HostValidationService hostValidationService;
   @Inject private Mailer mailer;
 
   public ConnectivityValidationTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

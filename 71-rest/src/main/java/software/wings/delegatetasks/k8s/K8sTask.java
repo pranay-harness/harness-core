@@ -26,8 +26,8 @@ import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 @Slf4j
 public class K8sTask extends AbstractDelegateRunnableTask {
   @Inject private Map<String, K8sTaskHandler> k8sCommandTaskTypeToTaskHandlerMap;
@@ -38,7 +38,7 @@ public class K8sTask extends AbstractDelegateRunnableTask {
   public static final String MANIFEST_FILES_DIR = "manifest-files";
 
   public K8sTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

@@ -21,8 +21,8 @@ import software.wings.helpers.ext.nexus.NexusService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Created by srinivas on 4/4/17.
@@ -36,8 +36,8 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
 
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
-  public NexusCollectionTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
-      Supplier<Boolean> preExecute) {
+  public NexusCollectionTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
     super(delegateTaskPackage, postExecute, preExecute);
   }
 

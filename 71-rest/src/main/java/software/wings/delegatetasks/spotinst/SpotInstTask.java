@@ -24,8 +24,8 @@ import software.wings.delegatetasks.spotinst.taskhandler.SpotinstTrafficShiftAlb
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class SpotInstTask extends AbstractDelegateRunnableTask {
@@ -39,7 +39,7 @@ public class SpotInstTask extends AbstractDelegateRunnableTask {
   @Inject private SpotinstTrafficShiftAlbSwapRoutesTaskHandler shiftAlbSwapRoutesTaskHandler;
 
   public SpotInstTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

@@ -16,15 +16,15 @@ import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.ci.CIBuildSetupTaskParams;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class CIBuildCommandTask extends AbstractDelegateRunnableTask {
   @Inject private CIBuildTaskHandler ciBuildTaskHandler;
 
   public CIBuildCommandTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

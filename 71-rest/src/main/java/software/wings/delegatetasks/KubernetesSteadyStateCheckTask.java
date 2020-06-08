@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 @Slf4j
 public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;
@@ -34,7 +34,7 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
   @Inject private TimeLimiter timeLimiter;
 
   public KubernetesSteadyStateCheckTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 
