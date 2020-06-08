@@ -10,6 +10,7 @@ import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
+import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
@@ -42,6 +43,7 @@ public class HttpStepPlanCreator implements SupportDefinedExecutorPlanCreator<Ht
         .name(httpStepInfo.getName())
         .identifier(httpStepInfo.getIdentifier())
         .stepType(BasicHttpStep.STEP_TYPE)
+        .group(StepGroup.STEP.name())
         .stepParameters(BasicHttpStepParameters.builder().url(spec.getUrl()).method(spec.getMethod()).build())
         .facilitatorObtainment(
             FacilitatorObtainment.builder().type(FacilitatorType.builder().type(FacilitatorType.TASK).build()).build())

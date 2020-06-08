@@ -6,7 +6,7 @@ import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.steps.AbstractStepWithMetaInfo;
 import io.harness.beans.steps.StepInfoType;
 import io.harness.beans.steps.TypeInfo;
-import io.harness.executionplan.GenericStepInfo;
+import io.harness.executionplan.plancreator.beans.GenericStepInfo;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.state.StepType;
 import lombok.Builder;

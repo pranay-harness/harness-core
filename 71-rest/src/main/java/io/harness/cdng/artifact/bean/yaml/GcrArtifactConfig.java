@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.artifact.bean.ArtifactSourceType;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -30,7 +29,6 @@ public class GcrArtifactConfig implements ArtifactConfig {
 
   @Value
   @Builder
-  @AllArgsConstructor
   @EqualsAndHashCode(callSuper = false)
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class GCRSpec implements Spec {

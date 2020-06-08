@@ -5,9 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.artifact.bean.ArtifactSourceType;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
@@ -29,9 +27,8 @@ public class DockerHubArtifactConfig implements ArtifactConfig {
   @Builder.Default String sourceType = ArtifactSourceType.DOCKER_HUB;
   @NotNull DockerSpec spec;
 
-  @Data
+  @Value
   @Builder
-  @AllArgsConstructor
   @EqualsAndHashCode(callSuper = false)
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class DockerSpec implements Spec {
@@ -49,9 +46,10 @@ public class DockerHubArtifactConfig implements ArtifactConfig {
       return ArtifactUtils.generateUniqueHashFromStringList(valuesList);
     }
 
+    // TODO(archit): Not include functions as part of outcome. Either create new class alltogether
     @Override
     public DockerArtifactSourceAttributes getSourceAttributes() {
-      return DockerArtifactSourceAttributes.newBuilder()
+      return DockerArtifactSourceAttributes.builder()
           .dockerhubConnector(dockerhubConnector)
           .imagePath(imagePath)
           .tag(tag)

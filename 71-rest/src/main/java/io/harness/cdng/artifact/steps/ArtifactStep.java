@@ -1,4 +1,4 @@
-package io.harness.cdng.artifact.state;
+package io.harness.cdng.artifact.steps;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
@@ -22,6 +22,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.execution.status.Status;
+import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
 import io.harness.state.Step;
@@ -53,6 +54,7 @@ public class ArtifactStep implements Step, TaskExecutable {
   @Override
   public Task obtainTask(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
     ArtifactStepParameters parameters = (ArtifactStepParameters) stepParameters;
+    logger.info("Executing deployment stage with params [{}]", parameters);
     ArtifactSource artifactSource = getArtifactSource(parameters, (String) ambiance.getInputArgs().get("accountId"));
 
     String waitId = generateUuid();
@@ -89,12 +91,18 @@ public class ArtifactStep implements Step, TaskExecutable {
               "Unhandled type CommandExecutionStatus: " + taskResponse.getCommandExecutionStatus().name());
       }
 
+      ArtifactStepParameters artifactStepParameters = (ArtifactStepParameters) stepParameters;
       ArtifactSource artifactSource =
-          getArtifactSource((ArtifactStepParameters) stepParameters, (String) ambiance.getInputArgs().get("accountId"));
+          getArtifactSource(artifactStepParameters, (String) ambiance.getInputArgs().get("accountId"));
       Artifact artifact = taskResponse.getArtifactAttributes().getArtifact(
           artifactSource.getAccountId(), artifactSource.getUuid(), artifactSource.getSourceType());
       Artifact savedArtifact = artifactService.create(artifact);
-      executionSweepingOutputService.consumeInternal(ambiance, "artifact", savedArtifact, 0);
+      // executionSweepingOutputService.consumeInternal(ambiance, "artifact", savedArtifact, 0);
+      stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
+                                          .name("artifacts")
+                                          .outcome(artifactStepParameters.getArtifactListConfig())
+                                          .group(StepGroup.STAGE.name())
+                                          .build());
     } else if (notifyResponseData instanceof ErrorNotifyResponseData) {
       stepResponseBuilder.status(Status.FAILED);
       stepResponseBuilder.failureInfo(

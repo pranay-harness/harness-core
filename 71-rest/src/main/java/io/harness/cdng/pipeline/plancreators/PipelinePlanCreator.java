@@ -17,6 +17,7 @@ import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
+import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
@@ -65,6 +66,7 @@ public class PipelinePlanCreator implements SupportDefinedExecutorPlanCreator<CD
         .name(pipeline.getName())
         .identifier(pipeline.getIdentifier())
         .stepType(PipelineSetupStep.STEP_TYPE)
+        .group(StepGroup.PIPELINE.name())
         .skipExpressionChain(true)
         .stepParameters(CDPipelineSetupParameters.builder()
                             .cdPipeline(pipeline)

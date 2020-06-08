@@ -282,6 +282,7 @@ public class ShellScriptStep implements Step, TaskExecutable {
             ((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
                 .getSweepingOutputEnvVariables();
         scriptStateExecutionData.setSweepingOutputEnvVariables(sweepingOutputEnvVariables);
+        scriptStateExecutionData.setStatus(ExecutionStatus.SUCCESS);
         saveSweepingOutputToContext = true;
       }
       stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()

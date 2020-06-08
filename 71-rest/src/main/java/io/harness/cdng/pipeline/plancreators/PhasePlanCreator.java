@@ -2,7 +2,6 @@ package io.harness.cdng.pipeline.plancreators;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STEP_PLAN_CREATOR;
-import static io.harness.state.core.section.chain.SectionChainStep.STEP_TYPE;
 import static java.lang.String.format;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
@@ -16,10 +15,12 @@ import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
+import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.state.core.section.chain.SectionChainStep;
 import io.harness.state.core.section.chain.SectionChainStepParameters;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionSection;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +78,8 @@ public class PhasePlanCreator implements SupportDefinedExecutorPlanCreator<CDPha
         .uuid(nodeId)
         .name(phase.getName())
         .identifier(phaseIdentifier)
-        .stepType(STEP_TYPE)
+        .stepType(SectionChainStep.STEP_TYPE)
+        .group(StepGroup.PHASE.name())
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeIds(planForSteps.stream()
                                               .map(CreateExecutionPlanResponse::getStartingNodeId)

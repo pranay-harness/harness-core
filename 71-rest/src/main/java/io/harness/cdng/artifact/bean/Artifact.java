@@ -11,9 +11,9 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
-import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
@@ -21,7 +21,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import javax.validation.constraints.NotNull;
 
 @Data
-@SuperBuilder
+@AllArgsConstructor
 @Entity(value = "artifactsNG")
 @FieldNameConstants(innerTypeName = "ArtifactsNGKeys")
 @HarnessEntity(exportable = true)
