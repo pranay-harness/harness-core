@@ -32,8 +32,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTask {
@@ -46,12 +46,12 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   @Getter private boolean isAsync;
   @Getter private Object[] parameters;
   private Consumer<DelegateTaskResponse> consumer;
-  private Supplier<Boolean> preExecute;
+  private BooleanSupplier preExecute;
 
   @Inject private DataCollectionExecutorService dataCollectionService;
 
   public AbstractDelegateRunnableTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     this.delegateId = delegateTaskPackage.getDelegateId();
     this.taskId = delegateTaskPackage.getDelegateTaskId();
     this.parameters = delegateTaskPackage.getDelegateTask().getData().getParameters();
@@ -76,7 +76,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
 
   @SuppressWarnings("PMD")
   private void runDelegateTask() {
-    if (!preExecute.get()) {
+    if (!preExecute.getAsBoolean()) {
       logger.info("Pre-execute returned false for task {}", taskId);
       return;
     }

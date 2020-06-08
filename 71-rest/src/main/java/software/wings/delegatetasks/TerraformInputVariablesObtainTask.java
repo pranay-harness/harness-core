@@ -34,8 +34,8 @@ import software.wings.utils.GitUtilsDelegate;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableTask {
@@ -46,7 +46,7 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
   @Inject private TerraformConfigInspectService terraformConfigInspectService;
 
   public TerraformInputVariablesObtainTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

@@ -21,8 +21,8 @@ import software.wings.helpers.ext.bamboo.BambooService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Created by rishi on 12/14/16.
@@ -33,8 +33,8 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask {
   @Inject private BambooService bambooService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
-  public BambooCollectionTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
-      Supplier<Boolean> preExecute) {
+  public BambooCollectionTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
     super(delegateTaskPackage, postExecute, preExecute);
   }
 

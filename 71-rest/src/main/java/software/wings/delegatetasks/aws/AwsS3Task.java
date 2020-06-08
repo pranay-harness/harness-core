@@ -19,14 +19,14 @@ import software.wings.service.impl.aws.model.AwsS3Request.AwsS3RequestType;
 import software.wings.service.intfc.aws.delegate.AwsS3HelperServiceDelegate;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class AwsS3Task extends AbstractDelegateRunnableTask {
   @Inject private AwsS3HelperServiceDelegate s3HelperServiceDelegate;
 
   public AwsS3Task(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

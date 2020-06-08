@@ -15,15 +15,15 @@ import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class ArtifactCollectTask extends AbstractDelegateRunnableTask {
   @Inject private Injector injector;
 
   public ArtifactCollectTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

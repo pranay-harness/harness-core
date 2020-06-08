@@ -30,8 +30,8 @@ import software.wings.settings.SettingValue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Created by anubhaw on 7/19/18.
@@ -43,7 +43,7 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
   @Inject private Injector injector;
 
   public BuildSourceTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

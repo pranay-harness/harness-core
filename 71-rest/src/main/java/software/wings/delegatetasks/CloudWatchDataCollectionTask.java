@@ -39,8 +39,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -54,7 +54,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
   @Inject private AwsLambdaHelperServiceDelegateImpl awsLambdaHelperServiceDelegate;
 
   public CloudWatchDataCollectionTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

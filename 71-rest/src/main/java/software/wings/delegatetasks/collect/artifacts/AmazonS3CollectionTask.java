@@ -18,8 +18,8 @@ import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Created by rktummala on 7/30/17.
@@ -29,8 +29,8 @@ import java.util.function.Supplier;
 public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask {
   @Inject private AmazonS3Service amazonS3Service;
 
-  public AmazonS3CollectionTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
-      Supplier<Boolean> preExecute) {
+  public AmazonS3CollectionTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
     super(delegateTaskPackage, postExecute, preExecute);
   }
 

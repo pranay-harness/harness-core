@@ -28,8 +28,8 @@ import software.wings.service.intfc.security.EncryptionService;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class TriggerTask extends AbstractDelegateRunnableTask {
@@ -37,7 +37,7 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
   @Inject private GitService gitService;
 
   public TriggerTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

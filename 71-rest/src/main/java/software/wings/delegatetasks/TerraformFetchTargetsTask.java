@@ -29,8 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
@@ -40,7 +40,7 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
   @Inject private TerraformConfigInspectService terraformConfigInspectService;
 
   public TerraformFetchTargetsTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

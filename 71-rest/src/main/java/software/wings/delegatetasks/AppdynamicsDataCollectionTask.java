@@ -47,8 +47,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
@@ -70,7 +70,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       new HashSet<>(Arrays.asList(AppdynamicsTimeSeries.AVG_RESPONSE_TIME.getMetricName()));
 
   public AppdynamicsDataCollectionTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

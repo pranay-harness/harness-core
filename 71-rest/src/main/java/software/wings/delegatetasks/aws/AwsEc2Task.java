@@ -33,14 +33,14 @@ import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class AwsEc2Task extends AbstractDelegateRunnableTask {
   @Inject private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
 
   public AwsEc2Task(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

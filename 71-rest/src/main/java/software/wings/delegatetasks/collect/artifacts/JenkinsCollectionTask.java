@@ -24,8 +24,8 @@ import software.wings.service.intfc.security.EncryptionService;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Created by rishi on 12/14/16.
@@ -37,8 +37,8 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
-  public JenkinsCollectionTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
-      Supplier<Boolean> preExecute) {
+  public JenkinsCollectionTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
     super(delegateTaskPackage, postExecute, preExecute);
   }
 

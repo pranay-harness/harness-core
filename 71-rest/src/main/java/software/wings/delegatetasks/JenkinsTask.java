@@ -54,8 +54,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Created by rishi on 12/14/16.
@@ -68,8 +68,8 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
   @Inject private JenkinsUtils jenkinsUtil;
   @Inject @Named("jenkinsExecutor") private ExecutorService jenkinsExecutor;
 
-  public JenkinsTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
-      Supplier<Boolean> preExecute) {
+  public JenkinsTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
     super(delegateTaskPackage, postExecute, preExecute);
   }
 

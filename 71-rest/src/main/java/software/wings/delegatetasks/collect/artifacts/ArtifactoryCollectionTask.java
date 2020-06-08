@@ -19,8 +19,8 @@ import software.wings.helpers.ext.artifactory.ArtifactoryService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Created by srinivas on 4/4/17.
@@ -30,8 +30,8 @@ import java.util.function.Supplier;
 public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask {
   @Inject private ArtifactoryService artifactoryService;
 
-  public ArtifactoryCollectionTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
-      Supplier<Boolean> preExecute) {
+  public ArtifactoryCollectionTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
     super(delegateTaskPackage, postExecute, preExecute);
   }
 

@@ -32,8 +32,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollectionTask {
@@ -45,7 +45,7 @@ public class StackDriverLogDataCollectionTask extends AbstractDelegateDataCollec
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
 
   public StackDriverLogDataCollectionTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

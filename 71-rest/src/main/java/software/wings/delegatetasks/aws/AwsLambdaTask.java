@@ -28,8 +28,8 @@ import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
 import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class AwsLambdaTask extends AbstractDelegateRunnableTask {
@@ -37,7 +37,7 @@ public class AwsLambdaTask extends AbstractDelegateRunnableTask {
   @Inject private AwsLambdaHelperServiceDelegate awsLambdaHelperServiceDelegate;
 
   public AwsLambdaTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

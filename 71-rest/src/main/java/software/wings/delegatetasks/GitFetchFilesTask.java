@@ -45,8 +45,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
@@ -57,7 +57,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
   public static final int GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT = 10;
 
   public GitFetchFilesTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

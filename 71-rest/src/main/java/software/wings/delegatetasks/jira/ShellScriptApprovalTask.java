@@ -34,8 +34,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @OwnedBy(CDC)
 public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
@@ -47,7 +47,7 @@ public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService logService;
 
   public ShellScriptApprovalTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

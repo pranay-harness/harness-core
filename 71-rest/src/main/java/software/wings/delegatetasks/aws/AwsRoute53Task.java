@@ -22,14 +22,14 @@ import software.wings.service.impl.aws.model.AwsRoute53Request.AwsRoute53Request
 import software.wings.service.intfc.aws.delegate.AwsRoute53HelperServiceDelegate;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class AwsRoute53Task extends AbstractDelegateRunnableTask {
   @Inject private AwsRoute53HelperServiceDelegate awsRoute53HelperServiceDelegate;
 
   public AwsRoute53Task(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

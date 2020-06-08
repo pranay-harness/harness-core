@@ -27,8 +27,8 @@ import software.wings.service.impl.AwsHelperService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
@@ -37,7 +37,7 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
   @Inject private EcsContainerService ecsContainerService;
 
   public EcsSteadyStateCheckTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

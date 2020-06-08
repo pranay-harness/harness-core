@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Created by sriram_parthasarathy on 9/12/17.
@@ -41,7 +41,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
   @Inject private SumoDelegateServiceImpl sumoDelegateService;
 
   public SumoDataCollectionTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

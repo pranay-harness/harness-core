@@ -23,8 +23,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 @Slf4j
 public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> extends AbstractDataCollectionTask<T> {
@@ -32,7 +32,7 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
   @Inject private MetricDataStoreService metricStoreService;
 
   public MetricsDataCollectionTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

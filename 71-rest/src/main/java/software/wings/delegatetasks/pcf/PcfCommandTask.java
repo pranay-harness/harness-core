@@ -16,14 +16,14 @@ import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 @Slf4j
 public class PcfCommandTask extends AbstractDelegateRunnableTask {
   @Inject PcfDelegateTaskHelper pcfDelegateTaskHelper;
 
   public PcfCommandTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

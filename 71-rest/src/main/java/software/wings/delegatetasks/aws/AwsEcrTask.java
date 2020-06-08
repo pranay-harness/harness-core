@@ -23,8 +23,8 @@ import software.wings.service.impl.aws.model.AwsEcrRequest.AwsEcrRequestType;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -32,7 +32,7 @@ public class AwsEcrTask extends AbstractDelegateRunnableTask {
   @Inject private AwsEcrHelperServiceDelegate ecrServiceDelegate;
 
   public AwsEcrTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 

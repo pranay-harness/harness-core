@@ -16,8 +16,8 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.joor.ReflectException;
 import software.wings.beans.DelegateTaskPackage;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Created by peeyushaggarwal on 1/12/17.
@@ -26,8 +26,8 @@ import java.util.function.Supplier;
 public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private Injector injector;
 
-  public ServiceImplDelegateTask(DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute,
-      Supplier<Boolean> preExecute) {
+  public ServiceImplDelegateTask(
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
     super(delegateTaskPackage, postExecute, preExecute);
   }
 

@@ -55,8 +55,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -68,7 +68,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
   private static final String WEBHOOK_CREATION_URL = "/rest/webhooks/1.0/webhook/";
 
   public JiraTask(
-      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
+      DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, consumer, preExecute);
   }
 
