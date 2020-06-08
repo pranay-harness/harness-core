@@ -263,6 +263,10 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
     assertThat(response).isNotNull();
     assertThat(response.getNotifyElements()).isNotNull();
     assertThat(response.getNotifyElements().size()).isEqualTo(1);
+
+    assertThat(stateData.getDesiredInstances()).isEqualTo(1);
+    assertThat(stateData.getMaxInstances()).isEqualTo(2);
+
     ContextElement contextElement = response.getNotifyElements().get(0);
     assertThat(contextElement instanceof AmiServiceSetupElement).isTrue();
     AmiServiceSetupElement amiServiceSetupElement = (AmiServiceSetupElement) contextElement;
