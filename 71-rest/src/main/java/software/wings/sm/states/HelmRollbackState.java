@@ -1,7 +1,5 @@
 package software.wings.sm.states;
 
-import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
-
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.context.ContextElementType;
@@ -58,8 +56,6 @@ public class HelmRollbackState extends HelmDeployState {
       previousReleaseRevision = ((HelmDeployContextElement) contextElement).getPreviousReleaseRevision();
     }
 
-    long steadyStateTimeout =
-        getSteadyStateTimeout() > 0 ? getSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT; // 10 minutes if not set
     return HelmRollbackCommandRequest.builder()
         .releaseName(releaseName)
         .prevReleaseVersion(previousReleaseRevision != null ? previousReleaseRevision : -1)
@@ -67,7 +63,7 @@ public class HelmRollbackState extends HelmDeployState {
         .appId(context.getAppId())
         .activityId(activityId)
         .commandName(HELM_COMMAND_NAME)
-        .timeoutInMillis(getTimeout(steadyStateTimeout))
+        .timeoutInMillis(getSafeTimeout())
         .containerServiceParams(containerServiceParams)
         .chartSpecification(helmChartSpecification)
         .repoName(repoName)

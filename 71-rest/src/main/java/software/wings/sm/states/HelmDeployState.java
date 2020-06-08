@@ -144,6 +144,7 @@ import software.wings.utils.ApplicationManifestUtils;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -198,9 +199,6 @@ public class HelmDeployState extends State {
   private static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
   private static final String NO_PREV_DEPLOYMENT = "No previous version available for rollback";
 
-  // Workaround for CDP-10845
-  private static final int minTimeoutInMs = 60000;
-
   /**
    * Instantiates a new state.
    *
@@ -223,6 +221,17 @@ public class HelmDeployState extends State {
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  @Override
+  public Integer getTimeoutMillis() {
+    return K8sStateHelper.getTimeoutMillisFromMinutes(steadyStateTimeout);
+  }
+
+  protected long getSafeTimeout() {
+    return getTimeoutMillis() != null && getTimeoutMillis() > 0
+        ? getTimeoutMillis()
+        : Duration.ofMinutes(DEFAULT_STEADY_STATE_TIMEOUT).toMillis();
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context) throws InterruptedException {
@@ -290,11 +299,6 @@ public class HelmDeployState extends State {
     }
   }
 
-  protected long getTimeout(long steadyStateTimeout) {
-    // Temporary workaround for CDP-10845
-    return steadyStateTimeout > minTimeoutInMs ? steadyStateTimeout : TimeUnit.MINUTES.toMillis(steadyStateTimeout);
-  }
-
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageDetails, String repoName,
@@ -317,7 +321,7 @@ public class HelmDeployState extends State {
             .namespace(containerServiceParams.getNamespace())
             .containerServiceParams(containerServiceParams)
             .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated)
-            .timeoutInMillis(getTimeout(steadyStateTimeout))
+            .timeoutInMillis(getSafeTimeout())
             .repoName(repoName)
             .gitConfig(gitConfig)
             .encryptedDataDetails(encryptedDataDetails)
@@ -847,7 +851,7 @@ public class HelmDeployState extends State {
                                               .async(true)
                                               .taskType(HELM_COMMAND_TASK.name())
                                               .parameters(new Object[] {commandRequest})
-                                              .timeout(TimeUnit.HOURS.toMillis(1))
+                                              .timeout(getSafeTimeout())
                                               .expressionFunctorToken(expressionFunctorToken)
                                               .build())
                                     .envId(env.getUuid())

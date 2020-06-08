@@ -175,7 +175,7 @@ public class K8sStateHelper {
   private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
 
   public static Integer getTimeoutMillisFromMinutes(Integer timeoutMinutes) {
-    if (timeoutMinutes == null) {
+    if (timeoutMinutes == null || timeoutMinutes == 0) {
       return null;
     }
     try {
