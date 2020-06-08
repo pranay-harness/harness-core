@@ -1,5 +1,6 @@
 package io.harness.cdng.artifact.bean;
 
+import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -8,22 +9,21 @@ import lombok.Value;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 public class DockerArtifactAttributes implements ArtifactAttributes {
-  /** Docker hub registry connector uuid. */
-  String dockerHubConnectorId;
+  /** Docker hub registry connector identifier. */
+  String dockerHubConnector;
   /** Images in repos need to be referenced via a path */
   String imagePath;
   /** Tag refers to exact tag number */
   String tag;
 
   @Override
-  public Artifact getArtifact(String accountId, String artifactSourceId, String sourceType) {
-    return DockerArtifact.builder()
-        .accountId(accountId)
-        .dockerHubConnectorId(getDockerHubConnectorId())
+  public ArtifactOutcome getArtifactOutcome(ArtifactConfigWrapper artifactConfig) {
+    DockerHubArtifactConfig dockerHubArtifactConfig = (DockerHubArtifactConfig) artifactConfig;
+    return DockerArtifactOutcome.builder()
+        .dockerhubConnector(getDockerHubConnector())
         .imagePath(getImagePath())
         .tag(getTag())
-        .artifactSourceId(artifactSourceId)
-        .sourceType(sourceType)
+        .tagRegex(dockerHubArtifactConfig.getTagRegex())
         .build();
   }
 }

@@ -10,7 +10,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -29,19 +29,18 @@ import javax.validation.constraints.NotNull;
  * This is the resolved artifact stream, can be used for Artifact Collection, etc.has
  */
 @Data
-@Builder
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Indexes({ @Index(options = @IndexOptions(name = "uniqueHash", unique = true), fields = { @Field("uniqueHash") }) })
-@FieldNameConstants(innerTypeName = "ArtifactsStreamNGKeys")
+@FieldNameConstants(innerTypeName = "ArtifactSourceKeys")
 @Entity(value = "artifactSourceNG")
 @HarnessEntity(exportable = true)
-public class ArtifactSource implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-                                       UpdatedByAware, AccountAccess {
+public abstract class ArtifactSource implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+                                                UpdatedAtAware, UpdatedByAware, AccountAccess {
   @Id private String uuid;
   @NotNull private String accountId;
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore @Indexed private long createdAt;
-  @NotNull private ArtifactSourceAttributes sourceAttributes;
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
   /** It gives the artifact source type.*/

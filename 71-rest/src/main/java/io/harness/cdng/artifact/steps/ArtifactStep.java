@@ -8,12 +8,11 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
-import io.harness.cdng.artifact.bean.Artifact;
+import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
+import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
-import io.harness.cdng.artifact.bean.yaml.ArtifactConfig;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
-import io.harness.cdng.artifact.service.ArtifactService;
 import io.harness.cdng.artifact.service.ArtifactSourceService;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -24,7 +23,6 @@ import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.facilitator.modes.task.TaskExecutable;
-import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
@@ -45,8 +43,6 @@ import java.util.concurrent.TimeUnit;
 public class ArtifactStep implements Step, TaskExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("ARTIFACT_STEP").build();
   @Inject private ArtifactSourceService artifactSourceService;
-  @Inject private ArtifactService artifactService;
-  @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
 
   // Default timeout of 1 minute.
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
@@ -58,7 +54,8 @@ public class ArtifactStep implements Step, TaskExecutable {
     ArtifactSource artifactSource = getArtifactSource(parameters, (String) ambiance.getInputArgs().get("accountId"));
 
     String waitId = generateUuid();
-    ArtifactTaskParameters taskParameters = ArtifactUtils.getArtifactTaskParameters(artifactSource);
+    ArtifactTaskParameters taskParameters = ArtifactUtils.getArtifactTaskParameters(
+        artifactSource.getAccountId(), parameters.getArtifactListConfig().getPrimary().getSourceAttributes());
     final TaskDataBuilder dataBuilder = TaskData.builder().async(true).taskType(TaskType.ARTIFACT_COLLECT_TASK.name());
     DelegateTaskBuilder delegateTaskBuilder =
         DelegateTask.builder().appId(artifactSource.getAccountId()).waitId(waitId);
@@ -92,17 +89,10 @@ public class ArtifactStep implements Step, TaskExecutable {
       }
 
       ArtifactStepParameters artifactStepParameters = (ArtifactStepParameters) stepParameters;
-      ArtifactSource artifactSource =
-          getArtifactSource(artifactStepParameters, (String) ambiance.getInputArgs().get("accountId"));
-      Artifact artifact = taskResponse.getArtifactAttributes().getArtifact(
-          artifactSource.getAccountId(), artifactSource.getUuid(), artifactSource.getSourceType());
-      Artifact savedArtifact = artifactService.create(artifact);
-      // executionSweepingOutputService.consumeInternal(ambiance, "artifact", savedArtifact, 0);
-      stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
-                                          .name("artifacts")
-                                          .outcome(artifactStepParameters.getArtifactListConfig())
-                                          .group(StepGroup.STAGE.name())
-                                          .build());
+      ArtifactOutcome artifact = taskResponse.getArtifactAttributes().getArtifactOutcome(
+          artifactStepParameters.getArtifactListConfig().getPrimary());
+      stepResponseBuilder.stepOutcome(
+          StepResponse.StepOutcome.builder().name("artifacts").outcome(artifact).group(StepGroup.STAGE.name()).build());
     } else if (notifyResponseData instanceof ErrorNotifyResponseData) {
       stepResponseBuilder.status(Status.FAILED);
       stepResponseBuilder.failureInfo(
@@ -116,13 +106,8 @@ public class ArtifactStep implements Step, TaskExecutable {
   }
 
   private ArtifactSource getArtifactSource(ArtifactStepParameters parameters, String accountId) {
-    ArtifactConfig primary = parameters.getArtifactListConfig().getPrimary();
-    ArtifactSource artifactSource = ArtifactSource.builder()
-                                        .accountId(accountId)
-                                        .sourceType(primary.getSourceType())
-                                        .sourceAttributes(primary.getSpec().getSourceAttributes())
-                                        .uniqueHash(primary.getSpec().getUniqueHash())
-                                        .build();
+    ArtifactConfigWrapper primary = parameters.getArtifactListConfig().getPrimary();
+    ArtifactSource artifactSource = primary.getArtifactSource(accountId);
     return artifactSourceService.saveOrGetArtifactStream(artifactSource);
   }
 }

@@ -51,11 +51,9 @@ public class DockerPublicRegistryProcessor {
 
   private DockerArtifactAttributes processPageResponse(
       DockerPublicImageTagResponse.Result publicImageTag, String imageName, DockerhubConnectorConfig connectorConfig) {
-    String tagUrl = connectorConfig.getRegistryUrl() + imageName + "/tags/";
-
     if (publicImageTag != null) {
       return DockerArtifactAttributes.builder()
-          .dockerHubConnectorId(tagUrl)
+          .dockerHubConnector(connectorConfig.getIdentifier())
           .imagePath(imageName)
           .tag(publicImageTag.getName())
           .build();

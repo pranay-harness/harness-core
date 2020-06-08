@@ -1,5 +1,6 @@
 package io.harness.cdng.artifact.bean.artifactsource;
 
+import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.connector.DockerhubConnectorConfig;
 import io.harness.cdng.artifact.delegate.DelegateArtifactService;
 import io.harness.cdng.artifact.delegate.DockerArtifactService;

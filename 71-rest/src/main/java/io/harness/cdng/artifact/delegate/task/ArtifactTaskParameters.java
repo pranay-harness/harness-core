@@ -1,6 +1,6 @@
 package io.harness.cdng.artifact.delegate.task;
 
-import io.harness.cdng.artifact.bean.artifactsource.ArtifactSourceAttributes;
+import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.connector.ConnectorConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;

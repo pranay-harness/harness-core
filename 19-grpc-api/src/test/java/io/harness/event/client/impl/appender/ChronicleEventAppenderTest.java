@@ -123,7 +123,7 @@ public class ChronicleEventAppenderTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = AVMOHAN)
+  @Owner(developers = AVMOHAN, intermittent = true)
   @Category(UnitTests.class)
   public void testNoMessageLoss() throws Exception {
     concurrentPublish(eventPublisher);

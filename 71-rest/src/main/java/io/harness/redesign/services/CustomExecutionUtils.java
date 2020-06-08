@@ -15,7 +15,7 @@ import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.artifact.bean.yaml.ArtifactConfig;
+import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.steps.ArtifactStep;
@@ -1131,15 +1131,12 @@ public class CustomExecutionUtils {
     String sectionNodeId = generateUuid();
     String dummyNodeId = generateUuid();
     String artifactNodeId = generateUuid();
-
-    DockerHubArtifactConfig.DockerSpec dockerSpec = DockerHubArtifactConfig.DockerSpec.builder()
-                                                        .dockerhubConnector("https://registry.hub.docker.com/")
-                                                        .imagePath("library/ubuntu")
-                                                        .tag("latest")
-                                                        .build();
-    ArtifactConfig artifactConfig =
-        DockerHubArtifactConfig.builder().identifier("ARTIFACT_YAML").sourceType("dockerhub").spec(dockerSpec).build();
-    ArtifactListConfig listConfig = ArtifactListConfig.builder().primary(artifactConfig).build();
+    ArtifactConfigWrapper artifactConfigWrapper = DockerHubArtifactConfig.builder()
+                                                      .dockerhubConnector("https://registry.hub.docker.com/")
+                                                      .imagePath("library/ubuntu")
+                                                      .tag("latest")
+                                                      .build();
+    ArtifactListConfig listConfig = ArtifactListConfig.builder().primary(artifactConfigWrapper).build();
     ArtifactStepParameters stepParameters = ArtifactStepParameters.builder().artifactListConfig(listConfig).build();
     return Plan.builder()
         .startingNodeId(sectionNodeId)
