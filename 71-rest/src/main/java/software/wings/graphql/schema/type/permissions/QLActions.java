@@ -7,7 +7,9 @@ public enum QLActions implements QLEnum {
   READ,
   UPDATE,
   DELETE,
-  EXECUTE;
+  EXECUTE,
+  EXECUTE_WORKFLOW,
+  EXECUTE_PIPELINE;
   @Override
   public String getStringValue() {
     return this.name();
