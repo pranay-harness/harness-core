@@ -11,12 +11,14 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.plan.input.InputArgs;
+import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -37,12 +39,15 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Mock private EngineExpressionService engineExpressionService;
   @Mock private Ambiance ambiance;
   @Mock private InputArgs inputArgs;
+  @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
+
   private static final String CLUSTER_NAME = "K8";
 
   @Before
   public void setUp() {
     on(buildSetupUtils).set("k8BuildSetupUtils", k8BuildSetupUtils);
     on(buildSetupUtils).set("managerCIResource", managerCIResource);
+    on(buildSetupUtils).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
   }
 
   @Test
@@ -57,6 +62,9 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     when(engineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(ambiance.getInputArgs()).thenReturn(inputArgs);
     when(inputArgs.get(any())).thenReturn("abc");
+    when(executionSweepingOutputResolver.resolve(any(), any()))
+        .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
+
     buildSetupUtils.executeCISetupTask(ciExecutionPlanTestHelper.getBuildEnvSetupStepInfo(), ambiance);
 
     verify(managerCIResource, times(1)).createK8PodTask(any(), any(), any(), any());

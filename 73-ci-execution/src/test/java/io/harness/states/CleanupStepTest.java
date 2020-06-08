@@ -13,11 +13,13 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
+import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.plan.input.InputArgs;
+import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -36,10 +38,12 @@ public class CleanupStepTest extends CIExecutionTest {
   @Mock private ManagerCIResource managerCIResource;
   @Mock private Ambiance ambiance;
   @Mock private InputArgs inputArgs;
+  @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
 
   @Before
   public void setUp() {
     on(cleanupStep).set("managerCIResource", managerCIResource);
+    on(cleanupStep).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
   }
 
   @Test
@@ -53,6 +57,9 @@ public class CleanupStepTest extends CIExecutionTest {
     when(managerCIResource.podCleanupTask(any(), any(), any())).thenReturn(requestCall);
     when(ambiance.getInputArgs()).thenReturn(inputArgs);
     when(inputArgs.get(any())).thenReturn("abc");
+
+    when(executionSweepingOutputResolver.resolve(any(), any()))
+        .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
     cleanupStep.executeSync(ambiance, CleanupStepInfo.builder().build(), null, null);
 
     verify(managerCIResource, times(1)).podCleanupTask(any(), any(), any());
@@ -69,6 +76,8 @@ public class CleanupStepTest extends CIExecutionTest {
     when(managerCIResource.podCleanupTask(any(), any(), any())).thenThrow(new RuntimeException());
     when(ambiance.getInputArgs()).thenReturn(inputArgs);
     when(inputArgs.get(any())).thenReturn("abc");
+    when(executionSweepingOutputResolver.resolve(any(), any()))
+        .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
 
     cleanupStep.executeSync(ambiance, CleanupStepInfo.builder().build(), null, null);
 

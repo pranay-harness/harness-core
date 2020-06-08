@@ -1,8 +1,6 @@
 package io.harness.stateutils.buildstate;
 
 import static io.harness.govern.Switch.unhandled;
-import static software.wings.common.CICommonPodConstants.CLUSTER_NAME;
-import static software.wings.common.CICommonPodConstants.NAMESPACE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -11,10 +9,14 @@ import io.harness.ambiance.Ambiance;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
+import io.harness.beans.sweepingoutputs.ContextElement;
+import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.network.SafeHttpCall;
+import io.harness.references.SweepingOutputRefObject;
+import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
 import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
@@ -27,14 +29,17 @@ public class BuildSetupUtils {
   @Inject private ManagerCIResource managerCIResource;
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
   @Inject private EngineExpressionService engineExpressionService;
-
+  @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   public RestResponse<K8sTaskExecutionResponse> executeCISetupTask(
       BuildEnvSetupStepInfo buildEnvSetupStepInfo, Ambiance ambiance) {
     switch (buildEnvSetupStepInfo.getBuildJobEnvInfo().getType()) {
       case K8:
         try {
-          final String namespace = (String) ambiance.getInputArgs().get(NAMESPACE);
-          final String clusterName = (String) ambiance.getInputArgs().get(CLUSTER_NAME);
+          K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
+              ambiance, SweepingOutputRefObject.builder().name(ContextElement.podDetails).build());
+
+          final String namespace = k8PodDetails.getNamespace();
+          final String clusterName = k8PodDetails.getClusterName();
           K8BuildJobEnvInfo k8BuildJobEnvInfo = (K8BuildJobEnvInfo) buildEnvSetupStepInfo.getBuildJobEnvInfo();
           // Supporting single pod currently
           Optional<PodSetupInfo> podSetupInfoOpt =

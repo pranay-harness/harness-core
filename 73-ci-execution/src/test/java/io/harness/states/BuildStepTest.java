@@ -13,11 +13,13 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.steps.stepinfo.BuildStepInfo;
+import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.plan.input.InputArgs;
+import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -36,9 +38,12 @@ public class BuildStepTest extends CIExecutionTest {
   @Mock private ManagerCIResource managerCIResource;
   @Mock private Ambiance ambiance;
   @Mock private InputArgs inputArgs;
+  @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
+
   @Before
   public void setUp() {
     on(buildStep).set("managerCIResource", managerCIResource);
+    on(buildStep).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
   }
 
   @Test
@@ -52,6 +57,9 @@ public class BuildStepTest extends CIExecutionTest {
     when(managerCIResource.podCommandExecutionTask(any(), any())).thenReturn(requestCall);
     when(ambiance.getInputArgs()).thenReturn(inputArgs);
     when(inputArgs.get(any())).thenReturn("abc");
+    when(executionSweepingOutputResolver.resolve(any(), any()))
+        .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
+
     buildStep.executeSync(ambiance,
         BuildStepInfo.builder().scriptInfos(ciExecutionPlanTestHelper.getBuildCommandSteps()).build(), null, null);
 
@@ -70,6 +78,8 @@ public class BuildStepTest extends CIExecutionTest {
 
     when(ambiance.getInputArgs()).thenReturn(inputArgs);
     when(inputArgs.get(any())).thenReturn("abc");
+    when(executionSweepingOutputResolver.resolve(any(), any()))
+        .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
 
     buildStep.executeSync(ambiance,
         BuildStepInfo.builder().scriptInfos(ciExecutionPlanTestHelper.getBuildCommandSteps()).build(), null, null);
