@@ -75,11 +75,13 @@ stages:
               - mvn clean install
         - step:
             identifier: upload-artifact1
-            type: upload
-            items:
-              - filePattern: ~/.m2/delegate-${BUILD_NUMBER}.jar
-                destination: gs://snapshot-delegate-jars/artifacts/
-                connector: repo_connector
-              - filePattern: ~/.m2/watcher-${BUILD_NUMBER}.jar
-                destination: gs://snapshot-watcher-jars/artifacts/
-                connector: repo_connector
+            type: publish
+            artifacts:
+              - dockerFile: ~/Dockerfile
+                image: ui
+                tag: 1.0.0
+                buildArguments:
+                  - key: value
+                destination:
+                  location: eu.gcr.io/harness/ui:latest
+                  connector: myDockerRepoConnector
