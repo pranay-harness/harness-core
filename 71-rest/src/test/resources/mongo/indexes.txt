@@ -60,7 +60,6 @@ artifacts {"name": "artifactStream_buildNo", "background": true} {"artifactStrea
 artifacts {"name": "artifactStream_revision", "background": true} {"artifactStreamId": 1, "revision": 1}
 artifacts {"name": "createdAt_1", "background": true} {"createdAt": 1}
 artifacts {"name": "owners", "background": true} {"artifactStreamId": 1, "appId": 1}
-artifactsNG {"name": "createdAt_1", "background": true} {"createdAt": 1}
 audits {"name": "accountId_1", "background": true} {"accountId": 1}
 audits {"name": "appId_1", "background": true} {"appId": 1}
 audits {"name": "createdAt_1", "background": true} {"createdAt": 1}

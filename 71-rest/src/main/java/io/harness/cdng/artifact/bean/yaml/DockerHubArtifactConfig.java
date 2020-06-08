@@ -2,59 +2,70 @@ package io.harness.cdng.artifact.bean.yaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
+import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.ArtifactSourceType;
+import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
+import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Value;
 
 import java.util.Arrays;
 import java.util.List;
-import javax.validation.constraints.NotNull;
 
 /**
  * This is Yaml POJO class which may contain expressions as well.
  * Used mainly for converter layer to store yaml.
  */
-@Value
+@Data
 @Builder
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ArtifactSourceType.DOCKER_HUB)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DockerHubArtifactConfig implements ArtifactConfig {
-  @NotNull String identifier;
-  @Builder.Default String sourceType = ArtifactSourceType.DOCKER_HUB;
-  @NotNull DockerSpec spec;
+public class DockerHubArtifactConfig implements ArtifactConfigWrapper {
+  /** Docker hub registry connector. */
+  String dockerhubConnector;
+  /** Images in repos need to be referenced via a path. */
+  String imagePath;
+  /** Tag refers to exact tag number. */
+  String tag;
+  /** Tag regex is used to get latest build from builds matching regex. */
+  String tagRegex;
 
-  @Value
-  @Builder
-  @EqualsAndHashCode(callSuper = false)
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  public static class DockerSpec implements Spec {
-    /** Docker hub registry connector. */
-    String dockerhubConnector;
-    /** Images in repos need to be referenced via a path. */
-    String imagePath;
-    /** Tag refers to exact tag number. */
-    String tag;
-    /** Tag regex is used to get latest build from builds matching regex. */
-    String tagRegex;
+  @Override
+  public String getSourceType() {
+    return ArtifactSourceType.DOCKER_HUB;
+  }
 
-    public String getUniqueHash() {
-      List<String> valuesList = Arrays.asList(dockerhubConnector, imagePath, getTag(), getTagRegex());
-      return ArtifactUtils.generateUniqueHashFromStringList(valuesList);
-    }
+  @Override
+  public String getUniqueHash() {
+    List<String> valuesList = Arrays.asList(dockerhubConnector, imagePath);
+    return ArtifactUtils.generateUniqueHashFromStringList(valuesList);
+  }
 
-    // TODO(archit): Not include functions as part of outcome. Either create new class alltogether
-    @Override
-    public DockerArtifactSourceAttributes getSourceAttributes() {
-      return DockerArtifactSourceAttributes.builder()
-          .dockerhubConnector(dockerhubConnector)
-          .imagePath(imagePath)
-          .tag(tag)
-          .tagRegex(tagRegex)
-          .build();
-    }
+  @Override
+  public ArtifactSource getArtifactSource(String accountId) {
+    return DockerArtifactSource.builder()
+        .accountId(accountId)
+        .sourceType(getSourceType())
+        .dockerHubConnector(dockerhubConnector)
+        .imagePath(imagePath)
+        .uniqueHash(getUniqueHash())
+        .build();
+  }
+
+  @Override
+  public ArtifactSourceAttributes getSourceAttributes() {
+    return DockerArtifactSourceAttributes.builder()
+        .dockerhubConnector(dockerhubConnector)
+        .imagePath(imagePath)
+        .tag(tag)
+        .tagRegex(tagRegex)
+        .build();
   }
 }

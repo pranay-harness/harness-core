@@ -1,13 +1,14 @@
 package io.harness.serializer.morphia;
 
-import io.harness.cdng.artifact.bean.Artifact;
-import io.harness.cdng.artifact.bean.DockerArtifact;
 import io.harness.cdng.artifact.bean.DockerArtifactAttributes;
+import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
+import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
+import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
@@ -29,8 +30,7 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     set.add(InfraMapping.class);
     set.add(K8sDirectInfraDefinition.class);
     set.add(K8sDirectInfraMapping.class);
-    set.add(Artifact.class);
-    set.add(DockerArtifact.class);
+    set.add(DockerArtifactSource.class);
     set.add(ArtifactSource.class);
   }
 
@@ -46,5 +46,7 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     h.put("cdng.artifact.delegate.task.ArtifactTaskResponse", ArtifactTaskResponse.class);
     h.put("cdng.artifact.bean.DockerArtifactAttributes", DockerArtifactAttributes.class);
     h.put("cdng.artifact.delegate.task.ArtifactTaskParameters", ArtifactTaskParameters.class);
+    h.put("cdng.artifact.bean.yaml.SidecarArtifact", SidecarArtifact.class);
+    h.put("cdng.artifact.bean.DockerArtifactOutcome", DockerArtifactOutcome.class);
   }
 }

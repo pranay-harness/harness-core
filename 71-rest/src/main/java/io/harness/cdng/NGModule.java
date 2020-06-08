@@ -1,8 +1,6 @@
 package io.harness.cdng;
 
-import io.harness.cdng.artifact.service.ArtifactService;
 import io.harness.cdng.artifact.service.ArtifactSourceService;
-import io.harness.cdng.artifact.service.impl.ArtifactServiceImpl;
 import io.harness.cdng.artifact.service.impl.ArtifactSourceServiceImpl;
 import io.harness.govern.DependencyModule;
 
@@ -26,6 +24,5 @@ public class NGModule extends DependencyModule {
   @Override
   protected void configure() {
     bind(ArtifactSourceService.class).to(ArtifactSourceServiceImpl.class);
-    bind(ArtifactService.class).to(ArtifactServiceImpl.class);
   }
 }

@@ -6,5 +6,6 @@ import lombok.Data;
 @Data
 @Builder
 public class DockerhubConnectorConfig implements ConnectorConfig {
+  String identifier;
   String registryUrl;
 }

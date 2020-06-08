@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cdng.artifact.bean.ArtifactAttributes;
-import io.harness.cdng.artifact.bean.artifactsource.ArtifactSourceAttributes;
+import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.connector.DockerhubConnectorConfig;
 import io.harness.cdng.artifact.delegate.resource.DockerRegistryService;
@@ -15,9 +15,9 @@ public class DockerArtifactServiceImpl implements DockerArtifactService {
 
   @Override
   public ArtifactAttributes getLastSuccessfulBuild(
-      String appId, ArtifactSourceAttributes streamAttributes, DockerhubConnectorConfig connectorConfig) {
-    DockerArtifactSourceAttributes dockerArtifactStreamAttributes = (DockerArtifactSourceAttributes) streamAttributes;
+      String appId, ArtifactSourceAttributes sourceAttributes, DockerhubConnectorConfig connectorConfig) {
+    DockerArtifactSourceAttributes dockerArtifactSourceAttributes = (DockerArtifactSourceAttributes) sourceAttributes;
     return dockerRegistryService.getLastSuccessfulBuild(
-        connectorConfig, dockerArtifactStreamAttributes.getImagePath(), dockerArtifactStreamAttributes.getTag());
+        connectorConfig, dockerArtifactSourceAttributes.getImagePath(), dockerArtifactSourceAttributes.getTag());
   }
 }

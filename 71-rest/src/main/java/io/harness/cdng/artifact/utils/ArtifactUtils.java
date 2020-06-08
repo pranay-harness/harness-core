@@ -5,7 +5,7 @@ import static software.wings.common.VerificationConstants.CONNECTOR;
 
 import com.google.common.hash.Hashing;
 
-import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
+import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.connector.ConnectorConfig;
 import io.harness.cdng.artifact.bean.connector.DockerhubConnectorConfig;
@@ -34,18 +34,20 @@ public interface ArtifactUtils {
     return Hashing.sha256().hashString(keyBuilder.toString(), StandardCharsets.UTF_8).toString();
   }
 
-  static ArtifactTaskParameters getArtifactTaskParameters(ArtifactSource artifactSource) {
+  static ArtifactTaskParameters getArtifactTaskParameters(String accountId, ArtifactSourceAttributes sourceAttributes) {
     return ArtifactTaskParameters.builder()
-        .accountId(artifactSource.getAccountId())
-        .attributes(artifactSource.getSourceAttributes())
-        .connectorConfig(getConnectorConfig(artifactSource))
+        .accountId(accountId)
+        .attributes(sourceAttributes)
+        .connectorConfig(getConnectorConfig(sourceAttributes))
         .build();
   }
 
   // TODO(archit): will call connector corresponding to connector identifier, accountID, projectId.
-  static ConnectorConfig getConnectorConfig(ArtifactSource artifactSource) {
-    DockerArtifactSourceAttributes sourceAttributes =
-        (DockerArtifactSourceAttributes) artifactSource.getSourceAttributes();
-    return DockerhubConnectorConfig.builder().registryUrl(sourceAttributes.getDockerhubConnector()).build();
+  static ConnectorConfig getConnectorConfig(ArtifactSourceAttributes artifactSourceAttributes) {
+    DockerArtifactSourceAttributes sourceAttributes = (DockerArtifactSourceAttributes) artifactSourceAttributes;
+    return DockerhubConnectorConfig.builder()
+        .registryUrl(sourceAttributes.getDockerhubConnector())
+        .identifier(sourceAttributes.getDockerhubConnector())
+        .build();
   }
 }

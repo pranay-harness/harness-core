@@ -1,3 +1,5 @@
 package io.harness.cdng.artifact.bean.connector;
 
-public interface ConnectorConfig {}
+import io.harness.yaml.core.intfc.WithIdentifier;
+
+public interface ConnectorConfig extends WithIdentifier {}
