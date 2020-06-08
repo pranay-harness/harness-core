@@ -60,6 +60,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.rule.Owner;
+import io.harness.rule.OwnerRule;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -106,6 +107,7 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.features.api.FeatureService;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
+import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
@@ -115,6 +117,7 @@ import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
+import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.impl.ContainerServiceParams;
@@ -150,6 +153,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.utils.ApplicationManifestUtils;
+import software.wings.utils.WingsTestConstants;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -326,6 +330,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecute() throws InterruptedException {
+    helmDeployState.setSteadyStateTimeout(5);
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder()
             .storeType(StoreType.HelmSourceRepo)
@@ -360,6 +365,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testExecuteWithHelmChartRepo() throws InterruptedException {
+    helmDeployState.setSteadyStateTimeout(5);
     HelmChartConfig chartConfigWithConnectorId = HelmChartConfig.builder().connectorId("connectorId").build();
     HelmChartConfig chartConfigWithoutConnectorId =
         HelmChartConfig.builder().chartVersion("1.0.0").chartUrl(CHART_URL).chartName(CHART_NAME).build();
@@ -418,6 +424,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   private void assertExecutedDelegateTask(DelegateTask delegateTask) {
     HelmInstallCommandRequest helmInstallCommandRequest =
         (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
+    assertThat(delegateTask.getData().getTimeout()).isEqualTo(300000);
     assertThat(helmInstallCommandRequest.getHelmCommandType()).isEqualTo(HelmCommandType.INSTALL);
     assertThat(helmInstallCommandRequest.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX);
     assertThat(helmInstallCommandRequest.getRepoName()).isEqualTo("app-name-service-name");
@@ -753,14 +760,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ANSHUL)
-  @Category(UnitTests.class)
-  public void testGetTimeout() {
-    assertThat(helmDeployState.getTimeout(100)).isEqualTo(6000000);
-    assertThat(helmDeployState.getTimeout(60000 + 1)).isEqualTo(60001);
-  }
-
-  @Test
   @Owner(developers = RIHAZ)
   @Category(UnitTests.class)
   public void testIsRollBackNotNeeded() {
@@ -845,6 +844,21 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void testTimeout() {
+    HelmDeployState state = new HelmDeployState("helm");
+
+    assertThat(state.getTimeoutMillis()).isEqualTo(null);
+
+    state.setSteadyStateTimeout(5);
+    assertThat(state.getTimeoutMillis()).isEqualTo(300000);
+
+    state.setSteadyStateTimeout(Integer.MAX_VALUE);
+    assertThat(state.getTimeoutMillis()).isNull();
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testTagsInExecuteHelmValuesFetchTask() {
@@ -882,5 +896,32 @@ public class HelmDeployStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     assertThat(delegateTask.getTags()).isEqualTo(Arrays.asList("delegateName"));
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void getHelmCommandRequestTimeoutValue() {
+    HelmInstallCommandRequest commandRequest;
+
+    helmDeployState.setSteadyStateTimeout(0);
+    commandRequest = getHelmRollbackCommandRequest(helmDeployState);
+    assertThat(commandRequest.getTimeoutInMillis()).isEqualTo(600000);
+
+    helmDeployState.setSteadyStateTimeout(5);
+    commandRequest = getHelmRollbackCommandRequest(helmDeployState);
+    assertThat(commandRequest.getTimeoutInMillis()).isEqualTo(300000);
+
+    helmDeployState.setSteadyStateTimeout(Integer.MAX_VALUE);
+    commandRequest = getHelmRollbackCommandRequest(helmDeployState);
+    assertThat(commandRequest.getTimeoutInMillis()).isEqualTo(600000);
+  }
+
+  private HelmInstallCommandRequest getHelmRollbackCommandRequest(HelmDeployState helmRollbackState) {
+    return (HelmInstallCommandRequest) helmRollbackState.getHelmCommandRequest(context,
+        HelmChartSpecification.builder().build(), ContainerServiceParams.builder().build(), "release-name",
+        WingsTestConstants.ACCOUNT_ID, WingsTestConstants.APP_ID, WingsTestConstants.ACTIVITY_ID,
+        ImageDetails.builder().build(), "repo", GitConfig.builder().build(), Collections.emptyList(), null,
+        K8sDelegateManifestConfig.builder().build(), Collections.emptyMap(), HelmConstants.HelmVersion.V3);
   }
 }

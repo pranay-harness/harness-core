@@ -1394,6 +1394,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void getTimeoutInMillis() {
     assertThat(k8sStateHelper.getTimeoutMillisFromMinutes(null)).isNull();
+    assertThat(k8sStateHelper.getTimeoutMillisFromMinutes(0)).isNull();
     assertThat(k8sStateHelper.getTimeoutMillisFromMinutes(10)).isEqualTo(600000);
     assertThat(k8sStateHelper.getTimeoutMillisFromMinutes(Integer.MAX_VALUE)).isEqualTo(null);
   }
