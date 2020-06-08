@@ -12,5 +12,5 @@ public interface ProjectService {
 
   Project update(Project project);
 
-  List<Project> getAll();
+  List<Project> getAll(String organizationId);
 }

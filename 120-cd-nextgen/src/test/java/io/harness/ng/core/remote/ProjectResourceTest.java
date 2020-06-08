@@ -16,7 +16,6 @@ import io.harness.ng.core.BaseTest;
 import io.harness.ng.core.dto.CreateProjectRequest;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.UpdateProjectRequest;
-import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,7 +26,6 @@ import java.util.Optional;
 
 public class ProjectResourceTest extends BaseTest {
   @Inject private ProjectResource projectResource;
-  @com.google.inject.Inject private HPersistence hPersistence;
 
   @Test
   @Owner(developers = ANKIT)
@@ -38,15 +36,16 @@ public class ProjectResourceTest extends BaseTest {
     CreateProjectRequest createRequest = random(CreateProjectRequest.class);
     ProjectDTO createdProject = projectResource.create(createRequest);
 
-    assertTrue(isNotEmpty(createdProject.getUuid()));
-    assertEquals(createdProject, projectResource.get(createdProject.getUuid()).orElse(null));
+    assertTrue(isNotEmpty(createdProject.getId()));
+    assertEquals(createdProject, projectResource.get(createdProject.getId()).orElse(null));
   }
 
   @Test
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void testListProjects() {
-    assertTrue(projectResource.list().isEmpty());
+    String orgId = randomAlphabetic(10);
+    assertTrue(projectResource.list(orgId).isEmpty());
 
     List<ProjectDTO> createdProjects = new ArrayList<>();
     for (int i = 0; i < 2; i++) {
@@ -54,7 +53,7 @@ public class ProjectResourceTest extends BaseTest {
       createdProjects.add(projectResource.create(createRequest));
     }
 
-    assertEquals(createdProjects, projectResource.list());
+    assertEquals(createdProjects, projectResource.list(orgId));
   }
 
   @Test
@@ -65,17 +64,17 @@ public class ProjectResourceTest extends BaseTest {
     ProjectDTO createdProject = projectResource.create(createRequest);
 
     UpdateProjectRequest updateRequest = random(UpdateProjectRequest.class);
-    ProjectDTO updatedProject = projectResource.update(createdProject.getUuid(), updateRequest).orElse(null);
+    ProjectDTO updatedProject = projectResource.update(createdProject.getId(), updateRequest).orElse(null);
 
     assertNotNull(updatedProject);
-    assertEquals(updatedProject, projectResource.get(createdProject.getUuid()).orElse(null));
+    assertEquals(updatedProject, projectResource.get(createdProject.getId()).orElse(null));
 
     assertEquals(updateRequest.getName(), updatedProject.getName());
     assertEquals(updateRequest.getDescription(), updatedProject.getDescription());
     assertEquals(updateRequest.getOwners(), updatedProject.getOwners());
     assertEquals(updateRequest.getTags(), updatedProject.getTags());
 
-    assertEquals(createdProject.getUuid(), updatedProject.getUuid());
+    assertEquals(createdProject.getId(), updatedProject.getId());
     assertEquals(createdProject.getAccountId(), updatedProject.getAccountId());
     assertEquals(createdProject.getOrgId(), updatedProject.getOrgId());
   }

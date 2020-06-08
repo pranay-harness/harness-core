@@ -23,6 +23,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 @Api("/projects")
@@ -53,8 +54,8 @@ public class ProjectResource {
   }
 
   @GET
-  public List<ProjectDTO> list() {
-    List<Project> projects = projectService.getAll();
+  public List<ProjectDTO> list(@QueryParam("organizationId") @NotEmpty String organizationId) {
+    List<Project> projects = projectService.getAll(organizationId);
     return projects.stream().map(projectMapper::writeDTO).collect(toList());
   }
 
