@@ -9,6 +9,7 @@ import io.harness.delegate.task.TaskParameters;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.ArrayList;
@@ -39,7 +40,10 @@ public class GitFetchFilesTaskParams implements ActivityAccess, TaskParameters, 
     if (isNotEmpty(gitFetchFilesConfigMap)) {
       for (Map.Entry<String, GitFetchFilesConfig> entry : gitFetchFilesConfigMap.entrySet()) {
         GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
-        executionCapabilities.addAll(gitFetchFileConfig.getGitConfig().fetchRequiredExecutionCapabilities());
+        executionCapabilities.add(GitConnectionCapability.builder()
+                                      .gitConfig(gitFetchFileConfig.getGitConfig())
+                                      .encryptedDataDetails(gitFetchFileConfig.getEncryptedDataDetails())
+                                      .build());
       }
     }
 

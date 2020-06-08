@@ -13,6 +13,7 @@ import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityChe
 import io.harness.delegate.task.executioncapability.SocketConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SystemEnvCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.ClusterMasterUrlCapabilityCheck;
+import software.wings.delegatetasks.validation.capabilitycheck.GitConnectionCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.HelmCommandCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.HelmInstallationCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.PcfAutoScalarCapabilityCheck;
@@ -42,6 +43,7 @@ public class CapabilityCheckFactory {
   @Inject ChartMuseumCapabilityCheck chartMuseumCapabilityCheck;
   @Inject ClusterMasterUrlCapabilityCheck clusterMasterUrlCapabilityCheck;
   @Inject ShellConnectionCapabilityCheck shellConnectionCapabilityCheck;
+  @Inject GitConnectionCapabilityCheck gitConnectionCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     switch (capabilityCheckType) {
@@ -79,6 +81,8 @@ public class CapabilityCheckFactory {
         return clusterMasterUrlCapabilityCheck;
       case SHELL_CONNECTION:
         return shellConnectionCapabilityCheck;
+      case GIT_CONNECTION:
+        return gitConnectionCapabilityCheck;
       default:
         return null;
     }

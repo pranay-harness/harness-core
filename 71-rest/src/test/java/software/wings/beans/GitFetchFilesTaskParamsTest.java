@@ -11,6 +11,7 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
+import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.Collections;
@@ -55,10 +56,8 @@ public class GitFetchFilesTaskParamsTest extends WingsBaseTest {
     executionCapabilities = gitFetchFilesTaskParams.fetchRequiredExecutionCapabilities();
 
     assertThat(executionCapabilities.size()).isEqualTo(2);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
-    assertThat(((HttpConnectionExecutionCapability) executionCapabilities.get(0)).getHost()).isEqualTo("abc.xyz");
+    assertThat(executionCapabilities.get(0)).isInstanceOf(GitConnectionCapability.class);
 
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
-    assertThat(((HttpConnectionExecutionCapability) executionCapabilities.get(1)).getHost()).isEqualTo("hello.world");
+    assertThat(executionCapabilities.get(1)).isInstanceOf(GitConnectionCapability.class);
   }
 }
