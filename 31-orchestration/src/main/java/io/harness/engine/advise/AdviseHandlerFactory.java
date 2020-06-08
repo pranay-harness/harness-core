@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.adviser.AdviseType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.advise.handlers.EndPlanAdviseHandler;
 import io.harness.engine.advise.handlers.NextStepHandler;
 import io.harness.engine.advise.handlers.RetryAdviseHandler;
 import io.harness.exception.InvalidRequestException;
@@ -14,6 +15,7 @@ import io.harness.exception.InvalidRequestException;
 public class AdviseHandlerFactory {
   @Inject private NextStepHandler nextStepHandler;
   @Inject private RetryAdviseHandler retryAdviseHandler;
+  @Inject private EndPlanAdviseHandler endPlanAdviseHandler;
 
   public AdviseHandler obtainHandler(AdviseType adviseType) {
     switch (adviseType) {
@@ -21,6 +23,8 @@ public class AdviseHandlerFactory {
         return nextStepHandler;
       case RETRY:
         return retryAdviseHandler;
+      case END_PLAN:
+        return endPlanAdviseHandler;
       default:
         throw new InvalidRequestException("No handler Present for advise type: " + adviseType);
     }

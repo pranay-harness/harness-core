@@ -95,10 +95,10 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldExecuteRetryPlan() {
     UserThreadLocal.set(user);
-    Plan expectedRetryPlan = CustomExecutionUtils.provideHttpRetryPlan();
+    Plan expectedRetryPlan = CustomExecutionUtils.provideHttpRetryIgnorePlan();
     when(executionEngine.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(RUNNING).plan(expectedRetryPlan).build());
-    PlanExecution planExecutionResponse = customExecutionService.executeRetryPlan();
+    PlanExecution planExecutionResponse = customExecutionService.executeRetryIgnorePlan();
 
     assertThat(planExecutionResponse.getPlan()).isEqualTo(expectedRetryPlan);
     assertThat(planExecutionResponse.getStatus()).isEqualTo(RUNNING);

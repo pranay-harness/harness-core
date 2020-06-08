@@ -32,7 +32,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import java.util.List;
 import java.util.Optional;
 
-public class ResumeAllHandler implements InterruptHandler {
+public class ResumeAllInterruptHandler implements InterruptHandler {
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;

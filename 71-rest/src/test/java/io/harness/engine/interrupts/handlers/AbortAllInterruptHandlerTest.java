@@ -32,7 +32,7 @@ import software.wings.WingsBaseTest;
 import software.wings.rules.Listeners;
 
 @Listeners(OrchestrationNotifyEventListener.class)
-public class AbortAllHandlerTest extends WingsBaseTest {
+public class AbortAllInterruptHandlerTest extends WingsBaseTest {
   @Inject private InterruptManager interruptManager;
   @Inject private ExecutionEngine executionEngine;
   @Inject private StepRegistry stepRegistry;

@@ -326,7 +326,7 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  public static Plan provideHttpRetryPlan() {
+  public static Plan provideHttpRetryIgnorePlan() {
     String httpNodeId = generateUuid();
     String dummyNodeId = generateUuid();
     BasicHttpStepParameters basicHttpStateParameters =
@@ -349,6 +349,45 @@ public class CustomExecutionUtils {
                                                          .retryCount(2)
                                                          .waitIntervalList(ImmutableList.of(2, 5))
                                                          .repairActionCodeAfterRetry(RepairActionCode.IGNORE)
+                                                         .nextNodeId(dummyNodeId)
+                                                         .build())
+                                         .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNodeId)
+                  .name("Dummy Node 1")
+                  .identifier("dummy")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .build();
+  }
+
+  public static Plan provideHttpRetryAbortPlan() {
+    String httpNodeId = generateUuid();
+    String dummyNodeId = generateUuid();
+    BasicHttpStepParameters basicHttpStateParameters =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
+    return Plan.builder()
+        .uuid(generateUuid())
+        .startingNodeId(httpNodeId)
+        .node(PlanNode.builder()
+                  .uuid(httpNodeId)
+                  .name("Basic Http 1")
+                  .stepType(BasicHttpStep.STEP_TYPE)
+                  .identifier("dummy")
+                  .stepParameters(basicHttpStateParameters)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                             .build())
+                  .adviserObtainment(AdviserObtainment.builder()
+                                         .type(AdviserType.builder().type(AdviserType.RETRY).build())
+                                         .parameters(RetryAdviserParameters.builder()
+                                                         .retryCount(2)
+                                                         .waitIntervalList(ImmutableList.of(2, 5))
+                                                         .repairActionCodeAfterRetry(RepairActionCode.END_EXECUTION)
                                                          .nextNodeId(dummyNodeId)
                                                          .build())
                                          .build())

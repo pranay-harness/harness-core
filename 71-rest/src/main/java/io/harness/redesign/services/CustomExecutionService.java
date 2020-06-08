@@ -17,7 +17,9 @@ public interface CustomExecutionService {
 
   PlanExecution executeSectionPlan();
 
-  PlanExecution executeRetryPlan();
+  PlanExecution executeRetryIgnorePlan();
+
+  PlanExecution executeRetryAbortPlan();
 
   PlanExecution executeRollbackPlan();
 

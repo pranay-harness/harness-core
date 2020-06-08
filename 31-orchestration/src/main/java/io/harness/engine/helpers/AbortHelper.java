@@ -1,16 +1,8 @@
-package io.harness.engine.interrupts.handlers;
+package io.harness.engine.helpers;
 
-import static io.harness.data.structure.CollectionUtils.isPresent;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.eraro.ErrorCode.ABORT_ALL_ALREADY;
-import static io.harness.exception.WingsException.USER;
-import static io.harness.execution.status.Status.ABORTED;
 import static io.harness.execution.status.Status.DISCONTINUING;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
-import static io.harness.interrupts.Interrupt.State.DISCARDED;
-import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
-import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
-import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toList;
 
@@ -21,11 +13,8 @@ import com.google.inject.name.Named;
 import io.harness.ambiance.Ambiance;
 import io.harness.engine.AmbianceHelper;
 import io.harness.engine.ExecutionEngine;
-import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptProcessingFailedException;
-import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.services.NodeExecutionService;
-import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.status.Status;
@@ -33,14 +22,12 @@ import io.harness.facilitator.modes.Abortable;
 import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.facilitator.modes.TaskSpawningExecutableResponse;
 import io.harness.interrupts.Interrupt;
-import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.persistence.HPersistence;
 import io.harness.plan.PlanNode;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.Step;
 import io.harness.tasks.TaskExecutor;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -49,75 +36,18 @@ import org.mongodb.morphia.query.UpdateResults;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
-public class AbortAllHandler implements InterruptHandler {
-  @Inject @Named("enginePersistence") private HPersistence hPersistence;
-  @Inject private InterruptService interruptService;
-  @Inject private NodeExecutionService nodeExecutionService;
+public class AbortHelper {
+  @Inject @Named("enginePersistence") HPersistence hPersistence;
   @Inject private StepRegistry stepRegistry;
   @Inject private ExecutionEngine executionEngine;
   @Inject private AmbianceHelper ambianceHelper;
+  @Inject private NodeExecutionService nodeExecutionService;
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
 
-  @Override
-  public Interrupt registerInterrupt(Interrupt interrupt) {
-    String savedInterruptId = validateAndSave(interrupt);
-    Interrupt savedInterrupt =
-        hPersistence.createQuery(Interrupt.class).filter(InterruptKeys.uuid, savedInterruptId).get();
-    return handleInterrupt(savedInterrupt);
-  }
-
-  private String validateAndSave(@Valid @NonNull Interrupt interrupt) {
-    List<Interrupt> interrupts = interruptService.fetchActiveInterrupts(interrupt.getPlanExecutionId());
-    if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == ABORT_ALL)) {
-      throw new InvalidRequestException("Execution already has ABORT_ALL interrupt", ABORT_ALL_ALREADY, USER);
-    }
-    if (isEmpty(interrupts)) {
-      return hPersistence.save(interrupt);
-    }
-
-    interrupts.forEach(savedInterrupt
-        -> interruptService.markProcessed(
-            savedInterrupt.getUuid(), savedInterrupt.getState() == PROCESSING ? PROCESSED_SUCCESSFULLY : DISCARDED));
-    return hPersistence.save(interrupt);
-  }
-
-  @Override
-  public Interrupt handleInterruptForNodeExecution(Interrupt interrupt, String nodeExecutionId) {
-    throw new UnsupportedOperationException("ABORT_ALL handling Not required for node individually");
-  }
-
-  @Override
-  public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt) {
-    interruptService.markProcessing(interrupt.getUuid());
-    if (!markAbortingState(interrupt, Status.finalizableStatuses())) {
-      return interrupt;
-    }
-
-    List<NodeExecution> discontinuingNodeExecutions =
-        nodeExecutionService.fetchNodeExecutionsByStatus(interrupt.getPlanExecutionId(), DISCONTINUING);
-
-    if (isEmpty(discontinuingNodeExecutions)) {
-      logger.warn("ABORT_ALL Interrupt being ignored as no running instance found for planExecutionId: {}",
-          interrupt.getUuid());
-      return interruptService.markProcessed(interrupt.getUuid(), PROCESSED_SUCCESSFULLY);
-    }
-    try {
-      for (NodeExecution discontinuingNodeExecution : discontinuingNodeExecutions) {
-        discontinueMarkedInstance(discontinuingNodeExecution);
-      }
-    } catch (InterruptProcessingFailedException ex) {
-      interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);
-      throw ex;
-    }
-
-    return interruptService.markProcessed(interrupt.getUuid(), PROCESSED_SUCCESSFULLY);
-  }
-
-  private void discontinueMarkedInstance(NodeExecution nodeExecution) {
+  public void discontinueMarkedInstance(NodeExecution nodeExecution, Status finalStatus) {
     boolean updated = false;
     try {
       Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
@@ -135,14 +65,14 @@ public class AbortAllHandler implements InterruptHandler {
 
       UpdateOperations<NodeExecution> ops = hPersistence.createUpdateOperations(NodeExecution.class);
       ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
-      ops.set(NodeExecutionKeys.status, ABORTED);
+      ops.set(NodeExecutionKeys.status, finalStatus);
 
       Query<NodeExecution> query = hPersistence.createQuery(NodeExecution.class, excludeAuthority)
                                        .filter(NodeExecutionKeys.uuid, nodeExecution.getUuid());
       NodeExecution updatedNodeExecution = hPersistence.findAndModify(query, ops, HPersistence.returnNewOptions);
       if (updatedNodeExecution != null) {
         updated = true;
-        executionEngine.endTransition(updatedNodeExecution, ABORTED, null);
+        executionEngine.endTransition(updatedNodeExecution, finalStatus, null);
       }
     } catch (Exception e) {
       logger.error("Error in discontinuing", e);
@@ -154,7 +84,7 @@ public class AbortAllHandler implements InterruptHandler {
     }
   }
 
-  private boolean markAbortingState(@NotNull Interrupt interrupt, EnumSet<Status> statuses) {
+  public boolean markAbortingState(@NotNull Interrupt interrupt, EnumSet<Status> statuses) {
     // Get all that are eligible for discontinuing
     List<NodeExecution> allNodeExecutions =
         nodeExecutionService.fetchNodeExecutionsByStatuses(interrupt.getPlanExecutionId(), statuses);

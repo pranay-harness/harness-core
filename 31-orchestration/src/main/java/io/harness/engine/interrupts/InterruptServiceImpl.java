@@ -10,8 +10,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import io.harness.engine.interrupts.handlers.PauseAllHandler;
-import io.harness.engine.interrupts.handlers.ResumeAllHandler;
+import io.harness.engine.interrupts.handlers.PauseAllInterruptHandler;
+import io.harness.engine.interrupts.handlers.ResumeAllInterruptHandler;
 import io.harness.exception.InvalidRequestException;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
@@ -30,8 +30,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class InterruptServiceImpl implements InterruptService {
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
-  @Inject private PauseAllHandler pauseAllHandler;
-  @Inject private ResumeAllHandler resumeAllHandler;
+  @Inject private PauseAllInterruptHandler pauseAllInterruptHandler;
+  @Inject private ResumeAllInterruptHandler resumeAllInterruptHandler;
 
   @Override
   public InterruptCheck checkAndHandleInterruptsBeforeNodeStart(String planExecutionId, String nodeExecutionId) {
@@ -47,10 +47,10 @@ public class InterruptServiceImpl implements InterruptService {
 
     switch (interrupt.getType()) {
       case PAUSE_ALL:
-        pauseAllHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
+        pauseAllInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
         return InterruptCheck.builder().proceed(false).reason("[InterruptCheck] PAUSE_ALL interrupt found").build();
       case RESUME_ALL:
-        resumeAllHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
+        resumeAllInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
         return InterruptCheck.builder().proceed(true).reason("[InterruptCheck] RESUME_ALL interrupt found").build();
       default:
         throw new InvalidRequestException("No Handler Present for interrupt type: " + interrupt.getType());
