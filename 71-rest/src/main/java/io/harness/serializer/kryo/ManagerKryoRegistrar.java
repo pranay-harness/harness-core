@@ -178,6 +178,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.GitValidationParameters;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphLink;
@@ -397,6 +398,7 @@ import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
 import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
+import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmInstallationCapability;
 import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapability;
@@ -1630,5 +1632,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsLambdaDetailsMetricsResponse.class, 7388);
     kryo.register(ServiceNowApprovalParams.class, 7389);
     kryo.register(ShellConnectionCapability.class, 7390);
+    kryo.register(GitConnectionCapability.class, 7391);
+    kryo.register(GitValidationParameters.class, 7392);
   }
 }

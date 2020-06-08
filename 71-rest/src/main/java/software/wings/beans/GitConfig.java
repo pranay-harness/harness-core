@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.audit.ResourceType.SOURCE_REPO_PROVIDER;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD;
 
@@ -11,8 +10,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
-import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -31,6 +28,7 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.SourceRepoProviderYaml;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -69,16 +67,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    if (!keyAuth) {
-      return Collections.singletonList(
-          HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(repoUrl));
-    } else if (isNotBlank(sshSettingId)) {
-      return Collections.singletonList(
-          SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(repoUrl));
-    } else {
-      logger.error("This Should Not Happen");
-      return null;
-    }
+    return new ArrayList<>();
   }
 
   @Override

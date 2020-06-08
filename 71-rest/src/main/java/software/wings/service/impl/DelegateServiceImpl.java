@@ -151,6 +151,8 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.FeatureName;
 import software.wings.beans.FileMetadata;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitValidationParameters;
 import software.wings.beans.HostValidationTaskParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -1919,6 +1921,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           newParams = new ArrayList<>(Collections.singletonList(parametersBuilder.build()));
           task.getData().setParameters(newParams.toArray());
         }
+        return;
+      case GIT_COMMAND:
+        GitConfig config = (GitConfig) params[1];
+        List<EncryptedDataDetail> encryptedDataDetails = (List<EncryptedDataDetail>) params[2];
+        Object[] newParamsArr = Arrays.copyOf(params, params.length + 1);
+        newParamsArr[newParamsArr.length - 1] =
+            GitValidationParameters.builder().gitConfig(config).encryptedDataDetails(encryptedDataDetails).build();
+        task.getData().setParameters(newParamsArr);
         return;
       default:
         noop();
