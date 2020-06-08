@@ -1,5 +1,6 @@
 package io.harness.functional.redesign.engine;
 
+import static io.harness.execution.status.Status.FAILED;
 import static io.harness.execution.status.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.GARVIT;
@@ -79,13 +80,41 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(FunctionalTests.class)
-  public void shouldExecuteHttpRetryPlan() {
+  public void shouldExecuteHttpRetryIgnorePlan() {
     PlanExecution httpRetryResponse =
-        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-retry");
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-retry-ignore");
 
     assertThat(httpRetryResponse.getStatus()).isEqualTo(SUCCEEDED);
     List<NodeExecution> nodeExecutions = getNodeExecutions(httpRetryResponse.getUuid());
     assertThat(nodeExecutions).hasSize(4);
+
+    List<NodeExecution> retriedNodeExecutions =
+        nodeExecutions.stream()
+            .filter(ex -> ex.getNode().getStepType().equals(BasicHttpStep.STEP_TYPE))
+            .collect(Collectors.toList());
+
+    assertThat(retriedNodeExecutions).hasSize(3);
+
+    // Pick Latest created one
+    assertThat(retriedNodeExecutions.get(0).getRetryIds())
+        .containsExactlyInAnyOrder(retriedNodeExecutions.get(1).getUuid(), retriedNodeExecutions.get(2).getUuid());
+
+    List<Interrupt> interrupts = getPlanInterrupts(httpRetryResponse.getUuid());
+    assertThat(interrupts).hasSize(2);
+    assertThat(interrupts.stream().map(Interrupt::getType).collect(Collectors.toList()))
+        .containsExactly(ExecutionInterruptType.RETRY, ExecutionInterruptType.RETRY);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(FunctionalTests.class)
+  public void shouldExecuteHttpRetryAbortPlan() {
+    PlanExecution httpRetryResponse =
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-retry-abort");
+
+    assertThat(httpRetryResponse.getStatus()).isEqualTo(FAILED);
+    List<NodeExecution> nodeExecutions = getNodeExecutions(httpRetryResponse.getUuid());
+    assertThat(nodeExecutions).hasSize(3);
 
     List<NodeExecution> retriedNodeExecutions =
         nodeExecutions.stream()

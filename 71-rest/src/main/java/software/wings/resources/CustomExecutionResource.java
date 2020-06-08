@@ -47,10 +47,17 @@ public class CustomExecutionResource {
   }
 
   @GET
-  @Path("/http-retry")
+  @Path("/http-retry-ignore")
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
-  public RestResponse<PlanExecution> executeRetryPlan() {
-    return new RestResponse<>(customExecutionService.executeRetryPlan());
+  public RestResponse<PlanExecution> executeRetryIgnorePlan() {
+    return new RestResponse<>(customExecutionService.executeRetryIgnorePlan());
+  }
+
+  @GET
+  @Path("/http-retry-abort")
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<PlanExecution> executeRetryAbortPlan() {
+    return new RestResponse<>(customExecutionService.executeRetryAbortPlan());
   }
 
   @GET

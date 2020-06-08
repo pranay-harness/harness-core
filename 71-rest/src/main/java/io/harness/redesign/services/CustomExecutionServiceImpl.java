@@ -57,8 +57,13 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
-  public PlanExecution executeRetryPlan() {
-    return engine.startExecution(CustomExecutionUtils.provideHttpRetryPlan(), getInputArgs(), getEmbeddedUser());
+  public PlanExecution executeRetryIgnorePlan() {
+    return engine.startExecution(CustomExecutionUtils.provideHttpRetryIgnorePlan(), getInputArgs(), getEmbeddedUser());
+  }
+
+  @Override
+  public PlanExecution executeRetryAbortPlan() {
+    return engine.startExecution(CustomExecutionUtils.provideHttpRetryAbortPlan(), getInputArgs(), getEmbeddedUser());
   }
 
   @Override

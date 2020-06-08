@@ -11,8 +11,10 @@ import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
+import io.harness.adviser.advise.EndPlanAdvise;
 import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.adviser.advise.RetryAdvise;
+import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
@@ -35,23 +37,23 @@ public class RetryAdviser implements Adviser {
       return null;
     }
     RetryAdviserParameters parameters = (RetryAdviserParameters) advisingEvent.getAdviserParameters();
-    NodeExecution nodeExecution =
-        Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(advisingEvent.getAmbiance()));
+    Ambiance ambiance = advisingEvent.getAmbiance();
+    NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
     if (nodeExecution.retryCount() < parameters.getRetryCount()) {
       int waitInterval = calculateWaitInterval(parameters.getWaitIntervalList(), nodeExecution.retryCount());
       return RetryAdvise.builder().retryNodeExecutionId(nodeExecution.getUuid()).waitInterval(waitInterval).build();
     }
-    return handlePostRetry(parameters);
+    return handlePostRetry(ambiance, parameters);
   }
 
-  private Advise handlePostRetry(RetryAdviserParameters parameters) {
+  private Advise handlePostRetry(Ambiance ambiance, RetryAdviserParameters parameters) {
     switch (parameters.getRepairActionCodeAfterRetry()) {
       case MANUAL_INTERVENTION:
       case ROLLBACK_WORKFLOW:
       case ROLLBACK_PHASE:
-      case END_EXECUTION:
-      case ABORT_WORKFLOW_EXECUTION:
         return null;
+      case END_EXECUTION:
+        return EndPlanAdvise.builder().build();
       case IGNORE:
         return NextStepAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
       default:
