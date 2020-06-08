@@ -11,10 +11,12 @@ import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
+import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.state.StepType;
 import io.harness.state.core.fork.ForkStep;
 import io.harness.state.core.fork.ForkStepParameters;
 import io.harness.yaml.core.Parallel;
@@ -63,7 +65,8 @@ public class ParallelStepPlanCreator implements SupportDefinedExecutorPlanCreato
         .uuid(deploymentStageUid)
         .name("parallel-step")
         .identifier("parallel-step-" + deploymentStageUid)
-        .stepType(ForkStep.STEP_TYPE)
+        .stepType(StepType.builder().type(ForkStep.STEP_TYPE.getType()).build())
+        .group(StepGroup.STEP.name())
         .stepParameters(ForkStepParameters.builder().parallelNodeIds(childNodeIds).build())
         .facilitatorObtainment(FacilitatorObtainment.builder()
                                    .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())

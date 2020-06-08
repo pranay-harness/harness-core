@@ -4,6 +4,7 @@ import static com.google.inject.Scopes.SINGLETON;
 
 import io.harness.executionplan.core.ExecutionPlanCreatorRegistry;
 import io.harness.executionplan.core.impl.ExecutionPlanCreatorRegistryImpl;
+import io.harness.executionplan.plancreator.GenericStepPlanCreator;
 import io.harness.executionplan.plancreator.ParallelStepPlanCreator;
 import io.harness.executionplan.plancreator.StagesPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
@@ -31,6 +32,7 @@ public class ExecutionPlanModule extends DependencyModule {
     bind(ParallelStepPlanCreator.class).in(SINGLETON);
     bind(ExecutionPlanCreatorHelper.class).in(SINGLETON);
     bind(StagesPlanCreator.class).in(SINGLETON);
+    bind(GenericStepPlanCreator.class).in(SINGLETON);
   }
 
   @Override

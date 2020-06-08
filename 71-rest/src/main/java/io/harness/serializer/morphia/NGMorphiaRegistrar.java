@@ -1,17 +1,22 @@
 package io.harness.serializer.morphia;
 
 import io.harness.cdng.artifact.bean.Artifact;
-import io.harness.cdng.artifact.bean.ArtifactAttributes;
 import io.harness.cdng.artifact.bean.DockerArtifact;
 import io.harness.cdng.artifact.bean.DockerArtifactAttributes;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
+import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
-import io.harness.cdng.artifact.state.ArtifactStepParameters;
+import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
+import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
+import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
+import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.infra.beans.InfraDefinition;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraDefinition;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
+import io.harness.cdng.service.Service;
+import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
@@ -27,14 +32,19 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Artifact.class);
     set.add(DockerArtifact.class);
     set.add(ArtifactSource.class);
-    set.add(DockerArtifactAttributes.class);
-    set.add(ArtifactAttributes.class);
   }
 
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
-    h.put("cdng.artifact.state.ArtifactStepParameters", ArtifactStepParameters.class);
+    h.put("cdng.artifact.steps.ArtifactStepParameters", ArtifactStepParameters.class);
     h.put("cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes", DockerArtifactSourceAttributes.class);
     h.put("cdng.artifact.bean.yaml.DockerHubArtifactConfig", DockerHubArtifactConfig.class);
+    h.put("cdng.artifact.bean.yaml.GcrArtifactConfig", GcrArtifactConfig.class);
+    h.put("cdng.service.steps.ServiceStepParameters", ServiceStepParameters.class);
+    h.put("cdng.service.Service", Service.class);
+    h.put("cdng.artifact.bean.yaml.ArtifactListConfig", ArtifactListConfig.class);
+    h.put("cdng.artifact.delegate.task.ArtifactTaskResponse", ArtifactTaskResponse.class);
+    h.put("cdng.artifact.bean.DockerArtifactAttributes", DockerArtifactAttributes.class);
+    h.put("cdng.artifact.delegate.task.ArtifactTaskParameters", ArtifactTaskParameters.class);
   }
 }

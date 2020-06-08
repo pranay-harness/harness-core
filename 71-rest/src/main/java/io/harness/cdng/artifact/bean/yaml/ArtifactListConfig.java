@@ -1,6 +1,7 @@
 package io.harness.cdng.artifact.bean.yaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.data.Outcome;
 import lombok.Builder;
 import lombok.Value;
 
@@ -11,7 +12,7 @@ import lombok.Value;
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ArtifactListConfig {
+public class ArtifactListConfig implements Outcome {
   ArtifactConfig primary;
 
   // TODO(archit): include sidecars after primary is done.

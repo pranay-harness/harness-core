@@ -1,4 +1,4 @@
-package io.harness.cdng.artifact.state;
+package io.harness.cdng.artifact.steps;
 
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.state.io.StepParameters;

@@ -11,10 +11,12 @@ import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanCreatorType;
+import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.state.StepType;
 import io.harness.state.core.section.chain.SectionChainStep;
 import io.harness.state.core.section.chain.SectionChainStepParameters;
 import io.harness.yaml.core.intfc.Stage;
@@ -67,7 +69,8 @@ public class StagesPlanCreator implements SupportDefinedExecutorPlanCreator<List
         .uuid(nodeId)
         .name(STAGES)
         .identifier(STAGES)
-        .stepType(SectionChainStep.STEP_TYPE)
+        .stepType(StepType.builder().type(SectionChainStep.STEP_TYPE.getType()).build())
+        .group(StepGroup.STAGES.name())
         .skipExpressionChain(true)
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeIds(planForStages.stream()

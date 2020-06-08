@@ -1,7 +1,6 @@
 package io.harness.cdng.artifact.bean.artifactsource;
 
 import io.harness.cdng.artifact.bean.connector.DockerhubConnectorConfig;
-import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig.DockerSpec;
 import io.harness.cdng.artifact.delegate.DelegateArtifactService;
 import io.harness.cdng.artifact.delegate.DockerArtifactService;
 import lombok.Builder;
@@ -12,12 +11,17 @@ import lombok.Value;
  * DTO object to be passed to delegate tasks.
  */
 @Value
+@Builder
 @EqualsAndHashCode(callSuper = false)
-public class DockerArtifactSourceAttributes extends DockerSpec implements ArtifactSourceAttributes {
-  @Builder(builderMethodName = "newBuilder")
-  public DockerArtifactSourceAttributes(String dockerhubConnector, String imagePath, String tag, String tagRegex) {
-    super(dockerhubConnector, imagePath, tag, tagRegex);
-  }
+public class DockerArtifactSourceAttributes implements ArtifactSourceAttributes {
+  /** Docker hub registry connector. */
+  String dockerhubConnector;
+  /** Images in repos need to be referenced via a path. */
+  String imagePath;
+  /** Tag refers to exact tag number. */
+  String tag;
+  /** Tag regex is used to get latest build from builds matching regex. */
+  String tagRegex;
 
   @Override
   public Class<? extends DelegateArtifactService<DockerhubConnectorConfig>> getDelegateArtifactService() {
