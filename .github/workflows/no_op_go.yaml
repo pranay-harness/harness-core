@@ -1,0 +1,74 @@
+name: No-op Tests for Go
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  no_op_go:
+    if: contains(github.event.pull_request.labels.*.name, 'go')
+    name: No-op tests for Go
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Complete unit-tests-0
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: unit-tests-0
+          description: 'Mark unit-tests-0 as success'
+          state: 'success'
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
+
+      - name: Complete unit-tests-1
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: unit-tests-1
+          description: 'Mark unit-tests-1 as success'
+          state: 'success'
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
+
+      - name: Complete unit-tests-2
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: unit-tests-2
+          description: 'Mark unit-tests-2 as success'
+          state: 'success'
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
+
+      - name: Complete functional-tests
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: functional-tests
+          description: 'Mark functional-tests as success'
+          state: 'success'
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
+
+      - name: Complete pmd-checks
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: pmd-checks
+          description: 'Mark pmd-checks as success'
+          state: 'success'
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
+
+      - name: Complete warnings-checks
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: warnings-checks
+          description: 'Mark warnings-checks as success'
+          state: 'success'
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
+
+      - name: Complete check-style
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: check-style
+          description: 'Mark check-style as success'
+          state: 'success'
+          sha: ${{github.event.pull_request.head.sha || github.sha}}

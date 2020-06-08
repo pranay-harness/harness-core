@@ -1,4 +1,4 @@
-name: Running Unit tests
+name: Go Build
 on:
   pull_request:
     branches:
