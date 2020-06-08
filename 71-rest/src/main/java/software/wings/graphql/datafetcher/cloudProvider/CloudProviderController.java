@@ -44,7 +44,8 @@ public class CloudProviderController {
         break;
       case KUBERNETES:
       case KUBERNETES_CLUSTER:
-        cloudProviderBuilder = QLKubernetesClusterCloudProvider.builder();
+        cloudProviderBuilder = QLKubernetesClusterCloudProvider.builder().skipK8sEventCollection(
+            getSkipK8sEventCollectionBoolean(settingAttribute));
         break;
       case PCF:
         cloudProviderBuilder = QLPcfCloudProvider.builder();
@@ -63,6 +64,14 @@ public class CloudProviderController {
     if (settingAttribute.getValue() instanceof CloudCostAware
         && ((CloudCostAware) settingAttribute.getValue()).getCcmConfig() != null) {
       return ((CloudCostAware) settingAttribute.getValue()).getCcmConfig().isCloudCostEnabled();
+    }
+    return false;
+  }
+
+  public static boolean getSkipK8sEventCollectionBoolean(SettingAttribute settingAttribute) {
+    if (settingAttribute.getValue() instanceof CloudCostAware
+        && ((CloudCostAware) settingAttribute.getValue()).getCcmConfig() != null) {
+      return ((CloudCostAware) settingAttribute.getValue()).getCcmConfig().isSkipK8sEventCollection();
     }
     return false;
   }

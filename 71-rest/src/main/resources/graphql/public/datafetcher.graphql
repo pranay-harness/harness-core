@@ -14,7 +14,7 @@ enum DataFetcherEnum {
   budgetNotifications
   budgetTrendStats
   ceConnector
-  ceHealthStatusta
+  ceHealthStatus
   cloudEntityStats
   cloudFilterValues
   cloudOverview
