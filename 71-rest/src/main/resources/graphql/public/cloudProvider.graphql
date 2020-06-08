@@ -40,7 +40,6 @@ interface CloudProvider {
   type: String
   # The field is work in progress.
   isContinuousEfficiencyEnabled: Boolean
-  ceHealthStatus: CEHealthStatus
 }
 
 type CloudProviderConnection {
@@ -76,7 +75,7 @@ type AwsCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
-  ceHealthStatus: CEHealthStatus
+  ceHealthStatus: CEHealthStatus @dataFetcher(name: ceHealthStatus)
 }
 
 type PhysicalDataCenterCloudProvider implements CloudProvider {
@@ -87,7 +86,6 @@ type PhysicalDataCenterCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
-  ceHealthStatus: CEHealthStatus
 }
 
 type AzureCloudProvider implements CloudProvider {
@@ -98,7 +96,6 @@ type AzureCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
-  ceHealthStatus: CEHealthStatus
 }
 
 type GcpCloudProvider implements CloudProvider {
@@ -109,7 +106,6 @@ type GcpCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
-  ceHealthStatus: CEHealthStatus
 }
 
 type KubernetesCloudProvider implements CloudProvider {
@@ -120,7 +116,8 @@ type KubernetesCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
-  ceHealthStatus: CEHealthStatus
+  skipK8sEventCollection: Boolean
+  ceHealthStatus: CEHealthStatus @dataFetcher(name: ceHealthStatus)
 }
 
 type PcfCloudProvider implements CloudProvider {
@@ -131,7 +128,6 @@ type PcfCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
-  ceHealthStatus: CEHealthStatus
 }
 
 type SpotInstCloudProvider implements CloudProvider {
@@ -142,5 +138,4 @@ type SpotInstCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
-  ceHealthStatus: CEHealthStatus
 }

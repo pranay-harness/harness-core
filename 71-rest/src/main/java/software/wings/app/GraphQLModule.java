@@ -70,6 +70,7 @@ import software.wings.graphql.datafetcher.budget.BudgetDataFetcher;
 import software.wings.graphql.datafetcher.budget.BudgetListDataFetcher;
 import software.wings.graphql.datafetcher.budget.BudgetNotificationsDataFetcher;
 import software.wings.graphql.datafetcher.budget.BudgetTrendStatsDataFetcher;
+import software.wings.graphql.datafetcher.ce.CeHealthStatusDataFetcher;
 import software.wings.graphql.datafetcher.cloudProvider.CloudProviderConnectionDataFetcher;
 import software.wings.graphql.datafetcher.cloudProvider.CloudProviderDataFetcher;
 import software.wings.graphql.datafetcher.cloudProvider.CloudProviderStatsDataFetcher;
@@ -245,6 +246,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ClusterDataFetcher.class);
     bindDataFetcherWithAnnotation(ClusterConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ConnectorConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(CeHealthStatusDataFetcher.class);
     bindDataFetcherWithAnnotation(CeConnectorDataFetcher.class);
     bindDataFetcherWithAnnotation(ConnectorStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudFilterValuesDataFetcher.class);

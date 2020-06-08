@@ -6,10 +6,12 @@ import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import io.harness.ccm.health.CEHealthStatus;
 import io.harness.ccm.health.HealthStatusService;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.CEHealthStatusDTO;
 import software.wings.graphql.schema.type.cloudProvider.QLCloudProvider;
 
-public class CEHealthStatusDataFetcher implements DataFetcher<CEHealthStatusDTO> {
+@Slf4j
+public class CeHealthStatusDataFetcher implements DataFetcher<CEHealthStatusDTO> {
   @Inject HealthStatusService healthStatusService;
 
   public DataFetcher get() {
@@ -29,7 +31,8 @@ public class CEHealthStatusDataFetcher implements DataFetcher<CEHealthStatusDTO>
           .clusterHealthStatusList(ceHealthStatus.getClusterHealthStatusList())
           .build();
     } catch (IllegalArgumentException e) {
-      return null;
+      logger.error("Exception getting health status", e);
     }
+    return null;
   }
 }

@@ -28,7 +28,7 @@ import software.wings.graphql.schema.type.cloudProvider.QLKubernetesClusterCloud
 import java.util.Arrays;
 import java.util.List;
 
-public class CEHealthStatusDataFetcherTest extends CategoryTest {
+public class CeHealthStatusDataFetcherTest extends CategoryTest {
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
   private String clusterId = "CLUSTER_ID";
   private String errorMessage = String.format(CEError.PERPETUAL_TASK_NOT_ASSIGNED.getMessage(), clusterId);
@@ -45,7 +45,7 @@ public class CEHealthStatusDataFetcherTest extends CategoryTest {
   private CEHealthStatusDTO ceHealthStatusDTO;
 
   @Mock private HealthStatusService healthStatusService;
-  @InjectMocks CEHealthStatusDataFetcher ceHealthStatusDataFetcher;
+  @InjectMocks CeHealthStatusDataFetcher ceHealthStatusDataFetcher;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Before

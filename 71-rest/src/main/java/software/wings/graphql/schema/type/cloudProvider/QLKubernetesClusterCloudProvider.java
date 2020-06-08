@@ -20,6 +20,7 @@ public class QLKubernetesClusterCloudProvider implements QLCloudProvider {
   private QLUser createdBy;
   private String type;
   private boolean isContinuousEfficiencyEnabled;
+  private boolean skipK8sEventCollection;
   private CEHealthStatus ceHealthStatus;
 
   public static class QLKubernetesClusterCloudProviderBuilder implements QLCloudProviderBuilder {}
