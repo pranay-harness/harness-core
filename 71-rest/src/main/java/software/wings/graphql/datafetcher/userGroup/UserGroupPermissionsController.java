@@ -13,6 +13,8 @@ import static software.wings.graphql.schema.type.permissions.QLAccountPermission
 import static software.wings.security.PermissionAttribute.Action.CREATE;
 import static software.wings.security.PermissionAttribute.Action.DELETE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
@@ -151,6 +153,10 @@ public class UserGroupPermissionsController {
         return DELETE;
       case EXECUTE:
         return EXECUTE;
+      case EXECUTE_PIPELINE:
+        return EXECUTE_PIPELINE;
+      case EXECUTE_WORKFLOW:
+        return EXECUTE_WORKFLOW;
       default:
         logger.error("Invalid Action {} given by the user", action.toString());
     }
@@ -396,6 +402,10 @@ public class UserGroupPermissionsController {
         return QLActions.DELETE;
       case EXECUTE:
         return QLActions.EXECUTE;
+      case EXECUTE_PIPELINE:
+        return QLActions.EXECUTE_PIPELINE;
+      case EXECUTE_WORKFLOW:
+        return QLActions.EXECUTE_WORKFLOW;
       default:
         logger.error("Invalid Action {} given by the user", action.toString());
     }

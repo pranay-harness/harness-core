@@ -132,7 +132,8 @@ public class UserGroupPermissionValidator {
         }
       } else {
         // All other PermissionType doesn't support the execute operation
-        if (actions.contains(QLActions.EXECUTE)) {
+        if (actions.contains(QLActions.EXECUTE) || actions.contains(QLActions.EXECUTE_WORKFLOW)
+            || actions.contains(QLActions.EXECUTE_PIPELINE)) {
           throw new InvalidRequestException(
               String.format("Invalid action EXECUTE  for the %s permission type", permissionType.getStringValue()));
         }

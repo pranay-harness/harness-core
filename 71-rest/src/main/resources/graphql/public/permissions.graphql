@@ -14,6 +14,8 @@ enum Actions {
   UPDATE
   DELETE
   EXECUTE
+  EXECUTE_WORKFLOW
+  EXECUTE_PIPELINE
 }
 
 input AccountPermissionInput {
