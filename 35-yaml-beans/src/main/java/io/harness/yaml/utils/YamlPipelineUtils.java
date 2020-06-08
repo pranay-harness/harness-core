@@ -65,7 +65,7 @@ public class YamlPipelineUtils {
    * @throws JsonMappingException the json mapping exception
    * @throws IOException          Signals that an I/O exception has occurred.
    */
-  public static <T> T read(URL yaml, Class<T> cls) throws JsonParseException, JsonMappingException, IOException {
+  public static <T> T read(URL yaml, Class<T> cls) throws IOException {
     return mapper.readValue(yaml, cls);
   }
 }

@@ -5,10 +5,10 @@ import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.beans.steps.AbstractStepWithMetaInfo;
 import io.harness.beans.steps.StepInfoType;
 import io.harness.beans.steps.TypeInfo;
+import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
 import io.harness.executionplan.plancreator.beans.GenericStepInfo;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.state.StepType;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,36 +21,26 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@JsonTypeName("upload")
-public class UploadStepInfo extends AbstractStepWithMetaInfo implements GenericStepInfo {
+@JsonTypeName("publish")
+public class PublishStepInfo extends AbstractStepWithMetaInfo implements GenericStepInfo {
   @JsonView(JsonViews.Internal.class)
   @NotNull
   public static final TypeInfo typeInfo = TypeInfo.builder()
-                                              .stepInfoType(StepInfoType.UPLOAD)
-                                              .stepType(StepType.builder().type(StepInfoType.UPLOAD.name()).build())
+                                              .stepInfoType(StepInfoType.PUBLISH)
+                                              .stepType(StepType.builder().type(StepInfoType.PUBLISH.name()).build())
                                               .build();
-  @NotNull List<Item> items;
+  @NotNull List<Artifact> artifacts;
 
   @Builder
-  public UploadStepInfo(String type, String identifier, String name, List<String> dependencies, Integer retry,
-      Integer timeout, List<Item> items) {
+  public PublishStepInfo(String type, String identifier, String name, List<String> dependencies, Integer retry,
+      Integer timeout, List<Artifact> artifacts) {
     super(type, identifier, name, dependencies, retry, timeout);
-    this.items = items;
+    this.artifacts = artifacts;
   }
 
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
-  }
-
-  @Data
-  @Builder
-  @NoArgsConstructor
-  @AllArgsConstructor
-  private static class Item {
-    private String filePattern;
-    private String destination;
-    private String connector;
   }
 
   @Override
