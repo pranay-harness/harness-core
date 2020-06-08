@@ -47,12 +47,12 @@ public class ProjectServiceImpl implements ProjectService {
 
   @Override
   public Project update(@Valid Project project) {
-    Objects.requireNonNull(project.getUuid());
+    Objects.requireNonNull(project.getId());
     return projectRepository.save(project);
   }
 
   @Override
-  public List<Project> getAll() {
+  public List<Project> getAll(String organizationId) {
     return Lists.newArrayList(projectRepository.findAll());
   }
 }

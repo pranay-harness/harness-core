@@ -6,17 +6,17 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
+import javax.validation.constraints.Size;
 
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProjectDTO {
+public class OrganizationDTO {
   String id;
   String accountId;
-  String orgId;
   String identifier;
   String name;
+  String color;
   String description;
-  List<String> owners;
-  List<String> tags;
+  @Size(max = 128) List<String> tags;
 }

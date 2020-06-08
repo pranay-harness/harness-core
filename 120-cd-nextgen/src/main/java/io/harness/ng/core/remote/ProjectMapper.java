@@ -22,7 +22,7 @@ public class ProjectMapper {
 
   ProjectDTO writeDTO(Project project) {
     return ProjectDTO.builder()
-        .uuid(project.getUuid())
+        .id(project.getId())
         .accountId(project.getAccountId())
         .orgId(project.getOrgId())
         .identifier(project.getIdentifier())
