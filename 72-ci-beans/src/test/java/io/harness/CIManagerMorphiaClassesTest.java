@@ -4,10 +4,10 @@ import static io.harness.rule.OwnerRule.HARSH;
 
 import com.google.common.collect.ImmutableSet;
 
-import io.harness.beans.morphia.CIBeansMorphiaRegistrar;
 import io.harness.category.element.UnitTests;
 import io.harness.morphia.MorphiaModule;
 import io.harness.rule.Owner;
+import io.harness.serializer.morphia.CIBeansMorphiaRegistrar;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

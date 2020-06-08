@@ -24,15 +24,16 @@ import io.harness.plan.PlanNode;
 import io.harness.states.IntegrationStageStep;
 import io.harness.yaml.core.Execution;
 
+import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.List;
 
 public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCreator<IntegrationStage> {
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
-
+  private static final SecureRandom random = new SecureRandom();
   @Override
   public CreateExecutionPlanResponse createPlan(IntegrationStage integrationStage, CreateExecutionPlanContext context) {
-    String podName = generatePodName(integrationStage);
+    final String podName = generatePodName(integrationStage);
     IntegrationStageExecutionModifier integrationStageExecutionModifier =
         IntegrationStageExecutionModifier.builder().podName(podName).build();
 
@@ -42,7 +43,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
 
     final CreateExecutionPlanResponse planForExecution = createPlanForExecution(modifiedExecutionPlan, context);
 
-    final PlanNode deploymentStageNode = prepareDeploymentNode(integrationStage, context, planForExecution);
+    final PlanNode deploymentStageNode = prepareDeploymentNode(integrationStage, context, planForExecution, podName);
 
     return CreateExecutionPlanResponse.builder()
         .planNode(deploymentStageNode)
@@ -59,7 +60,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   }
 
   private PlanNode prepareDeploymentNode(IntegrationStage integrationStage, CreateExecutionPlanContext context,
-      CreateExecutionPlanResponse planForExecution) {
+      CreateExecutionPlanResponse planForExecution, String podName) {
     final String deploymentStageUid = generateUuid();
 
     return PlanNode.builder()
@@ -69,6 +70,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
         .stepType(IntegrationStageStep.STEP_TYPE)
         .stepParameters(
             IntegrationStageStepParameters.builder()
+                .podName(podName)
                 .integrationStage(integrationStage)
                 .fieldToExecutionNodeIdMap(ImmutableMap.of(CHILD_PLAN_START_NODE, planForExecution.getStartingNodeId()))
                 .build())
@@ -89,7 +91,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   }
 
   private String generatePodName(IntegrationStage integrationStage) {
-    // TODO Use better pod naming strategy after discussion with PM
-    return POD_NAME + "-" + integrationStage.getIdentifier();
+    // TODO Use better pod naming strategy after discussion with PM, attach build number in future
+    return POD_NAME + "-" + integrationStage.getIdentifier() + random.nextInt(100000000);
   }
 }

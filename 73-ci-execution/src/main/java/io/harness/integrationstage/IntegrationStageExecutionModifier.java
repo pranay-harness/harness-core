@@ -41,7 +41,7 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
   private static final String ENV_SETUP_NAME = "envSetupName";
   private static final String CONTAINER_NAME = "build-setup";
   private static final String CLEANUP_STEP_NAME = "cleanupStep";
-  String podName;
+  private String podName;
   private static final ImageDetails imageDetails = ImageDetails.builder()
                                                        .name("maven")
                                                        .tag("3.6.3-jdk-8")
@@ -94,10 +94,15 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
   }
 
   private BuildJobEnvInfo getCIBuildJobEnvInfo(IntegrationStage integrationStage) {
-    return K8BuildJobEnvInfo.builder()
-        .podsSetupInfo(getCIPodsSetupInfo(integrationStage))
-        .workDir(integrationStage.getWorkingDirectory())
-        .build();
+    // TODO Only kubernetes is supported currently
+    if (integrationStage.getInfrastructure().getType().equals("kubernetes-direct")) {
+      return K8BuildJobEnvInfo.builder()
+          .podsSetupInfo(getCIPodsSetupInfo(integrationStage))
+          .workDir(integrationStage.getWorkingDirectory())
+          .build();
+    } else {
+      throw new IllegalArgumentException("Input infrastructure type is not of type kubernetes");
+    }
   }
 
   private K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfo(IntegrationStage integrationStage) {

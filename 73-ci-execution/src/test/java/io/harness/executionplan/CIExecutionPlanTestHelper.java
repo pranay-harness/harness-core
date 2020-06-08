@@ -118,7 +118,7 @@ public class CIExecutionPlanTestHelper {
 
   public Infrastructure getInfrastructure() {
     return K8sDirectInfraYaml.builder()
-        .type("kubernetes-gcp")
+        .type("kubernetes-direct")
         .spec(K8sDirectInfraYaml.Spec.builder().k8sConnector("testGcpConnector").namespace("testNamespace").build())
         .build();
   }

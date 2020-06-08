@@ -1,11 +1,8 @@
 package io.harness.states;
 
 import static java.util.stream.Collectors.toList;
-import static software.wings.common.CICommonPodConstants.CLUSTER_NAME;
 import static software.wings.common.CICommonPodConstants.CONTAINER_NAME;
 import static software.wings.common.CICommonPodConstants.MOUNT_PATH;
-import static software.wings.common.CICommonPodConstants.NAMESPACE;
-import static software.wings.common.CICommonPodConstants.PODNAME;
 import static software.wings.common.CICommonPodConstants.REL_STDERR_FILE_PATH;
 import static software.wings.common.CICommonPodConstants.REL_STDOUT_FILE_PATH;
 
@@ -15,12 +12,16 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Produces;
 import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.steps.stepinfo.BuildStepInfo;
+import io.harness.beans.sweepingoutputs.ContextElement;
+import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.network.SafeHttpCall;
+import io.harness.references.SweepingOutputRefObject;
+import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
@@ -43,6 +44,7 @@ public class BuildStep implements Step, SyncExecutable {
   @Inject private ManagerCIResource managerCIResource;
   @Inject EngineExpressionService engineExpressionService;
   public static final StepType STEP_TYPE = BuildStepInfo.typeInfo.getStepType();
+  @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
 
   // TODO Async can not be supported at this point. We have to build polling framework on CI manager.
   //     Async will be supported once we will have delegate microservice ready.
@@ -51,9 +53,11 @@ public class BuildStep implements Step, SyncExecutable {
   public StepResponse executeSync(
       Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
     try {
-      final String namespace = (String) ambiance.getInputArgs().get(NAMESPACE);
-      final String clusterName = (String) ambiance.getInputArgs().get(CLUSTER_NAME);
-      final String podName = (String) ambiance.getInputArgs().get(PODNAME);
+      K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
+          ambiance, SweepingOutputRefObject.builder().name(ContextElement.podDetails).build());
+      final String namespace = k8PodDetails.getNamespace();
+      final String clusterName = k8PodDetails.getClusterName();
+      final String podName = k8PodDetails.getPodName();
 
       BuildStepInfo buildStepInfo = (BuildStepInfo) stepParameters;
 

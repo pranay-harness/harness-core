@@ -12,11 +12,13 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
+import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.plan.input.InputArgs;
+import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
@@ -37,6 +39,7 @@ public class BuildEnvSetupStepTest extends CIExecutionTest {
   @Mock private BuildSetupUtils buildSetupUtils;
   @Mock private Ambiance ambiance;
   @Mock private InputArgs inputArgs;
+  @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
 
   @Before
   public void setUp() {
@@ -57,6 +60,8 @@ public class BuildEnvSetupStepTest extends CIExecutionTest {
     when(buildSetupUtils.executeCISetupTask(any(), any())).thenReturn(restResponse);
     when(ambiance.getInputArgs()).thenReturn(inputArgs);
     when(inputArgs.get(any())).thenReturn("abc");
+    when(executionSweepingOutputResolver.resolve(any(), any()))
+        .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
 
     buildEnvSetupStep.executeSync(null, BuildEnvSetupStepInfo.builder().build(), null, null);
 

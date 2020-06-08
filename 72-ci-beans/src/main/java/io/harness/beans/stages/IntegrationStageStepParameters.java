@@ -10,5 +10,6 @@ import java.util.Map;
 @Builder
 public class IntegrationStageStepParameters implements StepParameters {
   private IntegrationStage integrationStage;
+  private String podName;
   private Map<String, String> fieldToExecutionNodeIdMap;
 }
