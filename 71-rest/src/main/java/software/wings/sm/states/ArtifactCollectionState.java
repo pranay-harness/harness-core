@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.valueOf;
@@ -13,10 +14,12 @@ import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delay.DelayEventHelper;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,8 +32,12 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.service.ArtifactStreamHelper;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
@@ -41,6 +48,7 @@ import software.wings.stencils.DefaultValue;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -55,11 +63,17 @@ public class ArtifactCollectionState extends State {
   @Attributes(title = "Regex") @Getter @Setter private boolean regex;
   @Attributes(title = "Build / Tag") @Getter @Setter private String buildNo;
 
+  @SchemaIgnore private Map<String, Object> runtimeValues;
+
   @Inject private transient ArtifactStreamService artifactStreamService;
   @Inject private transient ArtifactService artifactService;
   @Inject private transient WorkflowExecutionService workflowExecutionService;
   @Inject private transient DelayEventHelper delayEventHelper;
   @Inject private transient FeatureFlagService featureFlagService;
+  @Inject private transient ArtifactStreamHelper artifactStreamHelper;
+  @Inject private transient ExecutorService executorService;
+  @Inject private transient BuildSourceService buildSourceService;
+  @Inject private transient ArtifactCollectionUtils artifactCollectionUtils;
 
   private static int DELAY_TIME_IN_SEC = 60;
   public static final long DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS = 5L * 60L * 1000L; // 5 minutes
@@ -79,9 +93,48 @@ public class ArtifactCollectionState extends State {
           .build();
     }
 
-    String evaluatedBuildNo = getEvaluatedBuildNo(context);
-
-    Artifact lastCollectedArtifact = fetchCollectedArtifact(artifactStream, evaluatedBuildNo);
+    String evaluatedBuildNo;
+    Artifact lastCollectedArtifact;
+    if (artifactStream.isArtifactStreamParameterized()
+        && featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, artifactStream.getAccountId())) {
+      if (isEmpty(runtimeValues)) {
+        logger.info("Artifact Source {} parameterized. However, runtime values not provided", artifactStream.getName());
+        return ExecutionResponse.builder()
+            .executionStatus(ExecutionStatus.FAILED)
+            .errorMessage("Artifact source parameterized. Please provide runtime values.")
+            .build();
+      }
+      if (isBlank(buildNo)) {
+        logger.info("Artifact Source {} parameterized. However, Build Number not provided", artifactStream.getName());
+        return ExecutionResponse.builder()
+            .executionStatus(ExecutionStatus.FAILED)
+            .errorMessage("Artifact source parameterized. Please provide Build Number.")
+            .build();
+      }
+      evaluatedBuildNo = context.renderExpression(buildNo);
+      runtimeValues.put("buildNo", evaluatedBuildNo);
+      artifactStreamHelper.resolveArtifactStreamRuntimeValues(artifactStream, runtimeValues);
+      artifactStream.setSourceName(artifactStream.generateSourceName());
+      lastCollectedArtifact = fetchCollectedArtifactForParameterizedArtifactStream(artifactStream, evaluatedBuildNo);
+      if (lastCollectedArtifact == null) {
+        BuildDetails buildDetails = buildSourceService.getBuild(
+            artifactStream.getAppId(), artifactStreamId, artifactStream.getSettingId(), runtimeValues);
+        if (buildDetails == null) {
+          logger.info(
+              "Failed to get Build Number {} for Artifact stream {}", evaluatedBuildNo, artifactStream.getName());
+          return ExecutionResponse.builder()
+              .executionStatus(ExecutionStatus.FAILED)
+              .errorMessage(
+                  "Failed to get Build Number " + evaluatedBuildNo + " for Artifact Source " + artifactStream.getName())
+              .build();
+        }
+        lastCollectedArtifact = artifactService.create(
+            artifactCollectionUtils.getArtifact(artifactStream, buildDetails), artifactStream, false);
+      }
+    } else {
+      evaluatedBuildNo = getEvaluatedBuildNo(context);
+      lastCollectedArtifact = fetchCollectedArtifact(artifactStream, evaluatedBuildNo);
+    }
 
     if (lastCollectedArtifact != null) {
       ArtifactCollectionExecutionData artifactCollectionExecutionData =
@@ -255,6 +308,15 @@ public class ArtifactCollectionState extends State {
     }
   }
 
+  private Artifact fetchCollectedArtifactForParameterizedArtifactStream(ArtifactStream artifactStream, String buildNo) {
+    if (isBlank(buildNo)) {
+      throw new InvalidRequestException("Artifact stream is parameterized. However, build number not provided");
+    } else {
+      return artifactService.getArtifactByBuildNumberAndSourceName(
+          artifactStream, buildNo, isRegex(), artifactStream.getSourceName());
+    }
+  }
+
   private EntityType fetchEntityType() {
     // TODO: ASR: observations:
     //   1. if entityType is present, entityId should not be blank
@@ -276,5 +338,9 @@ public class ArtifactCollectionState extends State {
 
   private boolean isMultiArtifact(String accountId) {
     return featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId);
+  }
+
+  public void setRuntimeValues(Map<String, Object> runtimeValues) {
+    this.runtimeValues = runtimeValues;
   }
 }

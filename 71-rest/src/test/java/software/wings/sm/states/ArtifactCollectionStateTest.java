@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -19,6 +20,7 @@ import static software.wings.sm.states.ArtifactCollectionState.DEFAULT_ARTIFACT_
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -47,15 +49,21 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.service.ArtifactStreamHelper;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
@@ -65,6 +73,8 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.WorkflowStandardParams.Builder;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class ArtifactCollectionStateTest extends CategoryTest {
@@ -80,6 +90,9 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   @Mock AccountService accountService;
   @Mock FeatureFlagService featureFlagService;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private ArtifactStreamHelper artifactStreamHelper;
+  @Mock private BuildSourceService buildSourceService;
+  @Mock private ArtifactCollectionUtils artifactCollectionUtils;
 
   private ManagerExpressionEvaluator expressionEvaluator = new ManagerExpressionEvaluator();
 
@@ -95,6 +108,20 @@ public class ArtifactCollectionStateTest extends CategoryTest {
                                                             .serviceId(SERVICE_ID)
                                                             .artifactPaths(asList("*WAR"))
                                                             .build();
+  private NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                        .accountId(ACCOUNT_ID)
+                                                        .appId(APP_ID)
+                                                        .settingId(SETTING_ID)
+                                                        .jobname("${repo}")
+                                                        .groupId("${groupId}")
+                                                        .artifactPaths(asList("${path}"))
+                                                        .autoPopulate(false)
+                                                        .serviceId(SERVICE_ID)
+                                                        .name("testNexus")
+                                                        .uuid(ARTIFACT_STREAM_ID)
+                                                        .sourceName(ARTIFACT_SOURCE_NAME)
+                                                        .build();
+
   private WorkflowStandardParams workflowStandardParams =
       Builder.aWorkflowStandardParams()
           .withAppId(APP_ID)
@@ -133,6 +160,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
     when(delayEventHelper.delay(anyInt(), any())).thenReturn("anyGUID");
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
+    nexusArtifactStream.setArtifactStreamParameterized(true);
   }
 
   @Test
@@ -222,5 +250,103 @@ public class ArtifactCollectionStateTest extends CategoryTest {
 
     // TODO: getErrorMsg returns null - is this expected
     // assertThat(executionContext.getStateExecutionData().getErrorMsg()).isNotBlank();
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldExecuteForParameterizedArtifactStreamWithLastCollectedArtifact() {
+    Map<String, Object> runtimeValues = new HashMap<>();
+    runtimeValues.put("repo", "harness-maven");
+    runtimeValues.put("group", "mygroup");
+    runtimeValues.put("artifactId", "todolist");
+    artifactCollectionState.setRuntimeValues(runtimeValues);
+    artifactCollectionState.setBuildNo("1.0");
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    when(artifactService.getArtifactByBuildNumberAndSourceName(
+             nexusArtifactStream, "1.0", false, "${repo}/${groupId}/${path}"))
+        .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
+    artifactCollectionState.execute(executionContext);
+    verify(artifactStreamService).get(ARTIFACT_STREAM_ID);
+    verify(workflowExecutionService).refreshBuildExecutionSummary(anyString(), any());
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldExecuteForParameterizedArtifactStreamWithNewBuild() {
+    Map<String, Object> runtimeValues = new HashMap<>();
+    runtimeValues.put("repo", "harness-maven");
+    runtimeValues.put("group", "mygroup");
+    runtimeValues.put("artifactId", "todolist");
+    artifactCollectionState.setRuntimeValues(runtimeValues);
+    artifactCollectionState.setBuildNo("1.1");
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    when(artifactService.getArtifactByBuildNumberAndSourceName(
+             nexusArtifactStream, "1.1", false, "${repo}/${groupId}/${path}"))
+        .thenReturn(null);
+    when(buildSourceService.getBuild(anyString(), anyString(), anyString(), any()))
+        .thenReturn(BuildDetails.Builder.aBuildDetails().withNumber("1.1").build());
+    Map<String, String> map = new HashMap<>();
+    map.put("buildNo", "1.1");
+    Artifact artifact = Artifact.Builder.anArtifact().withMetadata(map).withUuid(ARTIFACT_ID).build();
+    when(artifactCollectionUtils.getArtifact(any(), any())).thenReturn(artifact);
+    when(artifactService.create(artifact, nexusArtifactStream, false)).thenReturn(artifact);
+    artifactCollectionState.execute(executionContext);
+    verify(artifactStreamService).get(ARTIFACT_STREAM_ID);
+    verify(workflowExecutionService).refreshBuildExecutionSummary(anyString(), any());
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotExecuteWithoutRuntimeValuesForParameterizedArtifactStream() {
+    Map<String, Object> runtimeValues = new HashMap<>();
+    artifactCollectionState.setRuntimeValues(runtimeValues);
+    artifactCollectionState.setBuildNo("1.1");
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotExecuteWithoutBuildNumberForParameterizedArtifactStream() {
+    Map<String, Object> runtimeValues = new HashMap<>();
+    runtimeValues.put("repo", "harness-maven");
+    runtimeValues.put("group", "mygroup");
+    runtimeValues.put("artifactId", "todolist");
+    artifactCollectionState.setRuntimeValues(runtimeValues);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldNotExecuteIfArtifactCollectionFailsForParameterizedArtifactStream() {
+    Map<String, Object> runtimeValues = new HashMap<>();
+    runtimeValues.put("repo", "harness-maven");
+    runtimeValues.put("group", "mygroup");
+    runtimeValues.put("artifactId", "todolist");
+    artifactCollectionState.setRuntimeValues(runtimeValues);
+    artifactCollectionState.setBuildNo("1.1");
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    when(artifactService.getArtifactByBuildNumberAndSourceName(
+             nexusArtifactStream, "1.1", false, "${repo}/${groupId}/${path}"))
+        .thenReturn(null);
+    when(buildSourceService.getBuild(anyString(), anyString(), anyString(), any())).thenReturn(null);
+    ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 }
