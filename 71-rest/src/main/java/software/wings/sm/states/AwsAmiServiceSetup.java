@@ -131,6 +131,8 @@ public class AwsAmiServiceSetup extends State {
     awsAmiExecutionData.setOldAutoScalingGroupName(amiServiceSetupResponse.getLastDeployedAsgName());
     awsAmiExecutionData.setNewVersion(amiServiceSetupResponse.getHarnessRevision());
     awsAmiExecutionData.setDelegateMetaInfo(amiServiceSetupResponse.getDelegateMetaInfo());
+    awsAmiExecutionData.setDesiredInstances(amiServiceSetupResponse.getDesiredInstances());
+    awsAmiExecutionData.setMaxInstances(amiServiceSetupResponse.getMaxInstances());
 
     AmiServiceSetupElement amiServiceElement =
         AmiServiceSetupElement.builder()
@@ -288,9 +290,12 @@ public class AwsAmiServiceSetup extends State {
       awsAmiExecutionData =
           AwsAmiSetupExecutionData.builder()
               .activityId(activity.getUuid())
-              .maxInstances(spotinstStateHelper.renderCount(maxInstances, context, DEFAULT_AMI_ASG_MAX_INSTANCES))
-              .desiredInstances(
-                  spotinstStateHelper.renderCount(desiredInstances, context, DEFAULT_AMI_ASG_DESIRED_INSTANCES))
+              .maxInstances(useCurrentRunningCount
+                      ? null
+                      : spotinstStateHelper.renderCount(maxInstances, context, DEFAULT_AMI_ASG_MAX_INSTANCES))
+              .desiredInstances(useCurrentRunningCount
+                      ? null
+                      : spotinstStateHelper.renderCount(desiredInstances, context, DEFAULT_AMI_ASG_DESIRED_INSTANCES))
               .resizeStrategy(resizeStrategy)
               .build();
 
