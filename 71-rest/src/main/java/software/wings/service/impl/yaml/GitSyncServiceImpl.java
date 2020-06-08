@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.aggregation.Group.first;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
@@ -17,6 +18,7 @@ import static software.wings.beans.security.UserGroup.ACCOUNT_ID_KEY;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
+import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.EMPTY_STR;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitIdOfError;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getCommitMessageOfError;
 import static software.wings.service.impl.yaml.sync.GitSyncErrorUtils.getYamlContentOfError;
@@ -69,6 +71,7 @@ import software.wings.yaml.gitSync.GitFileActivity.GitFileActivityKeys;
 import software.wings.yaml.gitSync.GitFileActivity.Status;
 import software.wings.yaml.gitSync.GitFileActivity.TriggeredBy;
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
+import software.wings.yaml.gitSync.GitWebhookRequestAttributes;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
@@ -363,14 +366,14 @@ public class GitSyncServiceImpl implements GitSyncService {
   private GitDetail createGitDetail(YamlGitConfig yamlGitConfig, Map<String, String> gitConnectorIdNameMap) {
     String gitConnectorName =
         getConnectorNameFromConnectorIdMap(yamlGitConfig.getGitConnectorId(), gitConnectorIdNameMap);
-    return buildGitDetail(yamlGitConfig, gitConnectorName);
+    return buildGitDetail(yamlGitConfig, gitConnectorName, EMPTY_STR);
   }
 
   private String getConnectorNameFromConnectorIdMap(String gitConnectorId, Map<String, String> gitConnectorIdNameMap) {
     return gitConnectorIdNameMap.getOrDefault(gitConnectorId, UNKNOWN_GIT_CONNECTOR);
   }
 
-  private GitDetail buildGitDetail(YamlGitConfig yamlGitConfig, String gitConnectorName) {
+  private GitDetail buildGitDetail(YamlGitConfig yamlGitConfig, String gitConnectorName, String gitCommitId) {
     return GitDetail.builder()
         .branchName(yamlGitConfig.getBranchName())
         .entityName(yamlGitConfig.getEntityName())
@@ -379,6 +382,7 @@ public class GitSyncServiceImpl implements GitSyncService {
         .connectorName(gitConnectorName)
         .yamlGitConfigId(yamlGitConfig.getUuid())
         .appId(yamlGitConfig.getAppId())
+        .gitCommitId(gitCommitId)
         .build();
   }
 
@@ -675,7 +679,8 @@ public class GitSyncServiceImpl implements GitSyncService {
       YamlChangeSet yamlChangeSet, YamlGitConfig yamlGitConfig, String accountId) {
     String gitConnectorName =
         safelyGetGitConnectorNameFromId(yamlChangeSet.getGitSyncMetadata().getGitConnectorId(), accountId);
-    GitDetail gitDetail = buildGitDetail(yamlGitConfig, gitConnectorName);
+    String gitCommitId = getGitCommitId(yamlChangeSet);
+    GitDetail gitDetail = buildGitDetail(yamlGitConfig, gitConnectorName, gitCommitId);
     RunningChangesetInformation runningChangesetInformation = RunningChangesetInformation.builder()
                                                                   .startedRunningAt(yamlChangeSet.getLastUpdatedAt())
                                                                   .queuedAt(yamlChangeSet.getCreatedAt())
@@ -688,11 +693,25 @@ public class GitSyncServiceImpl implements GitSyncService {
       YamlChangeSet yamlChangeSet, YamlGitConfig yamlGitConfig, String accountId) {
     String gitConnectorName =
         safelyGetGitConnectorNameFromId(yamlChangeSet.getGitSyncMetadata().getGitConnectorId(), accountId);
-    GitDetail gitDetail = buildGitDetail(yamlGitConfig, gitConnectorName);
+    String gitCommitId = getGitCommitId(yamlChangeSet);
+    GitDetail gitDetail = buildGitDetail(yamlGitConfig, gitConnectorName, gitCommitId);
     QueuedChangesetInformation queuedChangesetInformation =
         QueuedChangesetInformation.builder().queuedAt(yamlChangeSet.getCreatedAt()).build();
     return buildChangesetDTO(queuedChangesetInformation, gitDetail, yamlChangeSet.isGitToHarness(),
         YamlChangeSet.Status.QUEUED, yamlChangeSet.getUuid());
+  }
+
+  private String getGitCommitId(YamlChangeSet yamlChangeSet) {
+    if (yamlChangeSet.isGitToHarness()) {
+      GitWebhookRequestAttributes gitWebhookRequest = yamlChangeSet.getGitWebhookRequestAttributes();
+      if (gitWebhookRequest != null) {
+        String commitId = gitWebhookRequest.getHeadCommitId();
+        if (isNotBlank(commitId)) {
+          return commitId;
+        }
+      }
+    }
+    return EMPTY_STR;
   }
 
   private ChangeSetDTO buildChangesetDTO(ChangesetInformation changesetInformation, GitDetail gitDetail,

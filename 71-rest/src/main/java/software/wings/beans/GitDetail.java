@@ -14,5 +14,6 @@ public class GitDetail {
   private String yamlGitConfigId;
   private String gitConnectorId;
   private String appId;
+  private String gitCommitId;
   @Transient String connectorName;
 }
