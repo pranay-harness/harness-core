@@ -9,6 +9,7 @@ import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.SizeFunction.size;
 import static io.harness.delegate.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
@@ -2002,7 +2003,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                             .doesNotExist();
       wingsPersistence.update(updateQuery, updateOperations);
 
-      if (results.stream().allMatch(DelegateConnectionResult::isValidated)) {
+      // If all delegate task capabilities were evaluated and they were ok, we can assign the task
+      if ((!featureFlagService.isEnabled(DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE, delegateTask.getAccountId())
+              || size(delegateTask.getExecutionCapabilities()) == size(results))
+          && results.stream().allMatch(DelegateConnectionResult::isValidated)) {
         return assignTask(delegateId, taskId, delegateTask);
       }
     }
