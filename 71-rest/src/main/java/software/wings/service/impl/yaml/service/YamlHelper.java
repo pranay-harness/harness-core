@@ -803,9 +803,12 @@ public class YamlHelper {
   }
 
   public ArtifactStream getArtifactStreamWithName(String applicationId, String serviceName, String artifactStreamName) {
-    String serviceId = serviceResourceService.getServiceByName(applicationId, serviceName).getUuid();
+    Service service = serviceResourceService.getServiceByName(applicationId, serviceName);
+    if (service == null) {
+      throw new InvalidRequestException("Service with given name doesn't exist", USER);
+    }
 
-    return artifactStreamService.getArtifactStreamByName(applicationId, serviceId, artifactStreamName);
+    return artifactStreamService.getArtifactStreamByName(applicationId, service.getUuid(), artifactStreamName);
   }
 
   public DeploymentSpecification getDeploymentSpecification(String applicationId, String serviceId, String subType) {
