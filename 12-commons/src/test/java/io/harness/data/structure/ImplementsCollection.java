@@ -14,7 +14,7 @@ class ImplementsCollection<T> implements List<T> {
 
   @Override
   public int size() {
-    return 0;
+    return empty ? 0 : 1;
   }
 
   @Override
