@@ -22,7 +22,6 @@ import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.EmbeddedUser;
 import io.harness.data.Outcome;
 import io.harness.delay.DelayEventHelper;
 import io.harness.delegate.beans.ResponseData;
@@ -41,7 +40,6 @@ import io.harness.engine.services.PlanExecutionService;
 import io.harness.exception.ExceptionUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -49,9 +47,7 @@ import io.harness.facilitator.FacilitatorResponse;
 import io.harness.facilitator.PassThroughData;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HPersistence;
-import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
-import io.harness.plan.input.InputArgs;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.resolver.ResolverRegistry;
@@ -76,13 +72,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+/**
+ * Please do not use this class outside of orchestration module. All the interactions with engine must be done via
+ * {@link EngineService}. This is for the internal workings of the engine
+ */
 @Slf4j
 @Redesign
 @OwnedBy(CDC)
-public class ExecutionEngine implements Engine {
+public class ExecutionEngine {
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Injector injector;
@@ -101,29 +100,6 @@ public class ExecutionEngine implements Engine {
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private InterruptService interruptService;
 
-  public PlanExecution startExecution(@Valid Plan plan, EmbeddedUser createdBy) {
-    return startExecution(plan, null, createdBy);
-  }
-
-  public PlanExecution startExecution(@Valid Plan plan, InputArgs inputArgs, EmbeddedUser createdBy) {
-    PlanExecution instance = PlanExecution.builder()
-                                 .uuid(generateUuid())
-                                 .plan(plan)
-                                 .inputArgs(inputArgs == null ? new InputArgs() : inputArgs)
-                                 .status(Status.RUNNING)
-                                 .createdBy(createdBy)
-                                 .startTs(System.currentTimeMillis())
-                                 .build();
-    PlanNode planNode = plan.fetchStartingNode();
-    if (planNode == null) {
-      logger.error("Cannot Start Execution for empty plan");
-      return null;
-    }
-    String savedPlanExecutionId = hPersistence.save(instance);
-    Ambiance ambiance = Ambiance.builder().inputArgs(inputArgs).planExecutionId(savedPlanExecutionId).build();
-    triggerExecution(ambiance, planNode);
-    return instance;
-  }
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
