@@ -19,7 +19,9 @@ import io.harness.utils.DummyOutcome;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class OutcomeServiceImplTest extends OrchestrationTest {
   @Inject private OutcomeService outcomeService;
@@ -76,5 +78,42 @@ public class OutcomeServiceImplTest extends OrchestrationTest {
     List<Outcome> outcomes =
         outcomeService.findAllByRuntimeId(ambiance.getPlanExecutionId(), ambiance.obtainCurrentRuntimeId());
     assertThat(outcomes.size()).isEqualTo(2);
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldFetchOutcomes() {
+    Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
+    String outcomeName = "outcome";
+    Ambiance ambiance1 = AmbianceTestUtils.buildAmbiance();
+    String outcomeName1 = "outcome1";
+
+    String instanceId1 =
+        outcomeService.consume(ambiance, outcomeName, DummyOutcome.builder().test("test1").build(), null);
+    String instanceId2 =
+        outcomeService.consume(ambiance1, outcomeName1, DummyOutcome.builder().test("test2").build(), null);
+
+    List<Outcome> outcomes = outcomeService.fetchOutcomes(Arrays.asList(instanceId1, instanceId2));
+    assertThat(outcomes.size()).isEqualTo(2);
+    assertThat(outcomes.stream().map(oc -> ((DummyOutcome) oc).getTest()).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("test1", "test2");
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldFetchOutcome() {
+    Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
+    String outcomeName = "outcome";
+
+    String instanceId =
+        outcomeService.consume(ambiance, outcomeName, DummyOutcome.builder().test("test").build(), null);
+
+    Outcome outcome = outcomeService.fetchOutcome(instanceId);
+    assertThat(outcome).isInstanceOf(DummyOutcome.class);
+    assertThat(((DummyOutcome) outcome).getTest()).isEqualTo("test");
   }
 }

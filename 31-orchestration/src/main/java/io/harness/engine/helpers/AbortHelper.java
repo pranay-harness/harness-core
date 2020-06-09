@@ -72,7 +72,7 @@ public class AbortHelper {
       NodeExecution updatedNodeExecution = hPersistence.findAndModify(query, ops, HPersistence.returnNewOptions);
       if (updatedNodeExecution != null) {
         updated = true;
-        executionEngine.endTransition(updatedNodeExecution, finalStatus, null);
+        executionEngine.endTransition(updatedNodeExecution, finalStatus, null, null);
       }
     } catch (Exception e) {
       logger.error("Error in discontinuing", e);

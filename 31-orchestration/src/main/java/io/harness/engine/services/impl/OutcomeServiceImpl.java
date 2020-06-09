@@ -25,11 +25,15 @@ import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.engine.services.OutcomeException;
 import io.harness.engine.services.OutcomeService;
 import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.references.RefObject;
 import io.harness.resolvers.ResolverUtils;
+import lombok.NonNull;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -118,6 +122,33 @@ public class OutcomeServiceImpl implements OutcomeService {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
     return instance.getOutcome();
+  }
+
+  @Override
+  public List<Outcome> fetchOutcomes(List<String> outcomeInstanceIds) {
+    if (isEmpty(outcomeInstanceIds)) {
+      return Collections.emptyList();
+    }
+    List<Outcome> outcomes = new ArrayList<>();
+    Query<OutcomeInstance> query = hPersistence.createQuery(OutcomeInstance.class, excludeAuthority)
+                                       .field(OutcomeInstanceKeys.uuid)
+                                       .in(outcomeInstanceIds);
+    try (HIterator<OutcomeInstance> iterator = new HIterator<>(query.fetch())) {
+      while (iterator.hasNext()) {
+        outcomes.add(iterator.next().getOutcome());
+      }
+    }
+    return outcomes;
+  }
+
+  @Override
+  public Outcome fetchOutcome(@NonNull String outcomeInstanceId) {
+    OutcomeInstance outcomeInstance =
+        hPersistence.createQuery(OutcomeInstance.class).filter(OutcomeInstanceKeys.uuid, outcomeInstanceId).get();
+    if (outcomeInstance == null) {
+      return null;
+    }
+    return outcomeInstance.getOutcome();
   }
 
   @Override
