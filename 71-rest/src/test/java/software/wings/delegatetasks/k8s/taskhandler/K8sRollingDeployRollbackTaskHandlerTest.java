@@ -3,17 +3,22 @@ package software.wings.delegatetasks.k8s.taskhandler;
 import static io.harness.k8s.model.Release.Status.Failed;
 import static io.harness.k8s.model.Release.Status.Succeeded;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.buildProcessResult;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.buildRelease;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.buildReleaseMultipleManagedWorkloads;
@@ -22,6 +27,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutUndoCommand;
 import io.harness.k8s.kubectl.Utils;
@@ -30,7 +36,7 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.rule.Owner;
-import io.harness.rule.OwnerRule;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -44,9 +50,12 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
 import software.wings.WingsBaseTest;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
 
 import java.net.URL;
@@ -58,6 +67,13 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
   @Mock private ReleaseHistory releaseHistory;
   @Mock private K8sTaskHelper taskHelper;
   @Mock private ExecutionLogCallback logCallback;
+  @Mock private KubernetesContainerService kubernetesContainerService;
+  @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+
+  @Before
+  public void setUp() throws Exception {
+    doReturn(logCallback).when(taskHelper).getExecutionLogCallback(any(), any());
+  }
 
   @InjectMocks private K8sRollingDeployRollbackTaskHandler k8sRollingDeployRollbackTaskHandler;
 
@@ -67,6 +83,28 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
   public void testRollbackForDC() throws Exception {
     rollbackUtil("/k8s/deployment-config.yaml",
         "oc --kubeconfig=config-path rollout undo DeploymentConfig/test-dc --namespace=default --to-revision=1");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testFirstDeploymentFailsRollBack() throws Exception {
+    on(k8sRollingDeployRollbackTaskHandler).set("releaseHistory", null);
+    doReturn("")
+        .when(kubernetesContainerService)
+        .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
+    k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
+        K8sRollingDeployRollbackTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
+
+    assertThat((String) on(k8sRollingDeployRollbackTaskHandler).get("release")).isNull();
+    assertThat((String) on(k8sRollingDeployRollbackTaskHandler).get("releaseHistory")).isNull();
+    verify(taskHelper, never()).doStatusCheck(any(), any(), any(), any());
+    verify(kubernetesContainerService, never()).saveReleaseHistory(any(), any(), any(), any());
+    final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+    verify(logCallback, times(1))
+        .saveExecutionLog(captor.capture(), eq(INFO), eq(CommandExecutionResult.CommandExecutionStatus.SUCCESS));
+    assertThat(captor.getValue())
+        .isEqualTo("Skipping Status Check since there is no previous eligible Managed Workload.");
   }
 
   @Test
@@ -129,7 +167,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void rollback() throws Exception {
     testRollBackReleaseIsNull();

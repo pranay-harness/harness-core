@@ -65,7 +65,6 @@ import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesValuesException;
-import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.kubectl.AbstractExecutable;
@@ -1023,17 +1022,8 @@ public class K8sTaskHelper {
       if (isValidManifestFile(manifestFile.getFileName())) {
         try {
           result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
-        } catch (KubernetesYamlException e) {
-          executionLogCallback.saveExecutionLog("Exception while processing " + manifestFile.getFileName(), ERROR);
-          String message = ExceptionUtils.getMessage(e);
-          if (e.getCause() != null) {
-            message += e.getCause().getMessage();
-          }
-          executionLogCallback.saveExecutionLog(message, ERROR);
-          throw e;
         } catch (Exception e) {
           executionLogCallback.saveExecutionLog("Exception while processing " + manifestFile.getFileName(), ERROR);
-          executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
           throw e;
         }
       }

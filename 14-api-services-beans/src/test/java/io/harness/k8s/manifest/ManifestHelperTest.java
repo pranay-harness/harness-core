@@ -21,6 +21,7 @@ import com.google.common.io.Resources;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ResponseMessage;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.Kind;
@@ -104,9 +105,7 @@ public class ManifestHelperTest extends CategoryTest {
     try {
       processYaml(":");
     } catch (KubernetesYamlException e) {
-      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
-          .extracting(ResponseMessage::getMessage)
-          .containsExactly("Invalid Kubernetes YAML Spec. Error parsing YAML..");
+      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM)).extracting(ResponseMessage::getMessage);
     }
   }
 
@@ -117,9 +116,7 @@ public class ManifestHelperTest extends CategoryTest {
     try {
       processYaml("object");
     } catch (KubernetesYamlException e) {
-      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
-          .extracting(ResponseMessage::getMessage)
-          .containsExactly("Invalid Kubernetes YAML Spec. Invalid Yaml. Object is not a map..");
+      assertThat(ExceptionUtils.getMessage(e)).contains("Object is not a map..");
     }
   }
 
@@ -132,9 +129,7 @@ public class ManifestHelperTest extends CategoryTest {
     try {
       processYaml(fileContents);
     } catch (KubernetesYamlException e) {
-      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
-          .extracting(ResponseMessage::getMessage)
-          .containsExactly("Invalid Kubernetes YAML Spec. Error processing yaml manifest. kind not found in spec..");
+      assertThat(ExceptionUtils.getMessage(e)).contains("kind not found in spec..");
     }
   }
 
@@ -147,10 +142,7 @@ public class ManifestHelperTest extends CategoryTest {
     try {
       processYaml(fileContents);
     } catch (KubernetesYamlException e) {
-      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
-          .extracting(ResponseMessage::getMessage)
-          .containsExactly(
-              "Invalid Kubernetes YAML Spec. Error processing yaml manifest. metadata.name not found in spec..");
+      assertThat(ExceptionUtils.getMessage(e)).contains("metadata.name not found in spec..");
     }
   }
 
@@ -271,9 +263,7 @@ public class ManifestHelperTest extends CategoryTest {
       validateValuesFileContents("test");
       fail("Invalid values content not caught.");
     } catch (WingsException e) {
-      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
-          .extracting(ResponseMessage::getMessage)
-          .containsExactly("Invalid values file. Object is not a map..");
+      assertThat(ExceptionUtils.getMessage(e)).contains("Object is not a map..");
     }
   }
 
@@ -360,10 +350,7 @@ public class ManifestHelperTest extends CategoryTest {
           + "  hello: world");
       fail("should not reach here");
     } catch (KubernetesYamlException e) {
-      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
-          .extracting(ResponseMessage::getMessage)
-          .containsExactly(
-              "Invalid Kubernetes YAML Spec. Error processing yaml manifest. metadata.name is set to null in spec..");
+      assertThat(ExceptionUtils.getMessage(e)).contains("metadata.name is set to null in spec..");
     }
   }
 
@@ -381,10 +368,7 @@ public class ManifestHelperTest extends CategoryTest {
           + "  hello: world");
       fail("should not reach here");
     } catch (KubernetesYamlException e) {
-      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
-          .extracting(ResponseMessage::getMessage)
-          .containsExactly(
-              "Invalid Kubernetes YAML Spec. Error processing yaml manifest. kind is set to null in spec..");
+      assertThat(ExceptionUtils.getMessage(e)).contains("kind is set to null in spec..");
     }
   }
 
@@ -400,10 +384,7 @@ public class ManifestHelperTest extends CategoryTest {
           + "  hello: world");
       fail("should not reach here");
     } catch (KubernetesYamlException e) {
-      assertThat(ExceptionLogger.getResponseMessageList(e, LOG_SYSTEM))
-          .extracting(ResponseMessage::getMessage)
-          .containsExactly(
-              "Invalid Kubernetes YAML Spec. Error processing yaml manifest. metadata is set to null in spec..");
+      assertThat(ExceptionUtils.getMessage(e)).contains("metadata is set to null in spec..");
     }
   }
 
