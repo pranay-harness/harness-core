@@ -211,6 +211,25 @@ resource "google_logging_metric" "delegate_no_eligible" {
   }
 }
 
+resource "google_logging_metric" "delegate_process_restarted" {
+  name = join("_", [local.name_prefix, "delegate_process_restarted"])
+  description = "Owner: Platform delegate"
+  filter = join("\n", [local.filter_prefix,
+    "\"Delegate restarted\""])
+  metric_descriptor {
+    metric_kind = "DELTA"
+    value_type = "INT64"
+    labels {
+      key = "accountId"
+      value_type = "STRING"
+      description = "The accountId"
+    }
+  }
+  label_extractors = {
+    "accountId": "EXTRACT(jsonPayload.harness.accountId)"
+  }
+}
+
 resource "google_monitoring_dashboard" "delegate_dashboard" {
   dashboard_json = <<EOF
 

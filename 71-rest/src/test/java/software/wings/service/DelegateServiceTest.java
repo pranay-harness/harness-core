@@ -110,7 +110,6 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Delegate.Status;
-import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskPackage;
@@ -313,8 +312,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     deletedDelegate.setStatus(Status.DELETED);
 
     wingsPersistence.save(Arrays.asList(delegate, deletedDelegate));
-    wingsPersistence.save(
-        DelegateConnection.builder().accountId(accountId).delegateId(delegate.getUuid()).version(VERSION).build());
+    delegateConnectionDao.registerHeartbeat(accountId, delegate.getUuid(),
+        DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version(VERSION).build());
     DelegateStatus delegateStatus = delegateService.getDelegateStatus(accountId);
     assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
     assertThat(delegateStatus.getDelegates()).hasSize(1);

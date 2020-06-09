@@ -9,12 +9,14 @@ import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.task.DelegateLogContext;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ErrorCodeName;
 import io.harness.eraro.Level;
 import io.harness.eraro.MessageManager;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import io.harness.serializer.JsonUtils;
 import org.atmosphere.cache.UUIDBroadcasterCache;
@@ -59,35 +61,38 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
         authService.validateDelegateToken(accountId, req.getParameter("token"));
 
         String delegateId = req.getParameter("delegateId");
-        String delegateConnectionId = req.getParameter("delegateConnectionId");
-        String delegateVersion = req.getHeader("Version");
+        try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+             AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
+          String delegateConnectionId = req.getParameter("delegateConnectionId");
+          String delegateVersion = req.getHeader("Version");
 
-        // These 2 will be sent by ECS delegate only
-        String sequenceNum = req.getParameter("sequenceNum");
-        String delegateToken = req.getParameter("delegateToken");
+          // These 2 will be sent by ECS delegate only
+          String sequenceNum = req.getParameter("sequenceNum");
+          String delegateToken = req.getParameter("delegateToken");
 
-        Delegate delegate = delegateService.get(accountId, delegateId, true);
-        delegate.setStatus(Status.ENABLED);
+          Delegate delegate = delegateService.get(accountId, delegateId, true);
+          delegate.setStatus(Status.ENABLED);
 
-        updateIfEcsDelegate(delegate, sequenceNum, delegateToken);
+          updateIfEcsDelegate(delegate, sequenceNum, delegateToken);
 
-        delegateService.register(delegate);
-        delegateConnectionDao.registerHeartbeat(accountId, delegateId,
-            DelegateConnectionHeartbeat.builder()
-                .delegateConnectionId(delegateConnectionId)
-                .version(delegateVersion)
-                .build());
+          delegateService.register(delegate);
+          delegateConnectionDao.registerHeartbeat(accountId, delegateId,
+              DelegateConnectionHeartbeat.builder()
+                  .delegateConnectionId(delegateConnectionId)
+                  .version(delegateVersion)
+                  .build());
 
-        resource.addEventListener(new AtmosphereResourceEventListenerAdapter() {
-          @Override
-          public void onDisconnect(AtmosphereResourceEvent event) {
-            try (AccountLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-              Delegate delegate = delegateService.get(accountId, delegateId, true);
-              delegateService.register(delegate);
-              delegateConnectionDao.delegateDisconnected(accountId, delegateConnectionId);
+          resource.addEventListener(new AtmosphereResourceEventListenerAdapter() {
+            @Override
+            public void onDisconnect(AtmosphereResourceEvent event) {
+              try (AccountLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+                Delegate delegate = delegateService.get(accountId, delegateId, true);
+                delegateService.register(delegate);
+                delegateConnectionDao.delegateDisconnected(accountId, delegateConnectionId);
+              }
             }
-          }
-        });
+          });
+        }
       } catch (WingsException e) {
         sendError(resource, e.getCode());
         return;
@@ -100,16 +105,19 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
       List<String> pathSegments = SPLITTER.splitToList(req.getPathInfo());
       String accountId = pathSegments.get(1);
       String delegateId = req.getParameter("delegateId");
-      String delegateConnectionId = req.getParameter("delegateConnectionId");
-      String delegateVersion = req.getHeader("Version");
+      try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+           AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
+        String delegateConnectionId = req.getParameter("delegateConnectionId");
+        String delegateVersion = req.getHeader("Version");
 
-      Delegate delegate = JsonUtils.asObject(CharStreams.toString(req.getReader()), Delegate.class);
-      delegateService.register(delegate);
-      delegateConnectionDao.registerHeartbeat(accountId, delegateId,
-          DelegateConnectionHeartbeat.builder()
-              .delegateConnectionId(delegateConnectionId)
-              .version(delegateVersion)
-              .build());
+        Delegate delegate = JsonUtils.asObject(CharStreams.toString(req.getReader()), Delegate.class);
+        delegateService.register(delegate);
+        delegateConnectionDao.registerHeartbeat(accountId, delegateId,
+            DelegateConnectionHeartbeat.builder()
+                .delegateConnectionId(delegateConnectionId)
+                .version(delegateVersion)
+                .build());
+      }
     }
   }
 

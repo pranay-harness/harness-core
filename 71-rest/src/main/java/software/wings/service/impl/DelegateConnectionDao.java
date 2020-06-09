@@ -5,7 +5,8 @@ import static io.harness.persistence.HPersistence.upToOne;
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static software.wings.beans.DelegateConnection.DEFAULT_EXPIRY_TIME_IN_MINUTES;
+import static software.wings.beans.DelegateConnection.EXPIRY_TIME;
+import static software.wings.beans.DelegateConnection.TTL;
 import static software.wings.beans.ManagerConfiguration.MATCH_ALL_VERSION;
 
 import com.google.inject.Inject;
@@ -35,8 +36,13 @@ public class DelegateConnectionDao {
   @Inject private HPersistence persistence;
 
   public void delegateDisconnected(String accountId, String delegateConnectionId) {
-    logger.info("Removing delegate connection delegateConnectionId: {}", delegateConnectionId);
-    persistence.delete(DelegateConnection.class, delegateConnectionId);
+    logger.info("Mark as disconnected delegateConnectionId: {}", delegateConnectionId);
+    Query<DelegateConnection> query = persistence.createQuery(DelegateConnection.class)
+                                          .filter(DelegateConnectionKeys.accountId, accountId)
+                                          .filter(DelegateConnectionKeys.uuid, delegateConnectionId);
+    UpdateOperations<DelegateConnection> updateOperations = persistence.createUpdateOperations(DelegateConnection.class)
+                                                                .set(DelegateConnectionKeys.disconnected, Boolean.TRUE);
+    persistence.update(query, updateOperations);
   }
 
   public void registerHeartbeat(String accountId, String delegateId, DelegateConnectionHeartbeat heartbeat) {
@@ -51,16 +57,32 @@ public class DelegateConnectionDao {
             .set(DelegateConnectionKeys.delegateId, delegateId)
             .set(DelegateConnectionKeys.version, heartbeat.getVersion())
             .set(DelegateConnectionKeys.lastHeartbeat, currentTimeMillis())
+            .set(DelegateConnectionKeys.disconnected, Boolean.FALSE)
             .set(DelegateConnectionKeys.validUntil,
-                Date.from(OffsetDateTime.now().plusMinutes(DEFAULT_EXPIRY_TIME_IN_MINUTES).toInstant()));
+                Date.from(OffsetDateTime.now().plusMinutes(TTL.toMinutes()).toInstant()));
 
-    persistence.upsert(query, updateOperations);
+    DelegateConnection previousDelegateConnection =
+        persistence.upsert(query, updateOperations, HPersistence.upsertReturnOldOptions);
+
+    if (previousDelegateConnection == null) {
+      if (persistence.delete(persistence.createQuery(DelegateConnection.class)
+                                 .filter(DelegateConnectionKeys.accountId, accountId)
+                                 .filter(DelegateConnectionKeys.delegateId, delegateId)
+                                 .filter(DelegateConnectionKeys.version, heartbeat.getVersion())
+                                 .field(DelegateConnectionKeys.uuid)
+                                 .notEqual(heartbeat.getDelegateConnectionId()))) {
+        logger.error("Delegate restarted");
+      }
+    }
   }
 
   public Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> obtainActiveDelegateConnections(
       String accountId) {
     List<DelegateConnection> delegateConnections = persistence.createQuery(DelegateConnection.class)
                                                        .filter(DelegateConnectionKeys.accountId, accountId)
+                                                       .filter(DelegateConnectionKeys.disconnected, Boolean.FALSE)
+                                                       .field(DelegateConnectionKeys.lastHeartbeat)
+                                                       .greaterThan(currentTimeMillis() - EXPIRY_TIME.toMillis())
                                                        .project(DelegateConnectionKeys.delegateId, true)
                                                        .project(DelegateConnectionKeys.version, true)
                                                        .project(DelegateConnectionKeys.lastHeartbeat, true)
@@ -77,9 +99,12 @@ public class DelegateConnectionDao {
             toList())));
   }
 
-  public Set<String> obtainDisconnectedDelegates(String accountId) {
-    Query<DelegateConnection> query =
-        persistence.createQuery(DelegateConnection.class).filter(DelegateConnectionKeys.accountId, accountId);
+  public Set<String> obtainConnectedDelegates(String accountId) {
+    Query<DelegateConnection> query = persistence.createQuery(DelegateConnection.class)
+                                          .filter(DelegateConnectionKeys.accountId, accountId)
+                                          .filter(DelegateConnectionKeys.disconnected, Boolean.FALSE)
+                                          .field(DelegateConnectionKeys.lastHeartbeat)
+                                          .greaterThan(currentTimeMillis() - EXPIRY_TIME.toMillis());
     String primaryVersion = persistence.createQuery(ManagerConfiguration.class).get().getPrimaryVersion();
     if (isNotEmpty(primaryVersion) && !StringUtils.equals(primaryVersion, MATCH_ALL_VERSION)) {
       query.filter(DelegateConnectionKeys.version, primaryVersion);
@@ -91,14 +116,13 @@ public class DelegateConnectionDao {
         .collect(toSet());
   }
 
-  public String save(DelegateConnection delegateConnection) {
-    return persistence.save(delegateConnection);
-  }
-
   public List<DelegateConnection> list(String accountId, String delegateId) {
     return persistence.createQuery(DelegateConnection.class)
         .filter(DelegateConnectionKeys.accountId, accountId)
         .filter(DelegateConnectionKeys.delegateId, delegateId)
+        .filter(DelegateConnectionKeys.disconnected, Boolean.FALSE)
+        .field(DelegateConnectionKeys.lastHeartbeat)
+        .greaterThan(currentTimeMillis() - EXPIRY_TIME.toMillis())
         .asList();
   }
 
@@ -107,6 +131,9 @@ public class DelegateConnectionDao {
                .filter(DelegateConnectionKeys.accountId, accountId)
                .filter(DelegateConnectionKeys.delegateId, delegateId)
                .filter(DelegateConnectionKeys.version, version)
+               .filter(DelegateConnectionKeys.disconnected, Boolean.FALSE)
+               .field(DelegateConnectionKeys.lastHeartbeat)
+               .greaterThan(currentTimeMillis() - EXPIRY_TIME.toMillis())
                .count(upToOne)
         > 0;
   }
