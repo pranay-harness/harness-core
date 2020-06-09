@@ -26,9 +26,9 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class JsonSubtypeResolver extends SubtypeResolver {
-  private SubtypeResolver subtypeResolver;
+  protected SubtypeResolver subtypeResolver;
 
-  private LoadingCache<Class<?>, List<NamedType>> classListLoadingCache =
+  protected LoadingCache<Class<?>, List<NamedType>> classListLoadingCache =
       CacheBuilder.newBuilder()
           .maximumSize(1000)
           .expireAfterWrite(10, TimeUnit.MINUTES)
