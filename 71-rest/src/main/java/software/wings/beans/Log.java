@@ -59,9 +59,13 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "commandLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @Indexes({
-  @Index(options = @IndexOptions(name = "appId_activityId"), fields = {
-    @Field(value = LogKeys.appId), @Field(value = LogKeys.activityId)
-  })
+  @Index(options = @IndexOptions(name = "appId_activityId"),
+      fields = { @Field(value = LogKeys.appId)
+                 , @Field(value = LogKeys.activityId) })
+  ,
+      @Index(options = @IndexOptions(name = "activityIdCreatedAt"), fields = {
+        @Field(value = LogKeys.activityId), @Field(value = CreatedAtAware.CREATED_AT_KEY)
+      })
 })
 public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                             UpdatedAtAware, UpdatedByAware, ApplicationAccess {

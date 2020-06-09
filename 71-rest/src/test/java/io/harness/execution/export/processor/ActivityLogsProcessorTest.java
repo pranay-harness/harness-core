@@ -79,7 +79,7 @@ public class ActivityLogsProcessorTest extends CategoryTest {
 
     activityLogsProcessor.visitExecutionMetadata(WorkflowExecutionMetadata.builder().id("id").build());
     assertThat(activityLogsProcessor.getActivityIdToExecutionDetailsMap()).isEmpty();
-    assertThat(activityLogsProcessor.getActivityIdToExecutionIdMap()).isEmpty();
+    assertThat(activityLogsProcessor.getActivityIdToExecutionMap()).isEmpty();
 
     WorkflowExecutionMetadata workflowExecutionMetadata =
         WorkflowExecutionMetadata.builder()
@@ -121,12 +121,12 @@ public class ActivityLogsProcessorTest extends CategoryTest {
     assertThat(activityLogsProcessor.getActivityIdToExecutionDetailsMap().get("id3"))
         .isEqualTo(workflowExecutionMetadata.getExecutionGraph().get(1));
 
-    assertThat(activityLogsProcessor.getActivityIdToExecutionIdMap().keySet())
+    assertThat(activityLogsProcessor.getActivityIdToExecutionMap().keySet())
         .containsExactlyInAnyOrder("aid", "id1", "id2", "id3");
-    assertThat(activityLogsProcessor.getActivityIdToExecutionIdMap().get("aid")).isEqualTo("pid");
-    assertThat(activityLogsProcessor.getActivityIdToExecutionIdMap().get("id1")).isEqualTo("pid");
-    assertThat(activityLogsProcessor.getActivityIdToExecutionIdMap().get("id2")).isEqualTo("pid");
-    assertThat(activityLogsProcessor.getActivityIdToExecutionIdMap().get("id3")).isEqualTo("pid");
+    assertThat(activityLogsProcessor.getActivityIdToExecutionMap().get("aid").getId()).isEqualTo("pid");
+    assertThat(activityLogsProcessor.getActivityIdToExecutionMap().get("id1").getId()).isEqualTo("pid");
+    assertThat(activityLogsProcessor.getActivityIdToExecutionMap().get("id2").getId()).isEqualTo("pid");
+    assertThat(activityLogsProcessor.getActivityIdToExecutionMap().get("id3").getId()).isEqualTo("pid");
   }
 
   @Test
@@ -256,6 +256,11 @@ public class ActivityLogsProcessorTest extends CategoryTest {
         .set("activityIdToExecutionDetailsMap",
             ImmutableMap.of("aid1", WorkflowExecutionMetadata.builder().build(), "aid2",
                 WorkflowExecutionMetadata.builder().build(), "aid3", WorkflowExecutionMetadata.builder().build()));
+    on(activityLogsProcessor)
+        .set("activityIdToExecutionMap",
+            ImmutableMap.of("aid1", WorkflowExecutionMetadata.builder().appId("appId").build(), "aid2",
+                WorkflowExecutionMetadata.builder().appId("appId").build(), "aid3",
+                WorkflowExecutionMetadata.builder().appId("appId").build()));
 
     Map<String, List<Log>> map = ImmutableMap.of("aid1",
         asList(aLog().withActivityId("aid1").withCommandUnitName("cu11").build(),
