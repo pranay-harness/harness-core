@@ -44,6 +44,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.DeploymentType;
@@ -1027,8 +1028,9 @@ public abstract class AbstractAnalysisState extends State {
     if (isEmpty(fieldValue)) {
       return false;
     }
-
-    return fieldValue.contains("$");
+    int expressions = StringUtils.countMatches(fieldValue, "$");
+    int hostFields = StringUtils.countMatches(fieldValue, "${host}");
+    return expressions > hostFields;
   }
 
   protected ExecutionResponse createExecutionResponse(

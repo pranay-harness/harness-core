@@ -43,6 +43,7 @@ import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class StackDriverStateTest extends APMStateVerificationTestBase {
@@ -143,5 +144,23 @@ public class StackDriverStateTest extends APMStateVerificationTestBase {
         () -> stackDriverState.triggerAnalysisDataCollection(executionContext, analysisContext, executionData, hosts))
         .isInstanceOf(NullPointerException.class)
         .hasMessage("No Gcp config setting with id: " + configId + " found");
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testFetchMetricDefinitions_withExpression() {
+    StackDriverMetricDefinition definition = stackDriverState.getMetricDefinitions().get(0);
+    String oldFilter = definition.getFilterJson();
+    String filter = oldFilter.replace("cluster_name", "${env.name}");
+    definition.setFilterJson(filter);
+    definition.extractJson();
+
+    doReturn(oldFilter).when(stackDriverState).getResolvedFieldValue(executionContext, "", filter);
+
+    List<StackDriverMetricDefinition> definitions = stackDriverState.fetchMetricDefinitions(executionContext);
+
+    assertThat(definitions.size()).isEqualTo(1);
+    assertThat(definitions.get(0).getFilterJson()).isEqualTo(oldFilter);
   }
 }
