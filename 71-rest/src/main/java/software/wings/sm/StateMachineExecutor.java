@@ -1119,6 +1119,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     cloned.setStateName(nextState.getName());
     cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
     cloned.setDelegateTaskId(null);
+    cloned.setSelectionLogsTrackingForTaskEnabled(false);
     cloned.setContextTransition(false);
     cloned.setStatus(NEW);
     cloned.setStartTs(null);
