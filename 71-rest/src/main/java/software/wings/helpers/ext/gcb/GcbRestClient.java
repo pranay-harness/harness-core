@@ -11,6 +11,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 import software.wings.helpers.ext.gcb.models.BuildOperationDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
+import software.wings.helpers.ext.gcb.models.GcbBuildTriggers;
 import software.wings.helpers.ext.gcb.models.RepoSource;
 
 @OwnedBy(CDC)
@@ -28,5 +29,9 @@ public interface GcbRestClient {
 
   @POST("v1/projects/{projectId}/builds")
   Call<BuildOperationDetails> createBuild(@Header("Authorization") String bearerAuthHeader,
-      @Path(value = "projectId", encoded = true) String projectId, @Body GcbBuildDetails buildParams);
+      @Path(value = "projectId") String projectId, @Body GcbBuildDetails buildParams);
+
+  @GET("v1/projects/{projectId}/triggers")
+  Call<GcbBuildTriggers> getAllTriggers(
+      @Header("Authorization") String bearerAuthHeader, @Path(value = "projectId") String projectId);
 }

@@ -7,6 +7,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.GcpConfig;
 import software.wings.helpers.ext.gcb.models.BuildOperationDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
+import software.wings.helpers.ext.gcb.models.GcbTrigger;
 import software.wings.helpers.ext.gcb.models.RepoSource;
 
 import java.util.List;
@@ -21,4 +22,9 @@ public interface GcbService {
 
   BuildOperationDetails runTrigger(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String projectId,
       String triggerId, RepoSource repoSource);
+
+  String fetchBuildLogs(
+      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, String fileName);
+
+  List<GcbTrigger> getAllTriggers(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String projectId);
 }
