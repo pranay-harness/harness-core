@@ -521,7 +521,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .encryptedDataDetails(
                 secretManager.getEncryptionDetails(gcpConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(new HashMap<>())
-            .timeSeriesToCollect(stackDriverState.fetchMetricDefinitions())
+            .timeSeriesToCollect(stackDriverState.fetchMetricDefinitions(context))
             .build();
 
       default:

@@ -60,15 +60,24 @@ public class StackDriverState extends AbstractMetricAnalysisState {
 
   private List<StackDriverMetricDefinition> metricDefinitions;
 
-  public List<StackDriverMetricDefinition> fetchMetricDefinitions() {
-    return metricDefinitions;
-  }
-
   public void setMetricDefinitions(List<StackDriverMetricDefinition> metricDefinitions) {
     this.metricDefinitions = metricDefinitions;
     if (isNotEmpty(metricDefinitions)) {
       metricDefinitions.forEach(StackDriverMetricDefinition::extractJson);
     }
+  }
+
+  public List<StackDriverMetricDefinition> getMetricDefinitions() {
+    return this.metricDefinitions;
+  }
+
+  public List<StackDriverMetricDefinition> fetchMetricDefinitions(ExecutionContext executionContext) {
+    for (StackDriverMetricDefinition metricDefinition : this.metricDefinitions) {
+      String resolvedJsonQuery = getResolvedFieldValue(executionContext, "", metricDefinition.getFilterJson());
+      metricDefinition.setFilterJson(resolvedJsonQuery);
+      metricDefinition.extractJson();
+    }
+    return this.metricDefinitions;
   }
 
   /**
@@ -147,7 +156,7 @@ public class StackDriverState extends AbstractMetricAnalysisState {
             .encryptedDataDetails(
                 secretManager.getEncryptionDetails(gcpConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(hosts)
-            .timeSeriesToCollect(metricDefinitions)
+            .timeSeriesToCollect(fetchMetricDefinitions(context))
             .build();
 
     String waitId = generateUuid();
