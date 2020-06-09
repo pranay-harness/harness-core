@@ -107,6 +107,7 @@ import software.wings.beans.TechStack;
 import software.wings.beans.UrlInfo;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.sso.LdapSettings;
@@ -202,6 +203,8 @@ public class AccountServiceImpl implements AccountService {
   private static final String DELIMITER = "####";
   private static final String ACCOUNT_ID = "accountId";
   private static final String APP_ID = "appId";
+  private static final String SOFTWARE_WINGS = "software.wings";
+  private static final String IO_HARNESS = "io.harness";
 
   private static Set<Class<? extends PersistentEntity>> seperateDeletionEntities =
       new HashSet<>(Arrays.asList(Account.class, User.class, SSOSettings.class));
@@ -478,18 +481,37 @@ public class AccountServiceImpl implements AccountService {
   }
 
   private void deleteAllEntities(String accountId) {
-    Reflections reflections = new Reflections("software.wings", "io.harness");
-    Set<Class<? extends AccountAccess>> entities = reflections.getSubTypesOf(AccountAccess.class);
-    for (Class entity : entities) {
-      if (!isAbstract(entity.getModifiers())) {
+    deleteApplicationAccessEntities(accountId);
+    deleteAccountAccessEntities(accountId);
+    deleteOwnedByAccountEntities(accountId);
+  }
+
+  private void deleteOwnedByAccountEntities(String accountId) {
+    List<OwnedByAccount> services = serviceClassLocator.descendingServicesForInterface(OwnedByAccount.class);
+    services.forEach(service -> service.deleteByAccountId(accountId));
+  }
+
+  private void deleteApplicationAccessEntities(String accountId) {
+    Reflections reflections = new Reflections(SOFTWARE_WINGS, IO_HARNESS);
+    Set<Class<? extends ApplicationAccess>> applicationAccessEntities =
+        reflections.getSubTypesOf(ApplicationAccess.class);
+    for (Class entity : applicationAccessEntities) {
+      if (!isAbstract(entity.getModifiers()) && !entity.isAssignableFrom(Application.class)) {
         deleteAppLevelDocuments(accountId, entity);
+      }
+    }
+  }
+
+  private void deleteAccountAccessEntities(String accountId) {
+    Reflections reflections = new Reflections(SOFTWARE_WINGS, IO_HARNESS);
+    Set<Class<? extends AccountAccess>> accountAccessEntities = reflections.getSubTypesOf(AccountAccess.class);
+    for (Class entity : accountAccessEntities) {
+      if (!isAbstract(entity.getModifiers())) {
         logger.info("Deleting account level entity {}", entity.getName());
         wingsPersistence.delete(
             wingsPersistence.createQuery(entity, excludeAuthority).filter(ACCOUNT_ID_KEY, accountId));
       }
     }
-    List<OwnedByAccount> services = serviceClassLocator.descendingServicesForInterface(OwnedByAccount.class);
-    services.forEach(service -> service.deleteByAccountId(accountId));
   }
 
   private boolean isAnnotatedExportable(Class<? extends PersistentEntity> clazz) {
