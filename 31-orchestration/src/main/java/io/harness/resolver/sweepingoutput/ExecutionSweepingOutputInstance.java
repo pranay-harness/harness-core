@@ -41,7 +41,7 @@ import java.util.List;
 @Value
 @Builder
 @Indexes({
-  @Index(options = @IndexOptions(name = "levelRuntimeIdUniqueIdx", unique = true), fields = {
+  @Index(options = @IndexOptions(name = "levelRuntimeIdUniqueIdx2", unique = true), fields = {
     @Field(ExecutionSweepingOutputKeys.planExecutionId)
     , @Field(ExecutionSweepingOutputKeys.levelRuntimeIdIdx), @Field(ExecutionSweepingOutputKeys.name)
   })

@@ -119,30 +119,38 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
                                              .build());
 
     validateExpression(evaluator, "bVal1.cVal1.strVal", "c11");
-    validateExpression(evaluator, "bVal1.cVal2.strVal", "finalC12");
+    validateExpression(evaluator, "bVal1.cVal2.strVal", "finalC12", true);
     validateExpression(evaluator, "bVal1.strVal1", "b11");
     validateExpression(evaluator, "bVal1.strVal2", "b12");
     validateExpression(evaluator, "bVal1.intVal1", 11);
     validateExpression(evaluator, "bVal1.intVal2", 12);
     validateExpression(evaluator, "bVal2.cVal1.strVal", "c21");
-    validateExpression(evaluator, "bVal2.cVal2.strVal", "finalC22");
-    validateExpression(evaluator, "bVal2.strVal1", "finalB21");
+    validateExpression(evaluator, "bVal2.cVal2.strVal", "finalC22", true);
+    validateExpression(evaluator, "bVal2.strVal1", "finalB21", true);
     validateExpression(evaluator, "bVal2.strVal2", "${b22}");
     validateExpression(evaluator, "bVal2.intVal1", 21);
-    validateExpression(evaluator, "bVal2.intVal2", 222);
+    validateExpression(evaluator, "bVal2.intVal2", 222, true);
     validateExpression(evaluator, "strVal1", "a1");
     validateExpression(evaluator, "strVal2", "a2");
   }
 
   private void validateExpression(EngineExpressionEvaluator evaluator, String expression, Object expected) {
-    validateSingleExpression(evaluator, expression, expected);
-    validateSingleExpression(evaluator, "obj." + expression, expected);
+    validateExpression(evaluator, expression, expected, false);
   }
 
-  private void validateSingleExpression(EngineExpressionEvaluator evaluator, String expression, Object expected) {
+  private void validateExpression(
+      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
+    validateSingleExpression(evaluator, expression, expected, skipEvaluate);
+    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate);
+  }
+
+  private void validateSingleExpression(
+      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
     expression = "${" + expression + "}";
     assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
-    assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
+    if (!skipEvaluate) {
+      assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
+    }
   }
 
   @Test

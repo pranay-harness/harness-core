@@ -1,18 +1,14 @@
 package io.harness.expression;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.CriticalExpressionEvaluationException;
-import io.harness.exception.FunctorException;
 import io.harness.utils.ParameterField;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlEngine;
-import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.jexl3.JexlExpression;
 import org.apache.commons.logging.impl.NoOpLog;
 import org.apache.commons.text.StrLookup;
@@ -107,14 +103,15 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
   }
 
   public Object evaluateExpression(String expression) {
-    // TODO(gpahal): Add support for variable tracking in this method.
+    // TODO(gpahal): Look at adding support for recursion and variable tracking in this method.
     // NOTE: Don't check for hasExpressions here. There might be normal expressions like '"true" != "false"'
-    if (EmptyPredicate.isEmpty(expression)) {
+    String normalizedExpression = stripDelimiters(expression);
+    if (EmptyPredicate.isEmpty(normalizedExpression)) {
       return null;
     }
 
     EngineJexlContext ctx = prepareContext();
-    return evaluateExpressionRecursive(expression, ctx, 0);
+    return evaluate(normalizedExpression, ctx);
   }
 
   public Optional<Object> evaluateExpressionOptional(String expression) {
@@ -123,33 +120,6 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
       return Optional.empty();
     }
     return Optional.of(value);
-  }
-
-  private Object evaluateExpressionRecursive(String expression, EngineJexlContext ctx, int depth) {
-    String normalizedExpression = stripDelimiters(expression);
-    if (EmptyPredicate.isEmpty(normalizedExpression)) {
-      return normalizedExpression;
-    }
-    if (depth >= ExpressionEvaluatorUtils.DEPTH_LIMIT) {
-      throw new CriticalExpressionEvaluationException("Exponentially growing interpretation", expression);
-    }
-
-    Object value;
-    try {
-      value = evaluate(normalizedExpression, ctx);
-    } catch (JexlException ex) {
-      if (ex.getCause() instanceof FunctorException) {
-        throw(FunctorException) ex.getCause();
-      }
-
-      logger.debug(format("Failed to evaluate expression: %s", expression), ex);
-      return expression;
-    }
-
-    if (value instanceof String && hasExpressions((String) value)) {
-      return evaluateExpressionRecursive((String) value, ctx, depth + 1);
-    }
-    return value;
   }
 
   /**
