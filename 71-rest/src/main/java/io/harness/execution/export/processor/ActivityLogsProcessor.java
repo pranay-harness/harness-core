@@ -67,7 +67,7 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
   @Inject @Named("gdsExecutor") @NonFinal @Setter ExecutorService gdsExecutorService;
 
   Map<String, ExecutionDetailsMetadata> activityIdToExecutionDetailsMap;
-  Map<String, String> activityIdToExecutionIdMap;
+  Map<String, ExecutionMetadata> activityIdToExecutionMap;
   ZipOutputStream zipOutputStream;
   Map<String, String> folderNamesMap;
   Map<String, Set<String>> executionLogFilesMap;
@@ -77,7 +77,7 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
   public ActivityLogsProcessor(ZipOutputStream zipOutputStream, Map<String, String> folderNamesMap,
       Map<String, Set<String>> executionLogFilesMap) {
     this.activityIdToExecutionDetailsMap = new HashMap<>();
-    this.activityIdToExecutionIdMap = new HashMap<>();
+    this.activityIdToExecutionMap = new HashMap<>();
     this.zipOutputStream = zipOutputStream;
     this.folderNamesMap = folderNamesMap == null ? Collections.emptyMap() : folderNamesMap;
     this.executionLogFilesMap = executionLogFilesMap;
@@ -98,8 +98,8 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
     }
 
     activityIdToExecutionDetailsMap.putAll(newActivityIdToNodeMetadataMap);
-    activityIdToExecutionIdMap.putAll(newActivityIdToNodeMetadataMap.keySet().stream().collect(
-        toMap(Function.identity(), ignored -> executionMetadata.getId())));
+    activityIdToExecutionMap.putAll(newActivityIdToNodeMetadataMap.keySet().stream().collect(
+        toMap(Function.identity(), ignored -> executionMetadata)));
   }
 
   private Map<String, ExecutionDetailsMetadata> updateWithShellScriptApprovalMetadata(
@@ -138,13 +138,13 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
     try {
       for (Map.Entry<String, List<Log>> entry : activityIdToLogsMap.entrySet()) {
         String activityId = entry.getKey();
-        String executionId = activityIdToExecutionIdMap.get(activityId);
-        if (executionId == null) {
+        ExecutionMetadata executionMetadata = activityIdToExecutionMap.get(activityId);
+        if (executionMetadata == null || executionMetadata.getId() == null) {
           continue;
         }
 
         updateExecutionDetailsMetadata(
-            activityIdToExecutionDetailsMap.get(entry.getKey()), entry.getValue(), executionId);
+            activityIdToExecutionDetailsMap.get(entry.getKey()), entry.getValue(), executionMetadata.getId());
       }
     } catch (IOException ex) {
       throw new ExportExecutionsException("Unable to create zip file for export executions request", ex);
@@ -217,9 +217,15 @@ public class ActivityLogsProcessor implements ExportExecutionsProcessor {
     // Create a completable future for each activityId.
     List<CompletableFuture<List<Log>>> futures = new ArrayList<>();
     for (String activityId : activityIdToExecutionDetailsMap.keySet()) {
+      ExecutionMetadata executionMetadata = activityIdToExecutionMap.get(activityId);
+      if (executionMetadata == null || executionMetadata.getAppId() == null) {
+        continue;
+      }
+
       CompletableFuture<List<Log>> future = CompletableFuture.supplyAsync(
           ()
               -> getPageRequestLogs(aPageRequest()
+                                        .addFilter(LogKeys.appId, Operator.EQ, executionMetadata.getAppId())
                                         .addFilter(LogKeys.activityId, Operator.EQ, activityId)
                                         .addOrder(CreatedAtAware.CREATED_AT_KEY, OrderType.ASC)
                                         .build()),
