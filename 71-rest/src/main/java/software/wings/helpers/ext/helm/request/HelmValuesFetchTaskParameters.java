@@ -10,7 +10,7 @@ import lombok.Data;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.service.impl.ContainerServiceParams;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -30,10 +30,27 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    HelmInstallCommandRequest commandRequest = HelmInstallCommandRequest.builder()
-                                                   .commandFlags(getHelmCommandFlags())
-                                                   .helmVersion(getHelmChartConfigTaskParams().getHelmVersion())
-                                                   .build();
-    return Collections.singletonList(HelmCommandCapability.builder().commandRequest(commandRequest).build());
+    List<ExecutionCapability> capabilities = new ArrayList<>();
+
+    if (helmChartConfigTaskParams != null && helmChartConfigTaskParams.getHelmRepoConfig() != null) {
+      capabilities.addAll(helmChartConfigTaskParams.fetchRequiredExecutionCapabilities());
+      if (isBindTaskFeatureSet && containerServiceParams != null) {
+        capabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities());
+      }
+    } else {
+      capabilities.add(HelmCommandCapability.builder()
+                           .commandRequest(HelmInstallCommandRequest.builder()
+                                               .commandFlags(getHelmCommandFlags())
+                                               .helmVersion(getHelmChartConfigTaskParams().getHelmVersion())
+                                               .containerServiceParams(getContainerServiceParams())
+                                               .build())
+                           .build());
+
+      if (containerServiceParams != null) {
+        capabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities());
+      }
+    }
+
+    return capabilities;
   }
 }
