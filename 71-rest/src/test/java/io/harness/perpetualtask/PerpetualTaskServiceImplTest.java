@@ -67,6 +67,87 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testDeleteTask() {
+    PerpetualTaskClientContext clientContext = clientContext();
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+    perpetualTaskRecord.setClientContext(clientContext);
+
+    String taskId = perpetualTaskService.createTask(
+        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false);
+
+    boolean deletedTask = perpetualTaskService.deleteTask(ACCOUNT_ID, taskId);
+
+    assertThat(taskId).isNotNull();
+    assertThat(deletedTask).isTrue();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testSetTaskState() {
+    PerpetualTaskClientContext clientContext = clientContext();
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+    perpetualTaskRecord.setClientContext(clientContext);
+
+    String taskId = perpetualTaskService.createTask(
+        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false);
+
+    perpetualTaskService.setTaskState(ACCOUNT_ID, taskId);
+
+    assertThat(taskId).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testGetTaskRecord() {
+    String accountId = UUIDGenerator.generateUuid();
+    String delegateId = UUIDGenerator.generateUuid();
+    String taskId = UUIDGenerator.generateUuid();
+
+    PerpetualTaskClientContext clientContext = clientContext();
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+    perpetualTaskRecord.setClientContext(clientContext);
+    perpetualTaskRecord.setAccountId(accountId);
+    perpetualTaskRecord.setDelegateId(delegateId);
+    perpetualTaskRecord.setUuid(taskId);
+    perpetualTaskRecordDao.save(perpetualTaskRecord);
+
+    PerpetualTaskRecord record = perpetualTaskService.getTaskRecord(taskId);
+
+    assertThat(record).isNotNull();
+    assertThat(record.getAccountId()).isEqualTo(accountId);
+    assertThat(record.getDelegateId()).isEqualTo(delegateId);
+    assertThat(record.getClientContext()).isEqualTo(clientContext);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testPerpetualTaskType() {
+    String accountId = UUIDGenerator.generateUuid();
+    String delegateId = UUIDGenerator.generateUuid();
+    String taskId = UUIDGenerator.generateUuid();
+    String perpetualTaskType = UUIDGenerator.generateUuid();
+
+    PerpetualTaskClientContext clientContext = clientContext();
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+    perpetualTaskRecord.setClientContext(clientContext);
+    perpetualTaskRecord.setAccountId(accountId);
+    perpetualTaskRecord.setDelegateId(delegateId);
+    perpetualTaskRecord.setUuid(taskId);
+    perpetualTaskRecord.setPerpetualTaskType(perpetualTaskType);
+    perpetualTaskRecordDao.save(perpetualTaskRecord);
+
+    String perpetualTaskTypeResult = perpetualTaskService.getPerpetualTaskType(taskId);
+
+    assertThat(perpetualTaskTypeResult).isNotNull();
+    assertThat(perpetualTaskTypeResult).isEqualTo(perpetualTaskType);
+  }
+
+  @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testUpdateHeartbeat() {
