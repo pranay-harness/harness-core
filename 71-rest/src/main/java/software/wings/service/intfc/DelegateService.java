@@ -114,7 +114,7 @@ public interface DelegateService extends OwnedByAccount, TaskExecutor {
 
   boolean filter(String delegateId, DelegateTaskAbortEvent taskAbortEvent);
 
-  void abortTask(String accountId, String delegateTaskId);
+  DelegateTask abortTask(String accountId, String delegateTaskId);
 
   String expireTask(String accountId, String delegateTaskId);
 
