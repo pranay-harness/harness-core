@@ -5,7 +5,6 @@ import static io.harness.cdng.orchestration.StepUtils.createStepResponseFromChil
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
@@ -24,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Map;
 
-@Produces(Step.class)
 @Slf4j
 public class IntegrationStageStep implements Step, ChildExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("INTEGRATION_STAGE_STEP").build();

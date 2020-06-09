@@ -16,9 +16,7 @@ import static software.wings.sm.StateType.SHELL_SCRIPT;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -75,8 +73,6 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Redesign
-@ExcludeRedesign
-@Produces(Step.class)
 @Slf4j
 public class ShellScriptStep implements Step, TaskExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type(SHELL_SCRIPT.name()).build();

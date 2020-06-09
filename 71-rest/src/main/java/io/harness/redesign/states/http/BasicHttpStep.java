@@ -5,9 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -34,8 +32,6 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Redesign
-@ExcludeRedesign
-@Produces(Step.class)
 @Slf4j
 public class BasicHttpStep implements Step, TaskExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("BASIC_HTTP").build();

@@ -3,7 +3,6 @@ package io.harness.states;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
@@ -23,7 +22,6 @@ import java.util.List;
  * This step does not do anything as checkout is happening in init container.
  * This step will be useful for non container execution
  */
-@Produces(Step.class)
 @Slf4j
 public class GitCloneStep implements Step, SyncExecutable {
   @Inject private ManagerCIResource managerCIResource;

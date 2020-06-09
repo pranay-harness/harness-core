@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
@@ -38,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-@Produces(Step.class)
 @Slf4j
 public class ArtifactStep implements Step, TaskExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("ARTIFACT_STEP").build();

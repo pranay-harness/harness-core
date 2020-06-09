@@ -10,9 +10,7 @@ import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.advise.NextStepAdvise;
-import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import software.wings.api.HttpStateExecutionData;
@@ -21,8 +19,6 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Redesign
-@ExcludeRedesign
-@Produces(Adviser.class)
 public class HttpResponseCodeSwitchAdviser implements Adviser {
   public static final AdviserType ADVISER_TYPE = AdviserType.builder().type("HTTP_RESPONSE_CODE_SWITCH").build();
 

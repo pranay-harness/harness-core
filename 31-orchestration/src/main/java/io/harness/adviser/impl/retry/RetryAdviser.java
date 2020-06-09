@@ -15,7 +15,6 @@ import io.harness.adviser.advise.EndPlanAdvise;
 import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.adviser.advise.RetryAdvise;
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.AmbianceHelper;
@@ -25,7 +24,6 @@ import java.util.List;
 
 @OwnedBy(CDC)
 @Redesign
-@Produces(Adviser.class)
 public class RetryAdviser implements Adviser {
   @Inject AmbianceHelper ambianceHelper;
 

@@ -32,8 +32,8 @@ import java.util.List;
 import java.util.Map;
 
 @Redesign
-@OwnedBy(HarnessTeam.CDC)
 @ExcludeRedesign
+@OwnedBy(HarnessTeam.CDC)
 public class BasicHttpChainStep implements Step, TaskChainExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("HTTP_CHAIN").build();
 

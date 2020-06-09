@@ -9,7 +9,6 @@ import static software.wings.common.CICommonPodConstants.REL_STDOUT_FILE_PATH;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.steps.stepinfo.BuildStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
@@ -38,7 +37,6 @@ import java.util.List;
  * Currently it assumes a timeout of 60 minutes
  */
 
-@Produces(Step.class)
 @Slf4j
 public class BuildStep implements Step, SyncExecutable {
   @Inject private ManagerCIResource managerCIResource;
