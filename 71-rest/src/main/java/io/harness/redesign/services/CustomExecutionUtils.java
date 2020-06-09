@@ -13,7 +13,6 @@ import io.harness.adviser.impl.retry.RetryAdviserParameters;
 import io.harness.adviser.impl.success.OnSuccessAdviser;
 import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
@@ -64,7 +63,6 @@ import software.wings.sm.states.ShellScriptState;
 
 @OwnedBy(CDC)
 @Redesign
-@ExcludeRedesign
 @UtilityClass
 public class CustomExecutionUtils {
   private static final String BASIC_HTTP_STATE_URL_404 = "http://httpstat.us/404";

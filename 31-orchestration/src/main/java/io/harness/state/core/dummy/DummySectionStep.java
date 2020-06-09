@@ -3,7 +3,6 @@ package io.harness.state.core.dummy;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.facilitator.modes.child.ChildExecutable;
@@ -20,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 
 @OwnedBy(CDC)
-@Produces(Step.class)
 public class DummySectionStep implements Step, ChildExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("DUMMY_SECTION").build();
 

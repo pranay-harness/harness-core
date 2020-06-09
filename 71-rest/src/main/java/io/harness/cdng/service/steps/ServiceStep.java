@@ -1,7 +1,6 @@
 package io.harness.cdng.service.steps;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.FailureType;
 import io.harness.execution.status.Status;
@@ -24,7 +23,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
-@Produces(Step.class)
 @Slf4j
 public class ServiceStep implements Step, ChildrenExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("SERVICE_STEP").build();

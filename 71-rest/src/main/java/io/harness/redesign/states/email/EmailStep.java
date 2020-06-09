@@ -7,7 +7,6 @@ import com.google.common.base.Splitter;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
@@ -31,7 +30,6 @@ import java.util.List;
 
 @OwnedBy(CDC)
 @Redesign
-@Produces(Step.class)
 @Slf4j
 public class EmailStep implements Step, SyncExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("EMAIL").build();

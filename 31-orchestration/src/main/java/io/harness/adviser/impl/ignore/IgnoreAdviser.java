@@ -10,14 +10,12 @@ import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.adviser.advise.NextStepAdvise;
-import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.state.io.FailureInfo;
 
 @OwnedBy(CDC)
 @Redesign
-@Produces(Adviser.class)
 public class IgnoreAdviser implements Adviser {
   public static final AdviserType ADVISER_TYPE = AdviserType.builder().type(AdviserType.IGNORE).build();
 

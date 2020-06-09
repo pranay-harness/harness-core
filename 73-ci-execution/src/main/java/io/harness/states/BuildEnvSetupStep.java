@@ -3,7 +3,6 @@ package io.harness.states;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
@@ -23,7 +22,6 @@ import java.util.List;
  * This state will setup the build environment, clone the git repository for running CI job.
  */
 
-@Produces(Step.class)
 @Slf4j
 public class BuildEnvSetupStep implements Step, SyncExecutable {
   @Inject private ManagerCIResource managerCIResource;

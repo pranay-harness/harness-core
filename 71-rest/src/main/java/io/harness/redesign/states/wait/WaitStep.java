@@ -7,9 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.SimpleNotifier;
 import io.harness.delegate.beans.ResponseData;
@@ -34,8 +32,6 @@ import java.util.concurrent.TimeUnit;
 
 @OwnedBy(CDC)
 @Redesign
-@ExcludeRedesign
-@Produces(Step.class)
 public class WaitStep implements Step, AsyncExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("WAIT_STATE").build();
 

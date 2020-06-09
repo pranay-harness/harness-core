@@ -3,7 +3,6 @@ package io.harness.states;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
@@ -28,7 +27,6 @@ import java.util.List;
  * State sends cleanup task to finish CI build job. It has to be executed in the end once all steps are complete
  */
 
-@Produces(Step.class)
 @Slf4j
 // TODO Cleanup Support for other types (Non K8)
 public class CleanupStep implements Step, SyncExecutable {

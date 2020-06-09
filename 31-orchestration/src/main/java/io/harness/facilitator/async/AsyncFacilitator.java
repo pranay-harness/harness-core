@@ -3,7 +3,6 @@ package io.harness.facilitator.async;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.Facilitator;
@@ -18,7 +17,6 @@ import java.util.List;
 
 @OwnedBy(CDC)
 @Redesign
-@Produces(Facilitator.class)
 public class AsyncFacilitator implements Facilitator {
   public static final FacilitatorType FACILITATOR_TYPE = FacilitatorType.builder().type(FacilitatorType.ASYNC).build();
 

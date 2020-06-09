@@ -3,7 +3,6 @@ package io.harness.state.core.fork;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.annotations.Produces;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
@@ -25,7 +24,6 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Redesign
-@Produces(Step.class)
 public class ForkStep implements Step, ChildrenExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("FORK").build();
 

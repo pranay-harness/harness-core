@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.LateBindingMap;
 import io.harness.references.SweepingOutputRefObject;
@@ -15,7 +14,6 @@ import lombok.Value;
 
 @OwnedBy(CDC)
 @Redesign
-@ExcludeRedesign
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = true)

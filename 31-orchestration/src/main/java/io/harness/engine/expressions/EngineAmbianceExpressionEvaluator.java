@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.AmbianceHelper;
 import io.harness.engine.expressions.functors.ExecutionSweepingOutputFunctor;
@@ -31,7 +30,6 @@ import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Redesign
-@ExcludeRedesign
 @EqualsAndHashCode(callSuper = true)
 public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   @Inject private OutcomeService outcomeService;
