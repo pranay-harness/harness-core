@@ -30,6 +30,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StatusNotifyResponseData;
+import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponseNotifyData;
 
@@ -73,6 +74,8 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(TaskExecutableResponse.class, 2526);
     kryo.register(TaskChainExecutableResponse.class, 2527);
     kryo.register(RepairActionCode.class, 2528);
+
+    kryo.register(StepOutcomeRef.class, 2529);
 
     // Add moved/old classes here
     // Keeping the same id for moved classes

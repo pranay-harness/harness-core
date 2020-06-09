@@ -59,8 +59,10 @@ import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.state.Step;
 import io.harness.state.io.FailureInfo;
+import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponseNotifyData;
 import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
@@ -245,11 +247,11 @@ public class ExecutionEngine implements Engine {
     NodeExecution nodeExecution = concludeNodeExecution(nodeExecutionId, stepResponse);
     // TODO => handle before node execution update
     Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
-    handleOutcomes(ambiance, stepResponse.stepOutcomeMap());
+    List<StepOutcomeRef> outcomeRefs = handleOutcomes(ambiance, stepResponse.stepOutcomeMap());
 
     PlanNode node = nodeExecution.getNode();
     if (isEmpty(node.getAdviserObtainments())) {
-      endTransition(nodeExecution, nodeExecution.getStatus(), stepResponse);
+      endTransition(nodeExecution, nodeExecution.getStatus(), stepResponse.getFailureInfo(), outcomeRefs);
       return;
     }
     Advise advise = null;
@@ -268,7 +270,7 @@ public class ExecutionEngine implements Engine {
       }
     }
     if (advise == null) {
-      endTransition(nodeExecution, nodeExecution.getStatus(), stepResponse);
+      endTransition(nodeExecution, nodeExecution.getStatus(), stepResponse.getFailureInfo(), outcomeRefs);
       return;
     }
     handleAdvise(ambiance, advise);
@@ -287,31 +289,34 @@ public class ExecutionEngine implements Engine {
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private void handleOutcomes(Ambiance ambiance, Map<String, StepResponse.StepOutcome> stepOutcomes) {
+  private List<StepOutcomeRef> handleOutcomes(Ambiance ambiance, Map<String, StepOutcome> stepOutcomes) {
+    List<StepOutcomeRef> outcomeRefs = new ArrayList<>();
     if (stepOutcomes == null) {
-      return;
+      return outcomeRefs;
     }
     stepOutcomes.forEach((name, stepOutcome) -> {
       Outcome outcome = stepOutcome.getOutcome();
       if (outcome != null) {
         Resolver resolver = resolverRegistry.obtain(outcome.getRefType());
-        resolver.consume(ambiance, name, outcome, stepOutcome.getGroup());
+        String instanceId = resolver.consume(ambiance, name, outcome, stepOutcome.getGroup());
+        outcomeRefs.add(StepOutcomeRef.builder().name(name).instanceId(instanceId).build());
       }
     });
+    return outcomeRefs;
   }
 
-  public void endTransition(NodeExecution nodeExecution, Status status, StepResponse stepResponse) {
+  public void endTransition(
+      NodeExecution nodeExecution, Status status, FailureInfo failureInfo, List<StepOutcomeRef> outcomeRefs) {
     if (isNotEmpty(nodeExecution.getNotifyId())) {
       PlanNode planNode = nodeExecution.getNode();
-      StepResponseNotifyData responseData =
-          StepResponseNotifyData.builder()
-              .nodeUuid(planNode.getUuid())
-              .stepOutcomes(stepResponse != null ? stepResponse.getStepOutcomes() : new ArrayList<>())
-              .failureInfo(stepResponse != null ? stepResponse.getFailureInfo() : null)
-              .identifier(planNode.getIdentifier())
-              .group(planNode.getGroup())
-              .status(status)
-              .build();
+      StepResponseNotifyData responseData = StepResponseNotifyData.builder()
+                                                .nodeUuid(planNode.getUuid())
+                                                .stepOutcomesRefs(outcomeRefs)
+                                                .failureInfo(failureInfo)
+                                                .identifier(planNode.getIdentifier())
+                                                .group(planNode.getGroup())
+                                                .status(status)
+                                                .build();
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
       logger.info("Ending Execution");

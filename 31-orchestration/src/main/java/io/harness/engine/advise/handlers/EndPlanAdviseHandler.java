@@ -16,6 +16,6 @@ public class EndPlanAdviseHandler implements AdviseHandler<EndPlanAdvise> {
   @Override
   public void handleAdvise(Ambiance ambiance, EndPlanAdvise endPlanAdvise) {
     NodeExecution nodeExecution = nodeExecutionService.get(ambiance.obtainCurrentRuntimeId());
-    engine.endTransition(nodeExecution, nodeExecution.getStatus(), null);
+    engine.endTransition(nodeExecution, nodeExecution.getStatus(), null, null);
   }
 }
