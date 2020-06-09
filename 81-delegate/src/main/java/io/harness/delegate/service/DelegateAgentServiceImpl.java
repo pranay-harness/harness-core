@@ -11,6 +11,7 @@ import static io.harness.delegate.configuration.InstallUtils.installKubectl;
 import static io.harness.delegate.configuration.InstallUtils.installKustomize;
 import static io.harness.delegate.configuration.InstallUtils.installOc;
 import static io.harness.delegate.configuration.InstallUtils.installTerraformConfigInspect;
+import static io.harness.delegate.message.ManagerMessageConstants.INVALID_TOKEN;
 import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
@@ -724,6 +725,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       migrate(StringUtils.substringAfter(message, MIGRATE));
     } else if (StringUtils.startsWith(message, JRE_VERSION)) {
       updateJreVersion(StringUtils.substringAfter(message, JRE_VERSION));
+    } else if (StringUtils.contains(message, INVALID_TOKEN)) {
+      initiateSelfDestruct();
     } else if (!StringUtils.equals(message, "X")) {
       logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       try {
