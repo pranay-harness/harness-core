@@ -66,6 +66,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
   private ReleaseHistory releaseHistory;
   private Release release;
   private Release previousRollbackEligibleRelease;
+  private boolean isNoopRollBack;
   private List<KubernetesResourceIdRevision> previousManagedWorkloads = new ArrayList<>();
 
   @Override
@@ -109,8 +110,10 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       updateManagedWorkloadRevisionsInRelease(k8sDelegateTaskParams);
     }
 
-    kubernetesContainerService.saveReleaseHistory(
-        kubernetesConfig, Collections.emptyList(), request.getReleaseName(), releaseHistory.getAsYaml());
+    if (!isNoopRollBack) {
+      kubernetesContainerService.saveReleaseHistory(
+          kubernetesConfig, Collections.emptyList(), request.getReleaseName(), releaseHistory.getAsYaml());
+    }
 
     return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
   }
@@ -128,6 +131,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
         kubernetesConfig, Collections.emptyList(), k8sRollingDeployRollbackTaskParameters.getReleaseName());
 
     if (StringUtils.isEmpty(releaseHistoryData)) {
+      isNoopRollBack = true;
       executionLogCallback.saveExecutionLog(
           "\nNo release history found for release " + k8sRollingDeployRollbackTaskParameters.getReleaseName());
     } else {
