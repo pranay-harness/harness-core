@@ -2486,25 +2486,30 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public void abortTask(String accountId, String delegateTaskId) {
+  public DelegateTask abortTask(String accountId, String delegateTaskId) {
     try (AutoLogContext ignore1 = new TaskLogContext(delegateTaskId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       if (delegateTaskId == null) {
         logger.warn("Delegate task id was null", new IllegalArgumentException());
-        return;
+        return null;
       }
       logger.info("Aborting delegate task");
-      endTask(accountId, delegateTaskId, getRunningTaskQuery(accountId, delegateTaskId), ABORTED);
+      return endTask(accountId, delegateTaskId, getRunningTaskQuery(accountId, delegateTaskId), ABORTED);
     }
   }
 
-  private void endTask(
+  private DelegateTask endTask(
       String accountId, String delegateTaskId, Query<DelegateTask> delegateTaskQuery, DelegateTask.Status error) {
-    wingsPersistence.update(delegateTaskQuery,
-        wingsPersistence.createUpdateOperations(DelegateTask.class).set(DelegateTaskKeys.status, error));
+    UpdateOperations updateOperations =
+        wingsPersistence.createUpdateOperations(DelegateTask.class).set(DelegateTaskKeys.status, error);
+
+    DelegateTask oldTask =
+        wingsPersistence.findAndModify(delegateTaskQuery, updateOperations, HPersistence.returnOldOptions);
 
     broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true)
         .broadcast(aDelegateTaskAbortEvent().withAccountId(accountId).withDelegateTaskId(delegateTaskId).build());
+
+    return oldTask;
   }
 
   private Query<DelegateTask> getRunningTaskQuery(String accountId, String delegateTaskId) {

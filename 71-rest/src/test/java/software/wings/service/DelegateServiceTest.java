@@ -1670,7 +1670,11 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldAbortTask() {
     DelegateTask delegateTask = saveDelegateTask(true, ImmutableSet.of(DELEGATE_ID), QUEUED);
-    delegateService.abortTask(ACCOUNT_ID, delegateTask.getUuid());
+
+    DelegateTask oldTask = delegateService.abortTask(ACCOUNT_ID, delegateTask.getUuid());
+
+    assertThat(oldTask.getUuid()).isEqualTo(delegateTask.getUuid());
+    assertThat(oldTask.getStatus()).isEqualTo(QUEUED);
     assertThat(wingsPersistence.createQuery(DelegateTask.class).get().getStatus()).isEqualTo(ABORTED);
   }
 
