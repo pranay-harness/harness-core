@@ -136,7 +136,7 @@ public class AlertCheckJob implements Job {
   }
 
   private void checkIfAnyDelegatesAreDown(String accountId, List<Delegate> delegates) {
-    Set<String> primaryConnections = delegateConnectionDao.obtainDisconnectedDelegates(accountId);
+    Set<String> primaryConnections = delegateConnectionDao.obtainConnectedDelegates(accountId);
 
     for (Delegate delegate : delegates) {
       AlertData alertData = DelegatesDownAlert.builder()

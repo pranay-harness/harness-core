@@ -43,16 +43,6 @@ public class DelegateConnectionDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldList() {
-    delegateConnectionDao.save(delegateConnection);
-    List<DelegateConnection> delegateConnections =
-        delegateConnectionDao.list(delegate.getAccountId(), delegate.getUuid());
-    assertThat(delegateConnections.get(0)).isEqualTo(delegateConnection);
-  }
-
-  @Test
-  @Owner(developers = HANTANG)
-  @Category(UnitTests.class)
   public void shouldReturnNullWhenList() {
     List<DelegateConnection> delegateConnections =
         delegateConnectionDao.list(delegate.getAccountId(), delegate.getUuid());

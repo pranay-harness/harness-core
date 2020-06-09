@@ -67,6 +67,7 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.PersistentEntity;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
+import io.harness.version.VersionInfoManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -93,8 +94,6 @@ import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
-import software.wings.beans.DelegateConnection;
-import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
@@ -238,6 +237,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private EventPublisher eventPublisher;
   @Inject private SegmentGroupEventJobService segmentGroupEventJobService;
   @Inject private Morphia morphia;
+  @Inject private DelegateConnectionDao delegateConnectionDao;
+  @Inject private VersionInfoManager versionInfoManager;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -1070,11 +1071,8 @@ public class AccountServiceImpl implements AccountService {
       return false;
     }
 
-    return wingsPersistence.createQuery(DelegateConnection.class)
-               .filter(DelegateConnectionKeys.accountId, accountId)
-               .filter(DelegateConnectionKeys.delegateId, delegateKey.getId())
-               .getKey()
-        != null;
+    return delegateConnectionDao.checkDelegateConnected(
+        accountId, delegateKey.getId().toString(), versionInfoManager.getVersionInfo().getVersion());
   }
 
   @Override
