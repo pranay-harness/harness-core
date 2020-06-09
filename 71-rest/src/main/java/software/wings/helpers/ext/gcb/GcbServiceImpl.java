@@ -13,6 +13,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
+import okhttp3.ResponseBody;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -20,7 +21,10 @@ import software.wings.beans.GcpConfig;
 import software.wings.exception.GcbClientException;
 import software.wings.helpers.ext.gcb.models.BuildOperationDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
+import software.wings.helpers.ext.gcb.models.GcbBuildTriggers;
+import software.wings.helpers.ext.gcb.models.GcbTrigger;
 import software.wings.helpers.ext.gcb.models.RepoSource;
+import software.wings.helpers.ext.gcs.GcsRestClient;
 import software.wings.service.impl.GcpHelperService;
 
 import java.io.IOException;
@@ -79,6 +83,32 @@ public class GcbServiceImpl implements GcbService {
     }
   }
 
+  @Override
+  public String fetchBuildLogs(
+      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, String fileName) {
+    try {
+      Response<ResponseBody> response =
+          getGcsRestClient()
+              .fetchLogs(getBasicAuthHeader(gcpConfig, encryptionDetails), bucketName, fileName)
+              .execute();
+      return response.body().string();
+    } catch (IOException e) {
+      throw new GcbClientException(GCP_ERROR_MESSAGE, e);
+    }
+  }
+
+  @Override
+  public List<GcbTrigger> getAllTriggers(
+      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String projectId) {
+    try {
+      Response<GcbBuildTriggers> response =
+          getGcbRestClient().getAllTriggers(getBasicAuthHeader(gcpConfig, encryptionDetails), projectId).execute();
+      return response.body().getTriggers();
+    } catch (IOException e) {
+      throw new GcbClientException(GCP_ERROR_MESSAGE, e);
+    }
+  }
+
   private GcbRestClient getGcbRestClient() {
     OkHttpClient okHttpClient = getOkHttpClientBuilder()
                                     .connectTimeout(5, TimeUnit.SECONDS)
@@ -90,6 +120,19 @@ public class GcbServiceImpl implements GcbService {
                             .addConverterFactory(JacksonConverterFactory.create())
                             .build();
     return retrofit.create(GcbRestClient.class);
+  }
+
+  private GcsRestClient getGcsRestClient() {
+    OkHttpClient okHttpClient = getOkHttpClientBuilder()
+                                    .connectTimeout(5, TimeUnit.SECONDS)
+                                    .proxy(Http.checkAndGetNonProxyIfApplicable(GcsRestClient.baseUrl))
+                                    .build();
+    Retrofit retrofit = new Retrofit.Builder()
+                            .client(okHttpClient)
+                            .baseUrl(GcsRestClient.baseUrl)
+                            .addConverterFactory(JacksonConverterFactory.create())
+                            .build();
+    return retrofit.create(GcsRestClient.class);
   }
 
   private String getBasicAuthHeader(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails)

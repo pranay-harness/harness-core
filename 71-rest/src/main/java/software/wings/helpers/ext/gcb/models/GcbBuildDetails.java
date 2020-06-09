@@ -6,6 +6,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotations.dev.OwnedBy;
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
 @Data
+@Builder
 public class GcbBuildDetails {
   private String id;
   private String projectId;
