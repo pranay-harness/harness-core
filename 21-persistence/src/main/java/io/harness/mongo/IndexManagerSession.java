@@ -187,13 +187,14 @@ public class IndexManagerSession {
         options.put(EXPIRE_AFTER_SECONDS, indexed.options().expireAfterSeconds());
       }
 
-      creators.put(indexName, IndexCreator.builder().collection(collection).keys(dbObject).options(options).build());
+      putCreator(
+          creators, indexName, IndexCreator.builder().collection(collection).keys(dbObject).options(options).build());
     }
 
     // Read Entity level "Indexes" annotation
     List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
     if (indexesAnnotations != null) {
-      indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
+      indexesAnnotations.stream().distinct().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
         BasicDBObject keys = new BasicDBObject();
 
         if (index.fields().length == 1 && !index.fields()[0].value().contains(".")) {
@@ -207,10 +208,6 @@ public class IndexManagerSession {
         String indexName = index.options().name();
         if (isEmpty(indexName)) {
           logger.error("Do not use default index name. WARNING: this index will not be created!!!");
-          return;
-        }
-        if (creators.containsKey(indexName)) {
-          // Java doubles some annotations
           return;
         }
 
@@ -229,11 +226,19 @@ public class IndexManagerSession {
 
         checkWithTheOthers(creators, newCreator);
 
-        creators.put(indexName, newCreator);
+        putCreator(creators, indexName, newCreator);
       });
     }
 
     return creators;
+  }
+
+  private static void putCreator(Map<String, IndexCreator> creators, String indexName, IndexCreator newCreator) {
+    creators.merge(indexName, newCreator, (old, current) -> {
+      logger.error(
+          "Indexes {} and {} have the same name {}", current.getKeys().toString(), old.getKeys().toString(), indexName);
+      throw new IndexManagerInspectException();
+    });
   }
 
   private static void checkWithTheOthers(Map<String, IndexCreator> creators, IndexCreator newCreator) {
@@ -313,12 +318,9 @@ public class IndexManagerSession {
 
   public boolean rebuildIndex(
       IndexManagerCollectionSession collectionSession, IndexCreator indexCreator, Duration waitFor) {
-    DBObject indexByFields = collectionSession.findIndexByFields(indexCreator);
-    if (indexByFields == null) {
+    if (!collectionSession.isRebuildNeeded(indexCreator)) {
       return false;
     }
-
-    String currentName = (String) indexByFields.get(NAME);
 
     // Mongo does not support index updates - we have to recreate the index
 
@@ -353,8 +355,18 @@ public class IndexManagerSession {
       return false;
     }
 
-    // now we are safe to drop the original
-    dropIndex(indexCreator.getCollection(), currentName);
+    // now it is safe to drop the colliding indexes
+    DBObject indexByFields = collectionSession.findIndexByFields(indexCreator);
+    if (indexByFields != null) {
+      String currentName = (String) indexByFields.get(NAME);
+      dropIndex(indexCreator.getCollection(), currentName);
+    }
+
+    String currentName = (String) indexCreator.getOptions().get(NAME);
+    DBObject indexByName = collectionSession.findIndexByName(currentName);
+    if (indexByName != null) {
+      dropIndex(indexCreator.getCollection(), currentName);
+    }
 
     // Lets create the target index
     create(indexCreator);

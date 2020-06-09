@@ -55,6 +55,20 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @RealMongo
+  public void testFindIndexByName() {
+    IndexManagerSession session = new IndexManagerSession(AUTO);
+    DBCollection collection = persistence.getCollection(TestIndexEntity.class);
+
+    session.create(buildIndexCreator(collection, "index", 1).build());
+
+    assertThat(createCollectionSession(collection).findIndexByName("index")).isNotNull();
+    assertThat(createCollectionSession(collection).findIndexByName("foo")).isNull();
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  @RealMongo
   public void testIsRebuiltNeeded() {
     IndexManagerSession session = new IndexManagerSession(AUTO);
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
@@ -66,8 +80,11 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
 
     assertThat(createCollectionSession(collection).isRebuildNeeded(indexCreator)).isFalse();
 
-    IndexCreator differentCreator = buildIndexCreator(collection, "foo2", 1).build();
+    IndexCreator differentCreator = buildIndexCreator(collection, "foo", -1).build();
     assertThat(createCollectionSession(collection).isRebuildNeeded(differentCreator)).isTrue();
+
+    IndexCreator differentNameCreator = buildIndexCreator(collection, "foo2", 1).build();
+    assertThat(createCollectionSession(collection).isRebuildNeeded(differentNameCreator)).isTrue();
   }
 
   @Test

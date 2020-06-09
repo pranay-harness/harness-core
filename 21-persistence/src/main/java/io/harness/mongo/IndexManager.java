@@ -52,22 +52,27 @@ public class IndexManager {
       return true;
     }
 
-    public static boolean compareKeys(BasicDBObject keys1, BasicDBObject keys2) {
+    public static boolean compareKeysOrderAndValues(BasicDBObject keys1, BasicDBObject keys2) {
       Iterator<Entry<String, Object>> iterator1 = keys1.entrySet().iterator();
       Iterator<Entry<String, Object>> iterator2 = keys2.entrySet().iterator();
       while (iterator1.hasNext()) {
         if (!iterator2.hasNext()) {
           return false;
         }
-        if (!iterator1.next().getKey().equals(iterator2.next().getKey())) {
+        Entry<String, Object> item1 = iterator1.next();
+        Entry<String, Object> item2 = iterator2.next();
+        if (!item1.getKey().equals(item2.getKey())) {
+          return false;
+        }
+        if (!item1.getValue().equals(item2.getValue())) {
           return false;
         }
       }
       return !iterator2.hasNext();
     }
 
-    public boolean sameKeys(BasicDBObject keys) {
-      return compareKeys(getKeys(), keys);
+    public boolean sameKeysOrderAndValues(BasicDBObject keys) {
+      return compareKeysOrderAndValues(getKeys(), keys);
     }
 
     public boolean sameKeySet(IndexCreator other) {

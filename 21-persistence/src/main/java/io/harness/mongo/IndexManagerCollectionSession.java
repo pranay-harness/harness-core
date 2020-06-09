@@ -61,7 +61,17 @@ class IndexManagerCollectionSession {
   DBObject findIndexByFields(IndexCreator indexCreator) {
     for (DBObject index : indexInfo) {
       BasicDBObject indexKeys = (BasicDBObject) index.get("key");
-      if (indexCreator.sameKeys(indexKeys)) {
+      if (indexCreator.sameKeysOrderAndValues(indexKeys)) {
+        return index;
+      }
+    }
+    return null;
+  }
+
+  DBObject findIndexByName(String name) {
+    for (DBObject index : indexInfo) {
+      String indexName = (String) index.get("name");
+      if (name.equals(indexName)) {
         return index;
       }
     }
@@ -70,15 +80,22 @@ class IndexManagerCollectionSession {
 
   boolean isRebuildNeeded(IndexCreator indexCreator) {
     // first make sure that we need to rename the index
+    String name = (String) indexCreator.getOptions().get(NAME);
+    DBObject indexByName = findIndexByName(name);
     DBObject indexByFields = findIndexByFields(indexCreator);
-    if (indexByFields == null) {
-      return false;
+
+    // There is collision by name
+    if (indexByName != null && indexByName != indexByFields) {
+      return true;
     }
 
-    String name = (String) indexCreator.getOptions().get(NAME);
-    String currentName = (String) indexByFields.get(NAME);
+    // There is collision by fields
+    if (indexByFields != null && indexByName != indexByFields) {
+      return true;
+    }
 
-    return !currentName.equals(name);
+    // else there is no collision or it is the same index
+    return false;
   }
 
   boolean isCreateNeeded(IndexCreator indexCreator) {
