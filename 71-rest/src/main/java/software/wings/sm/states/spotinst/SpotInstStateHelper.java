@@ -30,6 +30,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
@@ -463,5 +464,21 @@ public class SpotInstStateHelper {
             .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
             .value(InstanceInfoVariables.builder().newInstanceTrafficPercent(trafficShift).build())
             .build());
+  }
+
+  public List<LbDetailsForAlbTrafficShift> getRenderedLbDetails(
+      ExecutionContext context, List<LbDetailsForAlbTrafficShift> lbDetails) {
+    List<LbDetailsForAlbTrafficShift> rendered = new ArrayList<>();
+    for (LbDetailsForAlbTrafficShift originalLbDetails : lbDetails) {
+      rendered.add(LbDetailsForAlbTrafficShift.builder()
+                       .loadBalancerName(context.renderExpression(originalLbDetails.getLoadBalancerName()))
+                       .loadBalancerArn(context.renderExpression(originalLbDetails.getListenerPort()))
+                       .listenerPort(context.renderExpression(originalLbDetails.getListenerPort()))
+                       .listenerArn(context.renderExpression(originalLbDetails.getListenerArn()))
+                       .useSpecificRule(originalLbDetails.isUseSpecificRule())
+                       .ruleArn(context.renderExpression(originalLbDetails.getRuleArn()))
+                       .build());
+    }
+    return rendered;
   }
 }

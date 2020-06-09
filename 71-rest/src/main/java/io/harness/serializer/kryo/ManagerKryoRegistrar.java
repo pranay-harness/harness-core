@@ -27,6 +27,7 @@ import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.serializer.KryoRegistrar;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
+import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
 import software.wings.api.AmiStepExecutionSummary;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ArtifactCollectionExecutionData;
@@ -558,6 +559,7 @@ import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
+import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
@@ -1634,5 +1636,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ShellConnectionCapability.class, 7390);
     kryo.register(GitConnectionCapability.class, 7391);
     kryo.register(GitValidationParameters.class, 7392);
+    kryo.register(AmiServiceTrafficShiftAlbSetupElement.class, 7393);
+    kryo.register(AwsAmiServiceTrafficShiftAlbSetupResponse.class, 7394);
   }
 }

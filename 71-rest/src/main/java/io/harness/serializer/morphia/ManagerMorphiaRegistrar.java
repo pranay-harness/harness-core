@@ -37,6 +37,7 @@ import io.harness.redesign.states.wait.WaitStepParameters;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
+import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
 import software.wings.api.AmiStepExecutionSummary;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ArtifactCollectionExecutionData;
@@ -1076,6 +1077,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
 
     w.put("api.AmiServiceDeployElement", AmiServiceDeployElement.class);
     w.put("api.AmiServiceSetupElement", AmiServiceSetupElement.class);
+    w.put("api.AmiServiceTrafficShiftAlbSetupElement", AmiServiceTrafficShiftAlbSetupElement.class);
     w.put("api.AmiStepExecutionSummary", AmiStepExecutionSummary.class);
     w.put("api.ApprovalStateExecutionData", ApprovalStateExecutionData.class);
     w.put("api.artifact.ServiceArtifactElement", ServiceArtifactElement.class);

@@ -41,7 +41,9 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.LaunchTemplateVersion;
 import com.amazonaws.services.ec2.model.RequestLaunchTemplateData;
 import io.fabric8.utils.Lists;
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -56,6 +58,8 @@ import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse.AwsAmiServiceSetupResponseBuilder;
+import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRequest;
+import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
@@ -367,6 +371,114 @@ public class AwsAmiHelperServiceDelegateImpl
       logger.error(errorMessage, ex);
       return AwsAmiServiceDeployResponse.builder().errorMessage(errorMessage).executionStatus(FAILED).build();
     }
+  }
+
+  @Override
+  public AwsAmiServiceTrafficShiftAlbSetupResponse setUpAmiServiceTrafficShift(
+      AwsAmiServiceTrafficShiftAlbSetupRequest request, ExecutionLogCallback logCallback) {
+    try {
+      AwsAmiServiceSetupResponse awsAmiServiceSetupResponse =
+          setUpAmiService(createAwsAmiRequest(request), logCallback);
+      if (awsAmiSetupFailed(awsAmiServiceSetupResponse)) {
+        return failureResponse(awsAmiServiceSetupResponse);
+      }
+      return successResponse(awsAmiServiceSetupResponse, loadTargetGroupDetails(request, logCallback));
+    } catch (Exception ex) {
+      return failureResponse(ex, logCallback);
+    }
+  }
+
+  @Override
+  public AwsAmiServiceTrafficShiftAlbSetupResponse deployAmiServiceTrafficShift(
+      AwsAmiServiceTrafficShiftAlbSetupRequest request, ExecutionLogCallback logCallback) {
+    throw new InvalidRequestException("Not implemented yet");
+  }
+
+  @Override
+  public AwsAmiServiceTrafficShiftAlbSetupResponse switchAmiRoutesTrafficShift(
+      AwsAmiServiceTrafficShiftAlbSetupRequest request, ExecutionLogCallback logCallback) {
+    throw new InvalidRequestException("Not implemented yet.");
+  }
+
+  @Override
+  public AwsAmiServiceTrafficShiftAlbSetupResponse rollbackSwitchAmiRoutesTrafficShift(
+      AwsAmiServiceTrafficShiftAlbSetupRequest request, ExecutionLogCallback logCallback) {
+    throw new InvalidRequestException("Not implemented yet");
+  }
+
+  private AwsAmiServiceSetupRequest createAwsAmiRequest(
+      AwsAmiServiceTrafficShiftAlbSetupRequest trafficShiftAlbSetupRequest) {
+    return AwsAmiServiceSetupRequest.builder()
+        .accountId(trafficShiftAlbSetupRequest.getAwsConfig().getAccountId())
+        .appId(trafficShiftAlbSetupRequest.getAppId())
+        .activityId(trafficShiftAlbSetupRequest.getActivityId())
+        .commandName(trafficShiftAlbSetupRequest.getCommandName())
+        .awsConfig(trafficShiftAlbSetupRequest.getAwsConfig())
+        .encryptionDetails(trafficShiftAlbSetupRequest.getEncryptionDetails())
+        .region(trafficShiftAlbSetupRequest.getRegion())
+        .infraMappingAsgName(trafficShiftAlbSetupRequest.getInfraMappingAsgName())
+        .infraMappingId(trafficShiftAlbSetupRequest.getInfraMappingId())
+        .artifactRevision(trafficShiftAlbSetupRequest.getArtifactRevision())
+        .build();
+  }
+
+  private List<LbDetailsForAlbTrafficShift> loadTargetGroupDetails(
+      AwsAmiServiceTrafficShiftAlbSetupRequest request, ExecutionLogCallback logCallback) {
+    List<LbDetailsForAlbTrafficShift> originalLbDetails = request.getLbDetails();
+    if (isEmpty(originalLbDetails)) {
+      throw new InvalidRequestException("No load balancers found for traffic shifting.");
+    }
+    List<LbDetailsForAlbTrafficShift> detailsWithTargetGroups = new ArrayList<>();
+    for (LbDetailsForAlbTrafficShift originalLbDetail : originalLbDetails) {
+      detailsWithTargetGroups.add(awsElbHelperServiceDelegate.loadTrafficShiftTargetGroupData(
+          request.getAwsConfig(), request.getRegion(), emptyList(), originalLbDetail, logCallback));
+    }
+    return detailsWithTargetGroups;
+  }
+
+  private AwsAmiServiceTrafficShiftAlbSetupResponse successResponse(
+      AwsAmiServiceSetupResponse awsAmiServiceSetupResponse,
+      List<LbDetailsForAlbTrafficShift> lbDetailsForAlbTrafficShifts) {
+    return AwsAmiServiceTrafficShiftAlbSetupResponse.builder()
+        .executionStatus(awsAmiServiceSetupResponse.getExecutionStatus())
+        .lastDeployedAsgName(awsAmiServiceSetupResponse.getLastDeployedAsgName())
+        .oldAsgNames(awsAmiServiceSetupResponse.getOldAsgNames())
+        .newAsgName(awsAmiServiceSetupResponse.getNewAsgName())
+        .harnessRevision(awsAmiServiceSetupResponse.getHarnessRevision())
+        .minInstances(awsAmiServiceSetupResponse.getMinInstances())
+        .maxInstances(awsAmiServiceSetupResponse.getMaxInstances())
+        .desiredInstances(awsAmiServiceSetupResponse.getDesiredInstances())
+        .baseLaunchTemplateName(awsAmiServiceSetupResponse.getBaseLaunchTemplateName())
+        .baseLaunchTemplateVersion(awsAmiServiceSetupResponse.getBaseLaunchTemplateVersion())
+        .newLaunchTemplateName(awsAmiServiceSetupResponse.getNewLaunchTemplateName())
+        .newLaunchTemplateVersion(awsAmiServiceSetupResponse.getNewLaunchTemplateVersion())
+        .baseAsgScalingPolicyJSONs(awsAmiServiceSetupResponse.getBaseAsgScalingPolicyJSONs())
+        .preDeploymentData(awsAmiServiceSetupResponse.getPreDeploymentData())
+        .delegateMetaInfo(awsAmiServiceSetupResponse.getDelegateMetaInfo())
+        .lbDetailsWithTargetGroups(lbDetailsForAlbTrafficShifts)
+        .build();
+  }
+
+  private AwsAmiServiceTrafficShiftAlbSetupResponse failureResponse(
+      AwsAmiServiceSetupResponse awsAmiServiceSetupResponse) {
+    return AwsAmiServiceTrafficShiftAlbSetupResponse.builder()
+        .errorMessage(awsAmiServiceSetupResponse.getErrorMessage())
+        .executionStatus(FAILED)
+        .build();
+  }
+
+  private AwsAmiServiceTrafficShiftAlbSetupResponse failureResponse(
+      Exception exception, ExecutionLogCallback logCallback) {
+    logCallback.saveExecutionLog(format("Exception: [%s].", exception.getMessage()), ERROR);
+    logger.error(exception.getMessage(), exception);
+    return AwsAmiServiceTrafficShiftAlbSetupResponse.builder()
+        .errorMessage(ExceptionUtils.getMessage(exception))
+        .executionStatus(FAILED)
+        .build();
+  }
+
+  private boolean awsAmiSetupFailed(AwsAmiServiceSetupResponse awsAmiServiceSetupResponse) {
+    return awsAmiServiceSetupResponse.getExecutionStatus() == ExecutionStatus.FAILED;
   }
 
   @VisibleForTesting

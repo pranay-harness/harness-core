@@ -19,6 +19,7 @@ import software.wings.service.impl.aws.model.AwsAmiRequest.AwsAmiRequestType;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
+import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
@@ -70,6 +71,18 @@ public class AwsAmiAsyncTask extends AbstractDelegateRunnableTask {
             return awsAmiHelperServiceDelegate.switchAmiRoutes(switchRoutesRequest, logCallback);
           }
         }
+        case EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB_SETUP:
+          AwsAmiServiceTrafficShiftAlbSetupRequest amiServiceTrafficShiftAlbSetupRequest =
+              (AwsAmiServiceTrafficShiftAlbSetupRequest) request;
+          ExecutionLogCallback logCallback = new ExecutionLogCallback(delegateLogService,
+              amiServiceTrafficShiftAlbSetupRequest.getAccountId(), amiServiceTrafficShiftAlbSetupRequest.getAppId(),
+              amiServiceTrafficShiftAlbSetupRequest.getActivityId(),
+              amiServiceTrafficShiftAlbSetupRequest.getCommandName());
+          return awsAmiHelperServiceDelegate.setUpAmiServiceTrafficShift(
+              amiServiceTrafficShiftAlbSetupRequest, logCallback);
+
+        case EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB_DEPLOY:
+        case EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB:
         default: {
           throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER);
         }

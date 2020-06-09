@@ -52,6 +52,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBAC
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_AWS_LAMBDA;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_KUBERNETES_SETUP;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.SPOTINST_ALB_SHIFT_LISTENER_UPDATE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.UPGRADE_AUTOSCALING_GROUP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.UPGRADE_AUTOSCALING_GROUP_ROUTE;
 import static software.wings.sm.StateTypeScope.COMMON;
@@ -493,7 +494,7 @@ public enum StateType implements StateTypeDescriptor {
       ORCHESTRATION_STENCILS),
 
   ASG_AMI_ALB_SHIFT_SWITCH_ROUTES(AwsAmiTrafficShiftAlbSwitchRoutesState.class, FLOW_CONTROLS,
-      UPGRADE_AUTOSCALING_GROUP_ROUTE, Lists.newArrayList(InfrastructureMappingType.AWS_AMI),
+      SPOTINST_ALB_SHIFT_LISTENER_UPDATE, Lists.newArrayList(InfrastructureMappingType.AWS_AMI),
       singletonList(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES), ORCHESTRATION_STENCILS),
 
   AWS_AMI_ROLLBACK_SWITCH_ROUTES(AwsAmiRollbackSwitchRoutesState.class, FLOW_CONTROLS, ROLLBACK_AUTOSCALING_GROUP_ROUTE,
