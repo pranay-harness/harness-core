@@ -157,6 +157,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
+import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
@@ -793,6 +794,19 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
+  private <T> T delegateExecute(Call<T> call) throws IOException {
+    Response<T> response = null;
+    try {
+      response = call.execute();
+      return response.body();
+    } finally {
+      if (response != null && !response.isSuccessful() && response.errorBody().string().contains("INVALID_TOKEN")) {
+        initiateSelfDestruct();
+        response.errorBody().close();
+      }
+    }
+  }
+
   private String registerDelegate(DelegateParamsBuilder builder) {
     updateBuilderIfEcsDelegate(builder);
     AtomicInteger attempts = new AtomicInteger(0);
@@ -803,7 +817,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         String attemptString = attempts.get() > 1 ? " (Attempt " + attempts.get() + ")" : "";
         logger.info("Registering delegate" + attemptString);
         DelegateParams delegateParams = builder.build().toBuilder().lastHeartBeat(clock.millis()).build();
-        restResponse = execute(delegateAgentManagerClient.registerDelegate(accountId, delegateParams));
+        restResponse = delegateExecute(delegateAgentManagerClient.registerDelegate(accountId, delegateParams));
       } catch (Exception e) {
         String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
         logger.error(msg, e);
@@ -860,7 +874,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         long updated = profileParams == null || !resultExists ? 0L : profileParams.getProfileLastUpdatedAt();
         RestResponse<DelegateProfileParams> response = timeLimiter.callWithTimeout(
             ()
-                -> execute(delegateAgentManagerClient.checkForProfile(delegateId, accountId, profileId, updated)),
+                -> delegateExecute(
+                    delegateAgentManagerClient.checkForProfile(delegateId, accountId, profileId, updated)),
             15L, TimeUnit.SECONDS, true);
         if (response != null) {
           applyProfile(response.getResource());
@@ -980,7 +995,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     // MultipartBody.Part is used to send also the actual file name
     Part part = Part.createFormData("file", profileResult.getName(), requestFile);
     timeLimiter.callWithTimeout(()
-                                    -> execute(delegateAgentManagerClient.saveProfileResult(
+                                    -> delegateExecute(delegateAgentManagerClient.saveProfileResult(
                                         delegateId, accountId, exitCode != 0, FileBucket.PROFILE_RESULTS, part)),
         15L, TimeUnit.SECONDS, true);
   }
@@ -1048,7 +1063,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         try {
           RestResponse<DelegateScripts> restResponse = timeLimiter.callWithTimeout(
               ()
-                  -> execute(delegateAgentManagerClient.getDelegateScripts(accountId, version)),
+                  -> delegateExecute(delegateAgentManagerClient.getDelegateScripts(accountId, version)),
               1L, TimeUnit.MINUTES, true);
           DelegateScripts delegateScripts = restResponse.getResource();
           if (delegateScripts.isDoUpgrade()) {
@@ -1094,7 +1109,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       try {
         List<DelegateTaskEvent> taskEvents = timeLimiter.callWithTimeout(
             ()
-                -> execute(delegateAgentManagerClient.pollTaskEvents(delegateId, accountId)),
+                -> delegateExecute(delegateAgentManagerClient.pollTaskEvents(delegateId, accountId)),
             15L, TimeUnit.SECONDS, true);
         if (isNotEmpty(taskEvents)) {
           logger.info("Processing DelegateTaskEvents {}", taskEvents);
@@ -1459,7 +1474,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       updateBuilderIfEcsDelegate(builder);
       DelegateParams delegateParams =
           builder.build().toBuilder().keepAlivePacket(true).polllingModeEnabled(true).build();
-      execute(delegateAgentManagerClient.registerDelegate(accountId, delegateParams));
+      delegateExecute(delegateAgentManagerClient.registerDelegate(accountId, delegateParams));
     } catch (UncheckedTimeoutException ex) {
       logger.warn("Timed out sending Keep Alive Request", ex);
     } catch (Exception e) {
@@ -1588,7 +1603,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       logger.info("Try to acquire DelegateTask - accountId: {}", accountId);
 
       DelegateTaskPackage delegateTaskPackage =
-          execute(managerClient.acquireTask(delegateId, delegateTaskId, accountId));
+          delegateExecute(managerClient.acquireTask(delegateId, delegateTaskId, accountId));
       if (delegateTaskPackage == null || delegateTaskPackage.getDelegateTask() == null) {
         logger.info("DelegateTask not available - accountId: {}", delegateTaskEvent.getAccountId());
         return;
