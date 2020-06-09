@@ -15,6 +15,7 @@ import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderPayload;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderPayload.QLUpdateCloudProviderPayloadBuilder;
+import software.wings.graphql.schema.type.QLCloudProviderType;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.SettingServiceHelper;
@@ -60,6 +61,7 @@ public class UpdateCloudProviderDataFetcher
           String.format("No cloud provider exists with the cloudProviderId %s", cloudProviderId));
     }
 
+    checkIfCloudProviderTypeMatchesTheInputType(settingAttribute.getValue().getType(), input.getCloudProviderType());
     QLUpdateCloudProviderPayloadBuilder builder =
         QLUpdateCloudProviderPayload.builder().clientMutationId(input.getClientMutationId());
 
@@ -107,5 +109,14 @@ public class UpdateCloudProviderDataFetcher
         settingsService.updateWithSettingFields(settingAttribute, settingAttribute.getUuid(), GLOBAL_APP_ID);
     settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, false);
     return builder.cloudProvider(CloudProviderController.populateCloudProvider(settingAttribute).build()).build();
+  }
+
+  private void checkIfCloudProviderTypeMatchesTheInputType(
+      String settingVariableType, QLCloudProviderType cloudProviderType) {
+    if (!settingVariableType.equals(cloudProviderType.toString())) {
+      throw new InvalidRequestException(String.format(
+          "The existing cloud provider is of type %s and the update operation inputs a cloud proivder of type %s",
+          settingVariableType, cloudProviderType));
+    }
   }
 }
