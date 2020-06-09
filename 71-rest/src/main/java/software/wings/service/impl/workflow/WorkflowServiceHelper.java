@@ -215,6 +215,8 @@ public class WorkflowServiceHelper {
   public static final String SETUP = "Setup";
   public static final String PCF_SETUP = "App Setup";
   public static final String PCF_PLUGIN = "CF Command";
+  public static final String AUTO_SCALING_GROUP_NAME = "Auto Scaling Group Name";
+  public static final String LOAD_BALANCER_DETAILS = "Load Balancer Details";
   public static final String ASG_AMI_ALB_SHIFT_SETUP = "Asg AMI ALB Shift Setup";
   public static final String ASG_AMI_ALB_SHIFT_DEPLOY = "Asg AMI ALB Shift Deploy";
   public static final String SPOTINST_SETUP = "Elastigroup Setup";

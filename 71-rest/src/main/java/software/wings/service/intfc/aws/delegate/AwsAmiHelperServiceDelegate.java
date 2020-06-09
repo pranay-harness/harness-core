@@ -5,6 +5,8 @@ import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
+import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRequest;
+import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
 
@@ -14,4 +16,13 @@ public interface AwsAmiHelperServiceDelegate {
   AwsAmiSwitchRoutesResponse switchAmiRoutes(AwsAmiSwitchRoutesRequest request, ExecutionLogCallback logCallback);
   AwsAmiSwitchRoutesResponse rollbackSwitchAmiRoutes(
       AwsAmiSwitchRoutesRequest request, ExecutionLogCallback logCallback);
+
+  AwsAmiServiceTrafficShiftAlbSetupResponse setUpAmiServiceTrafficShift(
+      AwsAmiServiceTrafficShiftAlbSetupRequest request, ExecutionLogCallback logCallback);
+  AwsAmiServiceTrafficShiftAlbSetupResponse deployAmiServiceTrafficShift(
+      AwsAmiServiceTrafficShiftAlbSetupRequest request, ExecutionLogCallback logCallback);
+  AwsAmiServiceTrafficShiftAlbSetupResponse switchAmiRoutesTrafficShift(
+      AwsAmiServiceTrafficShiftAlbSetupRequest request, ExecutionLogCallback logCallback);
+  AwsAmiServiceTrafficShiftAlbSetupResponse rollbackSwitchAmiRoutesTrafficShift(
+      AwsAmiServiceTrafficShiftAlbSetupRequest request, ExecutionLogCallback logCallback);
 }

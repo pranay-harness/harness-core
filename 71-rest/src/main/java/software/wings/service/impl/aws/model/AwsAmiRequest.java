@@ -11,7 +11,14 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class AwsAmiRequest extends AwsRequest {
-  public enum AwsAmiRequestType { EXECUTE_AMI_SERVICE_SETUP, EXECUTE_AMI_SERVICE_DEPLOY, EXECUTE_AMI_SWITCH_ROUTE }
+  public enum AwsAmiRequestType {
+    EXECUTE_AMI_SERVICE_SETUP,
+    EXECUTE_AMI_SERVICE_DEPLOY,
+    EXECUTE_AMI_SWITCH_ROUTE,
+    EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB_SETUP,
+    EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB_DEPLOY,
+    EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB
+  }
 
   @NotNull private AwsAmiRequestType requestType;
   @NotNull private String region;

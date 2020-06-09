@@ -289,9 +289,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private static final List<String> ecsArtifactNeededStateTypes =
       Arrays.asList(ECS_SERVICE_DEPLOY.name(), ECS_SERVICE_SETUP.name(), ECS_DAEMON_SERVICE_SETUP.name());
 
-  private static final List<String> amiArtifactNeededStateTypes = Arrays.asList(AWS_AMI_SERVICE_SETUP.name(),
-      AWS_AMI_SERVICE_DEPLOY.name(), StateType.SPOTINST_SETUP.name(), StateType.SPOTINST_DEPLOY.name(),
-      StateType.SPOTINST_ALB_SHIFT_SETUP.name(), StateType.SPOTINST_ALB_SHIFT_DEPLOY.name());
+  private static final List<String> amiArtifactNeededStateTypes =
+      Arrays.asList(AWS_AMI_SERVICE_SETUP.name(), AWS_AMI_SERVICE_DEPLOY.name(), ASG_AMI_SERVICE_ALB_SHIFT_SETUP.name(),
+          ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY.name(), StateType.SPOTINST_SETUP.name(), StateType.SPOTINST_DEPLOY.name(),
+          StateType.SPOTINST_ALB_SHIFT_SETUP.name(), StateType.SPOTINST_ALB_SHIFT_DEPLOY.name());
 
   private static final List<String> codeDeployArtifactNeededStateTypes = Arrays.asList(AWS_CODEDEPLOY_STATE.name());
 

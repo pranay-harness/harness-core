@@ -54,7 +54,6 @@ import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupElement.Spo
 import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -208,7 +207,7 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
             .elastigroupJson(elastigroupOriginalJson)
             .elastigroupNamePrefix(finalElastigroupNamePrefix)
             .image(artifact.getRevision())
-            .lbDetails(getRenderedLbDetails(context))
+            .lbDetails(spotinstStateHelper.getRenderedLbDetails(context, lbDetails))
             .userData(spotinstStateHelper.getBase64EncodedUserData(
                 dataBag.getApp().getUuid(), serviceElement.getUuid(), context))
             .build();
@@ -243,21 +242,6 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
         .stateExecutionData(stateExecutionData)
         .async(true)
         .build();
-  }
-
-  private List<LbDetailsForAlbTrafficShift> getRenderedLbDetails(ExecutionContext context) {
-    List<LbDetailsForAlbTrafficShift> rendered = new ArrayList<>();
-    for (LbDetailsForAlbTrafficShift originalLbDetails : lbDetails) {
-      rendered.add(LbDetailsForAlbTrafficShift.builder()
-                       .loadBalancerName(context.renderExpression(originalLbDetails.getLoadBalancerName()))
-                       .loadBalancerArn(context.renderExpression(originalLbDetails.getListenerPort()))
-                       .listenerPort(context.renderExpression(originalLbDetails.getListenerPort()))
-                       .listenerArn(context.renderExpression(originalLbDetails.getListenerArn()))
-                       .useSpecificRule(originalLbDetails.isUseSpecificRule())
-                       .ruleArn(context.renderExpression(originalLbDetails.getRuleArn()))
-                       .build());
-    }
-    return rendered;
   }
 
   @Override
