@@ -1,10 +1,7 @@
 package io.harness.cdng.artifact.bean;
 
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.WRAPPER_OBJECT;
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
-
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
+import io.harness.yaml.core.intfc.WithIdentifier;
 
 /**
  * wrapper object for dockerhub, gcr, etc element.
@@ -16,10 +13,13 @@ import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
  *              identifier:
  *              dockerhub:
  */
-@JsonTypeInfo(use = NAME, include = WRAPPER_OBJECT)
-public interface ArtifactConfigWrapper {
+
+public interface ArtifactConfigWrapper extends WithIdentifier {
   String getSourceType();
   String getUniqueHash();
   ArtifactSource getArtifactSource(String accountId);
   ArtifactSourceAttributes getSourceAttributes();
+  String getArtifactType();
+  String setArtifactType(String artifactType);
+  String setIdentifier(String identifier);
 }

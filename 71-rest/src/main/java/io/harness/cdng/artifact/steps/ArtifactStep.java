@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
-import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
@@ -20,13 +19,13 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.execution.status.Status;
-import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepTransput;
 import io.harness.tasks.Task;
@@ -53,7 +52,7 @@ public class ArtifactStep implements Step, TaskExecutable {
 
     String waitId = generateUuid();
     ArtifactTaskParameters taskParameters = ArtifactUtils.getArtifactTaskParameters(
-        artifactSource.getAccountId(), parameters.getArtifactListConfig().getPrimary().getSourceAttributes());
+        artifactSource.getAccountId(), parameters.getArtifact().getSourceAttributes());
     final TaskDataBuilder dataBuilder = TaskData.builder().async(true).taskType(TaskType.ARTIFACT_COLLECT_TASK.name());
     DelegateTaskBuilder delegateTaskBuilder =
         DelegateTask.builder().appId(artifactSource.getAccountId()).waitId(waitId);
@@ -85,12 +84,7 @@ public class ArtifactStep implements Step, TaskExecutable {
           throw new ArtifactServerException(
               "Unhandled type CommandExecutionStatus: " + taskResponse.getCommandExecutionStatus().name());
       }
-
-      ArtifactStepParameters artifactStepParameters = (ArtifactStepParameters) stepParameters;
-      ArtifactOutcome artifact = taskResponse.getArtifactAttributes().getArtifactOutcome(
-          artifactStepParameters.getArtifactListConfig().getPrimary());
-      stepResponseBuilder.stepOutcome(
-          StepResponse.StepOutcome.builder().name("artifacts").outcome(artifact).group(StepGroup.STAGE.name()).build());
+      stepResponseBuilder.stepOutcome(getStepOutcome(taskResponse, (ArtifactStepParameters) stepParameters));
     } else if (notifyResponseData instanceof ErrorNotifyResponseData) {
       stepResponseBuilder.status(Status.FAILED);
       stepResponseBuilder.failureInfo(
@@ -104,8 +98,13 @@ public class ArtifactStep implements Step, TaskExecutable {
   }
 
   private ArtifactSource getArtifactSource(ArtifactStepParameters parameters, String accountId) {
-    ArtifactConfigWrapper primary = parameters.getArtifactListConfig().getPrimary();
-    ArtifactSource artifactSource = primary.getArtifactSource(accountId);
+    ArtifactSource artifactSource = parameters.getArtifact().getArtifactSource(accountId);
     return artifactSourceService.saveOrGetArtifactStream(artifactSource);
+  }
+
+  private StepOutcome getStepOutcome(ArtifactTaskResponse taskResponse, ArtifactStepParameters stepParameters) {
+    ArtifactOutcome artifact = taskResponse.getArtifactAttributes().getArtifactOutcome(stepParameters.getArtifact());
+    String outcomeKey = artifact.getArtifactType() + ":" + artifact.getIdentifier();
+    return StepOutcome.builder().name(outcomeKey).outcome(artifact).build();
   }
 }

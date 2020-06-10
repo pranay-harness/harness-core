@@ -15,7 +15,6 @@ import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
-import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
@@ -1134,8 +1133,7 @@ public class CustomExecutionUtils {
                                                       .imagePath("library/ubuntu")
                                                       .tag("latest")
                                                       .build();
-    ArtifactListConfig listConfig = ArtifactListConfig.builder().primary(artifactConfigWrapper).build();
-    ArtifactStepParameters stepParameters = ArtifactStepParameters.builder().artifactListConfig(listConfig).build();
+    ArtifactStepParameters stepParameters = ArtifactStepParameters.builder().artifact(artifactConfigWrapper).build();
     return Plan.builder()
         .startingNodeId(sectionNodeId)
         .uuid(planId)

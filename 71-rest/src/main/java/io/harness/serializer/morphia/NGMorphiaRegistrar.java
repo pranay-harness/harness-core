@@ -17,6 +17,8 @@ import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraDefinition;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
 import io.harness.cdng.service.Service;
+import io.harness.cdng.service.beans.ServiceOutcome;
+import io.harness.cdng.service.beans.ServiceOutcome.Artifacts;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
@@ -48,5 +50,7 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     h.put("cdng.artifact.delegate.task.ArtifactTaskParameters", ArtifactTaskParameters.class);
     h.put("cdng.artifact.bean.yaml.SidecarArtifact", SidecarArtifact.class);
     h.put("cdng.artifact.bean.DockerArtifactOutcome", DockerArtifactOutcome.class);
+    h.put("cdng.service.beans.ServiceOutcome", ServiceOutcome.class);
+    h.put("cdng.service.beans.ServiceOutcome$Artifacts", Artifacts.class);
   }
 }

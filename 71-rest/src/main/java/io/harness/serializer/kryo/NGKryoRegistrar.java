@@ -15,6 +15,8 @@ import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.service.Service;
 import io.harness.cdng.service.ServiceSpec;
+import io.harness.cdng.service.beans.ServiceOutcome;
+import io.harness.cdng.service.beans.ServiceOutcome.Artifacts;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.serializer.KryoRegistrar;
 
@@ -36,5 +38,7 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceSpec.class, 8015);
     kryo.register(SidecarArtifact.class, 8016);
     kryo.register(DockerArtifactSource.class, 8017);
+    kryo.register(ServiceOutcome.class, 8018);
+    kryo.register(Artifacts.class, 8019);
   }
 }
