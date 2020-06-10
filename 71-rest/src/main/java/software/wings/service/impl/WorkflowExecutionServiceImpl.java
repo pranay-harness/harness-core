@@ -1286,32 +1286,69 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setAccountId(app.getAccountId());
     wingsPersistence.save(workflowExecution);
     logger.info("Created workflow execution {}", workflowExecution.getUuid());
-
-    // Resolve artifact source parameters and collect artifacts before starting execution
     if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, app.getAccountId())) {
-      // for pipeline avoid duplicate artifact collection since same code called via EnvState
-      if (!executionArgs.isTriggeredFromPipeline() || executionArgs.getWorkflowType() != ORCHESTRATION) {
-        workflowExecution.setStatus(PREPARING);
-        updateStatus(
-            workflowExecution.getAppId(), workflowExecution.getUuid(), PREPARING, "Starting artifact collection");
-        List<Artifact> artifacts =
-            collectArtifactsAsync(workflowExecution, executionArgs.getArtifactVariables(), app.getUuid());
-        if (isNotEmpty(artifacts)) {
-          addArtifactsToWorkflowExecution(workflowExecution, stdParams, executionArgs, artifacts);
-          updateWorkflowExecutionArtifacts(workflowExecution.getAppId(), workflowExecution.getUuid(),
-              workflowExecution.getArtifacts(), executionArgs.getArtifacts());
+      WorkflowExecution finalWorkflowExecution = workflowExecution;
+      if (parameterizedArtifactStreamsPresent(executionArgs.getArtifactVariables())) {
+        if (!executionArgs.isTriggeredFromPipeline() || executionArgs.getWorkflowType() != ORCHESTRATION) {
+          workflowExecution.setStatus(PREPARING);
+          updateStatus(
+              workflowExecution.getAppId(), workflowExecution.getUuid(), PREPARING, "Starting artifact collection");
+          executorService.submit(
+              ()
+                  -> collectArtifactsAndStartExecution(finalWorkflowExecution, stateMachine, workflowExecutionAdvisor,
+                      workflowExecutionUpdate, stdParams, app, workflow, pipeline, executionArgs, contextElements));
         }
-        WorkflowExecution savedWorkflowExecution = wingsPersistence.getWithAppId(
-            WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
-        if (savedWorkflowExecution.getStatus() != FAILED) {
-          // artifact collection succeeded - unset the WorkflowExecution#message
-          unsetWorkflowExecutionMessage(workflowExecution.getAppId(), workflowExecution.getUuid());
-        } else {
-          return savedWorkflowExecution;
+      } else {
+        workflowExecution = continueWorkflowExecution(workflowExecution, stateMachine, workflowExecutionAdvisor,
+            workflowExecutionUpdate, stdParams, app, workflow, pipeline, executionArgs, contextElements);
+      }
+    } else {
+      workflowExecution = continueWorkflowExecution(workflowExecution, stateMachine, workflowExecutionAdvisor,
+          workflowExecutionUpdate, stdParams, app, workflow, pipeline, executionArgs, contextElements);
+    }
+    return workflowExecution;
+  }
+
+  private boolean parameterizedArtifactStreamsPresent(List<ArtifactVariable> artifactVariables) {
+    boolean foundParameterized = false;
+    if (isNotEmpty(artifactVariables)) {
+      for (ArtifactVariable artifactVariable : artifactVariables) {
+        if (artifactVariable.getArtifactStreamMetadata() != null) {
+          foundParameterized = true;
+          break;
         }
       }
     }
+    return foundParameterized;
+  }
 
+  @SuppressWarnings("squid:S00107")
+  private void collectArtifactsAndStartExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
+      ExecutionEventAdvisor workflowExecutionAdvisor, WorkflowExecutionUpdate workflowExecutionUpdate,
+      WorkflowStandardParams stdParams, Application app, Workflow workflow, Pipeline pipeline,
+      ExecutionArgs executionArgs, ContextElement... contextElements) {
+    // Resolve artifact source parameters and collect artifacts before starting execution
+    List<Artifact> artifacts = collectArtifacts(workflowExecution, executionArgs.getArtifactVariables(), app.getUuid());
+    if (isNotEmpty(artifacts)) {
+      addArtifactsToWorkflowExecution(workflowExecution, stdParams, executionArgs, artifacts);
+      updateWorkflowExecutionArtifacts(workflowExecution.getAppId(), workflowExecution.getUuid(),
+          workflowExecution.getArtifacts(), executionArgs.getArtifacts());
+    }
+    WorkflowExecution savedWorkflowExecution = wingsPersistence.getWithAppId(
+        WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+    if (savedWorkflowExecution.getStatus() != FAILED) {
+      // artifact collection succeeded - unset the WorkflowExecution#message
+      unsetWorkflowExecutionMessage(savedWorkflowExecution.getAppId(), savedWorkflowExecution.getUuid());
+      continueWorkflowExecution(savedWorkflowExecution, stateMachine, workflowExecutionAdvisor, workflowExecutionUpdate,
+          stdParams, app, workflow, pipeline, executionArgs, contextElements);
+    }
+  }
+
+  @SuppressWarnings("squid:S00107")
+  private WorkflowExecution continueWorkflowExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
+      ExecutionEventAdvisor workflowExecutionAdvisor, WorkflowExecutionUpdate workflowExecutionUpdate,
+      WorkflowStandardParams stdParams, Application app, Workflow workflow, Pipeline pipeline,
+      ExecutionArgs executionArgs, ContextElement... contextElements) {
     updateWorkflowElement(workflowExecution, stdParams, workflow, app.getAccountId());
 
     LinkedList<ContextElement> elements = new LinkedList<>();
@@ -1367,7 +1404,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       savedWorkflowExecution = wingsPersistence.getWithAppId(
           WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
     }
-
     return savedWorkflowExecution;
   }
 
@@ -1404,7 +1440,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  public List<Artifact> collectArtifactsAsync(
+  public List<Artifact> collectArtifacts(
       WorkflowExecution workflowExecution, List<ArtifactVariable> artifactVariables, String appId) {
     List<Artifact> artifacts = new ArrayList<>();
     Queue<Future<BuildDetails>> futures = new ConcurrentLinkedQueue<>();
