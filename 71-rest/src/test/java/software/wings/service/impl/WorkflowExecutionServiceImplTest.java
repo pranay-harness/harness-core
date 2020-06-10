@@ -2588,7 +2588,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     map1.put("buildNo", "1.0");
     List<Artifact> artifacts =
         ((WorkflowExecutionServiceImpl) workflowExecutionService)
-            .collectArtifactsAsync(workflowExecution,
+            .collectArtifacts(workflowExecution,
                 singletonList(ArtifactVariable.builder()
                                   .entityType(SERVICE)
                                   .entityId("SERVICE_ID_1")
@@ -2625,7 +2625,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     map1.put("buildNo", "1.0");
     List<Artifact> artifacts =
         ((WorkflowExecutionServiceImpl) workflowExecutionService)
-            .collectArtifactsAsync(workflowExecution,
+            .collectArtifacts(workflowExecution,
                 singletonList(ArtifactVariable.builder()
                                   .entityType(SERVICE)
                                   .entityId("SERVICE_ID_1")
