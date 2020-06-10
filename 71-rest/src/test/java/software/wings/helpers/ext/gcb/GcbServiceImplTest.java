@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -41,7 +42,7 @@ import java.util.List;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(GcbServiceImpl.class)
-public class GcbServiceImplTest {
+public class GcbServiceImplTest extends CategoryTest {
   private static final String VALID_AUTH_TOKEN = "validToken";
   private static final String PROJECT_ID = "projectId";
   private static final String BUILD_ID = "buildId";
@@ -69,8 +70,8 @@ public class GcbServiceImplTest {
   @Before
   public void setUp() throws Exception {
     gcbService = PowerMockito.spy(new GcbServiceImpl(gcpHelperService));
-    PowerMockito.doReturn(gcbRestClient).when(gcbService, "getGcbRestClient");
-    PowerMockito.doReturn(gcsRestClient).when(gcbService, "getGcsRestClient");
+    PowerMockito.doReturn(gcbRestClient).when(gcbService, "getRestClient", GcbRestClient.class, GcbRestClient.baseUrl);
+    PowerMockito.doReturn(gcsRestClient).when(gcbService, "getRestClient", GcsRestClient.class, GcsRestClient.baseUrl);
     PowerMockito.doReturn(VALID_AUTH_TOKEN).when(gcbService, "getBasicAuthHeader", anyObject(), anyObject());
   }
 
