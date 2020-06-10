@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.sm.StepExecutionSummary;
 
 import java.util.Set;
@@ -18,4 +19,5 @@ public class K8sExecutionSummary extends StepExecutionSummary {
   private Integer releaseNumber;
   private Integer targetInstances;
   private Set<String> namespaces;
+  private HelmChartInfo helmChartInfo;
 }

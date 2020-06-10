@@ -1,10 +1,14 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,7 +19,10 @@ import static software.wings.sm.states.k8s.K8sBlueGreenDeploy.K8S_BLUE_GREEN_DEP
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
+import com.google.common.collect.ImmutableMap;
+
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.model.K8sPod;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,12 +31,18 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElementListParam;
+import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sBlueGreenDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
+import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
+import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
+import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
@@ -45,6 +58,7 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
   @Mock private ApplicationManifestUtils applicationManifestUtils;
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
+  @Mock private ActivityService activityService;
   @InjectMocks private K8sBlueGreenDeploy k8sBlueGreenDeploy;
 
   private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance().displayName(STATE_NAME).build();
@@ -99,5 +113,27 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
 
     state.setStateTimeoutInMinutes(5);
     assertThat(state.getTimeoutMillis()).isEqualTo(300000);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHelmChartInfoValue() {
+    stateExecutionInstance.setStateExecutionMap(ImmutableMap.of(STATE_NAME, new K8sStateExecutionData()));
+    HelmChartInfo helmChartInfo = HelmChartInfo.builder().name("chart").version("1.0.0").build();
+    K8sTaskExecutionResponse taskExecutionResponse =
+        K8sTaskExecutionResponse.builder()
+            .commandExecutionStatus(SUCCESS)
+            .k8sTaskResponse(K8sBlueGreenDeployResponse.builder().helmChartInfo(helmChartInfo).build())
+            .build();
+
+    doReturn(InstanceElementListParam.builder().build())
+        .when(k8sStateHelper)
+        .getInstanceElementListParam(anyListOf(K8sPod.class));
+    ExecutionResponse executionResponse =
+        k8sBlueGreenDeploy.handleAsyncResponseForK8sTask(context, ImmutableMap.of("response", taskExecutionResponse));
+    K8sStateExecutionData executionData = (K8sStateExecutionData) executionResponse.getStateExecutionData();
+
+    assertThat(executionData.getHelmChartInfo()).isEqualTo(helmChartInfo);
   }
 }

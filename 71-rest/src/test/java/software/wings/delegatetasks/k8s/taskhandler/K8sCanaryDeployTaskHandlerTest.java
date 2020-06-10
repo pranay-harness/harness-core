@@ -2,6 +2,7 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
@@ -23,6 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DAEMON_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_DIRECT_APPLY_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
@@ -50,12 +52,15 @@ import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.delegatetasks.k8s.K8sTestHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
+import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sCanaryDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
@@ -63,6 +68,7 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -506,5 +512,45 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
         K8sCanaryDeployTaskParameters.builder().build(), mock(ExecutionLogCallback.class));
 
     assertThat(success).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testAssignHelmChartInfo() throws Exception {
+    K8sCanaryDeployTaskHandler handler = spy(k8sCanaryDeployTaskHandler);
+    K8sDelegateManifestConfig manifestConfig = K8sDelegateManifestConfig.builder()
+                                                   .manifestStoreTypes(StoreType.HelmChartRepo)
+                                                   .helmChartConfigParams(HelmChartConfigParams.builder().build())
+                                                   .build();
+    HelmChartInfo helmChartInfo = HelmChartInfo.builder().name("chart").version("1.0.0").build();
+
+    on(handler).set("canaryWorkload", deployment);
+    ReleaseHistory releaseHist = ReleaseHistory.createNew();
+    releaseHist.setReleases(asList(Release.builder().number(2).build()));
+    on(handler).set("releaseHistory", releaseHist);
+    on(handler).set("currentRelease", releaseHist.getLatestRelease());
+    doReturn(true).when(handler).init(
+        any(K8sCanaryDeployTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    doReturn(true).when(handler).prepareForCanary(
+        any(K8sDelegateTaskParams.class), any(K8sCanaryDeployTaskParameters.class), any(ExecutionLogCallback.class));
+    doReturn(Arrays.asList(K8sPod.builder().build())).when(handler).getAllPods();
+    doReturn(helmChartInfo)
+        .when(k8sTaskHelper)
+        .getHelmChartDetails(manifestConfig, Paths.get(".", MANIFEST_FILES_DIR).toString());
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class));
+
+    K8sTaskExecutionResponse response = handler.executeTask(K8sCanaryDeployTaskParameters.builder()
+                                                                .skipDryRun(true)
+                                                                .k8sDelegateManifestConfig(manifestConfig)
+                                                                .releaseName("release-name")
+                                                                .build(),
+        K8sDelegateTaskParams.builder().workingDirectory(".").build());
+
+    K8sCanaryDeployResponse canaryDeployResponse = (K8sCanaryDeployResponse) response.getK8sTaskResponse();
+    assertThat(canaryDeployResponse.getHelmChartInfo()).isEqualTo(helmChartInfo);
   }
 }

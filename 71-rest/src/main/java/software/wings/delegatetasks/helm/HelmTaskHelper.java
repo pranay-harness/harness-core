@@ -554,4 +554,8 @@ public class HelmTaskHelper {
   public HelmChartInfo getHelmChartInfoFromChartsYamlFile(HelmInstallCommandRequest request) throws IOException {
     return getHelmChartInfoFromChartsYamlFile(Paths.get(request.getWorkingDir(), CHARTS_YAML_KEY).toString());
   }
+
+  public HelmChartInfo getHelmChartInfoFromChartDirectory(String chartDirectory) throws IOException {
+    return getHelmChartInfoFromChartsYamlFile(Paths.get(chartDirectory, CHARTS_YAML_KEY).toString());
+  }
 }

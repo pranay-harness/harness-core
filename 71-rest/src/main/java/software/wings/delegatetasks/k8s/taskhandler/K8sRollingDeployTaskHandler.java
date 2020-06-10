@@ -54,6 +54,7 @@ import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
@@ -152,6 +153,9 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       }
     }
 
+    HelmChartInfo helmChartInfo = k8sTaskHelper.getHelmChartDetails(
+        k8sRollingDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory);
+
     wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WrapUp));
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
@@ -163,6 +167,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
             .releaseNumber(release.getNumber())
             .k8sPodList(tagNewPods(getPods(), existingPodList))
             .loadBalancer(k8sTaskHelper.getLoadBalancerEndpoint(kubernetesConfig, resources))
+            .helmChartInfo(helmChartInfo)
             .build();
 
     return K8sTaskExecutionResponse.builder()

@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
@@ -8,18 +9,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.Kind;
+import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
+import io.harness.k8s.model.ReleaseHistory;
 import io.harness.rule.Owner;
+import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -28,14 +39,23 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
+import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
+import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
+import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
+import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -155,5 +175,47 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
 
   private K8sPod podWithName(String name) {
     return K8sPod.builder().name(name).build();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testAssignHelmChartInfo() throws Exception {
+    K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
+    K8sDelegateManifestConfig manifestConfig = K8sDelegateManifestConfig.builder()
+                                                   .manifestStoreTypes(StoreType.HelmChartRepo)
+                                                   .helmChartConfigParams(HelmChartConfigParams.builder().build())
+                                                   .build();
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().workingDirectory(".").build();
+    K8sRollingDeployTaskParameters rollingDeployTaskParams =
+        K8sRollingDeployTaskParameters.builder().k8sDelegateManifestConfig(manifestConfig).skipDryRun(true).build();
+    HelmChartInfo helmChartInfo = HelmChartInfo.builder().name("chart").version("1.0.0").build();
+
+    on(handler).set("resources", Lists.emptyList());
+    ReleaseHistory releaseHist = ReleaseHistory.createNew();
+    releaseHist.setReleases(new ArrayList<>());
+    on(handler).set("releaseHistory", releaseHist);
+    doReturn(true).when(handler).init(
+        any(K8sRollingDeployTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    doReturn(mock(ExecutionLogCallback.class))
+        .when(k8sTaskHelper)
+        .getExecutionLogCallback(any(K8sTaskParameters.class), anyString());
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .applyManifests(any(Kubectl.class), anyListOf(KubernetesResource.class), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class));
+    doReturn(helmChartInfo)
+        .when(k8sTaskHelper)
+        .getHelmChartDetails(manifestConfig, Paths.get(".", MANIFEST_FILES_DIR).toString());
+
+    K8sTaskExecutionResponse response = handler.executeTask(rollingDeployTaskParams, delegateTaskParams);
+    K8sRollingDeployResponse rollingDeployResponse = (K8sRollingDeployResponse) response.getK8sTaskResponse();
+
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    assertThat(rollingDeployResponse.getHelmChartInfo()).isEqualTo(helmChartInfo);
   }
 }

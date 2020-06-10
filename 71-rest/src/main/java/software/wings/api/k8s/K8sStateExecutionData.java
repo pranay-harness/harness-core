@@ -8,12 +8,13 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.TaskType;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +37,9 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
   private TaskType currentTaskType;
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
   private String loadBalancer;
-  private Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
-  private Set<String> namespaces = new HashSet<>();
+  @Builder.Default private Map<K8sValuesLocation, String> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
+  @Builder.Default private Set<String> namespaces = new HashSet<>();
+  private HelmChartInfo helmChartInfo;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -81,6 +83,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
         .releaseNumber(releaseNumber)
         .targetInstances(targetInstances)
         .namespaces(namespaces)
+        .helmChartInfo(helmChartInfo)
         .build();
   }
 }

@@ -50,6 +50,7 @@ import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sCanaryDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
@@ -131,6 +132,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
     }
 
     List<K8sPod> allPods = getAllPods();
+    HelmChartInfo helmChartInfo = k8sTaskHelper.getHelmChartDetails(
+        k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory);
 
     wrapUp(k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, WrapUp));
 
@@ -143,6 +146,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
             .k8sPodList(allPods)
             .currentInstances(targetInstances)
             .canaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef())
+            .helmChartInfo(helmChartInfo)
             .build();
     return K8sTaskExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)

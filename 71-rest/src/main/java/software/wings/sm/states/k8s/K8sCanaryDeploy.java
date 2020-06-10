@@ -173,6 +173,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
 
     stateExecutionData.setReleaseNumber(k8sCanaryDeployResponse.getReleaseNumber());
     stateExecutionData.setTargetInstances(targetInstances);
+    stateExecutionData.setHelmChartInfo(k8sCanaryDeployResponse.getHelmChartInfo());
 
     final List<K8sPod> newPods = k8sStateHelper.getNewPods(k8sCanaryDeployResponse.getK8sPodList());
     InstanceElementListParam instanceElementListParam = k8sStateHelper.getInstanceElementListParam(newPods);
