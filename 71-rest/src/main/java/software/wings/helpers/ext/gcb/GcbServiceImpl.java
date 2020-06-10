@@ -48,7 +48,7 @@ public class GcbServiceImpl implements GcbService {
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String projectId, GcbBuildDetails buildParams) {
     try {
       Response<BuildOperationDetails> response =
-          getGcbRestClient()
+          getRestClient(GcbRestClient.class, GcbRestClient.baseUrl)
               .createBuild(getBasicAuthHeader(gcpConfig, encryptionDetails), projectId, buildParams)
               .execute();
       return response.body();
@@ -62,7 +62,9 @@ public class GcbServiceImpl implements GcbService {
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String projectId, String buildId) {
     try {
       Response<GcbBuildDetails> response =
-          getGcbRestClient().getBuild(getBasicAuthHeader(gcpConfig, encryptionDetails), projectId, buildId).execute();
+          getRestClient(GcbRestClient.class, GcbRestClient.baseUrl)
+              .getBuild(getBasicAuthHeader(gcpConfig, encryptionDetails), projectId, buildId)
+              .execute();
       return response.body();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
@@ -74,7 +76,7 @@ public class GcbServiceImpl implements GcbService {
       String projectId, String triggerId, RepoSource repoSource) {
     try {
       Response<BuildOperationDetails> response =
-          getGcbRestClient()
+          getRestClient(GcbRestClient.class, GcbRestClient.baseUrl)
               .runTrigger(getBasicAuthHeader(gcpConfig, encryptionDetails), projectId, triggerId, repoSource)
               .execute();
       return response.body();
@@ -88,7 +90,7 @@ public class GcbServiceImpl implements GcbService {
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, String fileName) {
     try {
       Response<ResponseBody> response =
-          getGcsRestClient()
+          getRestClient(GcsRestClient.class, GcsRestClient.baseUrl)
               .fetchLogs(getBasicAuthHeader(gcpConfig, encryptionDetails), bucketName, fileName)
               .execute();
       return response.body().string();
@@ -102,37 +104,26 @@ public class GcbServiceImpl implements GcbService {
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String projectId) {
     try {
       Response<GcbBuildTriggers> response =
-          getGcbRestClient().getAllTriggers(getBasicAuthHeader(gcpConfig, encryptionDetails), projectId).execute();
+          getRestClient(GcbRestClient.class, GcbRestClient.baseUrl)
+              .getAllTriggers(getBasicAuthHeader(gcpConfig, encryptionDetails), projectId)
+              .execute();
       return response.body().getTriggers();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
     }
   }
 
-  private GcbRestClient getGcbRestClient() {
+  private <T> T getRestClient(final Class<T> client, String baseUrl) {
     OkHttpClient okHttpClient = getOkHttpClientBuilder()
                                     .connectTimeout(5, TimeUnit.SECONDS)
-                                    .proxy(Http.checkAndGetNonProxyIfApplicable(GcbRestClient.baseUrl))
+                                    .proxy(Http.checkAndGetNonProxyIfApplicable(baseUrl))
                                     .build();
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)
-                            .baseUrl(GcbRestClient.baseUrl)
+                            .baseUrl(baseUrl)
                             .addConverterFactory(JacksonConverterFactory.create())
                             .build();
-    return retrofit.create(GcbRestClient.class);
-  }
-
-  private GcsRestClient getGcsRestClient() {
-    OkHttpClient okHttpClient = getOkHttpClientBuilder()
-                                    .connectTimeout(5, TimeUnit.SECONDS)
-                                    .proxy(Http.checkAndGetNonProxyIfApplicable(GcsRestClient.baseUrl))
-                                    .build();
-    Retrofit retrofit = new Retrofit.Builder()
-                            .client(okHttpClient)
-                            .baseUrl(GcsRestClient.baseUrl)
-                            .addConverterFactory(JacksonConverterFactory.create())
-                            .build();
-    return retrofit.create(GcsRestClient.class);
+    return retrofit.create(client);
   }
 
   private String getBasicAuthHeader(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails)
