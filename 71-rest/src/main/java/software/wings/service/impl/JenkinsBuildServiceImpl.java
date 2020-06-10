@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.network.Http.connectableHttpUrl;
@@ -19,6 +18,7 @@ import com.google.inject.Singleton;
 import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -107,8 +107,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     } catch (WingsException e) {
       throw e;
     } catch (IOException e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Failed to fetch Jobs. Reason:" + ExceptionUtils.getMessage(e));
+      throw new ArtifactServerException("Failed to fetch Jobs. Reason:" + ExceptionUtils.getMessage(e), e, USER);
     }
   }
 
@@ -129,8 +128,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception ex) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Error in artifact paths from jenkins server. Reason:" + ExceptionUtils.getMessage(ex));
+      throw new ArtifactServerException(
+          "Error in artifact paths from jenkins server. Reason:" + ExceptionUtils.getMessage(ex), ex, USER);
     }
   }
 
@@ -148,8 +147,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     } catch (WingsException e) {
       throw e;
     } catch (IOException ex) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER_ADMIN)
-          .addParam("message", "Error in fetching build from jenkins server. Reason:" + ExceptionUtils.getMessage(ex));
+      throw new ArtifactServerException(
+          "Error in fetching build from jenkins server. Reason:" + ExceptionUtils.getMessage(ex), ex, USER_ADMIN);
     }
   }
 
@@ -181,18 +180,16 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
 
     if (JenkinsUtils.TOKEN_FIELD.equals(jenkinsConfig.getAuthMechanism())) {
       if (isEmpty(new String(jenkinsConfig.getToken()))) {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Token should be not empty");
+        throw new ArtifactServerException("Token should be not empty", USER);
       }
     } else {
       if (isEmpty(jenkinsConfig.getUsername()) || isEmpty(new String(jenkinsConfig.getPassword()))) {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-            .addParam("message", "UserName/Password should be not empty");
+        throw new ArtifactServerException("UserName/Password should be not empty", USER);
       }
     }
 
     if (!connectableHttpUrl(jenkinsConfig.getJenkinsUrl())) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Could not reach Jenkins Server at : " + jenkinsConfig.getJenkinsUrl());
+      throw new ArtifactServerException("Could not reach Jenkins Server at : " + jenkinsConfig.getJenkinsUrl(), USER);
     }
 
     Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
@@ -227,8 +224,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception ex) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Error in fetching builds from jenkins server. Reason:" + ExceptionUtils.getMessage(ex));
+      throw new ArtifactServerException(
+          "Error in fetching builds from jenkins server. Reason:" + ExceptionUtils.getMessage(ex), ex, USER);
     }
   }
 

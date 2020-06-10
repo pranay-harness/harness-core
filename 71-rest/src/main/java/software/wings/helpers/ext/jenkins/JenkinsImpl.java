@@ -3,7 +3,6 @@ package software.wings.helpers.ext.jenkins;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.stream.StreamUtils.getInputStreamSize;
 import static io.harness.threading.Morpheus.quietSleep;
@@ -38,6 +37,7 @@ import com.offbytwo.jenkins.model.QueueItem;
 import com.offbytwo.jenkins.model.QueueReference;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
+import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -182,8 +182,7 @@ public class JenkinsImpl implements Jenkins {
         }
       }, 120L, TimeUnit.SECONDS, true);
     } catch (Exception e) {
-      logger.warn("Failure in fetching job: [{}]", e.getMessage());
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
+      throw new ArtifactServerException("Failure in fetching job: " + ExceptionUtils.getMessage(e), e, USER);
     }
   }
 
@@ -219,7 +218,7 @@ public class JenkinsImpl implements Jenkins {
         }
       }, 120L, TimeUnit.SECONDS, true);
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
+      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
     }
   }
 
@@ -424,7 +423,7 @@ public class JenkinsImpl implements Jenkins {
   public QueueReference trigger(String jobname, Map<String, String> parameters) throws IOException {
     JobWithDetails jobWithDetails = getJob(jobname);
     if (jobWithDetails == null) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "No job [" + jobname + "] found");
+      throw new ArtifactServerException("No job [" + jobname + "] found", USER);
     }
     try {
       QueueReference queueReference;
@@ -585,21 +584,20 @@ public class JenkinsImpl implements Jenkins {
         }
       }, 30L, TimeUnit.SECONDS, true);
     } catch (Exception e) {
-      logger.warn("Failure in fetching environment variables for job: [{}]", e.getMessage());
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
+      throw new ArtifactServerException(
+          "Failure in fetching environment variables for job: " + ExceptionUtils.getMessage(e), e, USER);
     }
   }
 
   private WingsException prepareWingsException(IOException e) {
     if (e instanceof HttpResponseException) {
       if (((HttpResponseException) e).getStatusCode() == 401) {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Invalid Jenkins credentials");
+        throw new ArtifactServerException("Invalid Jenkins credentials", USER);
       } else if (((HttpResponseException) e).getStatusCode() == 403) {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-            .addParam("message", "User not authorized to access jenkins");
+        throw new ArtifactServerException("User not authorized to access jenkins", USER);
       }
     }
-    throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
+    throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
   }
 
   private Pair<String, InputStream> downloadArtifactFromABuild(Build build, String artifactpathRegex)
