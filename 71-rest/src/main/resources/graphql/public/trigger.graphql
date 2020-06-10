@@ -13,8 +13,141 @@ type Trigger {
   name: String
   # Description of the Trigger
   description: String
+  # The condition that will execute the Trigger: On new artifact, On pipeline completion, On Cron schedule, On webhook
+  condition: TriggerCondition
+  # Action performed by the trigger: Execute workflow/pipeline
+  action: TriggerAction
   createdAt: DateTime
   createdBy: User
+  excludeHostsWithSameArtifact: Boolean
+}
+
+type WebhoookDetails {
+  webhookURL: String
+  method: String
+  header: String
+  payload: String
+}
+
+interface TriggerCondition {
+  triggerConditionType: TriggerConditionType
+}
+
+enum TriggerConditionType {
+  NEW_ARTIFACT
+  PIPELINE_COMPLETION
+  SCHEDULED
+  WEBHOOK
+}
+
+type OnNewArtifact implements TriggerCondition {
+  triggerConditionType: TriggerConditionType
+  artifactSourceId: String
+  artifactSourceName: String
+  artifactFilter: String
+  regex: Boolean
+}
+
+type OnPipelineCompletion implements TriggerCondition {
+  triggerConditionType: TriggerConditionType
+  pipelineId: String
+  pipelineName: String
+}
+
+type OnWebhook implements TriggerCondition {
+  triggerConditionType: TriggerConditionType
+  webhookSource: WebhookSource
+  webhookDetails: WebhoookDetails
+  webhookEvent: WebhookEvent
+  branchRegex: String
+}
+
+type OnSchedule implements TriggerCondition {
+  triggerConditionType: TriggerConditionType
+  cronExpression: String!
+  cronDescription: String!
+  onNewArtifactOnly: Boolean
+}
+
+enum WebhookSource {
+  GITHUB
+  GITLAB
+  BITBUCKET
+  CUSTOM
+}
+
+type WebhookEvent {
+  event: String
+  action: String
+}
+
+interface TriggerAction {
+  variables: [TriggerVariableValue]
+  artifactSelections: [ArtifactSelection]
+}
+
+type WorkflowAction implements TriggerAction {
+  workflowId: String
+  workflowName: String
+  variables: [TriggerVariableValue]
+  artifactSelections: [ArtifactSelection]
+}
+
+type PipelineAction implements TriggerAction {
+  pipelineId: String
+  pipelineName: String
+  variables: [TriggerVariableValue]
+  artifactSelections: [ArtifactSelection]
+}
+
+type TriggerVariableValue {
+  name: String
+  value: String
+}
+
+interface ArtifactSelection {
+  serviceId: String
+  serviceName: String
+}
+
+type FromTriggeringArtifactSource implements ArtifactSelection {
+  serviceId: String
+  serviceName: String
+}
+
+type LastCollected implements ArtifactSelection {
+  serviceId: String
+  serviceName: String
+  artifactSourceId: String
+  artifactSourceName: String
+  regex: Boolean
+  artifactFilter: String
+}
+
+type LastDeployedFromWorkflow implements ArtifactSelection {
+  serviceId: String
+  serviceName: String
+  workflowId: String
+  workflowName: String
+}
+
+type LastDeployedFromPipeline implements ArtifactSelection {
+  serviceId: String
+  serviceName: String
+  pipelineId: String
+  pipelineName: String
+}
+
+type FromTriggeringPipeline implements ArtifactSelection {
+  serviceId: String
+  serviceName: String
+}
+
+type FromWebhookPayload implements ArtifactSelection {
+  serviceId: String
+  serviceName: String
+  artifactSourceId: String
+  artifactSourceName: String
 }
 
 type TriggerConnection {

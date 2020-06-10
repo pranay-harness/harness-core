@@ -20,6 +20,9 @@ public class QLTrigger implements QLObject {
   private String id;
   private String name;
   private String description;
+  private QLTriggerCondition condition;
+  private QLTriggerAction action;
   private Long createdAt;
   private QLUser createdBy;
+  private Boolean excludeHostsWithSameArtifact;
 }

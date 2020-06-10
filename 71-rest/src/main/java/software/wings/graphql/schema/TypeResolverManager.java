@@ -88,6 +88,18 @@ import software.wings.graphql.schema.type.secrets.QLKerberosAuthentication;
 import software.wings.graphql.schema.type.secrets.QLSSHAuthentication;
 import software.wings.graphql.schema.type.secrets.QLSSHCredential;
 import software.wings.graphql.schema.type.secrets.QLWinRMCredential;
+import software.wings.graphql.schema.type.trigger.QLFromTriggeringArtifactSource;
+import software.wings.graphql.schema.type.trigger.QLFromTriggeringPipeline;
+import software.wings.graphql.schema.type.trigger.QLFromWebhookPayload;
+import software.wings.graphql.schema.type.trigger.QLLastCollected;
+import software.wings.graphql.schema.type.trigger.QLLastDeployedFromPipeline;
+import software.wings.graphql.schema.type.trigger.QLLastDeployedFromWorkflow;
+import software.wings.graphql.schema.type.trigger.QLOnNewArtifact;
+import software.wings.graphql.schema.type.trigger.QLOnPipelineCompletion;
+import software.wings.graphql.schema.type.trigger.QLOnSchedule;
+import software.wings.graphql.schema.type.trigger.QLOnWebhook;
+import software.wings.graphql.schema.type.trigger.QLPipelineAction;
+import software.wings.graphql.schema.type.trigger.QLWorkflowAction;
 import software.wings.graphql.schema.type.usergroup.QLLDAPSettings;
 import software.wings.graphql.schema.type.usergroup.QLSAMLSettings;
 
@@ -113,6 +125,9 @@ public class TypeResolverManager {
     public static final String LinkedSSOSetting = "LinkedSSOSetting";
     public static final String Secret = "Secret";
     public static final String SSHAuthenticationType = "SSHAuthenticationType";
+    public static final String TRIGGER_CONDITION = "TriggerCondition";
+    public static final String TRIGGER_ACTION = "TriggerAction";
+    public static final String ARTIFACT_SELECTION = "ArtifactSelection";
   }
 
   @UtilityClass
@@ -204,6 +219,19 @@ public class TypeResolverManager {
     public static final String sshCredential = "SSHCredential";
     public static final String sshAuthentication = "SSHAuthentication";
     public static final String kerberosAuthentication = "KerberosAuthentication";
+
+    public static final String ON_NEW_ARTIFACT = "OnNewArtifact";
+    public static final String ON_PIPELINE_COMPLETION = "OnPipelineCompletion";
+    public static final String ON_WEB_HOOK = "OnWebhook";
+    public static final String ON_SCHEDULE = "OnSchedule";
+    public static final String WORKFLOW_ACTION = "WorkflowAction";
+    public static final String PIPELINE_ACTION = "PipelineAction";
+    public static final String FROM_TRIGGERING_ARTIFACT_SOURCE = "FromTriggeringArtifactSource";
+    public static final String LAST_COLLECTED = "LastCollected";
+    public static final String LAST_DEPLOYED_FROM_WORKFLOW = "LastDeployedFromWorkflow";
+    public static final String LAST_DEPLOYED_FROM_PIPELINE = "LastDeployedFromPipeline";
+    public static final String FROM_TRIGGERING_PIPELINE = "FromTriggeringPipeline";
+    public static final String FROM_WEBHOOK_PAYLOAD = "FromWebhookPayload";
   }
 
   /**
@@ -350,6 +378,29 @@ public class TypeResolverManager {
                 ImmutableMap.<Class, String>builder()
                     .put(QLSSHAuthentication.class, TypeResolverManagerTypes.sshAuthentication)
                     .put(QLKerberosAuthentication.class, TypeResolverManagerTypes.kerberosAuthentication)
+                    .build()))
+        .put(TypeResolverManagerUnifaces.TRIGGER_CONDITION,
+            getResultTypeResolver(
+                ImmutableMap.<Class, String>builder()
+                    .put(QLOnNewArtifact.class, TypeResolverManagerTypes.ON_NEW_ARTIFACT)
+                    .put(QLOnPipelineCompletion.class, TypeResolverManagerTypes.ON_PIPELINE_COMPLETION)
+                    .put(QLOnWebhook.class, TypeResolverManagerTypes.ON_WEB_HOOK)
+                    .put(QLOnSchedule.class, TypeResolverManagerTypes.ON_SCHEDULE)
+                    .build()))
+        .put(TypeResolverManagerUnifaces.TRIGGER_ACTION,
+            getResultTypeResolver(ImmutableMap.<Class, String>builder()
+                                      .put(QLWorkflowAction.class, TypeResolverManagerTypes.WORKFLOW_ACTION)
+                                      .put(QLPipelineAction.class, TypeResolverManagerTypes.PIPELINE_ACTION)
+                                      .build()))
+        .put(TypeResolverManagerUnifaces.ARTIFACT_SELECTION,
+            getResultTypeResolver(
+                ImmutableMap.<Class, String>builder()
+                    .put(QLFromTriggeringArtifactSource.class, TypeResolverManagerTypes.FROM_TRIGGERING_ARTIFACT_SOURCE)
+                    .put(QLLastCollected.class, TypeResolverManagerTypes.LAST_COLLECTED)
+                    .put(QLLastDeployedFromWorkflow.class, TypeResolverManagerTypes.LAST_DEPLOYED_FROM_WORKFLOW)
+                    .put(QLLastDeployedFromPipeline.class, TypeResolverManagerTypes.LAST_DEPLOYED_FROM_PIPELINE)
+                    .put(QLFromTriggeringPipeline.class, TypeResolverManagerTypes.FROM_TRIGGERING_PIPELINE)
+                    .put(QLFromWebhookPayload.class, TypeResolverManagerTypes.FROM_WEBHOOK_PAYLOAD)
                     .build()))
         .build();
   }
