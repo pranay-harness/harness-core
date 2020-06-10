@@ -36,6 +36,10 @@ public class DockerHubArtifactConfig implements ArtifactConfigWrapper {
   String tag;
   /** Tag regex is used to get latest build from builds matching regex. */
   String tagRegex;
+  /** Identifier for artifact. */
+  String identifier;
+  /** Type to identify whether primary and sidecars artifact. */
+  String artifactType;
 
   @Override
   public String getSourceType() {
@@ -67,5 +71,17 @@ public class DockerHubArtifactConfig implements ArtifactConfigWrapper {
         .tag(tag)
         .tagRegex(tagRegex)
         .build();
+  }
+
+  @Override
+  public String setArtifactType(String artifactType) {
+    this.artifactType = artifactType;
+    return artifactType;
+  }
+
+  @Override
+  public String setIdentifier(String identifier) {
+    this.identifier = identifier;
+    return identifier;
   }
 }

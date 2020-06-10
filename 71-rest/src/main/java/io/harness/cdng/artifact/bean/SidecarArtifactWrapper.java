@@ -13,4 +13,6 @@ import io.harness.yaml.core.intfc.WithIdentifier;
  *              identifier:
  */
 @JsonTypeInfo(use = NAME, include = WRAPPER_OBJECT)
-public interface SidecarArtifactWrapper extends WithIdentifier {}
+public interface SidecarArtifactWrapper extends WithIdentifier {
+  ArtifactConfigWrapper getArtifact();
+}

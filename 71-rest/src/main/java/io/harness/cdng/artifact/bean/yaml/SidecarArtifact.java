@@ -1,24 +1,32 @@
 package io.harness.cdng.artifact.bean.yaml;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
+import io.harness.cdng.artifact.bean.ArtifactSourceType;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
+import io.harness.cdng.artifact.utils.ArtifactUtils;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @Builder
 @JsonTypeName("sidecar")
 public class SidecarArtifact implements SidecarArtifactWrapper {
   String identifier;
-  ArtifactConfigWrapper artifact;
+  @JsonIgnore ArtifactConfigWrapper artifact;
 
-  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-  public SidecarArtifact(
-      @JsonProperty("identifier") String identifier, @JsonProperty("dockerhub") ArtifactConfigWrapper sidecar) {
-    this.identifier = identifier;
+  @JsonProperty(ArtifactSourceType.DOCKER_HUB)
+  public void setDockerHub(DockerHubArtifactConfig sidecar) {
     this.artifact = sidecar;
+    this.artifact.setIdentifier(this.identifier);
+    this.artifact.setArtifactType(ArtifactUtils.SIDECAR_ARTIFACT);
+  }
+  @JsonProperty(ArtifactSourceType.GCR)
+  public void setGCR(GcrArtifactConfig sidecar) {
+    this.artifact = sidecar;
+    this.artifact.setIdentifier(this.identifier);
+    this.artifact.setArtifactType(ArtifactUtils.SIDECAR_ARTIFACT);
   }
 }

@@ -17,6 +17,9 @@ import java.util.Comparator;
 import java.util.List;
 
 public interface ArtifactUtils {
+  String PRIMARY_ARTIFACT = "primary";
+  String SIDECAR_ARTIFACT = "sidecar";
+
   static void appendIfNecessary(StringBuilder keyBuilder, String value) {
     if (keyBuilder == null) {
       throw new InvalidRequestException("Key string builder cannot be null");

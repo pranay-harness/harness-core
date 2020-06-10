@@ -24,6 +24,8 @@ public class DockerArtifactAttributes implements ArtifactAttributes {
         .imagePath(getImagePath())
         .tag(getTag())
         .tagRegex(dockerHubArtifactConfig.getTagRegex())
+        .identifier(artifactConfig.getIdentifier())
+        .artifactType(artifactConfig.getArtifactType())
         .build();
   }
 }

@@ -16,4 +16,8 @@ public class DockerArtifactOutcome implements ArtifactOutcome {
   String tag;
   /** Tag regex is used to get latest build from builds matching regex. */
   String tagRegex;
+  /** Identifier for artifact. */
+  String identifier;
+  /** Type to identify whether primary and sidecars artifact. */
+  String artifactType;
 }
