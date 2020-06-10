@@ -17,7 +17,6 @@ import io.harness.exception.WingsException;
 import io.harness.health.HealthMonitor;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
-import io.harness.redis.RedisConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
 import org.redisson.api.RLock;
@@ -36,20 +35,20 @@ public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, M
   private static final String ERROR_MESSAGE = "Failed to acquire distributed lock for %s";
 
   @Inject
-  public RedisPersistentLocker(RedisConfig redisConfig) {
+  public RedisPersistentLocker(RedisLockConfig redisLockConfig) {
     Config config = new Config();
-    if (!redisConfig.isSentinel()) {
-      config.useSingleServer().setAddress(redisConfig.getRedisUrl());
+    if (!redisLockConfig.isSentinel()) {
+      config.useSingleServer().setAddress(redisLockConfig.getRedisUrl());
     } else {
-      config.useSentinelServers().setMasterName(redisConfig.getMasterName());
-      for (String sentinelUrl : redisConfig.getSentinelUrls()) {
+      config.useSentinelServers().setMasterName(redisLockConfig.getMasterName());
+      for (String sentinelUrl : redisLockConfig.getSentinelUrls()) {
         config.useSentinelServers().addSentinelAddress(sentinelUrl);
       }
     }
     logger.info("Starting redis client");
     this.client = Redisson.create(config);
     logger.info("Started redis client");
-    String envNamespace = redisConfig.getEnvNamespace();
+    String envNamespace = redisLockConfig.getEnvNamespace();
     this.lockNamespace = EmptyPredicate.isEmpty(envNamespace) ? LOCK_PREFIX.concat(":")
                                                               : String.format("%s:%s:", envNamespace, LOCK_PREFIX);
   }

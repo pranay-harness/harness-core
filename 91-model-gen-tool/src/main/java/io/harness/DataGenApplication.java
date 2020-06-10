@@ -1,8 +1,8 @@
 package io.harness;
 
+import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.mockito.Mockito.mock;
-import static software.wings.utils.CacheManager.USER_CACHE;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -10,9 +10,10 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
 
-import com.hazelcast.core.HazelcastInstance;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
+import io.harness.cache.CacheConfig;
+import io.harness.cache.CacheModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.DeployMode;
 import io.harness.event.EventsModule;
@@ -25,12 +26,12 @@ import io.harness.persistence.HPersistence;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import lombok.extern.slf4j.Slf4j;
+import org.atmosphere.cpr.AtmosphereServlet;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.AuthModule;
-import software.wings.app.CacheModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GuiceObjectFactory;
 import software.wings.app.MainConfiguration;
@@ -42,21 +43,18 @@ import software.wings.app.StreamModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
-import software.wings.beans.User;
 import software.wings.licensing.LicenseService;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateProfileService;
-import software.wings.utils.CacheManager;
+import software.wings.utils.ManagerCacheHandler;
 
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import javax.cache.Caching;
-import javax.cache.configuration.Configuration;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
@@ -91,16 +89,14 @@ public class DataGenApplication extends Application<MainConfiguration> {
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
 
-    CacheModule cacheModule = new CacheModule(configuration);
-    modules.add(cacheModule);
-    StreamModule streamModule = new StreamModule(environment, cacheModule.getHazelcastInstance());
-
-    modules.add(streamModule);
+    CacheModule cacheModule = new CacheModule(CacheConfig.builder().cacheBackend(NOOP).build());
+    modules.addAll(cacheModule.cumulativeDependencies());
+    StreamModule streamModule = new StreamModule(environment);
+    modules.addAll(streamModule.cumulativeDependencies());
 
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(HazelcastInstance.class).toInstance(cacheModule.getHazelcastInstance());
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
       }
     });
@@ -119,26 +115,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
 
     Injector injector = Guice.createInjector(modules);
 
-    Caching.getCachingProvider().getCacheManager().createCache(USER_CACHE, new Configuration<String, User>() {
-      public static final long serialVersionUID = 1L;
-
-      @Override
-      public Class<String> getKeyType() {
-        return String.class;
-      }
-
-      @Override
-      public Class<User> getValueType() {
-        return User.class;
-      }
-
-      @Override
-      public boolean isStoreByValue() {
-        return true;
-      }
-    });
-
-    streamModule.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
+    injector.getInstance(AtmosphereServlet.class).framework().objectFactory(new GuiceObjectFactory(injector));
 
     registerObservers(injector);
 
@@ -159,15 +136,15 @@ public class DataGenApplication extends Application<MainConfiguration> {
     });
 
     // Access all caches before coming out of maintenance
-    CacheManager cacheManager = injector.getInstance(CacheManager.class);
+    ManagerCacheHandler managerCacheHandler = injector.getInstance(ManagerCacheHandler.class);
 
-    cacheManager.getUserCache();
-    cacheManager.getUserPermissionInfoCache();
-    cacheManager.getUserRestrictionInfoCache();
-    cacheManager.getApiKeyPermissionInfoCache();
-    cacheManager.getApiKeyRestrictionInfoCache();
-    cacheManager.getNewRelicApplicationCache();
-    cacheManager.getWhitelistConfigCache();
+    managerCacheHandler.getUserCache();
+    managerCacheHandler.getUserPermissionInfoCache();
+    managerCacheHandler.getUserRestrictionInfoCache();
+    managerCacheHandler.getApiKeyPermissionInfoCache();
+    managerCacheHandler.getApiKeyRestrictionInfoCache();
+    managerCacheHandler.getNewRelicApplicationCache();
+    managerCacheHandler.getWhitelistConfigCache();
 
     String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
 

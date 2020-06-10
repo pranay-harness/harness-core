@@ -1,5 +1,7 @@
 package io.harness.rule;
 
+import static io.harness.cache.CacheBackend.CAFFEINE;
+import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static org.mockito.Mockito.mock;
 
@@ -9,8 +11,10 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 
-import com.hazelcast.core.HazelcastInstance;
 import graphql.GraphQL;
+import io.harness.cache.CacheConfig;
+import io.harness.cache.CacheConfig.CacheConfigBuilder;
+import io.harness.cache.CacheModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
@@ -35,7 +39,6 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.AuthModule;
-import software.wings.app.CacheModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GraphQLModule;
 import software.wings.app.MainConfiguration;
@@ -47,11 +50,13 @@ import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
+import software.wings.rules.Cache;
 import software.wings.security.ThreadLocalUserProvider;
 
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -115,13 +120,19 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
 
     MainConfiguration configuration = getConfiguration("graphQL");
 
-    CacheModule cacheModule = new CacheModule(configuration);
-    modules.add(cacheModule);
+    CacheConfigBuilder cacheConfigBuilder =
+        CacheConfig.builder().disabledCaches(new HashSet<>()).cacheNamespace("harness-cache");
+    if (annotations.stream().anyMatch(annotation -> annotation instanceof Cache)) {
+      cacheConfigBuilder.cacheBackend(CAFFEINE);
+    } else {
+      cacheConfigBuilder.cacheBackend(NOOP);
+    }
+    CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
+    modules.addAll(0, cacheModule.cumulativeDependencies());
 
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(HazelcastInstance.class).toInstance(cacheModule.getHazelcastInstance());
         bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
       }

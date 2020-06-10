@@ -78,7 +78,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.signup.BugsnagErrorReporter;
 import software.wings.utils.AccountPermissionUtils;
-import software.wings.utils.CacheManager;
+import software.wings.utils.ManagerCacheHandler;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
@@ -131,7 +131,7 @@ public class UserResource {
   private AccountService accountService;
   private AuthenticationManager authenticationManager;
   private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
-  private CacheManager cacheManager;
+  private ManagerCacheHandler managerCacheHandler;
   private HarnessUserGroupService harnessUserGroupService;
   private UserGroupService userGroupService;
   private AccountPermissionUtils accountPermissionUtils;
@@ -144,7 +144,7 @@ public class UserResource {
   @Inject
   public UserResource(UserService userService, AuthService authService, AccountService accountService,
       AccountPermissionUtils accountPermissionUtils, AuthenticationManager authenticationManager,
-      TwoFactorAuthenticationManager twoFactorAuthenticationManager, CacheManager cacheManager,
+      TwoFactorAuthenticationManager twoFactorAuthenticationManager, ManagerCacheHandler managerCacheHandler,
       HarnessUserGroupService harnessUserGroupService, UserGroupService userGroupService,
       MainConfiguration mainConfiguration, AccountPasswordExpirationJob accountPasswordExpirationJob,
       ReCaptchaVerifier reCaptchaVerifier) {
@@ -154,7 +154,7 @@ public class UserResource {
     this.accountPermissionUtils = accountPermissionUtils;
     this.authenticationManager = authenticationManager;
     this.twoFactorAuthenticationManager = twoFactorAuthenticationManager;
-    this.cacheManager = cacheManager;
+    this.managerCacheHandler = managerCacheHandler;
     this.harnessUserGroupService = harnessUserGroupService;
     this.userGroupService = userGroupService;
     this.mainConfiguration = mainConfiguration;
@@ -326,7 +326,7 @@ public class UserResource {
   public RestResponse resetCache() {
     User authUser = UserThreadLocal.get();
     if (harnessUserGroupService.isHarnessSupportUser(authUser.getUuid())) {
-      cacheManager.resetAllCaches();
+      managerCacheHandler.resetAllCaches();
     } else {
       return Builder.aRestResponse()
           .withResponseMessages(Lists.newArrayList(

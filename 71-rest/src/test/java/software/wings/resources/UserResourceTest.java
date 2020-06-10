@@ -53,7 +53,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.signup.BugsnagErrorReporter;
 import software.wings.utils.AccountPermissionUtils;
-import software.wings.utils.CacheManager;
+import software.wings.utils.ManagerCacheHandler;
 import software.wings.utils.ResourceTestRule;
 
 import java.io.IOException;
@@ -68,7 +68,7 @@ public class UserResourceTest extends WingsBaseTest {
   public static final UserService USER_SERVICE = mock(UserService.class);
   public static final HarnessUserGroupService HARNESS_USER_GROUP_SERVICE = mock(HarnessUserGroupService.class);
   public static final UserGroupService USER_GROUP_SERVICE = mock(UserGroupService.class);
-  public static final CacheManager CACHE_HELPER = mock(CacheManager.class);
+  public static final ManagerCacheHandler CACHE_HELPER = mock(ManagerCacheHandler.class);
   public static final AuthService AUTH_SERVICE = mock(AuthService.class);
   public static final AccountService ACCOUNT_SERVICE = mock(AccountService.class);
   public static final MainConfiguration MAIN_CONFIGURATION = mock(MainConfiguration.class);

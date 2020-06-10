@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.UserInvite;
-import software.wings.utils.CacheManager;
+import software.wings.utils.ManagerCacheHandler;
 
 import javax.cache.Cache;
 
@@ -14,13 +14,13 @@ import javax.cache.Cache;
 @Singleton
 public class SignupSpamChecker {
   private static final int REGISTRATION_SPAM_THRESHOLD = 3;
-  @Inject private CacheManager cacheManager;
+  @Inject private ManagerCacheHandler managerCacheHandler;
 
   public boolean isSpam(UserInvite userInvite) {
     // HAR-7639: If the same email is being used repeatedly for trial signup, it's likely a spam activity.
     // Reject/throttle these registration request to avoid the verification or access-your-account email spamming
     // the legitimate trial user's mailbox.
-    Cache<String, Integer> trialEmailCache = cacheManager.getTrialRegistrationEmailCache();
+    Cache<String, Integer> trialEmailCache = managerCacheHandler.getTrialRegistrationEmailCache();
     String emailAddress = userInvite.getEmail();
     Preconditions.checkNotNull(trialEmailCache, "Email cache is null. ");
     Integer registrationCount = trialEmailCache.get(emailAddress);

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.cache.HarnessCacheManager;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -14,6 +15,8 @@ import software.wings.rules.Cache;
 
 import javax.cache.annotation.CacheKey;
 import javax.cache.annotation.CacheResult;
+import javax.cache.expiry.AccessedExpiryPolicy;
+import javax.cache.expiry.Duration;
 
 /**
  * Created by peeyushaggarwal on 8/29/16.
@@ -21,14 +24,18 @@ import javax.cache.annotation.CacheResult;
 @Cache
 public class CachingTest extends WingsBaseTest {
   @Inject private CacheableService cacheableService;
+  @Inject private HarnessCacheManager harnessCacheManager;
 
   /**
    * Should cache repeated calls.
    */
+  @Cache
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCacheRepeatedCalls() {
+    harnessCacheManager.getCache(
+        "TestCache", Integer.class, Object.class, AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES));
     assertThat(cacheableService.getCacheableObject(1, 1)).extracting(CacheableObject::getX).isEqualTo(1);
     assertThat(cacheableService.getCallCount()).isEqualTo(1);
     assertThat(cacheableService.getCacheableObject(1, 2)).extracting(CacheableObject::getX).isEqualTo(1);
@@ -81,7 +88,7 @@ public class CachingTest extends WingsBaseTest {
      * @param y the y
      * @return the cacheable object
      */
-    @CacheResult
+    @CacheResult(cacheName = "TestCache")
     public CacheableObject getCacheableObject(@CacheKey int x, int y) {
       CacheableObject toReturn = new CacheableObject();
       toReturn.setX(x);

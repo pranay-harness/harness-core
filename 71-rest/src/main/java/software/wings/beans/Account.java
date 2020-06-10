@@ -79,7 +79,7 @@ public class Account extends Base implements PersistentRegularIterable {
   @JsonIgnore
   private long lastLicenseExpiryReminderSentAt;
 
-  @JsonIgnore private EncryptionInterface encryption;
+  @JsonIgnore private transient EncryptionInterface encryption;
   private boolean twoFactorAdminEnforced;
 
   // Set this flag when creating an empty account for data import.

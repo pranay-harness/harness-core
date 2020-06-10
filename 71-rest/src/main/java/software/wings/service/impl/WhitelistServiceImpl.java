@@ -33,7 +33,7 @@ import software.wings.features.IpWhitelistingFeature;
 import software.wings.features.api.PremiumFeature;
 import software.wings.features.api.RestrictedApi;
 import software.wings.service.intfc.WhitelistService;
-import software.wings.utils.CacheManager;
+import software.wings.utils.ManagerCacheHandler;
 
 import java.util.Arrays;
 import java.util.List;
@@ -49,7 +49,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class WhitelistServiceImpl implements WhitelistService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private MainConfiguration mainConfiguration;
-  @Inject private CacheManager cacheManager;
+  @Inject private ManagerCacheHandler managerCacheHandler;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject @Named(IpWhitelistingFeature.FEATURE_NAME) private PremiumFeature ipWhitelistingFeature;
@@ -114,7 +114,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   }
 
   public List<Whitelist> getWhitelistConfig(String accountId) {
-    Cache<String, WhitelistConfig> cache = cacheManager.getWhitelistConfigCache();
+    Cache<String, WhitelistConfig> cache = managerCacheHandler.getWhitelistConfigCache();
     WhitelistConfig value;
 
     // Cache should never be null, but just in case
@@ -144,7 +144,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   }
 
   private void evictWhitelistConfigCache(String accountId) {
-    Cache<String, WhitelistConfig> cache = cacheManager.getWhitelistConfigCache();
+    Cache<String, WhitelistConfig> cache = managerCacheHandler.getWhitelistConfigCache();
     cache.remove(accountId);
   }
 

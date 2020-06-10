@@ -1,18 +1,24 @@
-package software.wings.app;
+package io.harness.cache;
 
+import static io.harness.cache.CacheBackend.REDIS;
 import static javax.cache.Caching.getCachingProvider;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.Provider;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
+import com.google.inject.name.Named;
 
 import com.hazelcast.cache.HazelcastCachingProvider;
-import com.hazelcast.config.Config;
-import com.hazelcast.config.XmlConfigBuilder;
-import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import io.harness.govern.DependencyModule;
 import io.harness.govern.ServersModule;
+import io.harness.hazelcast.HazelcastModule;
+import io.harness.redis.RedissonKryoCodec;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.intercept.MethodInvocation;
 import org.jsr107.ri.annotations.CacheContextSource;
 import org.jsr107.ri.annotations.DefaultCacheKeyGenerator;
@@ -24,9 +30,12 @@ import org.jsr107.ri.annotations.guice.CacheRemoveEntryInterceptor;
 import org.jsr107.ri.annotations.guice.CacheResultInterceptor;
 
 import java.io.Closeable;
+import java.io.File;
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.cache.CacheManager;
@@ -96,31 +105,81 @@ import javax.cache.spi.CachingProvider;
  * @author Michael Stachel
  * @version $Revision$
  */
-public class CacheModule extends AbstractModule implements ServersModule {
-  private HazelcastInstance hazelcastInstance;
+@Slf4j
+public class CacheModule extends DependencyModule implements ServersModule {
+  private static final String CACHING_PROVIDER_CLASSPATH = "javax.cache.spi.CachingProvider";
   private CacheManager cacheManager;
+  private CacheConfig cacheConfig;
 
-  public CacheModule(MainConfiguration mainConfiguration) {
-    Config config = new XmlConfigBuilder().build();
-    config.setInstanceName("wings-hazelcast");
-    if (mainConfiguration.getHazelcast() != null) {
-      if (mainConfiguration.getHazelcast().getAwsConfig() != null
-          && mainConfiguration.getHazelcast().getAwsConfig().isEnabled()) {
-        config.getNetworkConfig().getJoin().setAwsConfig(mainConfiguration.getHazelcast().getAwsConfig());
-      }
-      if (mainConfiguration.getHazelcast().getTcpIpConfig() != null
-          && mainConfiguration.getHazelcast().getTcpIpConfig().isEnabled()) {
-        config.getNetworkConfig().getJoin().setTcpIpConfig(mainConfiguration.getHazelcast().getTcpIpConfig());
-      }
-    }
+  public CacheModule(@NonNull CacheConfig cacheConfig) {
+    this.cacheConfig = cacheConfig;
+  }
 
-    hazelcastInstance = Hazelcast.getOrCreateHazelcastInstance(config);
-    System.setProperty("javax.cache.spi.CachingProvider", "com.hazelcast.cache.HazelcastCachingProvider");
-    Properties properties = new Properties();
-    properties.setProperty(HazelcastCachingProvider.HAZELCAST_INSTANCE_NAME, "wings-hazelcast");
+  @Provides
+  @Named("Redis")
+  @Singleton
+  CacheManager getRedissonCacheManager() {
+    System.setProperty(CACHING_PROVIDER_CLASSPATH, "org.redisson.jcache.JCachingProvider");
     CachingProvider provider = getCachingProvider();
-    this.cacheManager =
-        provider.getCacheManager(provider.getDefaultURI(), provider.getDefaultClassLoader(), properties);
+    URI uri = provider.getDefaultURI();
+    File file = new File("redisson-jcache.yaml");
+    if (file.exists()) {
+      uri = file.toURI();
+      logger.info("Found the redisson config in the working directory {}", uri);
+    }
+    return provider.getCacheManager(uri, provider.getDefaultClassLoader(), new Properties());
+  }
+
+  @Provides
+  @Named("Hazelcast")
+  @Singleton
+  CacheManager getHazelcastCacheManager(Provider<HazelcastInstance> hazelcastInstanceProvider) {
+    hazelcastInstanceProvider.get();
+    System.setProperty(CACHING_PROVIDER_CLASSPATH, "com.hazelcast.cache.HazelcastCachingProvider");
+    Properties properties = new Properties();
+    properties.setProperty(HazelcastCachingProvider.HAZELCAST_INSTANCE_NAME, HazelcastModule.INSTANCE_NAME);
+    CachingProvider provider = getCachingProvider();
+    return provider.getCacheManager(provider.getDefaultURI(), provider.getDefaultClassLoader(), properties);
+  }
+
+  @Provides
+  @Named("Caffeine")
+  @Singleton
+  CacheManager getCaffeineCacheManager() {
+    System.setProperty(CACHING_PROVIDER_CLASSPATH, "com.github.benmanes.caffeine.jcache.spi.CaffeineCachingProvider");
+    Properties properties = new Properties();
+    CachingProvider provider = getCachingProvider();
+    return provider.getCacheManager(provider.getDefaultURI(), provider.getDefaultClassLoader(), properties);
+  }
+
+  @Provides
+  @Singleton
+  public HarnessCacheManager getHarnessCacheManager(@Named("Redis") Provider<CacheManager> redisProvider,
+      @Named("Hazelcast") Provider<CacheManager> hazelcastProvider,
+      @Named("Caffeine") Provider<CacheManager> caffeineProvider) {
+    CacheBackend cacheBackend = cacheConfig.getCacheBackend();
+    switch (cacheBackend) {
+      case NOOP:
+        return new NoOpHarnessCacheManager();
+      case REDIS:
+        this.cacheManager = redisProvider.get();
+        break;
+      case HAZELCAST:
+        this.cacheManager = hazelcastProvider.get();
+        break;
+      case CAFFEINE:
+        this.cacheManager = caffeineProvider.get();
+        break;
+      default:
+        throw new UnsupportedOperationException();
+    }
+    return new HarnessCacheManagerImpl(cacheManager, cacheConfig);
+  }
+
+  @Provides
+  @Singleton
+  public CacheResolverFactory getCacheResolverFactory(HarnessCacheManager harnessCacheManager) {
+    return new DefaultCacheResolverFactory(cacheManager);
   }
 
   public static <T, R> Supplier<R> bind(Function<T, R> fn, T val) {
@@ -129,8 +188,11 @@ public class CacheModule extends AbstractModule implements ServersModule {
 
   @Override
   protected void configure() {
+    if (cacheConfig.getCacheBackend() == REDIS) {
+      bind(RedissonKryoCodec.class).toInstance(new RedissonKryoCodec());
+    }
+
     bind(CacheKeyGenerator.class).to(DefaultCacheKeyGenerator.class);
-    bind(CacheResolverFactory.class).toInstance(new DefaultCacheResolverFactory(cacheManager));
     bind(new TypeLiteral<CacheContextSource<MethodInvocation>>() {}).to(CacheLookupUtil.class);
 
     CachePutInterceptor cachePutInterceptor = new CachePutInterceptor();
@@ -154,12 +216,17 @@ public class CacheModule extends AbstractModule implements ServersModule {
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(CacheRemoveAll.class), cacheRemoveAllInterceptor);
   }
 
-  public HazelcastInstance getHazelcastInstance() {
-    return hazelcastInstance;
+  @Override
+  public Set<DependencyModule> dependencies() {
+    return Collections.singleton(HazelcastModule.getInstance());
   }
 
   @Override
   public List<Closeable> servers(Injector injector) {
-    return Collections.singletonList(() -> hazelcastInstance.shutdown());
+    return Collections.singletonList(() -> {
+      if (cacheManager != null) {
+        cacheManager.close();
+      }
+    });
   }
 }

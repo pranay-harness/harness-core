@@ -49,8 +49,8 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserGroupService;
-import software.wings.utils.CacheManager;
 import software.wings.utils.CryptoUtils;
+import software.wings.utils.ManagerCacheHandler;
 
 import java.util.ArrayList;
 import java.util.Base64;
@@ -72,7 +72,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private UserGroupService userGroupService;
-  @Inject private CacheManager cacheManager;
+  @Inject private ManagerCacheHandler managerCacheHandler;
   @Inject private AuthHandler authHandler;
   @Inject private AuthService authService;
   @Inject private ExecutorService executorService;
@@ -135,11 +135,11 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   }
 
   private void evictApiKeyAndRebuildCache(String apiKey, String accountId, boolean rebuild) {
-    Cache<String, ApiKeyEntry> apiKeyCache = requireNonNull(cacheManager.getApiKeyCache());
+    Cache<String, ApiKeyEntry> apiKeyCache = requireNonNull(managerCacheHandler.getApiKeyCache());
     Cache<String, UserPermissionInfo> apiKeyPermissionInfoCache =
-        requireNonNull(cacheManager.getApiKeyPermissionInfoCache());
+        requireNonNull(managerCacheHandler.getApiKeyPermissionInfoCache());
     Cache<String, UserRestrictionInfo> apiKeyRestrictionInfoCache =
-        requireNonNull(cacheManager.getApiKeyRestrictionInfoCache());
+        requireNonNull(managerCacheHandler.getApiKeyRestrictionInfoCache());
 
     boolean apiKeyPresent = apiKeyCache.remove(apiKey);
     boolean apiKeyPresentInPermissions = apiKeyPermissionInfoCache.remove(apiKey);
@@ -305,7 +305,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   }
 
   private ApiKeyEntry getApiKeyFromCacheOrDB(String apiKey, String accountId, boolean details) {
-    Cache<String, ApiKeyEntry> apiKeyCache = cacheManager.getApiKeyCache();
+    Cache<String, ApiKeyEntry> apiKeyCache = managerCacheHandler.getApiKeyCache();
     if (apiKeyCache == null) {
       logger.warn("apiKeyCache is null. Fetch from DB");
       return getByKeyFromDB(apiKey, accountId, details);
@@ -333,7 +333,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Override
   public UserPermissionInfo getApiKeyPermissions(ApiKeyEntry apiKeyEntry, String accountId) {
     String apiKey = apiKeyEntry.getDecryptedKey();
-    Cache<String, UserPermissionInfo> apiKeyPermissionsCache = cacheManager.getApiKeyPermissionInfoCache();
+    Cache<String, UserPermissionInfo> apiKeyPermissionsCache = managerCacheHandler.getApiKeyPermissionInfoCache();
     if (apiKeyPermissionsCache == null) {
       logger.warn("apiKey permissions cache is null. Fetch from DB");
       return authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
@@ -359,7 +359,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   public UserRestrictionInfo getApiKeyRestrictions(
       ApiKeyEntry apiKeyEntry, UserPermissionInfo userPermissionInfo, String accountId) {
     String apiKey = apiKeyEntry.getDecryptedKey();
-    Cache<String, UserRestrictionInfo> apiKeyRestrictionInfoCache = cacheManager.getApiKeyRestrictionInfoCache();
+    Cache<String, UserRestrictionInfo> apiKeyRestrictionInfoCache = managerCacheHandler.getApiKeyRestrictionInfoCache();
     if (apiKeyRestrictionInfoCache == null) {
       logger.warn("apiKey restrictions cache is null. Fetch from DB");
       return authService.getUserRestrictionInfoFromDB(accountId, userPermissionInfo, apiKeyEntry.getUserGroups());
@@ -395,7 +395,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public void evictAndRebuildPermissions(String accountId, boolean rebuild) {
-    Cache<String, UserPermissionInfo> permissionsCache = cacheManager.getApiKeyPermissionInfoCache();
+    Cache<String, UserPermissionInfo> permissionsCache = managerCacheHandler.getApiKeyPermissionInfoCache();
 
     PageResponse pageResponse = list(PageRequestBuilder.aPageRequest().build(), accountId, false, true);
     List<ApiKeyEntry> apiKeyEntryList = pageResponse.getResponse();

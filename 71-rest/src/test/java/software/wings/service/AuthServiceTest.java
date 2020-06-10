@@ -17,6 +17,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -73,7 +74,8 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.utils.CacheManager;
+import software.wings.service.intfc.UserService;
+import software.wings.utils.ManagerCacheHandler;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
@@ -95,7 +97,7 @@ public class AuthServiceTest extends WingsBaseTest {
   private static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   @Mock private GenericDbCache cache;
-  @Mock private static CacheManager cacheManager;
+  @Mock private static ManagerCacheHandler managerCacheHandler;
   @Mock private Cache<String, User> userCache;
   @Mock private Cache<String, AuthToken> authTokenCache;
   @Mock private HPersistence persistence;
@@ -105,6 +107,7 @@ public class AuthServiceTest extends WingsBaseTest {
   @Mock FeatureFlagService featureFlagService;
   @Mock PortalConfig portalConfig;
   @Inject MainConfiguration mainConfiguration;
+  @Inject @InjectMocks private UserService userService;
   @Inject @InjectMocks private AuthService authService;
 
   private Builder userBuilder = anUser().appId(APP_ID).email(USER_EMAIL).name(USER_NAME).password(PASSWORD);
@@ -117,11 +120,12 @@ public class AuthServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
+    initMocks(this);
     on(mainConfiguration).set("portal", portalConfig);
-    when(cacheManager.getUserCache()).thenReturn(userCache);
+    when(managerCacheHandler.getUserCache()).thenReturn(userCache);
     when(userCache.get(USER_ID)).thenReturn(User.Builder.anUser().uuid(USER_ID).build());
 
-    when(cacheManager.getAuthTokenCache()).thenReturn(authTokenCache);
+    when(managerCacheHandler.getAuthTokenCache()).thenReturn(authTokenCache);
     when(authTokenCache.get(VALID_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 86400000L));
     when(authTokenCache.get(EXPIRED_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 0L));
 
