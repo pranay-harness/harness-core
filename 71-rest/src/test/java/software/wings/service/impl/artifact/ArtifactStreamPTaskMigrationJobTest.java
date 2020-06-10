@@ -115,6 +115,7 @@ public class ArtifactStreamPTaskMigrationJobTest extends CategoryTest {
     FieldEnd fieldEnd = mock(FieldEnd.class);
     when(query.field(anyString())).thenReturn(fieldEnd);
     when(fieldEnd.in(any())).thenReturn(query);
+    when(fieldEnd.lessThan(any())).thenReturn(query);
     when(fieldEnd.doesNotExist()).thenReturn(query);
     when(query.project(anyString(), anyBoolean())).thenReturn(query);
   }

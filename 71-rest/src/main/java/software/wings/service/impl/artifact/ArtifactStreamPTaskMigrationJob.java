@@ -13,6 +13,7 @@ import com.google.inject.Singleton;
 
 import io.dropwizard.lifecycle.Managed;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -105,6 +106,8 @@ public class ArtifactStreamPTaskMigrationJob implements Managed {
 
     List<ArtifactStream> artifactStreams = query.field(ArtifactStreamKeys.perpetualTaskId)
                                                .doesNotExist()
+                                               .field(ArtifactStreamKeys.failedCronAttempts)
+                                               .lessThan(ArtifactCollectionResponseHandler.MAX_FAILED_ATTEMPTS)
                                                .project(ArtifactStreamKeys.accountId, true)
                                                .project(ArtifactStreamKeys.uuid, true)
                                                .asList(new FindOptions().limit(BATCH_SIZE));
