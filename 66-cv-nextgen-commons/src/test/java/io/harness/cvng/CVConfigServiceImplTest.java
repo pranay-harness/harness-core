@@ -25,13 +25,15 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class CVConfigServiceImplTest extends CVNextGenBaseTest {
-  @Inject CVConfigService cvConfigService;
+  @Inject private CVConfigService cvConfigService;
   private String accountId;
   private String connectorId;
+  private String productName;
   @Before
   public void setup() {
     this.accountId = generateUuid();
     this.connectorId = generateUuid();
+    this.productName = generateUuid();
   }
 
   @Test
@@ -109,10 +111,10 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
     CVConfig cvConfig = createCVConfig();
     save(cvConfig);
     CVConfig updated = cvConfigService.get(cvConfig.getUuid());
-    updated.setName("this is updated config name");
+    updated.setProjectIdentifier("ProjectIdentifier");
     cvConfigService.update(Lists.newArrayList(updated));
     assertCommons(cvConfigService.get(updated.getUuid()), updated);
-    assertThat(updated.getName()).isEqualTo("this is updated config name");
+    assertThat(updated.getProjectIdentifier()).isEqualTo("ProjectIdentifier");
   }
 
   @Test
@@ -120,7 +122,6 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   @Category(UnitTests.class)
   public void testUpdate_withEmptyCVConfigId() {
     CVConfig cvConfig = createCVConfig();
-    cvConfig.setName("this is updated config name");
     assertThatThrownBy(() -> cvConfigService.update(Lists.newArrayList(cvConfig)))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("Trying to update a CVConfig with empty UUID.");
@@ -171,6 +172,37 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  public void testList_withConnectorAndProductName() {
+    List<CVConfig> cvConfigs = createCVConfigs(4);
+    String connectorId1 = generateUuid();
+    cvConfigs.forEach(cvConfig -> {
+      cvConfig.setConnectorId(connectorId1);
+      cvConfig.setProductName("product1");
+    });
+    cvConfigs.get(0).setProductName("product2");
+    save(cvConfigs);
+    assertThat(cvConfigService.list(accountId, connectorId1, "product1")).hasSize(3);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testList_withConnectorAndProductNameGroupId() {
+    List<CVConfig> cvConfigs = createCVConfigs(4);
+    String connectorId1 = generateUuid();
+    cvConfigs.forEach(cvConfig -> {
+      cvConfig.setConnectorId(connectorId1);
+      cvConfig.setProductName("product1");
+      cvConfig.setGroupId("group1");
+    });
+    cvConfigs.get(0).setProductName("product2");
+    save(cvConfigs);
+    assertThat(cvConfigService.list(accountId, connectorId1, "product1", "group1")).hasSize(3);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
   public void testGetProjectsNames_whenNoConfigsPresent() {
     assertThat(cvConfigService.getProductNames(accountId, generateUuid())).isEmpty();
   }
@@ -186,13 +218,25 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
     assertThat(cvConfigService.getProductNames(accountId, connectorId)).isEqualTo(Lists.newArrayList("p1", "p2", "p3"));
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testDeleteByGroupId() {
+    String groupName = "appdynamics-app-name";
+    List<CVConfig> cvConfigs = createCVConfigs(5);
+    cvConfigs.forEach(cvConfig -> cvConfig.setGroupId(groupName));
+    save(cvConfigs);
+    cvConfigService.deleteByGroupId(accountId, connectorId, productName, groupName);
+    cvConfigs.forEach(cvConfig -> assertThat(cvConfigService.get(cvConfig.getUuid())).isNull());
+  }
+
   private void assertCommons(CVConfig actual, CVConfig expected) {
     assertThat(actual.getType()).isEqualTo(expected.getType());
     assertThat(actual.getAccountId()).isEqualTo(expected.getAccountId());
     assertThat(actual.getCategory()).isEqualTo(expected.getCategory());
     assertThat(actual.getConnectorId()).isEqualTo(expected.getConnectorId());
-    assertThat(actual.getEnvId()).isEqualTo(expected.getEnvId());
-    assertThat(actual.getServiceId()).isEqualTo(expected.getServiceId());
+    assertThat(actual.getEnvIdentifier()).isEqualTo(expected.getEnvIdentifier());
+    assertThat(actual.getServiceIdentifier()).isEqualTo(expected.getServiceIdentifier());
     assertThat(actual.getName()).isEqualTo(expected.getName());
   }
 
@@ -213,8 +257,9 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
     cvConfig.setConnectorId(connectorId);
     cvConfig.setCategory("Performance");
     cvConfig.setAccountId(accountId);
-    cvConfig.setEnvId(generateUuid());
+    cvConfig.setProductName(productName);
+    cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setName("cvConfigName-" + generateUuid());
-    cvConfig.setProjectId(generateUuid());
+    cvConfig.setProjectIdentifier(generateUuid());
   }
 }

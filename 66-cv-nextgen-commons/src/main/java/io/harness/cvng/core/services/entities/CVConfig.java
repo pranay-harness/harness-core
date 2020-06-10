@@ -10,6 +10,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -21,6 +22,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @FieldNameConstants(innerTypeName = "CVConfigKeys")
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "cvConfigs")
 @HarnessEntity(exportable = true)
@@ -32,10 +34,11 @@ public abstract class CVConfig implements PersistentEntity, UuidAware, CreatedAt
   private long lastUpdatedAt;
   @NotNull @Indexed private String accountId;
   @NotNull @Indexed private String connectorId;
-  @NotNull private String serviceId;
-  @NotNull private String envId;
-  @NotNull private String projectId;
+  @NotNull private String serviceIdentifier;
+  @NotNull private String envIdentifier;
+  @NotNull private String projectIdentifier;
   private String category;
   private String productName;
+  private String groupId;
   public abstract DataSourceType getType();
 }

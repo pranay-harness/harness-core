@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class SplunkCVConfig extends LogCVConfig {
+  private String serviceInstanceIdentifier;
   @Override
   public DataSourceType getType() {
     return DataSourceType.SPLUNK;
