@@ -44,12 +44,12 @@ logging:
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
 
 mongo:
-  uri: mongodb://localhost:27017/cd-nextgen
+  uri: mongodb://localhost:27017/ng-harness
   connectTimeout: 30000
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
-  indexManagerMode: AUTO
+  indexManagerMode: MANUAL
 
 # [secondary-db]: Uncomment the following if you want to connect to another database
 #secondary-mongo:
