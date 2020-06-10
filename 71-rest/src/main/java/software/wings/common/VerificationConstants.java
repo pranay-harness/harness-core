@@ -265,6 +265,7 @@ public class VerificationConstants {
       EventConstants.VERIFICATION_STATE_TYPE, EventConstants.APPLICATION_ID, EventConstants.WORKFLOW_ID};
   // TODO: Need to remove this field once everything is moved to CV task based data collection.
   public static final Duration DATA_COLLECTION_RETRY_SLEEP = Duration.ofSeconds(30);
+  public static final int MAX_NUM_ALERT_OCCURRENCES = 4;
   public static String getDataCollectionMetricHelpDocument() {
     return "This metric is used to track the Verification data Collection per account";
   }

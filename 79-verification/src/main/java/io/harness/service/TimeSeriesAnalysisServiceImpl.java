@@ -104,6 +104,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -417,8 +418,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     if (mlAnalysisResponse.getOverallMetricScores() == null) {
       mlAnalysisResponse.setOverallMetricScores(new HashMap<>());
     }
-    double riskScore =
-        mlAnalysisResponse.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(0.0);
+    double riskScore = computeRiskScore(mlAnalysisResponse);
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(
         cvConfigId, riskScore, mlAnalysisResponse.getAnalysisMinute());
     mlAnalysisResponse.bundleAsJosnAndCompress();
@@ -428,6 +428,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         stateType, workflowExecutionId, stateExecutionId);
     logLearningEngineAnalysisMessage(mlAnalysisResponse);
     return true;
+  }
+
+  private double computeRiskScore(MetricAnalysisRecord mlAnalysisResponse) {
+    return mlAnalysisResponse.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(0.0);
   }
 
   @Override
@@ -1150,5 +1154,30 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       return Optional.empty();
     }
     return Optional.of(results.get(0).getCreatedAt());
+  }
+
+  @Override
+  public int getNumberOfAnalysisAboveThresholdSince(int analysisMinute, String cvConfigId, double alertThreshold) {
+    Query<TimeSeriesMLAnalysisRecord> analysisQuery =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+            .filter(MetricAnalysisRecordKeys.cvConfigId, cvConfigId)
+            .field(MetricAnalysisRecordKeys.analysisMinute)
+            .greaterThanOrEq(analysisMinute)
+            .order(Sort.descending(MetricAnalysisRecordKeys.analysisMinute));
+
+    List<TimeSeriesMLAnalysisRecord> analysisRecords = analysisQuery.asList();
+    AtomicInteger numberOfConsecutiveThresholdBreaches = new AtomicInteger(0);
+    if (analysisRecords != null) {
+      analysisRecords.forEach(analysisRecord -> {
+        analysisRecord.decompress();
+        double risk = computeRiskScore(analysisRecord);
+        if (risk >= alertThreshold) {
+          numberOfConsecutiveThresholdBreaches.incrementAndGet();
+        } else {
+          return;
+        }
+      });
+    }
+    return numberOfConsecutiveThresholdBreaches.get();
   }
 }

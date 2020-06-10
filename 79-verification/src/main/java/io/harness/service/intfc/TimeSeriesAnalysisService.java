@@ -110,4 +110,6 @@ public interface TimeSeriesAnalysisService {
   long getLastDataCollectedMinute(String appId, String stateExecutionId, StateType stateType);
 
   Optional<Long> getCreatedTimeOfLastCollection(CVConfiguration cvConfiguration);
+
+  int getNumberOfAnalysisAboveThresholdSince(int analysisMinute, String cvConfigId, double riskScore);
 }

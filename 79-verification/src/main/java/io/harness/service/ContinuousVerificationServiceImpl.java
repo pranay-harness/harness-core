@@ -33,6 +33,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import com.codahale.metrics.annotation.Counted;
 import com.codahale.metrics.annotation.Timed;
@@ -103,6 +104,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -124,6 +126,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private UsageMetricsHelper usageMetricsHelper;
   @Inject private CVTaskService cvTaskService;
   @Inject private CVActivityLogService cvActivityLogService;
+  @Inject @Named("alertsCreationExecutor") protected ExecutorService executorService;
 
   @Override
   @Counted
@@ -1945,6 +1948,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   @Override
   public void triggerTimeSeriesAlertIfNecessary(String cvConfigId, double riskScore, long analysisMinute) {
+    executorService.submit(() -> triggerTimeSeriesAlert(cvConfigId, riskScore, analysisMinute));
+  }
+
+  private void triggerTimeSeriesAlert(String cvConfigId, double riskScore, long analysisMinute) {
     if (isEmpty(cvConfigId)) {
       return;
     }
@@ -1967,6 +1974,19 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
               .build()));
       return;
+    }
+
+    // check to see if num of occurrences match.
+    if (cvConfiguration.getNumOfOccurrencesForAlert() > 1) {
+      int earliestTimeToCheck = (int) analysisMinute
+          - (cvConfiguration.getNumOfOccurrencesForAlert() - 1) * SERVICE_GUARD_ANALYSIS_WINDOW_MINS;
+      int numOfBreaches = timeSeriesAnalysisService.getNumberOfAnalysisAboveThresholdSince(
+          earliestTimeToCheck, cvConfigId, cvConfiguration.getAlertThreshold());
+      if (numOfBreaches < cvConfiguration.getNumOfOccurrencesForAlert()) {
+        logger.info("For {}, number of breaches of alert threshold is {} but min number in config is {} ", cvConfigId,
+            numOfBreaches, cvConfiguration.getNumOfOccurrencesForAlert());
+        return;
+      }
     }
 
     logger.info("triggering alert for {} with risk score {}", cvConfigId, riskScore);
