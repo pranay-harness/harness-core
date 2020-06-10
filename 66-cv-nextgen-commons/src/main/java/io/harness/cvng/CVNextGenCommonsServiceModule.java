@@ -10,5 +10,6 @@ public class CVNextGenCommonsServiceModule extends AbstractModule {
   protected void configure() {
     bind(CVConfigService.class).to(CVConfigServiceImpl.class);
     bind(DataSourceService.class).to(DataSourceServiceImpl.class);
+    bind(DSConfigService.class).to(DSConfigServiceImpl.class);
   }
 }

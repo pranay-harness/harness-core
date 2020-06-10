@@ -59,10 +59,36 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
+  public void deleteByGroupId(String accountId, String connectorId, String productName, String groupId) {
+    hPersistence.delete(hPersistence.createQuery(CVConfig.class)
+                            .filter(CVConfigKeys.accountId, accountId)
+                            .filter(CVConfigKeys.connectorId, connectorId)
+                            .filter(CVConfigKeys.productName, productName)
+                            .filter(CVConfigKeys.groupId, groupId));
+  }
+
+  @Override
   public List<CVConfig> list(@NotNull String accountId, String connectorId) {
     Query<CVConfig> query = hPersistence.createQuery(CVConfig.class)
                                 .filter(CVConfigKeys.accountId, accountId)
                                 .filter(CVConfigKeys.connectorId, connectorId);
+    return query.asList();
+  }
+  @Override
+  public List<CVConfig> list(String accountId, String connectorId, String productName) {
+    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class)
+                                .filter(CVConfigKeys.accountId, accountId)
+                                .filter(CVConfigKeys.connectorId, connectorId)
+                                .filter(CVConfigKeys.productName, productName);
+    return query.asList();
+  }
+  @Override
+  public List<CVConfig> list(String accountId, String connectorId, String productName, String groupId) {
+    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class)
+                                .filter(CVConfigKeys.accountId, accountId)
+                                .filter(CVConfigKeys.connectorId, connectorId)
+                                .filter(CVConfigKeys.productName, productName)
+                                .filter(CVConfigKeys.groupId, groupId);
     return query.asList();
   }
 
