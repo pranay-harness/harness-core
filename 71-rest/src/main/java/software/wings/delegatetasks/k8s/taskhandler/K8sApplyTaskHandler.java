@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.KubernetesConfig;
-import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
@@ -154,19 +153,10 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
       applyFilePaths.forEach(each -> sb.append(color(format("- %s", each), Gray)).append(System.lineSeparator()));
       executionLogCallback.saveExecutionLog(sb.toString());
 
-      List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplateForApply(k8sDelegateTaskParams,
+      resources = k8sTaskHelper.getResourcesFromManifests(k8sDelegateTaskParams,
           k8sApplyTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory, applyFilePaths,
           k8sApplyTaskParameters.getValuesYamlList(), releaseName, kubernetesConfig.getNamespace(),
           executionLogCallback, k8sApplyTaskParameters);
-
-      if (isEmpty(manifestFiles)) {
-        executionLogCallback.saveExecutionLog(color("\nNo Manifests found after rendering", Yellow, Bold));
-        executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
-        return false;
-      }
-
-      resources = k8sTaskHelper.readManifests(manifestFiles, executionLogCallback);
-      k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, kubernetesConfig.getNamespace());
 
       executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
       executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));

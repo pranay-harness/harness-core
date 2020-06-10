@@ -245,6 +245,23 @@ public class K8sTaskHelper {
     return true;
   }
 
+  public boolean deleteManifests(Kubectl client, List<KubernetesResource> resources,
+      K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws Exception {
+    FileIo.writeUtf8StringToFile(
+        k8sDelegateTaskParams.getWorkingDirectory() + "/manifests.yaml", ManifestHelper.toYaml(resources));
+
+    Kubectl overriddenClient = getOverriddenClient(client, resources, k8sDelegateTaskParams);
+
+    final DeleteCommand deleteCommand = overriddenClient.delete().filename("manifests.yaml");
+    ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, deleteCommand);
+    if (result.getExitValue() != 0) {
+      executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+      return false;
+    }
+
+    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+    return true;
+  }
   public boolean doStatusCheck(Kubectl client, KubernetesResourceId resourceId,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws Exception {
     final String eventFormat = "%-7s: %s";
@@ -966,9 +983,9 @@ public class K8sTaskHelper {
     return new ArrayList<>();
   }
 
-  public List<ManifestFile> renderTemplateForApply(K8sDelegateTaskParams k8sDelegateTaskParams,
+  public List<ManifestFile> renderTemplateForGivenFiles(K8sDelegateTaskParams k8sDelegateTaskParams,
       K8sDelegateManifestConfig k8sDelegateManifestConfig, String manifestFilesDirectory,
-      @NotEmpty List<String> filesToApply, List<String> valuesFiles, String releaseName, String namespace,
+      @NotEmpty List<String> filesList, List<String> valuesFiles, String releaseName, String namespace,
       ExecutionLogCallback executionLogCallback, K8sTaskParameters k8sTaskParameters) throws Exception {
     StoreType storeType = k8sDelegateManifestConfig.getManifestStoreTypes();
 
@@ -976,23 +993,23 @@ public class K8sTaskHelper {
       case Local:
       case Remote:
         List<ManifestFile> manifestFiles =
-            readFilesFromDirectory(manifestFilesDirectory, filesToApply, executionLogCallback);
+            readFilesFromDirectory(manifestFilesDirectory, filesList, executionLogCallback);
         return renderManifestFilesForGoTemplate(
             k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback);
 
       case HelmSourceRepo:
-        return renderTemplateForHelmChartFiles(k8sDelegateTaskParams, manifestFilesDirectory, filesToApply, valuesFiles,
+        return renderTemplateForHelmChartFiles(k8sDelegateTaskParams, manifestFilesDirectory, filesList, valuesFiles,
             releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion());
 
       case HelmChartRepo:
         manifestFilesDirectory =
             Paths.get(manifestFilesDirectory, k8sDelegateManifestConfig.getHelmChartConfigParams().getChartName())
                 .toString();
-        return renderTemplateForHelmChartFiles(k8sDelegateTaskParams, manifestFilesDirectory, filesToApply, valuesFiles,
+        return renderTemplateForHelmChartFiles(k8sDelegateTaskParams, manifestFilesDirectory, filesList, valuesFiles,
             releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion());
       case KustomizeSourceRepo:
         return kustomizeTaskHelper.buildForApply(k8sDelegateTaskParams.getKustomizeBinaryPath(),
-            k8sDelegateManifestConfig.getKustomizeConfig(), manifestFilesDirectory, filesToApply, executionLogCallback);
+            k8sDelegateManifestConfig.getKustomizeConfig(), manifestFilesDirectory, filesList, executionLogCallback);
 
       default:
         unhandled(storeType);
@@ -1014,6 +1031,22 @@ public class K8sTaskHelper {
     return readManifests(manifestFiles, executionLogCallback);
   }
 
+  public List<KubernetesResource> getResourcesFromManifests(K8sDelegateTaskParams k8sDelegateTaskParams,
+      K8sDelegateManifestConfig k8sDelegateManifestConfig, String manifestFilesDirectory,
+      @NotEmpty List<String> filesList, List<String> valuesFiles, String releaseName, String namespace,
+      ExecutionLogCallback executionLogCallback, K8sTaskParameters k8sTaskParameters) throws Exception {
+    List<ManifestFile> manifestFiles =
+        renderTemplateForGivenFiles(k8sDelegateTaskParams, k8sDelegateManifestConfig, manifestFilesDirectory, filesList,
+            valuesFiles, releaseName, namespace, executionLogCallback, k8sTaskParameters);
+    if (isEmpty(manifestFiles)) {
+      return new ArrayList<>();
+    }
+
+    List<KubernetesResource> resources = readManifests(manifestFiles, executionLogCallback);
+    setNamespaceToKubernetesResourcesIfRequired(resources, namespace);
+
+    return resources;
+  }
   public List<KubernetesResource> readManifests(
       List<ManifestFile> manifestFiles, ExecutionLogCallback executionLogCallback) {
     List<KubernetesResource> result = new ArrayList<>();
