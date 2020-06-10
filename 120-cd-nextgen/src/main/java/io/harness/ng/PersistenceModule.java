@@ -14,9 +14,12 @@ import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.guice.annotation.GuiceModule;
 import org.springframework.guice.module.BeanFactoryProvider;
@@ -30,7 +33,7 @@ public class PersistenceModule extends AbstractModule {
     installModule(getMongoModule());
   }
 
-  @EnableMongoRepositories(basePackages = "io.harness")
+  @EnableMongoRepositories(basePackages = "io.harness", mongoTemplateRef = "primary")
   @EnableMongoAuditing
   @Configuration
   @GuiceModule
@@ -40,6 +43,12 @@ public class PersistenceModule extends AbstractModule {
     @Inject
     public SpringMongoConfig(Injector injector) {
       advancedDatastore = injector.getProvider(get(AdvancedDatastore.class, named("primaryDatastore"))).get();
+    }
+
+    @Bean(name = "primary")
+    @Primary
+    public MongoTemplate primaryMongoTemplate() {
+      return new MongoTemplate(mongoClient(), getDatabaseName());
     }
 
     @Override
@@ -64,4 +73,29 @@ public class PersistenceModule extends AbstractModule {
       install(module);
     }
   }
+
+  /* [secondary-db]:
+  Uncomment the below section of code if you want to use another DB
+  what it essentially does is that it creates a new mongo template and advises spring to use this template for
+  repositories under io.harness.ng.core.dao.api.secondary package
+  */
+
+  /*
+  @EnableMongoRepositories(basePackages = "io.harness.ng.core.dao.api.secondary", mongoTemplateRef = "secondary")
+  @Configuration
+  @GuiceModule
+  public static class SpringMongoConfig1 {
+    private AdvancedDatastore advancedDatastore;
+
+    @Inject
+    public SpringMongoConfig1(Injector injector) {
+      advancedDatastore = injector.getProvider(get(AdvancedDatastore.class, named("secondaryDatastore"))).get();
+    }
+
+    @Bean(name = "secondary")
+    public MongoTemplate secondaryMongoTemplate() {
+      return new MongoTemplate(advancedDatastore.getMongo(), advancedDatastore.getDB().getName());
+    }
+  }
+  */
 }

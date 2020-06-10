@@ -50,3 +50,12 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+
+# [secondary-db]: Uncomment the following if you want to connect to another database
+#secondary-mongo:
+#  uri: mongodb://localhost:27017/cd-nextgen-secondary
+#  connectTimeout: 30000
+#  serverSelectionTimeout: 90000
+#  maxConnectionIdleTime: 600000
+#  connectionsPerHost: 300
+#  indexManagerMode: AUTO
