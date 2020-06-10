@@ -6,7 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.cluster.entities.BillingDataPipelineRecord;
+import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
+import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

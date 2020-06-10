@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -19,6 +18,7 @@ import com.google.auth.Credentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.TableInfo;
 import com.google.cloud.bigquery.datatransfer.v1.DataTransferServiceClient;
+import com.google.cloud.bigquery.datatransfer.v1.TransferConfig;
 
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.config.BillingDataPipelineConfig;
@@ -79,7 +79,9 @@ public class BillingDataPipelineServiceImplTest {
     dataTransferServiceClient = mock(DataTransferServiceClient.class);
     doReturn(dataTransferServiceClient).when(billingDataPipelineService).getDataTransferClient();
     doReturn(dataTransferServiceClient).when(billingDataPipelineService).getDataTransferClient(isA(Credentials.class));
-    doNothing().when(billingDataPipelineService).executeDataTransferJobCreate(any(), any());
+    doReturn(TransferConfig.newBuilder().setName("TRANSFER_CONFIG_NAME").build())
+        .when(billingDataPipelineService)
+        .executeDataTransferJobCreate(any(), any());
   }
 
   @Test
@@ -97,7 +99,7 @@ public class BillingDataPipelineServiceImplTest {
   @Category(UnitTests.class)
   public void shouldCopy() throws IOException {
     String jobName = "copy-java-api-display-name";
-    String srcProjectId = "tough-talent-271423";
+    String srcProjectId = "ccm-play";
     String srcDatasetId = "billing";
     String dstProjectId = "ccm-play";
     String dstDatasetId = "copy_dataset_cli";

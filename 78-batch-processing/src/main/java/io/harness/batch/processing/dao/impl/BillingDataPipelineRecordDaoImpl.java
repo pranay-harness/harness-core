@@ -6,8 +6,8 @@ import static java.util.Objects.isNull;
 import com.google.inject.Inject;
 
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
-import io.harness.ccm.cluster.entities.BillingDataPipelineRecord;
-import io.harness.ccm.cluster.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
+import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -23,8 +23,8 @@ public class BillingDataPipelineRecordDaoImpl implements BillingDataPipelineReco
   @Autowired @Inject private HPersistence hPersistence;
 
   @Override
-  public boolean create(BillingDataPipelineRecord billingDataPipelineRecord) {
-    return hPersistence.save(billingDataPipelineRecord) != null;
+  public String create(BillingDataPipelineRecord billingDataPipelineRecord) {
+    return hPersistence.save(billingDataPipelineRecord);
   }
 
   @Override

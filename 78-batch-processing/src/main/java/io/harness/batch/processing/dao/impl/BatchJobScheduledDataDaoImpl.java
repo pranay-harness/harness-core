@@ -26,7 +26,7 @@ public class BatchJobScheduledDataDaoImpl implements BatchJobScheduledDataDao {
   public BatchJobScheduledData fetchLastBatchJobScheduledData(String accountId, BatchJobType batchJobType) {
     return hPersistence.createQuery(BatchJobScheduledData.class)
         .filter(BatchJobScheduledDataKeys.accountId, accountId)
-        .filter(BatchJobScheduledDataKeys.batchJobType, batchJobType)
+        .filter(BatchJobScheduledDataKeys.batchJobType, batchJobType.name())
         .order(Sort.descending(BatchJobScheduledDataKeys.endAt))
         .get();
   }

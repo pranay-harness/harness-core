@@ -19,7 +19,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.IteratorUtils;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -234,13 +233,13 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
 
   public List<GcpBillingAccount> listGcpBillingAccountUpdatedInDuration(
       String accountId, long startTime, long endTime) {
-    return IteratorUtils.toList(new HIterator<>(persistence.createQuery(GcpBillingAccount.class, excludeAuthority)
-                                                    .filter(GcpBillingAccountKeys.accountId, accountId)
-                                                    .field(GcpBillingAccountKeys.lastUpdatedAt)
-                                                    .greaterThan(startTime)
-                                                    .field(GcpBillingAccountKeys.lastUpdatedAt)
-                                                    .lessThan(endTime)
-                                                    .fetch()));
+    return persistence.createQuery(GcpBillingAccount.class, excludeAuthority)
+        .filter(GcpBillingAccountKeys.accountId, accountId)
+        .field(GcpBillingAccountKeys.lastUpdatedAt)
+        .greaterThanOrEq(startTime)
+        .field(GcpBillingAccountKeys.lastUpdatedAt)
+        .lessThan(endTime)
+        .asList();
   }
 
   @Override

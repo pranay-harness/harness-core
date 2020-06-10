@@ -26,9 +26,9 @@ import static java.lang.String.format;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
+import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.cluster.ClusterRecordService;
-import io.harness.ccm.cluster.dao.BillingDataPipelineRecordDao;
-import io.harness.ccm.cluster.entities.BillingDataPipelineRecord;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.ccm.config.CCMSettingService;
@@ -41,6 +41,7 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CEGcpConfig;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 
@@ -117,8 +118,15 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     String s3SyncHealthStatus = null;
     long lastS3SyncTimestamp = 0L;
     boolean isAWSConnector = false;
+    String billingPipelineRecordSettingId = cloudProvider.getUuid();
+
     if (cloudProvider.getValue() instanceof CEAwsConfig) {
       isAWSConnector = true;
+    }
+
+    if (cloudProvider.getValue() instanceof CEGcpConfig) {
+      CEGcpConfig value = (CEGcpConfig) cloudProvider.getValue();
+      billingPipelineRecordSettingId = value.getOrganizationSettingId();
     }
 
     Instant connectorCreationInstantDayTruncated =
@@ -128,8 +136,8 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     long timeDifference =
         currentInstantDayTruncated.toEpochMilli() - connectorCreationInstantDayTruncated.toEpochMilli();
 
-    BillingDataPipelineRecord billingDataPipelineRecord =
-        billingDataPipelineRecordDao.fetchBillingPipelineRecord(cloudProvider.getAccountId(), cloudProvider.getUuid());
+    BillingDataPipelineRecord billingDataPipelineRecord = billingDataPipelineRecordDao.fetchBillingPipelineRecord(
+        cloudProvider.getAccountId(), billingPipelineRecordSettingId);
 
     if (timeDifference == 0 || billingDataPipelineRecord == null) {
       return serialiseHealthStatusToPOJO(

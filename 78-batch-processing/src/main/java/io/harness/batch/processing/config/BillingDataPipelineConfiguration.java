@@ -2,37 +2,31 @@ package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.reader.SettingAttributeReader;
-import io.harness.batch.processing.writer.AwsBillingDataPipelineWriter;
-import io.harness.batch.processing.writer.GcpBillingDataPipelineWriter;
-import io.harness.persistence.HPersistence;
+import io.harness.batch.processing.tasklet.AwsBillingDataPipelineTasklet;
+import io.harness.batch.processing.tasklet.GcpBillingDataPipelineTasklet;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import software.wings.beans.SettingAttribute;
 
 @Slf4j
 @Configuration
 public class BillingDataPipelineConfiguration {
-  private static final int BATCH_SIZE = 10;
-  @Autowired BatchMainConfig config;
-  @Autowired HPersistence hPersistence;
-
   @Bean
-  public ItemWriter<SettingAttribute> awsBillingDataPipelineWriter() {
-    return new AwsBillingDataPipelineWriter();
+  public Tasklet awsBillingDataPipelineTasklet() {
+    return new AwsBillingDataPipelineTasklet();
   }
 
   @Bean
-  public ItemWriter<SettingAttribute> gcpBillingDataPipelineWriter() {
-    return new GcpBillingDataPipelineWriter();
+  public Tasklet gcpBillingDataPipelineTasklet() {
+    return new GcpBillingDataPipelineTasklet();
   }
 
   @Bean
@@ -48,22 +42,13 @@ public class BillingDataPipelineConfiguration {
   }
 
   @Bean
-  public Step awsBillingDataPipelineStep(
-      StepBuilderFactory stepBuilderFactory, SettingAttributeReader settingAttributeReader) {
-    return stepBuilderFactory.get("awsBillingDataPipelineStep")
-        .<SettingAttribute, SettingAttribute>chunk(BATCH_SIZE)
-        .reader(settingAttributeReader)
-        .writer(awsBillingDataPipelineWriter())
-        .build();
+  public Step awsBillingDataPipelineStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("awsBillingDataPipelineStep").tasklet(awsBillingDataPipelineTasklet()).build();
   }
 
   @Bean
   public Step gcpBillingDataPipelineStep(
       StepBuilderFactory stepBuilderFactory, SettingAttributeReader settingAttributeReader) {
-    return stepBuilderFactory.get("gcpBillingDataPipelineStep")
-        .<SettingAttribute, SettingAttribute>chunk(BATCH_SIZE)
-        .reader(settingAttributeReader)
-        .writer(gcpBillingDataPipelineWriter())
-        .build();
+    return stepBuilderFactory.get("gcpBillingDataPipelineStep").tasklet(gcpBillingDataPipelineTasklet()).build();
   }
 }

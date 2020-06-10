@@ -20,9 +20,12 @@ import com.google.cloud.bigquery.TableInfo;
 import com.google.cloud.bigquery.TimePartitioning;
 import com.google.cloud.bigquery.datatransfer.v1.CreateTransferConfigRequest;
 import com.google.cloud.bigquery.datatransfer.v1.DataTransferServiceClient;
+import com.google.cloud.bigquery.datatransfer.v1.DataTransferServiceClient.ListTransferRunsPagedResponse;
 import com.google.cloud.bigquery.datatransfer.v1.DataTransferServiceSettings;
 import com.google.cloud.bigquery.datatransfer.v1.ScheduleOptions;
+import com.google.cloud.bigquery.datatransfer.v1.StartManualTransferRunsRequest;
 import com.google.cloud.bigquery.datatransfer.v1.TransferConfig;
+import com.google.cloud.bigquery.datatransfer.v1.TransferRun;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.Struct;
 import com.google.protobuf.Timestamp;
@@ -30,8 +33,9 @@ import com.google.protobuf.Value;
 
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
+import io.harness.batch.processing.service.BillingDataPipelineUtils;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineService;
-import io.harness.ccm.cluster.entities.BillingDataPipelineRecord;
+import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,7 +45,11 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Slf4j
 @Service
@@ -74,11 +82,9 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   private static final String SCHEDULED_QUERY_TEMPLATE = "scheduledQuery_%s";
   private static final String AWS_PRE_AGG_QUERY_TEMPLATE = "awsPreAggQuery_%s";
 
-  private static final String ACCOUNT_NAME_LABEL_KEY = "account_name";
-  private static final String ACCOUNT_TYPE_LABEL_KEY = "account_type";
   public static final String scheduledQueryKey = "scheduledQuery";
   public static final String preAggQueryKey = "preAggQueryKey";
-  private static final String PAID_ACCOUNT_TYPE = "PAID";
+
   public static final String DATA_SET_NAME_TEMPLATE = "BillingReport_%s";
   private static final String TEMP_TABLE_SCHEDULED_QUERY_TEMPLATE =
       "SELECT * FROM `%s.%s.awsCurTable_*` WHERE _TABLE_SUFFIX = CONCAT(CAST(EXTRACT(YEAR from "
@@ -128,9 +134,11 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
       return billingDataPipelineRecord.getDataSetId();
     }
     String accountName = account.getAccountName();
-    String dataSetName = String.format(DATA_SET_NAME_TEMPLATE, modifyStringToComplyRegex(accountId));
+    String dataSetName =
+        String.format(DATA_SET_NAME_TEMPLATE, BillingDataPipelineUtils.modifyStringToComplyRegex(accountId));
     String description = getDataSetDescription(accountId, accountName);
-    Map<String, String> labelMap = getLabelMap(accountName, getAccountType(account));
+    Map<String, String> labelMap =
+        BillingDataPipelineUtils.getLabelMap(accountName, BillingDataPipelineUtils.getAccountType(account));
     try {
       ServiceAccountCredentials credentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
       BigQuery bigquery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
@@ -151,14 +159,16 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   }
 
   @Override
-  public void createScheduledQueriesForGCP(String scheduledQueryName, String dstDataSetId) throws IOException {
+  public String createScheduledQueriesForGCP(String scheduledQueryName, String dstDataSetId) throws IOException {
     String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
     DataTransferServiceClient dataTransferServiceClient = getDataTransferClient();
     String tablePrefix = gcpProjectId + "." + dstDataSetId;
     String query = String.format(GCP_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE, tablePrefix, tablePrefix, tablePrefix);
     CreateTransferConfigRequest scheduledTransferConfigRequest =
         getTransferConfigRequest(dstDataSetId, scheduledQueryName, true, query);
-    executeDataTransferJobCreate(scheduledTransferConfigRequest, dataTransferServiceClient);
+    TransferConfig createdTransferConfig =
+        executeDataTransferJobCreate(scheduledTransferConfigRequest, dataTransferServiceClient);
+    return createdTransferConfig.getName();
   }
 
   @Override
@@ -208,7 +218,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
               .setParams(
                   Struct.newBuilder().putFields(QUERY_CONST, Value.newBuilder().setStringValue(query).build()).build())
               .setScheduleOptions(ScheduleOptions.newBuilder()
-                                      .setStartTime(getJobStartTimeStamp(numberOfHours, numberOfMinutes))
+                                      .setStartTime(getJobStartTimeStamp(1, numberOfHours, numberOfMinutes))
                                       .build())
               .setDataSourceId(SCHEDULED_QUERY_DATA_SOURCE_ID)
               .build();
@@ -216,29 +226,65 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
       parent = String.format(PARENT_TEMPLATE, gcpProjectId);
       numberOfHours = 6;
       numberOfMinutes = 15;
-      transferConfig = TransferConfig.newBuilder()
-                           .setDisplayName(scheduledQueryName)
-                           .setParams(Struct.newBuilder()
-                                          .putFields(QUERY_CONST, Value.newBuilder().setStringValue(query).build())
-                                          .putFields(WRITE_DISPOSITION_CONST,
-                                              Value.newBuilder().setStringValue(WRITE_TRUNCATE_VALUE).build())
-                                          .putFields(DEST_TABLE_NAME_CONST,
-                                              Value.newBuilder().setStringValue(DEST_TABLE_NAME_VALUE).build())
-                                          .build())
-                           .setDestinationDatasetId(dstDataSetId)
-                           .setScheduleOptions(ScheduleOptions.newBuilder()
-                                                   .setStartTime(getJobStartTimeStamp(numberOfHours, numberOfMinutes))
-                                                   .build())
-                           .setDataSourceId(SCHEDULED_QUERY_DATA_SOURCE_ID)
-                           .build();
+      transferConfig =
+          TransferConfig.newBuilder()
+              .setDisplayName(scheduledQueryName)
+              .setParams(Struct.newBuilder()
+                             .putFields(QUERY_CONST, Value.newBuilder().setStringValue(query).build())
+                             .putFields(WRITE_DISPOSITION_CONST,
+                                 Value.newBuilder().setStringValue(WRITE_TRUNCATE_VALUE).build())
+                             .putFields(DEST_TABLE_NAME_CONST,
+                                 Value.newBuilder().setStringValue(DEST_TABLE_NAME_VALUE).build())
+                             .build())
+              .setDestinationDatasetId(dstDataSetId)
+              .setScheduleOptions(ScheduleOptions.newBuilder()
+                                      .setStartTime(getJobStartTimeStamp(1, numberOfHours, numberOfMinutes))
+                                      .build())
+              .setDataSourceId(SCHEDULED_QUERY_DATA_SOURCE_ID)
+              .build();
     }
 
     return CreateTransferConfigRequest.newBuilder().setTransferConfig(transferConfig).setParent(parent).build();
   }
+  @Override
+  public void triggerTransferJobRun(String transferResourceName, String impersonatedServiceAccount) throws IOException {
+    ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
+    Credentials credentials = getImpersonatedCredentials(sourceCredentials, impersonatedServiceAccount);
+    DataTransferServiceClient client = getDataTransferClient(credentials);
+    StartManualTransferRunsRequest request =
+        StartManualTransferRunsRequest.newBuilder()
+            .setParent(transferResourceName)
+            .setRequestedRunTime(Timestamp.newBuilder()
+                                     .setSeconds(TimeUnit.MILLISECONDS.toSeconds(Instant.now().toEpochMilli()))
+                                     .build())
+            .build();
+    client.startManualTransferRuns(request);
+  }
 
   @Override
-  public void createDataTransferJobFromBQ(String jobName, String srcProjectId, String srcDatasetId, String dstProjectId,
-      String dstDatasetId, String impersonatedServiceAccount) throws IOException {
+  public List<TransferRun> listTransferRuns(String transferResourceName, String impersonatedServiceAccount)
+      throws IOException {
+    ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
+    Credentials credentials = getImpersonatedCredentials(sourceCredentials, impersonatedServiceAccount);
+    DataTransferServiceClient client = getDataTransferClient(credentials);
+
+    ListTransferRunsPagedResponse response = client.listTransferRuns(transferResourceName);
+    return StreamSupport.stream(response.iterateAll().spliterator(), true).collect(Collectors.toList());
+  }
+
+  @Override
+  public TransferRun getTransferRuns(String transferRunResourceName, String impersonatedServiceAccount)
+      throws IOException {
+    ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
+    Credentials credentials = getImpersonatedCredentials(sourceCredentials, impersonatedServiceAccount);
+    DataTransferServiceClient client = getDataTransferClient(credentials);
+
+    return client.getTransferRun(transferRunResourceName);
+  }
+
+  @Override
+  public String createDataTransferJobFromBQ(String jobName, String srcProjectId, String srcDatasetId,
+      String dstProjectId, String dstDatasetId, String impersonatedServiceAccount) throws IOException {
     ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
     Credentials credentials = getImpersonatedCredentials(sourceCredentials, impersonatedServiceAccount);
     DataTransferServiceClient client = getDataTransferClient(credentials);
@@ -254,13 +300,15 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
                            .putFields("source_dataset_id", Value.newBuilder().setStringValue(srcDatasetId).build())
                            .putFields("overwrite_destination_table", Value.newBuilder().setBoolValue(true).build())
                            .build())
-            .setScheduleOptions(ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(6, 0)).build())
+            .setScheduleOptions(ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(1, 6, 0)).build())
             .build();
     CreateTransferConfigRequest request =
         CreateTransferConfigRequest.newBuilder().setTransferConfig(transferConfig).setParent(parent).build();
-    executeDataTransferJobCreate(request, client);
+    TransferConfig createdTransferConfig = executeDataTransferJobCreate(request, client);
+    return createdTransferConfig.getName();
   }
 
+  @Override
   public String createDataTransferJobFromGCS(String destinationDataSetId, String settingId, String accountId,
       String accountName, String curReportName) throws IOException {
     DataTransferServiceClient dataTransferServiceClient = getDataTransferClient();
@@ -290,7 +338,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
                                Value.newBuilder().setStringValue(TEMP_DEST_TABLE_NAME_VALUE).build())
                            .build())
             .setDestinationDatasetId(destinationDataSetId)
-            .setScheduleOptions(ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(6, 0)).build())
+            .setScheduleOptions(ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(1, 6, 0)).build())
             .setDataSourceId(GCS_DATA_SOURCE_ID)
             .build();
 
@@ -300,10 +348,10 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
     return transferJobName;
   }
 
-  private Timestamp getJobStartTimeStamp(int numberOfHours, int numberOfMinutes) {
+  private Timestamp getJobStartTimeStamp(int numberOfDays, int numberOfHours, int numberOfMinutes) {
     long timeStampInSeconds = Instant.now()
                                   .truncatedTo(ChronoUnit.DAYS)
-                                  .plus(1, ChronoUnit.DAYS)
+                                  .plus(numberOfDays, ChronoUnit.DAYS)
                                   .plus(numberOfHours, ChronoUnit.HOURS)
                                   .plus(numberOfMinutes, ChronoUnit.MINUTES)
                                   .getEpochSecond();
@@ -311,31 +359,14 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   }
 
   private String getUniqueSuffixFromAccountId(String harnessAccountId, String accountName) {
-    return modifyStringToComplyRegex(accountName) + "_" + modifyStringToComplyRegex(harnessAccountId);
-  }
-
-  public String modifyStringToComplyRegex(String accountInfo) {
-    return accountInfo.toLowerCase().replaceAll("[^a-z0-9]", "_");
-  }
-
-  public Map<String, String> getLabelMap(String accountName, String accountType) {
-    Map<String, String> labelMap = new HashMap<>();
-    labelMap.put(ACCOUNT_NAME_LABEL_KEY, modifyStringToComplyRegex(accountName));
-    labelMap.put(ACCOUNT_TYPE_LABEL_KEY, modifyStringToComplyRegex(accountType));
-    return labelMap;
-  }
-
-  public String getAccountType(Account accountInfo) {
-    if (accountInfo.getLicenseInfo() != null) {
-      return accountInfo.getLicenseInfo().getAccountType();
-    }
-    return PAID_ACCOUNT_TYPE;
+    return BillingDataPipelineUtils.modifyStringToComplyRegex(accountName) + "_"
+        + BillingDataPipelineUtils.modifyStringToComplyRegex(harnessAccountId);
   }
 
   @VisibleForTesting
-  void executeDataTransferJobCreate(
+  TransferConfig executeDataTransferJobCreate(
       CreateTransferConfigRequest request, DataTransferServiceClient dataTransferServiceClient) {
-    dataTransferServiceClient.createTransferConfig(request);
+    return dataTransferServiceClient.createTransferConfig(request);
   }
 
   public DataTransferServiceClient getDataTransferClient() throws IOException {

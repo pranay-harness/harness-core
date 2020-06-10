@@ -44,7 +44,6 @@ import software.wings.verification.CVConfiguration;
 
 import java.util.Map;
 import java.util.Set;
-
 @Slf4j
 public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   @Inject HObjectFactory objectFactory;

@@ -1,4 +1,4 @@
-package io.harness.ccm.cluster.entities;
+package io.harness.ccm.billing.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.persistence.AccountAccess;
@@ -32,7 +32,9 @@ public class BillingDataPipelineRecord implements PersistentEntity, UuidAware, C
 
   private String dataSetId;
   private String dataTransferJobName;
+  private String transferJobResourceName;
   private String preAggregatedScheduledQueryName;
+  private String preAggregatedScheduleQueryResourceName;
 
   private String gcpBqProjectId;
   private String gcpBqDatasetId;

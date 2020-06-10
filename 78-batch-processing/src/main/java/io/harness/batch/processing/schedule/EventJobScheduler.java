@@ -7,6 +7,7 @@ import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizatio
 import io.harness.batch.processing.billing.timeseries.service.impl.WeeklyReportServiceImpl;
 import io.harness.batch.processing.ccm.BatchJobBucket;
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.config.GcpScheduledQueryTriggerAction;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineHealthStatusService;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
@@ -16,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import software.wings.beans.Account;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.util.Comparator;
@@ -34,13 +34,14 @@ public class EventJobScheduler {
   @Autowired private WeeklyReportServiceImpl weeklyReportService;
   @Autowired private BillingDataServiceImpl billingDataService;
   @Autowired private BillingDataPipelineHealthStatusService billingDataPipelineHealthStatusService;
+  @Autowired private GcpScheduledQueryTriggerAction gcpScheduledQueryTriggerAction;
 
   @PostConstruct
   public void orderJobs() {
     jobs.sort(Comparator.comparingInt(job -> BatchJobType.valueOf(job.getName()).getOrder()));
   }
 
-  @Scheduled(cron = "0 */20 * * * ?")
+  @Scheduled(cron = "0 0 * ? * *")
   public void runCloudEfficiencyB1Jobs() {
     runCloudEfficiencyEventJobs(BatchJobBucket.OUT_OF_CLUSTER);
   }
@@ -51,11 +52,16 @@ public class EventJobScheduler {
   }
 
   public void runCloudEfficiencyEventJobs(BatchJobBucket batchJobBucket) {
-    List<Account> ccmEnabledAccounts = cloudToHarnessMappingService.getCCMEnabledAccounts();
-    ccmEnabledAccounts.forEach(account
+    cloudToHarnessMappingService.getCCMEnabledAccounts().forEach(account
         -> jobs.stream()
                .filter(job -> BatchJobType.fromJob(job).getBatchJobBucket() == batchJobBucket)
                .forEach(job -> runJob(account.getUuid(), job)));
+  }
+
+  @Scheduled(cron = "0 * * ? * *")
+  public void runGcpScheduledQueryJobs() {
+    cloudToHarnessMappingService.getCCMEnabledAccounts().forEach(
+        account -> gcpScheduledQueryTriggerAction.execute(account.getUuid()));
   }
 
   @Scheduled(cron = "0 0 8 * * ?")
