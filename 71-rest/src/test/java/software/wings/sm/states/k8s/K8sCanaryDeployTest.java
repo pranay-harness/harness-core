@@ -1,13 +1,18 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,8 +23,12 @@ import static software.wings.sm.states.k8s.K8sCanaryDeploy.K8S_CANARY_DEPLOY_COM
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.k8s.model.K8sPod;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,18 +37,26 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElementListParam;
+import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sCanaryDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
+import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
+import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
+import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -50,6 +67,7 @@ public class K8sCanaryDeployTest extends WingsBaseTest {
   @Mock private ApplicationManifestUtils applicationManifestUtils;
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
+  @Mock private ActivityService activityService;
   @InjectMocks K8sCanaryDeploy k8sCanaryDeploy;
 
   private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance().displayName(STATE_NAME).build();
@@ -118,5 +136,31 @@ public class K8sCanaryDeployTest extends WingsBaseTest {
 
     state.setStateTimeoutInMinutes(5);
     assertThat(state.getTimeoutMillis()).isEqualTo(300000);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHelmChartInfoValue() {
+    WorkflowStandardParams standardContextElement =
+        spy(WorkflowStandardParams.Builder.aWorkflowStandardParams().build());
+    stateExecutionInstance.setContextElements(Lists.newLinkedList(Arrays.asList(standardContextElement)));
+    stateExecutionInstance.setStateExecutionMap(ImmutableMap.of(STATE_NAME, new K8sStateExecutionData()));
+    HelmChartInfo helmChartInfo = HelmChartInfo.builder().name("chart").version("1.0.0").build();
+    K8sTaskExecutionResponse taskExecutionResponse =
+        K8sTaskExecutionResponse.builder()
+            .commandExecutionStatus(SUCCESS)
+            .k8sTaskResponse(K8sCanaryDeployResponse.builder().helmChartInfo(helmChartInfo).build())
+            .build();
+
+    doReturn(InstanceElementListParam.builder().build())
+        .when(k8sStateHelper)
+        .getInstanceElementListParam(anyListOf(K8sPod.class));
+    doReturn(ImmutableMap.of()).when(standardContextElement).paramMap(context);
+    ExecutionResponse executionResponse =
+        k8sCanaryDeploy.handleAsyncResponseForK8sTask(context, ImmutableMap.of("response", taskExecutionResponse));
+    K8sStateExecutionData executionData = (K8sStateExecutionData) executionResponse.getStateExecutionData();
+
+    assertThat(executionData.getHelmChartInfo()).isEqualTo(helmChartInfo);
   }
 }

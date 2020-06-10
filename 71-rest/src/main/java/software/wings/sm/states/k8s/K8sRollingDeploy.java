@@ -158,6 +158,7 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
     stateExecutionData.setReleaseNumber(k8sRollingDeployResponse.getReleaseNumber());
     stateExecutionData.setLoadBalancer(k8sRollingDeployResponse.getLoadBalancer());
     stateExecutionData.setNamespaces(k8sStateHelper.getNamespacesFromK8sPodList(newPods));
+    stateExecutionData.setHelmChartInfo(k8sRollingDeployResponse.getHelmChartInfo());
 
     InstanceElementListParam instanceElementListParam = k8sStateHelper.getInstanceElementListParam(newPods);
 

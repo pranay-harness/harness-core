@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -89,6 +90,7 @@ import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.states.k8s.K8sStateHelper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1092,6 +1094,10 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   private List<Instance> buildK8sInstance(String podName) {
+    return buildK8sInstanceWithHelmChartInfo(podName, null);
+  }
+
+  private List<Instance> buildK8sInstanceWithHelmChartInfo(String podName, HelmChartInfo helmChartInfo) {
     return asList(Instance.builder()
                       .uuid(INSTANCE_1_ID)
                       .accountId(ACCOUNT_ID)
@@ -1112,7 +1118,111 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                                         .namespace("default")
                                         .releaseName("release-123")
                                         .containers(asList(K8sContainerInfo.builder().image("nginx:0.1").build()))
+                                        .helmChartInfo(helmChartInfo)
                                         .build())
                       .build());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void test_K8sHelmChartDeployment_newInstances() throws Exception {
+    doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
+    doReturn(Collections.emptyList()).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(asList(K8sPod.builder()
+                        .name("sample-pod")
+                        .podIP("ip-127.0.0.1")
+                        .namespace("default")
+                        .containerList(asList(K8sContainer.builder().image("nginx:0.1").build()))
+                        .build()))
+        .when(k8sStateHelper)
+        .getPodList(any(), anyString(), anyString());
+
+    containerInstanceHandler.handleNewDeployment(
+        asList(
+            DeploymentSummary.builder()
+                .accountId(ACCOUNT_ID)
+                .infraMappingId(INFRA_MAPPING_ID)
+                .workflowExecutionId("workflowExecution_1")
+                .stateExecutionInstanceId("stateExecutionInstanceId")
+                .deploymentInfo(
+                    K8sDeploymentInfo.builder()
+                        .namespace("default")
+                        .releaseName("release-123")
+                        .helmChartInfo(
+                            HelmChartInfo.builder().name("helmChartName").version("1.0.0").repoUrl("repoUrl").build())
+                        .build())
+                .build()),
+        false, OnDemandRollbackInfo.builder().onDemandRollback(false).build());
+    ArgumentCaptor<Instance> instanceCaptor = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService, times(1)).saveOrUpdate(instanceCaptor.capture());
+
+    Instance savedInstance = instanceCaptor.getValue();
+    assertThat(savedInstance.getInstanceInfo()).isInstanceOf(K8sPodInfo.class);
+    K8sPodInfo k8sPodInfo = (K8sPodInfo) savedInstance.getInstanceInfo();
+    assertThat(k8sPodInfo.getHelmChartInfo().getName()).isEqualTo("helmChartName");
+    assertThat(k8sPodInfo.getHelmChartInfo().getVersion()).isEqualTo("1.0.0");
+    assertThat(k8sPodInfo.getHelmChartInfo().getRepoUrl()).isEqualTo("repoUrl");
+
+    assertionsForNoDelete();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void test_K8sHelmChartDeployment_newHelmChartVersion() throws Exception {
+    doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+
+    final List<Instance> instances = new ArrayList<>();
+    instances.addAll(buildK8sInstanceWithHelmChartInfo(
+        "sample-pod", HelmChartInfo.builder().name("helmChartName").version("1.0.0").repoUrl("repoUrl").build()));
+    instances.addAll(buildK8sInstanceWithHelmChartInfo(
+        "sample-pod-2", HelmChartInfo.builder().name("helmChartName").version("1.2.0").repoUrl("repoUrl").build()));
+    instances.get(0).setLastWorkflowExecutionName("Current Workflow");
+    instances.get(1).setLastWorkflowExecutionName("Another Workflow");
+
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(asList(K8sPod.builder()
+                        .name("sample-pod")
+                        .podIP("ip-127.0.0.1")
+                        .namespace("default")
+                        .containerList(asList(K8sContainer.builder().image("nginx:0.1").build()))
+                        .build()))
+        .when(k8sStateHelper)
+        .getPodList(any(), anyString(), anyString());
+
+    containerInstanceHandler.handleNewDeployment(
+        asList(
+            DeploymentSummary.builder()
+                .accountId(ACCOUNT_ID)
+                .infraMappingId(INFRA_MAPPING_ID)
+                .workflowExecutionId("workflowExecution_1")
+                .stateExecutionInstanceId("stateExecutionInstanceId")
+                .workflowExecutionName("Current Workflow")
+                .deploymentInfo(
+                    K8sDeploymentInfo.builder()
+                        .namespace("default")
+                        .releaseName("release-123")
+                        .helmChartInfo(
+                            HelmChartInfo.builder().name("helmChartName").version("1.1.0").repoUrl("repoUrl").build())
+                        .build())
+                .build()),
+        false, OnDemandRollbackInfo.builder().onDemandRollback(false).build());
+
+    ArgumentCaptor<Instance> instanceCaptor = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService, times(1)).saveOrUpdate(instanceCaptor.capture());
+
+    Instance savedInstance = instanceCaptor.getValue();
+    assertThat(savedInstance.getInstanceInfo()).isInstanceOf(K8sPodInfo.class);
+    K8sPodInfo k8sPodInfo = (K8sPodInfo) savedInstance.getInstanceInfo();
+    assertThat(k8sPodInfo.getPodName()).isEqualTo("sample-pod");
+    assertThat(k8sPodInfo.getHelmChartInfo().getName()).isEqualTo("helmChartName");
+    assertThat(k8sPodInfo.getHelmChartInfo().getVersion()).isEqualTo("1.1.0");
+    assertThat(k8sPodInfo.getHelmChartInfo().getRepoUrl()).isEqualTo("repoUrl");
   }
 }

@@ -142,6 +142,7 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
         (K8sBlueGreenDeployResponse) executionResponse.getK8sTaskResponse();
 
     stateExecutionData.setReleaseNumber(k8sBlueGreenDeployResponse.getReleaseNumber());
+    stateExecutionData.setHelmChartInfo(k8sBlueGreenDeployResponse.getHelmChartInfo());
 
     final List<K8sPod> newPods = k8sStateHelper.getNewPods(k8sBlueGreenDeployResponse.getK8sPodList());
     InstanceElementListParam instanceElementListParam = k8sStateHelper.getInstanceElementListParam(newPods);

@@ -8,6 +8,7 @@ import static io.harness.k8s.model.Kind.Namespace;
 import static io.harness.k8s.model.Kind.ReplicaSet;
 import static io.harness.k8s.model.Kind.Secret;
 import static io.harness.k8s.model.Kind.Service;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.SAHIL;
@@ -27,11 +28,13 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.api.mockito.PowerMockito.when;
+import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
@@ -93,6 +96,7 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.service.impl.KubernetesHelperService;
@@ -103,6 +107,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -989,5 +994,48 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     assertThat(K8sTaskHelper.manifestFilesFromGitFetchFilesResult(
                    GitFetchFilesResult.builder().files(emptyList()).build(), ""))
         .isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void helmChartInfoFromDelegateManifestConfig() throws Exception {
+    String workingDirectory = "working/directory";
+    ArgumentCaptor<String> checkHelmChartDirCaptor = ArgumentCaptor.forClass(String.class);
+    HelmChartInfo existingHelmChartInfo = HelmChartInfo.builder().name("chart").version("1.0.0").build();
+
+    // When Store Type is HelmSourceRepo
+    doReturn(existingHelmChartInfo).when(mockHelmTaskHelper).getHelmChartInfoFromChartDirectory(anyString());
+    K8sDelegateManifestConfig delegateManifestConfig = K8sDelegateManifestConfig.builder()
+                                                           .manifestStoreTypes(HelmSourceRepo)
+                                                           .gitConfig(GitConfig.builder().branch("master").build())
+                                                           .build();
+    HelmChartInfo helmChartInfo = helper.getHelmChartDetails(delegateManifestConfig, workingDirectory);
+    verify(mockHelmTaskHelper, times(1)).getHelmChartInfoFromChartDirectory(checkHelmChartDirCaptor.capture());
+    assertThat(checkHelmChartDirCaptor.getValue()).isEqualTo(workingDirectory);
+    assertHelmChartInfo(helmChartInfo);
+
+    // When Store Type is HelmChartRepo
+    reset(mockHelmTaskHelper);
+    doReturn(existingHelmChartInfo).when(mockHelmTaskHelper).getHelmChartInfoFromChartDirectory(anyString());
+    delegateManifestConfig.setManifestStoreTypes(HelmChartRepo);
+    delegateManifestConfig.setHelmChartConfigParams(HelmChartConfigParams.builder().chartName("chart").build());
+    delegateManifestConfig.setGitConfig(null);
+    helmChartInfo = helper.getHelmChartDetails(delegateManifestConfig, workingDirectory);
+    verify(mockHelmTaskHelper, times(1)).getHelmChartInfoFromChartDirectory(checkHelmChartDirCaptor.capture());
+    assertThat(checkHelmChartDirCaptor.getValue()).isEqualTo(Paths.get(workingDirectory, "chart").toString());
+    assertHelmChartInfo(helmChartInfo);
+
+    // When Store Type is other than Helm type
+    reset(mockHelmTaskHelper);
+    delegateManifestConfig.setManifestStoreTypes(Remote);
+    helmChartInfo = helper.getHelmChartDetails(delegateManifestConfig, workingDirectory);
+    verify(mockHelmTaskHelper, never()).getHelmChartInfoFromChartDirectory(anyString());
+    assertThat(helmChartInfo).isNull();
+  }
+
+  private void assertHelmChartInfo(HelmChartInfo helmChartInfo) {
+    assertThat(helmChartInfo.getName()).isEqualTo("chart");
+    assertThat(helmChartInfo.getVersion()).isEqualTo("1.0.0");
   }
 }

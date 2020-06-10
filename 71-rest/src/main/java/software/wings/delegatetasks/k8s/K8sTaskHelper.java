@@ -127,7 +127,9 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.helpers.ext.helm.HelmCommandTemplateFactory;
 import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
+import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
@@ -167,6 +169,7 @@ public class K8sTaskHelper {
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
   @Inject private HelmTaskHelper helmTaskHelper;
+  @Inject private HelmHelper helmHelper;
   @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private KustomizeTaskHelper kustomizeTaskHelper;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
@@ -1214,6 +1217,26 @@ public class K8sTaskHelper {
     }
 
     return false;
+  }
+
+  public HelmChartInfo getHelmChartDetails(K8sDelegateManifestConfig delegateManifestConfig, String workingDirectory) {
+    HelmChartInfo helmChartInfo = null;
+    try {
+      if (delegateManifestConfig != null) {
+        StoreType manifestStoreType = delegateManifestConfig.getManifestStoreTypes();
+        if (StoreType.HelmSourceRepo == manifestStoreType || StoreType.HelmChartRepo == manifestStoreType) {
+          String chartName = Optional.ofNullable(delegateManifestConfig.getHelmChartConfigParams())
+                                 .map(HelmChartConfigParams::getChartName)
+                                 .orElse("");
+          helmChartInfo =
+              helmTaskHelper.getHelmChartInfoFromChartDirectory(Paths.get(workingDirectory, chartName).toString());
+        }
+      }
+    } catch (IOException ex) {
+      logger.error("Error while fetching helm chart info", ex);
+    }
+
+    return helmChartInfo;
   }
 
   @VisibleForTesting

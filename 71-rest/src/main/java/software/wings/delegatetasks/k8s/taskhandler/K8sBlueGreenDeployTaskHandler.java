@@ -61,6 +61,7 @@ import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sBlueGreenDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
@@ -152,6 +153,9 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
+    HelmChartInfo helmChartInfo = k8sTaskHelper.getHelmChartDetails(
+        k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory);
+
     wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, WrapUp));
 
     final List<K8sPod> podList = getAllPods();
@@ -167,6 +171,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
                                                          .k8sPodList(podList)
                                                          .primaryServiceName(primaryService.getResourceId().getName())
                                                          .stageServiceName(stageService.getResourceId().getName())
+                                                         .helmChartInfo(helmChartInfo)
                                                          .build(),
         SUCCESS);
   }

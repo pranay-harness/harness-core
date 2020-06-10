@@ -74,6 +74,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.ContainerDepl
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.ContainerInstanceSyncPerpetualTaskCreator;
@@ -361,6 +362,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
     SetView<String> instancesToBeAdded = Sets.difference(currentPodsMap.keySet(), dbPodMap.keySet());
     SetView<String> instancesToBeDeleted = Sets.difference(dbPodMap.keySet(), currentPodsMap.keySet());
+    SetView<String> instancesToBeUpdated = Sets.intersection(currentPodsMap.keySet(), dbPodMap.keySet());
 
     Set<String> instanceIdsToBeDeleted =
         instancesToBeDeleted.stream().map(instancePodName -> dbPodMap.get(instancePodName).getUuid()).collect(toSet());
@@ -388,6 +390,34 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     }
 
     logger.info("Instances to be added {}", instancesToBeAdded.size());
+
+    if (deploymentSummary != null) {
+      for (String podName : instancesToBeUpdated) {
+        Instance instanceToBeUpdated = dbPodMap.get(podName);
+        String deploymentWorkflowName = Optional.ofNullable(deploymentSummary.getWorkflowExecutionName()).orElse("");
+        if (deploymentWorkflowName.equals(instanceToBeUpdated.getLastWorkflowExecutionName())
+            && updateHelmChartInfoForK8sPodInstanceInfo(instanceToBeUpdated, deploymentSummary)) {
+          instanceService.saveOrUpdate(instanceToBeUpdated);
+        }
+      }
+    }
+  }
+
+  private boolean updateHelmChartInfoForK8sPodInstanceInfo(Instance instance, DeploymentSummary deploymentSummary) {
+    boolean updated = false;
+    if (instance.getInstanceInfo() instanceof K8sPodInfo
+        && deploymentSummary.getDeploymentInfo() instanceof K8sDeploymentInfo) {
+      K8sPodInfo k8sPodInfo = (K8sPodInfo) instance.getInstanceInfo();
+      K8sDeploymentInfo deploymentInfo = (K8sDeploymentInfo) deploymentSummary.getDeploymentInfo();
+
+      if (deploymentInfo.getHelmChartInfo() != null
+          && !deploymentInfo.getHelmChartInfo().equals(k8sPodInfo.getHelmChartInfo())) {
+        k8sPodInfo.setHelmChartInfo(deploymentInfo.getHelmChartInfo());
+        updated = true;
+      }
+    }
+
+    return updated;
   }
 
   private Map<ContainerMetadata, DeploymentSummary> getDeploymentSummaryMap(
@@ -709,6 +739,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         .releaseName(k8sExecutionSummary.getReleaseName())
         .releaseNumber(k8sExecutionSummary.getReleaseNumber())
         .namespaces(k8sExecutionSummary.getNamespaces())
+        .helmChartInfo(k8sExecutionSummary.getHelmChartInfo())
         .build();
   }
 
@@ -747,6 +778,10 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
   private Instance buildInstanceFromPodInfo(
       InfrastructureMapping infraMapping, K8sPod pod, DeploymentSummary deploymentSummary) {
+    HelmChartInfo helmChartInfo = null;
+    if (deploymentSummary != null && deploymentSummary.getDeploymentInfo() instanceof K8sDeploymentInfo) {
+      helmChartInfo = ((K8sDeploymentInfo) deploymentSummary.getDeploymentInfo()).getHelmChartInfo();
+    }
     InstanceBuilder builder = buildInstanceBase(null, infraMapping, deploymentSummary);
     builder.podInstanceKey(PodInstanceKey.builder().podName(pod.getName()).namespace(pod.getNamespace()).build());
     builder.instanceInfo(K8sPodInfo.builder()
@@ -754,6 +789,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
                              .podName(pod.getName())
                              .ip(pod.getPodIP())
                              .namespace(pod.getNamespace())
+                             .helmChartInfo(helmChartInfo)
                              .containers(pod.getContainerList()
                                              .stream()
                                              .map(container
