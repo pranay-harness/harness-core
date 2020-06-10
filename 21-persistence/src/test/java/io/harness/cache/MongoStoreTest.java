@@ -1,4 +1,4 @@
-package software.wings.common.cache;
+package io.harness.cache;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static java.time.Duration.ofSeconds;
@@ -11,10 +11,9 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.turbo.TurboFilter;
 import ch.qos.logback.core.spi.FilterReply;
 import de.bwaldvogel.mongo.wire.MongoWireProtocolHandler;
-import io.harness.cache.Distributable;
-import io.harness.cache.Nominal;
-import io.harness.cache.Ordinal;
+import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import lombok.Builder;
 import lombok.Value;
@@ -23,15 +22,13 @@ import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
-import software.wings.WingsBaseTest;
-import software.wings.dl.WingsPersistence;
 
 import java.io.ObjectStreamClass;
 import java.util.Collections;
 import java.util.List;
 
-public class MongoStoreTest extends WingsBaseTest {
-  @Inject WingsPersistence wingsPersistence;
+public class MongoStoreTest extends PersistenceTest {
+  @Inject HPersistence hPersistence;
   @Inject MongoStore mongoStore;
 
   @Value
