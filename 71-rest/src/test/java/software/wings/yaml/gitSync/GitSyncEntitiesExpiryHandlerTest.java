@@ -9,6 +9,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static software.wings.yaml.errorhandling.GitSyncError.GitSyncErrorKeys;
+import static software.wings.yaml.errorhandling.GitSyncError.builder;
 
 import com.google.inject.Inject;
 
@@ -27,7 +29,6 @@ import software.wings.beans.Account;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitFileActivitySummary;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.yaml.errorhandling.GitSyncError;
 
@@ -37,7 +38,7 @@ import java.util.List;
 public class GitSyncEntitiesExpiryHandlerTest extends WingsBaseTest {
   @Mock GitSyncService gitSyncService;
   @Mock AppService appService;
-  @Mock GitSyncErrorService gitSyncErrorService;
+
   @InjectMocks @Inject GitSyncEntitiesExpiryHandler gitSyncEntitiesExpiryHandler;
 
   private final Long ONE_MONTH_IN_MILLS = 2592000000L;
@@ -55,18 +56,21 @@ public class GitSyncEntitiesExpiryHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGitSyncError() {
     GitSyncError gitSyncError =
-        GitSyncError.builder().gitCommitId("commitId").accountId(account.getUuid()).fullSyncPath(false).build();
+        builder().gitCommitId("commitId").accountId(account.getUuid()).fullSyncPath(false).build();
     wingsPersistence.save(gitSyncError);
     GitSyncError gitSyncError_1 =
-        GitSyncError.builder().gitCommitId("commitId1").accountId(account.getUuid()).fullSyncPath(false).build();
+        builder().gitCommitId("commitId1").accountId(account.getUuid()).fullSyncPath(false).build();
     wingsPersistence.save(gitSyncError_1);
     gitSyncError_1.setCreatedAt(gitSyncError_1.getCreatedAt() + 2);
     wingsPersistence.save(gitSyncError_1);
 
     gitSyncEntitiesExpiryHandler.handleGitError(account, gitSyncError_1.getCreatedAt() - 1);
-    ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
-    verify(gitSyncErrorService, times(1)).deleteGitSyncErrors(argumentCaptor.capture(), any());
-    assert argumentCaptor.getValue().size() == 1;
+
+    assertThat(wingsPersistence.createQuery(GitSyncError.class)
+                   .filter(GitSyncErrorKeys.accountId, account.getUuid())
+                   .asList()
+                   .size())
+        .isEqualTo(1);
   }
 
   @Test

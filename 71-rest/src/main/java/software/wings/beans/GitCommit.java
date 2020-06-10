@@ -43,7 +43,9 @@ import java.util.List;
         , @Field(GitCommitKeys.status), @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC)
       }, options = @IndexOptions(name = "gitCommitStatusLastUpdatedIdx")), @Index(fields = {
         @Field(GitCommitKeys.accountId), @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC)
-      }, options = @IndexOptions(name = "gitCommitAccountIdLastUpdatedAT"))
+      }, options = @IndexOptions(name = "gitCommitAccountIdLastUpdatedAT")), @Index(fields = {
+        @Field(GitCommitKeys.accountId), @Field(GitCommitKeys.createdAt),
+      }, options = @IndexOptions(name = "gitCommitAccountIdCreatedAt"))
 })
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GitCommitKeys")
