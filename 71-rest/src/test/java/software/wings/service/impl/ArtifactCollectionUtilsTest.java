@@ -35,6 +35,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
@@ -95,7 +96,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSkipArtifactStreamIterationExcessiveFailedAttempts() {
     ArtifactStream artifactStream = DockerArtifactStream.builder().build();
-    artifactStream.setFailedCronAttempts(PermitServiceImpl.MAX_FAILED_ATTEMPTS + 1);
+    artifactStream.setFailedCronAttempts(ArtifactCollectionResponseHandler.MAX_FAILED_ATTEMPTS + 1);
 
     assertThat(artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, true)).isTrue();
   }

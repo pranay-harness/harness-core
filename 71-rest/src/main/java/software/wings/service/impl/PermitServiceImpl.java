@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.logging.AutoLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Permit;
@@ -41,15 +42,13 @@ public class PermitServiceImpl implements PermitService {
    */
   private static final int[] BACKOFF_MULTIPLIER = new int[] {1, 1, 2, 3, 5, 10};
 
-  public static final int MAX_FAILED_ATTEMPTS = 3500;
-
   public static int getBackoffMultiplier(int failedCronAttempts) {
     return failedCronAttempts > 500 ? BACKOFF_MULTIPLIER.length - 1
                                     : BACKOFF_MULTIPLIER[failedCronAttempts % BACKOFF_MULTIPLIER.length];
   }
 
   public static boolean shouldSendAlert(int failedCronAttempts) {
-    return MAX_FAILED_ATTEMPTS == failedCronAttempts;
+    return ArtifactCollectionResponseHandler.MAX_FAILED_ATTEMPTS == failedCronAttempts;
   }
 
   @Override

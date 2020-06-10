@@ -222,7 +222,7 @@ public class DelegateAgentResourceTest {
                 new GenericType<RestResponse<Boolean>>() {});
 
     verify(artifactCollectionResponseHandler, atLeastOnce())
-        .processArtifactCollectionResult(buildSourceExecutionResponse);
+        .processArtifactCollectionResult(ACCOUNT_ID, "12345679", buildSourceExecutionResponse);
   }
 
   @Test

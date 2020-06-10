@@ -39,10 +39,10 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
   // the task timeout. Right now, timeout is 2 minutes, and this value is 1.5 minutes.
   private static final long INTERNAL_TIMEOUT_IN_MS = 90L * 1000;
 
-  private ArtifactRepositoryServiceImpl artifactRepositoryService;
-  private ManagerClient managerClient;
+  private final ArtifactRepositoryServiceImpl artifactRepositoryService;
+  private final ManagerClient managerClient;
 
-  private Cache<String, ArtifactsPublishedCache> cache = Caffeine.newBuilder().build();
+  private final Cache<String, ArtifactsPublishedCache> cache = Caffeine.newBuilder().build();
 
   @Inject
   public ArtifactPerpetualTaskExecutor(

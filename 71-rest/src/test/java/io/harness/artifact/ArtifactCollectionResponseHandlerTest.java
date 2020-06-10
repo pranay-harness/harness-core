@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.UNSTABLE;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
@@ -24,6 +23,7 @@ import com.google.inject.Inject;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.rule.Owner;
 import org.assertj.core.util.Maps;
 import org.junit.Before;
@@ -35,6 +35,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.FeatureName;
+import software.wings.beans.alert.AlertType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
@@ -42,25 +43,30 @@ import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.TriggerService;
 
 import java.util.HashSet;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionException;
 
 public class ArtifactCollectionResponseHandlerTest extends CategoryTest {
-  @Mock private ExecutorService executorService;
+  private static final String ACCOUNT_ID = "ACCOUNT_ID";
+  private static final String PERPETUAL_TASK_ID = "PERPETUAL_TASK_ID";
+
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactService artifactService;
   @Mock private TriggerService triggerService;
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
+  @Mock private PerpetualTaskService perpetualTaskService;
+  @Mock private AlertService alertService;
   @Mock private FeatureFlagService featureFlagService;
 
   @Inject @InjectMocks private ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
+
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+
   private static final BuildDetails BUILD_DETAILS_1 = aBuildDetails().withNumber("1").build();
   private static final BuildDetails BUILD_DETAILS_2 = aBuildDetails().withNumber("2").build();
   private final ArtifactStream ARTIFACT_STREAM = DockerArtifactStream.builder()
@@ -89,10 +95,13 @@ public class ArtifactCollectionResponseHandlerTest extends CategoryTest {
 
   @Before
   public void setup() {
+    ARTIFACT_STREAM.setPerpetualTaskId(PERPETUAL_TASK_ID);
+    ARTIFACT_STREAM_UNSTABLE.setPerpetualTaskId(PERPETUAL_TASK_ID);
     ARTIFACT_STREAM_UNSTABLE.setCollectionStatus(UNSTABLE.name());
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_STREAM);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_2)).thenReturn(ARTIFACT_STREAM_UNSTABLE);
     when(featureFlagService.isEnabled(eq(FeatureName.ARTIFACT_STREAM_REFACTOR), any())).thenReturn(false);
+    when(featureFlagService.isEnabled(eq(FeatureName.ARTIFACT_PERPETUAL_TASK), any())).thenReturn(true);
   }
 
   @Test
@@ -101,28 +110,53 @@ public class ArtifactCollectionResponseHandlerTest extends CategoryTest {
   public void shouldHandleInvalidArtifactStream() {
     BuildSourceExecutionResponse buildSourceExecutionResponse = constructBuildSourceExecutionResponse(false, true);
     buildSourceExecutionResponse.setArtifactStreamId("random");
-    artifactCollectionResponseHandler.processArtifactCollectionResult(buildSourceExecutionResponse);
-    verify(executorService, never()).submit(any(Runnable.class));
+    artifactCollectionResponseHandler.processArtifactCollectionResult(
+        ACCOUNT_ID, PERPETUAL_TASK_ID, buildSourceExecutionResponse);
+    verify(perpetualTaskService).deleteTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
   }
 
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void shouldHandleExecutorRejectedQueueException() {
-    BuildSourceExecutionResponse buildSourceExecutionResponse = constructBuildSourceExecutionResponse(false, true);
-    when(executorService.submit(any(Runnable.class))).thenThrow(RejectedExecutionException.class);
-    artifactCollectionResponseHandler.processArtifactCollectionResult(buildSourceExecutionResponse);
-    verify(executorService, times(1)).submit(any(Runnable.class));
-  }
-
-  @Test
-  @Owner(developers = SRINIVAS)
-  @Category(UnitTests.class)
-  public void shouldNotProcessHandleFailedResponse() {
+  public void shouldNotProcessWhenFeatureDisabled() {
+    when(featureFlagService.isEnabled(eq(FeatureName.ARTIFACT_PERPETUAL_TASK), any())).thenReturn(false);
     BuildSourceExecutionResponse buildSourceExecutionResponse =
-        BuildSourceExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
-    artifactCollectionResponseHandler.processArtifactCollectionResult(buildSourceExecutionResponse);
-    verify(executorService, never()).submit(any(Runnable.class));
+        BuildSourceExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+    artifactCollectionResponseHandler.processArtifactCollectionResult(
+        ACCOUNT_ID, PERPETUAL_TASK_ID, buildSourceExecutionResponse);
+    verify(perpetualTaskService, never()).resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldNotProcessFailedResponse() {
+    BuildSourceExecutionResponse buildSourceExecutionResponse =
+        BuildSourceExecutionResponse.builder()
+            .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+            .artifactStreamId(ARTIFACT_STREAM_ID)
+            .build();
+    ARTIFACT_STREAM.setFailedCronAttempts(3499);
+    artifactCollectionResponseHandler.processArtifactCollectionResult(
+        ACCOUNT_ID, PERPETUAL_TASK_ID, buildSourceExecutionResponse);
+    verify(perpetualTaskService, times(1)).resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
+    verify(alertService, times(1)).openAlert(eq(ACCOUNT_ID), any(), eq(AlertType.ARTIFACT_COLLECTION_FAILED), any());
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
+  public void shouldProcessSuccessfulResponse() {
+    BuildSourceExecutionResponse buildSourceExecutionResponse =
+        BuildSourceExecutionResponse.builder()
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .artifactStreamId(ARTIFACT_STREAM_ID)
+            .buildSourceResponse(BuildSourceResponse.builder().cleanup(false).build())
+            .build();
+    ARTIFACT_STREAM.setFailedCronAttempts(10);
+    artifactCollectionResponseHandler.processArtifactCollectionResult(
+        ACCOUNT_ID, PERPETUAL_TASK_ID, buildSourceExecutionResponse);
+    verify(artifactStreamService, times(1)).updateFailedCronAttempts(ACCOUNT_ID, ARTIFACT_STREAM_ID, 0);
   }
 
   @Test

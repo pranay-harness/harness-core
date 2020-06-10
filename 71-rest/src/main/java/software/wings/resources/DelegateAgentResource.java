@@ -320,7 +320,7 @@ public class DelegateAgentResource {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
       logger.info("Received artifact collection {}", executionResponse.getBuildSourceResponse().getBuildDetails());
-      artifactCollectionResponseHandler.processArtifactCollectionResult(executionResponse);
+      artifactCollectionResponseHandler.processArtifactCollectionResult(accountId, perpetualTaskId, executionResponse);
     }
     return new RestResponse<>(true);
   }

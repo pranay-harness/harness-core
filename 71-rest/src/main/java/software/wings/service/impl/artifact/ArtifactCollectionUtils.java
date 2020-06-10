@@ -33,6 +33,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.artifact.ArtifactUtilities;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
@@ -88,7 +89,6 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.service.impl.PermitServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -853,7 +853,7 @@ public class ArtifactCollectionUtils {
   public boolean skipArtifactStreamIteration(ArtifactStream artifactStream, boolean isCollection) {
     String prefix = isCollection ? "ASYNC_ARTIFACT_CRON" : "ASYNC_ARTIFACT_CLEANUP_CRON";
     String action = isCollection ? "collection" : "cleanup";
-    if (artifactStream.getFailedCronAttempts() > PermitServiceImpl.MAX_FAILED_ATTEMPTS) {
+    if (artifactStream.getFailedCronAttempts() > ArtifactCollectionResponseHandler.MAX_FAILED_ATTEMPTS) {
       logger.warn(
           "{}: Artifact {} disabled for artifactStream due to too many failures, type: {}, id: {}, failed count: {}",
           prefix, action, artifactStream.getArtifactStreamType(), artifactStream.getUuid(),
