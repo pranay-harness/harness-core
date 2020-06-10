@@ -18,7 +18,10 @@ public class GitValidationParameters implements ExecutionCapabilityDemander {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Collections.singletonList(
-        GitConnectionCapability.builder().gitConfig(gitConfig).encryptedDataDetails(encryptedDataDetails).build());
+    return Collections.singletonList(GitConnectionCapability.builder()
+                                         .gitConfig(gitConfig)
+                                         .settingAttribute(gitConfig.getSshSettingAttribute())
+                                         .encryptedDataDetails(encryptedDataDetails)
+                                         .build());
   }
 }
