@@ -42,6 +42,7 @@ public class GitFetchFilesTaskParams implements ActivityAccess, TaskParameters, 
         GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
         executionCapabilities.add(GitConnectionCapability.builder()
                                       .gitConfig(gitFetchFileConfig.getGitConfig())
+                                      .settingAttribute(gitFetchFileConfig.getGitConfig().getSshSettingAttribute())
                                       .encryptedDataDetails(gitFetchFileConfig.getEncryptedDataDetails())
                                       .build());
       }
