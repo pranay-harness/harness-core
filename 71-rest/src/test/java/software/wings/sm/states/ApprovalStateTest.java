@@ -87,6 +87,8 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.approval.ApprovalStateParams;
+import software.wings.beans.approval.ConditionalOperator;
+import software.wings.beans.approval.Criteria;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.beans.artifact.Artifact;
@@ -114,6 +116,7 @@ import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.EnvState.EnvStateKeys;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -695,22 +698,164 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
-  public void testExecuteSnowApprovalIfAlreadyApprovedWithApprovalField() {
+  public void testExecuteSnowApprovalIfAlreadyApprovedWithMultipleValues() {
     String approvalValue = "Approved";
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(false)))
-        .thenReturn(ServiceNowExecutionData.builder().currentState(approvalValue).build());
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(true)))
+        .thenReturn(ServiceNowExecutionData.builder()
+                        .currentState("state")
+                        .currentStatus(Collections.singletonMap("approval", approvalValue))
+                        .build());
+    when(featureFlagService.isGlobalEnabled(any())).thenReturn(true);
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
     serviceNowApprovalParams.setIssueNumber("issueNumber");
-    serviceNowApprovalParams.setApprovalField("approval");
-    serviceNowApprovalParams.setApprovalValue(approvalValue);
+    Criteria approvalCriteria = new Criteria();
+    approvalCriteria.setConditions(
+        Collections.singletonMap("approval", Arrays.asList("Requested", "Canceled", approvalValue)));
+    serviceNowApprovalParams.setApproval(approvalCriteria);
     approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
     approvalState.setApprovalStateParams(approvalStateParams);
-    ApprovalStateExecutionData executionData =
-        ApprovalStateExecutionData.builder().approvalStateType(ApprovalStateType.SERVICENOW).build();
+    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
+                                                   .approvalStateType(ApprovalStateType.SERVICENOW)
+                                                   .snowApproval(approvalCriteria)
+                                                   .build();
+
+    ExecutionResponse executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testExecuteSnowApprovalIfAlreadyRejectedWithMultipleANDConditions() {
+    String approvalValue = "Approved";
+    when(context.renderExpression(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(true)))
+        .thenReturn(ServiceNowExecutionData.builder()
+                        .currentState("state")
+                        .currentStatus(ImmutableMap.of("state", "Closed", "approval", "Approved"))
+                        .build());
+    when(featureFlagService.isGlobalEnabled(any())).thenReturn(true);
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
+    serviceNowApprovalParams.setIssueNumber("issueNumber");
+    Criteria rejectionCriteria = new Criteria();
+    rejectionCriteria.setConditions(ImmutableMap.of(
+        "state", Arrays.asList("Closed", "Cancelled"), "approval", Arrays.asList("Approved", "Requested")));
+    serviceNowApprovalParams.setRejection(rejectionCriteria);
+    approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
+                                                   .approvalStateType(ApprovalStateType.SERVICENOW)
+                                                   .snowApproval(rejectionCriteria)
+                                                   .build();
+
+    ExecutionResponse executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(REJECTED);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testExecuteSnowApprovalIfAlreadyRejectedWithMultipleORConditions() {
+    when(context.renderExpression(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(true)))
+        .thenReturn(ServiceNowExecutionData.builder()
+                        .currentState("state")
+                        .currentStatus(ImmutableMap.of("state", "Scheduled", "approval", "Approved"))
+                        .build());
+    when(featureFlagService.isGlobalEnabled(any())).thenReturn(true);
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
+    serviceNowApprovalParams.setIssueNumber("issueNumber");
+    Criteria rejectionCriteria = new Criteria();
+    rejectionCriteria.setOperator(ConditionalOperator.OR);
+    rejectionCriteria.setConditions(ImmutableMap.of(
+        "state", Arrays.asList("Closed", "Cancelled"), "approval", Arrays.asList("Approved", "Requested")));
+    serviceNowApprovalParams.setRejection(rejectionCriteria);
+    approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
+                                                   .approvalStateType(ApprovalStateType.SERVICENOW)
+                                                   .snowApproval(rejectionCriteria)
+                                                   .build();
+
+    ExecutionResponse executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(REJECTED);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testExecuteSnowApprovalPausedIfConditionsNotMet() {
+    when(context.renderExpression(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(true)))
+        .thenReturn(ServiceNowExecutionData.builder()
+                        .currentState("state")
+                        .currentStatus(ImmutableMap.of("state", "Scheduled", "approval", "Approved"))
+                        .build());
+    when(featureFlagService.isGlobalEnabled(any())).thenReturn(true);
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
+    serviceNowApprovalParams.setIssueNumber("issueNumber");
+    Criteria rejectionCriteria = new Criteria();
+    rejectionCriteria.setConditions(ImmutableMap.of(
+        "state", Arrays.asList("Closed", "Cancelled"), "approval", Arrays.asList("Approved", "Requested")));
+    serviceNowApprovalParams.setRejection(rejectionCriteria);
+    approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
+                                                   .approvalStateType(ApprovalStateType.SERVICENOW)
+                                                   .snowApproval(rejectionCriteria)
+                                                   .build();
+
+    ExecutionResponse executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldApproveSnowApprovalIfBothCriteriaMet() {
+    when(context.renderExpression(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(true)))
+        .thenReturn(ServiceNowExecutionData.builder()
+                        .currentState("state")
+                        .currentStatus(ImmutableMap.of("state", "Scheduled", "approval", "Approved"))
+                        .build());
+    when(featureFlagService.isGlobalEnabled(any())).thenReturn(true);
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
+    serviceNowApprovalParams.setIssueNumber("issueNumber");
+    Criteria approvalCriteria = new Criteria();
+    approvalCriteria.setConditions(ImmutableMap.of(
+        "state", Arrays.asList("Closed", "Scheduled"), "approval", Arrays.asList("Approved", "Requested")));
+    Criteria rejectionCriteria = new Criteria();
+    rejectionCriteria.setConditions(ImmutableMap.of(
+        "state", Arrays.asList("Scheduled", "Cancelled"), "approval", Arrays.asList("Approved", "Rejected")));
+    serviceNowApprovalParams.setRejection(rejectionCriteria);
+    serviceNowApprovalParams.setApproval(approvalCriteria);
+    approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
+                                                   .approvalStateType(ApprovalStateType.SERVICENOW)
+                                                   .snowApproval(rejectionCriteria)
+                                                   .build();
 
     ExecutionResponse executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
     assertThat(executionResponse).isNotNull();

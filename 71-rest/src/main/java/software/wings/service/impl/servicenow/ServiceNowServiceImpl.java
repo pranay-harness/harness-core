@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
 import io.harness.waiter.WaitNotifyEngine;
@@ -284,6 +285,13 @@ public class ServiceNowServiceImpl implements ServiceNowService {
             && approvalPollingJobEntity.getRejection().satisfied(currentStatus)) {
           return ServiceNowExecutionData.builder()
               .executionStatus(ExecutionStatus.REJECTED)
+              .currentState(issueStatus)
+              .build();
+        }
+
+        if (EmptyPredicate.isNotEmpty(issueStatus)) {
+          return ServiceNowExecutionData.builder()
+              .executionStatus(ExecutionStatus.PAUSED)
               .currentState(issueStatus)
               .build();
         }

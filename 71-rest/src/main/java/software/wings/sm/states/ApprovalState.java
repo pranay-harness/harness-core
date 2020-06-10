@@ -502,11 +502,13 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
       if (featureFlagService.isGlobalEnabled(FeatureName.SERVICENOW_MULTIPLE_CONDITIONS)) {
         Map<String, String> currentStatus = serviceNowExecutionData.getCurrentStatus();
-        executionData.setCurrentStatus(
-            currentStatus.entrySet()
-                .stream()
-                .map(status -> StringUtils.capitalize(status.getKey()) + " is equal to " + status.getValue())
-                .collect(Collectors.joining(",\n")));
+        if (isNotEmpty(currentStatus)) {
+          executionData.setCurrentStatus(
+              currentStatus.entrySet()
+                  .stream()
+                  .map(status -> StringUtils.capitalize(status.getKey()) + " is equal to " + status.getValue())
+                  .collect(Collectors.joining(",\n")));
+        }
 
         if (executionData.getSnowApproval() != null && executionData.getSnowApproval().satisfied(currentStatus)) {
           return respondWithStatus(context, executionData, null,

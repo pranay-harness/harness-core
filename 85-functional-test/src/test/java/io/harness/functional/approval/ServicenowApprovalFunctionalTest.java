@@ -33,8 +33,10 @@ import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Environment;
@@ -45,17 +47,21 @@ import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.approval.ConditionalOperator;
+import software.wings.beans.approval.Criteria;
 import software.wings.beans.servicenow.ServiceNowCreateUpdateParams;
 import software.wings.beans.servicenow.ServiceNowFields;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @OwnedBy(CDC)
+@Slf4j
 public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private SettingGenerator settingGenerator;
@@ -78,9 +84,19 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
-  @Category(FunctionalTests.class)
-  public void ExecuteServiceNowApprovalForStateField() {
+  @Owner(developers = PRABU, intermittent = true)
+  @Category({FunctionalTests.class})
+  @Ignore("This test is Flaky. Need to debug more by the test owner")
+  public void ExecuteServiceNowApprovalForMultipleORConditions() {
+    Criteria rejectionCriteria = new Criteria();
+    rejectionCriteria.setConditions(
+        ImmutableMap.of("state", Arrays.asList("Cancelled"), "approval", Arrays.asList("Approved", "Rejected")));
+
+    Criteria approvalCriteria = new Criteria();
+    approvalCriteria.setConditions(ImmutableMap.of(
+        "state", Arrays.asList("Closed", "Cancelled"), "approval", Arrays.asList("Approved", "Requested")));
+    approvalCriteria.setOperator(ConditionalOperator.OR);
+
     Workflow snowApprovalWorkflow =
         aWorkflow()
             .name("ServiceNow Approval Functional Test" + System.currentTimeMillis())
@@ -90,24 +106,52 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).addStep(getSnowCreateNode()).build())
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT)
-                                                 .addStep(getSnowApprovalNode("state", "Authorize", "Canceled"))
-                                                 .addStep(getSnowUpdateNode("state", "Assess"))
+                                                 .addStep(getSnowApprovalNode(approvalCriteria, rejectionCriteria))
+                                                 .addStep(getSnowUpdateNode(ImmutableMap.of("approval", "Approved")))
                                                  .withStepsInParallel(true)
                                                  .build())
                     .build())
             .build();
-    workflowExecuteAndAssert(snowApprovalWorkflow);
+    workflowExecuteAndAssert(snowApprovalWorkflow, ExecutionStatus.SUCCESS);
   }
 
-  private GraphNode getSnowApprovalNode(String field, String approvalValue, String rejectionValue) {
+  @Test
+  @Owner(developers = PRABU, intermittent = true)
+  @Category({FunctionalTests.class})
+  @Ignore("This test is Flaky. Need to debug more by the test owner")
+  public void ExecuteServiceNowApprovalForMultipleANDConditions() {
+    Criteria rejectionCriteria = new Criteria();
+    rejectionCriteria.setConditions(
+        ImmutableMap.of("state", Arrays.asList("Canceled", "Assess"), "approval", Arrays.asList("Rejected")));
+
+    Criteria approvalCriteria = new Criteria();
+    approvalCriteria.setConditions(
+        ImmutableMap.of("state", Arrays.asList("Closed", "Canceled"), "approval", Arrays.asList("Approved")));
+
+    Workflow snowApprovalWorkflow =
+        aWorkflow()
+            .name("ServiceNow Rejection Functional Test" + System.currentTimeMillis())
+            .envId(environment.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).addStep(getSnowCreateNode()).build())
+                    .withPostDeploymentSteps(
+                        aPhaseStep(POST_DEPLOYMENT)
+                            .addStep(getSnowApprovalNode(approvalCriteria, rejectionCriteria))
+                            .addStep(getSnowUpdateNode(ImmutableMap.of("state", "Canceled", "approval", "Approved")))
+                            .withStepsInParallel(true)
+                            .build())
+                    .build())
+            .build();
+    workflowExecuteAndAssert(snowApprovalWorkflow, ExecutionStatus.SUCCESS);
+  }
+
+  private GraphNode getSnowApprovalNode(Criteria approval, Criteria rejection) {
     HashMap<String, Object> serviceNowApprovalParams = new HashMap<>();
-    serviceNowApprovalParams.put("approvalField", field);
-    serviceNowApprovalParams.put("approvalOperator", "equalsTo");
-    serviceNowApprovalParams.put("approvalValue", approvalValue);
+    serviceNowApprovalParams.put("approval", approval);
     serviceNowApprovalParams.put("issueNumber", "${snowIssue.issueNumber}");
-    serviceNowApprovalParams.put("rejectionField", field);
-    serviceNowApprovalParams.put("rejectionValue", rejectionValue);
-    serviceNowApprovalParams.put("rejectionOperator", "equalsTo");
+    serviceNowApprovalParams.put("rejection", rejection);
     serviceNowApprovalParams.put("ticketType", "CHANGE_REQUEST");
     serviceNowApprovalParams.put("snowConnectorId", snowSetting.getUuid());
 
@@ -126,7 +170,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
         .build();
   }
 
-  private GraphNode getSnowUpdateNode(String field, String value) {
+  private GraphNode getSnowUpdateNode(Map<String, String> updateValues) {
     ServiceNowCreateUpdateParams params = new ServiceNowCreateUpdateParams();
     params.setAction(ServiceNowAction.UPDATE);
     params.setSnowConnectorId(snowSetting.getUuid());
@@ -134,11 +178,13 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
     params.setIssueNumber("${snowIssue.issueNumber}");
     Map<ServiceNowFields, String> fields = new HashMap<>();
     Map<String, String> additionalFields = new HashMap<>();
-    try {
-      fields.put(ServiceNowFields.valueOf(field), value);
-      fields.put(WORK_NOTES, "Started progress");
-    } catch (IllegalArgumentException e) {
-      additionalFields.put(field, value);
+    for (Map.Entry<String, String> updateEntry : updateValues.entrySet()) {
+      try {
+        fields.put(ServiceNowFields.valueOf(updateEntry.getKey()), updateEntry.getValue());
+        fields.put(WORK_NOTES, "Started progress");
+      } catch (IllegalArgumentException e) {
+        additionalFields.put(updateEntry.getKey(), updateEntry.getValue());
+      }
     }
     params.setFields(fields);
     params.setAdditionalFields(additionalFields);
@@ -174,9 +220,10 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
         .build();
   }
 
-  private void workflowExecuteAndAssert(Workflow workflow) {
+  private void workflowExecuteAndAssert(Workflow workflow, ExecutionStatus status) {
     Workflow savedWorkflow =
         WorkflowRestUtils.createWorkflow(bearerToken, environment.getAccountId(), environment.getAppId(), workflow);
+    logger.info("Workflow created successfully");
     assertThat(savedWorkflow).isNotNull();
 
     ExecutionArgs executionArgs = new ExecutionArgs();
@@ -189,14 +236,17 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution =
         WorkflowRestUtils.startWorkflow(bearerToken, environment.getAppId(), environment.getUuid(), executionArgs);
 
-    Awaitility.await()
-        .atMost(360, TimeUnit.SECONDS)
-        .pollInterval(60, TimeUnit.SECONDS)
-        .until(()
-                   -> workflowExecutionService.getWorkflowExecution(environment.getAppId(), workflowExecution.getUuid())
-                          .getStatus()
-                == ExecutionStatus.SUCCESS);
+    logger.info("Workflow Execution started");
 
+    Awaitility.await().atMost(600, TimeUnit.SECONDS).pollInterval(20, TimeUnit.SECONDS).until(() -> {
+      ExecutionStatus executionStatus =
+          workflowExecutionService.getWorkflowExecution(environment.getAppId(), workflowExecution.getUuid())
+              .getStatus();
+      logger.info("Current workflow execution status: {}", executionStatus.name());
+      return executionStatus == status;
+    });
+
+    logger.info("Workflow Execution completed successfully");
     WorkflowExecution completedExecution =
         workflowExecutionService.getExecutionDetails(environment.getAppId(), workflowExecution.getUuid(), false);
 
