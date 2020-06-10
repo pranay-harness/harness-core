@@ -28,6 +28,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_DATA_COLLECTION_INTERVAL_IN_MINUTE;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
+import static software.wings.common.VerificationConstants.SERVICE_GUARD_ANALYSIS_WINDOW_MINS;
 import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
@@ -161,6 +162,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -197,8 +199,11 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Mock private AppService appService;
   @Mock private CVActivityLogService cvActivityLogService;
   @Mock private Logger activityLogger;
+
   private SumoConfig sumoConfig;
   private DatadogConfig datadogConfig;
+
+  private ExecutorService executorService;
 
   @Before
   public void setUp() throws Exception {
@@ -259,6 +264,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     datadogCVConfiguration.setBaselineEndMinute(TimeUnit.MILLISECONDS.toMinutes(currentTime));
 
     datadogCvConfigId = wingsPersistence.save(datadogCVConfiguration);
+    executorService = Executors.newSingleThreadExecutor();
 
     when(cvConfigurationService.listConfigurations(accountId))
         .thenReturn(Lists.newArrayList(logsCVConfiguration, datadogCVConfiguration));
@@ -268,6 +274,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     writeField(continuousVerificationService, "cvActivityLogService", cvActivityLogService, true);
     writeField(timeSeriesAnalysisService, "managerClient", verificationManagerClient, true);
     writeField(continuousVerificationService, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
+    writeField(continuousVerificationService, "executorService", executorService, true);
     when(delegateService.queueTask(anyObject()))
         .then(invocation -> wingsPersistence.save((DelegateTask) invocation.getArguments()[0]));
     when(settingsService.get(connectorId)).thenReturn(aSettingAttribute().withValue(sumoConfig).build());
@@ -1250,37 +1257,9 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testTriggerTimeSeriesAlertIfNecessary() throws IOException {
-    final NewRelicCVServiceConfiguration cvConfiguration = new NewRelicCVServiceConfiguration();
-    cvConfiguration.setAppId(appId);
-    cvConfiguration.setEnvId(envId);
-    cvConfiguration.setServiceId(serviceId);
-    cvConfiguration.setAlertEnabled(false);
-    cvConfiguration.setAlertThreshold(0.5);
-    cvConfiguration.setName(generateUuid());
-    cvConfiguration.setAccountId(accountId);
-    cvConfiguration.setStateType(StateType.NEW_RELIC);
-    final String configId = wingsPersistence.save(cvConfiguration);
-
-    File file = new File(getClass().getClassLoader().getResource("./metric_records.json").getFile());
-    final Gson gson1 = new Gson();
-    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
-      List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
-      metricDataRecords.forEach(metricDataRecord -> {
-        metricDataRecord.setAppId(appId);
-        metricDataRecord.setCvConfigId(configId);
-        metricDataRecord.setStateType(StateType.NEW_RELIC);
-        metricDataRecord.setDataCollectionMinute(10);
-      });
-
-      final List<TimeSeriesDataRecord> dataRecords =
-          TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(metricDataRecords);
-      dataRecords.forEach(dataRecord -> dataRecord.compress());
-
-      wingsPersistence.save(dataRecords);
-    }
-
+  public void testTriggerTimeSeriesAlertIfNecessary() throws Exception {
+    String configId = saveCvConfigForAlertTests();
+    CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, configId);
     when(cvConfigurationService.getConfiguration(anyString())).thenReturn(cvConfiguration);
 
     // disabled alert should not throw alert
@@ -1317,6 +1296,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     // same minute should not throw another alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 10);
     sleep(ofMillis(2000));
+    waitForAlert(1, Optional.empty());
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
     assertThat(alerts).hasSize(1);
 
@@ -1368,6 +1348,89 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(
         wingsPersistence.createQuery(Alert.class, excludeAuthority).filter(AlertKeys.status, AlertStatus.Open).count())
         .isEqualTo(1);
+  }
+
+  private String saveCvConfigForAlertTests() throws Exception {
+    final NewRelicCVServiceConfiguration cvConfiguration = new NewRelicCVServiceConfiguration();
+    cvConfiguration.setAppId(appId);
+    cvConfiguration.setEnvId(envId);
+    cvConfiguration.setServiceId(serviceId);
+    cvConfiguration.setAlertEnabled(false);
+    cvConfiguration.setAlertThreshold(0.5);
+    cvConfiguration.setName(generateUuid());
+    cvConfiguration.setAccountId(accountId);
+    cvConfiguration.setStateType(StateType.NEW_RELIC);
+    String configId = wingsPersistence.save(cvConfiguration);
+
+    File file = new File(getClass().getClassLoader().getResource("./metric_records.json").getFile());
+    final Gson gson1 = new Gson();
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
+      List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
+      metricDataRecords.forEach(metricDataRecord -> {
+        metricDataRecord.setAppId(appId);
+        metricDataRecord.setCvConfigId(configId);
+        metricDataRecord.setStateType(StateType.NEW_RELIC);
+        metricDataRecord.setDataCollectionMinute(10);
+      });
+
+      final List<TimeSeriesDataRecord> dataRecords =
+          TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(metricDataRecords);
+      dataRecords.forEach(dataRecord -> dataRecord.compress());
+
+      wingsPersistence.save(dataRecords);
+    }
+    return configId;
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerTimeSeriesAlertIfNecessary_numOccurrencesNotMet() throws Exception {
+    String configId = saveCvConfigForAlertTests();
+    CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, configId);
+    cvConfiguration.setAlertEnabled(true);
+    cvConfiguration.setAlertThreshold(0.3);
+    cvConfiguration.setNumOfOccurrencesForAlert(2);
+    wingsPersistence.save(cvConfiguration);
+    when(cvConfigurationService.getConfiguration(anyString())).thenReturn(cvConfiguration);
+
+    continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 10);
+    assertThat(wingsPersistence.createQuery(Alert.class, excludeAuthority).asList()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerTimeSeriesAlertIfNecessary_numOccurrencesMet() throws Exception {
+    String configId = saveCvConfigForAlertTests();
+    CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, configId);
+    cvConfiguration.setAlertEnabled(true);
+    cvConfiguration.setAlertThreshold(0.3);
+    cvConfiguration.setNumOfOccurrencesForAlert(2);
+    wingsPersistence.save(cvConfiguration);
+    when(cvConfigurationService.getConfiguration(anyString())).thenReturn(cvConfiguration);
+
+    Map<String, Double> metricScores = new HashMap<>();
+    metricScores.put("txn1", 0.8);
+    int analysisMinute = 1000;
+    TimeSeriesMLAnalysisRecord analysisRecordCurrent = TimeSeriesMLAnalysisRecord.builder().build();
+    analysisRecordCurrent.setCvConfigId(configId);
+    analysisRecordCurrent.setAnalysisMinute(analysisMinute);
+    analysisRecordCurrent.setOverallMetricScores(metricScores);
+    analysisRecordCurrent.bundleAsJosnAndCompress();
+
+    TimeSeriesMLAnalysisRecord analysisRecordPrevious = TimeSeriesMLAnalysisRecord.builder().build();
+    analysisRecordPrevious.setCvConfigId(configId);
+    analysisRecordPrevious.setAnalysisMinute(analysisMinute - SERVICE_GUARD_ANALYSIS_WINDOW_MINS);
+    analysisRecordPrevious.setOverallMetricScores(metricScores);
+    analysisRecordPrevious.bundleAsJosnAndCompress();
+
+    wingsPersistence.save(Arrays.asList(analysisRecordCurrent, analysisRecordPrevious));
+
+    continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, analysisMinute);
+    waitForAlert(1, Optional.empty());
+    assertThat(wingsPersistence.createQuery(Alert.class, excludeAuthority).asList()).isNotEmpty();
   }
 
   @Test

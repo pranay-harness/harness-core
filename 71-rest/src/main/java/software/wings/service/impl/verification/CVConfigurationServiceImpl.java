@@ -11,6 +11,7 @@ import static io.harness.persistence.HQuery.excludeValidate;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.CV_META_DATA;
+import static software.wings.common.VerificationConstants.MAX_NUM_ALERT_OCCURRENCES;
 import static software.wings.sm.StateType.STACK_DRIVER_LOG;
 import static software.wings.sm.states.APMVerificationState.metricDefinitions;
 
@@ -39,6 +40,7 @@ import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData.ContinuousVerificationAlertDataKeys;
 import software.wings.common.VerificationConstants;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.resources.PrometheusResource;
@@ -275,7 +277,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     cvConfiguration.setAppId(appId);
     cvConfiguration.setStateType(stateType);
     cvConfiguration.setUuid(generateUuid());
-
+    validateAlertOccurrenceCount(cvConfiguration);
     if (VerificationConstants.getLogAnalysisStates().contains(cvConfiguration.getStateType())
         && featureFlagService.isEnabled(FeatureName.LOGS_V2_247, cvConfiguration.getAccountId())) {
       LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
@@ -644,6 +646,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   private UpdateOperations<CVConfiguration> getUpdateOperations(
       StateType stateType, CVConfiguration cvConfiguration, CVConfiguration savedConfiguration) {
     logger.info("Updating CV Service Configuration {}", cvConfiguration);
+    validateAlertOccurrenceCount(cvConfiguration);
     UpdateOperations<CVConfiguration> updateOperations =
         wingsPersistence.createUpdateOperations(CVConfiguration.class)
             .set(CVConfigurationKeys.connectorId, cvConfiguration.getConnectorId())
@@ -653,6 +656,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set(CVConfigurationKeys.name, cvConfiguration.getName())
             .set(CVConfigurationKeys.alertEnabled, cvConfiguration.isAlertEnabled())
             .set(CVConfigurationKeys.alertThreshold, cvConfiguration.getAlertThreshold())
+            .set(CVConfigurationKeys.numOfOccurrencesForAlert, cvConfiguration.getNumOfOccurrencesForAlert())
             .set(CVConfigurationKeys.snoozeStartTime, cvConfiguration.getSnoozeStartTime())
             .set(CVConfigurationKeys.snoozeEndTime, cvConfiguration.getSnoozeEndTime());
     if (cvConfiguration.getAnalysisTolerance() != null) {
@@ -1215,5 +1219,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     cvConfigurationList.forEach(cvConfiguration -> { accountIdSet.add(cvConfiguration.getAccountId()); });
 
     return accountIdList.stream().map(accountIdSet::contains).collect(Collectors.toList());
+  }
+
+  private void validateAlertOccurrenceCount(CVConfiguration cvConfiguration) {
+    if (cvConfiguration.getNumOfOccurrencesForAlert() > MAX_NUM_ALERT_OCCURRENCES) {
+      throw new DataCollectionException(
+          "Invalid occurrence count for alert setup. Maximum allowed value is " + MAX_NUM_ALERT_OCCURRENCES);
+    }
   }
 }

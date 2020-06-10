@@ -65,6 +65,7 @@ public class CVConfiguration extends Base implements NameAccess {
   private boolean isWorkflowConfig;
   private boolean alertEnabled;
   private double alertThreshold = 0.5;
+  private int numOfOccurrencesForAlert = 1;
   private long snoozeStartTime;
   private long snoozeEndTime;
 

@@ -124,6 +124,11 @@ public class VerificationServiceModule extends AbstractModule {
                 .setPriority(Thread.MIN_PRIORITY)
                 .build()));
 
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("alertsCreationExecutor"))
+        .toInstance(ThreadPool.create(1, 10, 5, TimeUnit.SECONDS,
+            new ThreadFactoryBuilder().setNameFormat("Alerts-creator-%d").setPriority(Thread.MIN_PRIORITY).build()));
+
     bind(QueueController.class).toInstance(new QueueController() {
       @Override
       public boolean isPrimary() {

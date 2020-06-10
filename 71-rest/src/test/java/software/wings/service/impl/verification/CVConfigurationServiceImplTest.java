@@ -49,6 +49,7 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.UsageLimitExceededAlert;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -550,6 +551,29 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     LogsCVConfiguration updatedConfig = cvConfigurationService.getConfiguration(logsCVConfiguration.getUuid());
     assertThat(updatedConfig).isNotNull();
     assertThat(updatedConfig.getAlertPriority()).isEqualTo(FeedbackPriority.P3);
+  }
+
+  @Test(expected = DataCollectionException.class)
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testCreate_invalidNumAlertOccurrences() throws Exception {
+    StackDriverMetricCVConfiguration configuration = createStackDriverConfig(accountId);
+    configuration.setNumOfOccurrencesForAlert(10);
+    String cvConfigId = cvConfigurationService.saveConfiguration(
+        accountId, "LQWs27mPS7OrwCwDmT8aBA", StateType.STACK_DRIVER, configuration);
+  }
+
+  @Test(expected = DataCollectionException.class)
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpdateConfiguration_invalidNumOccurrencesAlerts() throws Exception {
+    LogsCVConfiguration logsCVConfiguration = createLogsCVConfig(true);
+    logsCVConfiguration.setUuid(generateUuid());
+    cvConfigurationService.saveToDatabase(logsCVConfiguration, true);
+
+    logsCVConfiguration.setAlertPriority(FeedbackPriority.P3);
+    logsCVConfiguration.setNumOfOccurrencesForAlert(6);
+    cvConfigurationService.updateConfiguration(logsCVConfiguration, logsCVConfiguration.getAppId());
   }
 
   @Test
