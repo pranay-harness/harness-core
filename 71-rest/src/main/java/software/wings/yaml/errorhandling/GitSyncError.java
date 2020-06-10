@@ -40,7 +40,9 @@ import javax.ws.rs.DefaultValue;
       }, options = @IndexOptions(background = true, name = "previousErrors_idx")), @Index(fields = {
         @Field("accountId")
         , @Field("appId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.previousCommitIdsWithError")
-      }, options = @IndexOptions(background = true, name = "previousErrors_idx_for_app_filter"))
+      }, options = @IndexOptions(background = true, name = "previousErrors_idx_for_app_filter")), @Index(fields = {
+        @Field("accountId"), @Field("createdAt")
+      }, options = @IndexOptions(background = true, name = "accountId_createdAt")),
 })
 @Data
 @NoArgsConstructor
