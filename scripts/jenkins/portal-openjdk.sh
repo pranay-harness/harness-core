@@ -178,3 +178,23 @@ then
     echo ${PURPOSE} > purpose.txt
 fi
 cd ../..
+
+mkdir -p dist/ng-manager
+cd dist/ng-manager
+cp ../../120-ng-manager/target/ng-manager-capsule.jar .
+cp ../../120-ng-manager/config.yml .
+cp ../../keystore.jks .
+cp ../../120-ng-manager/key.pem .
+cp ../../120-ng-manager/cert.pem .
+
+cp ../../dockerization/ng-manager/Dockerfile-ng-manager-jenkins-k8-openjdk ./Dockerfile
+cp ../../dockerization/ng-manager/Dockerfile-ng-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
+cp -r ../../dockerization/ng-manager/scripts/ .
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+
+cd ../..
