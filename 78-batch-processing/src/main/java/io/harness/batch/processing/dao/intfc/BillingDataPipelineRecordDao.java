@@ -1,11 +1,11 @@
 package io.harness.batch.processing.dao.intfc;
 
-import io.harness.ccm.cluster.entities.BillingDataPipelineRecord;
+import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 
 import java.util.List;
 
 public interface BillingDataPipelineRecordDao {
-  boolean create(BillingDataPipelineRecord billingDataPipelineRecord);
+  String create(BillingDataPipelineRecord billingDataPipelineRecord);
 
   BillingDataPipelineRecord getByMasterAccountId(String accountId, String awsMasterAccountId);
 

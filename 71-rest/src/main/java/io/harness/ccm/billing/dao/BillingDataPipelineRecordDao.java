@@ -1,10 +1,10 @@
-package io.harness.ccm.cluster.dao;
+package io.harness.ccm.billing.dao;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.ccm.cluster.entities.BillingDataPipelineRecord;
-import io.harness.ccm.cluster.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
+import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,6 +15,10 @@ public class BillingDataPipelineRecordDao {
 
   public boolean create(BillingDataPipelineRecord billingDataPipelineRecord) {
     return persistence.save(billingDataPipelineRecord) != null;
+  }
+
+  public BillingDataPipelineRecord get(String uuid) {
+    return persistence.get(BillingDataPipelineRecord.class, uuid);
   }
 
   public BillingDataPipelineRecord fetchBillingPipelineMetaDataFromAccountId(String accountId) {

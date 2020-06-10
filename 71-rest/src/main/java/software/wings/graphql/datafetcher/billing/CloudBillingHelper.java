@@ -7,8 +7,8 @@ import com.google.inject.Singleton;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
-import io.harness.ccm.cluster.dao.BillingDataPipelineRecordDao;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.exception.InvalidRequestException;
 import software.wings.app.MainConfiguration;

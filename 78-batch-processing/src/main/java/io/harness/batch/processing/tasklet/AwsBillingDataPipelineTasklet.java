@@ -1,4 +1,4 @@
-package io.harness.batch.processing.writer;
+package io.harness.batch.processing.tasklet;
 
 import static io.harness.batch.processing.service.impl.BillingDataPipelineServiceImpl.preAggQueryKey;
 import static io.harness.batch.processing.service.impl.BillingDataPipelineServiceImpl.scheduledQueryKey;
@@ -9,17 +9,19 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineService;
-import io.harness.ccm.cluster.entities.BillingDataPipelineRecord;
+import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.annotation.BeforeStep;
-import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
@@ -28,19 +30,15 @@ import java.util.List;
 
 @Slf4j
 @Singleton
-public class AwsBillingDataPipelineWriter extends EventWriter implements ItemWriter<SettingAttribute> {
+public class AwsBillingDataPipelineTasklet implements Tasklet {
   @Autowired private BillingDataPipelineService billingDataPipelineService;
   @Autowired private BillingDataPipelineRecordDao billingDataPipelineRecordDao;
-
+  @Autowired protected CloudToHarnessMappingService cloudToHarnessMappingService;
   private JobParameters parameters;
 
-  @BeforeStep
-  public void beforeStep(final StepExecution stepExecution) {
-    parameters = stepExecution.getJobExecution().getJobParameters();
-  }
-
   @Override
-  public void write(List<? extends SettingAttribute> settingAttributes) {
+  public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
+    parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
     Account account = cloudToHarnessMappingService.getAccountInfoFromId(accountId);
     String accountName = account.getAccountName();
@@ -84,5 +82,6 @@ public class AwsBillingDataPipelineWriter extends EventWriter implements ItemWri
         }
       }
     });
+    return null;
   }
 }

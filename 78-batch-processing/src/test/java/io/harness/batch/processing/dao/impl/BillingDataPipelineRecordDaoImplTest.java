@@ -7,8 +7,8 @@ import com.google.cloud.bigquery.datatransfer.v1.TransferState;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.cluster.entities.BillingDataPipelineRecord;
-import io.harness.ccm.cluster.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
+import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.junit.Test;

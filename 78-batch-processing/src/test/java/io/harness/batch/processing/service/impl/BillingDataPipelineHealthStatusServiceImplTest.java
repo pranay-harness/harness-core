@@ -13,7 +13,7 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.cluster.entities.BillingDataPipelineRecord;
+import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
