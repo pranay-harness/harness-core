@@ -1,9 +1,9 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.cache.MongoStoreTest.TestNominalEntity;
+import io.harness.cache.MongoStoreTest.TestOrdinalEntity;
 import io.harness.serializer.KryoRegistrar;
-import software.wings.common.cache.MongoStoreTest.TestNominalEntity;
-import software.wings.common.cache.MongoStoreTest.TestOrdinalEntity;
 import software.wings.expression.ManagerExpressionEvaluatorTest;
 import software.wings.service.impl.SweepingOutputServiceImplTest;
 import software.wings.service.impl.WorkflowExecutionUpdateFake;

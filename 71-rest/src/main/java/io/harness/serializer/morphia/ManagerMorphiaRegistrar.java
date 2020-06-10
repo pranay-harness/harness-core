@@ -1,6 +1,5 @@
 package io.harness.serializer.morphia;
 
-import io.harness.cache.CacheEntity;
 import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.budget.entities.ClusterBudgetScope;
@@ -819,7 +818,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Base.class);
     set.add(BaseFile.class);
     set.add(BugsnagCVConfiguration.class);
-    set.add(CacheEntity.class);
     set.add(CECommunications.class);
     set.add(CloudFormationInfrastructureProvisioner.class);
     set.add(CloudFormationRollbackConfig.class);

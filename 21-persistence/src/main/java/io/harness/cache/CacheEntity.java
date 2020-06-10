@@ -1,6 +1,7 @@
 package io.harness.cache;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -22,13 +23,13 @@ import java.util.Date;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "CacheEntityKeys")
-@Entity(value = "cache", noClassnameStored = true)
+@Entity(value = "cache")
 @HarnessEntity(exportable = false)
-public class CacheEntity {
-  private long contextValue;
-  @Id private String canonicalKey;
+public class CacheEntity implements PersistentEntity {
+  long contextValue;
+  @Id String canonicalKey;
 
-  private byte[] entity;
+  byte[] entity;
 
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) Date validUntil;
 }

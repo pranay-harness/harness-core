@@ -1,6 +1,7 @@
-package software.wings.common.cache;
+package io.harness.cache;
 
 import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -9,20 +10,14 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.ErrorCategory;
 import com.mongodb.MongoCommandException;
-import io.harness.cache.CacheEntity;
 import io.harness.cache.CacheEntity.CacheEntityKeys;
-import io.harness.cache.Distributable;
-import io.harness.cache.DistributedStore;
-import io.harness.cache.Nominal;
-import io.harness.cache.Ordinal;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.govern.IgnoreThrowable;
+import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.QueryFactory;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.dl.WingsPersistence;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -35,7 +30,7 @@ import java.util.Objects;
 public class MongoStore implements DistributedStore {
   private static final int version = 1;
 
-  @Inject WingsPersistence wingsPersistence;
+  @Inject HPersistence hPersistence;
 
   String canonicalKey(long algorithmId, long structureHash, String key, List<String> params) {
     if (EmptyPredicate.isEmpty(params)) {
@@ -58,11 +53,8 @@ public class MongoStore implements DistributedStore {
   private <T extends Distributable> T get(
       Long contextValue, long algorithmId, long structureHash, String key, List<String> params) {
     try {
-      final Datastore datastore = wingsPersistence.getDatastore(CacheEntity.class);
-      final QueryFactory factory = datastore.getQueryFactory();
-
       final Query<CacheEntity> entityQuery =
-          factory.createQuery(datastore, wingsPersistence.getCollection(CacheEntity.class), CacheEntity.class)
+          hPersistence.createQuery(CacheEntity.class)
               .filter(CacheEntityKeys.canonicalKey, canonicalKey(algorithmId, structureHash, key, params));
 
       if (contextValue != null) {
@@ -86,28 +78,24 @@ public class MongoStore implements DistributedStore {
   public <T extends Distributable> void upsert(T entity, Duration ttl) {
     final String canonicalKey =
         canonicalKey(entity.algorithmId(), entity.structureHash(), entity.key(), entity.parameters());
-    Long contextValue = null;
-    if (entity instanceof Nominal) {
-      contextValue = ((Nominal) entity).contextHash();
-    } else if (entity instanceof Ordinal) {
-      contextValue = ((Ordinal) entity).contextOrder();
-    }
+    Long contextValue =
+        entity instanceof Nominal ? ((Nominal) entity).contextHash() : ((Ordinal) entity).contextOrder();
+
     try {
-      final Datastore datastore = wingsPersistence.getDatastore(CacheEntity.class);
-      final UpdateOperations<CacheEntity> updateOperations = datastore.createUpdateOperations(CacheEntity.class);
+      final UpdateOperations<CacheEntity> updateOperations = hPersistence.createUpdateOperations(CacheEntity.class);
       updateOperations.set(CacheEntityKeys.contextValue, contextValue);
       updateOperations.set(CacheEntityKeys.canonicalKey, canonicalKey);
       updateOperations.set(CacheEntityKeys.entity, KryoUtils.asDeflatedBytes(entity));
       updateOperations.set(CacheEntityKeys.validUntil, Date.from(OffsetDateTime.now().plus(ttl).toInstant()));
 
       final Query<CacheEntity> query =
-          datastore.createQuery(CacheEntity.class).filter(CacheEntityKeys.canonicalKey, canonicalKey);
+          hPersistence.createQuery(CacheEntity.class).filter(CacheEntityKeys.canonicalKey, canonicalKey);
       if (entity instanceof Ordinal) {
         // For ordinal data lets make sure we are not downgrading the cache
         query.field(CacheEntityKeys.contextValue).lessThan(contextValue);
       }
 
-      datastore.findAndModify(query, updateOperations, false, true);
+      hPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
     } catch (MongoCommandException exception) {
       if (ErrorCategory.fromErrorCode(exception.getErrorCode()) != DUPLICATE_KEY) {
         logger.error("Failed to update cache for key {}, hash {}", canonicalKey, contextValue, exception);
@@ -117,6 +105,7 @@ public class MongoStore implements DistributedStore {
     } catch (DuplicateKeyException ignore) {
       // Unfortunately mongo does not seem to support atomic upsert. It is atomic update and the unique index will
       // prevent second record being stored, but competing calls will occasionally throw duplicate exception
+      IgnoreThrowable.ignoredOnPurpose(ignore);
     } catch (RuntimeException ex) {
       logger.error("Failed to update cache for key {}, hash {}", canonicalKey, contextValue, ex);
     }
