@@ -14,7 +14,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.lock.AcquiredLock;
-import io.harness.redis.RedisConfig;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +42,7 @@ public class RedisPersistentLockerTest extends PersistenceTest {
   public void setup() {
     initMocks(this);
     PowerMockito.mockStatic(Redisson.class);
-    RedisConfig config = mock(RedisConfig.class);
+    RedisLockConfig config = mock(RedisLockConfig.class);
     client = mock(RedissonClient.class);
     when(Redisson.create(any())).thenReturn(client);
     redisPersistentLocker = new RedisPersistentLocker(config);

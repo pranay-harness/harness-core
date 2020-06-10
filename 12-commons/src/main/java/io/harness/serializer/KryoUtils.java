@@ -23,7 +23,7 @@ import java.util.zip.InflaterInputStream;
 @UtilityClass
 @Slf4j
 public class KryoUtils {
-  private static synchronized Kryo kryo() {
+  public static synchronized Kryo kryo() {
     final ClassResolver classResolver = new ClassResolver();
     HKryo kryo = new HKryo(classResolver);
 

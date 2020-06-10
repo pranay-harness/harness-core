@@ -90,7 +90,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.VerificationService;
 import software.wings.service.intfc.WhitelistService;
-import software.wings.utils.CacheManager;
+import software.wings.utils.ManagerCacheHandler;
 import software.wings.utils.ResourceTestRule;
 
 import java.util.Date;
@@ -124,7 +124,7 @@ public class SecureResourceTest extends CategoryTest {
   private static GenericDbCache genericDbCache = mock(GenericDbCache.class);
   private static AccountService accountService = mock(AccountService.class);
   private static HPersistence hPersistence = mock(HPersistence.class);
-  private static CacheManager cacheManager = mock(CacheManager.class);
+  private static ManagerCacheHandler managerCacheHandler = mock(ManagerCacheHandler.class);
 
   private static AppService appService = mock(AppService.class);
   private static UserService userService = mock(UserService.class);
@@ -138,9 +138,9 @@ public class SecureResourceTest extends CategoryTest {
   private static SecretManager secretManager = mock(SecretManager.class);
   private static GraphQLUtils graphQLUtils = mock(GraphQLUtils.class);
 
-  private static AuthService authService =
-      new AuthServiceImpl(genericDbCache, hPersistence, userService, userGroupService, usageRestrictionsService,
-          cacheManager, configuration, learningEngineService, authHandler, harnessUserGroupService, secretManager);
+  private static AuthService authService = new AuthServiceImpl(genericDbCache, hPersistence, userService,
+      userGroupService, usageRestrictionsService, managerCacheHandler, configuration, learningEngineService,
+      authHandler, harnessUserGroupService, secretManager);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(authService, authHandler, appService, userService,
       accountService, whitelistService, harnessUserGroupService, graphQLUtils);
@@ -248,13 +248,13 @@ public class SecureResourceTest extends CategoryTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(cacheManager.getUserCache()).thenReturn(cache);
+    when(managerCacheHandler.getUserCache()).thenReturn(cache);
     when(cache.get(USER_ID)).thenReturn(user);
-    when(cacheManager.getUserPermissionInfoCache()).thenReturn(cachePermissionInfo);
+    when(managerCacheHandler.getUserPermissionInfoCache()).thenReturn(cachePermissionInfo);
     when(cachePermissionInfo.get(ACCOUNT_ID + "~" + USER_ID)).thenReturn(userPermissionInfo);
 
     Cache<String, AuthToken> authTokenCache = (Cache<String, AuthToken>) mock(Cache.class);
-    when(cacheManager.getAuthTokenCache()).thenReturn(authTokenCache);
+    when(managerCacheHandler.getAuthTokenCache()).thenReturn(authTokenCache);
     when(authTokenCache.get(VALID_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, TOKEN_EXPIRY_IN_MILLIS));
 
     when(genericDbCache.get(Account.class, ACCOUNT_ID))

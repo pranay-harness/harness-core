@@ -44,6 +44,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
+import io.harness.cache.HarnessCacheManager;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
@@ -154,7 +155,6 @@ import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.verification.CVConfigurationService;
-import software.wings.utils.CacheManager;
 import software.wings.verification.CVConfiguration;
 
 import java.io.IOException;
@@ -212,7 +212,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject ServiceClassLocator serviceClassLocator;
 
   @Inject protected AuthService authService;
-  @Inject protected CacheManager cacheManager;
+  @Inject protected HarnessCacheManager harnessCacheManager;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RoleService roleService;
   @Inject private AuthHandler authHandler;

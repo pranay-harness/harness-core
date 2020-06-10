@@ -1,5 +1,7 @@
 package software.wings.rules;
 
+import static io.harness.cache.CacheBackend.CAFFEINE;
+import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.maintenance.MaintenanceController.forceMaintenance;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
@@ -21,10 +23,12 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 
 import com.codahale.metrics.MetricRegistry;
-import com.hazelcast.core.HazelcastInstance;
 import com.mongodb.MongoClient;
 import io.dropwizard.Configuration;
 import io.dropwizard.lifecycle.Managed;
+import io.harness.cache.CacheConfig;
+import io.harness.cache.CacheConfig.CacheConfigBuilder;
+import io.harness.cache.CacheModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.config.PublisherConfiguration;
 import io.harness.event.EventsModule;
@@ -60,13 +64,11 @@ import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProv
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
-import org.mockito.internal.util.MockUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.WingsTestModule;
 import software.wings.app.AuthModule;
-import software.wings.app.CacheModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GeneralNotifyEventListener;
 import software.wings.app.LicenseModule;
@@ -87,6 +89,7 @@ import software.wings.service.impl.EventEmitter;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -150,35 +153,20 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
 
     configuration = getConfiguration(annotations, dbName);
 
-    HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
-
     List<Module> modules = modules(annotations);
     addQueueModules(modules);
 
-    if (annotations.stream().anyMatch(Cache.class ::isInstance)) {
-      System.setProperty("hazelcast.jcache.provider.type", "server");
-      CacheModule cacheModule = new CacheModule((MainConfiguration) configuration);
-      modules.add(0, cacheModule);
-      hazelcastInstance = cacheModule.getHazelcastInstance();
+    CacheConfigBuilder cacheConfigBuilder =
+        CacheConfig.builder().disabledCaches(new HashSet<>()).cacheNamespace("harness-cache");
+    if (annotations.stream().anyMatch(annotation -> annotation instanceof Cache)) {
+      cacheConfigBuilder.cacheBackend(CAFFEINE);
+    } else {
+      cacheConfigBuilder.cacheBackend(NOOP);
     }
-
-    if (annotations.stream().anyMatch(annotation -> annotation instanceof Hazelcast || annotation instanceof Cache)) {
-      if (new MockUtil().isMock(hazelcastInstance)) {
-        hazelcastInstance = com.hazelcast.core.Hazelcast.newHazelcastInstance();
-      }
-    }
-
-    HazelcastInstance finalHazelcastInstance = hazelcastInstance;
-
-    modules.add(0, new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(HazelcastInstance.class).toInstance(finalHazelcastInstance);
-      }
-    });
+    CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
+    modules.addAll(0, cacheModule.cumulativeDependencies());
 
     injector = Guice.createInjector(modules);
-
     registerListeners(annotations.stream().filter(Listeners.class ::isInstance).findFirst());
     registerScheduledJobs(injector);
     registerProviders();

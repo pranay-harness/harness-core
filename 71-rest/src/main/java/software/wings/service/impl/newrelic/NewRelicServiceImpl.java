@@ -55,7 +55,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState.Method;
 import software.wings.sm.states.NewRelicState;
 import software.wings.sm.states.NewRelicState.Metric;
-import software.wings.utils.CacheManager;
+import software.wings.utils.ManagerCacheHandler;
 
 import java.io.IOException;
 import java.net.URL;
@@ -80,7 +80,7 @@ public class NewRelicServiceImpl implements NewRelicService {
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
-  @Inject private CacheManager cacheManager;
+  @Inject private ManagerCacheHandler managerCacheHandler;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionContextFactory executionContextFactory;
   @Inject private MLServiceUtils mlServiceUtils;
@@ -191,7 +191,8 @@ public class NewRelicServiceImpl implements NewRelicService {
                                             .build();
       switch (stateType) {
         case NEW_RELIC:
-          Cache<String, NewRelicApplications> newRelicApplicationCache = cacheManager.getNewRelicApplicationCache();
+          Cache<String, NewRelicApplications> newRelicApplicationCache =
+              managerCacheHandler.getNewRelicApplicationCache();
           String key = settingAttribute.getUuid();
           NewRelicApplications applications;
           try {

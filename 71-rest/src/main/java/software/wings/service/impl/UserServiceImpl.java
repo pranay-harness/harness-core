@@ -175,7 +175,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.marketplace.gcp.GCPBillingPollingService;
 import software.wings.service.intfc.signup.SignupException;
 import software.wings.service.intfc.signup.SignupSpamChecker;
-import software.wings.utils.CacheManager;
+import software.wings.utils.ManagerCacheHandler;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -242,7 +242,7 @@ public class UserServiceImpl implements UserService {
   @Inject private UserGroupService userGroupService;
   @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private AppService appService;
-  @Inject private CacheManager cacheManager;
+  @Inject private ManagerCacheHandler managerCacheHandler;
   @Inject private AuthHandler authHandler;
   @Inject private SecretManager secretManager;
   @Inject private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
@@ -2316,7 +2316,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User getUserFromCacheOrDB(String userId) {
-    Cache<String, User> userCache = cacheManager.getUserCache();
+    Cache<String, User> userCache = managerCacheHandler.getUserCache();
     User user = null;
     try {
       if (userCache == null) {
@@ -2344,8 +2344,8 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void evictUserFromCache(String userId) {
-    Preconditions.checkNotNull(cacheManager.getUserCache(), "User cache can't be null");
-    cacheManager.getUserCache().remove(userId);
+    Preconditions.checkNotNull(managerCacheHandler.getUserCache(), "User cache can't be null");
+    managerCacheHandler.getUserCache().remove(userId);
   }
 
   /* (non-Javadoc)

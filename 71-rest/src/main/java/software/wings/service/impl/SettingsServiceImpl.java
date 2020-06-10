@@ -151,8 +151,8 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.CacheManager;
 import software.wings.utils.CryptoUtils;
+import software.wings.utils.ManagerCacheHandler;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 
@@ -197,7 +197,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private CEInfraSetupHandlerFactory ceInfraSetupHandlerFactory;
 
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
-  @Inject private CacheManager cacheManager;
+  @Inject private ManagerCacheHandler harnessCacheManager;
   @Inject private EnvironmentService envService;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private EventPublishHelper eventPublishHelper;
@@ -946,7 +946,7 @@ public class SettingsServiceImpl implements SettingsService {
       yamlPushService.pushYamlChangeSet(settingAttribute.getAccountId(), savedSettingAttributes,
           updatedSettingAttribute, Type.UPDATE, settingAttribute.isSyncFromGit(), isRename);
     }
-    cacheManager.getNewRelicApplicationCache().remove(updatedSettingAttribute.getUuid());
+    harnessCacheManager.getNewRelicApplicationCache().remove(updatedSettingAttribute.getUuid());
 
     if (updatedSettingAttribute.getValue() instanceof CloudCostAware) {
       ccmSettingService.maskCCMConfig(updatedSettingAttribute);
@@ -1053,7 +1053,7 @@ public class SettingsServiceImpl implements SettingsService {
 
     if (deleted && shouldBeSynced(settingAttribute, pushToGit)) {
       yamlPushService.pushYamlChangeSet(accountId, settingAttribute, null, Type.DELETE, syncFromGit, false);
-      cacheManager.getNewRelicApplicationCache().remove(settingAttribute.getUuid());
+      harnessCacheManager.getNewRelicApplicationCache().remove(settingAttribute.getUuid());
     } else {
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, settingAttribute);
     }

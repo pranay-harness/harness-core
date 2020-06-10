@@ -37,6 +37,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
+import io.harness.testlib.RealMongo;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -865,6 +866,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     callback.await();
   }
 
+  @RealMongo
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)

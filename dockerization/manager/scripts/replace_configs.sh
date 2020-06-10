@@ -2,6 +2,7 @@
 
 CONFIG_FILE=/opt/harness/config.yml
 NEWRELIC_FILE=/opt/harness/newrelic.yml
+REDISSON_CACHE_FILE=/opt/harness/redisson-jcache.yaml
 
 yq delete -i $CONFIG_FILE server.applicationConnectors[0]
 yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
@@ -501,29 +502,42 @@ if [[ "" != "$DISTRIBUTED_LOCK_IMPLEMENTATION" ]]; then
   yq write -i $CONFIG_FILE distributedLockImplementation "$DISTRIBUTED_LOCK_IMPLEMENTATION"
 fi
 
-if [[ "$REDIS_SENTINEL" == "true" ]]; then
-  yq write -i $CONFIG_FILE redisConfig.sentinel true
+if [[ "" != "$REDIS_URL" ]]; then
+  yq write -i $CONFIG_FILE redisLockConfig.redisUrl "$REDIS_URL"
+  yq write -i $REDISSON_CACHE_FILE singleServerConfig.address "$REDIS_URL"
 fi
 
-if [[ "" != "$REDIS_URL" ]]; then
-  yq write -i $CONFIG_FILE redisConfig.redisUrl "$REDIS_URL"
+if [[ "$REDIS_SENTINEL" == "true" ]]; then
+  yq write -i $CONFIG_FILE redisLockConfig.sentinel true
+  yq delete -i $REDISSON_CACHE_FILE singleServerConfig
 fi
 
 if [[ "" != "$REDIS_MASTER_NAME" ]]; then
-  yq write -i $CONFIG_FILE redisConfig.masterName "$REDIS_MASTER_NAME"
+  yq write -i $CONFIG_FILE redisLockConfig.masterName "$REDIS_MASTER_NAME"
+  yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.masterName "$REDIS_MASTER_NAME"
 fi
 
 if [[ "" != "$REDIS_SENTINELS" ]]; then
   IFS=',' read -ra REDIS_SENTINEL_URLS <<< "$REDIS_SENTINELS"
   INDEX=0
   for REDIS_SENTINEL_URL in "${REDIS_SENTINEL_URLS[@]}"; do
-    yq write -i $CONFIG_FILE redisConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
+    yq write -i $CONFIG_FILE redisLockConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
+    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[+] "${REDIS_SENTINEL_URL}"
     INDEX=$(expr $INDEX + 1)
   done
+  yq write -i $REDISSON_CACHE_FILE codec "!<io.harness.redis.RedissonKryoCodec> {}"
 fi
 
 if [[ "" != "$REDIS_ENV_NAMESPACE" ]]; then
-    yq write -i $CONFIG_FILE redisConfig.envNamespace "$REDIS_ENV_NAMESPACE"
+    yq write -i $CONFIG_FILE redisLockConfig.envNamespace "$REDIS_ENV_NAMESPACE"
+fi
+
+if [[ "" != "$CACHE_NAMESPACE" ]]; then
+    yq write -i $CONFIG_FILE cacheConfig.cacheNamespace "$CACHE_NAMESPACE"
+fi
+
+if [[ "" != "$CACHE_BACKEND" ]]; then
+    yq write -i $CONFIG_FILE cacheConfig.cacheBackend "$CACHE_BACKEND"
 fi
 
 if [[ "" != "$CURRENT_JRE" ]]; then

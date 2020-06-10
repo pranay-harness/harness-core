@@ -15,7 +15,6 @@ import static software.wings.common.VerificationConstants.CV_24X7_METRIC_LABELS;
 import static software.wings.common.VerificationConstants.CV_META_DATA;
 import static software.wings.common.VerificationConstants.VERIFICATION_DEPLOYMENTS;
 import static software.wings.common.VerificationConstants.VERIFICATION_METRIC_LABELS;
-import static software.wings.utils.CacheManager.USER_CACHE;
 
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -33,7 +32,6 @@ import com.google.inject.name.Names;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
-import com.hazelcast.core.HazelcastInstance;
 import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthValueFactoryProvider;
@@ -48,6 +46,7 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
+import io.harness.cache.CacheModule;
 import io.harness.ccm.CEPerpetualTaskHandler;
 import io.harness.ccm.budget.BudgetHandler;
 import io.harness.ccm.cluster.ClusterRecordHandler;
@@ -123,6 +122,9 @@ import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 import io.harness.workers.background.iterator.InstanceSyncHandler;
 import io.harness.workers.background.iterator.SettingAttributeValidateConnectivityHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.atmosphere.cpr.AtmosphereServlet;
+import org.atmosphere.cpr.BroadcasterFactory;
+import org.atmosphere.cpr.MetaBroadcaster;
 import org.coursera.metrics.datadog.DatadogReporter;
 import org.coursera.metrics.datadog.transport.HttpTransport;
 import org.eclipse.jetty.server.Connector;
@@ -208,7 +210,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachineExecutor;
-import software.wings.utils.CacheManager;
+import software.wings.utils.ManagerCacheHandler;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
 import software.wings.yaml.gitSync.GitSyncEntitiesExpiryHandler;
 
@@ -221,8 +223,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import javax.cache.Caching;
-import javax.cache.configuration.Configuration;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.validation.Validation;
@@ -307,16 +307,14 @@ public class WingsApplication extends Application<MainConfiguration> {
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
 
-    CacheModule cacheModule = new CacheModule(configuration);
-    modules.add(cacheModule);
-    StreamModule streamModule = new StreamModule(environment, cacheModule.getHazelcastInstance());
-
-    modules.add(streamModule);
+    CacheModule cacheModule = new CacheModule(configuration.getCacheConfig());
+    modules.addAll(cacheModule.cumulativeDependencies());
+    StreamModule streamModule = new StreamModule(environment);
+    modules.addAll(streamModule.cumulativeDependencies());
 
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(HazelcastInstance.class).toInstance(cacheModule.getHazelcastInstance());
         bind(MetricRegistry.class).toInstance(metricRegistry);
       }
     });
@@ -372,26 +370,20 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     Injector injector = Guice.createInjector(modules);
 
-    Caching.getCachingProvider().getCacheManager().createCache(USER_CACHE, new Configuration<String, User>() {
-      public static final long serialVersionUID = 1L;
+    // Access all caches before coming out of maintenance
+    ManagerCacheHandler managerCacheHandler = injector.getInstance(ManagerCacheHandler.class);
 
-      @Override
-      public Class<String> getKeyType() {
-        return String.class;
-      }
+    managerCacheHandler.getUserCache();
+    managerCacheHandler.getUserPermissionInfoCache();
+    managerCacheHandler.getUserRestrictionInfoCache();
+    managerCacheHandler.getApiKeyPermissionInfoCache();
+    managerCacheHandler.getApiKeyRestrictionInfoCache();
+    managerCacheHandler.getNewRelicApplicationCache();
+    managerCacheHandler.getWhitelistConfigCache();
 
-      @Override
-      public Class<User> getValueType() {
-        return User.class;
-      }
-
-      @Override
-      public boolean isStoreByValue() {
-        return true;
-      }
-    });
-
-    streamModule.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
+    injector.getInstance(BroadcasterFactory.class);
+    injector.getInstance(MetaBroadcaster.class);
+    injector.getInstance(AtmosphereServlet.class).framework().objectFactory(new GuiceObjectFactory(injector));
 
     initializeFeatureFlags(injector);
 
@@ -454,17 +446,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     initializeServiceSecretKeys(injector);
 
     runMigrations(injector);
-
-    // Access all caches before coming out of maintenance
-    CacheManager cacheManager = injector.getInstance(CacheManager.class);
-
-    cacheManager.getUserCache();
-    cacheManager.getUserPermissionInfoCache();
-    cacheManager.getUserRestrictionInfoCache();
-    cacheManager.getApiKeyPermissionInfoCache();
-    cacheManager.getApiKeyRestrictionInfoCache();
-    cacheManager.getNewRelicApplicationCache();
-    cacheManager.getWhitelistConfigCache();
 
     String deployMode = configuration.getDeployMode().name();
 

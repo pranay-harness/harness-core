@@ -97,7 +97,7 @@ datadogConfig:
 
 distributedLockImplementation: MONGO
 
-redisConfig:
+redisLockConfig:
   sentinel: false
   masterName: "test"
   redisUrl: "redis://localhost:6379"
@@ -252,7 +252,10 @@ portal:
   externalGraphQLRateLimitPerMinute: 500
   customDashGraphQLRateLimitPerMinute: 1000
 
-disabledCache: []
+cacheConfig:
+  cacheBackend: HAZELCAST
+  cacheNamespace: harness-cache
+  disabledCaches: []
 
 featuresEnabled: ""
 

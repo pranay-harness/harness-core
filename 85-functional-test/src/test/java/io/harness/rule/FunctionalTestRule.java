@@ -1,5 +1,6 @@
 package io.harness.rule;
 
+import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
 import static org.mockito.Mockito.mock;
 
@@ -18,6 +19,8 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import graphql.GraphQL;
 import io.dropwizard.Configuration;
+import io.harness.cache.CacheConfig;
+import io.harness.cache.CacheModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
 import io.harness.event.EventsModule;
@@ -68,6 +71,7 @@ import software.wings.service.impl.EventEmitter;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import javax.validation.Validation;
@@ -167,6 +171,13 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         return datastore;
       }
     });
+
+    CacheModule cacheModule = new CacheModule(CacheConfig.builder()
+                                                  .cacheBackend(NOOP)
+                                                  .disabledCaches(new HashSet<>())
+                                                  .cacheNamespace("harness-cache")
+                                                  .build());
+    modules.addAll(0, cacheModule.cumulativeDependencies());
 
     modules.add(new AbstractModule() {
       @Override

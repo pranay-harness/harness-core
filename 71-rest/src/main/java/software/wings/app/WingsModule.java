@@ -74,6 +74,7 @@ import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.lock.PersistentLocker;
+import io.harness.lock.redis.RedisLockConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
@@ -84,7 +85,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
-import io.harness.redis.RedisConfig;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.serializer.YamlUtils;
@@ -617,7 +617,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.signup.BugsnagErrorReporter;
 import software.wings.signup.SignupServiceImpl;
 import software.wings.sm.ExpressionProcessorFactory;
-import software.wings.utils.CacheManager.CacheManagerConfig;
 import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
@@ -669,13 +668,8 @@ public class WingsModule extends DependencyModule implements ServersModule {
 
   @Provides
   @Singleton
-  RedisConfig redisConfig() {
-    return configuration.getRedisConfig();
-  }
-
-  @Provides
-  public CacheManagerConfig cacheManagerConfig() {
-    return CacheManagerConfig.builder().disabled(configuration.getDisabledCache()).build();
+  RedisLockConfig redisLockConfig() {
+    return configuration.getRedisLockConfig();
   }
 
   @Provides

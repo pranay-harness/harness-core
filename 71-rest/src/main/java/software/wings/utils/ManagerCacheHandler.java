@@ -1,12 +1,8 @@
 package software.wings.utils;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
-import lombok.Builder;
-import lombok.Value;
+import io.harness.cache.HarnessCacheManager;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
@@ -15,21 +11,15 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRestrictionInfo;
 import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
 
-import java.util.Optional;
-import java.util.Set;
 import javax.cache.Cache;
-import javax.cache.CacheException;
-import javax.cache.Caching;
 import javax.cache.configuration.Factory;
-import javax.cache.configuration.MutableConfiguration;
 import javax.cache.expiry.AccessedExpiryPolicy;
 import javax.cache.expiry.Duration;
-import javax.cache.expiry.EternalExpiryPolicy;
 import javax.cache.expiry.ExpiryPolicy;
 
-@Singleton
-public class CacheManager {
-  public static final String USER_CACHE = "userCache";
+public class ManagerCacheHandler {
+  private HarnessCacheManager harnessCacheManager;
+  private static final String USER_CACHE = "userCache";
   private static final String HARNESS_API_KEY_CACHE = "harnessApiKeyCache";
   private static final String NEW_RELIC_APPLICATION_CACHE = "nrApplicationCache";
   private static final String TRIAL_EMAIL_CACHE = "trialEmailCache";
@@ -41,40 +31,14 @@ public class CacheManager {
   private static final String WHITELIST_CACHE = "whitelistCache";
   private static final String AUTH_TOKEN_CACHE = "authTokenCache";
 
-  @Value
-  @Builder
-  public static class CacheManagerConfig {
-    Set<String> disabled;
+  @Inject
+  public ManagerCacheHandler(HarnessCacheManager harnessCacheManager) {
+    this.harnessCacheManager = harnessCacheManager;
   }
 
-  @Inject CacheManagerConfig config;
-
-  public <K, V> Cache<K, V> getCache(
+  private <K, V> Cache<K, V> getCache(
       String cacheName, Class<K> keyType, Class<V> valueType, Factory<ExpiryPolicy> expiryPolicy) {
-    if (isNotEmpty(config.getDisabled()) && config.getDisabled().contains(cacheName)) {
-      return null;
-    }
-
-    MutableConfiguration<K, V> configuration = new MutableConfiguration<>();
-    configuration.setTypes(keyType, valueType);
-    configuration.setStoreByValue(true);
-    configuration.setExpiryPolicyFactory(expiryPolicy);
-    configuration.setStatisticsEnabled(true);
-    configuration.setManagementEnabled(true);
-
-    try {
-      return Optional.ofNullable(Caching.getCache(cacheName, keyType, valueType))
-          .orElseGet(() -> Caching.getCachingProvider().getCacheManager().createCache(cacheName, configuration));
-    } catch (CacheException ce) {
-      if (ce.getMessage().equalsIgnoreCase("A cache named " + cacheName + " already exists.")) {
-        return Caching.getCache(cacheName, keyType, valueType);
-      }
-      throw ce;
-    }
-  }
-
-  public <K, V> Cache<K, V> getCache(String cacheName, Class<K> keyType, Class<V> valueType) {
-    return getCache(cacheName, keyType, valueType, EternalExpiryPolicy.factoryOf());
+    return harnessCacheManager.getCache(cacheName, keyType, valueType, expiryPolicy);
   }
 
   public Cache<String, AuthToken> getAuthTokenCache() {
