@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.validation.Validator.notNullCheck;
@@ -9,7 +8,9 @@ import static io.harness.validation.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.security.EncryptionUtils;
 import software.wings.beans.HarnessApiKey;
@@ -44,7 +45,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
   @Override
   public String generate(String clientType) {
     if (!ClientType.isValid(clientType)) {
-      throw new WingsException("Invalid client type : " + clientType);
+      throw new InvalidArgumentsException("Invalid client type : " + clientType);
     }
 
     String apiKey;
@@ -66,7 +67,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
   private String extractToken(ContainerRequestContext requestContext, String prefix) {
     String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorizationHeader == null || !authorizationHeader.startsWith(prefix)) {
-      throw new WingsException(INVALID_TOKEN, USER_ADMIN);
+      throw new UnauthorizedException("Invalid token", USER_ADMIN);
     }
     return authorizationHeader.substring(prefix.length()).trim();
   }
@@ -79,7 +80,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
   @Override
   public String get(String clientType) {
     if (!ClientType.isValid(clientType)) {
-      throw new WingsException("Invalid client type : " + clientType);
+      throw new InvalidArgumentsException("Invalid client type : " + clientType);
     }
 
     Cache<String, String> harnessApiKeyCache = cacheManager.getHarnessApiKeyCache();
@@ -105,7 +106,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
   @Override
   public boolean delete(String clientType) {
     if (!ClientType.isValid(clientType)) {
-      throw new WingsException("Invalid client type : " + clientType);
+      throw new InvalidArgumentsException("Invalid client type : " + clientType);
     }
 
     HarnessApiKey apiKeyObject = getApiKeyObject(ClientType.valueOf(clientType));
@@ -151,7 +152,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
       });
 
       if (!valid) {
-        throw new WingsException(INVALID_TOKEN, USER);
+        throw new UnauthorizedException("Invalid token", USER_ADMIN);
       }
     } else {
       throw new InvalidRequestException("Invalid api annotation", USER);
