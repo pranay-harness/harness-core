@@ -569,7 +569,21 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
     List<NameValuePair> rawVariablesList = new ArrayList<>();
 
-    if (this instanceof DestroyTerraformProvisionState && fileId != null) {
+    if (isNotEmpty(this.variables) || isNotEmpty(this.backendConfigs)) {
+      List<NameValuePair> validVariables =
+          validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
+      rawVariablesList.addAll(validVariables);
+
+      variables = infrastructureProvisionerService.extractUnresolvedTextVariables(validVariables);
+      encryptedVariables =
+          infrastructureProvisionerService.extractEncryptedTextVariables(validVariables, context.getAppId());
+
+      if (this.backendConfigs != null) {
+        backendConfigs = infrastructureProvisionerService.extractTextVariables(this.backendConfigs, context);
+        encryptedBackendConfigs =
+            infrastructureProvisionerService.extractEncryptedTextVariables(this.backendConfigs, context.getAppId());
+      }
+    } else if (this instanceof DestroyTerraformProvisionState && fileId != null) {
       FileMetadata fileMetadata = fileService.getFileMetadata(fileId, FileBucket.TERRAFORM_STATE);
 
       if (fileMetadata != null && fileMetadata.getMetadata() != null) {
@@ -646,22 +660,8 @@ public abstract class TerraformProvisionState extends State {
           setTfVarFiles(tfVarFiles);
         }
       }
-
-    } else {
-      List<NameValuePair> validVariables =
-          validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
-      rawVariablesList.addAll(validVariables);
-
-      variables = infrastructureProvisionerService.extractUnresolvedTextVariables(validVariables);
-      encryptedVariables =
-          infrastructureProvisionerService.extractEncryptedTextVariables(validVariables, context.getAppId());
-
-      if (this.backendConfigs != null) {
-        backendConfigs = infrastructureProvisionerService.extractTextVariables(this.backendConfigs, context);
-        encryptedBackendConfigs =
-            infrastructureProvisionerService.extractEncryptedTextVariables(this.backendConfigs, context.getAppId());
-      }
     }
+
     targets = resolveTargets(targets, context);
 
     TerraformProvisionParameters parameters =
