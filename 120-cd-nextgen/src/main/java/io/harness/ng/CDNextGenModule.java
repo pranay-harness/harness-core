@@ -31,6 +31,18 @@ public class CDNextGenModule extends AbstractModule {
         return appConfig.getMongoConfig();
       }
     });
+
+    /*
+    [secondary-db]: To use another DB, uncomment this and add @Named("primaryMongoConfig") to the above one
+
+    install(new ProviderModule() {
+       @Provides
+       @Singleton
+       @Named("secondaryMongoConfig")
+       MongoConfig mongoConfig() {
+         return appConfig.getSecondaryMongoConfig();
+       }
+     });*/
     install(new ValidationModule(getValidatorFactory()));
     install(new PersistenceModule());
     install(new CoreModule());

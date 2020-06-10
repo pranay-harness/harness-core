@@ -24,6 +24,9 @@ public class CDNextGenConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
 
+  // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
+  //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
+
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
 
