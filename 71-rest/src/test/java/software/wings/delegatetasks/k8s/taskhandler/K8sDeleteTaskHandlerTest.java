@@ -15,7 +15,10 @@ import static software.wings.delegatetasks.k8s.K8sTestHelper.deploymentConfig;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.namespace;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.service;
 
+import com.google.common.collect.ImmutableList;
+
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.KubernetesResourceId;
@@ -35,6 +38,7 @@ import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sApplyTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
+import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sDeleteResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
@@ -66,7 +70,12 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
-  public void executeTaskNoResources() throws Exception {
+  public void executeTaskNoResourcesAndFiles() throws Exception {
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), any(String.class), any(ExecutionLogCallback.class));
+
     K8sDeleteTaskParameters deleteAllParams = K8sDeleteTaskParameters.builder().build();
     final K8sTaskExecutionResponse taskResponse = handler.executeTaskInternal(deleteAllParams, taskParams);
 
@@ -131,5 +140,69 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
         .isThrownBy(()
                         -> handler.executeTaskInternal(
                             K8sApplyTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build()));
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.SAHIL)
+  @Category(UnitTests.class)
+  public void deleteGivenFiles() throws Exception {
+    doReturn(new KubernetesConfig()).when(deploymentDelegateHelper).getKubernetesConfig(any(K8sClusterConfig.class));
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), any(String.class), any(ExecutionLogCallback.class));
+
+    K8sDeleteTaskParameters deleteAllParams = K8sDeleteTaskParameters.builder().filePaths("a,b,c").build();
+
+    final K8sTaskExecutionResponse taskResponse = handler.executeTaskInternal(deleteAllParams, taskParams);
+
+    verify(k8sTaskHelper, times(1))
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), any(String.class), any(ExecutionLogCallback.class));
+    verify(deploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(k8sTaskHelper)
+        .getResourcesFromManifests(any(K8sDelegateTaskParams.class), any(K8sDelegateManifestConfig.class),
+            any(String.class), eq(ImmutableList.of("a", "b", "c")), any(List.class), any(String.class),
+            any(String.class), any(ExecutionLogCallback.class), eq(deleteAllParams));
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.SAHIL)
+  @Category(UnitTests.class)
+  public void deleteFilesGivenNoFilePaths() throws Exception {
+    doReturn(new KubernetesConfig()).when(deploymentDelegateHelper).getKubernetesConfig(any(K8sClusterConfig.class));
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), any(String.class), any(ExecutionLogCallback.class));
+
+    K8sDeleteTaskParameters deleteAllParams = K8sDeleteTaskParameters.builder().filePaths("").build();
+    final K8sTaskExecutionResponse taskResponse = handler.executeTaskInternal(deleteAllParams, taskParams);
+
+    verify(k8sTaskHelper)
+        .getK8sTaskExecutionResponse(
+            K8sDeleteResponse.builder().build(), CommandExecutionResult.CommandExecutionStatus.SUCCESS);
+    verify(deploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.SAHIL)
+  @Category(UnitTests.class)
+  public void deleteFilesAndResourcesGiven() throws Exception {
+    K8sDeleteTaskParameters deleteAllParams = K8sDeleteTaskParameters.builder()
+                                                  .filePaths("a,b,c")
+                                                  .resources("default/Deployment/test,default/Service/test-svc")
+                                                  .build();
+    final K8sTaskExecutionResponse taskResponse = handler.executeTaskInternal(deleteAllParams, taskParams);
+
+    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+    verify(k8sTaskHelper, times(1))
+        .delete(any(Kubectl.class), eq(taskParams), captor.capture(), any(ExecutionLogCallback.class));
+
+    @SuppressWarnings("unchecked") List<KubernetesResourceId> deletedResources = captor.getValue();
+
+    assertThat(deletedResources).hasSize(2);
+    assertThat(deletedResources.stream().map(KubernetesResourceId::getKind).collect(Collectors.toSet()))
+        .containsExactlyInAnyOrder("Deployment", "Service");
   }
 }

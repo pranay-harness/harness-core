@@ -10,6 +10,7 @@ import static io.harness.k8s.model.Kind.Secret;
 import static io.harness.k8s.model.Kind.Service;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -469,6 +470,41 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     verify(spyHelper, times(1)).runK8sExecutable(any(), any(), captor.capture());
     assertThat(captor.getValue().command())
         .isEqualTo("oc --kubeconfig=config-path apply --filename=manifests.yaml --record");
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testDeleteForOpenshiftResources() throws Exception {
+    ProcessResult processResult = new ProcessResult(0, new ProcessOutput("abc".getBytes()));
+    doReturn(processResult).when(spyHelper).runK8sExecutable(any(), any(), any(AbstractExecutable.class));
+
+    final String workingDirectory = ".";
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder()
+                                                      .workingDirectory(workingDirectory)
+                                                      .kubectlPath("kubectl")
+                                                      .ocPath("oc")
+                                                      .kubeconfigPath("config-path")
+                                                      .build();
+    Kubectl client = Kubectl.client("kubectl", "config-path");
+
+    spyHelper.deleteManifests(client, emptyList(), k8sDelegateTaskParams, executionLogCallback);
+
+    ArgumentCaptor<DeleteCommand> captor = ArgumentCaptor.forClass(DeleteCommand.class);
+    verify(spyHelper, times(1)).runK8sExecutable(any(), any(), captor.capture());
+    assertThat(captor.getValue().command())
+        .isEqualTo("kubectl --kubeconfig=config-path delete --filename=manifests.yaml");
+    reset(spyHelper);
+
+    doReturn(processResult).when(spyHelper).runK8sExecutable(any(), any(), any(AbstractExecutable.class));
+    spyHelper.deleteManifests(client,
+        asList(KubernetesResource.builder()
+                   .spec("")
+                   .resourceId(KubernetesResourceId.builder().kind("Route").build())
+                   .build()),
+        k8sDelegateTaskParams, executionLogCallback);
+    verify(spyHelper, times(1)).runK8sExecutable(any(), any(), captor.capture());
+    assertThat(captor.getValue().command()).isEqualTo("oc --kubeconfig=config-path delete --filename=manifests.yaml");
   }
 
   @Test
