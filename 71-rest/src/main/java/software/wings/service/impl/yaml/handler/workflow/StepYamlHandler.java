@@ -8,6 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.template.TemplateHelper.convertToEntityVariables;
+import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABLE;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -43,8 +44,12 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.template.TemplateService;
+import software.wings.sm.StateType;
+import software.wings.sm.states.ApprovalState.ApprovalStateKeys;
+import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.yaml.workflow.StepYaml;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -186,6 +191,18 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         List<String> templateProperties = templateService.fetchTemplateProperties(template);
         if (templateProperties != null && outputProperties != null) {
           outputProperties.keySet().removeAll(templateProperties);
+        }
+      }
+    }
+
+    if (StateType.APPROVAL.name().equals(step.getType()) && isNotEmpty(outputProperties)) {
+      if (ApprovalStateType.SERVICENOW.name().equals(properties.get(APPROVAL_STATE_TYPE_VARIABLE))) {
+        Map<String, Object> snowParams =
+            (Map<String, Object>) ((Map<String, Object>) properties.get(ApprovalStateKeys.approvalStateParams))
+                .get("serviceNowApprovalParams");
+        if (snowParams.containsKey("approval") || snowParams.containsKey("rejection")) {
+          snowParams.keySet().removeAll(
+              Arrays.asList("approvalValue", "rejectionValue", "approvalField", "rejectionField"));
         }
       }
     }

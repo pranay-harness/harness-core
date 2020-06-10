@@ -9,6 +9,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.PipelineStage.Yaml;
 import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
+import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABLE;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -39,8 +40,11 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.ApprovalState.ApprovalStateKeys;
+import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -240,6 +244,15 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       Map<String, Object> properties = stageElement.getProperties();
 
       if (properties != null) {
+        if (ApprovalStateType.SERVICENOW.name().equals(properties.get(APPROVAL_STATE_TYPE_VARIABLE))) {
+          Map<String, Object> snowParams =
+              (Map<String, Object>) ((Map<String, Object>) properties.get(ApprovalStateKeys.approvalStateParams))
+                  .get("serviceNowApprovalParams");
+          if (snowParams.containsKey("approval") || snowParams.containsKey("rejection")) {
+            snowParams.keySet().removeAll(
+                Arrays.asList("approvalValue", "rejectionValue", "approvalField", "rejectionField"));
+          }
+        }
         properties.forEach((name, value) -> {
           if (!shouldBeIgnored(name)) {
             outputProperties.put(name,

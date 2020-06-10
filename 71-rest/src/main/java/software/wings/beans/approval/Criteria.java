@@ -36,7 +36,8 @@ public class Criteria {
         .stream()
         .map(condition
             -> StringUtils.capitalize(condition.getKey()) + " should be "
-                + (condition.getValue().size() > 1 ? "in " + condition.getValue() : condition.getValue().get(0)))
+                + (condition.getValue().size() > 1 ? "any of " + String.join("/", condition.getValue())
+                                                   : condition.getValue().get(0)))
         .collect(Collectors.joining(" " + operator.name() + ",\n"));
   }
 
