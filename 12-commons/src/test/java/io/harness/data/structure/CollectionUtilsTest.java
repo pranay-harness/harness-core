@@ -2,6 +2,7 @@ package io.harness.data.structure;
 
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.VGLIJIN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -89,5 +90,13 @@ public class CollectionUtilsTest extends CategoryTest {
     assertThat(CollectionUtils.nullIfEmptyMap(null)).isNull();
     assertThat(CollectionUtils.nullIfEmptyMap(Collections.emptyMap())).isNull();
     assertThat(CollectionUtils.nullIfEmptyMap(Collections.singletonMap("k", "v"))).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = VGLIJIN)
+  @Category(UnitTests.class)
+  public void testOverrideOperator() {
+    assertThat(CollectionUtils.overrideOperator(null, 1)).isEqualTo(1);
+    assertThat(CollectionUtils.overrideOperator("", null)).isNull();
   }
 }

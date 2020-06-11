@@ -20,6 +20,7 @@ import software.wings.delegatetasks.ConnectivityValidationTask;
 import software.wings.delegatetasks.DynaTraceDataCollectionTask;
 import software.wings.delegatetasks.EcsSteadyStateCheckTask;
 import software.wings.delegatetasks.ElkLogzDataCollectionTask;
+import software.wings.delegatetasks.GcbTask;
 import software.wings.delegatetasks.GitCommandTask;
 import software.wings.delegatetasks.GitFetchFilesTask;
 import software.wings.delegatetasks.HelmRepoConfigValidationTask;
@@ -94,6 +95,7 @@ import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.delegatetasks.validation.DockerValidation;
 import software.wings.delegatetasks.validation.DynaTraceValidation;
 import software.wings.delegatetasks.validation.ElkValidation;
+import software.wings.delegatetasks.validation.GcbValidation;
 import software.wings.delegatetasks.validation.GcrValidation;
 import software.wings.delegatetasks.validation.GcsValidation;
 import software.wings.delegatetasks.validation.GitFetchFilesValidation;
@@ -135,6 +137,7 @@ public enum TaskType {
   COMMAND(TaskGroup.COMMAND, CommandTask.class, CommandValidation.class),
   SCRIPT(TaskGroup.SCRIPT, ShellScriptTask.class, ShellScriptValidation.class),
   HTTP(TaskGroup.HTTP, HttpTask.class, HttpValidation.class),
+  GCB(TaskGroup.GCB, GcbTask.class, GcbValidation.class),
   JENKINS(TaskGroup.JENKINS, JenkinsTask.class, JenkinsValidation.class),
   JENKINS_COLLECTION(TaskGroup.JENKINS, JenkinsCollectionTask.class, JenkinsValidation.class),
   JENKINS_GET_BUILDS(TaskGroup.JENKINS, ServiceImplDelegateTask.class, JenkinsValidation.class),

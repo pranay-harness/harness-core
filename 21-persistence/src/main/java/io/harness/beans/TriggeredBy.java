@@ -12,4 +12,8 @@ import lombok.NoArgsConstructor;
 public class TriggeredBy {
   private String name;
   private String email;
+
+  public static TriggeredBy triggeredBy(String name, String email) {
+    return new TriggeredBy(name, email);
+  }
 }

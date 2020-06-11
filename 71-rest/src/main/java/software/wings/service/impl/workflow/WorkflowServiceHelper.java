@@ -291,6 +291,7 @@ public class WorkflowServiceHelper {
   public static final String RESOURCE_CONSTRAINT = "Resource Constraint";
   public static final String APPROVAL_NAME = "Approval";
   public static final String JENKINS = "Jenkins";
+  public static final String GCB = "Google Cloud Build";
   public static final String BAMBOO = "Bamboo";
   public static final String SHELL_SCRIPT = "Shell Script";
   public static final String HTTP = "HTTP";

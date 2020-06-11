@@ -143,6 +143,7 @@ import software.wings.sm.states.EnvLoopState;
 import software.wings.sm.states.EnvResumeState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
+import software.wings.sm.states.GcbState;
 import software.wings.sm.states.GcpClusterSetup;
 import software.wings.sm.states.HelmDeployState;
 import software.wings.sm.states.HelmRollbackState;
@@ -420,6 +421,11 @@ public enum StateType implements StateTypeDescriptor {
    * Jenkins state type.
    */
   JENKINS(JenkinsState.class, OTHERS, asList(), ORCHESTRATION_STENCILS, COMMON),
+
+  /**
+   * GoogleCloudBuild state type.
+   */
+  GCB(GcbState.class, OTHERS, emptyList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Bamboo state type

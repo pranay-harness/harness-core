@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotations.dev.OwnedBy;
 import lombok.Data;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
@@ -15,12 +16,12 @@ import java.util.Map;
 @JsonInclude(NON_NULL)
 @Data
 public class RepoSource {
-  private String projectId;
-  private String repoName;
-  private String dir;
-  private Boolean invertRegex;
-  private Map<String, String> substitutions;
-  private String branchName;
-  private String tagName;
-  private String commitSha;
+  @Nullable private String projectId;
+  @Nullable private String repoName;
+  @Nullable private String dir;
+  @Nullable private Boolean invertRegex;
+  @Nullable private Map<String, String> substitutions;
+  @Nullable private String branchName;
+  @Nullable private String tagName;
+  @Nullable private String commitSha;
 }
