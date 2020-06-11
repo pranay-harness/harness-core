@@ -14,7 +14,7 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +37,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
   private TaskType currentTaskType;
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
   private String loadBalancer;
-  @Builder.Default private Map<K8sValuesLocation, String> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
+  @Builder.Default private Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
   @Builder.Default private Set<String> namespaces = new HashSet<>();
   private HelmChartInfo helmChartInfo;
 
