@@ -156,7 +156,8 @@ public class EfficiencyStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
     String totalCostDescription = String.format(TOTAL_COST_DESCRIPTION, startTime, endTime);
 
     return QLContextInfo.builder()
-        .totalCost(costStats.getTotal())
+        .totalCost(costStats.getTotal().doubleValue() > 1000.0 ? Math.round(costStats.getTotal().doubleValue())
+                                                               : costStats.getTotal())
         .costTrend(costStats.getTrend())
         .totalCostDescription(totalCostDescription)
         .build();
