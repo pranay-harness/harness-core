@@ -8,7 +8,8 @@ import static org.mockito.Mockito.mock;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.commandlibrary.common.service.CommandLibraryService;
+import io.harness.commandlibrary.server.app.CommandLibraryServerConfig;
+import io.harness.commandlibrary.server.beans.ServiceSecretConfig;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Before;
@@ -30,7 +31,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
 public class CommandLibraryServerAuthenticationFilterTest extends CategoryTest {
-  @Mock CommandLibraryService commandLibraryService;
+  @Mock CommandLibraryServerConfig commandLibraryServerConfig;
   @Mock ResourceInfo resourceInfo;
 
   @InjectMocks
@@ -40,7 +41,9 @@ public class CommandLibraryServerAuthenticationFilterTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-    doReturn("secret").when(commandLibraryService).getSecretForClient(MANAGER_CLIENT_ID);
+    doReturn(ServiceSecretConfig.builder().managerToCommandLibraryServiceSecret("secret").build())
+        .when(commandLibraryServerConfig)
+        .getServiceSecretConfig();
     doReturn(ResourceInfo.class).when(resourceInfo).getResourceClass();
     doReturn(CommandLibraryResource.class.getDeclaredMethods()[0]).when(resourceInfo).getResourceMethod();
   }

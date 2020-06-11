@@ -599,3 +599,9 @@ fi
 if [[ "" != "$BUGSNAG_API_KEY" ]]; then
   yq write -i $CONFIG_FILE bugsnagApiKey "$BUGSNAG_API_KEY"
 fi
+
+
+if [[ "" != "$MANAGER_TO_COMMAND_LIBRARY_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE commandLibraryServiceConfig.managerToCommandLibraryServiceSecret "$MANAGER_TO_COMMAND_LIBRARY_SERVICE_SECRET"
+fi
+

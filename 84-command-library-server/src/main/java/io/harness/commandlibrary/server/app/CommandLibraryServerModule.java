@@ -9,8 +9,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
-import io.harness.commandlibrary.common.service.CommandLibraryService;
-import io.harness.commandlibrary.common.service.impl.CommandLibraryServiceImpl;
 import io.harness.commandlibrary.server.service.impl.CommandServiceImpl;
 import io.harness.commandlibrary.server.service.impl.CommandStoreServiceImpl;
 import io.harness.commandlibrary.server.service.impl.CommandVersionServiceImpl;
@@ -58,7 +56,6 @@ public class CommandLibraryServerModule extends AbstractModule {
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
-    bind(CommandLibraryService.class).to(CommandLibraryServiceImpl.class);
 
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);

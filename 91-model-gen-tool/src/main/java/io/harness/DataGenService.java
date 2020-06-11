@@ -186,8 +186,6 @@ public class DataGenService {
 
     featureFlagService.initializeFeatureFlags();
     createServiceSecretKey(ServiceType.LEARNING_ENGINE, "67d9b94d9856665afc21acd3aa745401");
-
-    createServiceSecretKey(ServiceType.MANAGER_TO_COMMAND_LIBRARY_SERVICE, "57d9b94d9856665afc21acd3aa745401");
   }
 
   private void createServiceSecretKey(ServiceType serviceType, String secret) {
