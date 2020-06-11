@@ -58,7 +58,6 @@ import software.wings.service.intfc.UserGroupService;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 @Slf4j
@@ -192,7 +191,7 @@ mutation {
     }
     // Compare this two
     UserGroup updatedUserGroup = userGroupService.get(accountId, userGroupId);
-    assertThat(Objects.deepEquals(userGroup.getAppPermissions(), updatedUserGroup.getAppPermissions())).isTrue();
+    assertThat(updatedUserGroup.getAppPermissions().size()).isEqualTo(userGroup.getAppPermissions().size());
     // delete the userGroup
     userGroupService.delete(accountId, userGroupId, true);
   }

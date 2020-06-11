@@ -105,6 +105,7 @@ import migrations.all.OverrideDefaultLimits;
 import migrations.all.PcfServiceDeploymentMigration;
 import migrations.all.PcfServiceSpecificationToManifestFileMigration;
 import migrations.all.PipelineWorkflowExecutionActionMigration;
+import migrations.all.PipelineWorkflowExecutionActionQlMigration;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import migrations.all.PrometheusCVMigration;
 import migrations.all.RemoveDupInstanceStats;
@@ -343,6 +344,7 @@ public class MigrationList {
         .add(Pair.of(313, PipelineWorkflowExecutionActionMigration.class))
         .add(Pair.of(314, VaultConfigRenewalIntervalMigration.class))
         .add(Pair.of(315, TrimURLsForAPMVerificationSettings.class))
+        .add(Pair.of(316, PipelineWorkflowExecutionActionQlMigration.class))
         .build();
   }
 }
