@@ -143,6 +143,7 @@ public class K8sDelete extends State implements K8sStateExecutor {
                             .commandName(K8S_DELETE_COMMAND_NAME)
                             .k8sTaskType(K8sTaskType.DELETE)
                             .resources(resources)
+                            .deleteNamespacesForRelease(deleteNamespacesForRelease)
                             .filePaths(filePaths)
                             .timeoutIntervalInMin(stateTimeoutInMinutes)
                             .k8sDelegateManifestConfig(k8sStateHelper.createDelegateManifestConfig(
