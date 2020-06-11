@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+addTags(){
+	path=$1
+	tags=$2
+	IFS=',' read -ra str_array <<< "$tags"
+	for tag in "${str_array[@]}"
+		do
+	   	 	yq write -i /opt/harness/command-library-server-config.yml "$path[+]" "$tag"
+		done
+}
+
 yq delete -i /opt/harness/command-library-server-config.yml server.adminConnectors
 yq delete -i /opt/harness/command-library-server-config.yml server.applicationConnectors[0]
 
@@ -30,6 +40,14 @@ fi
 
 if [[ "" != "$MANAGER_TO_COMMAND_LIBRARY_SERVICE_SECRET" ]]; then
   yq write -i /opt/harness/command-library-server-config.yml serviceSecret.managerToCommandLibraryServiceSecret "$MANAGER_TO_COMMAND_LIBRARY_SERVICE_SECRET"
+fi
+
+if [[ "" != "$ALLOWED_TAGS_TO_ADD" ]]; then
+  addTags "tag.allowedTags" "$ALLOWED_TAGS_TO_ADD"
+fi
+
+if [[ "" != "$IMPORTANT_TAGS_TO_ADD" ]]; then
+  addTags "tag.importantTags" "$IMPORTANT_TAGS_TO_ADD"
 fi
 
 
