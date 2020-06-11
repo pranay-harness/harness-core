@@ -72,7 +72,7 @@ public class CEMailer {
       email.setFrom(smtpConfig.getFromAddress(), HARNESS_NAME);
 
       for (String to : emailData.getTo()) {
-        email.addTo(to);
+        email.addBcc(to);
       }
 
       if (emailData.getCc() != null) {
