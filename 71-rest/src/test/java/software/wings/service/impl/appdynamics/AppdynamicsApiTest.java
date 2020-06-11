@@ -22,7 +22,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.core.services.api.DataSourceService;
+import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.cvng.models.DataSourceType;
 import io.harness.cvng.models.ThirdPartyApiResponseStatus;
@@ -74,7 +74,7 @@ import java.util.stream.Collectors;
 public class AppdynamicsApiTest extends WingsBaseTest {
   private static final SecureRandom random = new SecureRandom();
 
-  @Inject private DataSourceService dataSourceService;
+  @Inject private MetricPackService metricPackService;
   @Inject private AppdynamicsResource appdynamicsResource;
   @Inject private AppdynamicsService appdynamicsService;
   @Inject private WingsPersistence wingsPersistence;
@@ -336,8 +336,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
           }
           return metricDataSuccessCall;
         });
-    final List<MetricPack> metricPacks = new ArrayList<>(
-        dataSourceService.getMetricPacks(accountId, generateUuid(), DataSourceType.APP_DYNAMICS, false));
+    final List<MetricPack> metricPacks =
+        new ArrayList<>(metricPackService.getMetricPacks(accountId, generateUuid(), DataSourceType.APP_DYNAMICS));
     final Set<AppdynamicsValidationResponse> metricPacksData = appdynamicsService.getMetricPackData(
         accountId, generateUuid(), saveAppdynamicsConfig(), 100, 200, generateUuid(), metricPacks);
     assertThat(metricPacksData.size()).isEqualTo(metricPacks.size());

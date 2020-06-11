@@ -45,6 +45,6 @@ public interface AppdynamicsService {
   String getTierByName(
       String analysisServerConfigId, String applicationId, String tierName, ThirdPartyApiCallLog apiCallLog);
 
-  Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String projectId, String connectorId,
+  Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String projectIdentifier, String connectorId,
       long appdAppId, long appdTierId, String requestGuid, List<MetricPack> metricPacks);
 }

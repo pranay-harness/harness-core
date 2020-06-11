@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.core.services.api.DataSourceService;
+import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -52,7 +52,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
   @Inject private MLServiceUtils mlServiceUtils;
-  @Inject private DataSourceService dataSourceService;
+  @Inject private MetricPackService metricPackService;
 
   @Override
   public List<NewRelicApplication> getApplications(final String settingId) throws IOException {
@@ -255,11 +255,12 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String projectId, String connectorId,
-      long appdAppId, long appdTierId, String requestGuid, List<MetricPack> metricPacks) {
-    logger.info("for {} connector {} and {} found these packs", projectId, connectorId, metricPacks, metricPacks);
-    Preconditions.checkState(
-        isNotEmpty(metricPacks), "No metric packs found for project {} with the name {}", projectId, metricPacks);
+  public Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String projectIdentifier,
+      String connectorId, long appdAppId, long appdTierId, String requestGuid, List<MetricPack> metricPacks) {
+    logger.info(
+        "for {} connector {} and {} found these packs", projectIdentifier, connectorId, metricPacks, metricPacks);
+    Preconditions.checkState(isNotEmpty(metricPacks), "No metric packs found for project {} with the name {}",
+        projectIdentifier, metricPacks);
     final SettingAttribute settingAttribute = settingsService.get(connectorId);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())

@@ -96,11 +96,12 @@ public class AppdynamicsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Set<AppdynamicsValidationResponse>> getMetricData(
-      @QueryParam("accountId") @NotNull String accountId, @QueryParam("projectId") @NotNull String projectId,
+      @QueryParam("accountId") @NotNull String accountId,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("connectorId") @NotNull String connectorId, @QueryParam("appdAppId") @NotNull long appdAppId,
       @QueryParam("appdTierId") @NotNull long appdTierId, @QueryParam("requestGuid") @NotNull String requestGuid,
       @NotNull @Valid @Body List<MetricPack> metricPacks) {
     return new RestResponse<>(appdynamicsService.getMetricPackData(
-        accountId, projectId, connectorId, appdAppId, appdTierId, requestGuid, metricPacks));
+        accountId, projectIdentifier, connectorId, appdAppId, appdTierId, requestGuid, metricPacks));
   }
 }

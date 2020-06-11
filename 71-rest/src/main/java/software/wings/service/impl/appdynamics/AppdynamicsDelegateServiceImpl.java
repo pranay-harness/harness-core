@@ -357,7 +357,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
     Set<AppdynamicsValidationResponse> appdynamicsValidationResponses = new HashSet<>();
     metricPacks.forEach(metricPack -> {
-      final String metricPackName = metricPack.getName();
+      final String metricPackName = metricPack.getIdentifier();
       final AppdynamicsValidationResponseBuilder appdynamicsValidationResponse =
           AppdynamicsValidationResponse.builder().metricPackName(metricPackName);
       List<Callable<AppdynamicsMetricValueValidationResponse>> callables = new ArrayList<>();
