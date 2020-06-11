@@ -108,7 +108,34 @@ public class ScimUserServiceTest extends WingsBaseTest {
     Response response = scimUserService.createUser(scimUser, account.getUuid());
 
     assertThat(response).isNotNull();
-    assertThat(response.getStatus()).isEqualTo(409);
+    assertThat(response.getStatus()).isEqualTo(201);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC0_testCreateUserWhichIsAlreadyPresent_2() {
+    ScimUser scimUser = new ScimUser();
+    Account account = new Account();
+    account.setUuid(generateUuid());
+    account.setAccountName("account_name");
+
+    scimUser.setUserName("username@harness.io");
+    scimUser.setDisplayName("display_name");
+
+    User user = new User();
+    user.setEmail("username@harness.io");
+    user.setName("display_name");
+
+    UserInvite userInvite = new UserInvite();
+    userInvite.setEmail("username@harness.io");
+
+    when(userService.getUserByEmail(anyString(), anyString())).thenReturn(user);
+    when(userService.inviteUserOld(any(UserInvite.class))).thenReturn(userInvite);
+    Response response = scimUserService.createUser(scimUser, account.getUuid());
+
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(201);
   }
 
   @Test

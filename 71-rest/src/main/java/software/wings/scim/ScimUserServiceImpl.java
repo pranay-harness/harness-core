@@ -57,12 +57,12 @@ public class ScimUserServiceImpl implements ScimUserService {
       userQuery.setId(user.getUuid());
       userQuery.setActive(true);
       if (shouldUpdateUser(userQuery, user)) {
+        updateUser(user.getUuid(), accountId, userQuery);
         logger.info("SCIM: Creating user call for accountId {} with updation {}", accountId, userQuery);
-        return Response.status(Status.CREATED).entity(getUser(user.getUuid(), accountId)).build();
       } else {
         logger.info("SCIM: Creating user call for accountId {} with conflict {}", accountId, userQuery);
-        return Response.status(Status.CONFLICT).entity(getUser(user.getUuid(), accountId)).build();
       }
+      return Response.status(Status.CREATED).entity(getUser(user.getUuid(), accountId)).build();
     }
 
     String userName = getName(userQuery);
@@ -177,10 +177,10 @@ public class ScimUserServiceImpl implements ScimUserService {
     List<ScimUser> scimUsers = new ArrayList<>();
     try {
       scimUsers = searchUserByUserName(accountId, searchQuery, count, startIndex);
-      logger.info("SCIM: Scim users found from query {}", scimUsers);
+      logger.info("SCIM: Scim users in account {} found from query {}", accountId, scimUsers);
       scimUsers.forEach(userResponse::resource);
     } catch (WingsException ex) {
-      logger.info("SCIM: Search user by name failed. searchQuery: {}, account: {}", searchQuery, accountId, ex);
+      logger.info("SCIM: Search user by name failed. account: {} ,searchQuery: {}", accountId, searchQuery, ex);
     }
 
     userResponse.startIndex(startIndex);
@@ -205,9 +205,9 @@ public class ScimUserServiceImpl implements ScimUserService {
 
   @Override
   public void deleteUser(String userId, String accountId) {
-    logger.info("SCIM: deleting the user {} for accountId {}", userId, accountId);
+    logger.info("SCIM: deleting for accountId {} the user {}", accountId, userId);
     userService.delete(accountId, userId);
-    logger.info("SCIM: deleting the user completed {} for accountId {}", userId, accountId);
+    logger.info("SCIM: deleting the user completed for accountId {} the user {}", accountId, userId);
   }
 
   @Override
