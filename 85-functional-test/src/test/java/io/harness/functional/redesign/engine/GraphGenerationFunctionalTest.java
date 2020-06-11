@@ -5,10 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
+import io.harness.data.Outcome;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.ExecutionMode;
@@ -35,6 +41,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.Application;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.core.GenericType;
@@ -199,6 +206,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
                         .objectMapperConfig(new ObjectMapperConfig().jackson2ObjectMapperFactory((cls, charset) -> {
                           ObjectMapper mapper = new ObjectMapper();
                           mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                          mapper.addMixIn(Outcome.class, OutcomeTestMixin.class);
                           return mapper;
                         }))
                         .sslConfig(new SSLConfig().relaxedHTTPSValidation()))
@@ -210,5 +218,27 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
             .as(returnType.getType(), ObjectMapperType.JACKSON_2);
 
     return response.getResource();
+  }
+
+  @JsonDeserialize(using = OutcomeTestDeserializer.class)
+  private abstract static class OutcomeTestMixin {}
+
+  private static class OutcomeTestDeserializer extends StdDeserializer<Outcome> {
+    OutcomeTestDeserializer() {
+      super(Outcome.class);
+    }
+
+    @Override
+    public Outcome deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+      final String httpExecutionDataParam = "httpMethod";
+      JsonNode node = p.getCodec().readTree(p);
+      if (node.hasNonNull(httpExecutionDataParam)) {
+        return HttpStateExecutionData.builder()
+            .status(ExecutionStatus.valueOf(node.get("status").asText()))
+            .httpMethod(node.get("httpMethod").asText())
+            .build();
+      }
+      return null;
+    }
   }
 }
