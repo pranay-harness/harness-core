@@ -32,6 +32,7 @@ public class PipelineStageExecution {
   @Builder.Default private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
   private StateExecutionData stateExecutionData;
   private String message;
+  private boolean looped;
 
   public List<WorkflowExecution> getWorkflowExecutions() {
     return Objects.isNull(workflowExecutions) ? new ArrayList<>() : workflowExecutions;

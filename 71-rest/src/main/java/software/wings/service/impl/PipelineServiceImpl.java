@@ -93,6 +93,7 @@ import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
+import software.wings.service.impl.pipeline.PipelineServiceHelper;
 import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AppService;
@@ -594,10 +595,17 @@ public class PipelineServiceImpl implements PipelineService {
             WorkflowServiceHelper.overrideWorkflowVariables(workflow.getOrchestrationWorkflow().getUserVariables(),
                 pipelineStageElement.getWorkflowVariables(), pipelineVariables);
         pipelineStageElement.setWorkflowVariables(resolvedWorkflowStepVariables);
+
+        if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
+          PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefinitionIds);
+        }
+
         if (BUILD != workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()) {
           resolveServices(services, serviceIds, resolvedWorkflowStepVariables, workflow);
           resolveInfraMappings(infraMappingIds, resolvedWorkflowStepVariables, workflow);
-          resolveInfraDefinitions(infraDefinitionIds, resolvedWorkflowStepVariables, workflow);
+          if (!pipelineStage.isLooped()) {
+            resolveInfraDefinitions(infraDefinitionIds, resolvedWorkflowStepVariables, workflow);
+          }
           if (pipelineStageElement.checkDisableAssertion()) {
             try {
               resolveEnvIds(envIds, resolvedWorkflowStepVariables, workflow);

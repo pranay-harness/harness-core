@@ -16,6 +16,7 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+import io.harness.serializer.KryoUtils;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -27,6 +28,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.simpleframework.xml.Transient;
 import software.wings.api.PhaseElement;
+import software.wings.beans.LoopEnvStateParams;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
 import java.time.OffsetDateTime;
@@ -78,6 +80,8 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
   private String delegateTaskId;
   private boolean selectionLogsTrackingForTaskEnabled;
   private String rollbackPhaseName;
+  private boolean parentLoopedState;
+  private LoopEnvStateParams loopedStateParams;
 
   private LinkedList<ContextElement> contextElements = new LinkedList<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
@@ -154,6 +158,20 @@ public class StateExecutionInstance implements PersistentEntity, UuidAware, Crea
       return null;
     }
     return phaseElement;
+  }
+
+  public StateExecutionInstance cloneInternal() {
+    StateExecutionInstance clone = KryoUtils.clone(this);
+    clone.setPrevInstanceId(null);
+    clone.setDelegateTaskId(null);
+    clone.setContextTransition(true);
+    clone.setStatus(ExecutionStatus.NEW);
+    clone.setStartTs(null);
+    clone.setEndTs(null);
+    clone.setCreatedAt(0);
+    clone.setLastUpdatedAt(0);
+    clone.setHasInspection(false);
+    return clone;
   }
 
   /**

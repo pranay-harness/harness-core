@@ -139,6 +139,7 @@ import software.wings.sm.states.EcsSteadyStateCheck;
 import software.wings.sm.states.ElasticLoadBalancerState;
 import software.wings.sm.states.ElkAnalysisState;
 import software.wings.sm.states.EmailState;
+import software.wings.sm.states.EnvLoopState;
 import software.wings.sm.states.EnvResumeState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
@@ -385,6 +386,8 @@ public enum StateType implements StateTypeDescriptor {
    * Env state state type.
    */
   ENV_STATE(EnvState.class, ENVIRONMENTS, asList(), PIPELINE_STENCILS),
+
+  ENV_LOOP_STATE(EnvLoopState.class, ENVIRONMENTS, asList(), NONE),
 
   /**
    * Env state state type.

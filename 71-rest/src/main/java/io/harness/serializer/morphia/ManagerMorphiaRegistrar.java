@@ -650,6 +650,7 @@ import software.wings.sm.states.EcsSteadyStateCheck;
 import software.wings.sm.states.ElasticLoadBalancerState;
 import software.wings.sm.states.ElkAnalysisState;
 import software.wings.sm.states.EmailState;
+import software.wings.sm.states.EnvLoopState;
 import software.wings.sm.states.EnvResumeState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
@@ -1482,6 +1483,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.ElkAnalysisState", ElkAnalysisState.class);
     w.put("sm.states.EmailState", EmailState.class);
     w.put("sm.states.EnvResumeState", EnvResumeState.class);
+    w.put("sm.states.EnvLoopState", EnvLoopState.class);
     w.put("sm.states.EnvState", EnvState.class);
     w.put("sm.states.EnvState$EnvExecutionResponseData", EnvExecutionResponseData.class);
     w.put("sm.states.ForkState", ForkState.class);

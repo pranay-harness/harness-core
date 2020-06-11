@@ -69,6 +69,7 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StateType.ENV_LOOP_STATE;
 import static software.wings.sm.StateType.ENV_RESUME_STATE;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.PHASE;
@@ -218,6 +219,7 @@ import software.wings.service.impl.WorkflowTree.WorkflowTreeBuilder;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.deployment.checks.DeploymentCtx;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeChecker;
+import software.wings.service.impl.pipeline.PipelineServiceHelper;
 import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
@@ -278,6 +280,7 @@ import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.rollback.RollbackStateMachineGenerator;
 import software.wings.sm.states.ElementStateExecutionData;
+import software.wings.sm.states.ForkState.ForkStateExecutionData;
 import software.wings.sm.states.HoldingScope;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstDeployStateExecutionData;
@@ -686,6 +689,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                         .stateName(pipelineStageElement.getName())
                                                         .status(stateExecutionInstance.getStatus())
                                                         .startTs(stateExecutionInstance.getStartTs())
+                                                        .looped(true)
                                                         .endTs(stateExecutionInstance.getEndTs())
                                                         .build();
             StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
@@ -704,6 +708,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             }
             stageExecutionDataList.add(stageExecution);
 
+          } else if (ENV_LOOP_STATE.name().equals(stateExecutionInstance.getStateType())
+              && featureFlagService.isEnabled(
+                     FeatureName.MULTISELECT_INFRA_PIPELINE, workflowExecution.getAccountId())) {
+            handleEnvLoopStateExecutionData(workflowExecution.getAppId(), stateExecutionInstanceMap,
+                stageExecutionDataList, stateExecutionInstance);
           } else {
             throw new InvalidRequestException("Unknown stateType " + stateExecutionInstance.getStateType());
           }
@@ -742,6 +751,44 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     } catch (ConcurrentModificationException cex) {
       // do nothing as it gets refreshed in next fetch
       logger.warn("Pipeline execution update failed ", cex); // TODO: add retry
+    }
+  }
+
+  private void handleEnvLoopStateExecutionData(String appId,
+      ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap,
+      List<PipelineStageExecution> stageExecutionDataList, StateExecutionInstance stateExecutionInstance) {
+    StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
+
+    if (stateExecutionData instanceof ForkStateExecutionData) {
+      ForkStateExecutionData envStateExecutionData = (ForkStateExecutionData) stateExecutionData;
+      if (isNotEmpty(envStateExecutionData.getForkStateNames())) {
+        for (String element : envStateExecutionData.getForkStateNames()) {
+          StateExecutionInstance executionInstanceLooped = stateExecutionInstanceMap.get(element);
+          PipelineStageExecution stageExecution = PipelineStageExecution.builder()
+                                                      .stateUuid(executionInstanceLooped.getUuid())
+                                                      .stateType(executionInstanceLooped.getStateType())
+                                                      .stateName(executionInstanceLooped.getStateName())
+                                                      .status(executionInstanceLooped.getStatus())
+                                                      .startTs(executionInstanceLooped.getStartTs())
+                                                      .endTs(executionInstanceLooped.getEndTs())
+                                                      .build();
+
+          StateExecutionData stateExecutionDataLooped = executionInstanceLooped.fetchStateExecutionData();
+          if (stateExecutionDataLooped instanceof EnvStateExecutionData) {
+            EnvStateExecutionData envStateExecutionDataLooped = (EnvStateExecutionData) stateExecutionDataLooped;
+            if (envStateExecutionDataLooped.getWorkflowExecutionId() != null) {
+              WorkflowExecution workflowExecution2 =
+                  getExecutionDetailsWithoutGraph(appId, envStateExecutionDataLooped.getWorkflowExecutionId());
+              workflowExecution2.setStateMachine(null);
+
+              stageExecution.setWorkflowExecutions(asList(workflowExecution2));
+              stageExecution.setStatus(workflowExecution2.getStatus());
+            }
+            stageExecution.setMessage(envStateExecutionData.getErrorMsg());
+          }
+          stageExecutionDataList.add(stageExecution);
+        }
+      }
     }
   }
 
@@ -1059,6 +1106,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         // TODO: if (workflowExecution.getStatus() == RUNNING)
         // Analyze if pipeline is in initial stage
       }
+    }
+
+    // checking pipeline for loops and replacing looped states with multiple parallel states.
+    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, accountId)) {
+      PipelineServiceHelper.updatePipelineWithLoopedState(pipeline);
     }
 
     StateMachine stateMachine = new StateMachine(pipeline, workflowService.stencilMap(pipeline.getAppId()));
