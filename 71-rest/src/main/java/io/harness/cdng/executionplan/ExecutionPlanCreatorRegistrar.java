@@ -7,6 +7,7 @@ import io.harness.cdng.pipeline.plancreators.ArtifactStepPlanCreator;
 import io.harness.cdng.pipeline.plancreators.DeploymentStagePlanCreator;
 import io.harness.cdng.pipeline.plancreators.ExecutionPhasesPlanCreator;
 import io.harness.cdng.pipeline.plancreators.HttpStepPlanCreator;
+import io.harness.cdng.pipeline.plancreators.ManifestStepPlanCreator;
 import io.harness.cdng.pipeline.plancreators.PhasePlanCreator;
 import io.harness.cdng.pipeline.plancreators.PipelinePlanCreator;
 import io.harness.cdng.pipeline.plancreators.ServiceStepPlanCreator;
@@ -29,6 +30,7 @@ public class ExecutionPlanCreatorRegistrar {
   @Inject private HttpStepPlanCreator httpStepPlanCreator;
   @Inject private ParallelStepPlanCreator parallelStepPlanCreator;
   @Inject private ArtifactStepPlanCreator artifactStepPlanCreator;
+  @Inject private ManifestStepPlanCreator manifestStepPlanCreator;
   @Inject private ServiceStepPlanCreator serviceStepPlanCreator;
   @Inject private GenericStepPlanCreator genericStepPlanCreator;
 
@@ -42,6 +44,7 @@ public class ExecutionPlanCreatorRegistrar {
     register(httpStepPlanCreator);
     register(parallelStepPlanCreator);
     register(artifactStepPlanCreator);
+    register(manifestStepPlanCreator);
     register(serviceStepPlanCreator);
     register(genericStepPlanCreator);
     logger.info("Done: register execution plan creators");

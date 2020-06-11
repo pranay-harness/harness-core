@@ -21,13 +21,25 @@ import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.infra.beans.K8sDirectInfraDefinition;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
+import io.harness.cdng.manifest.state.ManifestListConfig;
+import io.harness.cdng.manifest.state.ManifestStep;
+import io.harness.cdng.manifest.state.ManifestStepParameters;
+import io.harness.cdng.manifest.yaml.GitStore;
+import io.harness.cdng.manifest.yaml.K8Manifest;
+import io.harness.cdng.manifest.yaml.ManifestConfig;
+import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.steps.PipelineSetupStep;
+import io.harness.cdng.service.OverrideConfig;
 import io.harness.cdng.service.Service;
+import io.harness.cdng.service.ServiceSpec;
+import io.harness.cdng.service.steps.ServiceStep;
+import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.delegate.task.shell.ScriptType;
+import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.interrupts.RepairActionCode;
@@ -59,6 +71,10 @@ import io.harness.state.core.section.chain.SectionChainStepParameters;
 import io.harness.state.io.StepParameters;
 import lombok.experimental.UtilityClass;
 import software.wings.sm.states.ShellScriptState;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @OwnedBy(CDC)
 @Redesign
@@ -1171,6 +1187,163 @@ public class CustomExecutionUtils {
                                              .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                              .build())
                   .build())
+        .build();
+  }
+
+  private static ManifestStepParameters getManifestStepParameters() {
+    ManifestConfigWrapper manifestConfig1 = ManifestConfig.builder()
+                                                .identifier("specsManifest")
+                                                .manifestAttributes(K8Manifest.builder()
+                                                                        .identifier("specsManifest")
+
+                                                                        .storeConfig(GitStore.builder()
+                                                                                         .connectorId("connector")
+                                                                                         .fetchValue("master")
+                                                                                         .fetchType("branch")
+                                                                                         .paths(Arrays.asList("path1"))
+                                                                                         .build())
+                                                                        .build())
+                                                .build();
+
+    ManifestConfigWrapper manifestConfig2 =
+        ManifestConfig.builder()
+            .identifier("valuesManifest")
+            .manifestAttributes(K8Manifest.builder()
+                                    .identifier("valuesManifest")
+                                    .storeConfig(GitStore.builder()
+                                                     .connectorId("connector")
+                                                     .fetchValue("master")
+                                                     .fetchType("branch")
+                                                     .paths(Arrays.asList("override/path1"))
+                                                     .build())
+                                    .build())
+            .build();
+
+    ManifestListConfig overrideConfigList = getOverrideManifestListConfig();
+
+    return ManifestStepParameters.builder()
+        .manifestServiceSpec(
+            ManifestListConfig.builder().manifests(Arrays.asList(manifestConfig1, manifestConfig2)).build())
+        .manifestStageOverride(overrideConfigList)
+        .build();
+  }
+
+  public Plan provideServiceStateTestPlan() {
+    String pipelineSetupNodeId = generateUuid();
+    final String serviceNodeId = generateUuid();
+    String dummyNodeId = generateUuid();
+
+    ManifestStepParameters manifestStepParameters = getManifestStepParameters();
+
+    Service service =
+        Service.builder()
+            .identifier("service")
+            .displayName("k8s")
+            .serviceSpec(ServiceSpec.builder()
+                             .deploymentType("kubernetes")
+                             .manifests(manifestStepParameters.getManifestServiceSpec())
+                             .build())
+            .overrides(
+                OverrideConfig.builder().manifestListConfig(manifestStepParameters.getManifestStageOverride()).build())
+            .build();
+
+    PlanNode manifestPlanNode =
+        PlanNode.builder()
+            .uuid(generateUuid())
+            .name("MANIFEST_STEP")
+            .identifier("MANIFEST_STEP1")
+            .stepType(ManifestStep.STEP_TYPE)
+            .stepParameters(manifestStepParameters)
+            .facilitatorObtainment(FacilitatorObtainment.builder()
+                                       .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                       .build())
+            .build();
+
+    CDPipeline cdPipeline = getCdPipeline(service);
+
+    List<String> childNodeIds = new ArrayList<>();
+    childNodeIds.add(manifestPlanNode.getUuid());
+
+    PlanNode serviceNode =
+        PlanNode.builder()
+            .uuid(serviceNodeId)
+            .name(service.getDisplayName())
+            .identifier(service.getIdentifier())
+            .stepType(ServiceStep.STEP_TYPE)
+            .stepParameters(ServiceStepParameters.builder().parallelNodeIds(childNodeIds).service(service).build())
+            .group(StepGroup.STAGE.name())
+            .facilitatorObtainment(FacilitatorObtainment.builder()
+                                       .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
+                                       .build())
+            .adviserObtainment(AdviserObtainment.builder()
+                                   .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                   .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
+                                   .build())
+            .build();
+
+    return Plan.builder()
+        .startingNodeId(pipelineSetupNodeId)
+        .uuid(generateUuid())
+        .node(PlanNode.builder()
+                  .uuid(pipelineSetupNodeId)
+                  .name("PIPELINE_SETUP")
+                  .identifier("PIPELINE_SETUP")
+                  .stepType(PipelineSetupStep.STEP_TYPE)
+                  .stepParameters(CDPipelineSetupParameters.builder().cdPipeline(cdPipeline).build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(serviceNodeId).build())
+                          .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .node(manifestPlanNode)
+        .node(serviceNode)
+        .node(PlanNode.builder()
+                  .uuid(dummyNodeId)
+                  .name("Dummy Node 1")
+                  .identifier("dummy")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+
+                  .build())
+        .build();
+  }
+
+  private static ManifestListConfig getOverrideManifestListConfig() {
+    ManifestConfigWrapper manifestConfigOverride =
+        ManifestConfig.builder()
+            .identifier("overrideManifest")
+            .manifestAttributes(K8Manifest.builder()
+                                    .identifier("overrideManifest")
+
+                                    .storeConfig(GitStore.builder()
+                                                     .connectorId("connector")
+                                                     .fetchValue("master")
+                                                     .fetchType("branch")
+                                                     .paths(Arrays.asList("overridePath"))
+                                                     .build())
+                                    .build())
+            .build();
+    return ManifestListConfig.builder().manifests(Arrays.asList(manifestConfigOverride)).build();
+  }
+
+  private static CDPipeline getCdPipeline(Service service) {
+    K8sDirectInfraDefinition k8sDirectInfraDefinition =
+        K8sDirectInfraDefinition.builder()
+            .name("k8s direct")
+            .spec(K8sDirectInfraDefinition.Spec.builder().namespace("namespace").build())
+            .build();
+
+    PipelineInfrastructure pipelineInfrastructure =
+        PipelineInfrastructure.builder().infraDefinition(k8sDirectInfraDefinition).build();
+
+    return CDPipeline.builder()
+        .stage(DeploymentStage.builder().service(service).infrastructure(pipelineInfrastructure).build())
         .build();
   }
 }

@@ -1,10 +1,17 @@
 package io.harness.cdng.service.steps;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.EMPTY_LIST;
+import static java.util.stream.Collectors.toList;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
+import io.harness.cdng.manifest.yaml.ManifestAttributes;
+import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.service.Service;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.Artifacts;
@@ -34,7 +41,6 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class ServiceStep implements Step, ChildrenExecutable {
@@ -88,7 +94,8 @@ public class ServiceStep implements Step, ChildrenExecutable {
     return responseBuilder.build();
   }
 
-  private ServiceOutcome createServiceOutcome(Service service, List<StepResponseNotifyData> responseNotifyDataList) {
+  @VisibleForTesting
+  ServiceOutcome createServiceOutcome(Service service, List<StepResponseNotifyData> responseNotifyDataList) {
     ServiceOutcomeBuilder outcomeBuilder = ServiceOutcome.builder()
                                                .displayName(service.getDisplayName())
                                                .identifier(service.getIdentifier())
@@ -98,23 +105,46 @@ public class ServiceStep implements Step, ChildrenExecutable {
     List<String> outcomeInstanceIds = responseNotifyDataList.stream()
                                           .flatMap(notifyData -> notifyData.getStepOutcomesRefs().stream())
                                           .map(StepOutcomeRef::getInstanceId)
-                                          .collect(Collectors.toList());
+                                          .collect(toList());
     List<Outcome> outcomes = outcomeService.fetchOutcomes(outcomeInstanceIds);
 
     ArtifactsBuilder artifactsBuilder = Artifacts.builder();
-    // Separate primary and sidecars artifacts.
-    for (Outcome outcome : outcomes) {
-      // Outcome from artifact child step.
-      if (outcome instanceof ArtifactOutcome) {
-        ArtifactOutcome artifactOutcome = (ArtifactOutcome) outcome;
-        if (artifactOutcome.getArtifactType().equals(ArtifactUtils.PRIMARY_ARTIFACT)) {
-          artifactsBuilder.primary(artifactOutcome);
-        } else {
-          artifactsBuilder.sidecar(artifactOutcome.getIdentifier(), artifactOutcome);
-        }
-      }
+
+    if (isNotEmpty(outcomes)) {
+      // Handle ArtifactOutcomes
+      List<Outcome> artifactOutcomes =
+          outcomes.stream().filter(outcome -> outcome instanceof ArtifactOutcome).collect(toList());
+      artifactOutcomes.forEach(artifactOutcome
+          -> handleArtifactOutcome(artifactsBuilder, (ArtifactOutcome) artifactOutcome, outcomeBuilder));
+
+      // Handle ManifestOutcome
+      List<Outcome> manifestOutcomes =
+          outcomes.stream().filter(outcome -> outcome instanceof ManifestOutcome).collect(toList());
+      manifestOutcomes.forEach(
+          manifestOutcome -> handleManifestOutcome((ManifestOutcome) manifestOutcome, outcomeBuilder));
     }
 
-    return outcomeBuilder.artifacts(artifactsBuilder.build()).build();
+    return outcomeBuilder.build();
+  }
+
+  private void handleManifestOutcome(ManifestOutcome outcome, ServiceOutcomeBuilder outcomeBuilder) {
+    List<ManifestAttributes> manifestAttributesForSErviceSpec =
+        isNotEmpty(outcome.getManifestAttributesForServiceSpec()) ? outcome.getManifestAttributesForServiceSpec()
+                                                                  : EMPTY_LIST;
+
+    outcomeBuilder.manifests(manifestAttributesForSErviceSpec);
+    outcomeBuilder.overrides(
+        ServiceOutcome.Override.builder().manifests(outcome.getManifestAttributesForOverride()).build());
+  }
+
+  private void handleArtifactOutcome(
+      ArtifactsBuilder artifactsBuilder, ArtifactOutcome artifactOutcome, ServiceOutcomeBuilder outcomeBuilder) {
+    if (artifactOutcome.getArtifactType().equals(ArtifactUtils.PRIMARY_ARTIFACT)) {
+      artifactsBuilder.primary(artifactOutcome);
+    } else {
+      artifactsBuilder.sidecar(artifactOutcome.getIdentifier(), artifactOutcome);
+    }
+
+    outcomeBuilder.artifacts(artifactsBuilder.build());
   }
 }

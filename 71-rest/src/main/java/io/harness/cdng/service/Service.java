@@ -12,4 +12,5 @@ public class Service implements Outcome {
   @NotNull private String identifier;
   @NotNull private String displayName;
   private ServiceSpec serviceSpec;
+  private OverrideConfig overrides;
 }

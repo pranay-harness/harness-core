@@ -1,6 +1,7 @@
 package io.harness.cdng.pipeline.plancreators;
 
 import static io.harness.cdng.executionplan.CDPlanCreatorType.ARTIFACT_PLAN_CREATOR;
+import static io.harness.cdng.executionplan.CDPlanCreatorType.MANIFEST_PLAN_CREATOR;
 import static io.harness.cdng.executionplan.CDPlanCreatorType.SERVICE_PLAN_CREATOR;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
@@ -39,12 +40,21 @@ public class ServiceStepPlanCreator implements SupportDefinedExecutorPlanCreator
   public CreateExecutionPlanResponse createPlan(Service service, CreateExecutionPlanContext context) {
     final List<CreateExecutionPlanResponse> planForArtifacts =
         getPlanForArtifacts(context, service.getServiceSpec().getArtifacts());
+
+    final CreateExecutionPlanResponse planForManifests = getPlanForManifests(context, service);
+
+    // Add artifactNodes and ManifestNode as children
     List<String> childNodeIds =
         planForArtifacts.stream().map(CreateExecutionPlanResponse::getStartingNodeId).collect(Collectors.toList());
+    childNodeIds.add(planForManifests.getStartingNodeId());
+
+    List<PlanNode> planNodes = getPlanNodes(planForArtifacts);
+    planNodes.addAll(planForManifests.getPlanNodes());
+
     final PlanNode serviceExecutionNode = prepareServiceNode(service, childNodeIds);
     return CreateExecutionPlanResponse.builder()
         .planNode(serviceExecutionNode)
-        .planNodes(getPlanNodes(planForArtifacts))
+        .planNodes(planNodes)
         .startingNodeId(serviceExecutionNode.getUuid())
         .build();
   }
@@ -93,6 +103,13 @@ public class ServiceStepPlanCreator implements SupportDefinedExecutorPlanCreator
       CreateExecutionPlanContext context, ArtifactConfigWrapper artifactConfigWrapper) {
     return executionPlanCreatorHelper.getExecutionPlanCreator(ARTIFACT_PLAN_CREATOR.getName(), artifactConfigWrapper,
         context, "No execution plan creator found for artifact execution");
+  }
+
+  private CreateExecutionPlanResponse getPlanForManifests(CreateExecutionPlanContext context, Service service) {
+    final ExecutionPlanCreator<Service> executionPlanCreator = executionPlanCreatorHelper.getExecutionPlanCreator(
+        MANIFEST_PLAN_CREATOR.getName(), service, context, "No execution plan creator found for Manifests execution");
+
+    return executionPlanCreator.createPlan(service, context);
   }
 
   @Override
