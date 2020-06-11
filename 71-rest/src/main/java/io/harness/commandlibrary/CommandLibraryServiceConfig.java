@@ -1,11 +1,14 @@
 package io.harness.commandlibrary;
 
 import lombok.AccessLevel;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 
-@Data
+@Value
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CommandLibraryServiceConfig {
   String baseUrl;
+  String managerToCommandLibraryServiceSecret;
 }

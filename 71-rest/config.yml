@@ -459,3 +459,4 @@ cdnConfig:
 
 commandLibraryServiceConfig:
   baseUrl: https://localhost:5050/command-library-service/
+  managerToCommandLibraryServiceSecret: a611aa13eb1d5e77bc3295517ebe65gh1

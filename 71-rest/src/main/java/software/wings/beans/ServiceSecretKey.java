@@ -23,7 +23,7 @@ public class ServiceSecretKey extends Base {
   private String serviceSecret;
   @Indexed(options = @IndexOptions(unique = true)) private ServiceType serviceType;
 
-  public enum ServiceType { LEARNING_ENGINE, MANAGER_TO_COMMAND_LIBRARY_SERVICE }
+  public enum ServiceType { LEARNING_ENGINE }
 
   // add version in the end
   public enum ServiceApiVersion { V1 }

@@ -20,6 +20,7 @@ import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.commandlibrary.server.beans.ServiceSecretConfig;
 import io.harness.commandlibrary.server.beans.TagConfig;
 import io.harness.commandlibrary.server.utils.CommandLibraryServerConstants;
 import io.harness.mongo.MongoConfig;
@@ -43,6 +44,8 @@ public class CommandLibraryServerConfig extends Configuration implements AssetsB
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
   @JsonProperty("tag") private TagConfig tagConfig = TagConfig.builder().build();
+  @JsonProperty("serviceSecret")
+  private ServiceSecretConfig serviceSecretConfig = ServiceSecretConfig.builder().build();
 
   @Override
   public void setServerFactory(ServerFactory factory) {

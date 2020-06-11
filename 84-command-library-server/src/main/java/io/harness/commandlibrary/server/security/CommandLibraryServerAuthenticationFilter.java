@@ -6,24 +6,22 @@ import static io.harness.exception.WingsException.USER;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.SPACE;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.commandlibrary.common.service.CommandLibraryService;
+import io.harness.commandlibrary.server.app.CommandLibraryServerConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.ServiceTokenAuthenticator;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import software.wings.security.annotations.PublicApi;
 
 import java.lang.reflect.Method;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import javax.annotation.Priority;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -38,9 +36,9 @@ import javax.ws.rs.core.HttpHeaders;
 public class CommandLibraryServerAuthenticationFilter implements ContainerRequestFilter {
   @Context ResourceInfo resourceInfo;
 
-  @Inject private CommandLibraryService commandLibraryService;
-  private final Supplier<String> secretKeyForManageSupplier =
-      Suppliers.memoizeWithExpiration(this ::getServiceSecretForManager, 1, TimeUnit.MINUTES);
+  @Inject private CommandLibraryServerConfig commandLibraryServerConfig;
+
+  private final Supplier<String> secretKeyForManageSupplier = this ::getServiceSecretForManager;
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
@@ -95,10 +93,9 @@ public class CommandLibraryServerAuthenticationFilter implements ContainerReques
 
   @NotNull
   private String getServiceSecretForManager() {
-    final String managerServiceSecret = commandLibraryService.getSecretForClient(MANAGER_CLIENT_ID);
-    if (StringUtils.isBlank(managerServiceSecret)) {
-      throw new InvalidRequestException("no secret key for client : " + MANAGER_CLIENT_ID);
+    if (isNotBlank(commandLibraryServerConfig.getServiceSecretConfig().getManagerToCommandLibraryServiceSecret())) {
+      return commandLibraryServerConfig.getServiceSecretConfig().getManagerToCommandLibraryServiceSecret().trim();
     }
-    return managerServiceSecret;
+    throw new InvalidRequestException("no secret key for client : " + MANAGER_CLIENT_ID);
   }
 }

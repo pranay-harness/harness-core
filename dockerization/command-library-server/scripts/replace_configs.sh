@@ -28,4 +28,8 @@ else
   yq delete -i /opt/harness/command-library-server-config.yml logging.appenders[1]
 fi
 
+if [[ "" != "$MANAGER_TO_COMMAND_LIBRARY_SERVICE_SECRET" ]]; then
+  yq write -i /opt/harness/command-library-server-config.yml serviceSecret.managerToCommandLibraryServiceSecret "$MANAGER_TO_COMMAND_LIBRARY_SERVICE_SECRET"
+fi
+
 

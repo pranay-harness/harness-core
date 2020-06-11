@@ -34,8 +34,6 @@ import io.harness.ccm.health.HealthStatusService;
 import io.harness.ccm.health.HealthStatusServiceImpl;
 import io.harness.ccm.setup.CESetupServiceModule;
 import io.harness.cdng.NGModule;
-import io.harness.commandlibrary.common.service.CommandLibraryService;
-import io.harness.commandlibrary.common.service.impl.CommandLibraryServiceImpl;
 import io.harness.config.PipelineConfig;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.dashboard.DashboardSettingsService;
@@ -867,7 +865,6 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(AwsS3HelperServiceManager.class).to(AwsS3HelperServiceManagerImpl.class);
     bind(GitSyncErrorService.class).to(GitSyncErrorServiceImpl.class);
     bind(YamlGitConfigService.class).to(YamlGitConfigServiceImpl.class);
-    bind(CommandLibraryService.class).to(CommandLibraryServiceImpl.class);
     bind(ErrorReporter.class).to(BugsnagErrorReporter.class);
     bind(CustomSecretsManagerService.class).to(CustomSecretsManagerServiceImpl.class);
     bind(CustomSecretsManagerEncryptionService.class).to(CustomSecretsManagerEncryptionServiceImpl.class);
