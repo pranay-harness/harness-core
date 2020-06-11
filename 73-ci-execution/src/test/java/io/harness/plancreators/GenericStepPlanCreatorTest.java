@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.steps.AbstractStepWithMetaInfo;
+import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionTest;
@@ -27,18 +27,20 @@ public class GenericStepPlanCreatorTest extends CIExecutionTest {
   @Inject GenericStepPlanCreator genericStepPlanCreator;
 
   @Mock CreateExecutionPlanContext createExecutionPlanContext;
-  @Mock PlanCreatorSearchContext<AbstractStepWithMetaInfo> planCreatorSearchContext;
+  @Mock PlanCreatorSearchContext<CIStepInfo> planCreatorSearchContext;
 
   private GitCloneStepInfo stepInfo;
 
   @Before
   public void setUp() {
     stepInfo = GitCloneStepInfo.builder()
-                   .branch("testBranch")
                    .identifier("testIdentifier")
-                   .gitConnector("testGitConnector")
-                   .path("/test/path")
                    .name("testName")
+                   .gitClone(GitCloneStepInfo.GitClone.builder()
+                                 .branch("testBranch")
+                                 .gitConnector("testGitConnector")
+                                 .path("/test/path")
+                                 .build())
                    .retry(3)
                    .timeout(60)
                    .build();

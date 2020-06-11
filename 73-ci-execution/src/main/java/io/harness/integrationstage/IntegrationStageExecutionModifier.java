@@ -64,10 +64,12 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
       GitConnectorYaml gitConnectorYaml = (GitConnectorYaml) integrationStage.getConnector();
       return Execution.builder()
           .steps(asList(BuildEnvSetupStepInfo.builder()
-                            .gitConnectorIdentifier(gitConnectorYaml.getIdentifier())
                             .identifier(ENV_SETUP_NAME)
-                            .branchName(getBranchName(integrationStage))
-                            .buildJobEnvInfo(getCIBuildJobEnvInfo(integrationStage))
+                            .setupEnv(BuildEnvSetupStepInfo.BuildEnvSetup.builder()
+                                          .gitConnectorIdentifier(gitConnectorYaml.getIdentifier())
+                                          .branchName(getBranchName(integrationStage))
+                                          .buildJobEnvInfo(getCIBuildJobEnvInfo(integrationStage))
+                                          .build())
                             .build()))
           .build();
     } else {
@@ -83,7 +85,7 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
                                                       .findFirst();
     if (executionSection.isPresent()) {
       GitCloneStepInfo gitCloneStepInfo = (GitCloneStepInfo) executionSection.get();
-      return gitCloneStepInfo.getBranch();
+      return gitCloneStepInfo.getGitClone().getBranch();
     } else {
       throw new InvalidRequestException("Failed to execute pipeline, Git clone section is missing");
     }
@@ -108,10 +110,10 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
   private K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfo(IntegrationStage integrationStage) {
     ContainerResourceParams containerResourceParams =
         ContainerResourceParams.builder()
-            .resourceRequestMilliCpu(integrationStage.getContainer().getResources().getRequestMilliCPU())
-            .resourceRequestMemoryMiB(integrationStage.getContainer().getResources().getRequestMemoryMiB())
-            .resourceLimitMilliCpu(integrationStage.getContainer().getResources().getLimitMilliCPU())
-            .resourceLimitMemoryMiB(integrationStage.getContainer().getResources().getRequestMemoryMiB())
+            .resourceRequestMilliCpu(integrationStage.getContainer().getResources().getReserve().getCpu())
+            .resourceRequestMemoryMiB(integrationStage.getContainer().getResources().getReserve().getMemory())
+            .resourceLimitMilliCpu(integrationStage.getContainer().getResources().getLimit().getCpu())
+            .resourceLimitMemoryMiB(integrationStage.getContainer().getResources().getLimit().getMemory())
             .build();
 
     List<PodSetupInfo> pods = new ArrayList<>();

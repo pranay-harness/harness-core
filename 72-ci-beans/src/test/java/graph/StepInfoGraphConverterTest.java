@@ -13,11 +13,11 @@ import io.harness.rule.Owner;
 import io.harness.yaml.core.Parallel;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionSection;
 import io.harness.yaml.core.auxiliary.intfc.StepWrapper;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class StepInfoGraphConverterTest extends CIBeansTest {
@@ -41,17 +41,16 @@ public class StepInfoGraphConverterTest extends CIBeansTest {
 
     final StepInfoGraph stepInfoGraph = stepInfoGraphConverter.convert(executionSectionList);
     assertThat(stepInfoGraph).isNotNull();
-    assertThat(stepInfoGraph.getStartNodeUuid())
-        .isEqualTo(stepInfoGraph.getNode("git-before-1").getStepMetadata().getUuid());
+    assertThat(stepInfoGraph.getStartNodeUuid()).isEqualTo(stepInfoGraph.getNode("git-before-1").getIdentifier());
 
     assertThat(stepInfoGraph.getNextNodeUuids(stepInfoGraph.getNode("git-before-1")))
-        .contains(stepInfoGraph.getNode("git-before-2").getStepMetadata().getUuid());
+        .contains(stepInfoGraph.getNode("git-before-2").getIdentifier());
     assertThat(stepInfoGraph.getNextNodeUuids(stepInfoGraph.getNode("git-before-2")))
-        .contains(stepInfoGraph.getNode("git-parallel-1").getStepMetadata().getUuid());
+        .contains(stepInfoGraph.getNode("git-parallel-1").getIdentifier());
     assertThat(stepInfoGraph.getNextNodeUuids(stepInfoGraph.getNode("git-before-2")))
-        .contains(stepInfoGraph.getNode("git-parallel-2").getStepMetadata().getUuid());
+        .contains(stepInfoGraph.getNode("git-parallel-2").getIdentifier());
     assertThat(stepInfoGraph.getNextNodeUuids(stepInfoGraph.getNode("git-before-2")))
-        .contains(stepInfoGraph.getNode("git-parallel-3").getStepMetadata().getUuid());
+        .contains(stepInfoGraph.getNode("git-parallel-3").getIdentifier());
 
     assertThat(StepInfoGraph.isNILStepUuId(stepInfoGraph.getNextNodeUuids(stepInfoGraph.getNode("git-after-1")).get(0)))
         .isTrue();
@@ -60,19 +59,14 @@ public class StepInfoGraphConverterTest extends CIBeansTest {
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
+  @Ignore("TODO: Graph section is not yet supported")
   public void testConversion_withGraphSection() {
     List<ExecutionSection> executionSectionList = new ArrayList<>();
     executionSectionList.add(GitCloneStepInfo.builder().identifier("git-before-1").build());
 
     List<StepWrapper> GraphList = new ArrayList<>();
-    GraphList.add(GitCloneStepInfo.builder()
-                      .identifier("git-graph-1")
-                      .dependencies(Collections.singletonList("git-graph-3"))
-                      .build());
-    GraphList.add(GitCloneStepInfo.builder()
-                      .identifier("git-graph-2")
-                      .dependencies(Collections.singletonList("git-graph-3"))
-                      .build());
+    GraphList.add(GitCloneStepInfo.builder().identifier("git-graph-1").build());
+    GraphList.add(GitCloneStepInfo.builder().identifier("git-graph-2").build());
     GraphList.add(GitCloneStepInfo.builder().identifier("git-graph-3").build());
     executionSectionList.add(io.harness.yaml.core.Graph.builder().sections(GraphList).build());
 
@@ -81,9 +75,9 @@ public class StepInfoGraphConverterTest extends CIBeansTest {
     final StepInfoGraph stepInfoGraph = stepInfoGraphConverter.convert(executionSectionList);
 
     assertThat(stepInfoGraph.getNextNodeUuids(stepInfoGraph.getNode("git-graph-3")))
-        .contains(stepInfoGraph.getNode("git-graph-1").getStepMetadata().getUuid());
+        .contains(stepInfoGraph.getNode("git-graph-1").getIdentifier());
     assertThat(stepInfoGraph.getNextNodeUuids(stepInfoGraph.getNode("git-graph-3")))
-        .contains(stepInfoGraph.getNode("git-graph-2").getStepMetadata().getUuid());
+        .contains(stepInfoGraph.getNode("git-graph-2").getIdentifier());
   }
 
   @Test

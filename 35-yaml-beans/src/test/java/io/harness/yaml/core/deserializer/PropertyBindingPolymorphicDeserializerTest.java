@@ -31,7 +31,6 @@ public class PropertyBindingPolymorphicDeserializerTest extends CategoryTest {
 
   private ObjectMapper mapper;
 
-  // UniquePropertyPolymorphicDeserializer test example
   private static class TestDeserializer extends PropertyBindingPolymorphicDeserializer<TestInterface> {
     private static final long serialVersionUID = 1L;
 
@@ -50,7 +49,7 @@ public class PropertyBindingPolymorphicDeserializerTest extends CategoryTest {
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
-  public void shouldDeserializeTestClassB() throws IOException {
+  public void shouldDeserializeTestClassA() throws IOException {
     TestInterface testInterface = mapper.readValue(PROPERTY_NAME_A + ": " + VALUE_A, TestInterface.class);
     assertThat(testInterface).isInstanceOf(TestClassA.class);
     assertThat(((TestClassA) testInterface).getPropertyNameA()).isEqualTo(VALUE_A);
@@ -59,7 +58,7 @@ public class PropertyBindingPolymorphicDeserializerTest extends CategoryTest {
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
-  public void shouldDeserializeTestClassA() throws IOException {
+  public void shouldDeserializeTestClassB() throws IOException {
     TestInterface testInterface = mapper.readValue(PROPERTY_NAME_B + ": " + VALUE_B, TestInterface.class);
     assertThat(testInterface).isInstanceOf(TestClassB.class);
     assertThat(((TestClassB) testInterface).getPropertyNameB()).isEqualTo(VALUE_B);
@@ -90,9 +89,6 @@ public class PropertyBindingPolymorphicDeserializerTest extends CategoryTest {
         .hasMessageContaining("No registered binding found for deserialization");
   }
 
-  /*
-   * The abstract class that doesn't provide type information for its child implementations
-   */
   @JsonDeserialize(using = TestDeserializer.class)
   private interface TestInterface {}
 

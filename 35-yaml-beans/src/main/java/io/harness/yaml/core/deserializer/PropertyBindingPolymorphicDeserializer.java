@@ -4,12 +4,15 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * PropertyBindingPolymorphicDeserializer is custom polymorphic deserializer that can be used in cases to where subtypes
@@ -46,12 +49,25 @@ public class PropertyBindingPolymorphicDeserializer<T> extends StdDeserializer<T
     ObjectNode obj = mapper.readTree(jp);
     Iterator<String> fieldNamesIterator = obj.fieldNames();
 
+    Map<String, ? extends Class<?>> reflectionBindings = null;
+    if (bindings.isEmpty()) {
+      final Collection<NamedType> subtypeClasses = DeserializerHelper.getSubtypeClasses(mapper, this.handledType());
+      reflectionBindings = subtypeClasses.stream().collect(Collectors.toMap(NamedType::getName, NamedType::getType));
+    }
+
     while (fieldNamesIterator.hasNext()) {
       String fieldName = fieldNamesIterator.next();
 
-      if (bindings.containsKey(fieldName)) {
-        type = bindings.get(fieldName);
-        break;
+      if (!bindings.isEmpty()) {
+        if (bindings.containsKey(fieldName)) {
+          type = bindings.get(fieldName);
+          break;
+        }
+      } else if (reflectionBindings != null) {
+        if (reflectionBindings.containsKey(fieldName)) {
+          type = (Class<? extends T>) reflectionBindings.get(fieldName);
+          break;
+        }
       }
     }
 

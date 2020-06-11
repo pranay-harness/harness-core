@@ -6,8 +6,7 @@ import graph.StepInfoGraph;
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
 import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
-import io.harness.beans.steps.AbstractStepWithMetaInfo;
-import io.harness.beans.steps.StepMetadata;
+import io.harness.beans.steps.CIStepInfo;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
@@ -20,26 +19,25 @@ import java.util.List;
  */
 
 @Singleton
-public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeConverter<AbstractStepWithMetaInfo> {
+public class BasicStepToExecutionNodeConverter implements StepToExecutionNodeConverter<CIStepInfo> {
   @Override
-  public PlanNode convertStep(AbstractStepWithMetaInfo step, List<String> nextStepUuids) {
+  public PlanNode convertStep(CIStepInfo step, List<String> nextStepUuids) {
     return PlanNode.builder()
-        .name(step.getStepMetadata().getUuid())
-        .uuid(step.getStepMetadata().getUuid())
+        .name(step.getIdentifier())
+        .uuid(step.getIdentifier())
         .stepType(step.getNonYamlInfo().getStepType())
         .identifier(step.getIdentifier())
         .stepParameters(step)
-        .facilitatorObtainment(getFacilitatorsFromMetaData(step.getStepMetadata()))
-        .adviserObtainments(getAdviserObtainmentFromMetaData(step.getStepMetadata(), nextStepUuids))
+        .facilitatorObtainment(getFacilitatorsFromMetaData())
+        .adviserObtainments(getAdviserObtainmentFromMetaData(nextStepUuids))
         .build();
   }
 
-  private FacilitatorObtainment getFacilitatorsFromMetaData(StepMetadata stepMetadata) {
+  private FacilitatorObtainment getFacilitatorsFromMetaData() {
     return FacilitatorObtainment.builder().type(FacilitatorType.builder().type(FacilitatorType.SYNC).build()).build();
   }
 
-  private List<AdviserObtainment> getAdviserObtainmentFromMetaData(
-      StepMetadata stepMetadata, List<String> nextStepUuids) {
+  private List<AdviserObtainment> getAdviserObtainmentFromMetaData(List<String> nextStepUuids) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
 
     // TODO Handle parallel execution

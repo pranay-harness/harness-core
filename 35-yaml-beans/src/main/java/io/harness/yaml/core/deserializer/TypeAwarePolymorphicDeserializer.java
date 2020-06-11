@@ -1,16 +1,17 @@
 package io.harness.yaml.core.deserializer;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.cfg.MapperConfig;
 import com.fasterxml.jackson.databind.deser.BeanDeserializerFactory;
 import com.fasterxml.jackson.databind.deser.ResolvableDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
@@ -41,25 +42,31 @@ public abstract class TypeAwarePolymorphicDeserializer<T> extends StdDeserialize
     ObjectMapper codec = (ObjectMapper) jp.getCodec();
     ObjectNode root = codec.readTree(jp);
 
-    Class<?> subClass;
+    Class<?> subClass = null;
 
     // Determine type name from yaml property obtained by getTypePropertyName method
     if (root.has(getTypePropertyName())) {
-      String type = root.findValue(getTypePropertyName()).asText();
+      JsonNode typeNode = root.findValue(getTypePropertyName());
+      String type = typeNode.asText();
+      if (typeNode.isNull() || isEmpty(type)) {
+        throw ctxt.mappingException("Type property: '" + getTypePropertyName() + "' is empty");
+      }
 
-      Collection<NamedType> subtypeClasses = getSubtypeClasses(codec, getType());
+      Collection<NamedType> subtypeClasses = DeserializerHelper.getSubtypeClasses(codec, getType());
       Optional<NamedType> namedType = subtypeClasses.stream().filter(nt -> type.equals(nt.getName())).findFirst();
 
       if (namedType.isPresent()) {
         subClass = namedType.get().getType();
-      } else {
-        return null;
+      }
+      if (subClass == null) {
+        throw ctxt.mappingException("No class definition found for type: '" + type + "'");
       }
     } else {
-      return null;
+      throw ctxt.mappingException("Cannot find type property: '" + getTypePropertyName() + "'");
     }
 
     // Create default deserializer for sub type
+
     DeserializationConfig config = ctxt.getConfig();
     JavaType javaType = TypeFactory.defaultInstance().constructType(subClass);
     JsonDeserializer<Object> defaultDeserializer =
@@ -78,11 +85,5 @@ public abstract class TypeAwarePolymorphicDeserializer<T> extends StdDeserialize
     }
 
     return (T) defaultDeserializer.deserialize(treeParser, ctxt);
-  }
-
-  private Collection<NamedType> getSubtypeClasses(ObjectMapper mapper, Class<?> clazz) {
-    MapperConfig<?> config = mapper.getDeserializationConfig();
-    AnnotatedClass ac = AnnotatedClass.constructWithoutSuperTypes(clazz, config);
-    return mapper.getSubtypeResolver().collectAndResolveSubtypesByClass(config, ac);
   }
 }

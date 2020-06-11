@@ -22,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.dl.WingsPersistence;
 
+import java.util.Objects;
 import java.util.Scanner;
 
 public class CIPipelineServiceImplTest extends CIManagerTest {
@@ -33,7 +34,8 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
 
   @Before
   public void setUp() {
-    String yamlString = new Scanner(CIPipelineServiceImplTest.class.getResourceAsStream("pipeline.yml"), "UTF-8")
+    String yamlString = new Scanner(
+        Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream("pipeline.yml")), "UTF-8")
                             .useDelimiter("\\A")
                             .next();
 

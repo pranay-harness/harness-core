@@ -3,40 +3,57 @@ package io.harness.beans.steps.stepinfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.beans.script.ScriptInfo;
-import io.harness.beans.steps.AbstractStepWithMetaInfo;
-import io.harness.beans.steps.StepInfoType;
+import io.harness.beans.steps.CIStepInfo;
+import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.executionplan.plancreator.beans.GenericStepInfo;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.state.StepType;
 import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.Value;
 import software.wings.jersey.JsonViews;
 
+import java.beans.ConstructorProperties;
 import java.util.List;
+import java.util.Optional;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-@Data
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@Value
+
 @JsonTypeName("build")
-public class BuildStepInfo extends AbstractStepWithMetaInfo implements GenericStepInfo {
+public class BuildStepInfo implements CIStepInfo, GenericStepInfo {
+  public static final int DEFAULT_RETRY = 0;
+  public static final int DEFAULT_TIMEOUT = 1200;
+
   @JsonView(JsonViews.Internal.class)
   @NotNull
   public static final TypeInfo typeInfo = TypeInfo.builder()
-                                              .stepInfoType(StepInfoType.BUILD)
-                                              .stepType(StepType.builder().type(StepInfoType.BUILD.name()).build())
+                                              .stepInfoType(CIStepInfoType.BUILD)
+                                              .stepType(StepType.builder().type(CIStepInfoType.BUILD.name()).build())
                                               .build();
+  @NotNull String identifier;
+  String name;
+  @Min(MIN_RETRY) @Max(MAX_RETRY) int retry;
+  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) int timeout;
 
-  private List<ScriptInfo> scriptInfos;
+  @NotNull Build build;
 
   @Builder
-  public BuildStepInfo(String type, String identifier, String name, List<String> dependencies, Integer retry,
-      Integer timeout, List<ScriptInfo> scriptInfos) {
-    super(type, identifier, name, dependencies, retry, timeout);
-    this.scriptInfos = scriptInfos;
+  @ConstructorProperties({"identifier", "name", "retry", "timeout", "build"})
+  public BuildStepInfo(String identifier, String name, Integer retry, Integer timeout, Build build) {
+    this.identifier = identifier;
+    this.name = name;
+    this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
+    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
+    this.build = build;
+  }
+
+  @Value
+  @Builder
+  public static class Build {
+    List<ScriptInfo> scriptInfos;
   }
 
   @Override

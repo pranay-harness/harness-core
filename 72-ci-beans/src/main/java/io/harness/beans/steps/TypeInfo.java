@@ -14,6 +14,6 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 public class TypeInfo implements NonYamlInfo {
-  @NotNull StepInfoType stepInfoType;
+  @NotNull CIStepInfoType stepInfoType;
   @NotNull StepType stepType;
 }

@@ -55,13 +55,19 @@ public class CIExecutionPlanTestHelper {
   }
 
   public BuildEnvSetupStepInfo getBuildEnvSetupStepInfo() {
-    return BuildEnvSetupStepInfo.builder().identifier(ENV_SETUP_NAME).buildJobEnvInfo(getCIBuildJobEnvInfo()).build();
+    return BuildEnvSetupStepInfo.builder()
+        .identifier(ENV_SETUP_NAME)
+        .setupEnv(BuildEnvSetupStepInfo.BuildEnvSetup.builder().buildJobEnvInfo(getCIBuildJobEnvInfo()).build())
+        .build();
   }
 
   public StepInfoGraph getStepsGraph() {
     return StepInfoGraph.builder()
         .steps(asList(getBuildEnvSetupStepInfo(),
-            TestStepInfo.builder().identifier(BUILD_STAGE_NAME).scriptInfos(getBuildCommandSteps()).build()))
+            TestStepInfo.builder()
+                .identifier(BUILD_STAGE_NAME)
+                .test(TestStepInfo.Test.builder().scriptInfos(getBuildCommandSteps()).build())
+                .build()))
         .build();
   }
 
@@ -76,8 +82,9 @@ public class CIExecutionPlanTestHelper {
 
   @NotNull
   private List<ExecutionSection> getExecutionSections() {
-    return new ArrayList<>(Arrays.asList(GitCloneStepInfo.builder().identifier("git-1").build(),
-        GitCloneStepInfo.builder().identifier("git-2").build()));
+    return new ArrayList<>(Arrays.asList(
+        GitCloneStepInfo.builder().gitClone(GitCloneStepInfo.GitClone.builder().build()).identifier("git-1").build(),
+        GitCloneStepInfo.builder().gitClone(GitCloneStepInfo.GitClone.builder().build()).identifier("git-2").build()));
   }
 
   public CIPipeline getCIPipeline() {

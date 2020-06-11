@@ -37,10 +37,10 @@ public class HttpStepPlanCreator implements SupportDefinedExecutorPlanCreator<Ht
   private PlanNode prepareHttpExecutionNode(HttpStepInfo httpStepInfo, CreateExecutionPlanContext context) {
     final String deploymentStageUid = generateUuid();
 
-    final HttpStepInfo.HttpSpec spec = httpStepInfo.getSpec();
+    final HttpStepInfo.HttpSpec spec = httpStepInfo.getHttp();
     return PlanNode.builder()
         .uuid(deploymentStageUid)
-        .name(httpStepInfo.getName())
+        .name(httpStepInfo.getDisplayName())
         .identifier(httpStepInfo.getIdentifier())
         .stepType(BasicHttpStep.STEP_TYPE)
         .group(StepGroup.STEP.name())
