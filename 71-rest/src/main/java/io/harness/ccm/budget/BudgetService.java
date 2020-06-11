@@ -30,4 +30,6 @@ public interface BudgetService {
   QLBudgetTableData getBudgetDetails(Budget budget);
 
   boolean isStartOfMonth();
+
+  boolean isAlertSentInCurrentMonth(long crossedAt);
 }

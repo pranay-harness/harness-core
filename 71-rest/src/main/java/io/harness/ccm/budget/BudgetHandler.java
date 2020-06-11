@@ -86,7 +86,8 @@ public class BudgetHandler implements Handler<Budget> {
 
     AlertThreshold[] alertThresholds = budget.getAlertThresholds();
     for (int i = 0; i < alertThresholds.length; i++) {
-      if (alertThresholds[i].getAlertsSent() > 0) {
+      if (alertThresholds[i].getAlertsSent() > 0
+          && budgetService.isAlertSentInCurrentMonth(alertThresholds[i].getCrossedAt())) {
         continue;
       }
       String costType = ACTUAL_COST_BUDGET;

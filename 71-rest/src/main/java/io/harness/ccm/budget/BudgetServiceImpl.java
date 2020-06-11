@@ -450,4 +450,14 @@ public class BudgetServiceImpl implements BudgetService {
     long startOfMonth = zdtStart.toEpochSecond() * 1000;
     return startOfMonth == startOfDay;
   }
+
+  @Override
+  public boolean isAlertSentInCurrentMonth(long crossedAt) {
+    ZoneId zoneId = ZoneId.of(DEFAULT_TIMEZONE);
+    LocalDate today = LocalDate.now(zoneId);
+    ZonedDateTime zdtStart = today.withDayOfMonth(1).atStartOfDay(zoneId);
+    long startOfMonth = zdtStart.toEpochSecond() * 1000;
+    crossedAt -= ONE_DAY_MILLIS;
+    return startOfMonth <= crossedAt;
+  }
 }
