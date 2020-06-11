@@ -162,6 +162,7 @@ import software.wings.sm.states.EcsSteadyStateCheck;
 import software.wings.sm.states.ElasticLoadBalancerState;
 import software.wings.sm.states.ElkAnalysisState;
 import software.wings.sm.states.EmailState;
+import software.wings.sm.states.GcbState;
 import software.wings.sm.states.GcpClusterSetup;
 import software.wings.sm.states.HelmDeployState;
 import software.wings.sm.states.HelmRollbackState;
@@ -559,6 +560,7 @@ public enum StepType {
   // CI System
   JENKINS(JenkinsState.class, WorkflowServiceHelper.JENKINS, asList(CI_SYSTEM), asList(PhaseStepType.values()),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+  GCB(GcbState.class, WorkflowServiceHelper.GCB, emptyList(), emptyList(), emptyList(), emptyList()),
   BAMBOO(BambooState.class, WorkflowServiceHelper.BAMBOO, asList(CI_SYSTEM), asList(PhaseStepType.values()),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
 

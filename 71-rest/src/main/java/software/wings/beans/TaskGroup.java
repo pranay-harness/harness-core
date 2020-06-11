@@ -23,6 +23,7 @@ public enum TaskGroup {
   ECR,
   GCR,
   GCS,
+  GCB,
   ACR,
   NEXUS,
   S3,

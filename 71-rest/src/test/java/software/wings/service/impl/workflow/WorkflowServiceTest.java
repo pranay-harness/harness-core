@@ -436,7 +436,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
 
   private StencilPostProcessor stencilPostProcessor = mock(StencilPostProcessor.class,
-      (Answer<List<Stencil>>) invocationOnMock -> { return (List<Stencil>) invocationOnMock.getArguments()[0]; });
+      (Answer<List<Stencil>>) invocationOnMock -> (List<Stencil>) invocationOnMock.getArguments()[0]);
 
   @Mock private UpdateOperations<Workflow> updateOperations;
   @Mock private LimitCheckerFactory limitCheckerFactory;
@@ -4398,7 +4398,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
-        .contains(tuple(CI_SYSTEM.name(), CI_SYSTEM.getDisplayName(), asList(StepType.JENKINS.name(), BAMBOO.name())));
+        .contains(tuple(CI_SYSTEM.name(), CI_SYSTEM.getDisplayName(),
+            asList(StepType.JENKINS.name(), StepType.GCB.name(), BAMBOO.name())));
     if (isK8sPhaseStep) {
       assertThat(workflowCategorySteps.getCategories())
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,

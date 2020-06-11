@@ -166,6 +166,7 @@ public class ActivityServiceImpl implements ActivityService {
                        .build());
           }
           break;
+        case GCB:
         case JENKINS:
         case KUBERNETES_STEADY_STATE_CHECK:
         case ECS_STEADY_STATE_CHECK:

@@ -11,7 +11,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
@@ -131,7 +130,7 @@ public class GcbServiceImpl implements GcbService {
     GoogleCredential gc = gcpHelperService.getGoogleCredential(gcpConfig, encryptionDetails);
 
     if (gc.refreshToken()) {
-      return Credentials.basic("_token", gc.getAccessToken());
+      return String.join(" ", "Bearer", gc.getAccessToken());
     } else {
       String msg = "Could not refresh token for google cloud provider";
       logger.warn(msg);

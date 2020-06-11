@@ -405,6 +405,8 @@ TASK_TYPES:
       value: ELK
     - name: Git
       value: GIT
+    - name: Google Cloud Build
+      value: GCB
     - name: Google Cloud Storage
       value: GCS
     - name: Google Container Registry

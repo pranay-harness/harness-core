@@ -98,7 +98,7 @@ public interface ExecutionContext {
 
   Map<String, String> getSafeDisplayServiceVariables();
 
-  SettingValue getGlobalSettingValue(String accountId, String settingId);
+  <T extends SettingValue> T getGlobalSettingValue(String accountId, String settingId);
 
   SweepingOutputInstanceBuilder prepareSweepingOutputBuilder(SweepingOutputInstance.Scope sweepingOutputScope);
 

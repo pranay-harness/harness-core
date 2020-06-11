@@ -110,4 +110,8 @@ public class CollectionUtils {
   public static <T> Optional<T> filterAndGetFirst(List<T> collection, Predicate<T> predicate) {
     return collection.stream().filter(predicate).findFirst();
   }
+
+  public <T> T overrideOperator(T left, T right) {
+    return right;
+  }
 }
