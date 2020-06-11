@@ -30,8 +30,8 @@ public class AppDynamicsCVConfigTransformerTest extends CVConfigTransformerTestB
   @Before
   public void setup() {
     super.setUp();
-    metricPacks = Sets.newHashSet(
-        MetricPack.builder().name("metric pack1").build(), MetricPack.builder().name("metric pack2").build());
+    metricPacks = Sets.newHashSet(MetricPack.builder().identifier("metric pack1").build(),
+        MetricPack.builder().identifier("metric pack2").build());
     serviceMappings = Sets.newHashSet(ServiceMapping.builder().serviceIdentifier("service1").tierName("tier1").build(),
         ServiceMapping.builder().serviceIdentifier("service2").tierName("tier2").build());
   }

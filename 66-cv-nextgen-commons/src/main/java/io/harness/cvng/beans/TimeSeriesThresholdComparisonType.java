@@ -1,0 +1,33 @@
+package io.harness.cvng.beans;
+
+import com.fasterxml.jackson.annotation.JsonValue;
+
+/**
+ * Possible types of thresholds that can be applied to a metric.
+ * Created by mike@ on 6/19/17.
+ */
+public enum TimeSeriesThresholdComparisonType {
+  /**
+   * A threshold that is divided by the previous build's value to yield a ratio.
+   */
+  RATIO("ratio"),
+  /**
+   * A threshold that is subtracted from the previous build's value to yield a delta.
+   */
+  DELTA("delta"),
+  /**
+   * A threshold that represents an absolute value to compare against rather than something in the previous build.
+   */
+  ABSOLUTE("absolute-value");
+
+  private String displayName;
+
+  TimeSeriesThresholdComparisonType(String displayName) {
+    this.displayName = displayName;
+  }
+
+  @JsonValue
+  public String getDisplayName() {
+    return displayName;
+  }
+}

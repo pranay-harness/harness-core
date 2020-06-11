@@ -54,7 +54,7 @@ public class AppDynamicsDSConfigTest extends DSConfigTestBase {
     assertThat(appDynamicsCVConfigs).hasSize(1);
     appDynamicsCVConfigs.forEach(appDynamicsCVConfig -> {
       assertCommon(appDynamicsCVConfig, appDynamicsDSConfig);
-      assertThat(appDynamicsCVConfig.getMetricPack().getName()).isEqualTo(metricPacks.get(0).getName());
+      assertThat(appDynamicsCVConfig.getMetricPack().getIdentifier()).isEqualTo(metricPacks.get(0).getIdentifier());
     });
     assertThat(appDynamicsCVConfigs.get(0).getServiceIdentifier()).isEqualTo("service1");
     assertThat(appDynamicsCVConfigs.get(0).getTierName()).isEqualTo("tier1");
@@ -147,6 +147,6 @@ public class AppDynamicsDSConfigTest extends DSConfigTestBase {
   }
 
   private MetricPack createMetricPack(int index) {
-    return MetricPack.builder().accountId(accountId).name("metric-pack-" + index).build();
+    return MetricPack.builder().accountId(accountId).identifier("metric-pack-" + index).build();
   }
 }

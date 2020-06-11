@@ -7,6 +7,7 @@ import io.harness.cvng.core.services.entities.MetricCVConfig;
 import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.cvng.core.services.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.entities.TimeSeriesRecord;
+import io.harness.cvng.core.services.entities.TimeSeriesThreshold;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
@@ -22,6 +23,7 @@ public class CVNextGenCommonMorphiaRegister implements MorphiaRegistrar {
     set.add(AppDynamicsCVConfig.class);
     set.add(LogCVConfig.class);
     set.add(MetricCVConfig.class);
+    set.add(TimeSeriesThreshold.class);
   }
 
   @Override

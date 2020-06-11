@@ -58,7 +58,7 @@ import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
-import io.harness.cvng.core.resources.DataSourceResource;
+import io.harness.cvng.core.resources.MetricPackResource;
 import io.harness.delay.DelayEventListener;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
@@ -594,7 +594,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void registerCVNextGenResources(Environment environment, Injector injector) {
-    Reflections reflections = new Reflections(DataSourceResource.class.getPackage().getName());
+    Reflections reflections = new Reflections(MetricPackResource.class.getPackage().getName());
     Set<Class<?>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
     for (Class<?> resource : resourceClasses) {
       if (Resource.isAcceptable(resource)) {
