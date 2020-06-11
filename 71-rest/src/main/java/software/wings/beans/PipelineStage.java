@@ -32,6 +32,8 @@ public class PipelineStage {
   private List<PipelineStageElement> pipelineStageElements = new ArrayList<>();
   private transient boolean valid = true;
   private transient String validationMessage;
+  private transient boolean looped;
+  private transient String loopedVarName;
 
   @Data
   @Builder

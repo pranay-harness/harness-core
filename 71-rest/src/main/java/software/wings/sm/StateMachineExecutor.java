@@ -289,6 +289,15 @@ public class StateMachineExecutor implements StateInspectionListener {
     stateExecutionInstance.setAppId(stateMachine.getAppId());
     State state =
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    if (state == null && stateExecutionInstance.isParentLoopedState()) {
+      if (stateExecutionInstance.getLoopedStateParams() == null) {
+        throw new InvalidRequestException("Looped Params cant be null when state is looped");
+      }
+      state = stateExecutionInstance.getLoopedStateParams().getEnvStateInstanceFromParams(
+          workflowService, stateMachine.getAppId());
+      stateMachine.addState(state);
+    }
+
     notNullCheck("state", state);
     stateExecutionInstance.setRollback(state.isRollback());
     stateExecutionInstance.setStateType(state.getStateType());
@@ -460,6 +469,10 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
     State currentState =
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    if (currentState == null && stateExecutionInstance.isParentLoopedState()) {
+      startStateExecution(context, stateExecutionInstance);
+      return;
+    }
     notNullCheck("currentState", currentState);
     if (currentState.getWaitInterval() != null && currentState.getWaitInterval() > 0) {
       StateExecutionData stateExecutionData =
@@ -1356,6 +1369,11 @@ public class StateMachineExecutor implements StateInspectionListener {
     StateMachine sm = stateExecutionService.obtainStateMachine(stateExecutionInstance);
     State currentState =
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    if (currentState == null && stateExecutionInstance.isParentLoopedState()) {
+      currentState =
+          stateExecutionInstance.getLoopedStateParams().getEnvStateInstanceFromParams(workflowService, appId);
+      sm.addState(currentState);
+    }
     injector.injectMembers(currentState);
 
     while (stateExecutionInstance.getStatus() == NEW || stateExecutionInstance.getStatus() == QUEUED
