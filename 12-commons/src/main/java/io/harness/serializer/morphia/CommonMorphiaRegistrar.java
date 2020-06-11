@@ -7,12 +7,13 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.security.SimpleEncryption;
 
+import java.io.Serializable;
 import java.util.Set;
 
 public class CommonMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
-    // There are no classes to register from this module
+    set.add(Serializable.class);
   }
 
   @Override
