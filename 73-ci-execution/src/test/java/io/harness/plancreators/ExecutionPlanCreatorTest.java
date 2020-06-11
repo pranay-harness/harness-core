@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.steps.StepInfoType;
+import io.harness.beans.steps.CIStepInfoType;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
@@ -52,11 +52,11 @@ public class ExecutionPlanCreatorTest extends CIExecutionTest {
         .isTrue();
     assertThat(planNodes.stream().anyMatch(node
                    -> "git-1".equals(node.getIdentifier())
-                       && StepInfoType.GIT_CLONE.name().equals(node.getStepType().getType())))
+                       && CIStepInfoType.GIT_CLONE.name().equals(node.getStepType().getType())))
         .isTrue();
     assertThat(planNodes.stream().anyMatch(node
                    -> "git-2".equals(node.getIdentifier())
-                       && StepInfoType.GIT_CLONE.name().equals(node.getStepType().getType())))
+                       && CIStepInfoType.GIT_CLONE.name().equals(node.getStepType().getType())))
         .isTrue();
   }
 

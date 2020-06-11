@@ -1,6 +1,6 @@
 identifier: publishArtifacts
-type: publish
-artifacts:
+name: publish artifacts step test
+publishArtifacts:
   - filePattern: ~/.m2/*-${BUILD_NUMBER}.jar
     destination:
       location: gs://snapshot-delegate-jars/artifacts/

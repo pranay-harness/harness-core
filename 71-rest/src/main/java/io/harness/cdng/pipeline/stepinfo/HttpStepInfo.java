@@ -9,12 +9,10 @@ import lombok.Value;
 @Builder
 @JsonTypeName("http")
 public class HttpStepInfo implements CDStepInfo {
-  String name;
+  String displayName;
   String type;
   String identifier;
-  int retry;
-  int timeout;
-  HttpSpec spec;
+  HttpSpec http;
 
   @Value
   @Builder

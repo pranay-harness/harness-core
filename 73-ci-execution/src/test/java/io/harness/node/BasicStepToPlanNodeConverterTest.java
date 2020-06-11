@@ -32,8 +32,8 @@ public class BasicStepToPlanNodeConverterTest extends CIExecutionTest {
   public void shouldGenerateExecutionPlan() {
     StepInfoGraph ciStepsGraph = ciExecutionPlanTestHelper.getStepsGraph();
 
-    PlanNode planNode = basicStepToExecutionNodeConverter.convertStep(ciStepsGraph.getSteps().get(0),
-        Collections.singletonList(ciStepsGraph.getSteps().get(1).getStepMetadata().getUuid()));
+    PlanNode planNode = basicStepToExecutionNodeConverter.convertStep(
+        ciStepsGraph.getSteps().get(0), Collections.singletonList(ciStepsGraph.getSteps().get(1).getIdentifier()));
 
     assertThat(planNode.getIdentifier()).isEqualTo(ENV_SETUP_NAME);
     assertThat(planNode.getFacilitatorObtainments()).isNotEmpty();

@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.TypeLiteral;
 
 import graph.GraphOperations;
-import io.harness.beans.steps.AbstractStepWithMetaInfo;
+import io.harness.beans.steps.CIStepInfo;
 import io.harness.govern.DependencyModule;
 
 import java.util.Set;
@@ -21,7 +21,7 @@ public class CIBeansModule extends DependencyModule {
 
   @Override
   protected void configure() {
-    bind(new TypeLiteral<GraphOperations<AbstractStepWithMetaInfo>>() {}).toInstance(new GraphOperations<>());
+    bind(new TypeLiteral<GraphOperations<CIStepInfo>>() {}).toInstance(new GraphOperations<>());
   }
 
   @Override

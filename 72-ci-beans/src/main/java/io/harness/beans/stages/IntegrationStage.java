@@ -20,7 +20,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
-@JsonTypeName("integration")
+@JsonTypeName("ci")
 public class IntegrationStage implements Stage {
   // Default properties
   @NotNull private String identifier;
@@ -29,11 +29,6 @@ public class IntegrationStage implements Stage {
   private boolean runParallel;
   private String skipCondition;
   private String description;
-
-  // CI specific properties
-  private String location;
-  private String project;
-  private String image;
 
   private Infrastructure infrastructure;
   private Connector connector;

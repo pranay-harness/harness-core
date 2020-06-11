@@ -6,7 +6,7 @@ import com.google.common.annotations.Beta;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.steps.AbstractStepWithMetaInfo;
+import io.harness.beans.steps.CIStepInfo;
 import io.harness.yaml.core.Graph;
 import io.harness.yaml.core.Parallel;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionSection;
@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 
 @Singleton
 public class StepInfoGraphConverter {
-  @Inject private GraphOperations<AbstractStepWithMetaInfo> operations;
+  @Inject private GraphOperations<CIStepInfo> operations;
 
   /**
    * Converts list of {@link ExecutionSection} to StepInfoGraph
@@ -35,9 +35,9 @@ public class StepInfoGraphConverter {
       return graph;
     }
     for (ExecutionSection section : sections) {
-      if (section instanceof AbstractStepWithMetaInfo) {
+      if (section instanceof CIStepInfo) {
         // process single step
-        currentSectionGraph = handleStepSection((AbstractStepWithMetaInfo) section);
+        currentSectionGraph = handleStepSection((CIStepInfo) section);
       } else if (section instanceof Parallel) {
         // process parallel section
         currentSectionGraph = handleParallelSection((Parallel) section);
@@ -49,8 +49,8 @@ public class StepInfoGraphConverter {
       }
 
       if (!isEmpty(currentSectionGraph.getAllNodes())) {
-        final Set<AbstractStepWithMetaInfo> roots = operations.findRoots(currentSectionGraph);
-        final Set<AbstractStepWithMetaInfo> leaves = operations.findLeafs(graph);
+        final Set<CIStepInfo> roots = operations.findRoots(currentSectionGraph);
+        final Set<CIStepInfo> leaves = operations.findLeafs(graph);
 
         // add all nodes to StepInfoGraph from graph section
         currentSectionGraph.getAllNodes().forEach(graph::addNode);
@@ -60,11 +60,11 @@ public class StepInfoGraphConverter {
           leaves.forEach(leaf -> roots.forEach(root -> graph.addEdge(leaf, root)));
         }
         // add adjacency list of current section graph to graph
-        for (AbstractStepWithMetaInfo fromNode : currentSectionGraph.getAllNodes()) {
+        for (CIStepInfo fromNode : currentSectionGraph.getAllNodes()) {
           Set<String> edges = currentSectionGraph.getEdges(fromNode.getIdentifier());
           if (!isEmpty(edges)) {
             for (String edge : edges) {
-              AbstractStepWithMetaInfo toNode = currentSectionGraph.getNode(edge);
+              CIStepInfo toNode = currentSectionGraph.getNode(edge);
               graph.addEdge(fromNode, toNode);
             }
           }
@@ -77,7 +77,7 @@ public class StepInfoGraphConverter {
     return graph;
   }
 
-  private StepInfoGraph handleStepSection(AbstractStepWithMetaInfo step) {
+  private StepInfoGraph handleStepSection(CIStepInfo step) {
     StepInfoGraph stepInfoGraph = StepInfoGraph.builder().build();
     // skip if null
     if (step == null) {
@@ -98,7 +98,7 @@ public class StepInfoGraphConverter {
     }
 
     // add each node
-    parallelSections.stream().map(step -> (AbstractStepWithMetaInfo) step).forEach(stepInfoGraph::addNode);
+    parallelSections.stream().map(step -> (CIStepInfo) step).forEach(stepInfoGraph::addNode);
 
     // return all parallel steps as previous steps
     return stepInfoGraph;
@@ -124,7 +124,7 @@ public class StepInfoGraphConverter {
       return stepInfoGraph;
     }
 
-    graph.getSections().stream().map(step -> (AbstractStepWithMetaInfo) step).forEach(stepInfoGraph::addNode);
+    graph.getSections().stream().map(step -> (CIStepInfo) step).forEach(stepInfoGraph::addNode);
 
     // add dependencies
     stepInfoGraph.getAllNodes().forEach(step

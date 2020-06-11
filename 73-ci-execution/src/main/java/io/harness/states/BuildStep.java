@@ -60,7 +60,7 @@ public class BuildStep implements Step, SyncExecutable {
       BuildStepInfo buildStepInfo = (BuildStepInfo) stepParameters;
 
       List<String> commandList =
-          buildStepInfo.getScriptInfos().stream().map(ScriptInfo::getScriptString).collect(toList());
+          buildStepInfo.getBuild().getScriptInfos().stream().map(ScriptInfo::getScriptString).collect(toList());
 
       // TODO only k8 cluster is supported
       K8ExecCommandParams k8ExecCommandParams = K8ExecCommandParams.builder()

@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.CIBeansTest;
-import io.harness.beans.steps.StepInfoType;
+import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
 import io.harness.beans.steps.stepinfo.publish.artifact.ArtifactType;
@@ -20,13 +20,15 @@ import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class PublishStepInfoTest extends CIBeansTest {
   private String yamlString;
   @Before
   public void setUp() {
-    yamlString = new Scanner(PublishStepInfoTest.class.getResourceAsStream("publish_step.yml"), "UTF-8")
+    yamlString = new Scanner(
+        Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream("publish_step.yml")), "UTF-8")
                      .useDelimiter("\\A")
                      .next();
   }
@@ -37,13 +39,13 @@ public class PublishStepInfoTest extends CIBeansTest {
     PublishStepInfo publishStepInfo = YamlPipelineUtils.read(yamlString, PublishStepInfo.class);
 
     TypeInfo nonYamlInfo = publishStepInfo.getNonYamlInfo();
-    assertThat(nonYamlInfo.getStepInfoType()).isEqualTo(StepInfoType.PUBLISH);
+    assertThat(nonYamlInfo.getStepInfoType()).isEqualTo(CIStepInfoType.PUBLISH);
 
     assertThat(publishStepInfo).isNotNull();
     assertThat(publishStepInfo.getIdentifier()).isEqualTo("publishArtifacts");
-    assertThat(publishStepInfo.getType()).isEqualTo("publish");
+    assertThat(publishStepInfo.getNonYamlInfo().getStepInfoType()).isEqualTo(CIStepInfoType.PUBLISH);
 
-    List<Artifact> artifacts = publishStepInfo.getArtifacts();
+    List<Artifact> artifacts = publishStepInfo.getPublishArtifacts();
     assertThat(artifacts).hasSize(6);
 
     assertThat(artifacts.get(0).getType()).isEqualTo(ArtifactType.FILE_PATTERN);

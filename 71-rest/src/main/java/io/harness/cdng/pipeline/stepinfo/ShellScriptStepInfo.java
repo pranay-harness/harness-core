@@ -16,17 +16,19 @@ import lombok.Value;
 @Builder
 @JsonTypeName("shellScript")
 public class ShellScriptStepInfo implements CDStepInfo, GenericStepInfo {
-  String name;
-  String type;
+  String displayName;
   String identifier;
-  int retry;
-  int timeout;
   ShellScriptStepParameters shellScript;
 
   @Override
   @JsonIgnore
   public StepParameters getStepParameters() {
     return shellScript;
+  }
+
+  @Override
+  public String getName() {
+    return displayName;
   }
 
   @Override

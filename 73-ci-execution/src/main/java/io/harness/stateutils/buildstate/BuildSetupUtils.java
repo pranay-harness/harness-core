@@ -32,7 +32,7 @@ public class BuildSetupUtils {
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   public RestResponse<K8sTaskExecutionResponse> executeCISetupTask(
       BuildEnvSetupStepInfo buildEnvSetupStepInfo, Ambiance ambiance) {
-    switch (buildEnvSetupStepInfo.getBuildJobEnvInfo().getType()) {
+    switch (buildEnvSetupStepInfo.getSetupEnv().getBuildJobEnvInfo().getType()) {
       case K8:
         try {
           K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
@@ -40,7 +40,8 @@ public class BuildSetupUtils {
 
           final String namespace = k8PodDetails.getNamespace();
           final String clusterName = k8PodDetails.getClusterName();
-          K8BuildJobEnvInfo k8BuildJobEnvInfo = (K8BuildJobEnvInfo) buildEnvSetupStepInfo.getBuildJobEnvInfo();
+          K8BuildJobEnvInfo k8BuildJobEnvInfo =
+              (K8BuildJobEnvInfo) buildEnvSetupStepInfo.getSetupEnv().getBuildJobEnvInfo();
           // Supporting single pod currently
           Optional<PodSetupInfo> podSetupInfoOpt =
               k8BuildJobEnvInfo.getPodsSetupInfo().getPodSetupInfoList().stream().findFirst();
@@ -50,16 +51,17 @@ public class BuildSetupUtils {
 
           PodSetupInfo podSetupInfo = podSetupInfoOpt.get();
           // TODO Use k8 connector from element input
-          return SafeHttpCall.execute(
-              managerCIResource.createK8PodTask(clusterName, buildEnvSetupStepInfo.getGitConnectorIdentifier(),
-                  buildEnvSetupStepInfo.getBranchName(), k8BuildSetupUtils.getPodParams(podSetupInfo, namespace)));
+          return SafeHttpCall.execute(managerCIResource.createK8PodTask(clusterName,
+              buildEnvSetupStepInfo.getSetupEnv().getGitConnectorIdentifier(),
+              buildEnvSetupStepInfo.getSetupEnv().getBranchName(),
+              k8BuildSetupUtils.getPodParams(podSetupInfo, namespace)));
 
         } catch (Exception e) {
           logger.error("build state execution failed", e);
         }
         break;
       default:
-        unhandled(buildEnvSetupStepInfo.getBuildJobEnvInfo().getType());
+        unhandled(buildEnvSetupStepInfo.getSetupEnv().getBuildJobEnvInfo().getType());
     }
     return null;
   }

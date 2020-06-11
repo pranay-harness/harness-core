@@ -17,9 +17,9 @@ public class ContainerTest extends CategoryTest {
   public void TestBuilderDefaults() {
     final Container container = Container.builder().resources(Container.Resources.builder().build()).build();
 
-    assertThat(container.getResources().getLimitMemoryMiB()).isEqualTo(900);
+    assertThat(container.getResources().getReserve().getMemory()).isEqualTo(Container.MEM_RESERVE_DEFAULT);
 
-    final RunStepInfo runStepInfo = RunStepInfo.builder().build();
-    assertThat(runStepInfo.isRunInBackground()).isFalse();
+    final RunStepInfo runStepInfo = RunStepInfo.builder().run(RunStepInfo.Run.builder().build()).build();
+    assertThat(runStepInfo.getRun().isRunInBackground()).isFalse();
   }
 }
