@@ -96,19 +96,19 @@ public class EcsSteadyStateCheck extends State {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
       Activity activity = createActivity(context);
       AwsConfig awsConfig = getAwsConfig(ecsInfrastructureMapping.getComputeProviderSettingId());
-      EcsSteadyStateCheckParams params =
-          EcsSteadyStateCheckParams.builder()
-              .appId(app.getUuid())
-              .region(ecsInfrastructureMapping.getRegion())
-              .accountId(app.getAccountId())
-              .timeoutInMs(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-              .activityId(activity.getUuid())
-              .commandName(ECS_STEADY_STATE_CHECK_COMMAND_NAME)
-              .clusterName(ecsInfrastructureMapping.getClusterName())
-              .serviceName(context.renderExpression(ecsServiceName))
-              .awsConfig(awsConfig)
-              .encryptionDetails(secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null))
-              .build();
+      EcsSteadyStateCheckParams params = EcsSteadyStateCheckParams.builder()
+                                             .appId(app.getUuid())
+                                             .region(ecsInfrastructureMapping.getRegion())
+                                             .accountId(app.getAccountId())
+                                             .timeoutInMs(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                                             .activityId(activity.getUuid())
+                                             .commandName(ECS_STEADY_STATE_CHECK_COMMAND_NAME)
+                                             .clusterName(ecsInfrastructureMapping.getClusterName())
+                                             .serviceName(context.renderExpression(ecsServiceName))
+                                             .awsConfig(awsConfig)
+                                             .encryptionDetails(secretManager.getEncryptionDetails(
+                                                 awsConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId()))
+                                             .build();
       DelegateTask delegateTask =
           DelegateTask.builder()
               .accountId(app.getAccountId())

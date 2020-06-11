@@ -84,7 +84,8 @@ public class CloudFormationCreateStackState extends CloudFormationState {
       gitConfig.setReference(provisioner.getGitFileConfig().getCommitId());
       builder.createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT)
           .gitFileConfig(provisioner.getGitFileConfig())
-          .encryptedDataDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
+          .encryptedDataDetails(
+              secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId()))
           .gitConfig(gitConfig);
     } else {
       throw new WingsException("Create type is not set on cloud provisioner");
