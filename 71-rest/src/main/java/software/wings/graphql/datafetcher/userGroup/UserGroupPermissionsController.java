@@ -270,9 +270,17 @@ public class UserGroupPermissionsController {
     return WorkflowFilter.builder().ids(pipelinePermissions.getEnvIds()).filterTypes(filterTypes).build();
   }
 
+  private void addDeploymentPermissions(Set<QLActions> actionsList) {
+    if (actionsList.contains(QLActions.EXECUTE)) {
+      actionsList.add(QLActions.EXECUTE_WORKFLOW);
+      actionsList.add(QLActions.EXECUTE_PIPELINE);
+    }
+  }
+
   public AppPermission convertToAppPermissionEntity(QLAppPermission permission) {
     // Converting the GraphQL actions to portal actions
     Set<QLActions> actionsList = permission.getActions();
+    addDeploymentPermissions(actionsList);
     Set<Action> actions = actionsList.stream().map(this ::mapAppActions).collect(Collectors.toSet());
     // Change the graphQL permissionType to the portal permissionType enum
     QLPermissionType permissionType = permission.getPermissionType();
