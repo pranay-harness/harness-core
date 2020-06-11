@@ -112,7 +112,7 @@ public class GcbServiceImpl implements GcbService {
     }
   }
 
-  private <T> T getRestClient(final Class<T> client, String baseUrl) {
+  protected <T> T getRestClient(final Class<T> client, String baseUrl) {
     OkHttpClient okHttpClient = getOkHttpClientBuilder()
                                     .connectTimeout(5, TimeUnit.SECONDS)
                                     .proxy(Http.checkAndGetNonProxyIfApplicable(baseUrl))
@@ -125,7 +125,7 @@ public class GcbServiceImpl implements GcbService {
     return retrofit.create(client);
   }
 
-  private String getBasicAuthHeader(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails)
+  protected String getBasicAuthHeader(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails)
       throws IOException {
     GoogleCredential gc = gcpHelperService.getGoogleCredential(gcpConfig, encryptionDetails);
 
