@@ -133,4 +133,11 @@ public class CustomExecutionResource {
   public RestResponse<PlanExecution> testArtifactStep() {
     return new RestResponse<>(customExecutionService.testArtifactState());
   }
+
+  @GET
+  @Path("/test-service-state")
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<PlanExecution> testServiceStep() {
+    return new RestResponse<>(customExecutionService.testServiceState());
+  }
 }
