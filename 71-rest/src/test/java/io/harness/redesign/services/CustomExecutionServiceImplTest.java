@@ -13,8 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.engine.EngineService;
-import io.harness.engine.GraphGenerator;
-import io.harness.engine.services.PlanExecutionService;
+import io.harness.engine.services.GraphGenerationService;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.plan.Plan;
@@ -33,11 +32,13 @@ import software.wings.beans.User;
 import software.wings.events.TestUtils;
 import software.wings.security.UserThreadLocal;
 
+/**
+ * Test class for {@link CustomExecutionServiceImpl}
+ */
 public class CustomExecutionServiceImplTest extends WingsBaseTest {
   @Inject private TestUtils testUtils;
   @Mock private EngineService engineService;
-  @Mock private GraphGenerator graphGenerator;
-  @Mock private PlanExecutionService planExecutionService;
+  @Mock private GraphGenerationService graphGenerationService;
   @InjectMocks @Inject private CustomExecutionServiceImpl customExecutionService;
 
   private User user;
@@ -130,13 +131,8 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
                                   .next(null)
                                   .subgraph(null)
                                   .build();
-    when(planExecutionService.get(planExecutionId))
-        .thenReturn(PlanExecution.builder()
-                        .uuid(planExecutionId)
-                        .status(RUNNING)
-                        .plan(CustomExecutionUtils.provideGraphTestPlan())
-                        .build());
-    when(graphGenerator.generateGraphVertex(planExecutionId)).thenReturn(graphVertex);
+    when(graphGenerationService.generateGraph(planExecutionId))
+        .thenReturn(Graph.builder().graphVertex(graphVertex).build());
     Graph graph = customExecutionService.getGraph(planExecutionId);
 
     assertThat(graph).isNotNull();

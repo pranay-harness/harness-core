@@ -48,6 +48,13 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
+  public List<NodeExecution> fetchNodeExecutionsWithoutOldRetries(String planExecutionId) {
+    return fetchNodeExecutionsInternal(hPersistence.createQuery(NodeExecution.class, excludeAuthority)
+                                           .filter(NodeExecutionKeys.planExecutionId, planExecutionId)
+                                           .filter(NodeExecutionKeys.oldRetry, Boolean.FALSE));
+  }
+
+  @Override
   public List<NodeExecution> fetchChildrenNodeExecutions(String planExecutionId, String parentId) {
     return fetchNodeExecutionsInternal(hPersistence.createQuery(NodeExecution.class, excludeAuthority)
                                            .filter(NodeExecutionKeys.planExecutionId, planExecutionId)

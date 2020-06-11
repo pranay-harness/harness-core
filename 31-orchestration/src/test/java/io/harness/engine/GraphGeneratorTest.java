@@ -11,9 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.services.OutcomeService;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.ExecutionMode;
@@ -45,7 +43,6 @@ public class GraphGeneratorTest extends OrchestrationTest {
   private static final String PLAN_EXECUTION_ID = "planId";
   private static final String STARTING_EXECUTION_NODE_ID = "startID";
 
-  @Mock private NodeExecutionService nodeExecutionService;
   @Mock private OutcomeService outcomeService;
   @InjectMocks @Inject private GraphGenerator graphGenerator;
 
@@ -58,12 +55,8 @@ public class GraphGeneratorTest extends OrchestrationTest {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void shouldReturnNullWhenNoNodesFound() {
-    when(nodeExecutionService.fetchNodeExecutions(null)).thenReturn(Collections.emptyList());
-
-    assertThatThrownBy(() -> graphGenerator.generateGraphVertex(null))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("No nodes found for planExecutionId [null]");
+  public void shouldReturnNullWhenStartingNodeExIdIsNull() {
+    assertThat(graphGenerator.generateGraphVertexStartingFrom(null, Collections.emptyList())).isNull();
   }
 
   @Test
@@ -83,9 +76,9 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                    .nextId("node2")
                                    .build();
 
-    when(nodeExecutionService.fetchNodeExecutions(PLAN_EXECUTION_ID)).thenReturn(Collections.singletonList(dummyStart));
-
-    assertThatThrownBy(() -> graphGenerator.generateGraphVertex(PLAN_EXECUTION_ID))
+    assertThatThrownBy(()
+                           -> graphGenerator.generateGraphVertexStartingFrom(
+                               dummyStart.getUuid(), Collections.singletonList(dummyStart)))
         .isInstanceOf(UnexpectedException.class);
   }
 
@@ -134,9 +127,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                      .build();
     List<NodeExecution> nodeExecutions = Lists.newArrayList(dummyStart, section, sectionChild);
 
-    when(nodeExecutionService.fetchNodeExecutions(PLAN_EXECUTION_ID)).thenReturn(nodeExecutions);
-
-    GraphVertex graphVertex = graphGenerator.generateGraphVertex(PLAN_EXECUTION_ID);
+    GraphVertex graphVertex = graphGenerator.generateGraphVertexStartingFrom(dummyStart.getUuid(), nodeExecutions);
 
     assertThat(graphVertex).isNotNull();
     assertThat(graphVertex.getUuid()).isEqualTo(dummyStart.getUuid());
@@ -199,9 +190,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                       .build();
     List<NodeExecution> nodeExecutions = Lists.newArrayList(fork, parallelNode1, parallelNode2);
 
-    when(nodeExecutionService.fetchNodeExecutions(PLAN_EXECUTION_ID)).thenReturn(nodeExecutions);
-
-    GraphVertex graphVertex = graphGenerator.generateGraphVertex(PLAN_EXECUTION_ID);
+    GraphVertex graphVertex = graphGenerator.generateGraphVertexStartingFrom(fork.getUuid(), nodeExecutions);
 
     assertThat(graphVertex).isNotNull();
     assertThat(graphVertex.getUuid()).isEqualTo(fork.getUuid());
@@ -290,9 +279,8 @@ public class GraphGeneratorTest extends OrchestrationTest {
     List<NodeExecution> nodeExecutions =
         Lists.newArrayList(sectionChainParentNode, sectionChain1, sectionChain2, dummyNode1, dummyNode2);
 
-    when(nodeExecutionService.fetchNodeExecutions(PLAN_EXECUTION_ID)).thenReturn(nodeExecutions);
-
-    GraphVertex graphVertex = graphGenerator.generateGraphVertex(PLAN_EXECUTION_ID);
+    GraphVertex graphVertex =
+        graphGenerator.generateGraphVertexStartingFrom(sectionChainParentNode.getUuid(), nodeExecutions);
 
     assertThat(graphVertex).isNotNull();
     assertThat(graphVertex.getNext()).isNull();

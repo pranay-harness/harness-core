@@ -18,6 +18,8 @@ public interface NodeExecutionService {
 
   List<NodeExecution> fetchNodeExecutions(String planExecutionId);
 
+  List<NodeExecution> fetchNodeExecutionsWithoutOldRetries(String planExecutionId);
+
   List<NodeExecution> fetchChildrenNodeExecutions(String planExecutionId, String parentId);
 
   List<NodeExecution> fetchNodeExecutionsByStatus(String planExecutionId, Status status);

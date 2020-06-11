@@ -11,10 +11,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.engine.EngineService;
-import io.harness.engine.GraphGenerator;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
-import io.harness.engine.services.PlanExecutionService;
+import io.harness.engine.services.GraphGenerationService;
 import io.harness.exception.GeneralException;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
@@ -34,9 +33,8 @@ import java.io.IOException;
 public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Inject private EngineService engineService;
   @Inject private InterruptManager interruptManager;
-  @Inject private GraphGenerator graphGenerator;
   @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
-  @Inject private PlanExecutionService planExecutionService;
+  @Inject private GraphGenerationService graphGenerationService;
 
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
   private static final String APP_ID = "d9cTupsyQjWqbhUmZ8XPdQ";
@@ -122,14 +120,7 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
 
   @Override
   public Graph getGraph(String planExecutionId) {
-    PlanExecution planExecution = planExecutionService.get(planExecutionId);
-    return Graph.builder()
-        .planExecutionId(planExecution.getUuid())
-        .startTs(planExecution.getStartTs())
-        .endTs(planExecution.getEndTs())
-        .status(planExecution.getStatus())
-        .graphVertex(graphGenerator.generateGraphVertex(planExecution.getUuid()))
-        .build();
+    return graphGenerationService.generateGraph(planExecutionId);
   }
 
   @Override
