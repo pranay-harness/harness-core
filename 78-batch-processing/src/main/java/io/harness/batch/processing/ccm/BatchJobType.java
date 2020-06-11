@@ -15,7 +15,7 @@ import java.util.List;
 @Getter
 public enum BatchJobType {
   BILLING_DATA_PIPELINE(50, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
-  SYNC_BILLING_REPORT_S3(100, 1, ChronoUnit.DAYS, emptyList(), OUT_OF_CLUSTER),
+  SYNC_BILLING_REPORT_S3(100, 6, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
   DEPLOYMENT_EVENT(150, 1, ChronoUnit.DAYS, emptyList(), IN_CLUSTER),
   ECS_EVENT(200, 1, ChronoUnit.DAYS, emptyList(), IN_CLUSTER),
   K8S_EVENT(300, 1, ChronoUnit.DAYS, emptyList(), IN_CLUSTER),
