@@ -14,9 +14,7 @@ import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.services.OutcomeService;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.ExecutionMode;
@@ -33,32 +31,22 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Singleton
 public class GraphGenerator {
-  @Inject private NodeExecutionService nodeExecutionService;
   @Inject private OutcomeService outcomeService;
 
-  public GraphVertex generateGraphVertex(String planExecutionId) {
-    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutions(planExecutionId);
-    if (isEmpty(nodeExecutions)) {
-      throw new InvalidRequestException("No nodes found for planExecutionId [" + planExecutionId + "]");
+  public GraphVertex generateGraphVertexStartingFrom(String startingNodeExId, List<NodeExecution> nodeExecutions) {
+    if (isEmpty(startingNodeExId)) {
+      logger.warn("Starting node cannot be null");
+      return null;
     }
-
-    return generate(nodeExecutions);
+    return generate(startingNodeExId, nodeExecutions);
   }
 
-  GraphVertex generate(List<NodeExecution> nodeExecutions) {
+  GraphVertex generate(String startingNodeExId, List<NodeExecution> nodeExecutions) {
     Map<String, NodeExecution> nodeExIdMap = obtainNodeExecutionMap(nodeExecutions);
     Map<String, List<String>> parentIdMap = obtainParentIdMap(nodeExecutions);
 
     final GraphGeneratorSession session = new GraphGeneratorSession(nodeExIdMap, parentIdMap);
-    return session.generateGraph(obtainStartingNodeExId(nodeExecutions));
-  }
-
-  private String obtainStartingNodeExId(List<NodeExecution> nodeExecutions) {
-    return nodeExecutions.stream()
-        .filter(node -> isEmpty(node.getParentId()) && isEmpty(node.getPreviousId()))
-        .findFirst()
-        .orElseThrow(() -> new InvalidRequestException("Starting node is not found"))
-        .getUuid();
+    return session.generateGraph(startingNodeExId);
   }
 
   private Map<String, NodeExecution> obtainNodeExecutionMap(List<NodeExecution> nodeExecutions) {
@@ -100,6 +88,7 @@ public class GraphGenerator {
               .failureInfo(currentNode.getFailureInfo())
               .interruptHistories(currentNode.getInterruptHistories())
               .outcomes(outcomeService.findAllByRuntimeId(currentNode.getPlanExecutionId(), currentNode.getUuid()))
+              .retryIds(currentNode.getRetryIds())
               .build();
 
       if (parentIdMap.containsKey(currentNode.getUuid())) {

@@ -10,14 +10,15 @@ import com.google.inject.name.Names;
 import io.harness.engine.EngineObtainmentHelper;
 import io.harness.engine.EngineService;
 import io.harness.engine.EngineServiceImpl;
-import io.harness.engine.GraphGenerator;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.expressions.EngineExpressionServiceImpl;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
+import io.harness.engine.services.GraphGenerationService;
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.services.OutcomeService;
 import io.harness.engine.services.PlanExecutionService;
+import io.harness.engine.services.impl.GraphGenerationServiceImpl;
 import io.harness.engine.services.impl.NodeExecutionServiceImpl;
 import io.harness.engine.services.impl.OutcomeServiceImpl;
 import io.harness.engine.services.impl.PlanExecutionServiceImpl;
@@ -60,7 +61,7 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
     bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingOutputServiceImpl.class);
     bind(HPersistence.class).annotatedWith(Names.named("enginePersistence")).to(MongoPersistence.class);
     bind(EngineService.class).to(EngineServiceImpl.class);
-    bind(GraphGenerator.class).toInstance(new GraphGenerator());
+    bind(GraphGenerationService.class).to(GraphGenerationServiceImpl.class);
     bind(EngineObtainmentHelper.class).toInstance(new EngineObtainmentHelper());
     bind(ExecutorService.class)
         .annotatedWith(Names.named("EngineExecutorService"))

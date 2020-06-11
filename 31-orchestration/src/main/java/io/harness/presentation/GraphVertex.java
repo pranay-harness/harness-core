@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.util.List;
 
@@ -18,7 +19,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class GraphVertex {
+public class GraphVertex implements Serializable {
   private String uuid;
   private String name;
   private Long startTs;
@@ -31,6 +32,7 @@ public class GraphVertex {
 
   private List<InterruptEffect> interruptHistories;
   private List<Outcome> outcomes;
+  private List<String> retryIds;
 
   private Subgraph subgraph;
   private GraphVertex next;

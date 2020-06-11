@@ -27,6 +27,7 @@ import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
 import io.harness.tasks.Task;
 
+import java.io.Serializable;
 import java.util.Set;
 
 @OwnedBy(CDC)
@@ -47,6 +48,7 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Task.class);
     set.add(ExecutableResponse.class);
     set.add(PassThroughData.class);
+    set.add(Serializable.class);
   }
 
   @Override

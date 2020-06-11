@@ -30,7 +30,6 @@ import io.restassured.config.SSLConfig;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.api.HttpStateExecutionData;
@@ -41,9 +40,9 @@ import java.util.Map;
 import javax.ws.rs.core.GenericType;
 
 /**
- * Functional Tests for {@link io.harness.engine.GraphGenerator}
+ * Functional Tests for {@link io.harness.engine.services.GraphGenerationService}
  */
-public class GraphGeneratorFunctionalTest extends AbstractFunctionalTest {
+public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
   private static final String BASIC_HTTP_STEP_TYPE = "BASIC_HTTP";
 
   @Inject private OwnerManager ownerManager;
@@ -64,7 +63,7 @@ public class GraphGeneratorFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ALEXEI)
   @Category(FunctionalTests.class)
-  @Ignore("Alternative to JsonTypeInfo on Outcomes/StepParameter  needs to be seen")
+  //@Ignore("Alternative to JsonTypeInfo on Outcomes/StepParameter  needs to be seen")
   public void shouldGenerateGraph() {
     PlanExecution planExecutionResponse =
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
