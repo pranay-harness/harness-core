@@ -43,6 +43,7 @@ import java.util.HashMap;
 public class K8sDeleteTest extends WingsBaseTest {
   private static final String RELEASE_NAME = "releaseName";
   private static final String FILE_PATHS = "abc/xyz";
+  private static final String RESOURCES = "*";
 
   @Mock private K8sStateHelper k8sStateHelper;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
@@ -58,7 +59,8 @@ public class K8sDeleteTest extends WingsBaseTest {
   public void setup() {
     context = new ExecutionContextImpl(stateExecutionInstance);
     k8sDelete.setFilePaths(FILE_PATHS);
-
+    k8sDelete.setDeleteNamespacesForRelease(true);
+    k8sDelete.setResources(RESOURCES);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
         .thenAnswer(i -> i.getArguments()[0]);
@@ -92,5 +94,7 @@ public class K8sDeleteTest extends WingsBaseTest {
     assertThat(taskParams.getCommandType()).isEqualTo(DELETE);
     assertThat(taskParams.getCommandName()).isEqualTo(K8sDelete.K8S_DELETE_COMMAND_NAME);
     assertThat(taskParams.getFilePaths()).isEqualTo(FILE_PATHS);
+    assertThat(taskParams.isDeleteNamespacesForRelease()).isEqualTo(true);
+    assertThat(taskParams.getResources()).isEqualTo(RESOURCES);
   }
 }
