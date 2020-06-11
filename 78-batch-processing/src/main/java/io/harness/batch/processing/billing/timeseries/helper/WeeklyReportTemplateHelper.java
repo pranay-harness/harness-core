@@ -18,14 +18,14 @@ public class WeeklyReportTemplateHelper {
 
   private static final String CLUSTER_COST_NOT_AVAILABLE = "<span style='color: #DBDCDD;font-size: 40px;'>-</span>";
   private static final String TOTAL_CLUSTER_COST_AVAILABLE =
-      "<span style=\"color: %s; font-size: 13px;text-align: center\">%s | %s</span><br><span style=\"color: #00ade4;font-size: 38px;\"><span class=\"clusterCost\">%s</span></span><br><span style=\"font-size: 10px; color: #808080\">Cluster cost</span>";
+      "<span style=\"color: %s; font-size: 13px;text-align: center\">%s | %s</span><br><span style=\"color: #00ade4;font-size: 32px;\"><span class=\"clusterCost\">%s</span></span><br><span style=\"font-size: 10px; color: #808080\">Cluster cost</span>";
   private static final String COST_NOT_AVAILABLE = "";
   private static final String APPLICATION_RELATED_COSTS_AVAILABLE =
-      "<tr><td align=\"left\" valign=\"top\" style=\"-webkit-font-smoothing: antialiased; text-size-adjust: 100%%; -ms-text-size-adjust: 100%%; -webkit-text-size-adjust: 100%%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 7%%; padding-right: 6.25%%; width: 87.5%%; font-size: 17px; font-weight: 400; line-height: 160%%; padding-bottom: 25px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;\" class=\"paragraph\" width=\"87.5%%\"><h1 style=\"font-size: 18px; font-weight: normal;\">Applications</h1><h1 style=\"font-size: 14px; font-weight: normal;\">%s</h1></td></tr>";
+      "<tr><td align=\"left\" valign=\"top\" style=\"-webkit-font-smoothing: antialiased; text-size-adjust: 100%%; -ms-text-size-adjust: 100%%; -webkit-text-size-adjust: 100%%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 7%%; padding-right: 6.25%%; min-width: 87.5%%; max-width: 87.5%%; font-size: 17px; font-weight: 400; line-height: 160%%; padding-bottom: 25px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;\" class=\"paragraph\" width=\"87.5%%\"><h1 style=\"font-size: 18px; font-weight: normal;\">Applications</h1><h1 style=\"font-size: 14px; font-weight: normal;\">%s</h1></td></tr>";
   private static final String CLUSTER_RELATED_COSTS_AVAILABLE =
-      "<tr><td align=\"left\" valign=\"top\" style=\"-webkit-font-smoothing: antialiased; text-size-adjust: 100%%; -ms-text-size-adjust: 100%%; -webkit-text-size-adjust: 100%%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 7%%; padding-right: 6.25%%; width: 87.5%%; font-size: 17px; font-weight: 400; line-height: 160%%; padding-bottom: 25px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;\" class=\"paragraph\" width=\"87.5%%\"><h1 style=\"font-size: 18px; font-weight: normal;\">Clusters</h1><h1 style=\"font-size: 14px; font-weight: normal;\">%s</h1></td></tr>";
+      "<tr><td align=\"left\" valign=\"top\" style=\"-webkit-font-smoothing: antialiased; text-size-adjust: 100%%; -ms-text-size-adjust: 100%%; -webkit-text-size-adjust: 100%%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 7%%; padding-right: 6.25%%; min-width: 87.5%%; max-width: 87.5%%; font-size: 17px; font-weight: 400; line-height: 160%%; padding-bottom: 25px; color: #000000; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;\" class=\"paragraph\" width=\"87.5%%\"><h1 style=\"font-size: 18px; font-weight: normal;\">Clusters</h1><h1 style=\"font-size: 14px; font-weight: normal;\">%s</h1></td></tr>";
   private static final String ENTITY_COST_AVAILABLE =
-      "<span>%s: <a href=\"%s\" target=\"_blank\"><span style=\"color: #00ade4\">%s </span></a>%s <span style=\"color: %s; font-size: 13px;\">(%s | %s)</span><br>";
+      "<span>%s: </span><a href=\"%s\" target=\"_blank\" style=\"text-decoration: none;\"><span style=\"color: #00ade4\">%s </span></a>%s <span style=\"color: %s; font-size: 13px;\">(%s | %s)</span><br>";
 
   public static final String TOTAL_CLUSTER_COST = "TOTAL_CLUSTER";
   public static final String TOTAL_CLUSTER_IDLE_COST = "TOTAL_CLUSTER_IDLE";
@@ -44,7 +44,7 @@ public class WeeklyReportTemplateHelper {
   public static final String PARENT = "PARENT";
 
   public static final String NAME = "_NAME";
-  public static final String ID = "_NAME";
+  public static final String ID = "_ID";
   public static final String COST = "_COST";
   public static final String COST_CHANGE_PERCENT = "_COST_CHANGE_PERCENT";
   public static final String COST_DIFF_AMOUNT = "_COST_DIFF";

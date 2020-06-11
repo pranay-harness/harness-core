@@ -259,6 +259,11 @@ public class WeeklyReportServiceImpl {
         populateDefaultPlaceholderValues(costValues, ENVIRONMENT);
       }
 
+      if (costValues.get(APPLICATION_RELATED_COSTS).equals(NOT_AVAILABLE)
+          && costValues.get(CLUSTER_RELATED_COSTS).equals(NOT_AVAILABLE)) {
+        return;
+      }
+
       templateHelper.populateCostDataForTemplate(templateModel, costValues);
 
       templateModel.put("DATE", reportDateRange);
