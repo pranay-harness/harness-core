@@ -37,7 +37,7 @@ public class RunStepInfo implements CIStepInfo, GenericStepInfo {
   @Min(MIN_RETRY) @Max(MAX_RETRY) int retry;
   @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) int timeout;
 
-  Run run;
+  @NotNull Run run;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "timeout", "run"})

@@ -13,7 +13,8 @@ publishArtifacts:
     image: ui
     tag: 1.0.0
     buildArguments:
-      - key: value
+      key1: value1
+      key2: value2
     destination:
       location: eu.gcr.io/harness/ui:latest
       connector: myDockerRepoConnector

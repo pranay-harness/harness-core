@@ -61,7 +61,8 @@ public class PublishStepInfoTest extends CIBeansTest {
     assertThat(dockerFileArtifact1.getDockerFile()).isEqualTo("~/Dockerfile");
     assertThat(dockerFileArtifact1.getImage()).isEqualTo("ui");
     assertThat(dockerFileArtifact1.getTag()).isEqualTo("1.0.0");
-    assertThat(dockerFileArtifact1.getBuildArguments().get(0).get("key")).isEqualTo("value");
+    assertThat(dockerFileArtifact1.getBuildArguments().get("key1")).isEqualTo("value1");
+    assertThat(dockerFileArtifact1.getBuildArguments().get("key2")).isEqualTo("value2");
     assertThat(dockerFileArtifact1.getDestination().getLocation()).isEqualTo("eu.gcr.io/harness/ui:latest");
     assertThat(dockerFileArtifact1.getDestination().getConnector()).isEqualTo("myDockerRepoConnector");
 

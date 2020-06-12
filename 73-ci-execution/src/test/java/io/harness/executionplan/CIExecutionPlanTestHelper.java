@@ -22,9 +22,9 @@ import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.yaml.core.Artifact;
 import io.harness.yaml.core.Execution;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionSection;
+import io.harness.yaml.core.auxiliary.intfc.StageWrapper;
 import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.core.intfc.Infrastructure;
-import io.harness.yaml.core.intfc.Stage;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -91,7 +91,7 @@ public class CIExecutionPlanTestHelper {
     return CIPipeline.builder().identifier("testPipelineIdentifier").stages(getStages()).build();
   }
 
-  private List<Stage> getStages() {
+  private List<StageWrapper> getStages() {
     return new ArrayList<>(Collections.singletonList(getIntegrationStage()));
   }
 
@@ -131,13 +131,15 @@ public class CIExecutionPlanTestHelper {
   }
   public IntegrationStage getIntegrationStage() {
     return IntegrationStage.builder()
-        .execution(getExecution())
-        .connector(getConnector())
-        .container(getContainer())
-        .artifact(getArtifact())
-        .infrastructure(getInfrastructure())
-        .type("integration")
         .identifier("intStageIdentifier")
+        .ci(IntegrationStage.Integration.builder()
+                .execution(getExecution())
+                .connector(getConnector())
+                .container(getContainer())
+                .artifact(getArtifact())
+                .infrastructure(getInfrastructure())
+                .build())
+
         .build();
   }
 }

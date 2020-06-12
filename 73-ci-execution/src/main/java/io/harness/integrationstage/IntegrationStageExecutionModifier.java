@@ -60,8 +60,8 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
 
   private Execution getPreIntegrationExecution(IntegrationStage integrationStage) {
     // TODO Only git is supported currently
-    if (integrationStage.getConnector().getType().equals("git")) {
-      GitConnectorYaml gitConnectorYaml = (GitConnectorYaml) integrationStage.getConnector();
+    if (integrationStage.getCi().getConnector().getType().equals("git")) {
+      GitConnectorYaml gitConnectorYaml = (GitConnectorYaml) integrationStage.getCi().getConnector();
       return Execution.builder()
           .steps(asList(BuildEnvSetupStepInfo.builder()
                             .identifier(ENV_SETUP_NAME)
@@ -78,7 +78,8 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
   }
 
   private String getBranchName(IntegrationStage integrationStage) {
-    Optional<ExecutionSection> executionSection = integrationStage.getExecution()
+    Optional<ExecutionSection> executionSection = integrationStage.getCi()
+                                                      .getExecution()
                                                       .getSteps()
                                                       .stream()
                                                       .filter(section -> section instanceof GitCloneStepInfo)
@@ -97,10 +98,10 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
 
   private BuildJobEnvInfo getCIBuildJobEnvInfo(IntegrationStage integrationStage) {
     // TODO Only kubernetes is supported currently
-    if (integrationStage.getInfrastructure().getType().equals("kubernetes-direct")) {
+    if (integrationStage.getCi().getInfrastructure().getType().equals("kubernetes-direct")) {
       return K8BuildJobEnvInfo.builder()
           .podsSetupInfo(getCIPodsSetupInfo(integrationStage))
-          .workDir(integrationStage.getWorkingDirectory())
+          .workDir(integrationStage.getCi().getWorkingDirectory())
           .build();
     } else {
       throw new IllegalArgumentException("Input infrastructure type is not of type kubernetes");
@@ -110,30 +111,30 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
   private K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfo(IntegrationStage integrationStage) {
     ContainerResourceParams containerResourceParams =
         ContainerResourceParams.builder()
-            .resourceRequestMilliCpu(integrationStage.getContainer().getResources().getReserve().getCpu())
-            .resourceRequestMemoryMiB(integrationStage.getContainer().getResources().getReserve().getMemory())
-            .resourceLimitMilliCpu(integrationStage.getContainer().getResources().getLimit().getCpu())
-            .resourceLimitMemoryMiB(integrationStage.getContainer().getResources().getLimit().getMemory())
+            .resourceRequestMilliCpu(integrationStage.getCi().getContainer().getResources().getReserve().getCpu())
+            .resourceRequestMemoryMiB(integrationStage.getCi().getContainer().getResources().getReserve().getMemory())
+            .resourceLimitMilliCpu(integrationStage.getCi().getContainer().getResources().getLimit().getCpu())
+            .resourceLimitMemoryMiB(integrationStage.getCi().getContainer().getResources().getLimit().getMemory())
             .build();
 
     List<PodSetupInfo> pods = new ArrayList<>();
-    pods.add(
-        PodSetupInfo.builder()
-            .podSetupParams(PodSetupInfo.PodSetupParams.builder()
-                                .containerDefinitionInfos(asList(
-                                    ContainerDefinitionInfo.builder()
-                                        .containerResourceParams(containerResourceParams)
-                                        .containerImageDetails(
-                                            ContainerImageDetails.builder()
-                                                .imageDetails(imageDetails)
-                                                .connectorIdentifier(integrationStage.getArtifact().getIdentifier())
-                                                .build())
-                                        .containerType(ContainerType.STEP_EXECUTOR)
-                                        .name(CONTAINER_NAME)
-                                        .build()))
-                                .build())
-            .name(podName)
-            .build());
+    pods.add(PodSetupInfo.builder()
+                 .podSetupParams(
+                     PodSetupInfo.PodSetupParams.builder()
+                         .containerDefinitionInfos(asList(
+                             ContainerDefinitionInfo.builder()
+                                 .containerResourceParams(containerResourceParams)
+                                 .containerImageDetails(
+                                     ContainerImageDetails.builder()
+                                         .imageDetails(imageDetails)
+                                         .connectorIdentifier(integrationStage.getCi().getArtifact().getIdentifier())
+                                         .build())
+                                 .containerType(ContainerType.STEP_EXECUTOR)
+                                 .name(CONTAINER_NAME)
+                                 .build()))
+                         .build())
+                 .name(podName)
+                 .build());
     return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
   }
 }
