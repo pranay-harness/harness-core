@@ -27,17 +27,17 @@ public class TestStepInfo implements CIStepInfo {
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  private static final TypeInfo typeInfo = TypeInfo.builder()
-                                               .stepInfoType(CIStepInfoType.TEST)
-                                               .stepType(StepType.builder().type(CIStepInfoType.TEST.name()).build())
-                                               .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder()
+                                              .stepInfoType(CIStepInfoType.TEST)
+                                              .stepType(StepType.builder().type(CIStepInfoType.TEST.name()).build())
+                                              .build();
 
   @NotNull String identifier;
   String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) int retry;
   @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) int timeout;
 
-  Test test;
+  @NotNull Test test;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "timeout", "test"})

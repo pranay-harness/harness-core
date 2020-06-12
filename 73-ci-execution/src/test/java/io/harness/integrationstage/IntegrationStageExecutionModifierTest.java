@@ -30,7 +30,7 @@ public class IntegrationStageExecutionModifierTest extends CIExecutionTest {
   private StageExecutionModifier stageExecutionModifier;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     stageExecutionModifier = IntegrationStageExecutionModifier.builder().podName(POD_NAME).build();
   }
 
@@ -39,7 +39,7 @@ public class IntegrationStageExecutionModifierTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldModifyExecutionPlan() {
     IntegrationStage stage = ciExecutionPlanTestHelper.getIntegrationStage();
-    Execution modifiedExecution = stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage);
+    Execution modifiedExecution = stageExecutionModifier.modifyExecutionPlan(stage.getCi().getExecution(), stage);
     assertThat(modifiedExecution).isNotNull();
     assertThat(modifiedExecution.getSteps()).isNotNull();
     assertThat(modifiedExecution.getSteps().get(0)).isInstanceOf(BuildEnvSetupStepInfo.class);
@@ -51,14 +51,16 @@ public class IntegrationStageExecutionModifierTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void testExpectingGitConnector() {
     IntegrationStage stage = IntegrationStage.builder()
-                                 .execution(ciExecutionPlanTestHelper.getExecution())
-                                 .connector(GitConnectorYaml.builder().type("***").build())
-                                 .container(ciExecutionPlanTestHelper.getContainer())
-                                 .artifact(ciExecutionPlanTestHelper.getArtifact())
+                                 .ci(IntegrationStage.Integration.builder()
+                                         .execution(ciExecutionPlanTestHelper.getExecution())
+                                         .connector(GitConnectorYaml.builder().type("***").build())
+                                         .container(ciExecutionPlanTestHelper.getContainer())
+                                         .artifact(ciExecutionPlanTestHelper.getArtifact())
+                                         .build())
                                  .build();
 
     Assertions.assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage));
+        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getCi().getExecution(), stage));
   }
 
   @Test
@@ -67,14 +69,18 @@ public class IntegrationStageExecutionModifierTest extends CIExecutionTest {
   public void testExpectingGitConnectorWithoutGitStep() {
     IntegrationStage stage =
         IntegrationStage.builder()
-            .execution(Execution.builder().steps(new ArrayList<>(Arrays.asList(RunStepInfo.builder().build()))).build())
-            .connector(ciExecutionPlanTestHelper.getConnector())
-            .container(ciExecutionPlanTestHelper.getContainer())
-            .artifact(ciExecutionPlanTestHelper.getArtifact())
+            .ci(IntegrationStage.Integration.builder()
+                    .execution(Execution.builder()
+                                   .steps(new ArrayList<>(Arrays.asList(RunStepInfo.builder().build())))
+                                   .build())
+                    .connector(ciExecutionPlanTestHelper.getConnector())
+                    .container(ciExecutionPlanTestHelper.getContainer())
+                    .artifact(ciExecutionPlanTestHelper.getArtifact())
+                    .build())
             .build();
 
     Assertions.assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage));
+        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getCi().getExecution(), stage));
   }
 
   @Test

@@ -919,10 +919,14 @@ public class CustomExecutionUtils {
     PipelineInfrastructure pipelineInfrastructure =
         PipelineInfrastructure.builder().infraDefinition(k8sDirectInfraDefinition).build();
 
-    CDPipeline cdPipeline =
-        CDPipeline.builder()
-            .stage(DeploymentStage.builder().service(service).infrastructure(pipelineInfrastructure).build())
-            .build();
+    CDPipeline cdPipeline = CDPipeline.builder()
+                                .stage(DeploymentStage.builder()
+                                           .deployment(DeploymentStage.Deployment.builder()
+                                                           .service(service)
+                                                           .infrastructure(pipelineInfrastructure)
+                                                           .build())
+                                           .build())
+                                .build();
 
     ShellScriptStepParameters shellScriptStepParameters =
         ShellScriptStepParameters.builder()
@@ -1343,7 +1347,12 @@ public class CustomExecutionUtils {
         PipelineInfrastructure.builder().infraDefinition(k8sDirectInfraDefinition).build();
 
     return CDPipeline.builder()
-        .stage(DeploymentStage.builder().service(service).infrastructure(pipelineInfrastructure).build())
+        .stage(DeploymentStage.builder()
+                   .deployment(DeploymentStage.Deployment.builder()
+                                   .service(service)
+                                   .infrastructure(pipelineInfrastructure)
+                                   .build())
+                   .build())
         .build();
   }
 }

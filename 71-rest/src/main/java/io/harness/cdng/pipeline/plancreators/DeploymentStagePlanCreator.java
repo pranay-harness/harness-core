@@ -36,8 +36,9 @@ public class DeploymentStagePlanCreator implements SupportDefinedExecutorPlanCre
   @Override
   public CreateExecutionPlanResponse createPlan(DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
     final CreateExecutionPlanResponse planForExecution =
-        createPlanForExecution(deploymentStage.getExecution(), context);
-    final CreateExecutionPlanResponse planForService = createPlanForService(deploymentStage.getService(), context);
+        createPlanForExecution(deploymentStage.getDeployment().getExecution(), context);
+    final CreateExecutionPlanResponse planForService =
+        createPlanForService(deploymentStage.getDeployment().getService(), context);
     final PlanNode deploymentStageNode =
         prepareDeploymentNode(deploymentStage, context, planForExecution, planForService);
 

@@ -1,15 +1,16 @@
 package io.harness.beans.stages;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.beans.yaml.extended.CustomVariables;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.yaml.core.Artifact;
 import io.harness.yaml.core.Execution;
 import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.core.intfc.Infrastructure;
-import io.harness.yaml.core.intfc.Stage;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -21,21 +22,34 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @JsonTypeName("ci")
-public class IntegrationStage implements Stage {
-  // Default properties
+public class IntegrationStage implements CIStage {
+  private static final CIStageType type = CIStageType.INTEGRATION;
+
   @NotNull private String identifier;
   private String name;
-  @NotNull private String type;
-  private boolean runParallel;
-  private String skipCondition;
-  private String description;
+  private Integration ci;
 
-  private Infrastructure infrastructure;
-  private Connector connector;
-  private Artifact artifact;
-  private Container container;
+  @Override
+  public CIStageType getType() {
+    return type;
+  }
 
-  private String workingDirectory;
+  @Data
+  @Builder
+  public static class Integration {
+    private boolean runParallel;
+    private String skipCondition;
+    private String description;
 
-  @NotNull private Execution execution;
+    private Infrastructure infrastructure;
+    private Connector connector;
+    private Artifact artifact;
+    private Container container;
+
+    private List<CustomVariables> customVariables;
+
+    private String workingDirectory;
+
+    @NotNull private Execution execution;
+  }
 }

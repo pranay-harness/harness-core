@@ -37,7 +37,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
     IntegrationStageExecutionModifier integrationStageExecutionModifier =
         IntegrationStageExecutionModifier.builder().podName(podName).build();
 
-    Execution execution = integrationStage.getExecution();
+    Execution execution = integrationStage.getCi().getExecution();
     Execution modifiedExecutionPlan =
         integrationStageExecutionModifier.modifyExecutionPlan(execution, integrationStage);
 

@@ -11,17 +11,23 @@ import java.util.List;
 
 @Value
 @Builder
-@JsonTypeName(DeploymentStage.DEPLOYMENT)
+@JsonTypeName(DeploymentStage.DEPLOYMENT_NAME)
 public class DeploymentStage implements CDStage {
-  public static final String DEPLOYMENT = "deployment";
-  private final String type = DEPLOYMENT;
-  private String name;
-  private boolean runParallel;
-  private String skipCondition;
-  private String description;
-  private String identifier;
-  private PipelineInfrastructure infrastructure;
-  private Service service;
-  private StageVariables stageVariables;
-  List<PhaseWrapper> execution;
+  public static final String DEPLOYMENT_NAME = "deployment";
+  String type = DEPLOYMENT_NAME;
+  String identifier;
+  String name;
+  Deployment deployment;
+
+  @Value
+  @Builder
+  public static class Deployment {
+    boolean runParallel;
+    String skipCondition;
+    String description;
+    PipelineInfrastructure infrastructure;
+    Service service;
+    StageVariables stageVariables;
+    List<PhaseWrapper> execution;
+  }
 }

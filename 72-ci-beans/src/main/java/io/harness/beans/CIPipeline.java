@@ -12,8 +12,8 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 import io.harness.yaml.core.Tag;
+import io.harness.yaml.core.auxiliary.intfc.StageWrapper;
 import io.harness.yaml.core.intfc.Pipeline;
-import io.harness.yaml.core.intfc.Stage;
 import io.harness.yaml.core.nonyaml.WithNonYamlInfo;
 import lombok.Builder;
 import lombok.Data;
@@ -38,7 +38,7 @@ public class CIPipeline implements Pipeline, WithNonYamlInfo<CIPipelineEntityInf
   private String name;
   private String description;
   List<Tag> tags;
-  private List<Stage> stages;
+  private List<StageWrapper> stages;
   private EmbeddedUser createdBy;
   private long createdAt;
 

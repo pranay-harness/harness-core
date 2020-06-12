@@ -35,8 +35,9 @@ public class IntegrationStageStep implements Step, ChildExecutable {
     IntegrationStageStepParameters parameters = (IntegrationStageStepParameters) stepParameters;
     logger.info("Executing deployment stage with params [{}]", parameters);
     // TODO Only K8 is supported currently
-    if (parameters.getIntegrationStage().getInfrastructure().getType().equals("kubernetes-direct")) {
-      K8sDirectInfraYaml k8sDirectInfraYaml = (K8sDirectInfraYaml) parameters.getIntegrationStage().getInfrastructure();
+    if (parameters.getIntegrationStage().getCi().getInfrastructure().getType().equals("kubernetes-direct")) {
+      K8sDirectInfraYaml k8sDirectInfraYaml =
+          (K8sDirectInfraYaml) parameters.getIntegrationStage().getCi().getInfrastructure();
       K8PodDetails k8PodDetails = K8PodDetails.builder()
                                       .clusterName(k8sDirectInfraYaml.getSpec().getK8sConnector())
                                       .namespace(k8sDirectInfraYaml.getSpec().getNamespace())
