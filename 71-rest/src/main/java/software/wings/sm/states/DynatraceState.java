@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.base.Preconditions;
@@ -36,6 +37,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -154,6 +156,15 @@ public class DynatraceState extends AbstractMetricAnalysisState {
   @Override
   protected Map<String, String> getCanaryNewHostNames(ExecutionContext context) {
     return Collections.singletonMap(TEST_HOST_NAME, DEFAULT_GROUP_NAME);
+  }
+  @Override
+  protected NodePair getControlAndTestNodes(ExecutionContext context) {
+    return NodePair.builder()
+        .testNodes(getCanaryNewHostNames(context).keySet())
+        .controlNodes(getComparisonStrategy() == COMPARE_WITH_PREVIOUS ? Collections.emptySet()
+                                                                       : getLastExecutionNodes(context).keySet())
+        .newNodesTrafficShiftPercent(Optional.empty())
+        .build();
   }
 
   public static String getMetricTypeForMetric(String metricName) {

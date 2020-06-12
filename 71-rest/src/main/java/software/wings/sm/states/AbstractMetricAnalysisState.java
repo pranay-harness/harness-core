@@ -29,6 +29,7 @@ import org.apache.commons.io.IOUtils;
 import org.intellij.lang.annotations.Language;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PcfInstanceElement;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.VerificationLogContext;
@@ -65,6 +66,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by rsingh on 9/25/17.
@@ -447,7 +449,12 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     campareAndLogNodesUsingNewInstanceAPI(context, testNodes, controlNodes);
 
     NodePair nodePair = getControlAndTestNodes(context);
-
+    if (featureFlagService.isEnabled(FeatureName.CV_NEW_INSTANCE_API, context.getAccountId())) {
+      getLogger().info("Using new instance API");
+      testNodes = nodePair.getTestNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
+      controlNodes =
+          nodePair.getControlNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
+    }
     int timeDurationInt = Integer.parseInt(getTimeDuration());
     String accountId = appService.get(context.getAppId()).getAccountId();
     boolean isHistoricalDataCollection = isHistoricalAnalysis(context.getAccountId());
