@@ -27,11 +27,9 @@ import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.FeatureFlagServiceImpl;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
-import software.wings.service.impl.analysis.VerificationServiceImpl;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.VerificationService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.io.IOException;
@@ -62,7 +60,6 @@ public class CommandLibraryServerModule extends AbstractModule {
     bind(CommandStoreService.class).to(CommandStoreServiceImpl.class);
     bind(CommandService.class).to(CommandServiceImpl.class);
     bind(CommandVersionService.class).to(CommandVersionServiceImpl.class);
-    bind(VerificationService.class).to(VerificationServiceImpl.class);
     bindCommandArchiveHandlers();
 
     bind(ExecutorService.class)
