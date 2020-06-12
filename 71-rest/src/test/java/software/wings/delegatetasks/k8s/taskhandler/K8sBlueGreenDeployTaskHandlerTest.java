@@ -4,11 +4,13 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -41,6 +43,7 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessLabelValues;
@@ -567,6 +570,15 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     K8sBlueGreenDeployResponse deployResponse = (K8sBlueGreenDeployResponse) response.getK8sTaskResponse();
 
     assertThat(deployResponse.getHelmChartInfo()).isEqualTo(helmChartInfo);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void invalidTypeOfTaskParams() {
+    assertThatExceptionOfType(InvalidArgumentsException.class)
+        .isThrownBy(() -> k8sBlueGreenDeployTaskHandler.executeTaskInternal(null, null))
+        .withMessageContaining("INVALID_ARGUMENT");
   }
 
   @Data

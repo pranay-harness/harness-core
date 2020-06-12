@@ -2,27 +2,35 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
+import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
@@ -217,5 +225,141 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
 
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(rollingDeployResponse.getHelmChartInfo()).isEqualTo(helmChartInfo);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void invalidTypeOfTaskParams() {
+    assertThatExceptionOfType(InvalidArgumentsException.class)
+        .isThrownBy(() -> k8sRollingDeployTaskHandler.executeTaskInternal(null, null))
+        .withMessageContaining("INVALID_ARGUMENT");
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void getFailureResponse() throws Exception {
+    k8sRollingDeployTaskHandler.executeTaskInternal(
+        K8sRollingDeployTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
+    verify(k8sTaskHelper, times(1))
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void prepareForRollingNotCanary() throws Exception {
+    List<KubernetesResource> kubernetesResources = getResources();
+    K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
+    doReturn(kubernetesResources)
+        .when(k8sTaskHelper)
+        .readManifestAndOverrideLocalSecrets(anyList(), any(ExecutionLogCallback.class), anyBoolean());
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+    doReturn(mock(ExecutionLogCallback.class))
+        .when(k8sTaskHelper)
+        .getExecutionLogCallback(any(K8sTaskParameters.class), anyString());
+    doReturn(KubernetesConfig.builder().build())
+        .when(containerDeploymentDelegateHelper)
+        .getKubernetesConfig(any(K8sClusterConfig.class));
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .dryRunManifests(
+            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .applyManifests(
+            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    handler.executeTaskInternal(
+        K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(false).build(),
+        K8sDelegateTaskParams.builder().build());
+
+    verify(k8sTaskHelper, times(1))
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+    verify(kubernetesContainerService, times(1))
+        .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
+    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(k8sTaskHelper, times(1))
+        .dryRunManifests(
+            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    verify(k8sTaskHelper, times(1))
+        .applyManifests(
+            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void prepareForRollingIsCanary() throws Exception {
+    String releaseHistory = "---\n"
+        + "version: v1\n"
+        + "releases:\n"
+        + "- status: Succeeded\n"
+        + "  managedWorkloads: []\n";
+    doReturn(releaseHistory)
+        .when(kubernetesContainerService)
+        .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+    List<KubernetesResource> kubernetesResources = getResources();
+    doReturn(kubernetesResources)
+        .when(k8sTaskHelper)
+        .readManifestAndOverrideLocalSecrets(anyList(), any(ExecutionLogCallback.class), anyBoolean());
+    K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
+    doReturn(mock(ExecutionLogCallback.class))
+        .when(k8sTaskHelper)
+        .getExecutionLogCallback(any(K8sTaskParameters.class), anyString());
+    doReturn(KubernetesConfig.builder().build())
+        .when(containerDeploymentDelegateHelper)
+        .getKubernetesConfig(any(K8sClusterConfig.class));
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .dryRunManifests(
+            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .applyManifests(
+            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    handler.executeTaskInternal(
+        K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(true).build(),
+        K8sDelegateTaskParams.builder().build());
+
+    verify(k8sTaskHelper, times(1))
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+    verify(kubernetesContainerService, times(1))
+        .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
+    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(k8sTaskHelper, times(1))
+        .dryRunManifests(
+            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    verify(k8sTaskHelper, times(1))
+        .applyManifests(
+            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testInitException() throws Exception {
+    doThrow(new KubernetesYamlException("reason"))
+        .when(k8sTaskHelper)
+        .deleteSkippedManifestFiles(anyString(), any(ExecutionLogCallback.class));
+    final boolean success = k8sRollingDeployTaskHandler.init(K8sRollingDeployTaskParameters.builder().build(),
+        K8sDelegateTaskParams.builder().build(), Mockito.mock(ExecutionLogCallback.class));
+    assertThat(success).isFalse();
+  }
+
+  private List<KubernetesResource> getResources() {
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
+    return kubernetesResources;
   }
 }

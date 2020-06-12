@@ -3,9 +3,11 @@ package software.wings.delegatetasks.k8s.taskhandler;
 import static io.harness.k8s.model.Release.Status.Failed;
 import static io.harness.k8s.model.Release.Status.Succeeded;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -28,6 +30,7 @@ import com.google.common.io.Resources;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutUndoCommand;
 import io.harness.k8s.kubectl.Utils;
@@ -56,7 +59,9 @@ import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
+import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 
 import java.net.URL;
 
@@ -173,6 +178,27 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     testRollBackReleaseIsNull();
     testRollBackIfNoManagedWorkload();
     testRollBackToSpecificRelease();
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void invalidTypeOfTaskParams() {
+    assertThatExceptionOfType(InvalidArgumentsException.class)
+        .isThrownBy(() -> k8sRollingDeployRollbackTaskHandler.executeTaskInternal(null, null))
+        .withMessageContaining("INVALID_ARGUMENT");
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void executeTaskInternalNoReleaseHistory() throws Exception {
+    doReturn(logCallback).when(taskHelper).getExecutionLogCallback(any(K8sTaskParameters.class), anyString());
+    k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
+        K8sRollingDeployRollbackTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
+    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(kubernetesContainerService, times(1))
+        .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
   }
 
   private void testRollBackToSpecificRelease() throws Exception {

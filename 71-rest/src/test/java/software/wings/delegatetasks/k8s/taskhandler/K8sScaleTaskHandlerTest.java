@@ -1,10 +1,12 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
@@ -14,6 +16,8 @@ import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResourceId;
@@ -33,6 +37,7 @@ import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sScaleTaskParameters;
+import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -128,6 +133,81 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
     assertThat(pods).hasSize(2);
     assertThat(pods.stream().filter(K8sPod::isNewPod).map(K8sPod::getName).collect(Collectors.toList()))
         .containsExactlyInAnyOrder("pod-2", "pod-3");
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void invalidTypeOfTaskParams() {
+    assertThatExceptionOfType(InvalidArgumentsException.class)
+        .isThrownBy(() -> k8sScaleTaskHandler.executeTaskInternal(null, null))
+        .withMessageContaining("INVALID_ARGUMENT");
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void executeTaskInternalInstanceUnitPercentage() throws Exception {
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+        .thenReturn(kubernetesConfig);
+    k8sScaleTaskParameters.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
+    k8sScaleTaskHandler.executeTaskInternal(k8sScaleTaskParameters, k8sDelegateTaskParams);
+    verify(k8sTaskHelper, times(1))
+        .getK8sTaskExecutionResponse(
+            any(K8sTaskResponse.class), any(CommandExecutionResult.CommandExecutionStatus.class));
+    verify(k8sTaskHelper, times(1))
+        .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
+            any(ExecutionLogCallback.class));
+    ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+    verify(k8sTaskHelper, times(1)).getPodDetails(any(KubernetesConfig.class), argumentCaptor.capture(), anyString());
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void skipSteadyStateCheckFail() throws Exception {
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+        .thenReturn(kubernetesConfig);
+    when(k8sTaskHelper.scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class),
+             anyInt(), any(ExecutionLogCallback.class)))
+        .thenReturn(true);
+    k8sScaleTaskHandler.executeTaskInternal(k8sScaleTaskParameters, k8sDelegateTaskParams);
+    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(k8sTaskHelper, times(1))
+        .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
+            any(ExecutionLogCallback.class));
+    verify(k8sTaskHelper, times(1))
+        .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class));
+    verify(k8sTaskHelper, times(1))
+        .getK8sTaskExecutionResponse(
+            any(K8sTaskResponse.class), any(CommandExecutionResult.CommandExecutionStatus.class));
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void skipSteadyStateCheckSuccess() throws Exception {
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
+        .thenReturn(kubernetesConfig);
+    when(k8sTaskHelper.scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class),
+             anyInt(), any(ExecutionLogCallback.class)))
+        .thenReturn(true);
+    when(k8sTaskHelper.doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class),
+             any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class)))
+        .thenReturn(true);
+    k8sScaleTaskHandler.executeTaskInternal(k8sScaleTaskParameters, k8sDelegateTaskParams);
+    verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(k8sTaskHelper, times(1))
+        .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
+            any(ExecutionLogCallback.class));
+    verify(k8sTaskHelper, times(1))
+        .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class));
+
+    verify(k8sTaskHelper, times(1))
+        .getK8sTaskExecutionResponse(
+            any(K8sTaskResponse.class), any(CommandExecutionResult.CommandExecutionStatus.class));
   }
 
   private K8sPod podWithName(String name) {
