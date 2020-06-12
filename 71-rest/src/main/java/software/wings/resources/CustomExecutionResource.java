@@ -13,6 +13,7 @@ import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rest.RestResponse;
 import software.wings.security.annotations.AuthRule;
 
+import java.io.IOException;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -100,7 +101,7 @@ public class CustomExecutionResource {
   @GET
   @Path("/test-infra-state")
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
-  public RestResponse<PlanExecution> testInfraState() {
+  public RestResponse<PlanExecution> testInfraState() throws IOException {
     return new RestResponse<>(customExecutionService.testInfraState());
   }
 

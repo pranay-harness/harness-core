@@ -12,9 +12,8 @@ import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
-import io.harness.cdng.infra.beans.InfraDefinition;
+import io.harness.cdng.environment.beans.Environment;
 import io.harness.cdng.infra.beans.InfraMapping;
-import io.harness.cdng.infra.beans.K8sDirectInfraDefinition;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
 import io.harness.cdng.service.OverrideConfig;
 import io.harness.cdng.service.Service;
@@ -29,12 +28,11 @@ import java.util.Set;
 public class NGMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
-    set.add(InfraDefinition.class);
     set.add(InfraMapping.class);
-    set.add(K8sDirectInfraDefinition.class);
     set.add(K8sDirectInfraMapping.class);
     set.add(DockerArtifactSource.class);
     set.add(ArtifactSource.class);
+    set.add(Environment.class);
   }
 
   @Override
@@ -53,6 +51,7 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     h.put("cdng.artifact.bean.DockerArtifactOutcome", DockerArtifactOutcome.class);
     h.put("cdng.service.beans.ServiceOutcome", ServiceOutcome.class);
     h.put("cdng.service.beans.ServiceOutcome$Artifacts", Artifacts.class);
+    h.put("cdng.environment.beans.Environment", Environment.class);
     h.put("cdng.service.beans.OverrideConfig", OverrideConfig.class);
   }
 }

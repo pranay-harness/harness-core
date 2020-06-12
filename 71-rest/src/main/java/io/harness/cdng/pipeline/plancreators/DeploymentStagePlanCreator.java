@@ -1,6 +1,7 @@
 package io.harness.cdng.pipeline.plancreators;
 
 import static io.harness.cdng.executionplan.CDPlanCreatorType.EXECUTION_PHASES_PLAN_CREATOR;
+import static io.harness.cdng.executionplan.CDPlanCreatorType.INFRA_PLAN_CREATOR;
 import static io.harness.cdng.executionplan.CDPlanCreatorType.SERVICE_PLAN_CREATOR;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGE_PLAN_CREATOR;
@@ -9,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cdng.pipeline.DeploymentStage;
+import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.Service;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
@@ -39,19 +41,31 @@ public class DeploymentStagePlanCreator implements SupportDefinedExecutorPlanCre
         createPlanForExecution(deploymentStage.getDeployment().getExecution(), context);
     final CreateExecutionPlanResponse planForService =
         createPlanForService(deploymentStage.getDeployment().getService(), context);
+    final CreateExecutionPlanResponse planForInfrastructure =
+        createPlanForInfrastructure(deploymentStage.getDeployment().getInfrastructure(), context);
     final PlanNode deploymentStageNode =
-        prepareDeploymentNode(deploymentStage, context, planForExecution, planForService);
+        prepareDeploymentNode(deploymentStage, context, planForExecution, planForService, planForInfrastructure);
 
     return CreateExecutionPlanResponse.builder()
         .planNode(deploymentStageNode)
         .planNodes(planForService.getPlanNodes())
+        .planNodes(planForInfrastructure.getPlanNodes())
         .planNodes(planForExecution.getPlanNodes())
         .startingNodeId(deploymentStageNode.getUuid())
         .build();
   }
 
+  private CreateExecutionPlanResponse createPlanForInfrastructure(
+      PipelineInfrastructure pipelineInfrastructure, CreateExecutionPlanContext context) {
+    final ExecutionPlanCreator<PipelineInfrastructure> executionPlanCreator =
+        executionPlanCreatorHelper.getExecutionPlanCreator(INFRA_PLAN_CREATOR.getName(), pipelineInfrastructure,
+            context, "No execution plan creator found for Infra Execution.");
+    return executionPlanCreator.createPlan(pipelineInfrastructure, context);
+  }
+
   private PlanNode prepareDeploymentNode(DeploymentStage deploymentStage, CreateExecutionPlanContext context,
-      CreateExecutionPlanResponse planForExecution, CreateExecutionPlanResponse planForService) {
+      CreateExecutionPlanResponse planForExecution, CreateExecutionPlanResponse planForService,
+      CreateExecutionPlanResponse planForInfrastructure) {
     final String deploymentStageUid = generateUuid();
 
     return PlanNode.builder()
@@ -62,6 +76,7 @@ public class DeploymentStagePlanCreator implements SupportDefinedExecutorPlanCre
         .group(StepGroup.STAGE.name())
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeId(planForService.getStartingNodeId())
+                            .childNodeId(planForInfrastructure.getStartingNodeId())
                             .childNodeId(planForExecution.getStartingNodeId())
                             .build())
         .facilitatorObtainment(FacilitatorObtainment.builder()

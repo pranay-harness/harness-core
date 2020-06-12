@@ -42,7 +42,8 @@ public class PipelineSetupStep implements Step, SyncExecutable, ChildExecutable 
                          .outcome(((DeploymentStage) parameters.getCdPipeline().getStages().get(0))
                                       .getDeployment()
                                       .getInfrastructure()
-                                      .getInfraDefinition())
+                                      .getInfrastructureSpec()
+                                      .getInfrastructure())
                          .build())
         .build();
   }
