@@ -12,7 +12,7 @@ import java.util.List;
 @Value
 @Builder
 public class CDPipeline implements Pipeline {
-  private String name;
+  private String displayName;
   private String description;
   private List<Tag> tags;
   @Singular private List<StageWrapper> stages;

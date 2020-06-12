@@ -56,7 +56,7 @@ public class DeploymentStagePlanCreator implements SupportDefinedExecutorPlanCre
 
     return PlanNode.builder()
         .uuid(deploymentStageUid)
-        .name(deploymentStage.getName())
+        .name(deploymentStage.getDisplayName())
         .identifier(deploymentStage.getIdentifier())
         .stepType(SectionChainStep.STEP_TYPE)
         .group(StepGroup.STAGE.name())

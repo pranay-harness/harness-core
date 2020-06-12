@@ -16,7 +16,7 @@ public class DeploymentStage implements CDStage {
   public static final String DEPLOYMENT_NAME = "deployment";
   String type = DEPLOYMENT_NAME;
   String identifier;
-  String name;
+  String displayName;
   Deployment deployment;
 
   @Value
