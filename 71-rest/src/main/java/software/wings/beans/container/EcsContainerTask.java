@@ -340,9 +340,11 @@ public class EcsContainerTask extends ContainerTask {
     List<ContainerDefinition> containerDefinitions = getContainerDefinitions();
     for (ContainerDefinition containerDefinition : containerDefinitions) {
       List<PortMapping> portMappings = containerDefinition.getPortMappings();
-      List<PortMapping> portMappingList =
-          portMappings.stream().filter(portMapping -> portMapping.getContainerPort() != null).collect(toList());
-      containerDefinition.setPortMappings(portMappingList);
+      if (isNotEmpty(portMappings)) {
+        List<PortMapping> portMappingList =
+            portMappings.stream().filter(portMapping -> portMapping.getContainerPort() != null).collect(toList());
+        containerDefinition.setPortMappings(portMappingList);
+      }
     }
   }
 }
