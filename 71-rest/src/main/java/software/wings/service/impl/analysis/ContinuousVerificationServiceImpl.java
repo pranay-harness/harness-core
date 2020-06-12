@@ -1500,7 +1500,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
       return response;
     } catch (Exception ex) {
-      logger.error("Exception while parsing the APM Response.");
+      logger.error("Exception while parsing the APM Response.", ex);
       response.setConfigurationCorrect(false);
       return response;
     }

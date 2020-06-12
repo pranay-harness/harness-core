@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ClientType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Rule;
@@ -13,7 +14,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
-import software.wings.beans.HarnessApiKey.ClientType;
 import software.wings.service.intfc.HarnessApiKeyService;
 
 /**

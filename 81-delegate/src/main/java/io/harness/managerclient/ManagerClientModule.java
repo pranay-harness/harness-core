@@ -3,6 +3,8 @@ package io.harness.managerclient;
 import com.google.inject.AbstractModule;
 
 import io.harness.security.TokenGenerator;
+import io.harness.verificationclient.CVNextGenServiceClient;
+import io.harness.verificationclient.CVNextGenServiceClientFactory;
 
 /**
  * Created by peeyushaggarwal on 11/29/16.
@@ -12,11 +14,13 @@ public class ManagerClientModule extends AbstractModule {
   private final String accountId;
   private final String accountSecret;
   private final String verificationServiceBaseUrl;
+  private final String cvNextGenUrl;
 
-  public ManagerClientModule(
-      String managerBaseUrl, String verificationServiceBaseUrl, String accountId, String accountSecret) {
+  public ManagerClientModule(String managerBaseUrl, String verificationServiceBaseUrl, String cvNextGenUrl,
+      String accountId, String accountSecret) {
     this.managerBaseUrl = managerBaseUrl;
     this.verificationServiceBaseUrl = verificationServiceBaseUrl;
+    this.cvNextGenUrl = cvNextGenUrl;
     this.accountId = accountId;
     this.accountSecret = accountSecret;
   }
@@ -30,5 +34,6 @@ public class ManagerClientModule extends AbstractModule {
         .toProvider(new DelegateAgentManagerClientFactory(managerBaseUrl, tokenGenerator));
     bind(VerificationServiceClient.class)
         .toProvider(new VerificationServiceClientFactory(verificationServiceBaseUrl, tokenGenerator));
+    bind(CVNextGenServiceClient.class).toProvider(new CVNextGenServiceClientFactory(cvNextGenUrl, tokenGenerator));
   }
 }

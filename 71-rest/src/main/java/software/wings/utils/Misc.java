@@ -6,22 +6,14 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Log.LogLevel;
-import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
-import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 
 /**
  * Miscellaneous utility class.
@@ -110,32 +102,6 @@ public class Misc {
     }
   }
 
-  public static ServiceApiVersion parseApisVersion(String acceptHeader) {
-    if (StringUtils.isEmpty(acceptHeader)) {
-      return null;
-    }
-
-    String[] headers = acceptHeader.split(",");
-    String header = headers[0].trim();
-    if (!header.startsWith("application/")) {
-      throw new IllegalArgumentException("Invalid header " + acceptHeader);
-    }
-
-    String versionHeader = header.replace("application/", "").trim();
-    if (StringUtils.isEmpty(versionHeader)) {
-      throw new IllegalArgumentException("Invalid header " + acceptHeader);
-    }
-
-    String[] versionSplit = versionHeader.split("\\+");
-
-    String version = versionSplit[0].trim();
-    if (version.toUpperCase().charAt(0) == 'V') {
-      return ServiceApiVersion.valueOf(version.toUpperCase());
-    }
-
-    return ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
-  }
-
   public static String getDurationString(long start, long end) {
     return getDurationString(end - start);
   }
@@ -220,19 +186,6 @@ public class Misc {
    */
   public static String replaceUnicodeWithDot(String str) {
     return str.replaceAll("\u2024", ".");
-  }
-
-  public static String generateSecretKey() {
-    KeyGenerator keyGen = null;
-    try {
-      keyGen = KeyGenerator.getInstance("AES");
-    } catch (NoSuchAlgorithmException e) {
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, e);
-    }
-    keyGen.init(128);
-    SecretKey secretKey = keyGen.generateKey();
-    byte[] encoded = secretKey.getEncoded();
-    return Hex.encodeHexString(encoded);
   }
 
   public static boolean isLong(String s) {

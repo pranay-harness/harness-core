@@ -3,9 +3,9 @@ package software.wings.resources;
 import com.google.inject.Inject;
 
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.PublicApi;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.slack.SlackApprovalUtils;
 
 import java.io.IOException;

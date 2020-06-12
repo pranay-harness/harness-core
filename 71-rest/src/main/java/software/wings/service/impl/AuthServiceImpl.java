@@ -49,6 +49,8 @@ import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
+import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
+import io.harness.entity.ServiceSecretKey.ServiceType;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.exception.InvalidRequestException;
@@ -73,7 +75,6 @@ import software.wings.beans.Event;
 import software.wings.beans.Permission;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Role;
-import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.security.AccountPermissions;
@@ -105,7 +106,6 @@ import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
-import software.wings.service.intfc.VerificationService;
 import software.wings.utils.ManagerCacheHandler;
 
 import java.io.UnsupportedEncodingException;
@@ -135,7 +135,7 @@ public class AuthServiceImpl implements AuthService {
   private UsageRestrictionsService usageRestrictionsService;
   private ManagerCacheHandler managerCacheHandler;
   private MainConfiguration configuration;
-  private VerificationService learningEngineService;
+  private VerificationServiceSecretManager verificationServiceSecretManager;
   private AuthHandler authHandler;
   private HarnessUserGroupService harnessUserGroupService;
   private SecretManager secretManager;
@@ -148,7 +148,7 @@ public class AuthServiceImpl implements AuthService {
   public AuthServiceImpl(GenericDbCache dbCache, HPersistence persistence, UserService userService,
       UserGroupService userGroupService, UsageRestrictionsService usageRestrictionsService,
       ManagerCacheHandler managerCacheHandler, MainConfiguration configuration,
-      VerificationService learningEngineService, AuthHandler authHandler,
+      VerificationServiceSecretManager verificationServiceSecretManager, AuthHandler authHandler,
       HarnessUserGroupService harnessUserGroupService, SecretManager secretManager) {
     this.dbCache = dbCache;
     this.persistence = persistence;
@@ -157,7 +157,7 @@ public class AuthServiceImpl implements AuthService {
     this.usageRestrictionsService = usageRestrictionsService;
     this.managerCacheHandler = managerCacheHandler;
     this.configuration = configuration;
-    this.learningEngineService = learningEngineService;
+    this.verificationServiceSecretManager = verificationServiceSecretManager;
     this.authHandler = authHandler;
     this.harnessUserGroupService = harnessUserGroupService;
     this.secretManager = secretManager;
@@ -436,7 +436,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void validateLearningEngineServiceToken(String learningEngineServiceToken) {
-    String jwtLearningEngineServiceSecret = learningEngineService.getVerificationServiceSecretKey();
+    String jwtLearningEngineServiceSecret = verificationServiceSecretManager.getVerificationServiceSecretKey();
     if (StringUtils.isBlank(jwtLearningEngineServiceSecret)) {
       throw new InvalidRequestException("no secret key for service found for " + ServiceType.LEARNING_ENGINE);
     }

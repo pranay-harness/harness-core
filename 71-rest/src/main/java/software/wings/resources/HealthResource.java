@@ -17,11 +17,11 @@ import io.harness.health.HealthService;
 import io.harness.mongo.MongoConfig;
 import io.harness.rest.RestResponse;
 import io.harness.security.AsymmetricEncryptor;
+import io.harness.security.annotations.PublicApi;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
 import software.wings.search.framework.ElasticsearchConfig;
-import software.wings.security.annotations.PublicApi;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;

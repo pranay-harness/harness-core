@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.HarnessApiKey.ClientType;
+import io.harness.beans.ClientType;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;

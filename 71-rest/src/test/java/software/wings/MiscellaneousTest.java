@@ -21,10 +21,10 @@ import com.openpojo.validation.test.impl.SetterTester;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.utils.Misc;
+import io.harness.version.ServiceApiVersion;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.beans.ServiceSecretKey;
-import software.wings.utils.Misc;
 import software.wings.utils.NoFieldShadowingRule;
 import software.wings.utils.ToStringTester;
 
@@ -105,11 +105,10 @@ public class MiscellaneousTest extends CategoryTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testParseApisVersion() {
-    ServiceSecretKey.ServiceApiVersion latestVersion =
-        ServiceSecretKey.ServiceApiVersion.values()[ServiceSecretKey.ServiceApiVersion.values().length - 1];
+    ServiceApiVersion latestVersion = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
     assertThat(Misc.parseApisVersion("application/json")).isEqualTo(latestVersion);
 
-    for (ServiceSecretKey.ServiceApiVersion serviceApiVersion : ServiceSecretKey.ServiceApiVersion.values()) {
+    for (ServiceApiVersion serviceApiVersion : ServiceApiVersion.values()) {
       String headerString = "application/" + serviceApiVersion.name().toLowerCase() + "+json, application/json";
       assertThat(Misc.parseApisVersion(headerString)).isEqualTo(serviceApiVersion);
     }

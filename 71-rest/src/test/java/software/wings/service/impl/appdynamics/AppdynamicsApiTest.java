@@ -22,9 +22,9 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.entities.MetricPack;
-import io.harness.cvng.models.DataSourceType;
 import io.harness.cvng.models.ThirdPartyApiResponseStatus;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;

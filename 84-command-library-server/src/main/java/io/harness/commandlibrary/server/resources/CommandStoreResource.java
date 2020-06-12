@@ -36,6 +36,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.NoResultFoundException;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.PublicApi;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -45,7 +46,6 @@ import software.wings.api.commandlibrary.EnrichedCommandVersionDTO;
 import software.wings.beans.commandlibrary.CommandEntity;
 import software.wings.beans.commandlibrary.CommandVersionEntity;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.PublicApi;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;

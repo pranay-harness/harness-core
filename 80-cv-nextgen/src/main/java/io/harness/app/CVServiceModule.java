@@ -4,6 +4,10 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
+import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
+import io.harness.cvng.core.services.impl.VerificationServiceSecretManagerImpl;
+import io.harness.mongo.MongoPersistence;
+import io.harness.persistence.HPersistence;
 import io.harness.threading.ThreadPool;
 import io.harness.version.VersionInfoManager;
 import org.apache.commons.io.IOUtils;
@@ -47,6 +51,8 @@ public class CVServiceModule extends AbstractModule {
       VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
           getClass().getClassLoader().getResourceAsStream("versionInfo.yaml"), StandardCharsets.UTF_8));
       bind(VersionInfoManager.class).toInstance(versionInfoManager);
+      bind(HPersistence.class).to(MongoPersistence.class);
+      bind(VerificationServiceSecretManager.class).to(VerificationServiceSecretManagerImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

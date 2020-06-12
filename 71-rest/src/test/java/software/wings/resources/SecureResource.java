@@ -1,11 +1,11 @@
 package software.wings.resources;
 
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.DelegateAuth;
+import io.harness.security.annotations.PublicApi;
 import software.wings.beans.User;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.annotations.DelegateAuth;
-import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
 
 import javax.ws.rs.GET;

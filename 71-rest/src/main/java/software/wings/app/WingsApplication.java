@@ -60,6 +60,7 @@ import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
 import io.harness.cvng.DataCollectionPerpetualTaskServiceClient;
 import io.harness.cvng.core.resources.MetricPackResource;
+import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.delay.DelayEventListener;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
@@ -206,7 +207,6 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.VerificationService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
@@ -826,7 +826,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void initializeServiceSecretKeys(Injector injector) {
-    injector.getInstance(VerificationService.class).initializeServiceSecretKeys();
+    injector.getInstance(VerificationServiceSecretManager.class).initializeServiceSecretKeys();
   }
 
   private void runMigrations(Injector injector) {

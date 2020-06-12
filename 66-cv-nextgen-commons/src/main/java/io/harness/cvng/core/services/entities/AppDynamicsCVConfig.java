@@ -1,7 +1,7 @@
 package io.harness.cvng.core.services.entities;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.cvng.models.DataSourceType;
+import io.harness.cvng.beans.DataSourceType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

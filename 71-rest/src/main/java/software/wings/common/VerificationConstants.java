@@ -157,7 +157,6 @@ public class VerificationConstants {
       "learning_engine_service_guard_feedback_task_queued_count"));
   public static final String CV_META_DATA = "cv_meta_data";
   public static final int RATE_LIMIT_STATUS = 429;
-  public static final String VERIFICATION_SERVICE_SECRET = "VERIFICATION_SERVICE_SECRET";
 
   public static final Set<String> VERIFICATION_SERVICE_METRICS =
       LEARNING_ENGINE_TASKS_METRIC_LIST; // Only LE task metrics are published now.
@@ -183,8 +182,6 @@ public class VerificationConstants {
   public static final String PROMETHEUS_DEEPLINK_FORMAT =
       "{baseUrl}/graph?g0.range_input={rangeInput}m&g0.end_input={endTime}&"
       + "g0.expr={metricString}&g0.tab=0";
-
-  public static final String DELEGATE_DATA_COLLETION = "delegate-data-collection";
 
   public static final String DATADOG_START_TIME_PLACEHOLDER = "${start_time_seconds}";
   public static final String DATADOG_END_TIME_PLACEHOLDER = "${end_time_seconds}";

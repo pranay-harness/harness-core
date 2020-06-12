@@ -6,13 +6,13 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.configuration.DeployMode;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.PublicApi;
 import io.harness.version.RuntimeInfo;
 import io.harness.version.VersionInfoManager;
 import io.harness.version.VersionPackage;
 import io.swagger.annotations.Api;
 import software.wings.app.MainConfiguration;
 import software.wings.core.managerConfiguration.ConfigurationController;
-import software.wings.security.annotations.PublicApi;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

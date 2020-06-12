@@ -1,5 +1,6 @@
 package io.harness.cvng.beans;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum TimeSeriesThresholdActionType {
@@ -14,5 +15,15 @@ public enum TimeSeriesThresholdActionType {
   @JsonValue
   public String getDisplayName() {
     return displayName;
+  }
+
+  @JsonCreator
+  public static TimeSeriesThresholdActionType fromDisplayName(String displayName) {
+    for (TimeSeriesThresholdActionType timeSeriesThresholdActionType : TimeSeriesThresholdActionType.values()) {
+      if (timeSeriesThresholdActionType.displayName.equals(displayName)) {
+        return timeSeriesThresholdActionType;
+      }
+    }
+    throw new IllegalArgumentException("Invalid value: " + displayName);
   }
 }

@@ -131,7 +131,7 @@ public class DelegateApplication {
       }
     });
     modules.add(new ManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
-        configuration.getAccountId(), configuration.getAccountSecret()));
+        configuration.getCvNextGenUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
     String managerHostAndPort = System.getenv("MANAGER_HOST_AND_PORT");
     modules.add(new ManagerGrpcClientModule(
         ManagerGrpcClientModule.Config.builder()

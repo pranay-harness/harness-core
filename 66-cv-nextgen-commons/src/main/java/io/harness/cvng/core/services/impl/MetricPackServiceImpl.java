@@ -11,6 +11,7 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
 import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
 import io.harness.cvng.core.services.api.MetricPackService;
@@ -19,7 +20,6 @@ import io.harness.cvng.core.services.entities.MetricPack.MetricDefinition;
 import io.harness.cvng.core.services.entities.MetricPack.MetricPackKeys;
 import io.harness.cvng.core.services.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.entities.TimeSeriesThreshold.TimeSeriesThresholdKeys;
-import io.harness.cvng.models.DataSourceType;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.YamlUtils;
 
@@ -193,5 +193,31 @@ public class MetricPackServiceImpl implements MetricPackService {
   @Override
   public boolean deleteMetricPackThresholds(String accountId, String projectIdentifier, String thresholdId) {
     return hPersistence.delete(TimeSeriesThreshold.class, thresholdId);
+  }
+
+  @Override
+  public void populateValidationPaths(
+      String accountId, String projectIdentifier, DataSourceType dataSourceType, MetricPack metricPack) {
+    final List<MetricPack> metricPacksForProject = getMetricPacks(accountId, projectIdentifier, dataSourceType);
+    final MetricPack metricPackForProject =
+        metricPacksForProject.stream()
+            .filter(metricPackProject -> metricPackProject.getIdentifier().equals(metricPack.getIdentifier()))
+            .findFirst()
+            .orElse(null);
+    if (metricPackForProject == null) {
+      return;
+    }
+
+    metricPack.getMetrics().forEach(metricDefinition -> {
+      final MetricDefinition metricDefinitionFromProject =
+          metricPackForProject.getMetrics()
+              .stream()
+              .filter(metric -> metric.getName().equals(metricDefinition.getName()))
+              .findFirst()
+              .orElse(null);
+      if (metricDefinitionFromProject != null) {
+        metricDefinition.setValidationPath(metricDefinitionFromProject.getValidationPath());
+      }
+    });
   }
 }

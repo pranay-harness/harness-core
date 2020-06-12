@@ -6,8 +6,8 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.resources.ExperimentalTimeseriesAnalysisResourceImpl;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.LearningEngineAuth;
 import software.wings.metrics.TimeSeriesMetricDefinition;
-import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.sm.StateType;
 

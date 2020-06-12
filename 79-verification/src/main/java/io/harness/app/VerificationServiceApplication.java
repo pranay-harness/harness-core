@@ -40,6 +40,7 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.beans.ExecutionStatus;
+import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
@@ -92,7 +93,6 @@ import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.MLAnalysisType;
-import software.wings.service.intfc.VerificationService;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -422,8 +422,9 @@ public class VerificationServiceApplication extends Application<VerificationServ
   }
 
   private void initializeServiceSecretKeys(Injector injector) {
-    injector.getInstance(VerificationService.class).initializeServiceSecretKeys();
-    VERIFICATION_SERVICE_SECRET.set(injector.getInstance(VerificationService.class).getVerificationServiceSecretKey());
+    injector.getInstance(VerificationServiceSecretManager.class).initializeServiceSecretKeys();
+    VERIFICATION_SERVICE_SECRET.set(
+        injector.getInstance(VerificationServiceSecretManager.class).getVerificationServiceSecretKey());
   }
 
   private void initializeServiceTaskPoll(Injector injector) {

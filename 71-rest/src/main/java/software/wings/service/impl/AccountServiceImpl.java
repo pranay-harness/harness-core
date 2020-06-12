@@ -9,6 +9,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeAuthorityCount;
+import static io.harness.utils.Misc.generateSecretKey;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.reflect.Modifier.isAbstract;
 import static java.util.Arrays.asList;
@@ -27,7 +28,6 @@ import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
 import static software.wings.beans.RoleType.PROD_SUPPORT;
 import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
-import static software.wings.utils.Misc.generateSecretKey;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

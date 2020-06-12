@@ -10,7 +10,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.service.impl.analysis.MLAnalysisType.LOG_ML;
 import static software.wings.service.impl.analysis.MLAnalysisType.TIME_SERIES;
-import static software.wings.utils.Misc.generateSecretKey;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -24,9 +23,6 @@ import io.harness.exception.InvalidArgumentsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Sort;
-import software.wings.beans.ServiceSecretKey;
-import software.wings.beans.ServiceSecretKey.ServiceSecretKeyKeys;
-import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesDataRecord;
@@ -48,26 +44,6 @@ import java.util.Optional;
 public class VerificationServiceImpl implements VerificationService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DataStoreService dataStoreService;
-
-  @Override
-  public void initializeServiceSecretKeys() {
-    for (ServiceType serviceType : ServiceType.values()) {
-      wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(
-          ServiceSecretKey.builder().serviceType(serviceType).serviceSecret(generateSecretKey()).build()));
-    }
-  }
-
-  @Override
-  public String getVerificationServiceSecretKey() {
-    final String verificationServiceSecret = System.getenv(VerificationConstants.VERIFICATION_SERVICE_SECRET);
-    if (isNotEmpty(verificationServiceSecret)) {
-      return verificationServiceSecret;
-    }
-    return wingsPersistence.createQuery(ServiceSecretKey.class)
-        .filter(ServiceSecretKeyKeys.serviceType, ServiceType.LEARNING_ENGINE)
-        .get()
-        .getServiceSecret();
-  }
 
   @Override
   public Optional<LearningEngineAnalysisTask> getLatestTaskForCvConfigIds(List<String> cvConfigIds) {

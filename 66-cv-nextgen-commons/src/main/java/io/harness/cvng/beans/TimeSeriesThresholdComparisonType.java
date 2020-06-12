@@ -1,5 +1,6 @@
 package io.harness.cvng.beans;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
@@ -29,5 +30,16 @@ public enum TimeSeriesThresholdComparisonType {
   @JsonValue
   public String getDisplayName() {
     return displayName;
+  }
+
+  @JsonCreator
+  public static TimeSeriesThresholdComparisonType fromDisplayName(String displayName) {
+    for (TimeSeriesThresholdComparisonType timeSeriesThresholdComparisonType :
+        TimeSeriesThresholdComparisonType.values()) {
+      if (timeSeriesThresholdComparisonType.displayName.equals(displayName)) {
+        return timeSeriesThresholdComparisonType;
+      }
+    }
+    throw new IllegalArgumentException("Invalid value: " + displayName);
   }
 }
