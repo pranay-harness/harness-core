@@ -76,8 +76,8 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
           String delegateId = ((DelegateTaskNotifyResponseData) response).getDelegateMetaInfo().getId();
           logger.info(
               "Delegate {} is assigned to the inactive {} perpetual task with id={}.", delegateId, taskType, taskId);
-          long lastContextUpdated = taskRecord.getClientContext().getLastContextUpdated();
-          perpetualTaskService.appointDelegate(taskRecord.getAccountId(), taskId, delegateId, lastContextUpdated);
+          perpetualTaskService.appointDelegate(
+              taskRecord.getAccountId(), taskId, delegateId, System.currentTimeMillis());
         } else if ((response instanceof RemoteMethodReturnValueData)
             && (((RemoteMethodReturnValueData) response).getException() instanceof InvalidRequestException)) {
           perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_ELIGIBLE_DELEGATES.name());
