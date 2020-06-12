@@ -17,9 +17,9 @@ import com.google.inject.Singleton;
 import io.harness.commandlibrary.server.app.CommandLibraryServerConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.ServiceTokenAuthenticator;
+import io.harness.security.annotations.PublicApi;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import software.wings.security.annotations.PublicApi;
 
 import java.lang.reflect.Method;
 import java.util.function.Supplier;

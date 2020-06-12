@@ -7,9 +7,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.beans.SplunkDSConfig;
 import io.harness.cvng.core.services.api.CVConfigTransformerTestBase;
 import io.harness.cvng.core.services.entities.SplunkCVConfig;
-import io.harness.cvng.models.SplunkDSConfig;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

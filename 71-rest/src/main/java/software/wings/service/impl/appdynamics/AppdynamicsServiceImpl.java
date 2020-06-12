@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.eraro.ErrorCode;
@@ -261,6 +262,9 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
         "for {} connector {} and {} found these packs", projectIdentifier, connectorId, metricPacks, metricPacks);
     Preconditions.checkState(isNotEmpty(metricPacks), "No metric packs found for project {} with the name {}",
         projectIdentifier, metricPacks);
+    metricPacks.forEach(metricPack
+        -> metricPackService.populateValidationPaths(
+            accountId, projectIdentifier, DataSourceType.APP_DYNAMICS, metricPack));
     final SettingAttribute settingAttribute = settingsService.get(connectorId);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())

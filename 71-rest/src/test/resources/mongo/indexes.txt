@@ -520,8 +520,6 @@ serviceInstance {"name": "createdAt_1", "background": true} {"createdAt": 1}
 serviceInstance {"name": "hostId_1", "background": true} {"hostId": 1}
 serviceInstance {"name": "infraMappingId_1", "background": true} {"infraMappingId": 1}
 serviceInstance {"name": "publicDns_1", "background": true} {"publicDns": 1}
-serviceSecrets {"name": "appId_1", "background": true} {"appId": 1}
-serviceSecrets {"name": "createdAt_1", "background": true} {"createdAt": 1}
 serviceSecrets {"name": "serviceType_1", "unique": true} {"serviceType": 1}
 serviceTemplates {"name": "appId_1", "background": true} {"appId": 1}
 serviceTemplates {"name": "app_env_createdAt", "background": true} {"appId": 1, "envId": 1, "createdAt": -1}
@@ -639,7 +637,7 @@ timeSeriesMetricTemplates {"name": "validUntil_1", "background": true, "expireAf
 timeSeriesRawData {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 timeSeriesRecords {"name": "accountId_1", "background": true} {"accountId": 1}
 timeSeriesRecords {"name": "cvConfigId_1", "background": true} {"cvConfigId": 1}
-timeSeriesRecords {"name": "projectId_1", "background": true} {"projectId": 1}
+timeSeriesRecords {"name": "projectIdentifier_1", "background": true} {"projectIdentifier": 1}
 timeSeriesRecords {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 timeSeriesRiskSummary {"name": "accountId_1", "background": true} {"accountId": 1}
 timeSeriesRiskSummary {"name": "appId_1", "background": true} {"appId": 1}

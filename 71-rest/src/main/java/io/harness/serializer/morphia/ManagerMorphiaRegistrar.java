@@ -262,7 +262,6 @@ import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceNowConfig;
-import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
@@ -975,7 +974,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Service.class);
     set.add(ServiceCommand.class);
     set.add(ServiceInstance.class);
-    set.add(ServiceSecretKey.class);
     set.add(ServiceTemplate.class);
     set.add(ServiceVariable.class);
     set.add(SettingAttribute.class);

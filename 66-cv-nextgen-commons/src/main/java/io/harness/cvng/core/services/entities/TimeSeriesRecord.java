@@ -46,7 +46,7 @@ public class TimeSeriesRecord implements GoogleDataStoreAware, UuidAware, Create
   @Id private String uuid;
 
   @Indexed private String accountId;
-  @Indexed private String projectId;
+  @Indexed private String projectIdentifier;
   @Indexed private String cvConfigId;
   @NotEmpty private long timestamp;
   private String host;
@@ -84,7 +84,7 @@ public class TimeSeriesRecord implements GoogleDataStoreAware, UuidAware, Create
                       .newKey(generateUniqueKey());
     com.google.cloud.datastore.Entity.Builder recordBuilder = com.google.cloud.datastore.Entity.newBuilder(taskKey);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesRecordKeys.accountId, accountId, false);
-    addFieldIfNotEmpty(recordBuilder, TimeSeriesRecordKeys.projectId, projectId, false);
+    addFieldIfNotEmpty(recordBuilder, TimeSeriesRecordKeys.projectIdentifier, projectIdentifier, false);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesRecordKeys.cvConfigId, cvConfigId, false);
     recordBuilder.set(TimeSeriesRecordKeys.timestamp, timestamp);
     addFieldIfNotEmpty(recordBuilder, TimeSeriesRecordKeys.host, host, false);
@@ -102,7 +102,7 @@ public class TimeSeriesRecord implements GoogleDataStoreAware, UuidAware, Create
   public GoogleDataStoreAware readFromCloudStorageEntity(com.google.cloud.datastore.Entity entity) {
     return TimeSeriesRecord.builder()
         .accountId(readString(entity, TimeSeriesRecordKeys.accountId))
-        .projectId(readString(entity, TimeSeriesRecordKeys.projectId))
+        .projectIdentifier(readString(entity, TimeSeriesRecordKeys.projectIdentifier))
         .cvConfigId(readString(entity, TimeSeriesRecordKeys.cvConfigId))
         .timestamp(readLong(entity, TimeSeriesRecordKeys.timestamp))
         .host(readString(entity, TimeSeriesRecordKeys.host))
@@ -113,16 +113,16 @@ public class TimeSeriesRecord implements GoogleDataStoreAware, UuidAware, Create
   private String generateUniqueKey() {
     StringBuilder keyBuilder = new StringBuilder();
     appendIfNecessary(keyBuilder, accountId);
-    appendIfNecessary(keyBuilder, projectId);
+    appendIfNecessary(keyBuilder, projectIdentifier);
     appendIfNecessary(keyBuilder, cvConfigId);
-    keyBuilder.append(KEY_SEPARATOR).append(timestamp);
+    keyBuilder.append(GoogleDataStoreAware.KEY_SEPARATOR).append(timestamp);
     appendIfNecessary(keyBuilder, host);
     return Hashing.sha256().hashString(keyBuilder.toString(), StandardCharsets.UTF_8).toString();
   }
 
   private void appendIfNecessary(StringBuilder keyBuilder, String value) {
     if (isNotEmpty(value)) {
-      keyBuilder.append(KEY_SEPARATOR).append(value);
+      keyBuilder.append(GoogleDataStoreAware.KEY_SEPARATOR).append(value);
     }
   }
 }

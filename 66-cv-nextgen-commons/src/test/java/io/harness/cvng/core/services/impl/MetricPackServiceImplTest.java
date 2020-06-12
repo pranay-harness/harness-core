@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNextGenBaseTest;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
 import io.harness.cvng.beans.TimeSeriesThresholdComparisonType;
@@ -19,7 +20,6 @@ import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.cvng.core.services.entities.TimeSeriesThreshold;
-import io.harness.cvng.models.DataSourceType;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.apache.commons.io.FileUtils;
@@ -116,6 +116,27 @@ public class MetricPackServiceImplTest extends CVNextGenBaseTest {
     performancePack.getMetrics().forEach(metricDefinition -> assertThat(metricDefinition.isIncluded()).isTrue());
 
     performancePack.getMetrics().forEach(metric -> assertThat(metric.getPath()).isNotEmpty());
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testPopulateValidationPaths() {
+    Collection<MetricPack> metricPacks =
+        metricPackService.getMetricPacks(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS);
+    MetricPack qualityPack = metricPacks.stream()
+                                 .filter(metricPack -> metricPack.getIdentifier().equals("Quality"))
+                                 .findFirst()
+                                 .orElseThrow(() -> new IllegalArgumentException("invalid pack name"));
+
+    qualityPack.getMetrics().forEach(metricDefinition -> {
+      assertThat(metricDefinition.getValidationPath()).isNotEmpty();
+      metricDefinition.setValidationPath(null);
+    });
+
+    metricPackService.populateValidationPaths(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS, qualityPack);
+    qualityPack.getMetrics().forEach(
+        metricDefinition -> { assertThat(metricDefinition.getValidationPath()).isNotEmpty(); });
   }
 
   @Test

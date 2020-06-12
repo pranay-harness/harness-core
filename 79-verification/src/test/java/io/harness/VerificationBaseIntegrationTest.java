@@ -27,6 +27,10 @@ import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
+import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
+import io.harness.entity.ServiceSecretKey;
+import io.harness.entity.ServiceSecretKey.ServiceSecretKeyKeys;
+import io.harness.entity.ServiceSecretKey.ServiceType;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.security.ServiceTokenGenerator;
@@ -41,12 +45,8 @@ import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import software.wings.beans.Application;
-import software.wings.beans.ServiceSecretKey;
-import software.wings.beans.ServiceSecretKey.ServiceSecretKeyKeys;
-import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.VerificationService;
 import software.wings.utils.WingsIntegrationTestConstants;
 
 import java.io.UnsupportedEncodingException;
@@ -82,7 +82,7 @@ public abstract class VerificationBaseIntegrationTest
   protected String userToken = "INVALID_TOKEN";
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected LearningEngineService learningEngineService;
-  @Inject private VerificationService verificationService;
+  @Inject private VerificationServiceSecretManager verificationServiceSecretManager;
 
   @BeforeClass
   public static void setup() throws KeyManagementException, NoSuchAlgorithmException {
@@ -119,7 +119,8 @@ public abstract class VerificationBaseIntegrationTest
 
   @Before
   public void setUp() throws Exception {
-    ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET.set(verificationService.getVerificationServiceSecretKey());
+    ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET.set(
+        verificationServiceSecretManager.getVerificationServiceSecretKey());
   }
 
   protected String loginUser(final String userName, final String password) {

@@ -13,6 +13,7 @@ public class DelegateConfiguration {
   private String accountSecret;
   private String managerUrl;
   private String verificationServiceUrl;
+  private String cvNextGenUrl;
   private String watcherCheckLocation;
   private long heartbeatIntervalMs;
   private String localDiskPath;

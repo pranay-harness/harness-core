@@ -6,9 +6,9 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.security.annotations.PublicApi;
 import io.swagger.annotations.Api;
 import software.wings.beans.WebHookRequest;
-import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.WebHookService;
 
 import javax.ws.rs.Consumes;

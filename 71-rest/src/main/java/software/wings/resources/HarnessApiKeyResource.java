@@ -6,14 +6,14 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.ClientType;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.HarnessApiKey.ClientType;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.utils.AccountPermissionUtils;

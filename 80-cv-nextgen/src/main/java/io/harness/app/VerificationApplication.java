@@ -25,6 +25,7 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
+import io.harness.security.VerificationServiceAuthenticationFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import ru.vyarus.guice.validator.ValidationModule;
@@ -100,5 +101,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
     Injector injector = Guice.createInjector(modules);
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
+    registerAuthFilters(environment, injector);
+  }
+
+  private void registerAuthFilters(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(VerificationServiceAuthenticationFilter.class));
   }
 }

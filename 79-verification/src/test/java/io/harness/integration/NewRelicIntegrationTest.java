@@ -32,6 +32,7 @@ import com.google.inject.Inject;
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.DeprecatedIntegrationTests;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob.MetricAnalysisGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -61,7 +62,6 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.WorkflowExecution;
-import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -332,14 +332,14 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
       stateExecutionInstance.setAppId(applicationId);
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
-      WebTarget target = client.target(VERIFICATION_API_BASE + "/" + VerificationConstants.DELEGATE_DATA_COLLETION
+      WebTarget target = client.target(VERIFICATION_API_BASE + "/" + CVNextGenConstants.DELEGATE_DATA_COLLETION
           + "/save-metrics?accountId=" + accountId + "&applicationId=" + applicationId
           + "&stateExecutionId=" + stateExecutionId + "&delegateTaskId=" + delegateTaskId);
       RestResponse<Boolean> restResponse = getDelegateRequestBuilderWithAuthHeader(target).post(
           entity(metricDataRecords, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
       assertThat(restResponse.getResource()).isTrue();
 
-      target = client.target(VERIFICATION_API_BASE + "/" + VerificationConstants.DELEGATE_DATA_COLLETION
+      target = client.target(VERIFICATION_API_BASE + "/" + CVNextGenConstants.DELEGATE_DATA_COLLETION
           + "/save-metrics?accountId=" + accountId + "&applicationId=" + applicationId
           + "&stateExecutionId=" + stateExecutionId + "&delegateTaskId=" + delegateTaskId);
       restResponse = getDelegateRequestBuilderWithAuthHeader(target).post(

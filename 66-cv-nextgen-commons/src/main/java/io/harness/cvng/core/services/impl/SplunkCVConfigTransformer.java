@@ -3,9 +3,9 @@ package io.harness.cvng.core.services.impl;
 import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
 
+import io.harness.cvng.beans.SplunkDSConfig;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
 import io.harness.cvng.core.services.entities.SplunkCVConfig;
-import io.harness.cvng.models.SplunkDSConfig;
 
 import java.util.List;
 @Singleton

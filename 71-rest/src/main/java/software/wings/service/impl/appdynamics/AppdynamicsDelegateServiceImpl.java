@@ -14,7 +14,7 @@ import com.google.inject.Singleton;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.AppdynamicsValidationResponse.AppdynamicsMetricValueValidationResponse;
 import io.harness.cvng.beans.AppdynamicsValidationResponse.AppdynamicsValidationResponseBuilder;
-import io.harness.cvng.core.CVNextGenConstants;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.cvng.models.ThirdPartyApiResponseStatus;
 import io.harness.exception.ExceptionUtils;

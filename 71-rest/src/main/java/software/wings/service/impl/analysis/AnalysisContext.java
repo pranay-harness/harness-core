@@ -13,6 +13,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.AccountAccess;
+import io.harness.version.ServiceApiVersion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,7 +28,6 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.FeatureName;
-import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.sm.StateType;
 
 import java.time.OffsetDateTime;

@@ -47,6 +47,7 @@ import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
@@ -88,7 +89,6 @@ import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
-import software.wings.service.intfc.VerificationService;
 import software.wings.service.intfc.WhitelistService;
 import software.wings.utils.ManagerCacheHandler;
 import software.wings.utils.ResourceTestRule;
@@ -130,7 +130,8 @@ public class SecureResourceTest extends CategoryTest {
   private static UserService userService = mock(UserService.class);
   private static UserGroupService userGroupService = mock(UserGroupService.class);
   private static UsageRestrictionsService usageRestrictionsService = mock(UsageRestrictionsService.class);
-  private static VerificationService learningEngineService = mock(VerificationService.class);
+  private static VerificationServiceSecretManager verificationServiceSecretManager =
+      mock(VerificationServiceSecretManager.class);
   private static MainConfiguration configuration = mock(MainConfiguration.class);
   private static AuthHandler authHandler = mock(AuthHandler.class);
   private static WhitelistService whitelistService = mock(WhitelistService.class);
@@ -139,7 +140,7 @@ public class SecureResourceTest extends CategoryTest {
   private static GraphQLUtils graphQLUtils = mock(GraphQLUtils.class);
 
   private static AuthService authService = new AuthServiceImpl(genericDbCache, hPersistence, userService,
-      userGroupService, usageRestrictionsService, managerCacheHandler, configuration, learningEngineService,
+      userGroupService, usageRestrictionsService, managerCacheHandler, configuration, verificationServiceSecretManager,
       authHandler, harnessUserGroupService, secretManager);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(authService, authHandler, appService, userService,

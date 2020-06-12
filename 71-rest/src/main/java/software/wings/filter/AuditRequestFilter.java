@@ -10,6 +10,8 @@ import com.google.inject.Singleton;
 
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.WingsException;
+import io.harness.security.annotations.DelegateAuth;
+import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -19,8 +21,6 @@ import software.wings.audit.AuditHeader.RequestType;
 import software.wings.audit.AuditSkip;
 import software.wings.beans.HttpMethod;
 import software.wings.common.AuditHelper;
-import software.wings.security.annotations.DelegateAuth;
-import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.intfc.FileService;
 
 import java.io.IOException;

@@ -14,6 +14,7 @@
         <module>19-grpc-api</module>
         <module>20-delegate-tasks</module>
         <module>21-persistence</module>
+        <module>24-common-entities</module>
         <module>25-orchestration-beans</module>
         <module>31-orchestration</module>
         <module>35-yaml-beans</module>
@@ -24,6 +25,7 @@
         <module>65-delegate-agent-beans</module>
         <module>65-delegate-service-beans</module>
         <module>66-cv-nextgen-commons</module>
+        <module>67-cv-nextgen-rest</module>
         <module>70-delegate-agent</module>
         <module>70-delegate-service</module>
         <module>71-rest</module>

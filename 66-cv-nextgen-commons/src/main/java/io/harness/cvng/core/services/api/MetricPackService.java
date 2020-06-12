@@ -1,8 +1,8 @@
 package io.harness.cvng.core.services.api;
 
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.cvng.core.services.entities.TimeSeriesThreshold;
-import io.harness.cvng.models.DataSourceType;
 
 import java.util.List;
 
@@ -19,4 +19,7 @@ public interface MetricPackService {
       List<TimeSeriesThreshold> timeSeriesThreshold);
 
   boolean deleteMetricPackThresholds(String accountId, String projectIdentifier, String thresholdId);
+
+  void populateValidationPaths(
+      String accountId, String projectIdentifier, DataSourceType dataSourceType, MetricPack metricPack);
 }

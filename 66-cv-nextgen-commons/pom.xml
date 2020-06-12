@@ -9,10 +9,6 @@
     <artifactId>66-cv-nextgen-commons</artifactId>
     <dependencies>
         <dependency>
-            <groupId>com.smoketurner</groupId>
-            <artifactId>dropwizard-swagger</artifactId>
-        </dependency>
-        <dependency>
             <groupId>software.wings</groupId>
             <artifactId>12-commons</artifactId>
             <version>${project.parent.version}</version>
@@ -20,6 +16,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>21-persistence</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>24-common-entities</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

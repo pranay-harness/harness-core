@@ -8,11 +8,11 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.beans.AppDynamicsDSConfig;
+import io.harness.cvng.beans.AppDynamicsDSConfig.ServiceMapping;
 import io.harness.cvng.core.services.api.CVConfigTransformerTestBase;
 import io.harness.cvng.core.services.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.services.entities.MetricPack;
-import io.harness.cvng.models.AppDynamicsDSConfig;
-import io.harness.cvng.models.AppDynamicsDSConfig.ServiceMapping;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

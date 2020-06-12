@@ -11,7 +11,6 @@ import static software.wings.common.VerificationConstants.WORKFLOW_CV_COLLECTION
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
@@ -20,6 +19,7 @@ import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
+import io.harness.version.ServiceApiVersion;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -27,7 +27,6 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import software.wings.beans.FeatureName;
-import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -45,7 +44,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Looks at the workflow analysis task queue for tasks and schedules them periodically.
  * Main entry - {@link #scheduleTaskPoll()}
- * Called from - {@link io.harness.app.VerificationServiceApplication#initializeServiceTaskPoll(Injector)}
  */
 @Singleton
 @Slf4j

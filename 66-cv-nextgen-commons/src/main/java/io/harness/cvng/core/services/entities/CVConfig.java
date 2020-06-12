@@ -3,7 +3,7 @@ package io.harness.cvng.core.services.entities;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotation.HarnessEntity;
-import io.harness.cvng.models.DataSourceType;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;

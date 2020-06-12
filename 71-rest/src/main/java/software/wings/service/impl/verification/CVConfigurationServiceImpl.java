@@ -1017,7 +1017,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
     logger.info("Deleting {} stale CVConfigurations: {}", deleteList.size(), deleteList);
 
-    Query<CVConfiguration> query = wingsPersistence.createQuery(CVConfiguration.class).field("_id").in(deleteList);
+    Query<CVConfiguration> query =
+        wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority).field("_id").in(deleteList);
 
     wingsPersistence.delete(query);
   }

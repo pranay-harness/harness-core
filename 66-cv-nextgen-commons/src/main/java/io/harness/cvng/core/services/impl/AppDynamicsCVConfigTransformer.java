@@ -5,9 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
 
+import io.harness.cvng.beans.AppDynamicsDSConfig;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
 import io.harness.cvng.core.services.entities.AppDynamicsCVConfig;
-import io.harness.cvng.models.AppDynamicsDSConfig;
 
 import java.util.HashSet;
 import java.util.List;

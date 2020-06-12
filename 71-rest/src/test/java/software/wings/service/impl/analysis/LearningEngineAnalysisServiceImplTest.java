@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.VERIFICATION_SERVICE_SECRET;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
@@ -10,6 +11,8 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
+import io.harness.entity.ServiceSecretKey;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -22,8 +25,6 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ServiceSecretKey;
-import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
@@ -38,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 @PrepareForTest({System.class, VerificationServiceImpl.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*", "javax.crypto.*"})
 public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
+  @Inject private VerificationServiceSecretManager verificationServiceSecretManager;
   @Inject private VerificationService learningEngineService;
   @Inject private WingsPersistence wingsPersistence;
 
@@ -252,9 +254,8 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void test_getVerificationServiceSecretKey_whenEnvVariableDefined() {
     String verificationServiceSecret = generateUUID();
-    PowerMockito.when(System.getenv(VerificationConstants.VERIFICATION_SERVICE_SECRET))
-        .thenReturn(verificationServiceSecret);
-    assertThat(learningEngineService.getVerificationServiceSecretKey()).isEqualTo(verificationServiceSecret);
+    PowerMockito.when(System.getenv(VERIFICATION_SERVICE_SECRET)).thenReturn(verificationServiceSecret);
+    assertThat(verificationServiceSecretManager.getVerificationServiceSecretKey()).isEqualTo(verificationServiceSecret);
   }
 
   @Test
@@ -263,8 +264,9 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
   public void test_getVerificationServiceSecretKey_whenEnvVariableNotDefined() {
     ServiceSecretKey serviceSecretKey = wingsPersistence.createQuery(ServiceSecretKey.class).get();
     assertThat(serviceSecretKey).isNull();
-    learningEngineService.initializeServiceSecretKeys();
+    verificationServiceSecretManager.initializeServiceSecretKeys();
     serviceSecretKey = wingsPersistence.createQuery(ServiceSecretKey.class).get();
-    assertThat(learningEngineService.getVerificationServiceSecretKey()).isEqualTo(serviceSecretKey.getServiceSecret());
+    assertThat(verificationServiceSecretManager.getVerificationServiceSecretKey())
+        .isEqualTo(serviceSecretKey.getServiceSecret());
   }
 }

@@ -13,9 +13,9 @@ import io.harness.exception.WingsException;
 import io.harness.health.HealthException;
 import io.harness.health.HealthService;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.PublicApi;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.security.annotations.PublicApi;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;

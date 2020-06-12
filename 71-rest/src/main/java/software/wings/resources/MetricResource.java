@@ -4,12 +4,12 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.ClientType;
 import io.harness.metrics.HarnessMetricRegistry;
+import io.harness.security.annotations.HarnessApiKeyAuth;
 import io.prometheus.client.exporter.common.TextFormat;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.HarnessApiKey.ClientType;
-import software.wings.security.annotations.HarnessApiKeyAuth;
 
 import java.io.IOException;
 import java.io.StringWriter;
