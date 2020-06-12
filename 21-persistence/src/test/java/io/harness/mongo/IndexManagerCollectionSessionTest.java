@@ -49,6 +49,29 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
 
     DBObject dbObject = createCollectionSession(collection).findIndexByFields(indexCreator);
     assertThat(dbObject.get("name")).isEqualTo("foo");
+
+    IndexCreator indexCreator2 = buildIndexCreator(collection, "foo", -1).build();
+    assertThat(createCollectionSession(collection).findIndexByFields(indexCreator2)).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void testFindIndexByFieldsAndDirection() {
+    IndexManagerSession session = new IndexManagerSession(AUTO);
+    DBCollection collection = persistence.getCollection(TestIndexEntity.class);
+
+    IndexCreator indexCreator = buildIndexCreator(collection, "foo", 1).build();
+    assertThat(createCollectionSession(collection).findIndexByFieldsAndDirection(indexCreator)).isNull();
+
+    session.create(indexCreator);
+
+    DBObject dbObject = createCollectionSession(collection).findIndexByFieldsAndDirection(indexCreator);
+    assertThat(dbObject.get("name")).isEqualTo("foo");
+
+    IndexCreator indexCreator2 = buildIndexCreator(collection, "foo", -1).build();
+    assertThat(createCollectionSession(collection).findIndexByFieldsAndDirection(indexCreator2)).isNull();
   }
 
   @Test

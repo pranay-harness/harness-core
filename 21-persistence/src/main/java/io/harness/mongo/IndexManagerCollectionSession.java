@@ -36,6 +36,9 @@ class IndexManagerCollectionSession {
 
   final void reset(DBCollection collection) {
     indexInfo = collection.getIndexInfo();
+    if (logger.isDebugEnabled()) {
+      logger.debug("collection {} has index info {}", collection.getName(), indexInfo.toString());
+    }
   }
 
   boolean isOkToDropIndexes(Date tooNew, Map<String, IndexManagerSession.Accesses> accesses) {
@@ -61,6 +64,16 @@ class IndexManagerCollectionSession {
   DBObject findIndexByFields(IndexCreator indexCreator) {
     for (DBObject index : indexInfo) {
       BasicDBObject indexKeys = (BasicDBObject) index.get("key");
+      if (indexCreator.sameKeysOrder(indexKeys)) {
+        return index;
+      }
+    }
+    return null;
+  }
+
+  DBObject findIndexByFieldsAndDirection(IndexCreator indexCreator) {
+    for (DBObject index : indexInfo) {
+      BasicDBObject indexKeys = (BasicDBObject) index.get("key");
       if (indexCreator.sameKeysOrderAndValues(indexKeys)) {
         return index;
       }
@@ -70,7 +83,7 @@ class IndexManagerCollectionSession {
 
   DBObject findIndexByName(String name) {
     for (DBObject index : indexInfo) {
-      String indexName = (String) index.get("name");
+      String indexName = (String) index.get(NAME);
       if (name.equals(indexName)) {
         return index;
       }
@@ -82,15 +95,21 @@ class IndexManagerCollectionSession {
     // first make sure that we need to rename the index
     String name = (String) indexCreator.getOptions().get(NAME);
     DBObject indexByName = findIndexByName(name);
-    DBObject indexByFields = findIndexByFields(indexCreator);
+    DBObject indexByFields = findIndexByFieldsAndDirection(indexCreator);
 
     // There is collision by name
     if (indexByName != null && indexByName != indexByFields) {
+      if (logger.isDebugEnabled()) {
+        logger.debug("index {} collides by name with {}", indexCreator.toString(), indexByName.toString());
+      }
       return true;
     }
 
     // There is collision by fields
     if (indexByFields != null && indexByName != indexByFields) {
+      if (logger.isDebugEnabled()) {
+        logger.info("index {} collides by fields with {}", indexCreator.toString(), indexByFields.toString());
+      }
       return true;
     }
 
@@ -99,8 +118,11 @@ class IndexManagerCollectionSession {
   }
 
   boolean isCreateNeeded(IndexCreator indexCreator) {
-    // first make sure that we need to rename the index
-    return findIndexByFields(indexCreator) == null;
+    String name = (String) indexCreator.getOptions().get(NAME);
+    DBObject indexByName = findIndexByName(name);
+    DBObject indexByFields = findIndexByFieldsAndDirection(indexCreator);
+
+    return indexByName == null || indexByName != indexByFields;
   }
 
   // This for checks for unused indexes. It utilize the indexStat provided from mongo.

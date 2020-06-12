@@ -339,11 +339,11 @@ public class IndexManagerSession {
         IndexCreator.builder().collection(indexCreator.getCollection()).keys(tempKeys).options(tempOptions).build();
 
     // Lets see if we already have this one created from before
-    DBObject triIndex = collectionSession.findIndexByFields(tempCreator);
+    DBObject triIndex = collectionSession.findIndexByFieldsAndDirection(tempCreator);
     if (triIndex == null) {
       create(tempCreator);
       collectionSession.reset(tempCreator.getCollection());
-      triIndex = collectionSession.findIndexByFields(tempCreator);
+      triIndex = collectionSession.findIndexByFieldsAndDirection(tempCreator);
       if (triIndex == null) {
         return true;
       }
@@ -364,7 +364,7 @@ public class IndexManagerSession {
 
     String currentName = (String) indexCreator.getOptions().get(NAME);
     DBObject indexByName = collectionSession.findIndexByName(currentName);
-    if (indexByName != null) {
+    if (indexByName != null && indexByName != indexByFields) {
       dropIndex(indexCreator.getCollection(), currentName);
     }
 
