@@ -317,8 +317,9 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .data(TaskData.builder()
                         .async(true)
                         .taskType(CLOUD_FORMATION_TASK.name())
-                        .parameters(
-                            new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+                        .parameters(new Object[] {request,
+                            secretManager.getEncryptionDetails(
+                                awsConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId())})
                         .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                         .build())
               .build();

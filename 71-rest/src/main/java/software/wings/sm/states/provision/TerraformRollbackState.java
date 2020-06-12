@@ -183,7 +183,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
               .commandUnit(TerraformCommandUnit.Rollback)
               .sourceRepoSettingId(configParameter.getSourceRepoSettingId())
               .sourceRepo(gitConfig)
-              .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
+              .sourceRepoEncryptionDetails(
+                  secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId()))
               .scriptPath(path)
               .variables(textVariables)
               .encryptedVariables(encryptedTextVariables)
