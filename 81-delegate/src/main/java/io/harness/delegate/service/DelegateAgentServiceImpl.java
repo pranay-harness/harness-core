@@ -1658,7 +1658,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         }
 
         updateCounterIfLessThanCurrent(maxValidatingFuturesCount, currentlyValidatingFutures.size());
-        logger.info("Task submitted for validation");
 
       } else if (delegateId.equals(delegateTaskPackage.getDelegateId())) {
         applyDelegateSecretFunctor(delegateTaskPackage);
@@ -1747,7 +1746,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
           if (delegateTaskPackage != null && delegateTaskPackage.getDelegateTask() != null
               && delegateId.equals(delegateTaskPackage.getDelegateId())) {
-            logger.info("Got the go-ahead to proceed for task.");
             applyDelegateSecretFunctor(delegateTaskPackage);
             executeTask(delegateTaskPackage);
           } else {
@@ -1877,7 +1875,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private BooleanSupplier getPreExecutionFunction(
       @NotNull DelegateTaskPackage delegateTaskPackage, LogSanitizer sanitizer) {
     return () -> {
-      logger.info("Starting pre-execution for task");
       if (!currentlyExecutingTasks.containsKey(delegateTaskPackage.getDelegateTaskId())) {
         logger.info("Adding task to executing tasks");
         currentlyExecutingTasks.put(delegateTaskPackage.getDelegateTaskId(), delegateTaskPackage);
@@ -1901,7 +1898,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return taskResponse -> {
       Response<ResponseBody> response = null;
       try {
-        logger.info("Sending response for task to manager");
         response = timeLimiter.callWithTimeout(() -> {
           Response<ResponseBody> resp = null;
           int retries = 3;
