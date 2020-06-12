@@ -63,7 +63,7 @@ public class PipelinePlanCreator implements SupportDefinedExecutorPlanCreator<CD
 
     return PlanNode.builder()
         .uuid(pipelineSetupNodeId)
-        .name(pipeline.getName())
+        .name(pipeline.getDisplayName())
         .identifier(pipeline.getIdentifier())
         .stepType(PipelineSetupStep.STEP_TYPE)
         .group(StepGroup.PIPELINE.name())

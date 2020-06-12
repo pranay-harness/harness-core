@@ -76,7 +76,7 @@ public class PhasePlanCreator implements SupportDefinedExecutorPlanCreator<CDPha
     final String phaseIdentifier = phase.getIdentifier();
     return PlanNode.builder()
         .uuid(nodeId)
-        .name(phase.getName())
+        .name(phase.getDisplayName())
         .identifier(phaseIdentifier)
         .stepType(SectionChainStep.STEP_TYPE)
         .group(StepGroup.PHASE.name())
