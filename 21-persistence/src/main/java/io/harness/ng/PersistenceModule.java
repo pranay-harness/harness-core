@@ -11,8 +11,6 @@ import com.google.inject.Module;
 import com.mongodb.MongoClient;
 import io.harness.govern.DependencyModule;
 import io.harness.mongo.MongoModule;
-import io.harness.mongo.MongoPersistence;
-import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +26,6 @@ import org.springframework.guice.module.SpringModule;
 public class PersistenceModule extends AbstractModule {
   @Override
   protected void configure() {
-    bind(HPersistence.class).to(MongoPersistence.class);
     install(new SpringModule(BeanFactoryProvider.from(SpringMongoConfig.class)));
     installModule(getMongoModule());
   }
