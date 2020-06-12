@@ -13,7 +13,7 @@ import retrofit2.http.Path;
 public interface GcsRestClient {
   String baseUrl = "https://storage.googleapis.com/";
 
-  @GET("storage/v1/b/{bucketName}/o/{fileName}?alt=media")
+  @GET("storage/v1/b/{bucketName}/o/log-{fileName}.txt?alt=media")
   Call<ResponseBody> fetchLogs(@Header("Authorization") String bearerAuthHeader,
-      @Path(value = "bucketName") String bucketName, @Path(value = "fileName") String fileName);
+      @Path(value = "bucketName") String bucket, @Path(value = "fileName") String buildId);
 }

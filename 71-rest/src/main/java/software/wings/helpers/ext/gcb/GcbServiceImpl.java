@@ -88,9 +88,10 @@ public class GcbServiceImpl implements GcbService {
   public String fetchBuildLogs(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, String fileName) {
     try {
+      final String bucket = bucketName.replace("gs://", "");
       Response<ResponseBody> response =
           getRestClient(GcsRestClient.class, GcsRestClient.baseUrl)
-              .fetchLogs(getBasicAuthHeader(gcpConfig, encryptionDetails), bucketName, fileName)
+              .fetchLogs(getBasicAuthHeader(gcpConfig, encryptionDetails), bucket, fileName)
               .execute();
       return response.body().string();
     } catch (IOException e) {
