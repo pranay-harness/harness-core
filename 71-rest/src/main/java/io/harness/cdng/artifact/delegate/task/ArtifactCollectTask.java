@@ -1,5 +1,6 @@
 package io.harness.cdng.artifact.delegate.task;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -36,8 +37,7 @@ public class ArtifactCollectTask extends AbstractDelegateRunnableTask {
   public ResponseData run(TaskParameters parameters) {
     try {
       ArtifactTaskParameters taskParameters = (ArtifactTaskParameters) parameters;
-      DelegateArtifactService artifactService =
-          injector.getInstance(taskParameters.getAttributes().getDelegateArtifactService());
+      DelegateArtifactService artifactService = getDelegateArtifactService(taskParameters);
       ArtifactAttributes artifactAttributes = artifactService.getLastSuccessfulBuild(
           taskParameters.getAppId(), taskParameters.getAttributes(), taskParameters.getConnectorConfig());
       return ArtifactTaskResponse.builder()
@@ -51,5 +51,10 @@ public class ArtifactCollectTask extends AbstractDelegateRunnableTask {
           .errorMessage(ExceptionUtils.getMessage(exception))
           .build();
     }
+  }
+
+  @VisibleForTesting
+  DelegateArtifactService getDelegateArtifactService(ArtifactTaskParameters taskParameters) {
+    return injector.getInstance(taskParameters.getAttributes().getDelegateArtifactService());
   }
 }

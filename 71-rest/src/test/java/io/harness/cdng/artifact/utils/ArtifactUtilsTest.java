@@ -3,8 +3,11 @@ package io.harness.cdng.artifact.utils;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
+import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -15,6 +18,14 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ArtifactUtilsTest extends WingsBaseTest {
+  private final DockerArtifactSourceAttributes dockerArtifactSourceAttributes =
+      DockerArtifactSourceAttributes.builder()
+          .dockerhubConnector("DOCKER_CONNECTOR")
+          .imagePath("DOCKER_IMAGE")
+          .tag("tag")
+          .tagRegex("tagRegex")
+          .build();
+
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
@@ -58,5 +69,21 @@ public class ArtifactUtilsTest extends WingsBaseTest {
 
     assertThat(firstListHash.equals(secondListHash)).isTrue();
     assertThat(thirdListHash.equals(secondListHash)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void shouldGetArtifactTaskParametersForDocker() {
+    ArtifactTaskParameters taskParameters =
+        ArtifactUtils.getArtifactTaskParameters(ACCOUNT_ID, dockerArtifactSourceAttributes);
+    assertThat(taskParameters.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(taskParameters.getAttributes()).isInstanceOf(DockerArtifactSourceAttributes.class);
+
+    DockerArtifactSourceAttributes attributes = (DockerArtifactSourceAttributes) taskParameters.getAttributes();
+    assertThat(attributes.getDockerhubConnector()).isEqualTo("DOCKER_CONNECTOR");
+    assertThat(attributes.getImagePath()).isEqualTo("DOCKER_IMAGE");
+    assertThat(attributes.getTag()).isEqualTo("tag");
+    assertThat(attributes.getTagRegex()).isEqualTo("tagRegex");
   }
 }
