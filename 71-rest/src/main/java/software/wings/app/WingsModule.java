@@ -36,6 +36,8 @@ import io.harness.ccm.setup.CESetupServiceModule;
 import io.harness.cdng.NGModule;
 import io.harness.config.PipelineConfig;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
+import io.harness.cvng.DataCollectionTaskService;
+import io.harness.cvng.DataCollectionTaskServiceImpl;
 import io.harness.dashboard.DashboardSettingsService;
 import io.harness.dashboard.DashboardSettingsServiceImpl;
 import io.harness.datahandler.services.AdminAccountService;
@@ -1094,6 +1096,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
     taskExecutorMap.addBinding(DelegateTask.TASK_IDENTIFIER).to(DelegateService.class);
+    bind(DataCollectionTaskService.class).to(DataCollectionTaskServiceImpl.class);
   }
 
   private void bindFeatures() {

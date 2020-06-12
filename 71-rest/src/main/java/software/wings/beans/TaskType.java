@@ -84,6 +84,7 @@ import software.wings.delegatetasks.validation.AwsConnectionValidation;
 import software.wings.delegatetasks.validation.AzureArtifactsValidation;
 import software.wings.delegatetasks.validation.BambooValidation;
 import software.wings.delegatetasks.validation.BuildSourceTaskValidation;
+import software.wings.delegatetasks.validation.CVDataCollectionValidator;
 import software.wings.delegatetasks.validation.CollaborationProviderTaskValidation;
 import software.wings.delegatetasks.validation.CommandValidation;
 import software.wings.delegatetasks.validation.ConnectivityBasicValidation;
@@ -272,6 +273,8 @@ public enum TaskType {
       TaskGroup.SPLUNK, software.wings.delegatetasks.cv.LogDataCollectionTask.class, DataCollectionValidator.class),
   ELK_COLLECT_LOG_DATAV2(
       TaskGroup.ELK, software.wings.delegatetasks.cv.LogDataCollectionTask.class, DataCollectionValidator.class),
+  DATA_COLLECTION_NEXT_GEN_VALIDATION(
+      TaskGroup.APPDYNAMICS, MetricsDataCollectionTask.class, CVDataCollectionValidator.class),
   SUMO_COLLECT_LOG_DATA(TaskGroup.SUMO, SumoDataCollectionTask.class, SumoValidation.class),
   SUMO_VALIDATE_CONFIGURATION_TASK(TaskGroup.SUMO, ServiceImplDelegateTask.class, SumoValidation.class),
   SUMO_GET_HOST_RECORDS(TaskGroup.SUMO, ServiceImplDelegateTask.class, SumoValidation.class),

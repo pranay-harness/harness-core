@@ -58,6 +58,7 @@ import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
+import io.harness.cvng.DataCollectionPerpetualTaskServiceClient;
 import io.harness.cvng.core.resources.MetricPackResource;
 import io.harness.delay.DelayEventListener;
 import io.harness.event.EventsModule;
@@ -508,6 +509,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(ContainerInstanceSyncPerpetualTaskClient.class));
     clientRegistry.registerClient(PerpetualTaskType.AWS_LAMBDA_INSTANCE_SYNC,
         injector.getInstance(AwsLambdaInstanceSyncPerpetualTaskClient.class));
+    clientRegistry.registerClient(
+        PerpetualTaskType.DATA_COLLECTION_TASK, injector.getInstance(DataCollectionPerpetualTaskServiceClient.class));
   }
 
   private void registerDatadogPublisherIfEnabled(MainConfiguration configuration) {

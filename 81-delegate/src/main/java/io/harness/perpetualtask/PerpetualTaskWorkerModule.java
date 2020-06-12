@@ -12,6 +12,8 @@ import io.grpc.Channel;
 import io.harness.perpetualtask.PerpetualTaskServiceGrpc.PerpetualTaskServiceBlockingStub;
 import io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams;
 import io.harness.perpetualtask.artifact.ArtifactPerpetualTaskExecutor;
+import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskExecutor;
+import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskExecutor;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskParams;
 import io.harness.perpetualtask.example.SamplePerpetualTaskExecutor;
@@ -55,6 +57,8 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
         .to(AwsCodeDeployInstanceSyncExecutor.class);
     mapBinder.addBinding(ContainerInstanceSyncPerpetualTaskParams.class.getSimpleName())
         .to(ContainerInstanceSyncPerpetualTaskExecutor.class);
+    mapBinder.addBinding(DataCollectionPerpetualTaskParams.class.getSimpleName())
+        .to(DataCollectionPerpetualTaskExecutor.class);
 
     install(new FactoryModuleBuilder()
                 .implement(PodWatcher.class, PodWatcher.class)
