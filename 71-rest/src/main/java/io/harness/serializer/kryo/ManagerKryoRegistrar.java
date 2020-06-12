@@ -453,16 +453,19 @@ import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
 import software.wings.helpers.ext.external.comm.EmailRequest;
 import software.wings.helpers.ext.gcb.models.BuildOptions;
 import software.wings.helpers.ext.gcb.models.BuildStep;
+import software.wings.helpers.ext.gcb.models.BuiltImage;
 import software.wings.helpers.ext.gcb.models.GcbArtifacts;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildSource;
 import software.wings.helpers.ext.gcb.models.GcbBuildStatus;
+import software.wings.helpers.ext.gcb.models.GcbResult;
 import software.wings.helpers.ext.gcb.models.LogStreamingOption;
 import software.wings.helpers.ext.gcb.models.LoggingMode;
 import software.wings.helpers.ext.gcb.models.MachineType;
 import software.wings.helpers.ext.gcb.models.SourceProvenance;
 import software.wings.helpers.ext.gcb.models.StorageSource;
 import software.wings.helpers.ext.gcb.models.SubstitutionOption;
+import software.wings.helpers.ext.gcb.models.TimeSpan;
 import software.wings.helpers.ext.gcb.models.VerifyOption;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
@@ -1696,5 +1699,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(StorageSource.class, 7421);
     kryo.register(SourceProvenance.class, 7422);
     kryo.register(BuildStep.class, 7423);
+    kryo.register(GcbResult.class, 7424);
+    kryo.register(TimeSpan.class, 7425);
+    kryo.register(BuiltImage.class, 7426);
   }
 }
