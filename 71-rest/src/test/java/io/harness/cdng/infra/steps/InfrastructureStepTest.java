@@ -4,10 +4,10 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.infra.beans.InfraDefinition;
 import io.harness.cdng.infra.beans.InfraMapping;
-import io.harness.cdng.infra.beans.K8sDirectInfraDefinition;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
+import io.harness.cdng.infra.yaml.Infrastructure;
+import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -24,20 +24,16 @@ public class InfrastructureStepTest {
     String connector = "connector";
     String serviceIdentifier = "serviceIdentifier";
 
-    InfraDefinition infraDefinition =
-        K8sDirectInfraDefinition.builder()
-            .accountId(accountId)
-            .spec(K8sDirectInfraDefinition.Spec.builder().k8sConnector(connector).namespace(namespace).build())
-            .build();
+    Infrastructure infrastructureSpec =
+        K8SDirectInfrastructure.builder().k8sConnector(connector).namespace(namespace).build();
 
     InfraMapping expectedInfraMapping = K8sDirectInfraMapping.builder()
                                             .serviceIdentifier(serviceIdentifier)
                                             .k8sConnector(connector)
                                             .namespace(namespace)
-                                            .accountId(accountId)
                                             .build();
 
-    InfraMapping infraMapping = infrastructureStep.createInfraMappingObject(serviceIdentifier, infraDefinition);
+    InfraMapping infraMapping = infrastructureStep.createInfraMappingObject(serviceIdentifier, infrastructureSpec);
     assertThat(infraMapping).isEqualTo(expectedInfraMapping);
   }
 }

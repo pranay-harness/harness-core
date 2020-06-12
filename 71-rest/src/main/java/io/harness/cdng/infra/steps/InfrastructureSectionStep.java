@@ -2,6 +2,7 @@ package io.harness.cdng.infra.steps;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.child.ChildExecutable;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.state.Step;
@@ -27,6 +28,6 @@ public class InfrastructureSectionStep implements Step, ChildExecutable {
   @Override
   public StepResponse handleChildResponse(
       Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    return null;
+    return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }

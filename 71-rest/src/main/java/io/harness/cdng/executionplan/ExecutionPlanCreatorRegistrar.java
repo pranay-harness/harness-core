@@ -3,6 +3,7 @@ package io.harness.cdng.executionplan;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.cdng.infra.InfraPlanCreator;
 import io.harness.cdng.pipeline.plancreators.ArtifactStepPlanCreator;
 import io.harness.cdng.pipeline.plancreators.DeploymentStagePlanCreator;
 import io.harness.cdng.pipeline.plancreators.ExecutionPhasesPlanCreator;
@@ -33,6 +34,7 @@ public class ExecutionPlanCreatorRegistrar {
   @Inject private ManifestStepPlanCreator manifestStepPlanCreator;
   @Inject private ServiceStepPlanCreator serviceStepPlanCreator;
   @Inject private GenericStepPlanCreator genericStepPlanCreator;
+  @Inject private InfraPlanCreator infraPlanCreator;
 
   public void register() {
     logger.info("Start: register execution plan creators");
@@ -47,6 +49,7 @@ public class ExecutionPlanCreatorRegistrar {
     register(manifestStepPlanCreator);
     register(serviceStepPlanCreator);
     register(genericStepPlanCreator);
+    register(infraPlanCreator);
     logger.info("Done: register execution plan creators");
   }
   private void register(SupportDefinedExecutorPlanCreator<?> executionPlanCreator) {

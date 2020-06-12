@@ -8,6 +8,8 @@ import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.presentation.Graph;
 
+import java.io.IOException;
+
 @OwnedBy(CDC)
 @Redesign
 public interface CustomExecutionService {
@@ -29,7 +31,7 @@ public interface CustomExecutionService {
 
   PlanExecution executeSectionChainPlan();
 
-  PlanExecution testInfraState();
+  PlanExecution testInfraState() throws IOException;
 
   PlanExecution testGraphPlan();
 

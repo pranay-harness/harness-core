@@ -93,7 +93,7 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
-  public PlanExecution testInfraState() {
+  public PlanExecution testInfraState() throws IOException {
     return engineService.startExecution(
         CustomExecutionUtils.provideInfraStateTestPlan(), getInputArgs(), getEmbeddedUser());
   }

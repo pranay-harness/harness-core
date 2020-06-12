@@ -210,6 +210,7 @@ environments {"name": "accountId_1", "background": true} {"accountId": 1}
 environments {"name": "appId_1", "background": true} {"appId": 1}
 environments {"name": "createdAt_1", "background": true} {"createdAt": 1}
 environments {"name": "yaml", "unique": true} {"appId": 1, "name": 1}
+environmentsNG {"name": "envNGIdx", "unique": true} {"accountId": 1, "orgId": 1, "projectId": 1, "identifier": 1}
 executionInterrupts {"name": "appId_1", "background": true} {"appId": 1}
 executionInterrupts {"name": "createdAt_1", "background": true} {"createdAt": 1}
 executionInterrupts {"name": "executionUuid_1", "background": true} {"executionUuid": 1}
