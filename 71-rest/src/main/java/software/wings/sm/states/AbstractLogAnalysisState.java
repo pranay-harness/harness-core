@@ -7,6 +7,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.common.VerificationConstants.DEFAULT_GROUP_NAME;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
@@ -70,6 +71,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by rsingh on 7/6/17.
@@ -419,7 +421,12 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     campareAndLogNodesUsingNewInstanceAPI(context, testNodes, controlNodes);
 
     NodePair nodePair = getControlAndTestNodes(context);
-
+    if (featureFlagService.isEnabled(FeatureName.CV_NEW_INSTANCE_API, context.getAccountId())) {
+      getLogger().info("Using new instance API");
+      testNodes = nodePair.getTestNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
+      controlNodes =
+          nodePair.getControlNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
+    }
     renderedQuery = context.renderExpression(query);
 
     String accountId = this.appService.get(context.getAppId()).getAccountId();
