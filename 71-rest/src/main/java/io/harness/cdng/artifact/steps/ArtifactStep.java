@@ -2,6 +2,7 @@ package io.harness.cdng.artifact.steps;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
@@ -75,6 +76,7 @@ public class ArtifactStep implements Step, TaskExecutable {
       switch (taskResponse.getCommandExecutionStatus()) {
         case SUCCESS:
           stepResponseBuilder.status(Status.SUCCEEDED);
+          stepResponseBuilder.stepOutcome(getStepOutcome(taskResponse, (ArtifactStepParameters) stepParameters));
           break;
         case FAILURE:
           stepResponseBuilder.status(Status.FAILED);
@@ -84,7 +86,6 @@ public class ArtifactStep implements Step, TaskExecutable {
           throw new ArtifactServerException(
               "Unhandled type CommandExecutionStatus: " + taskResponse.getCommandExecutionStatus().name());
       }
-      stepResponseBuilder.stepOutcome(getStepOutcome(taskResponse, (ArtifactStepParameters) stepParameters));
     } else if (notifyResponseData instanceof ErrorNotifyResponseData) {
       stepResponseBuilder.status(Status.FAILED);
       stepResponseBuilder.failureInfo(
@@ -97,12 +98,14 @@ public class ArtifactStep implements Step, TaskExecutable {
     return stepResponseBuilder.build();
   }
 
-  private ArtifactSource getArtifactSource(ArtifactStepParameters parameters, String accountId) {
+  @VisibleForTesting
+  ArtifactSource getArtifactSource(ArtifactStepParameters parameters, String accountId) {
     ArtifactSource artifactSource = parameters.getArtifact().getArtifactSource(accountId);
     return artifactSourceService.saveOrGetArtifactStream(artifactSource);
   }
 
-  private StepOutcome getStepOutcome(ArtifactTaskResponse taskResponse, ArtifactStepParameters stepParameters) {
+  @VisibleForTesting
+  StepOutcome getStepOutcome(ArtifactTaskResponse taskResponse, ArtifactStepParameters stepParameters) {
     ArtifactOutcome artifact = taskResponse.getArtifactAttributes().getArtifactOutcome(stepParameters.getArtifact());
     String outcomeKey = artifact.getArtifactType() + ":" + artifact.getIdentifier();
     return StepOutcome.builder().name(outcomeKey).outcome(artifact).build();

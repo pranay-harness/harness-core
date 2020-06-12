@@ -3,6 +3,7 @@ package io.harness.cdng.artifact.delegate.resource;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.helpers.ext.docker.DockerRegistryServiceImpl.isSuccessful;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
 import io.harness.cdng.artifact.bean.ArtifactAttributes;
@@ -22,7 +23,8 @@ import java.io.IOException;
 @Singleton
 @Slf4j
 public class DockerPublicRegistryProcessor {
-  private DockerRegistryRestClient getDockerRegistryRestClient(DockerhubConnectorConfig connectorConfig) {
+  @VisibleForTesting
+  DockerRegistryRestClient getDockerRegistryRestClient(DockerhubConnectorConfig connectorConfig) {
     OkHttpClient okHttpClient = Http.getUnsafeOkHttpClient(connectorConfig.getRegistryUrl());
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)
@@ -49,7 +51,8 @@ public class DockerPublicRegistryProcessor {
     return dockerArtifactAttributes;
   }
 
-  private DockerArtifactAttributes processPageResponse(
+  @VisibleForTesting
+  DockerArtifactAttributes processPageResponse(
       DockerPublicImageTagResponse.Result publicImageTag, String imageName, DockerhubConnectorConfig connectorConfig) {
     if (publicImageTag != null) {
       return DockerArtifactAttributes.builder()
