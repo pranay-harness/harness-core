@@ -11,6 +11,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.util.Durations;
+import com.google.protobuf.util.Timestamps;
 
 import io.grpc.StatusRuntimeException;
 import io.harness.flow.BackoffScheduler;
@@ -117,9 +118,9 @@ public class PerpetualTaskWorker {
   }
 
   private void logPullDelay(PerpetualTaskAssignDetails task, String message) {
-    long seconds = task.getLastContextUpdated().getSeconds();
+    long lastContextUpdated = Timestamps.toMillis(task.getLastContextUpdated());
     long startTime = currentTimeMillis();
-    long delay = startTime - Duration.ofSeconds(seconds).toMillis();
+    long delay = startTime - lastContextUpdated;
 
     try (DelayLogContext ignore = new DelayLogContext(delay, OVERRIDE_ERROR)) {
       logger.info(message);
@@ -136,8 +137,10 @@ public class PerpetualTaskWorker {
         startTasks.add(assignDetails);
       } else {
         PerpetualTaskAssignRecord runningTask = runningTaskMap.get(assignDetails.getTaskId());
-        if (runningTask.getPerpetualTaskAssignDetails().getLastContextUpdated().getSeconds()
-            < assignDetails.getLastContextUpdated().getSeconds()) {
+        long runningTaskLastContextUpdated =
+            Timestamps.toMillis(runningTask.getPerpetualTaskAssignDetails().getLastContextUpdated());
+        long assignDetailsLastContextUpdated = Timestamps.toMillis(assignDetails.getLastContextUpdated());
+        if (runningTaskLastContextUpdated < assignDetailsLastContextUpdated) {
           updatedTasks.add(assignDetails);
         }
       }
