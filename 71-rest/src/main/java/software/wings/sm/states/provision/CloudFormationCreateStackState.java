@@ -109,13 +109,14 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .waitId(activityId)
         .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
         .appId(executionContext.getApp().getUuid())
-        .data(
-            TaskData.builder()
-                .async(true)
-                .taskType(CLOUD_FORMATION_TASK.name())
-                .parameters(new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
-                .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                .build())
+        .data(TaskData.builder()
+                  .async(true)
+                  .taskType(CLOUD_FORMATION_TASK.name())
+                  .parameters(new Object[] {request,
+                      secretManager.getEncryptionDetails(
+                          awsConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId())})
+                  .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                  .build())
         .build();
   }
 

@@ -483,7 +483,8 @@ public abstract class TerraformProvisionState extends State {
             .commandUnit(commandUnit())
             .sourceRepoSettingId(element.getSourceRepoSettingId())
             .sourceRepo(gitConfig)
-            .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
+            .sourceRepoEncryptionDetails(
+                secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId()))
             .scriptPath(path)
             .variables(textVariables)
             .encryptedVariables(encryptedTextVariables)
@@ -676,7 +677,8 @@ public abstract class TerraformProvisionState extends State {
             .commandUnit(commandUnit())
             .sourceRepoSettingId(terraformProvisioner.getSourceRepoSettingId())
             .sourceRepo(gitConfig)
-            .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
+            .sourceRepoEncryptionDetails(
+                secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId()))
             .scriptPath(path)
             .variables(variables)
             .rawVariables(rawVariablesList)
