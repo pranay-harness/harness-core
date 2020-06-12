@@ -1,0 +1,61 @@
+package io.harness.cvng;
+
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.perpetualtask.PerpetualTaskType.DATA_COLLECTION_TASK;
+import static io.harness.rule.OwnerRule.KAMAL;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.google.inject.Inject;
+
+import io.harness.category.element.UnitTests;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
+import io.harness.rule.Owner;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import software.wings.WingsBaseTest;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class DataCollectionTaskServiceImplTest extends WingsBaseTest {
+  @Inject private DataCollectionTaskService dataCollectionTaskService;
+  @Inject private PerpetualTaskService perpetualTaskService;
+  private String accountId;
+  private String cvConfigId;
+  @Before
+  public void setup() {
+    accountId = generateUuid();
+    cvConfigId = generateUuid();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void create() {
+    String taskId = dataCollectionTaskService.create(accountId, cvConfigId);
+    assertThat(taskId).isNotNull();
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
+    PerpetualTaskClientContext perpetualTaskClientContext = perpetualTaskRecord.getClientContext();
+    Map<String, String> clientParamMap = new HashMap<>();
+    clientParamMap.put("cvConfigId", cvConfigId);
+    assertThat(perpetualTaskClientContext.getClientParams()).isEqualTo(clientParamMap);
+    assertThat(perpetualTaskService.getPerpetualTaskType(taskId)).isEqualTo(DATA_COLLECTION_TASK);
+    assertThat(perpetualTaskRecord.getIntervalSeconds()).isEqualTo(60);
+    assertThat(perpetualTaskRecord.getTimeoutMillis()).isEqualTo(900000);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void delete() {
+    String taskId = dataCollectionTaskService.create(accountId, cvConfigId);
+    assertThat(taskId).isNotNull();
+    dataCollectionTaskService.delete(accountId, "some-other-id");
+    assertThat(perpetualTaskService.getTaskRecord(taskId)).isNotNull();
+    dataCollectionTaskService.delete(accountId, taskId);
+    assertThat(perpetualTaskService.getTaskRecord(taskId)).isNull();
+  }
+}

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.datacollection;
+
+option java_multiple_files = true;
+
+message DataCollectionPerpetualTaskParams {
+  string cv_config_id = 1;
+}

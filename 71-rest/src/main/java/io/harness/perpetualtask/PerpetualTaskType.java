@@ -12,6 +12,7 @@ public final class PerpetualTaskType {
   public static final String SPOT_INST_AMI_INSTANCE_SYNC = "SPOT_INST_AMI_INSTANCE_SYNC";
   public static final String CONTAINER_INSTANCE_SYNC = "CONTAINER_INSTANCE_SYNC";
   public static final String AWS_LAMBDA_INSTANCE_SYNC = "AWS_LAMBDA_INSTANCE_SYNC";
+  public static final String DATA_COLLECTION_TASK = "DATA_COLLECTION_TASK";
 
   private PerpetualTaskType() {}
 }
