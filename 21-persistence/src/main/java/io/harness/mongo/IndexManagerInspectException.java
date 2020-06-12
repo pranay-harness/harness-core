@@ -9,4 +9,8 @@ public class IndexManagerInspectException extends WingsException {
   public IndexManagerInspectException() {
     super(null, null, GENERAL_ERROR, Level.ERROR, null, null);
   }
+
+  public IndexManagerInspectException(String message) {
+    super(message, null, GENERAL_ERROR, Level.ERROR, null, null);
+  }
 }

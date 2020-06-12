@@ -18,6 +18,7 @@ import io.harness.testlib.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.utils.IndexType;
 
 public class IndexManagerTest extends PersistenceTest {
   @Inject HPersistence persistence;
@@ -63,5 +64,14 @@ public class IndexManagerTest extends PersistenceTest {
 
     assertThat(IndexManager.IndexCreator.subsequenceKeys(a1, a1b1)).isFalse();
     assertThat(IndexManager.IndexCreator.subsequenceKeys(a_1, a1b1)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void testIndexTypeFromValue() {
+    assertThat(IndexManager.IndexCreator.indexTypeFromValue(Integer.valueOf(1))).isEqualTo(IndexType.ASC);
+    assertThat(IndexManager.IndexCreator.indexTypeFromValue(Float.valueOf(1))).isEqualTo(IndexType.ASC);
+    assertThat(IndexManager.IndexCreator.indexTypeFromValue(Double.valueOf(1.0))).isEqualTo(IndexType.ASC);
   }
 }
