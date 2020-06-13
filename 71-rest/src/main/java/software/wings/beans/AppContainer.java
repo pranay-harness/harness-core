@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.ChecksumType;
 import io.harness.beans.EmbeddedUser;
 import lombok.experimental.FieldNameConstants;
 import org.glassfish.jersey.media.multipart.FormDataParam;

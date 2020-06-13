@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.ChecksumType;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

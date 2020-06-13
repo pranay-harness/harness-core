@@ -22,14 +22,14 @@ import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Filters;
+import io.harness.beans.ChecksumType;
+import io.harness.beans.FileMetadata;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
 import software.wings.beans.BaseFile;
-import software.wings.beans.ChecksumType;
-import software.wings.beans.FileMetadata;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 

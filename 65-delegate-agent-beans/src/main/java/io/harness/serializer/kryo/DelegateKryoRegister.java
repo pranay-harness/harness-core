@@ -1,6 +1,7 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.beans.ChecksumType;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
@@ -15,6 +16,7 @@ public class DelegateKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(DelegateScripts.class, 5002);
+    kryo.register(ChecksumType.class, 5065);
     kryo.register(DelegateConfiguration.class, 5469);
 
     kryo.register(DelegateRegisterResponse.class, 6501);

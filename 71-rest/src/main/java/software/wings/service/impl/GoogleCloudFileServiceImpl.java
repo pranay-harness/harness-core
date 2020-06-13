@@ -22,6 +22,8 @@ import com.google.cloud.storage.StorageOptions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.ChecksumType;
+import io.harness.beans.FileMetadata;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -33,8 +35,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.BaseFile;
-import software.wings.beans.ChecksumType;
-import software.wings.beans.FileMetadata;
 import software.wings.beans.GcsFileMetadata;
 import software.wings.beans.GcsFileMetadata.GcsFileMetadataKeys;
 import software.wings.dl.WingsPersistence;

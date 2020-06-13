@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.FileMetadata;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.distribution.idempotence.IdempotentId;
@@ -28,7 +29,6 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.FileMetadata;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.security.annotations.Scope;

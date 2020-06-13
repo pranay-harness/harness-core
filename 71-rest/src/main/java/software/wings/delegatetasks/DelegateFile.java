@@ -1,9 +1,9 @@
 package software.wings.delegatetasks;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.beans.ChecksumType;
+import io.harness.beans.FileMetadata;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
-import software.wings.beans.ChecksumType;
-import software.wings.beans.FileMetadata;
 import software.wings.service.intfc.FileService;
 
 import java.io.File;

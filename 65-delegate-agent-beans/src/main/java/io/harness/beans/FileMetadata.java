@@ -1,4 +1,4 @@
-package software.wings.beans;
+package io.harness.beans;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
