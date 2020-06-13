@@ -3,6 +3,7 @@ package software.wings.service.impl.pipeline.resume;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -585,6 +586,18 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCheckPipelineResumeAvailableForTypeWorkflow() {
     WorkflowExecution workflowExecution = prepareFailedPipelineExecution(WorkflowType.ORCHESTRATION);
+    pipelineResumeUtils.checkPipelineResumeAvailable(workflowExecution);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testCheckPipelineResumeUnavailableForPipelineFailedDuringArtifactCollection() {
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
+    PipelineStageExecution stageExecution1 = PipelineStageExecution.builder().status(ExecutionStatus.QUEUED).build();
+    PipelineStageExecution stageExecution2 = PipelineStageExecution.builder().status(ExecutionStatus.QUEUED).build();
+    workflowExecution.setPipelineExecution(
+        aPipelineExecution().withPipelineStageExecutions(asList(stageExecution1, stageExecution2)).build());
     pipelineResumeUtils.checkPipelineResumeAvailable(workflowExecution);
   }
 

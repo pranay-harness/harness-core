@@ -35,6 +35,7 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
+import static io.harness.interrupts.ExecutionInterruptType.PAUSE;
 import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
 import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -1375,7 +1376,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @SuppressWarnings("squid:S00107")
-  private void collectArtifactsAndStartExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
+  @VisibleForTesting
+  protected void collectArtifactsAndStartExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       ExecutionEventAdvisor workflowExecutionAdvisor, WorkflowExecutionUpdate workflowExecutionUpdate,
       WorkflowStandardParams stdParams, Application app, Workflow workflow, Pipeline pipeline,
       ExecutionArgs executionArgs, ContextElement... contextElements) {
@@ -1391,9 +1393,39 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (savedWorkflowExecution.getStatus() != FAILED) {
       // artifact collection succeeded - unset the WorkflowExecution#message
       unsetWorkflowExecutionMessage(savedWorkflowExecution.getAppId(), savedWorkflowExecution.getUuid());
+      // check for ABORT_ALL interrupt and abort the execution
+      if (abortInterruptsFoundForExecution(workflowExecution)) {
+        abortWorkflowExecution(workflowExecution.getAppId(), workflowExecution.getUuid());
+        return;
+      }
       continueWorkflowExecution(savedWorkflowExecution, stateMachine, workflowExecutionAdvisor, workflowExecutionUpdate,
           stdParams, app, workflow, pipeline, executionArgs, contextElements);
     }
+  }
+
+  private boolean abortInterruptsFoundForExecution(WorkflowExecution workflowExecution) {
+    boolean interruptRegistered = false;
+    List<ExecutionInterrupt> executionInterrupts =
+        wingsPersistence.createQuery(ExecutionInterrupt.class, excludeAuthority)
+            .filter(ExecutionInterruptKeys.appId, workflowExecution.getAppId())
+            .filter(ExecutionInterruptKeys.executionUuid, workflowExecution.getUuid())
+            .filter(ExecutionInterruptKeys.executionInterruptType, ABORT_ALL)
+            .asList();
+    if (isNotEmpty(executionInterrupts)) {
+      interruptRegistered = true;
+    }
+    return interruptRegistered;
+  }
+
+  private void abortWorkflowExecution(String appId, String workflowExecutionId) {
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .filter(WorkflowExecutionKeys.appId, appId)
+                                         .filter(WorkflowExecutionKeys.uuid, workflowExecutionId);
+
+    UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                                                        .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis())
+                                                        .set(WorkflowExecutionKeys.status, ExecutionStatus.ABORTED);
+    wingsPersistence.update(query, updateOps);
   }
 
   @SuppressWarnings("squid:S00107")
@@ -2418,8 +2450,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (workflowExecution.getWorkflowType() != PIPELINE) {
+      if (executionInterrupt.getExecutionInterruptType() == PAUSE && workflowExecution.getStatus() == PREPARING) {
+        throw new InvalidRequestException("Cannot pause Workflow in Preparing state");
+      }
       executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
       return executionInterrupt;
+    }
+
+    if (executionInterrupt.getExecutionInterruptType() == PAUSE_ALL && workflowExecution.getStatus() == PREPARING) {
+      throw new InvalidRequestException("Cannot pause pipeline in Preparing state");
     }
 
     if (!(executionInterrupt.getExecutionInterruptType() == PAUSE_ALL
