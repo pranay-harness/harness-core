@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.ExecutionStatus.PREPARING;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -53,6 +54,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNET
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.EMAIL;
 import static software.wings.sm.StateType.ENV_STATE;
@@ -72,6 +74,7 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
@@ -117,6 +120,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ArtifactStreamMetadata;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.CanaryOrchestrationWorkflow;
+import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
@@ -179,9 +183,11 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
+import software.wings.sm.ExecutionEventAdvisor;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
+import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.HoldingScope;
@@ -2639,5 +2645,77 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(artifacts).isEmpty();
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(workflowExecution.getMessage()).contains("Error collecting build for artifact source art_parameterized");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldAbortExecutionAfterCollectingArtifactsOnInterrupt() {
+    StateMachine stateMachine = aStateMachine().build();
+    ExecutionEventAdvisor executionEventAdvisor = new CanaryWorkflowExecutionAdvisor();
+    WorkflowExecutionUpdate workflowExecutionUpdate = new WorkflowExecutionUpdate();
+    WorkflowStandardParams stdParams = aWorkflowStandardParams().build();
+    wingsPersistence.save(WorkflowExecution.builder()
+                              .accountId(ACCOUNT_ID)
+                              .appId(app.getUuid())
+                              .status(PREPARING)
+                              .message("Starting artifact collection")
+                              .uuid(WORKFLOW_EXECUTION_ID)
+                              .build());
+    Graph graph = constructGraph();
+    Workflow workflow =
+        aWorkflow()
+            .envId(env.getUuid())
+            .appId(app.getUuid())
+            .name("workflow1")
+            .description("Sample Workflow")
+            .orchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .build();
+    workflow = workflowService.createWorkflow(workflow);
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    Map<String, Object> map1 = new HashMap<>();
+    map1.put("artifactId", "myartifact");
+    map1.put("buildNo", "1.0");
+    executionArgs.setArtifactVariables(asList(
+        ArtifactVariable.builder()
+            .entityType(SERVICE)
+            .entityId("SERVICE_ID_1")
+            .name("art_parameterized")
+            .artifactStreamMetadata(
+                ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).runtimeValues(map1).build())
+            .build()));
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .jobname("releases")
+                                                  .groupId("mygroup")
+                                                  .artifactPaths(asList("${artifactId}"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .build();
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+    when(buildSourceService.getBuild(anyString(), anyString(), anyString(), any()))
+        .thenReturn(BuildDetails.Builder.aBuildDetails().withNumber("1.0").build());
+    Map<String, String> map = new HashMap<>();
+    map.put("buildNo", "1.0");
+    Artifact artifact = Artifact.Builder.anArtifact().withMetadata(map).withUuid(ARTIFACT_ID).build();
+    when(artifactCollectionUtils.getArtifact(any(), any())).thenReturn(artifact);
+    when(artifactService.create(artifact, nexusArtifactStream, false)).thenReturn(artifact);
+    WorkflowExecution workflowExecution =
+        wingsPersistence.getWithAppId(WorkflowExecution.class, app.getUuid(), WORKFLOW_EXECUTION_ID);
+    ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
+                                                .appId(app.getUuid())
+                                                .executionUuid(workflowExecution.getUuid())
+                                                .executionInterruptType(ExecutionInterruptType.ABORT_ALL)
+                                                .build();
+    wingsPersistence.save(executionInterrupt);
+    ((WorkflowExecutionServiceImpl) workflowExecutionService)
+        .collectArtifactsAndStartExecution(workflowExecution, stateMachine, executionEventAdvisor,
+            workflowExecutionUpdate, stdParams, app, workflow, null, executionArgs, null);
+    workflowExecution = wingsPersistence.getWithAppId(WorkflowExecution.class, app.getUuid(), WORKFLOW_EXECUTION_ID);
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.ABORTED);
+    assertThat(workflowExecution.getMessage()).isNull();
   }
 }

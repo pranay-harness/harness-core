@@ -50,6 +50,9 @@ public enum ExecutionStatus {
     return activeStatuses;
   }
 
+  public static boolean isActiveStatus(ExecutionStatus status) {
+    return status != null && activeStatuses.contains(status);
+  }
   public static Set<ExecutionStatus> finalStatuses() {
     return finalStatuses;
   }

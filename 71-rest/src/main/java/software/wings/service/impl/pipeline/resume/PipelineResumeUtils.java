@@ -3,6 +3,7 @@ package software.wings.service.impl.pipeline.resume;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.beans.ExecutionStatus.isActiveStatus;
 import static io.harness.beans.ExecutionStatus.isNegativeStatus;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
@@ -336,6 +337,26 @@ public class PipelineResumeUtils {
       throw new InvalidRequestException(
           format("Pipeline resume is only available on the latest iteration of a resumed execution: %s",
               prevWorkflowExecution.getUuid()));
+    }
+
+    if (prevWorkflowExecution.getStatus() == FAILED) {
+      List<PipelineStageExecution> pipelineStageExecutions =
+          prevWorkflowExecution.getPipelineExecution().getPipelineStageExecutions();
+      if (isEmpty(pipelineStageExecutions)) {
+        throw new InvalidRequestException("You cannot resume an empty pipeline");
+      } else {
+        boolean notInActiveStatus = false;
+        for (PipelineStageExecution pipelineStageExecution : pipelineStageExecutions) {
+          if (!isActiveStatus(pipelineStageExecution.getStatus())) {
+            notInActiveStatus = true;
+            break;
+          }
+        }
+        if (!notInActiveStatus) {
+          throw new InvalidRequestException(
+              "Pipeline resume is not available for a pipeline that failed during artifact collection");
+        }
+      }
     }
   }
 
