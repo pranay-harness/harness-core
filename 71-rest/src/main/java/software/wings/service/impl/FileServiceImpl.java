@@ -6,12 +6,12 @@ import static software.wings.service.impl.FileServiceUtils.isMongoFileIdFormat;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.FileMetadata;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.DataStorageMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.BaseFile;
-import software.wings.beans.FileMetadata;
 import software.wings.beans.GcsFileMetadata;
 import software.wings.beans.GcsFileMetadata.GcsFileMetadataKeys;
 import software.wings.dl.WingsPersistence;

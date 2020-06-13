@@ -11,13 +11,13 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.ChecksumType;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import software.wings.beans.Application;
-import software.wings.beans.ChecksumType;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.ConfigFile.OverrideYaml;

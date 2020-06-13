@@ -160,7 +160,6 @@ import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
-import software.wings.beans.ChecksumType;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.DatadogConfig;
@@ -921,7 +920,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BastionConnectionAttributes.class, 5073);
     kryo.register(BugsnagConfig.class, 5490);
     kryo.register(CanaryWorkflowExecutionAdvisor.class, 5024);
-    kryo.register(ChecksumType.class, 5065);
     kryo.register(AbstractCommandUnit.class, 5030);
     kryo.register(CleanupPowerShellCommandUnit.class, 5273);
     kryo.register(CleanupSshCommandUnit.class, 5031);

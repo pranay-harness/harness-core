@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.FileMetadata;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
@@ -38,7 +39,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.FileMetadata;
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.TerraformInfrastructureProvisioner;

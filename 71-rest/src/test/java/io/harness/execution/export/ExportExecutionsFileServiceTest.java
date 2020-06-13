@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
+import io.harness.beans.FileMetadata;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.ExportExecutionsException;
@@ -26,7 +27,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.FileMetadata;
 import software.wings.service.intfc.FileService;
 
 import java.io.File;

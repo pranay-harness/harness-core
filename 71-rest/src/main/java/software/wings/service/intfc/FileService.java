@@ -1,9 +1,9 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.FileMetadata;
 import io.harness.delegate.service.DelegateAgentFileService;
 import io.harness.stream.BoundedInputStream;
 import software.wings.beans.BaseFile;
-import software.wings.beans.FileMetadata;
 
 import java.io.File;
 import java.io.InputStream;

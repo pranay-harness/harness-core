@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import io.harness.beans.ChecksumType;
 import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
 import lombok.Data;

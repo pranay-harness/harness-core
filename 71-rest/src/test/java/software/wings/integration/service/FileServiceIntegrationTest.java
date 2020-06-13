@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.FILE_ID;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
+import io.harness.beans.FileMetadata;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
@@ -21,7 +22,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BaseFile;
-import software.wings.beans.FileMetadata;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.FileService;
 
