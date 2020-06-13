@@ -34,6 +34,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingInt;
 import static java.util.Comparator.naturalOrder;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -2103,11 +2104,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     String capabilities;
     List<ExecutionCapability> executionCapabilities = delegateTask.getExecutionCapabilities();
     if (isNotEmpty(executionCapabilities)) {
-      capabilities = join(", ",
-          (executionCapabilities.size() > 4 ? executionCapabilities.subList(0, 4) : executionCapabilities)
-              .stream()
-              .map(ExecutionCapability::fetchCapabilityBasis)
-              .collect(toList()));
+      capabilities = (executionCapabilities.size() > 4 ? executionCapabilities.subList(0, 4) : executionCapabilities)
+                         .stream()
+                         .map(ExecutionCapability::fetchCapabilityBasis)
+                         .collect(joining(", "));
       if (executionCapabilities.size() > 4) {
         capabilities += ", and " + (executionCapabilities.size() - 4) + " more...";
       }
@@ -2140,7 +2140,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                 Delegate delegate = get(delegateTask.getAccountId(), delegateId, false);
                 return delegate == null ? delegateId : delegate.getHostName();
               })
-              .collect(Collectors.joining()));
+              .collect(joining()));
     } else {
       timedoutDelegates = "no delegates timedout";
     }
