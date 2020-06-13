@@ -21,6 +21,6 @@ public class SystemEnvCheckerCapability implements ExecutionCapability {
 
   @Override
   public String fetchCapabilityBasis() {
-    return systemPropertyName;
+    return systemPropertyName + ":" + comparate;
   }
 }
