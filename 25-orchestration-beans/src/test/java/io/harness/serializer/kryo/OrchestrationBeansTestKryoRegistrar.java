@@ -6,7 +6,7 @@ import io.harness.serializer.KryoRegistrar;
 
 public class OrchestrationBeansTestKryoRegistrar implements KryoRegistrar {
   @Override
-  public void register(Kryo kryo) throws Exception {
+  public void register(Kryo kryo) {
     int index = 25 * 10000;
     kryo.register(DummyOutput.class, index++);
   }

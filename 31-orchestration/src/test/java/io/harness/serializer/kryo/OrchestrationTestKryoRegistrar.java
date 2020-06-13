@@ -6,7 +6,7 @@ import io.harness.utils.DummySweepingOutput;
 
 public class OrchestrationTestKryoRegistrar implements KryoRegistrar {
   @Override
-  public void register(Kryo kryo) throws Exception {
+  public void register(Kryo kryo) {
     int index = 31 * 10000;
     kryo.register(DummySweepingOutput.class, index++);
   }

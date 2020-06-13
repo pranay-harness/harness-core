@@ -44,7 +44,7 @@ import java.time.Duration;
 @OwnedBy(CDC)
 public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
   @Override
-  public void register(Kryo kryo) throws Exception {
+  public void register(Kryo kryo) {
     // Add new Classes Here
     kryo.register(Status.class, 2501);
     kryo.register(StatusNotifyResponseData.class, 2502);

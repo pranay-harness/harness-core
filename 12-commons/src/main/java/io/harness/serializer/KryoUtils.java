@@ -8,6 +8,7 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.pool.KryoPool;
 import com.esotericsoftware.kryo.util.IntMap;
+import io.harness.exception.GeneralException;
 import io.harness.reflection.CodeUtils;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import org.reflections.Reflections;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -45,9 +47,8 @@ public class KryoUtils {
         }
       }
 
-    } catch (Exception e) {
-      logger.error("Failed to initialize kryo", e);
-      System.exit(1);
+    } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+      throw new GeneralException("Failed initializing kryo", e);
     }
 
     return kryo;

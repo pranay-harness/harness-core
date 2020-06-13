@@ -6,7 +6,7 @@ import io.harness.serializer.KryoRegistrar;
 
 public class PersistenceRegistrar implements KryoRegistrar {
   @Override
-  public void register(Kryo kryo) throws Exception {
+  public void register(Kryo kryo) {
     kryo.register(EmbeddedUser.class, 5021);
   }
 }
