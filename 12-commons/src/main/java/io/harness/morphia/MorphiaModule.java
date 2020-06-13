@@ -15,6 +15,7 @@ import org.mongodb.morphia.mapping.MappedClass;
 import org.reflections.Reflections;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -41,9 +42,8 @@ public class MorphiaModule extends DependencyProviderModule {
 
         morphiaRegistrar.registerClasses(morphiaClasses);
       }
-    } catch (Exception e) {
-      logger.error("Failed to initialize morphia object factory", e);
-      System.exit(1);
+    } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+      throw new GeneralException("Failed initializing morphia", e);
     }
 
     return morphiaClasses;

@@ -11,7 +11,7 @@ import io.harness.serializer.KryoRegistrar;
 
 public class CIBeansRegistrar implements KryoRegistrar {
   @Override
-  public void register(Kryo kryo) throws Exception {
+  public void register(Kryo kryo) {
     kryo.register(K8PodDetails.class, 100001);
     kryo.register(ContextElement.class, 100002);
   }

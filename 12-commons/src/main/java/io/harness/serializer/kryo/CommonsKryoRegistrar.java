@@ -6,7 +6,7 @@ import io.harness.serializer.KryoRegistrar;
 
 public class CommonsKryoRegistrar implements KryoRegistrar {
   @Override
-  public void register(Kryo kryo) throws Exception {
+  public void register(Kryo kryo) {
     kryo.register(VerificationOperationException.class, 3001);
   }
 }

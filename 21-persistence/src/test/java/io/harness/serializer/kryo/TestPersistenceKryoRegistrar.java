@@ -8,7 +8,7 @@ public class TestPersistenceKryoRegistrar implements KryoRegistrar {
   int index = 21 * 10000;
 
   @Override
-  public void register(Kryo kryo) throws Exception {
+  public void register(Kryo kryo) {
     kryo.register(MongoStoreTest.TestNominalEntity.class, index++);
     kryo.register(MongoStoreTest.TestOrdinalEntity.class, index++);
   }

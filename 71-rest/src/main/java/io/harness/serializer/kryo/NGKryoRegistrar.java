@@ -27,7 +27,7 @@ import io.harness.serializer.KryoRegistrar;
 
 public class NGKryoRegistrar implements KryoRegistrar {
   @Override
-  public void register(Kryo kryo) throws Exception {
+  public void register(Kryo kryo) {
     kryo.register(ArtifactStepParameters.class, 8001);
     kryo.register(ArtifactTaskParameters.class, 8002);
     kryo.register(ArtifactTaskResponse.class, 8003);

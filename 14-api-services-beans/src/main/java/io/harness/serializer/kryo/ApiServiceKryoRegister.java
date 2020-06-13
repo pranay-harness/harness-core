@@ -62,7 +62,7 @@ import org.json.JSONException;
 
 public class ApiServiceKryoRegister implements KryoRegistrar {
   @Override
-  public void register(Kryo kryo) throws Exception {
+  public void register(Kryo kryo) {
     kryo.register(Instance.class, 1001);
     kryo.register(SdkInternalList.class, 1002);
     kryo.register(InstanceBlockDeviceMapping.class, 1003);

@@ -9,7 +9,7 @@ import io.harness.serializer.KryoRegistrar;
 
 public class CIExecutionRegistrar implements KryoRegistrar {
   @Override
-  public void register(Kryo kryo) throws Exception {
+  public void register(Kryo kryo) {
     // No class to register
   }
 }

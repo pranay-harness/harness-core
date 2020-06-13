@@ -822,7 +822,7 @@ import java.time.Instant;
 
 public class ManagerKryoRegistrar implements KryoRegistrar {
   @Override
-  public void register(Kryo kryo) throws Exception {
+  public void register(Kryo kryo) {
     kryo.register(AmiServiceDeployElement.class, 5220);
     kryo.register(AmiServiceSetupElement.class, 5218);
     kryo.register(AmiStepExecutionSummary.class, 5219);
