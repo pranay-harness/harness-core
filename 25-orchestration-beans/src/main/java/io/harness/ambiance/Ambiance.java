@@ -2,7 +2,7 @@ package io.harness.ambiance;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -48,7 +48,9 @@ public class Ambiance {
       logContext.put("runtimeId", level.getRuntimeId());
       logContext.put("setupId", level.getSetupId());
     });
-    return new AutoLogContext(logContext, OVERRIDE_ERROR);
+
+    // Execution engine starts
+    return new AutoLogContext(logContext, OVERRIDE_NESTS);
   }
 
   public void addLevel(@Valid @NotNull Level level) {
