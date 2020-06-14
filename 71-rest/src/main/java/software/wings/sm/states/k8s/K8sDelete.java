@@ -1,9 +1,11 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.sm.StateType.K8S_DELETE;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -20,6 +22,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.k8s.K8sStateExecutionData;
+import software.wings.beans.Activity;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.CommandUnit;
@@ -81,7 +84,43 @@ public class K8sDelete extends State implements K8sStateExecutor {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    if (needsManifest()) {
+      return executeWithManifest(context);
+    } else {
+      return executeWithoutManifest(context);
+    }
+  }
+
+  private boolean needsManifest() {
+    return isNotEmpty(filePaths);
+  }
+
+  private ExecutionResponse executeWithManifest(ExecutionContext context) {
     return k8sStateHelper.executeWrapperWithManifest(this, context);
+  }
+
+  private ExecutionResponse executeWithoutManifest(ExecutionContext context) {
+    try {
+      ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
+
+      Activity activity = createActivity(context);
+
+      K8sTaskParameters k8sTaskParameters = K8sDeleteTaskParameters.builder()
+                                                .activityId(activity.getUuid())
+                                                .releaseName(k8sStateHelper.getReleaseName(context, infraMapping))
+                                                .commandName(K8S_DELETE_COMMAND_NAME)
+                                                .k8sTaskType(K8sTaskType.DELETE)
+                                                .resources(context.renderExpression(this.resources))
+                                                .deleteNamespacesForRelease(deleteNamespacesForRelease)
+                                                .timeoutIntervalInMin(10)
+                                                .build();
+
+      return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   @Override
@@ -196,5 +235,11 @@ public class K8sDelete extends State implements K8sStateExecutor {
   @Override
   public Integer getTimeoutMillis() {
     return K8sStateHelper.getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
+  }
+
+  private Activity createActivity(ExecutionContext context) {
+    return k8sStateHelper.createK8sActivity(context, K8S_DELETE_COMMAND_NAME, getStateType(), activityService,
+        ImmutableList.of(
+            new K8sDummyCommandUnit(K8sDummyCommandUnit.Init), new K8sDummyCommandUnit(K8sDummyCommandUnit.Delete)));
   }
 }

@@ -5,8 +5,12 @@ import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -19,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.rule.Owner;
+import io.harness.rule.OwnerRule;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,12 +31,16 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Activity;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
+import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
@@ -39,6 +48,8 @@ import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class K8sDeleteTest extends WingsBaseTest {
   private static final String RELEASE_NAME = "releaseName";
@@ -53,23 +64,112 @@ public class K8sDeleteTest extends WingsBaseTest {
 
   private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance().displayName(STATE_NAME).build();
 
-  private ExecutionContextImpl context;
+  @Mock private ExecutionContextImpl context;
 
   @Before
   public void setup() {
-    context = new ExecutionContextImpl(stateExecutionInstance);
     k8sDelete.setFilePaths(FILE_PATHS);
     k8sDelete.setDeleteNamespacesForRelease(true);
     k8sDelete.setResources(RESOURCES);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
         .thenAnswer(i -> i.getArguments()[0]);
+    doReturn(Activity.builder().uuid("activity-id").build())
+        .when(k8sStateHelper)
+        .createK8sActivity(
+            any(), eq(K8sDelete.K8S_DELETE_COMMAND_NAME), anyString(), any(ActivityService.class), anyList());
+    doReturn(new DirectKubernetesInfrastructureMapping())
+        .when(k8sStateHelper)
+        .getContainerInfrastructureMapping(context);
+    doReturn("release-name")
+        .when(k8sStateHelper)
+        .getReleaseName(eq(context), eq(new DirectKubernetesInfrastructureMapping()));
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void executeWithoutManifestDeleteNamespace() {
+    doReturn("Deployment/test").when(context).renderExpression("${workflow.variables.resources}");
+    k8sDelete.setResources("${workflow.variables.resources}");
+    k8sDelete.setFilePaths(null);
+    k8sDelete.setDeleteNamespacesForRelease(true);
+
+    k8sDelete.execute(context);
+
+    ArgumentCaptor<List> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
+    verify(k8sStateHelper, never()).executeWrapperWithManifest(any(), any());
+    verify(k8sStateHelper, times(1))
+        .createK8sActivity(eq(context), eq(K8sDelete.K8S_DELETE_COMMAND_NAME), eq("K8S_DELETE"),
+            any(ActivityService.class), listArgumentCaptor.capture());
+
+    @SuppressWarnings("unchecked") List<K8sDummyCommandUnit> commandUnits = listArgumentCaptor.getValue();
+    assertThat(commandUnits.stream().map(K8sDummyCommandUnit::getName).collect(Collectors.toList()))
+        .containsExactly(K8sDummyCommandUnit.Init, K8sDummyCommandUnit.Delete);
+
+    verify(k8sStateHelper, times(1))
+        .queueK8sDelegateTask(eq(context),
+            eq(K8sDeleteTaskParameters.builder()
+                    .releaseName("release-name")
+                    .resources("Deployment/test")
+                    .filePaths(null)
+                    .activityId("activity-id")
+                    .commandName(K8sDelete.K8S_DELETE_COMMAND_NAME)
+                    .k8sTaskType(DELETE)
+                    .deleteNamespacesForRelease(true)
+                    .timeoutIntervalInMin(10)
+                    .build()));
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void executeWithoutManifestNotDeleteNamespace() {
+    doReturn("Deployment/test").when(context).renderExpression("${workflow.variables.resources}");
+    k8sDelete.setResources("${workflow.variables.resources}");
+    k8sDelete.setFilePaths(null);
+    k8sDelete.setDeleteNamespacesForRelease(false);
+
+    k8sDelete.execute(context);
+
+    ArgumentCaptor<List> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
+    verify(k8sStateHelper, never()).executeWrapperWithManifest(any(), any());
+    verify(k8sStateHelper, times(1))
+        .createK8sActivity(eq(context), eq(K8sDelete.K8S_DELETE_COMMAND_NAME), eq("K8S_DELETE"),
+            any(ActivityService.class), listArgumentCaptor.capture());
+
+    @SuppressWarnings("unchecked") List<K8sDummyCommandUnit> commandUnits = listArgumentCaptor.getValue();
+    assertThat(commandUnits.stream().map(K8sDummyCommandUnit::getName).collect(Collectors.toList()))
+        .containsExactly(K8sDummyCommandUnit.Init, K8sDummyCommandUnit.Delete);
+
+    verify(k8sStateHelper, times(1))
+        .queueK8sDelegateTask(eq(context),
+            eq(K8sDeleteTaskParameters.builder()
+                    .releaseName("release-name")
+                    .resources("Deployment/test")
+                    .filePaths(null)
+                    .activityId("activity-id")
+                    .commandName(K8sDelete.K8S_DELETE_COMMAND_NAME)
+                    .k8sTaskType(DELETE)
+                    .deleteNamespacesForRelease(false)
+                    .timeoutIntervalInMin(10)
+                    .build()));
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void executeWithManifest() {
+    k8sDelete.setFilePaths("templates/foo.yaml");
+    k8sDelete.execute(context);
+    verify(k8sStateHelper, times(1)).executeWrapperWithManifest(k8sDelete, context);
   }
 
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testExecute() {
+    k8sDelete.setFilePaths(FILE_PATHS);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
 
@@ -81,6 +181,8 @@ public class K8sDeleteTest extends WingsBaseTest {
         .thenReturn(K8sDelegateManifestConfig.builder().build());
     when(k8sStateHelper.getRenderedValuesFiles(any(), any())).thenReturn(Collections.emptyList());
     when(k8sStateHelper.queueK8sDelegateTask(any(), any())).thenReturn(ExecutionResponse.builder().build());
+    doReturn("abc/xyz").when(context).renderExpression("abc/xyz");
+    doReturn("*").when(context).renderExpression("*");
 
     k8sDelete.executeK8sTask(context, ACTIVITY_ID);
 
