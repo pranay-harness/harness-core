@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-(
 mkdir -p logs
+(
 echo
 echo "` date +%d/%m/%Y%t%H:%M:%S `    ###########################"
 
