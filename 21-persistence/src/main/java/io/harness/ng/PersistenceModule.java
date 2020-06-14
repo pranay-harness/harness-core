@@ -3,16 +3,19 @@ package io.harness.ng;
 import static com.google.inject.Key.get;
 import static com.google.inject.name.Names.named;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import com.mongodb.MongoClient;
+import io.harness.annotation.HarnessRepo;
 import io.harness.govern.DependencyModule;
 import io.harness.mongo.MongoModule;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
@@ -23,6 +26,8 @@ import org.springframework.guice.annotation.GuiceModule;
 import org.springframework.guice.module.BeanFactoryProvider;
 import org.springframework.guice.module.SpringModule;
 
+import java.util.Collection;
+
 public class PersistenceModule extends AbstractModule {
   @Override
   protected void configure() {
@@ -30,12 +35,14 @@ public class PersistenceModule extends AbstractModule {
     installModule(getMongoModule());
   }
 
-  @EnableMongoRepositories(basePackages = "io.harness", mongoTemplateRef = "primary")
+  @EnableMongoRepositories(
+      basePackages = "io.harness", mongoTemplateRef = "primary", includeFilters = @Filter(HarnessRepo.class))
   @EnableMongoAuditing
   @Configuration
   @GuiceModule
   public static class SpringMongoConfig extends AbstractMongoConfiguration {
     private final AdvancedDatastore advancedDatastore;
+    private static final Collection<String> BASE_PACKAGES = ImmutableList.of("io.harness");
 
     @Inject
     public SpringMongoConfig(Injector injector) {
@@ -56,6 +63,11 @@ public class PersistenceModule extends AbstractModule {
     @Override
     protected String getDatabaseName() {
       return advancedDatastore.getDB().getName();
+    }
+
+    @Override
+    protected Collection<String> getMappingBasePackages() {
+      return BASE_PACKAGES;
     }
   }
 

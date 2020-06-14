@@ -4,9 +4,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
 import io.harness.mongo.MongoPersistence;
-import io.harness.ng.PersistenceTestModule;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.testlib.PersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;

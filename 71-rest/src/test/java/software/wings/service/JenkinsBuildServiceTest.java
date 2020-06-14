@@ -182,7 +182,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
       jenkinsBuildService.validateArtifactServer(badJenkinsConfig, Collections.emptyList());
       fail("jenkinsBuildService.validateArtifactServer did not throw!!!");
     } catch (WingsException e) {
-      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARTIFACT_SERVER.toString());
+      assertThat(e.getCode()).isEqualTo(ErrorCode.ARTIFACT_SERVER_ERROR);
       assertThat(e.getParams()).isNotEmpty();
       assertThat(e.getParams().get("message")).isEqualTo("Could not reach Jenkins Server at : BAD_URL");
     }

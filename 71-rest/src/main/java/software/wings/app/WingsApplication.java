@@ -82,8 +82,8 @@ import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
-import io.harness.mongo.MongoModule;
 import io.harness.mongo.QuartzCleaner;
+import io.harness.ng.PersistenceModule;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -301,7 +301,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
 
     List<Module> modules = new ArrayList<>();
-    modules.addAll(new MongoModule().cumulativeDependencies());
+    modules.add(new PersistenceModule());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()

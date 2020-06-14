@@ -48,9 +48,9 @@ import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.testlib.PersistenceTestModule;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.MongoRuleMixin;
-import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -266,7 +266,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
 
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
-    modules.addAll(new TestMongoModule().cumulativeDependencies());
+    modules.add(new PersistenceTestModule());
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
     modules.add(new YamlModule());
     modules.add(new ManagerExecutorModule());
