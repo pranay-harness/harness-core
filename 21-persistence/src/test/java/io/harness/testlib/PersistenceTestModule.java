@@ -1,7 +1,8 @@
-package io.harness.ng;
+package io.harness.testlib;
 
 import com.google.inject.Module;
 
+import io.harness.ng.PersistenceModule;
 import io.harness.testlib.module.TestMongoModule;
 
 public class PersistenceTestModule extends PersistenceModule {
