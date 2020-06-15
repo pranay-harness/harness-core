@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.artifact.ArtifactStreamAttributes;

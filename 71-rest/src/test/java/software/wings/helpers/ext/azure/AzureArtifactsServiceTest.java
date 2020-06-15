@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateFile;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.waiter.ListNotifyResponseData;
@@ -37,7 +38,6 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
-import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;

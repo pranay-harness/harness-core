@@ -12,6 +12,7 @@ import static software.wings.beans.Log.LogLevel.WARN;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
@@ -25,7 +26,6 @@ import org.jetbrains.annotations.NotNull;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
-import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 
