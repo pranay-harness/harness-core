@@ -207,6 +207,10 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline savedPipeline = wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
     notNullCheck("Pipeline not saved", savedPipeline, USER);
 
+    if (!savedPipeline.getName().equals(pipeline.getName())) {
+      validatePipelineNameForDuplicates(pipeline);
+    }
+
     Set<String> keywords = pipeline.generateKeywords();
     checkUniquePipelineStepName(pipeline);
     checkUniqueApprovalPublishedVariable(pipeline);
