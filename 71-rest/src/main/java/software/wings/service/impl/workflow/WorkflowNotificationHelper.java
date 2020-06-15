@@ -469,10 +469,12 @@ public class WorkflowNotificationHelper {
       PhaseSubWorkflow phaseSubWorkflow) {
     WorkflowNotificationDetailsBuilder serviceDetails = WorkflowNotificationDetails.builder();
     List<String> serviceIds = new ArrayList<>();
-    if (scope == WORKFLOW_PHASE) {
-      serviceIds.add(phaseSubWorkflow.getServiceId());
-    } else if (isNotEmpty(workflowExecution.getServiceIds())) {
-      serviceIds.addAll(workflowExecution.getServiceIds());
+    if (isNotEmpty(workflowExecution.getServiceIds())) {
+      if (scope == WORKFLOW_PHASE) {
+        serviceIds.add(phaseSubWorkflow.getServiceId());
+      } else {
+        serviceIds.addAll(workflowExecution.getServiceIds());
+      }
     }
 
     StringBuilder serviceMsg = new StringBuilder();
@@ -569,10 +571,12 @@ public class WorkflowNotificationHelper {
       ExecutionScope scope, PhaseSubWorkflow phaseSubWorkflow) {
     WorkflowNotificationDetailsBuilder artifactsDetails = WorkflowNotificationDetails.builder();
     List<String> serviceIds = new ArrayList<>();
-    if (scope == WORKFLOW_PHASE) {
-      serviceIds.add(phaseSubWorkflow.getServiceId());
-    } else if (isNotEmpty(workflowExecution.getServiceIds())) {
-      serviceIds.addAll(workflowExecution.getServiceIds());
+    if (isNotEmpty(workflowExecution.getServiceIds())) {
+      if (scope == WORKFLOW_PHASE) {
+        serviceIds.add(phaseSubWorkflow.getServiceId());
+      } else {
+        serviceIds.addAll(workflowExecution.getServiceIds());
+      }
     }
 
     Map<String, Artifact> artifactStreamIdArtifacts = new HashMap<>();
