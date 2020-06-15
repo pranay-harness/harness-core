@@ -31,6 +31,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AmiServiceSetupElement;
+import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
 import software.wings.api.AmiStepExecutionSummary;
 import software.wings.api.AwsCodeDeployRequestElement;
 import software.wings.api.AwsLambdaContextElement;
@@ -588,8 +589,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         }
       }
     } else if (phaseStepType == PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP) {
-      ContextElement contextElement =
-          fetchNotifiedContextElement(elementNotifyResponseData, AmiServiceSetupElement.class);
+      ContextElement contextElement = getAwsAmiNotifiedContextElement(elementNotifyResponseData);
       if (contextElement != null) {
         contextElements.add(contextElement);
         addNotifyElement = true;
@@ -639,6 +639,19 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       throw new InvalidRequestException("Did not find Spotinst setup element.");
     }
     return elementOptional.get();
+  }
+
+  private ContextElement getAwsAmiNotifiedContextElement(ElementNotifyResponseData elementNotifyResponseData) {
+    List<ContextElement> elements = elementNotifyResponseData.getContextElements();
+    if (isEmpty(elements)) {
+      return null;
+    }
+    Optional<ContextElement> elementOptional = elements.stream()
+                                                   .filter(element
+                                                       -> element instanceof AmiServiceSetupElement
+                                                           || element instanceof AmiServiceTrafficShiftAlbSetupElement)
+                                                   .findFirst();
+    return elementOptional.orElse(null);
   }
 
   private void addProvisionerElements(

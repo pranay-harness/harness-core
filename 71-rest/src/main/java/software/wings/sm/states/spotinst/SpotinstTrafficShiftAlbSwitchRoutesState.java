@@ -10,6 +10,7 @@ import static io.harness.spotinst.model.SpotInstConstants.PHASE_PARAM;
 import static io.harness.spotinst.model.SpotInstConstants.SWAP_ROUTES_COMMAND_UNIT;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.singletonList;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_TRAFFIC_SHIFT_WEIGHT;
 import static software.wings.sm.states.spotinst.SpotInstListenerUpdateState.SPOTINST_LISTENER_UPDATE_COMMAND;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -150,7 +151,7 @@ public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
   }
 
   protected int getNewElastigroupWeight(ExecutionContext context) {
-    return spotinstStateHelper.renderCount(newElastigroupWeightExpr, context, 10);
+    return spotinstStateHelper.renderCount(newElastigroupWeightExpr, context, DEFAULT_TRAFFIC_SHIFT_WEIGHT);
   }
 
   @Override

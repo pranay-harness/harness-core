@@ -34,6 +34,7 @@ import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.AwsAmiDeployStateExecutionData;
 import software.wings.api.AwsAmiSetupExecutionData;
 import software.wings.api.AwsAmiSwitchRoutesStateExecutionData;
+import software.wings.api.AwsAmiTrafficShiftAlbStateExecutionData;
 import software.wings.api.AwsClusterExecutionData;
 import software.wings.api.AwsCodeDeployRequestElement;
 import software.wings.api.AwsLambdaContextElement;
@@ -590,9 +591,12 @@ import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
+import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbDeployRequest;
+import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
+import software.wings.service.impl.aws.model.AwsAmiTrafficShiftAlbSwitchRouteRequest;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountRequest;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountResponse;
@@ -1668,8 +1672,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ShellConnectionCapability.class, 7390);
     kryo.register(GitConnectionCapability.class, 7391);
     kryo.register(GitValidationParameters.class, 7392);
-    kryo.register(AmiServiceTrafficShiftAlbSetupElement.class, 7393);
-    kryo.register(AwsAmiServiceTrafficShiftAlbSetupResponse.class, 7394);
     kryo.register(AppPermissionSummaryForUI.class, 7395);
     kryo.register(UserRestrictionInfo.class, 7396);
     kryo.register(AppPermissionSummary.class, 7397);
@@ -1706,5 +1708,11 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(DelegateTaskBroadcast.class, 7428);
     kryo.register(Event.class, 7429);
     kryo.register(Event.Type.class, 7430);
+    kryo.register(AmiServiceTrafficShiftAlbSetupElement.class, 7431);
+    kryo.register(AwsAmiServiceTrafficShiftAlbSetupResponse.class, 7432);
+    kryo.register(AwsAmiServiceTrafficShiftAlbSetupRequest.class, 7433);
+    kryo.register(AwsAmiServiceTrafficShiftAlbDeployRequest.class, 7434);
+    kryo.register(AwsAmiTrafficShiftAlbSwitchRouteRequest.class, 7435);
+    kryo.register(AwsAmiTrafficShiftAlbStateExecutionData.class, 7436);
   }
 }
