@@ -172,8 +172,9 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldValidateInvalidUrl() {
+    final String badUrl = "BAD_URL";
     JenkinsConfig badJenkinsConfig = JenkinsConfig.builder()
-                                         .jenkinsUrl("BAD_URL")
+                                         .jenkinsUrl(badUrl)
                                          .username("username")
                                          .password("password".toCharArray())
                                          .accountId(ACCOUNT_ID)
@@ -182,9 +183,10 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
       jenkinsBuildService.validateArtifactServer(badJenkinsConfig, Collections.emptyList());
       fail("jenkinsBuildService.validateArtifactServer did not throw!!!");
     } catch (WingsException e) {
+      assertThat(e.getMessage()).isEqualTo("Could not reach Jenkins Server at : " + badUrl);
       assertThat(e.getCode()).isEqualTo(ErrorCode.ARTIFACT_SERVER_ERROR);
       assertThat(e.getParams()).isNotEmpty();
-      assertThat(e.getParams().get("message")).isEqualTo("Could not reach Jenkins Server at : BAD_URL");
+      assertThat(e.getParams().get("message")).isEqualTo("Could not reach Jenkins Server at : " + badUrl);
     }
   }
 

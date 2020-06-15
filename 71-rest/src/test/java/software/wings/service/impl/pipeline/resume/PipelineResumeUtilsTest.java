@@ -1,5 +1,6 @@
 package software.wings.service.impl.pipeline.resume;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -46,6 +47,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
@@ -557,7 +559,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testCheckPipelineResumeAvailable() {
-    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecutionWithNotActiveExecutions();
     pipelineResumeUtils.checkPipelineResumeAvailable(workflowExecution);
 
     workflowExecution = prepareLatestResumedFailedPipelineExecution();
@@ -738,6 +740,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
         .workflowType(workflowType)
         .status(ExecutionStatus.FAILED)
         .executionArgs(new ExecutionArgs())
+        .pipelineExecution(PipelineExecution.Builder.aPipelineExecution().build())
         .build();
   }
 
@@ -745,10 +748,19 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     return prepareFailedPipelineExecution(WorkflowType.PIPELINE);
   }
 
+  private WorkflowExecution prepareFailedPipelineExecutionWithNotActiveExecutions() {
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution(WorkflowType.PIPELINE);
+    workflowExecution.getPipelineExecution().getPipelineStageExecutions().add(
+        PipelineStageExecution.builder().status(FAILED).build());
+    return workflowExecution;
+  }
+
   private WorkflowExecution prepareLatestResumedFailedPipelineExecution() {
     WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
     workflowExecution.setPipelineResumeId(pipelineResumeId);
     workflowExecution.setLatestPipelineResume(true);
+    workflowExecution.getPipelineExecution().getPipelineStageExecutions().add(
+        PipelineStageExecution.builder().status(FAILED).build());
     return workflowExecution;
   }
 
