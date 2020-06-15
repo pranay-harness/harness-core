@@ -52,11 +52,12 @@ import javax.annotation.Nullable;
   @Index(fields = { @Field("accountId")
                     , @Field("importedByScim") },
       options = @IndexOptions(name = "accountIdAndImportedByScim", background = true))
-
   ,
       @Index(fields = {
         @Field("accountId"), @Field("memberIds")
-      }, options = @IndexOptions(name = "accountAndMemberIds", background = true))
+      }, options = @IndexOptions(name = "accountAndMemberIds", background = true)), @Index(fields = {
+        @Field("accountId"), @Field("name")
+      }, options = @IndexOptions(name = "accountIdAndName", background = true))
 })
 @FieldNameConstants(innerTypeName = "UserGroupKeys")
 @Entity(value = "userGroups", noClassnameStored = true)
