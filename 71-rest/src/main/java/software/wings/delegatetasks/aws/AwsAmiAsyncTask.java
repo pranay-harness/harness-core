@@ -19,6 +19,7 @@ import software.wings.service.impl.aws.model.AwsAmiRequest.AwsAmiRequestType;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
+import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsResponse;
@@ -72,16 +73,11 @@ public class AwsAmiAsyncTask extends AbstractDelegateRunnableTask {
           }
         }
         case EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB_SETUP:
-          AwsAmiServiceTrafficShiftAlbSetupRequest amiServiceTrafficShiftAlbSetupRequest =
-              (AwsAmiServiceTrafficShiftAlbSetupRequest) request;
-          ExecutionLogCallback logCallback = new ExecutionLogCallback(delegateLogService,
-              amiServiceTrafficShiftAlbSetupRequest.getAccountId(), amiServiceTrafficShiftAlbSetupRequest.getAppId(),
-              amiServiceTrafficShiftAlbSetupRequest.getActivityId(),
-              amiServiceTrafficShiftAlbSetupRequest.getCommandName());
-          return awsAmiHelperServiceDelegate.setUpAmiServiceTrafficShift(
-              amiServiceTrafficShiftAlbSetupRequest, logCallback);
+          return performAwsAmiServiceTrafficShiftSetup((AwsAmiServiceTrafficShiftAlbSetupRequest) request);
 
         case EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB_DEPLOY:
+          return performAwsAmiTrafficShiftDeployment((AwsAmiServiceTrafficShiftAlbDeployRequest) request);
+
         case EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB:
         default: {
           throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER);
@@ -93,5 +89,17 @@ public class AwsAmiAsyncTask extends AbstractDelegateRunnableTask {
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
+  }
+
+  private AwsResponse performAwsAmiServiceTrafficShiftSetup(AwsAmiServiceTrafficShiftAlbSetupRequest request) {
+    ExecutionLogCallback logCallback = new ExecutionLogCallback(delegateLogService, request.getAccountId(),
+        request.getAppId(), request.getActivityId(), request.getCommandName());
+    return awsAmiHelperServiceDelegate.setUpAmiServiceTrafficShift(request, logCallback);
+  }
+
+  private AwsResponse performAwsAmiTrafficShiftDeployment(AwsAmiServiceTrafficShiftAlbDeployRequest request) {
+    ExecutionLogCallback logCallback = new ExecutionLogCallback(delegateLogService, request.getAccountId(),
+        request.getAppId(), request.getActivityId(), request.getCommandName());
+    return awsAmiHelperServiceDelegate.deployAmiServiceTrafficShift(request, logCallback);
   }
 }

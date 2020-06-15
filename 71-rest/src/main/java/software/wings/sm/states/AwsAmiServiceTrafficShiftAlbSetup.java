@@ -48,6 +48,7 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.states.spotinst.SpotInstStateHelper;
@@ -57,15 +58,16 @@ import software.wings.utils.Misc;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class AwsAmiServiceTrafficShiftAlbSetup extends State {
   @Getter @Setter private String autoScalingGroupName;
   @Getter @Setter private String autoScalingSteadyStateTimeout;
   @Getter @Setter private boolean useCurrentRunningCount;
-  @Getter @Setter private String minInstances;
-  @Getter @Setter private String maxInstances;
-  @Getter @Setter private String desiredInstances;
+  @Getter @Setter private String minInstancesExpr;
+  @Getter @Setter private String maxInstancesExpr;
+  @Getter @Setter private String targetInstancesExpr;
   @Getter @Setter private List<LbDetailsForAlbTrafficShift> lbDetails;
 
   @Inject private ServiceResourceService serviceResourceService;
@@ -112,6 +114,10 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
     AwsAmiServiceTrafficShiftAlbSetupRequest amiTrafficShiftRequest =
         buildAmiTrafficShiftSetupRequest(context, awsAmiTrafficShiftAlbData, activity);
 
+    long timeout = TimeUnit.MINUTES.toMillis(
+        renderExpression(context, autoScalingSteadyStateTimeout, (int) DEFAULT_ASYNC_CALL_TIMEOUT));
+    setTimeoutMillis((int) timeout);
+
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(awsAmiTrafficShiftAlbData.getApp().getAccountId())
                                     .appId(awsAmiTrafficShiftAlbData.getApp().getUuid())
@@ -123,7 +129,7 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
                                               .async(true)
                                               .taskType(TaskType.AWS_AMI_ASYNC_TASK.name())
                                               .parameters(new Object[] {amiTrafficShiftRequest})
-                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .timeout(timeout)
                                               .build())
                                     .envId(awsAmiTrafficShiftAlbData.getEnv().getUuid())
                                     .build();
@@ -138,7 +144,7 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
 
     Command command =
         serviceResourceService
-            .getCommandByName(app.getUuid(), awsAmiTrafficShiftAlbData.getServiceId(), env.getUuid(), COMMAND_NAME)
+            .getCommandByName(app.getUuid(), awsAmiTrafficShiftAlbData.getServiceId(), envId, COMMAND_NAME)
             .getCommand();
 
     List<CommandUnit> commandUnitList = serviceResourceService.getFlattenCommandUnitList(
@@ -186,9 +192,9 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
         .infraMappingId(awsAmiTrafficShiftAlbData.getInfrastructureMapping().getUuid())
         .artifactRevision(awsAmiTrafficShiftAlbData.getArtifact().getRevision())
         .newAsgNamePrefix(getAsgNamePrefix(context, awsAmiTrafficShiftAlbData))
-        .minInstances(getInstanceCount(context, minInstances, DEFAULT_AMI_ASG_MIN_INSTANCES))
-        .maxInstances(getInstanceCount(context, maxInstances, DEFAULT_AMI_ASG_MAX_INSTANCES))
-        .desiredInstances(getInstanceCount(context, desiredInstances, DEFAULT_AMI_ASG_DESIRED_INSTANCES))
+        .minInstances(renderExpression(context, minInstancesExpr, DEFAULT_AMI_ASG_MIN_INSTANCES))
+        .maxInstances(renderExpression(context, maxInstancesExpr, DEFAULT_AMI_ASG_MAX_INSTANCES))
+        .desiredInstances(renderExpression(context, targetInstancesExpr, DEFAULT_AMI_ASG_DESIRED_INSTANCES))
         .autoScalingSteadyStateTimeout(
             renderExpression(context, autoScalingSteadyStateTimeout, DEFAULT_AMI_ASG_TIMEOUT_MIN))
         .useCurrentRunningCount(useCurrentRunningCount)
@@ -248,10 +254,6 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
     return invalidFields;
   }
 
-  private Integer getInstanceCount(ExecutionContext context, String expression, int defaultValue) {
-    return useCurrentRunningCount ? null : renderExpression(context, expression, defaultValue);
-  }
-
   private Integer renderExpression(ExecutionContext context, String expression, int defaultValue) {
     return spotinstStateHelper.renderCount(expression, context, defaultValue);
   }
@@ -277,8 +279,8 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
     AwsAmiSetupExecutionData awsAmiExecutionData =
         AwsAmiSetupExecutionData.builder()
             .activityId(activityId)
-            .maxInstances(getInstanceCount(context, maxInstances, DEFAULT_AMI_ASG_MAX_INSTANCES))
-            .desiredInstances(getInstanceCount(context, desiredInstances, DEFAULT_AMI_ASG_DESIRED_INSTANCES))
+            .maxInstances(renderExpression(context, maxInstancesExpr, DEFAULT_AMI_ASG_MAX_INSTANCES))
+            .desiredInstances(renderExpression(context, targetInstancesExpr, DEFAULT_AMI_ASG_DESIRED_INSTANCES))
             .build();
     return createResponse(activityId, ExecutionStatus.SUCCESS, null, awsAmiExecutionData, null, true);
   }
@@ -294,13 +296,15 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
   private ExecutionResponse createResponse(String activityId, ExecutionStatus status, String errorMessage,
       AwsAmiSetupExecutionData executionData, AmiServiceTrafficShiftAlbSetupElement serviceSetupElement,
       boolean isAsync) {
-    return ExecutionResponse.builder()
-        .correlationIds(singletonList(activityId))
+    ExecutionResponseBuilder responseBuilder = ExecutionResponse.builder();
+    if (serviceSetupElement != null) {
+      responseBuilder.contextElement(serviceSetupElement);
+      responseBuilder.notifyElement(serviceSetupElement);
+    }
+    return responseBuilder.correlationIds(singletonList(activityId))
         .executionStatus(status)
         .errorMessage(errorMessage)
         .stateExecutionData(executionData)
-        .contextElement(serviceSetupElement)
-        .notifyElement(serviceSetupElement)
         .async(isAsync)
         .build();
   }

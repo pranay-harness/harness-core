@@ -34,6 +34,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.AmiServiceSetupElement;
+import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.ClusterElement;
 import software.wings.api.ContainerServiceElement;
@@ -244,6 +245,13 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     assertThat(executionResponse.getContextElements()).isNotEmpty();
     assertThat(executionResponse.getContextElements().get(0)).isInstanceOf(AmiServiceSetupElement.class);
     assertThat(executionResponse.getNotifyElements().get(0)).isInstanceOf(AmiServiceSetupElement.class);
+
+    response.put("", getElementNotifyResponseData(AmiServiceTrafficShiftAlbSetupElement.builder().build()));
+    Reflect.on(phaseStepSubWorkflow).set("phaseStepType", AMI_AUTOSCALING_GROUP_SETUP);
+    executionResponse = phaseStepSubWorkflow.handleAsyncResponse(executionContext, response);
+    assertThat(executionResponse.getContextElements()).isNotEmpty();
+    assertThat(executionResponse.getContextElements().get(0)).isInstanceOf(AmiServiceTrafficShiftAlbSetupElement.class);
+    assertThat(executionResponse.getNotifyElements().get(0)).isInstanceOf(AmiServiceTrafficShiftAlbSetupElement.class);
 
     response.put("", getElementNotifyResponseData(null));
     Reflect.on(phaseStepSubWorkflow).set("phaseStepType", CONTAINER_SETUP);

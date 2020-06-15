@@ -15,6 +15,7 @@ public interface AwsConstants {
   // Alb Traffic Shift Constants
   int MAX_TRAFFIC_SHIFT_WEIGHT = 100;
   int MIN_TRAFFIC_SHIFT_WEIGHT = 0;
+  int DEFAULT_TRAFFIC_SHIFT_WEIGHT = 10;
 
   // Main Ecs Container Name
   String MAIN_ECS_CONTAINER_NAME_TAG = "HARNESS_DEPLOYED_MAIN_CONTAINER";
@@ -27,4 +28,11 @@ public interface AwsConstants {
   String MAX_INSTANCES = "maxInstances";
   String DESIRED_INSTANCES = "desiredInstances";
   String AUTO_SCALING_TIMEOUT = "autoScalingSteadyStateTimeout";
+
+  String VARIABLE_ACTIVITY_ID = "activityId";
+  String DISPLAY_ACTIVITY_ID = "Activity Id";
+  String AUTOSCALING_GROUP = "AutoScaling Group";
+  String OLD_AUTOSCALING_GROUP = "Old AutoScaling Group";
+  String NEW_AUTOSCALING_GROUP = "New AutoScaling Group";
+  String NEW_AUTOSCALING_GROUP_WEIGHT = "New AutoScaling Group Weight";
 }
