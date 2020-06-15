@@ -150,4 +150,8 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
   boolean isOpenSSHKeyUsed(SettingAttribute settingAttribute);
 
   void restrictOpenSSHKey(SettingAttribute settingAttribute);
+
+  String getSSHKeyName(String sshSettingId);
+
+  String getSSHSettingId(String accountId, String sshKeyName);
 }
