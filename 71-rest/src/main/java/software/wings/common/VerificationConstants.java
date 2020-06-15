@@ -264,6 +264,8 @@ public class VerificationConstants {
   // TODO: Need to remove this field once everything is moved to CV task based data collection.
   public static final Duration DATA_COLLECTION_RETRY_SLEEP = Duration.ofSeconds(30);
   public static final int MAX_NUM_ALERT_OCCURRENCES = 4;
+  public static final String AZURE_BASE_URL = "https://api.loganalytics.io/";
+  public static final String AZURE_TOKEN_URL = "https://login.microsoftonline.com/";
   public static String getDataCollectionMetricHelpDocument() {
     return "This metric is used to track the Verification data Collection per account";
   }
