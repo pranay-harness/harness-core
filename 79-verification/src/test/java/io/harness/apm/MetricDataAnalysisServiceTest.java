@@ -784,7 +784,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
 
     TimeSeriesMLAnalysisRecord expectedAfterDecompression =
         JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
-    timeSeriesMLAnalysisRecord.decompress();
+    timeSeriesMLAnalysisRecord.decompress(false);
 
     assertThat(timeSeriesMLAnalysisRecord).isEqualTo(expectedAfterDecompression);
   }

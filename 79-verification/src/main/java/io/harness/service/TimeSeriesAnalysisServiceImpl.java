@@ -1017,7 +1017,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     }
     final TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord = analysisQuery.get();
     if (timeSeriesMLAnalysisRecord != null) {
-      timeSeriesMLAnalysisRecord.decompress();
+      timeSeriesMLAnalysisRecord.decompress(false);
     }
     return timeSeriesMLAnalysisRecord;
   }
@@ -1043,7 +1043,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     final List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords = analysisQuery.asList();
     if (timeSeriesMLAnalysisRecords != null) {
-      timeSeriesMLAnalysisRecords.forEach(MetricAnalysisRecord::decompress);
+      timeSeriesMLAnalysisRecords.forEach(timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompress(false));
     }
     return timeSeriesMLAnalysisRecords;
   }
@@ -1169,7 +1169,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     AtomicInteger numberOfConsecutiveThresholdBreaches = new AtomicInteger(0);
     if (analysisRecords != null) {
       analysisRecords.forEach(analysisRecord -> {
-        analysisRecord.decompress();
+        analysisRecord.decompress(true);
         double risk = computeRiskScore(analysisRecord);
         if (risk >= alertThreshold) {
           numberOfConsecutiveThresholdBreaches.incrementAndGet();
