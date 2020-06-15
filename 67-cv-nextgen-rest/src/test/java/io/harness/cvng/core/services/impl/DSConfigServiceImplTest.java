@@ -19,7 +19,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DSConfigServiceImplTest extends CVNextGenRestBaseTest {
   @Inject DSConfigService dsConfigService;
@@ -37,7 +39,7 @@ public class DSConfigServiceImplTest extends CVNextGenRestBaseTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testUpsert_withSingleConfig() {
-    DSConfig dsConfig = createAppDynamicsDataSourceCVConfig();
+    DSConfig dsConfig = createAppDynamicsDataSourceCVConfig("appd application name");
     dsConfigService.upsert(dsConfig);
     List<? extends DSConfig> dataSourceCVConfigs =
         dsConfigService.list(accountId, connectorId, dsConfig.getProductName());
@@ -50,24 +52,23 @@ public class DSConfigServiceImplTest extends CVNextGenRestBaseTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testList_multiple() {
-    AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig();
-    dataSourceCVConfig.setApplicationName("app1");
-    dataSourceCVConfig.setIdentifier("app1");
+    AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("app1");
     dsConfigService.upsert(dataSourceCVConfig);
-    dataSourceCVConfig = createAppDynamicsDataSourceCVConfig();
-    dataSourceCVConfig.setApplicationName("app2");
-    dataSourceCVConfig.setIdentifier("app2");
+    dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("app2");
     dsConfigService.upsert(dataSourceCVConfig);
     List<? extends DSConfig> dataSourceCVConfigs =
         dsConfigService.list(accountId, connectorId, dataSourceCVConfig.getProductName());
     assertThat(dataSourceCVConfigs).hasSize(2);
+    Set<String> identifiers = new HashSet<>();
+    dataSourceCVConfigs.forEach(dsConfig -> identifiers.add(dsConfig.getIdentifier()));
+    assertThat(identifiers).isEqualTo(Sets.newHashSet("app1", "app2"));
   }
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testDelete() {
-    AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig();
+    AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("appd application name");
     dataSourceCVConfig.setApplicationName("app1");
     dataSourceCVConfig.setIdentifier("app1");
     dsConfigService.upsert(dataSourceCVConfig);
@@ -76,11 +77,11 @@ public class DSConfigServiceImplTest extends CVNextGenRestBaseTest {
     assertThat(dsConfigService.list(accountId, connectorId, productName)).isEmpty();
   }
 
-  private AppDynamicsDSConfig createAppDynamicsDataSourceCVConfig() {
+  private AppDynamicsDSConfig createAppDynamicsDataSourceCVConfig(String identifier) {
     AppDynamicsDSConfig appDynamicsDSConfig = new AppDynamicsDSConfig();
-    appDynamicsDSConfig.setIdentifier("appd application name");
+    appDynamicsDSConfig.setIdentifier(identifier);
     appDynamicsDSConfig.setConnectorId(connectorId);
-    appDynamicsDSConfig.setApplicationName("appd application name");
+    appDynamicsDSConfig.setApplicationName(identifier);
     appDynamicsDSConfig.setProductName(productName);
     appDynamicsDSConfig.setEnvIdentifier("harnessProd");
     appDynamicsDSConfig.setAccountId(accountId);

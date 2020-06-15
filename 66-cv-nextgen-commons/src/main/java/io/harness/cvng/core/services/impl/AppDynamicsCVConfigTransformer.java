@@ -1,8 +1,5 @@
 package io.harness.cvng.core.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
-import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
 
 import io.harness.cvng.beans.AppDynamicsDSConfig;
@@ -17,7 +14,6 @@ import java.util.stream.Collectors;
 public class AppDynamicsCVConfigTransformer implements CVConfigTransformer<AppDynamicsCVConfig, AppDynamicsDSConfig> {
   @Override
   public AppDynamicsDSConfig transformToDSConfig(List<AppDynamicsCVConfig> cvConfigGroup) {
-    Preconditions.checkArgument(isNotEmpty(cvConfigGroup), "List of cvConfigs can not empty");
     AppDynamicsCVConfig cvConfig = cvConfigGroup.get(0);
     AppDynamicsDSConfig appDynamicsConfig = new AppDynamicsDSConfig();
     appDynamicsConfig.setApplicationName(cvConfig.getApplicationName());

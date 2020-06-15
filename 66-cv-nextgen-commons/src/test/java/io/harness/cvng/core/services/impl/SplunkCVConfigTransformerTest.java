@@ -47,5 +47,6 @@ public class SplunkCVConfigTransformerTest extends CVConfigTransformerTestBase {
     assertThat(splunkDSConfig.getQuery()).isEqualTo("exception");
     assertThat(splunkDSConfig.getEventType()).isEqualTo("QA");
     assertThat(splunkDSConfig.getServiceInstanceIdentifier()).isEqualTo("host");
+    assertThat(splunkDSConfig.getServiceIdentifier()).isEqualTo(splunkCVConfig.getServiceIdentifier());
   }
 }
