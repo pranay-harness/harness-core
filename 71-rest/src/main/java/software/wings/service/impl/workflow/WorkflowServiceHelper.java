@@ -29,7 +29,6 @@ import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.FeatureName.ASG_AMI_TRAFFIC_SHIFT;
-import static software.wings.beans.FeatureName.AWS_TRAFFIC_SHIFT;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PCF_PCF;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
@@ -2640,7 +2639,7 @@ public class WorkflowServiceHelper {
 
   private void generateNewWfPhaseStepsForSpotinstBg(WorkflowCreationFlags creationFlags, String accountId, String appId,
       WorkflowPhase workflowPhase, boolean serviceRepeat) {
-    if (isAlbTrafficShiftType(creationFlags, accountId)) {
+    if (isAlbTrafficShiftType(creationFlags)) {
       generateNewWorkflowPhaseStepsForSpotinstAlbTrafficShift(appId, workflowPhase);
     } else {
       generateNewWorkflowPhaseStepsForSpotInstBlueGreen(appId, workflowPhase, !serviceRepeat);
@@ -2661,9 +2660,8 @@ public class WorkflowServiceHelper {
         && flags.isAwsTrafficShiftAlbType();
   }
 
-  private boolean isAlbTrafficShiftType(WorkflowCreationFlags flags, String accountId) {
-    return featureFlagService.isEnabled(AWS_TRAFFIC_SHIFT, accountId) && flags != null
-        && flags.isAwsTrafficShiftAlbType();
+  private boolean isAlbTrafficShiftType(WorkflowCreationFlags flags) {
+    return flags != null && flags.isAwsTrafficShiftAlbType();
   }
 
   public WorkflowPhase generateRollbackWorkflowPhase(String appId, WorkflowPhase workflowPhase,
@@ -2721,7 +2719,7 @@ public class WorkflowServiceHelper {
 
   private WorkflowPhase generateRollbackBgPhaseForSpotinstBg(
       WorkflowPhase workflowPhase, WorkflowCreationFlags creationFlags, String accountId) {
-    if (isAlbTrafficShiftType(creationFlags, accountId)) {
+    if (isAlbTrafficShiftType(creationFlags)) {
       return generateRollbackWorkflowPhaseForSpotinstAlbTrafficShift(workflowPhase);
     } else {
       return generateRollbackWorkflowPhaseForSpotInstBlueGreen(workflowPhase);
