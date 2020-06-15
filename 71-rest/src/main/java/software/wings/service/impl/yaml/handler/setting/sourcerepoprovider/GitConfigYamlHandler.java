@@ -19,43 +19,47 @@ public class GitConfigYamlHandler extends SourceRepoProviderYamlHandler<Yaml, Gi
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
 
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .type(gitConfig.getType())
-                    .url(gitConfig.getRepoUrl())
-                    .username(gitConfig.getUsername())
-                    .password(getEncryptedValue(gitConfig, "password", false))
-                    .branch(gitConfig.getBranch())
-                    .keyAuth(gitConfig.isKeyAuth())
-                    .sshSettingId(gitConfig.getSshSettingId())
-                    .description(gitConfig.getDescription())
-                    .authorName(gitConfig.getAuthorName())
-                    .authorEmailId(gitConfig.getAuthorEmailId())
-                    .commitMessage(gitConfig.getCommitMessage())
-                    .build();
+    Yaml yaml =
+        Yaml.builder()
+            .harnessApiVersion(getHarnessApiVersion())
+            .type(gitConfig.getType())
+            .url(gitConfig.getRepoUrl())
+            .username(gitConfig.getUsername())
+            .password(gitConfig.getEncryptedPassword() != null ? getEncryptedValue(gitConfig, "password", false) : null)
+            .branch(gitConfig.getBranch())
+            .keyAuth(gitConfig.isKeyAuth())
+            .sshKeyName(
+                gitConfig.getSshSettingId() != null ? settingsService.getSSHKeyName(gitConfig.getSshSettingId()) : null)
+            .description(gitConfig.getDescription())
+            .authorName(gitConfig.getAuthorName())
+            .authorEmailId(gitConfig.getAuthorEmailId())
+            .commitMessage(gitConfig.getCommitMessage())
+            .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
-  protected SettingAttribute toBean(
+  public SettingAttribute toBean(
       SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
-    GitConfig config = GitConfig.builder()
-                           .accountId(accountId)
-                           .repoUrl(yaml.getUrl())
-                           .branch(yaml.getBranch())
-                           .encryptedPassword(yaml.getPassword())
-                           .username(yaml.getUsername())
-                           .keyAuth(yaml.isKeyAuth())
-                           .sshSettingId(yaml.getSshSettingId())
-                           .authorName(yaml.getAuthorName())
-                           .authorEmailId(yaml.getAuthorEmailId())
-                           .commitMessage(yaml.getCommitMessage())
-                           .build();
+    GitConfig config =
+        GitConfig.builder()
+            .accountId(accountId)
+            .repoUrl(yaml.getUrl())
+            .branch(yaml.getBranch())
+            .encryptedPassword(yaml.getPassword())
+            .username(yaml.getUsername())
+            .keyAuth(yaml.isKeyAuth())
+            .sshSettingId(
+                yaml.getSshKeyName() != null ? settingsService.getSSHSettingId(accountId, yaml.getSshKeyName()) : null)
+            .authorName(yaml.getAuthorName())
+            .authorEmailId(yaml.getAuthorEmailId())
+            .commitMessage(yaml.getCommitMessage())
+            .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
   }
 

@@ -130,7 +130,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
     private String branch;
     private String reference;
     private boolean keyAuth;
-    private String sshSettingId;
+    private String sshKeyName;
     private String description;
     private String authorName;
     private String authorEmailId;
@@ -138,13 +138,13 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password, String branch,
-        String reference, UsageRestrictions.Yaml usageRestrictions, boolean keyAuth, String sshSettingId,
+        String reference, UsageRestrictions.Yaml usageRestrictions, boolean keyAuth, String sshKeyName,
         String description, String authorName, String authorEmailId, String commitMessage) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.branch = branch;
       this.reference = reference;
       this.keyAuth = keyAuth;
-      this.sshSettingId = sshSettingId;
+      this.sshKeyName = sshKeyName;
       this.description = description;
       this.authorName = authorName;
       this.authorEmailId = authorEmailId;

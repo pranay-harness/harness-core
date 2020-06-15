@@ -1606,4 +1606,19 @@ public class SettingsServiceImpl implements SettingsService {
           "An OpenSSH key might not work with Harness. Please use an RSA key. See Harness documentation for help.");
     }
   }
+
+  @Override
+  public String getSSHKeyName(String sshSettingId) {
+    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, sshSettingId);
+    return settingAttribute.getName();
+  }
+
+  @Override
+  public String getSSHSettingId(String accountId, String sshKeyName) {
+    SettingAttribute settingAttributeByName = getSettingAttributeByName(accountId, sshKeyName);
+    if (settingAttributeByName == null) {
+      throw new InvalidRequestException("No setting attribute with given keyName", USER);
+    }
+    return settingAttributeByName.getUuid();
+  }
 }
