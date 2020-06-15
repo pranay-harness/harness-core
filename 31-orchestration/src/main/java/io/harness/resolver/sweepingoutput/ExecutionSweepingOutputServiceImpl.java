@@ -1,7 +1,6 @@
 package io.harness.resolver.sweepingoutput;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -20,7 +19,6 @@ import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.persistence.HPersistence;
 import io.harness.references.RefObject;
-import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputInstance.ExecutionSweepingOutputKeys;
 import io.harness.resolvers.ResolverUtils;
 
 import java.util.Comparator;
@@ -33,6 +31,7 @@ import java.util.List;
 public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutputService {
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private Injector injector;
+  @Inject private ExecutionSweepingOutputInstanceRepository repository;
 
   @Override
   public String consumeInternal(Ambiance ambiance, String name, SweepingOutput value, int levelsToKeep) {
@@ -41,12 +40,15 @@ public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutp
     }
 
     try {
-      return hPersistence.save(ExecutionSweepingOutputInstance.builder()
-                                   .planExecutionId(ambiance.getPlanExecutionId())
-                                   .levels(ambiance.getLevels())
-                                   .name(name)
-                                   .value(value)
-                                   .build());
+      ExecutionSweepingOutputInstance instance =
+          repository.save(ExecutionSweepingOutputInstance.builder()
+                              .planExecutionId(ambiance.getPlanExecutionId())
+                              .levels(ambiance.getLevels())
+                              .name(name)
+                              .value(value)
+                              .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevels()))
+                              .build());
+      return instance.getUuid();
     } catch (DuplicateKeyException ex) {
       throw new SweepingOutputException(format("Sweeping output with name %s is already saved", name), ex);
     }
@@ -71,14 +73,8 @@ public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutp
 
   private SweepingOutput resolveUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
     String name = refObject.getName();
-    List<ExecutionSweepingOutputInstance> instances =
-        hPersistence.createQuery(ExecutionSweepingOutputInstance.class, excludeAuthority)
-            .filter(ExecutionSweepingOutputKeys.planExecutionId, ambiance.getPlanExecutionId())
-            .filter(ExecutionSweepingOutputKeys.name, name)
-            .field(ExecutionSweepingOutputKeys.levelRuntimeIdIdx)
-            .in(ResolverUtils.prepareLevelRuntimeIdIndices(ambiance))
-            .asList();
-
+    List<ExecutionSweepingOutputInstance> instances = repository.findByPlanExecutionIdAndNameAndLevelRuntimeIdIdxIn(
+        ambiance.getPlanExecutionId(), name, ResolverUtils.prepareLevelRuntimeIdIndices(ambiance));
     // Multiple instances might be returned if the same name was saved at different levels/specificity.
     ExecutionSweepingOutputInstance instance = EmptyPredicate.isEmpty(instances)
         ? null
