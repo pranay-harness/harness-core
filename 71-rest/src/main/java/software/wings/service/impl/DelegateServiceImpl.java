@@ -2614,6 +2614,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     return registeredDelegate;
   }
 
+  @Override
+  public Optional<DelegateTask> fetchDelegateTask(String accountId, String taskId) {
+    return Optional.ofNullable(wingsPersistence.createQuery(DelegateTask.class)
+                                   .filter(DelegateTaskKeys.accountId, accountId)
+                                   .filter(DelegateTaskKeys.uuid, taskId)
+                                   .get());
+  }
+
   /**
    * ECS delegate sends keepAlive request every 20 secs. KeepAlive request is a frequent and light weight
    * mode for indicating that delegate is active.

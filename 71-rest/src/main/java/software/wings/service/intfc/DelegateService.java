@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import javax.validation.Valid;
 
@@ -128,4 +129,6 @@ public interface DelegateService extends OwnedByAccount, TaskExecutor {
       String delegateProfile) throws IOException;
 
   List<Integer> getCountOfDelegatesForAccounts(List<String> collect);
+
+  Optional<DelegateTask> fetchDelegateTask(String accountId, String taskId);
 }

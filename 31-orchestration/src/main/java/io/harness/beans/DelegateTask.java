@@ -35,6 +35,7 @@ import org.mongodb.morphia.converters.SimpleValueConverter;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
@@ -68,13 +69,14 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
 
   @Id private String uuid;
   @NotEmpty private String accountId;
+  private boolean selectionLogsTrackingEnabled;
+
   protected String appId;
   private String envId;
   private String infrastructureMappingId;
   private String serviceTemplateId;
   private String artifactStreamId;
   private String workflowExecutionId;
-  private boolean selectionLogsTrackingEnabled;
 
   private String version;
   private List<String> tags;
@@ -132,7 +134,32 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
     }
   }
 
-  public enum Status { QUEUED, STARTED, FINISHED, ERROR, ABORTED }
+  public enum Status {
+    QUEUED,
+    STARTED,
+    FINISHED,
+    ERROR,
+    ABORTED;
+
+    private static Set<Status> finalStatuses = EnumSet.of(FINISHED, ERROR, ABORTED);
+    private static Set<Status> runningStatuses = EnumSet.of(QUEUED, STARTED);
+
+    public static Set<Status> finalStatuses() {
+      return finalStatuses;
+    }
+
+    public static boolean isFinalStatus(Status status) {
+      return status != null && finalStatuses.contains(status);
+    }
+
+    public static Set<Status> runningStatuses() {
+      return runningStatuses;
+    }
+
+    public static boolean isRunningStatus(Status status) {
+      return status != null && runningStatuses.contains(status);
+    }
+  }
 
   @UtilityClass
   public static final class DelegateTaskKeys {

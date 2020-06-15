@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -18,4 +19,5 @@ public class TaskData {
   private Object[] parameters;
   private long timeout;
   private int expressionFunctorToken;
+  Map<String, String> expressions;
 }
