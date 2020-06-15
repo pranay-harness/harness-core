@@ -502,6 +502,8 @@ if [[ "" != "$DISTRIBUTED_LOCK_IMPLEMENTATION" ]]; then
   yq write -i $CONFIG_FILE distributedLockImplementation "$DISTRIBUTED_LOCK_IMPLEMENTATION"
 fi
 
+yq delete -i $REDISSON_CACHE_FILE codec
+
 if [[ "" != "$REDIS_URL" ]]; then
   yq write -i $CONFIG_FILE redisLockConfig.redisUrl "$REDIS_URL"
   yq write -i $REDISSON_CACHE_FILE singleServerConfig.address "$REDIS_URL"
@@ -525,7 +527,6 @@ if [[ "" != "$REDIS_SENTINELS" ]]; then
     yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[+] "${REDIS_SENTINEL_URL}"
     INDEX=$(expr $INDEX + 1)
   done
-  yq write -i $REDISSON_CACHE_FILE codec "!<io.harness.redis.RedissonKryoCodec> {}"
 fi
 
 if [[ "" != "$REDIS_ENV_NAMESPACE" ]]; then
