@@ -86,6 +86,7 @@ enum CCMAggregateOperation {
   MAX
   MIN
   AVG
+  COUNT
 }
 
 input CCMGroupBy {

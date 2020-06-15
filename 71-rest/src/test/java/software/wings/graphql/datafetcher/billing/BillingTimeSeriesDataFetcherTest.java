@@ -154,21 +154,18 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     String[] appIdFilterValues = new String[] {APP1_ID_ACCOUNT1};
 
     List<QLBillingDataFilter> filters = Arrays.asList(makeApplicationFilter(appIdFilterValues), makeTimeFilter(0L));
-    List<QLCCMGroupBy> groupBy = Arrays.asList(makeApplicationEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeStartTimeEntityGroupBy());
+    List<QLBillingSortCriteria> sortCriteria = Collections.EMPTY_LIST;
 
+    List<QLCCMAggregationFunction> aggFunction = Collections.singletonList(makeCountAggregation());
     QLBillingStackedTimeSeriesData data = (QLBillingStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
+        ACCOUNT1_ID, aggFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
 
-    assertThat(aggregationFunction.get(0).getColumnName()).isEqualTo("billingamount");
-    assertThat(aggregationFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(aggFunction.get(0).getColumnName()).isEqualTo("instanceId");
+    assertThat(aggFunction.get(0).getOperationType()).isEqualTo(QLCCMAggregateOperation.COUNT);
     assertThat(filters.get(0).getApplication().getValues()).isEqualTo(appIdFilterValues);
     assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
-    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
-    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
     assertThat(data).isNotNull();
-    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(APP1_ID_ACCOUNT1);
-    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("APPID");
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(0);
   }
 
@@ -677,6 +674,13 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.SUM)
         .columnName("billingamount")
+        .build();
+  }
+
+  private QLCCMAggregationFunction makeCountAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.COUNT)
+        .columnName("instanceId")
         .build();
   }
 
