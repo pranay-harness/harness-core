@@ -134,6 +134,8 @@ public class AccountGenerator {
                                                              .expiryTime(-1)
                                                              .build())
                                         .build());
+
+    ensureUserGroup(account, UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME);
     ensureDefaultUsers(account);
     return account;
   }
@@ -261,15 +263,20 @@ public class AccountGenerator {
     users.add(adminUser);
     users.add(default2faUser);
     addUsersToUserGroup(users, account.getUuid(), UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
-    UserGroup readOnlyUserGroup = authHandler.buildReadOnlyUserGroup(
-        account.getUuid(), readOnlyUser, UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME);
-
-    wingsPersistence.save(readOnlyUserGroup);
-
-    addUserToUserGroup(readOnlyUser, readOnlyUserGroup);
-
+    addUserToUserGroup(readOnlyUser, account.getUuid(), UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME);
     addUserToHarnessUserGroup(adminUser);
 
+    return account;
+  }
+
+  public Account ensureUserGroup(Account account, String userGroupName) {
+    if (userGroupService.fetchUserGroupByName(account.getUuid(), userGroupName) == null) {
+      User readOnlyUser = ensureUser(
+          readOnlyUserUuid, readOnlyUserName, readOnlyEmail, scmSecret.decryptToCharArray(readOnlyPassword), account);
+      UserGroup readOnlyUserGroup = authHandler.buildReadOnlyUserGroup(
+          account.getUuid(), readOnlyUser, UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME);
+      wingsPersistence.save(readOnlyUserGroup);
+    }
     return account;
   }
 

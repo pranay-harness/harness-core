@@ -35,12 +35,12 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UserGroupAlreadyExistException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
 import io.harness.scheduler.PersistentScheduler;
-import io.harness.validation.PersistenceValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -124,6 +124,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup save(UserGroup userGroup) {
     notNullCheck(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());
     checkUserGroupsCountWithinLimit(userGroup.getAccountId());
+    checkForUserGroupWithSameName(userGroup);
 
     if (null == userGroup.getNotificationSettings()) {
       NotificationSettings notificationSettings =
@@ -131,8 +132,7 @@ public class UserGroupServiceImpl implements UserGroupService {
       userGroup.setNotificationSettings(notificationSettings);
     }
 
-    UserGroup savedUserGroup = PersistenceValidator.duplicateCheck(
-        () -> wingsPersistence.saveAndGet(UserGroup.class, userGroup), "name", userGroup.getName());
+    UserGroup savedUserGroup = wingsPersistence.saveAndGet(UserGroup.class, userGroup);
     Account account = accountService.get(userGroup.getAccountId());
     notNullCheck("account", account);
     loadUsers(savedUserGroup, account);
@@ -141,6 +141,13 @@ public class UserGroupServiceImpl implements UserGroupService {
     logger.info("Auditing creation of new userGroup={} and account={}", userGroup.getName(), account.getAccountName());
     eventPublishHelper.publishSetupRbacEvent(userGroup.getAccountId(), savedUserGroup.getUuid(), EntityType.USER_GROUP);
     return savedUserGroup;
+  }
+
+  private void checkForUserGroupWithSameName(UserGroup userGroup) {
+    UserGroup existingUserGroup = fetchUserGroupByName(userGroup.getAccountId(), userGroup.getName());
+    if (existingUserGroup != null && !existingUserGroup.getUuid().equals(userGroup.getUuid())) {
+      throw new UserGroupAlreadyExistException("User Group with same name already exists.");
+    }
   }
 
   private void checkUserGroupsCountWithinLimit(String accountId) {
@@ -291,11 +298,11 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup updateOverview(UserGroup userGroup) {
     notNullCheck("name", userGroup.getName());
     UserGroup userGroupFromDB = get(userGroup.getAccountId(), userGroup.getUuid());
+    checkForUserGroupWithSameName(userGroup);
     if (UserGroupUtils.isAdminUserGroup(userGroupFromDB)) {
       throw new WingsException(
           ErrorCode.UPDATE_NOT_ALLOWED, "Can not update name/description of Account Administrator user group");
     }
-
     UpdateOperations<UserGroup> operations =
         wingsPersistence.createUpdateOperations(UserGroup.class).set("name", userGroup.getName());
     setUnset(operations, "description", userGroup.getDescription());

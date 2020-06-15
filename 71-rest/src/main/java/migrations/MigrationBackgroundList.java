@@ -62,6 +62,7 @@ import migrations.all.MigrateLogDataRecordsToGoogle;
 import migrations.all.MigratePipelineStagesToUseDisableAssertion;
 import migrations.all.MigrateTimeSeriesRawDataToGoogle;
 import migrations.all.NoOpMigration;
+import migrations.all.RemoveDuplicateUserGroupNameMigration;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.ScheduleSegmentPublishJob;
 import migrations.all.SendInviteUrlForAllUserInvites;
@@ -221,6 +222,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(129, CleanUpDirectK8sInfraMappingEncryptedFieldsMigration.class))
         .add(Pair.of(130, InfraMappingToDefinitionMigration.class))
         .add(Pair.of(131, K8sStatesTimeoutMigration.class))
+        .add(Pair.of(132, RemoveDuplicateUserGroupNameMigration.class))
         .build();
   }
 }

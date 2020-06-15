@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MEHUL;
+import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.UJJAWAL;
@@ -58,6 +59,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.UserGroupAlreadyExistException;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -251,8 +253,13 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     UserGroup userGroupFromGet = userGroupService.get(accountId, userGroupId);
     compare(savedUserGroup, userGroupFromGet);
 
-    userGroup =
-        builder().accountId(accountId).uuid(userGroupId).description(description).memberIds(asList(user1Id)).build();
+    userGroup = builder()
+                    .accountId(accountId)
+                    .uuid(userGroupId)
+                    .name(name)
+                    .description(description)
+                    .memberIds(asList(user1Id))
+                    .build();
     savedUserGroup = userGroupService.save(userGroup);
     compare(userGroup, savedUserGroup);
 
@@ -706,6 +713,30 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     assertThat(userGroups).isNotNull();
     assertThat(userGroups.stream().map(UserGroup::getName).collect(Collectors.toList()))
         .containsExactlyInAnyOrder("USER_GROUP1", "USER_GROUP2", "USER_GROUP3");
+  }
+
+  @Test(expected = UserGroupAlreadyExistException.class)
+  @Owner(developers = MOHIT)
+  @Category(UnitTests.class)
+  public void shouldNotAllowDuplicateUserGroups_tc1() {
+    UserGroup userGroup1 = builder().accountId(accountId).uuid(userGroupId).description(description).name(name).build();
+    wingsPersistence.save(userGroup1);
+    UserGroup userGroup2 =
+        builder().accountId(accountId).description(description).name(name).description(description).build();
+    userGroupService.save(userGroup2);
+  }
+
+  @Test(expected = UserGroupAlreadyExistException.class)
+  @Owner(developers = MOHIT)
+  @Category(UnitTests.class)
+  public void shouldNotAllowDuplicateUserGroups_tc2() {
+    UserGroup userGroup1 = builder().accountId(accountId).uuid(userGroupId).description(description).name(name).build();
+    UserGroup userGroup2 =
+        builder().accountId(accountId).uuid(userGroup2Id).description(description).name(name2).build();
+    wingsPersistence.save(userGroup1);
+    wingsPersistence.save(userGroup2);
+    userGroup2.setName(name);
+    userGroupService.updateOverview(userGroup2);
   }
 
   private List<String> getIds(List<UserGroup> userGroups) {
