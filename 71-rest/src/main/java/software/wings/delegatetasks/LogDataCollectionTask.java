@@ -3,10 +3,13 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.AZURE_BASE_URL;
+import static software.wings.common.VerificationConstants.AZURE_TOKEN_URL;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.NON_HOST_PREVIOUS_ANALYSIS;
 import static software.wings.common.VerificationConstants.URL_BODY_APPENDER;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.inject.Inject;
@@ -31,6 +34,7 @@ import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.analysis.AzureLogAnalyticsConnectionDetails;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -62,6 +66,9 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private CustomLogDataCollectionInfo dataCollectionInfo;
   private Map<String, String> decryptedFields = new HashMap<>();
   private static final String DATADOG_API_MASK = "api_key=([^&]*)&application_key=([^&]*)";
+
+  // special case for azure. This is unfortunately a hack
+  private AzureLogAnalyticsConnectionDetails azureLogAnalyticsConnectionDetails;
 
   public LogDataCollectionTask(
       DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -148,6 +155,56 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
       this.taskResult = taskResult;
     }
 
+    private Map<String, String> fetchAdditionalHeaders(CustomLogDataCollectionInfo dataCollectionInfo) {
+      // Special case for getting the bearer token for azure log analytics
+      if (!dataCollectionInfo.getBaseUrl().contains(AZURE_BASE_URL)) {
+        return null;
+      }
+      Map<String, Object> resolvedOptions = resolveDollarReferences(dataCollectionInfo.getOptions());
+      String clientId = azureLogAnalyticsConnectionDetails == null ? (String) resolvedOptions.get("client_id")
+                                                                   : azureLogAnalyticsConnectionDetails.getClientId();
+      String clientSecret = azureLogAnalyticsConnectionDetails == null
+          ? (String) resolvedOptions.get("client_secret")
+          : azureLogAnalyticsConnectionDetails.getClientSecret();
+      String tenantId = azureLogAnalyticsConnectionDetails == null ? (String) resolvedOptions.get("tenant_id")
+                                                                   : azureLogAnalyticsConnectionDetails.getTenantId();
+      if (azureLogAnalyticsConnectionDetails == null) {
+        // saving the details in this object so we can remove the details from the request parameters
+        azureLogAnalyticsConnectionDetails = AzureLogAnalyticsConnectionDetails.builder()
+                                                 .clientId(clientId)
+                                                 .clientSecret(clientSecret)
+                                                 .tenantId(tenantId)
+                                                 .build();
+
+        dataCollectionInfo.getOptions().remove("client_id");
+        dataCollectionInfo.getOptions().remove("tenant_id");
+        dataCollectionInfo.getOptions().remove("client_secret");
+      }
+
+      Preconditions.checkNotNull(
+          clientId, "client_id parameter cannot be null when collecting data from azure log analytics");
+      Preconditions.checkNotNull(
+          tenantId, "tenant_id parameter cannot be null when collecting data from azure log analytics");
+      Preconditions.checkNotNull(
+          clientSecret, "client_secret parameter cannot be null when collecting data from azure log analytics");
+      String urlForToken = tenantId + "/oauth2/token";
+
+      Map<String, String> bearerTokenHeader = new HashMap<>();
+      bearerTokenHeader.put("Content-Type", "application/x-www-form-urlencoded");
+      Call<Object> bearerTokenCall = getRestClient(AZURE_TOKEN_URL)
+                                         .getAzureBearerToken(urlForToken, bearerTokenHeader, "client_credentials",
+                                             clientId, AZURE_BASE_URL, clientSecret);
+
+      Object response = requestExecutor.executeRequest(bearerTokenCall);
+      Map<String, Object> responseMap = new JSONObject(JsonUtils.asJson(response)).toMap();
+      String bearerToken = (String) responseMap.get("access_token");
+
+      String headerVal = "Bearer " + bearerToken;
+      Map<String, String> header = new HashMap<>();
+      header.put("Authorization", headerVal);
+      return header;
+    }
+
     private BiMap<String, Object> resolveDollarReferences(Map<String, String> input) {
       BiMap<String, Object> output = HashBiMap.create();
       if (input == null) {
@@ -207,9 +264,9 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
         // We're doing this check because in SG24/7 we allow only one logCollection. So the body is present in the
         // dataCollectionInfo. In workflow there can be one body per logCollection in setup.
         // So we're taking care of both.
+        String[] urlAndBody = url.split(URL_BODY_APPENDER);
+        url = urlAndBody[0];
         if (isEmpty(body)) {
-          String[] urlAndBody = url.split(URL_BODY_APPENDER);
-          url = urlAndBody[0];
           bodyStr = urlAndBody.length > 1 ? urlAndBody[1] : "";
         } else {
           bodyStr = JsonUtils.asJson(body);
@@ -254,7 +311,13 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
               dataCollectionInfo.getLogResponseDefinition().entrySet()) {
             List<LogElement> logs = new ArrayList<>();
             String tempHost = dataCollectionInfo.getHosts().iterator().next();
-
+            Map<String, String> additionalHeaders = fetchAdditionalHeaders(dataCollectionInfo);
+            if (isNotEmpty(additionalHeaders)) {
+              if (dataCollectionInfo.getHeaders() == null) {
+                dataCollectionInfo.setHeaders(new HashMap<>());
+              }
+              additionalHeaders.forEach((key, val) -> dataCollectionInfo.getHeaders().put(key, val));
+            }
             // go fetch the logs first
             if (!dataCollectionInfo.isShouldDoHostBasedFiltering()) {
               // this query is not host based. So we should not make one call per host

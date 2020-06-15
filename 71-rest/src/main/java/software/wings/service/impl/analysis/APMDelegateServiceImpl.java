@@ -1,7 +1,10 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.common.VerificationConstants.AZURE_BASE_URL;
+import static software.wings.common.VerificationConstants.AZURE_TOKEN_URL;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.inject.Inject;
@@ -54,17 +57,8 @@ public class APMDelegateServiceImpl implements APMDelegateService {
       config.getHeaders().put("Accept", "application/json");
     }
     decryptFields(config.getEncryptedDataDetails());
-    Call<Object> request = getAPMRestClient(config).validate(
-        resolveDollarReferences(config.getUrl()), config.getHeaders(), config.getOptions());
-    if (config.getCollectionMethod() != null && config.getCollectionMethod() == Method.POST) {
-      Map<String, Object> body = new HashMap<>();
-      if (isNotEmpty(config.getBody())) {
-        config.setBody(resolveDollarReferences(config.getBody()));
-        body = new JSONObject(config.getBody()).toMap();
-      }
-      request = getAPMRestClient(config).postCollect(resolveDollarReferences(config.getUrl()),
-          resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()), body);
-    }
+
+    Call<Object> request = getCall(config);
 
     requestExecutor.executeRequest(request);
     return true;
@@ -154,31 +148,78 @@ public class APMDelegateServiceImpl implements APMDelegateService {
     }
     apiCallLog.setTitle("Fetching data from " + config.getUrl());
 
+    Call<Object> request = getCall(config);
+
+    return JsonUtils.asJson(requestExecutor.executeRequest(apiCallLog, request));
+  }
+
+  private Call<Object> getCall(APMValidateCollectorConfig config) {
     Call<Object> request;
+    // Special case for getting the bearer token for azure log analytics token
+    if (config.getBaseUrl().contains(AZURE_BASE_URL)) {
+      try {
+        config.setHeaders(getAzureAuthHeader(config));
+        config.getOptions().remove("client_id");
+        config.getOptions().remove("tenant_id");
+        config.getOptions().remove("client_secret");
+      } catch (Exception e) {
+        throw new DataCollectionException("Unable to fetch the bearer token for Azure Log Analytics: ", e);
+      }
+    }
     if (config.getCollectionMethod() != null && config.getCollectionMethod() == Method.POST) {
       Map<String, Object> body = new HashMap<>();
       if (isNotEmpty(config.getBody())) {
         config.setBody(resolveDollarReferences(config.getBody()));
         body = new JSONObject(config.getBody()).toMap();
       }
-      request = getAPMRestClient(config).postCollect(resolveDollarReferences(config.getUrl()),
-          resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()), body);
+      request = getAPMRestClient(config.getBaseUrl())
+                    .postCollect(resolveDollarReferences(config.getUrl()), resolveDollarReferences(config.getHeaders()),
+                        resolveDollarReferences(config.getOptions()), body);
     } else {
-      request = getAPMRestClient(config).collect(resolveDollarReferences(config.getUrl()),
-          resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()));
+      request = getAPMRestClient(config.getBaseUrl())
+                    .collect(resolveDollarReferences(config.getUrl()), resolveDollarReferences(config.getHeaders()),
+                        resolveDollarReferences(config.getOptions()));
     }
-
-    return JsonUtils.asJson(requestExecutor.executeRequest(apiCallLog, request));
+    return request;
   }
 
-  private APMRestClient getAPMRestClient(final APMValidateCollectorConfig config) {
-    final Retrofit retrofit = new Retrofit.Builder()
-                                  .baseUrl(config.getBaseUrl())
-                                  .addConverterFactory(JacksonConverterFactory.create())
-                                  .client(Http.getOkHttpClientWithNoProxyValueSet(config.getBaseUrl())
-                                              .connectTimeout(30, TimeUnit.SECONDS)
-                                              .build())
-                                  .build();
+  private APMRestClient getAPMRestClient(String baseUrl) {
+    final Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .addConverterFactory(JacksonConverterFactory.create())
+            .client(Http.getOkHttpClientWithNoProxyValueSet(baseUrl).connectTimeout(30, TimeUnit.SECONDS).build())
+            .build();
     return retrofit.create(APMRestClient.class);
+  }
+
+  private Map<String, String> getAzureAuthHeader(APMValidateCollectorConfig config) {
+    Map<String, Object> resolvedOptions = resolveDollarReferences(config.getOptions());
+    String clientId = (String) resolvedOptions.get("client_id");
+    String clientSecret = (String) resolvedOptions.get("client_secret");
+    String tenantId = (String) resolvedOptions.get("tenant_id");
+    Preconditions.checkNotNull(
+        clientId, "client_id parameter cannot be null when collecting data from azure log analytics");
+    Preconditions.checkNotNull(
+        tenantId, "tenant_id parameter cannot be null when collecting data from azure log analytics");
+    Preconditions.checkNotNull(
+        clientSecret, "client_secret parameter cannot be null when collecting data from azure log analytics");
+
+    String urlForToken = tenantId + "/oauth2/token";
+
+    Map<String, String> bearerTokenHeader = new HashMap<>();
+    bearerTokenHeader.put("Content-Type", "application/x-www-form-urlencoded");
+    Call<Object> bearerTokenCall = getAPMRestClient(AZURE_TOKEN_URL)
+                                       .getAzureBearerToken(urlForToken, bearerTokenHeader, "client_credentials",
+                                           clientId, AZURE_BASE_URL, clientSecret);
+
+    Object response = requestExecutor.executeRequest(bearerTokenCall);
+    Map<String, Object> responseMap = new JSONObject(JsonUtils.asJson(response)).toMap();
+    String bearerToken = (String) responseMap.get("access_token");
+
+    String headerVal = "Bearer " + bearerToken;
+    Map<String, String> header = new HashMap<>();
+    header.put("Authorization", headerVal);
+    return header;
   }
 }

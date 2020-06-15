@@ -14,6 +14,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.log.LogResponseParser;
 import software.wings.service.impl.log.LogResponseParser.LogResponseData;
+import software.wings.sm.states.BugsnagState;
 import software.wings.sm.states.CustomLogVerificationState;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 
@@ -94,6 +95,55 @@ public class LogResponseParserTest extends CategoryTest {
     List<LogElement> logs = parser.extractLogs(data);
     assertThat(logs).isNotNull();
     assertThat(5 == logs.size()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testParseValidAzure() throws IOException {
+    String textLoad =
+        Resources.toString(LogResponseParserTest.class.getResource("/apm/azuresample.json"), Charsets.UTF_8);
+
+    List<String> hostList = Arrays.asList("harness-manager-1.0.5909-192-7bd4987549-pfwgn");
+    Map<String, ResponseMapper> responseMappers = new HashMap<>();
+    responseMappers.put("timestamp",
+        CustomLogVerificationState.ResponseMapper.builder()
+            .fieldName("timestamp")
+            .jsonPath(Arrays.asList("tables[*].rows[*].[1]"))
+            .timestampFormat("yyyy-MM-dd'T'HH:mm:ss.SS'Z'")
+            .build());
+    responseMappers.put("host",
+        CustomLogVerificationState.ResponseMapper.builder().fieldName("host").fieldValue("samplehostname").build());
+    responseMappers.put("logMessage",
+        CustomLogVerificationState.ResponseMapper.builder()
+            .fieldName("logMessage")
+            .jsonPath(Arrays.asList("tables[*].rows[*].[0]"))
+            .build());
+
+    LogResponseParser parser = new LogResponseParser();
+    LogResponseParser.LogResponseData data =
+        new LogResponseData(textLoad, new HashSet<>(hostList), false, false, responseMappers);
+
+    List<LogElement> logs = parser.extractLogs(data);
+    assertThat(logs).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testParseValidBugsnag() throws IOException {
+    String textLoad =
+        Resources.toString(LogResponseParserTest.class.getResource("/apm/bugsnagsample.json"), Charsets.UTF_8);
+
+    Map<String, ResponseMapper> responseMappers =
+        BugsnagState.constructLogDefinitions("sampleProjecId", null).values().iterator().next();
+    List<String> hostList = Arrays.asList("harness-manager-1.0.5909-192-7bd4987549-pfwgn");
+    LogResponseParser parser = new LogResponseParser();
+    LogResponseParser.LogResponseData data =
+        new LogResponseData(textLoad, new HashSet<>(hostList), false, false, responseMappers);
+
+    List<LogElement> logs = parser.extractLogs(data);
+    assertThat(logs).isNotNull();
   }
 
   @Test

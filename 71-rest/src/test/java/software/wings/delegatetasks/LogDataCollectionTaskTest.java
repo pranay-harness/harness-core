@@ -9,6 +9,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.common.VerificationConstants.AZURE_BASE_URL;
+import static software.wings.common.VerificationConstants.AZURE_TOKEN_URL;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -228,6 +230,76 @@ public class LogDataCollectionTaskTest extends CategoryTest {
     verify(logAnalysisStoreService, times(1))
         .save(any(StateType.class), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
             anyString(), anyString(), any(List.class));
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testFetchLogs_azureRefreshToken() throws Exception {
+    // setup
+    String textLoad =
+        Resources.toString(LogResponseParserTest.class.getResource("/apm/azuresample.json"), Charsets.UTF_8);
+    String searchUrl = "_search?pretty=true&q=*&size=5";
+    Map<String, ResponseMapper> responseMappers = new HashMap<>();
+    responseMappers.put("timestamp",
+        CustomLogVerificationState.ResponseMapper.builder()
+            .fieldName("timestamp")
+            .jsonPath(Arrays.asList("tables[*].rows[*].[1]"))
+            .timestampFormat("yyyy-MM-dd'T'HH:mm:ss.SS'Z'")
+            .build());
+    responseMappers.put("host",
+        CustomLogVerificationState.ResponseMapper.builder().fieldName("host").fieldValue("samplehostname").build());
+    responseMappers.put("logMessage",
+        CustomLogVerificationState.ResponseMapper.builder()
+            .fieldName("logMessage")
+            .jsonPath(Arrays.asList("tables[*].rows[*].[0]"))
+            .build());
+
+    Map<String, Map<String, ResponseMapper>> logDefinition = new HashMap<>();
+    logDefinition.put(searchUrl, responseMappers);
+    setup(logDefinition, new HashSet<>(Arrays.asList("test.hostname.2", "test.hostname.22", "test.hostname.12")));
+    doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
+
+    when(logAnalysisStoreService.save(any(StateType.class), anyString(), anyString(), anyString(), anyString(),
+             anyString(), anyString(), anyString(), anyString(), any(List.class)))
+        .thenReturn(true);
+    Map tokenResponse = new HashMap();
+    tokenResponse.put("access_token", "accessToken");
+    when(requestExecutor.executeRequest(any())).thenReturn(tokenResponse);
+    when(requestExecutor.executeRequest(any(), any(), any())).thenReturn(textLoad);
+    dataCollectionInfo.setShouldDoHostBasedFiltering(false);
+    dataCollectionInfo.setBaseUrl(AZURE_BASE_URL);
+    EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().fieldName("client_id").build();
+    EncryptedDataDetail encryptedDataDetail2 = EncryptedDataDetail.builder().fieldName("client_secret").build();
+    EncryptedDataDetail encryptedDataDetail3 = EncryptedDataDetail.builder().fieldName("tenant_id").build();
+    when(encryptionService.getDecryptedValue(encryptedDataDetail)).thenReturn("clientId".toCharArray());
+    when(encryptionService.getDecryptedValue(encryptedDataDetail2)).thenReturn("clientSecret".toCharArray());
+    when(encryptionService.getDecryptedValue(encryptedDataDetail3)).thenReturn("tenantId".toCharArray());
+
+    dataCollectionInfo.setEncryptedDataDetails(
+        Arrays.asList(encryptedDataDetail, encryptedDataDetail2, encryptedDataDetail3));
+    Map<String, String> options = new HashMap<>();
+    options.put("client_id", "${client_id}");
+    options.put("tenant_id", "${tenant_id}");
+    options.put("client_secret", "${client_secret}");
+    dataCollectionInfo.setOptions(options);
+
+    // execute
+    DataCollectionTaskResult taskResult = dataCollectionTask.initDataCollection(dataCollectionInfo);
+    Runnable r = dataCollectionTask.getDataCollector(taskResult);
+    r.run();
+
+    // verify
+    // verify
+    ArgumentCaptor<Map> maskPatternsCaptor = ArgumentCaptor.forClass(Map.class);
+    ArgumentCaptor<Call> requestCaptor = ArgumentCaptor.forClass(Call.class);
+    ArgumentCaptor<Call> tokenRequestCaptor = ArgumentCaptor.forClass(Call.class);
+
+    // since the flag is set in datacollectionInfo, the number of invocations should be 1 only.
+    verify(requestExecutor).executeRequest(tokenRequestCaptor.capture());
+
+    Call<Object> request = tokenRequestCaptor.getValue();
+    assertThat(request.request().url().toString()).contains(AZURE_TOKEN_URL);
   }
 
   @Test

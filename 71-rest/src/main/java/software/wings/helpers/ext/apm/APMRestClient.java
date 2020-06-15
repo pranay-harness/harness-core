@@ -2,6 +2,8 @@ package software.wings.helpers.ext.apm;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.Field;
+import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.HeaderMap;
 import retrofit2.http.POST;
@@ -18,6 +20,12 @@ public interface APMRestClient {
   @POST
   Call<Object> validatePost(@Url String url, @HeaderMap Map<String, String> headers,
       @QueryMap Map<String, String> options, @Body Map<String, Object> body);
+
+  @FormUrlEncoded
+  @POST
+  Call<Object> getAzureBearerToken(@Url String url, @HeaderMap Map<String, String> headers,
+      @Field("grant_type") String grantType, @Field("client_id") String clientId, @Field("resource") String resource,
+      @Field("client_secret") String clientSecret);
 
   @GET
   Call<Object> collect(@Url String url, @HeaderMap Map<String, Object> headers, @QueryMap Map<String, Object> options);
