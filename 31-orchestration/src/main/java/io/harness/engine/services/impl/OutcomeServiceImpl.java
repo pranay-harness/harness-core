@@ -2,42 +2,36 @@ package io.harness.engine.services.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
-import io.harness.ambiance.Level.LevelKeys;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.data.OutcomeInstance;
-import io.harness.data.OutcomeInstance.OutcomeInstanceKeys;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.EngineAmbianceExpressionEvaluator;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.engine.services.OutcomeException;
 import io.harness.engine.services.OutcomeService;
+import io.harness.engine.services.repositories.OutcomeRepository;
 import io.harness.expression.EngineExpressionEvaluator;
-import io.harness.persistence.HIterator;
-import io.harness.persistence.HPersistence;
 import io.harness.references.RefObject;
 import io.harness.resolvers.ResolverUtils;
 import lombok.NonNull;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
@@ -45,8 +39,8 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @Singleton
 public class OutcomeServiceImpl implements OutcomeService {
-  @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private Injector injector;
+  @Inject private OutcomeRepository outcomeRepository;
 
   @Override
   public String consumeInternal(Ambiance ambiance, String name, Outcome value, int levelsToKeep) {
@@ -56,13 +50,16 @@ public class OutcomeServiceImpl implements OutcomeService {
     }
 
     try {
-      return hPersistence.save(OutcomeInstance.builder()
-                                   .planExecutionId(ambiance.getPlanExecutionId())
-                                   .levels(ambiance.getLevels())
-                                   .producedBy(producedBy)
-                                   .name(name)
-                                   .outcome(value)
-                                   .build());
+      OutcomeInstance instance =
+          outcomeRepository.save(OutcomeInstance.builder()
+                                     .planExecutionId(ambiance.getPlanExecutionId())
+                                     .levels(ambiance.getLevels())
+                                     .producedBy(producedBy)
+                                     .name(name)
+                                     .outcome(value)
+                                     .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevels()))
+                                     .build());
+      return instance.getUuid();
     } catch (DuplicateKeyException ex) {
       throw new OutcomeException(format("Outcome with name %s is already saved", name), ex);
     }
@@ -71,7 +68,7 @@ public class OutcomeServiceImpl implements OutcomeService {
   @Override
   public Outcome resolve(Ambiance ambiance, RefObject refObject) {
     if (EmptyPredicate.isNotEmpty(refObject.getProducerId())) {
-      return resolveUsingProducerId(ambiance, refObject);
+      return resolveUsingProducerSetupId(ambiance, refObject);
     }
     if (!refObject.getName().contains(".")) {
       // It is not an expression-like ref-object.
@@ -88,16 +85,11 @@ public class OutcomeServiceImpl implements OutcomeService {
     return (value instanceof Outcome) ? (Outcome) value : null;
   }
 
-  private Outcome resolveUsingProducerId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
+  private Outcome resolveUsingProducerSetupId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
     String name = refObject.getName();
     List<OutcomeInstance> instances =
-        hPersistence.createQuery(OutcomeInstance.class, excludeAuthority)
-            .filter(OutcomeInstanceKeys.planExecutionId, ambiance.getPlanExecutionId())
-            .filter(OutcomeInstanceKeys.name, name)
-            .filter(OutcomeInstanceKeys.producedBy + "." + LevelKeys.setupId, refObject.getProducerId())
-            .order(Sort.descending(OutcomeInstanceKeys.createdAt))
-            .asList();
-
+        outcomeRepository.findByPlanExecutionIdAndNameAndProducedBySetupIdOrderByCreatedAtDesc(
+            ambiance.getPlanExecutionId(), name, refObject.getProducerId());
     // Multiple instances might be returned if the same plan node executed multiple times.
     if (EmptyPredicate.isEmpty(instances)) {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
@@ -107,12 +99,9 @@ public class OutcomeServiceImpl implements OutcomeService {
 
   private Outcome resolveUsingRuntimeId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
     String name = refObject.getName();
-    List<OutcomeInstance> instances = hPersistence.createQuery(OutcomeInstance.class, excludeAuthority)
-                                          .filter(OutcomeInstanceKeys.planExecutionId, ambiance.getPlanExecutionId())
-                                          .filter(OutcomeInstanceKeys.name, name)
-                                          .field(OutcomeInstanceKeys.levelRuntimeIdIdx)
-                                          .in(ResolverUtils.prepareLevelRuntimeIdIndices(ambiance))
-                                          .asList();
+
+    List<OutcomeInstance> instances = outcomeRepository.findByPlanExecutionIdAndNameAndLevelRuntimeIdIdxIn(
+        ambiance.getPlanExecutionId(), name, ResolverUtils.prepareLevelRuntimeIdIndices(ambiance));
 
     // Multiple instances might be returned if the same name was saved at different levels/specificity.
     OutcomeInstance instance = EmptyPredicate.isEmpty(instances)
@@ -130,33 +119,23 @@ public class OutcomeServiceImpl implements OutcomeService {
       return Collections.emptyList();
     }
     List<Outcome> outcomes = new ArrayList<>();
-    Query<OutcomeInstance> query = hPersistence.createQuery(OutcomeInstance.class, excludeAuthority)
-                                       .field(OutcomeInstanceKeys.uuid)
-                                       .in(outcomeInstanceIds);
-    try (HIterator<OutcomeInstance> iterator = new HIterator<>(query.fetch())) {
-      while (iterator.hasNext()) {
-        outcomes.add(iterator.next().getOutcome());
-      }
+    Iterable<OutcomeInstance> outcomesInstances = outcomeRepository.findAllById(outcomeInstanceIds);
+    for (OutcomeInstance instance : outcomesInstances) {
+      outcomes.add(instance.getOutcome());
     }
     return outcomes;
   }
 
   @Override
   public Outcome fetchOutcome(@NonNull String outcomeInstanceId) {
-    OutcomeInstance outcomeInstance =
-        hPersistence.createQuery(OutcomeInstance.class).filter(OutcomeInstanceKeys.uuid, outcomeInstanceId).get();
-    if (outcomeInstance == null) {
-      return null;
-    }
-    return outcomeInstance.getOutcome();
+    Optional<OutcomeInstance> outcomeInstance = outcomeRepository.findById(outcomeInstanceId);
+    return outcomeInstance.map(OutcomeInstance::getOutcome).orElse(null);
   }
 
   @Override
   public List<Outcome> findAllByRuntimeId(String planExecutionId, String runtimeId) {
-    List<OutcomeInstance> outcomeInstances = hPersistence.createQuery(OutcomeInstance.class, excludeAuthority)
-                                                 .filter(OutcomeInstanceKeys.planExecutionId, planExecutionId)
-                                                 .filter(OutcomeInstanceKeys.producedByRuntimeId, runtimeId)
-                                                 .asList();
+    List<OutcomeInstance> outcomeInstances =
+        outcomeRepository.findByPlanExecutionIdAndProducedByRuntimeIdOrderByCreatedAtDesc(planExecutionId, runtimeId);
 
     if (isEmpty(outcomeInstances)) {
       return Collections.emptyList();

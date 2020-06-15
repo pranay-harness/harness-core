@@ -1,4 +1,4 @@
-package io.harness.ng.core.dao.api;
+package io.harness.ng.core.dao.api.repositories;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.ng.core.entities.Project;

@@ -36,7 +36,7 @@ public class PersistenceModule extends AbstractModule {
   }
 
   @EnableMongoRepositories(
-      basePackages = "io.harness", mongoTemplateRef = "primary", includeFilters = @Filter(HarnessRepo.class))
+      basePackages = {"io.harness"}, mongoTemplateRef = "primary", includeFilters = @Filter(HarnessRepo.class))
   @EnableMongoAuditing
   @Configuration
   @GuiceModule

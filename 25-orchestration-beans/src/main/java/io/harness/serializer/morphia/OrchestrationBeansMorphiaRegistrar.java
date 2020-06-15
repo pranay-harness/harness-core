@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.adviser.AdviserParameters;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
-import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.facilitator.DefaultFacilitatorParams;
@@ -37,7 +36,6 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(NodeExecution.class);
     set.add(PlanExecution.class);
     set.add(Interrupt.class);
-    set.add(OutcomeInstance.class);
     set.add(StepTransput.class);
     set.add(FacilitatorParameters.class);
     set.add(AdviserParameters.class);

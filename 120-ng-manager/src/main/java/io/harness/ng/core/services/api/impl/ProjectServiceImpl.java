@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.DuplicateFieldException;
-import io.harness.ng.core.dao.api.ProjectRepository;
+import io.harness.ng.core.dao.api.repositories.ProjectRepository;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.services.api.ProjectService;
 import lombok.extern.slf4j.Slf4j;
