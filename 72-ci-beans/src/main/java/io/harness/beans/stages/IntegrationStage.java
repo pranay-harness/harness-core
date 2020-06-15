@@ -3,6 +3,7 @@ package io.harness.beans.stages;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.yaml.extended.CustomVariables;
 import io.harness.beans.yaml.extended.container.Container;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.yaml.core.Artifact;
 import io.harness.yaml.core.Execution;
 import io.harness.yaml.core.intfc.Connector;
@@ -25,7 +26,7 @@ import javax.validation.constraints.NotNull;
 public class IntegrationStage implements CIStage {
   private static final CIStageType type = CIStageType.INTEGRATION;
 
-  @NotNull private String identifier;
+  @NotNull @EntityIdentifier private String identifier;
   private String name;
   private Integration ci;
 

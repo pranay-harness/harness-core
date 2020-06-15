@@ -1,6 +1,7 @@
 package io.harness.beans.yaml.extended.connector;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.yaml.core.intfc.Connector;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +17,7 @@ import javax.validation.constraints.NotNull;
 @JsonTypeName("git")
 public class GitConnectorYaml implements Connector {
   @NotNull private String type;
-  @NotNull private String identifier;
+  @NotNull @EntityIdentifier private String identifier;
   @NotNull private Spec spec;
 
   @Data

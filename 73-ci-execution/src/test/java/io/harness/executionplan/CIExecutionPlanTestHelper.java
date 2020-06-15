@@ -107,7 +107,11 @@ public class CIExecutionPlanTestHelper {
   }
 
   public Container getContainer() {
-    return Container.builder().connector("testConnector").identifier("testContainer").imagePath("/test/path").build();
+    return Container.builder()
+        .connector("testConnector")
+        .identifier("testContainer")
+        .imagePath("/test/path:v1")
+        .build();
   }
   public Artifact getArtifact() {
     return Artifact.builder()

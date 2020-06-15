@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -34,7 +35,7 @@ import javax.validation.constraints.NotNull;
 @StoreIn("harnessci")
 public class CIPipeline implements Pipeline, WithNonYamlInfo<CIPipelineEntityInfo>, PersistentEntity, UuidAware,
                                    CreatedAtAware, UpdatedAtAware, AccountAccess {
-  private String identifier;
+  @EntityIdentifier private String identifier;
   private String name;
   private String description;
   List<Tag> tags;

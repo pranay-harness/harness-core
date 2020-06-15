@@ -6,6 +6,7 @@ import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.executionplan.plancreator.beans.GenericStepInfo;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.state.StepType;
@@ -33,7 +34,7 @@ public class BuildStepInfo implements CIStepInfo, GenericStepInfo {
                                               .stepInfoType(CIStepInfoType.BUILD)
                                               .stepType(StepType.builder().type(CIStepInfoType.BUILD.name()).build())
                                               .build();
-  @NotNull String identifier;
+  @NotNull @EntityIdentifier String identifier;
   String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) int retry;
   @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) int timeout;
