@@ -11,6 +11,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
 
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
@@ -30,6 +31,7 @@ import io.harness.queue.TestNoTopicQueuableObject;
 import io.harness.queue.TestNoTopicQueuableObjectListener;
 import io.harness.queue.TestTopicQueuableObject;
 import io.harness.queue.TestTopicQueuableObjectListener;
+import io.harness.redis.RedisConfig;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -97,6 +99,13 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Singleton
       DistributedLockImplementation distributedLockImplementation() {
         return MONGO;
+      }
+
+      @Provides
+      @Named("lock")
+      @Singleton
+      RedisConfig redisConfig() {
+        return RedisConfig.builder().build();
       }
     });
     modules.addAll(new PersistentLockModule().cumulativeDependencies());

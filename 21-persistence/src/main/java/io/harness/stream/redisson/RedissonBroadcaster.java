@@ -1,32 +1,47 @@
-package software.wings.utils;
+/*
+ * Copyright 2008-2020 Async-IO.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package io.harness.stream.redisson;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ITopic;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.util.AbstractBroadcasterProxy;
+import org.redisson.api.RTopic;
+import org.redisson.api.RedissonClient;
 
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Created by peeyushaggarwal on 1/11/17.
+ * Simple {@link org.atmosphere.cpr.Broadcaster} implementation based on Redisson
+ *
+ * @author Michael Gerlyand
  */
+@NoArgsConstructor
 @Slf4j
-public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
-  public static final AtomicReference<HazelcastInstance> HAZELCAST_INSTANCE = new AtomicReference<>();
-
+public class RedissonBroadcaster extends AbstractBroadcasterProxy {
+  private static volatile RedissonClient redissonClient;
   private final AtomicBoolean isClosed = new AtomicBoolean();
-  private ITopic topic;
-  private String messageListenerRegistrationId;
-
-  public HazelcastBroadcaster() {}
+  private RTopic topic;
+  private Integer messageListenerRegistrationId;
 
   @Override
   public Broadcaster initialize(String id, AtmosphereConfig config) {
@@ -35,30 +50,40 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
 
   @Override
   public Broadcaster initialize(String id, URI uri, AtmosphereConfig config) {
-    super.initialize(id, uri, config);
+    super.initialize(id, URI.create("http://localhost:6379"), config);
     setUp();
     return this;
   }
 
-  public void setUp() {
-    topic = HAZELCAST_INSTANCE.get().getTopic(getID());
+  private synchronized void setUp() {
+    if (redissonClient == null) {
+      redissonClient = RedissonFactory.getRedissonClient(config);
+    }
+    topic = redissonClient.getTopic(getID(), redissonClient.getConfig().getCodec());
     config.shutdownHook(() -> {
-      HazelcastBroadcaster.HAZELCAST_INSTANCE.get().shutdown();
+      redissonClient.shutdown();
       isClosed.set(true);
     });
   }
 
+  @Override
+  public synchronized void setID(String id) {
+    super.setID(id);
+    setUp();
+    reconfigure();
+  }
+
   private synchronized void addMessageListener() {
-    if (isNotEmpty(getAtmosphereResources()) && messageListenerRegistrationId == null) {
+    if (isNotEmpty(getAtmosphereResources()) && messageListenerRegistrationId == null && topic != null) {
       messageListenerRegistrationId =
-          topic.addMessageListener(message -> broadcastReceivedMessage(message.getMessageObject()));
+          topic.addListener(Object.class, (channel, message) -> broadcastReceivedMessage(message));
       logger.info("Added message listener to topic");
     }
   }
 
   private synchronized void removeMessageListener() {
     if (isEmpty(getAtmosphereResources()) && messageListenerRegistrationId != null && topic != null) {
-      topic.removeMessageListener(messageListenerRegistrationId);
+      topic.removeListener(messageListenerRegistrationId);
       messageListenerRegistrationId = null;
       logger.info("Removed message listener from topic");
     }
@@ -79,15 +104,9 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
   }
 
   @Override
-  public synchronized void setID(String id) {
-    super.setID(id);
-    setUp();
-  }
-
-  @Override
-  public void destroy() {
+  public synchronized void destroy() {
     if (!isClosed.get()) {
-      topic.destroy();
+      topic.removeAllListeners();
       topic = null;
     }
     super.destroy();

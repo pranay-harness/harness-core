@@ -11,6 +11,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import io.dropwizard.lifecycle.Managed;
@@ -74,7 +75,6 @@ import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.lock.PersistentLocker;
-import io.harness.lock.redis.RedisLockConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
@@ -85,6 +85,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
+import io.harness.redis.RedisConfig;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.serializer.YamlUtils;
@@ -667,9 +668,17 @@ public class WingsModule extends DependencyModule implements ServersModule {
   }
 
   @Provides
+  @Named("lock")
   @Singleton
-  RedisLockConfig redisLockConfig() {
+  RedisConfig redisLockConfig() {
     return configuration.getRedisLockConfig();
+  }
+
+  @Provides
+  @Named("atmosphere")
+  @Singleton
+  RedisConfig redisAtmoshphereConfig() {
+    return configuration.getRedisAtmosphereConfig();
   }
 
   @Provides

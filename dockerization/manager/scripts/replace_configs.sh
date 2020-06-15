@@ -502,6 +502,10 @@ if [[ "" != "$DISTRIBUTED_LOCK_IMPLEMENTATION" ]]; then
   yq write -i $CONFIG_FILE distributedLockImplementation "$DISTRIBUTED_LOCK_IMPLEMENTATION"
 fi
 
+if [[ "" != "$ATMOSPHERE_BACKEND" ]]; then
+  yq write -i $CONFIG_FILE atmosphereBroadcaster "$ATMOSPHERE_BACKEND"
+fi
+
 yq delete -i $REDISSON_CACHE_FILE codec
 
 if [[ "" != "$REDIS_URL" ]]; then
@@ -511,11 +515,13 @@ fi
 
 if [[ "$REDIS_SENTINEL" == "true" ]]; then
   yq write -i $CONFIG_FILE redisLockConfig.sentinel true
+  yq write -i $CONFIG_FILE redisAtmosphereConfig.sentinel true
   yq delete -i $REDISSON_CACHE_FILE singleServerConfig
 fi
 
 if [[ "" != "$REDIS_MASTER_NAME" ]]; then
   yq write -i $CONFIG_FILE redisLockConfig.masterName "$REDIS_MASTER_NAME"
+  yq write -i $CONFIG_FILE redisAtmosphereConfig.masterName "$REDIS_MASTER_NAME"
   yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.masterName "$REDIS_MASTER_NAME"
 fi
 
@@ -524,6 +530,7 @@ if [[ "" != "$REDIS_SENTINELS" ]]; then
   INDEX=0
   for REDIS_SENTINEL_URL in "${REDIS_SENTINEL_URLS[@]}"; do
     yq write -i $CONFIG_FILE redisLockConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
+    yq write -i $CONFIG_FILE redisAtmosphereConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
     yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[+] "${REDIS_SENTINEL_URL}"
     INDEX=$(expr $INDEX + 1)
   done
@@ -531,6 +538,7 @@ fi
 
 if [[ "" != "$REDIS_ENV_NAMESPACE" ]]; then
     yq write -i $CONFIG_FILE redisLockConfig.envNamespace "$REDIS_ENV_NAMESPACE"
+    yq write -i $CONFIG_FILE redisAtmosphereConfig.envNamespace "$REDIS_ENV_NAMESPACE"
 fi
 
 if [[ "" != "$CACHE_NAMESPACE" ]]; then

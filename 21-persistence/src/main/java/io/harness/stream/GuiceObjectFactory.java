@@ -1,4 +1,4 @@
-package software.wings.app;
+package io.harness.stream;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.AbstractModule;

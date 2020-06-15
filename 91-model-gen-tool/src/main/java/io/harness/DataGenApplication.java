@@ -2,6 +2,7 @@ package io.harness;
 
 import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.stream.AtmosphereBroadcaster.MEMORY;
 import static org.mockito.Mockito.mock;
 
 import com.google.inject.AbstractModule;
@@ -23,23 +24,21 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.GlobalContextManager;
 import io.harness.ng.PersistenceModule;
 import io.harness.persistence.HPersistence;
+import io.harness.stream.StreamModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import lombok.extern.slf4j.Slf4j;
-import org.atmosphere.cpr.AtmosphereServlet;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
-import software.wings.app.GuiceObjectFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
 import software.wings.app.SSOModule;
 import software.wings.app.SignupModule;
-import software.wings.app.StreamModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
@@ -91,7 +90,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
 
     CacheModule cacheModule = new CacheModule(CacheConfig.builder().cacheBackend(NOOP).build());
     modules.addAll(cacheModule.cumulativeDependencies());
-    StreamModule streamModule = new StreamModule(environment);
+    StreamModule streamModule = new StreamModule(MEMORY);
     modules.addAll(streamModule.cumulativeDependencies());
 
     modules.add(new AbstractModule() {
@@ -114,8 +113,6 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new AuthModule());
 
     Injector injector = Guice.createInjector(modules);
-
-    injector.getInstance(AtmosphereServlet.class).framework().objectFactory(new GuiceObjectFactory(injector));
 
     registerObservers(injector);
 
