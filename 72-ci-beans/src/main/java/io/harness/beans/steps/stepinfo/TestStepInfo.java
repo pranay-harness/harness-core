@@ -6,6 +6,7 @@ import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.state.StepType;
 import lombok.Builder;
 import lombok.Value;
@@ -32,7 +33,7 @@ public class TestStepInfo implements CIStepInfo {
                                               .stepType(StepType.builder().type(CIStepInfoType.TEST.name()).build())
                                               .build();
 
-  @NotNull String identifier;
+  @NotNull @EntityIdentifier String identifier;
   String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) int retry;
   @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) int timeout;

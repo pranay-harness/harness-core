@@ -41,6 +41,7 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
   private static final String ENV_SETUP_NAME = "envSetupName";
   private static final String CONTAINER_NAME = "build-setup";
   private static final String CLEANUP_STEP_NAME = "cleanupStep";
+  private static final String IMAGE_PATH_SPLIT_REGEX = ":";
   private String podName;
   private static final ImageDetails imageDetails = ImageDetails.builder()
                                                        .name("maven")
@@ -48,6 +49,7 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
                                                        .registryUrl("https://index.docker.io/v1/")
                                                        .username("harshjain12")
                                                        .build();
+
   @Override
   public Execution modifyExecutionPlan(Execution execution, Stage stage) {
     Execution modifiedExecutionPlan = Execution.builder().steps(execution.getSteps()).build();
@@ -126,7 +128,7 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
                                  .containerResourceParams(containerResourceParams)
                                  .containerImageDetails(
                                      ContainerImageDetails.builder()
-                                         .imageDetails(imageDetails)
+                                         .imageDetails(getImageDetails(integrationStage))
                                          .connectorIdentifier(integrationStage.getCi().getArtifact().getIdentifier())
                                          .build())
                                  .containerType(ContainerType.STEP_EXECUTOR)
@@ -136,5 +138,28 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
                  .name(podName)
                  .build());
     return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
+  }
+
+  private ImageDetails getImageDetails(IntegrationStage integrationStage) {
+    String imagePath = integrationStage.getCi().getContainer().getImagePath();
+    String name = integrationStage.getCi().getContainer().getImagePath();
+    String tag = "latest";
+
+    if (imagePath.contains(IMAGE_PATH_SPLIT_REGEX)) {
+      String[] subTokens = integrationStage.getCi().getContainer().getImagePath().split(IMAGE_PATH_SPLIT_REGEX);
+      if (subTokens.length == 2) {
+        name = subTokens[0];
+        tag = subTokens[1];
+      } else {
+        throw new InvalidRequestException("ImagePath should not contain multiple tags");
+      }
+    }
+
+    return ImageDetails.builder()
+        .name(name)
+        .tag(tag)
+        .registryUrl("https://index.docker.io/v1/")
+        .username("harshjain12")
+        .build();
   }
 }
