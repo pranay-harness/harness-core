@@ -25,6 +25,7 @@ public class BillingDataQueryMetadata {
     MIN_STARTTIME("MINSTARTTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
     MAX_STARTTIME("MAXSTARTTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
     SUM("COST", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    COUNT("COUNT", DataType.DOUBLE, QLFilterKind.SIMPLE),
     APPID("APPID", DataType.STRING, QLFilterKind.SIMPLE),
     REGION("REGION", DataType.STRING, QLFilterKind.SIMPLE),
     SERVICEID("SERVICEID", DataType.STRING, QLFilterKind.SIMPLE),

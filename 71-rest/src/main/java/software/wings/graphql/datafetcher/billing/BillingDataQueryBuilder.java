@@ -384,6 +384,11 @@ public class BillingDataQueryBuilder {
                 BillingDataMetaDataFields.AVGMEMORYUTILIZATION.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.AVGMEMORYUTILIZATION);
       }
+    } else if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.COUNT) {
+      selectQuery.addCustomColumns(
+          Converter.toColumnSqlObject(FunctionCall.count().addColumnParams(schema.getInstanceId()),
+              BillingDataMetaDataFields.COUNT.getFieldName()));
+      fieldNames.add(BillingDataMetaDataFields.COUNT);
     }
   }
 

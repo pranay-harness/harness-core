@@ -1,3 +1,3 @@
 package software.wings.graphql.datafetcher.billing;
 
-public enum QLCCMAggregateOperation { SUM, MIN, MAX, AVG }
+public enum QLCCMAggregateOperation { SUM, MIN, MAX, AVG, COUNT }
