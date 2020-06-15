@@ -4398,8 +4398,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
-        .contains(tuple(CI_SYSTEM.name(), CI_SYSTEM.getDisplayName(),
-            asList(StepType.JENKINS.name(), StepType.GCB.name(), BAMBOO.name())));
+        .contains(tuple(CI_SYSTEM.name(), CI_SYSTEM.getDisplayName(), asList(StepType.JENKINS.name(), BAMBOO.name())));
     if (isK8sPhaseStep) {
       assertThat(workflowCategorySteps.getCategories())
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
