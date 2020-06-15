@@ -82,6 +82,7 @@ import software.wings.alerts.AlertSeverity;
 import software.wings.alerts.AlertStatus;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
+import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SumoConfig;
@@ -3847,6 +3848,27 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
             .asList();
     assertThat(feedbackTasks).hasSize(0);
     assertThat(feedbackAnalysisRecords).hasSize(0);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testDatadogValidateConnectorConfig() {
+    DatadogConfig config = DatadogConfig.builder()
+                               .accountId("accountId")
+                               .apiKey("testApiKey".toCharArray())
+                               .applicationKey("testAppKey".toCharArray())
+                               .url("https://app.datadoghq.com/v1/")
+                               .build();
+    APMValidateCollectorConfig validateCollectorConfig = config.createAPMValidateCollectorConfig();
+
+    assertThat(validateCollectorConfig.getUrl()).isEqualTo(DatadogConfig.validationUrl);
+    assertThat(validateCollectorConfig.getHeaders().size()).isEqualTo(0);
+    assertThat(validateCollectorConfig.getOptions().size()).isEqualTo(3);
+    assertThat(validateCollectorConfig.getOptions().containsKey("api_key")).isTrue();
+    assertThat(validateCollectorConfig.getOptions().containsKey("application_key")).isTrue();
+    assertThat(validateCollectorConfig.getOptions().containsKey("from")).isTrue();
+    assertThat(validateCollectorConfig.getOptions().containsKey("to")).isFalse();
   }
 
   private Map<String, Map<String, SplunkAnalysisCluster>> getUnknownClusters(boolean setPriority) {
