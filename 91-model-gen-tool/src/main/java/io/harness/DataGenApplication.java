@@ -21,7 +21,7 @@ import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.GlobalContextManager;
-import io.harness.mongo.MongoModule;
+import io.harness.ng.PersistenceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -82,7 +82,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(20, 1000, 500L, TimeUnit.MILLISECONDS));
 
     List<Module> modules = new ArrayList<>();
-    modules.addAll(new MongoModule().cumulativeDependencies());
+    modules.add(new PersistenceModule());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
