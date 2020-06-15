@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -134,6 +135,8 @@ import java.util.Map;
 
 public class PipelineServiceTest extends WingsBaseTest {
   private static final String PIPELINE = Loader.load("pipeline/dry_run.json");
+  private static final String PIPELINE_NAME = "pipeline1";
+  private static final String UPDATED_PIPELINE_NAME = "Changed Pipeline";
 
   @Mock private AppService appService;
   @Mock private TriggerService triggerService;
@@ -346,10 +349,40 @@ public class PipelineServiceTest extends WingsBaseTest {
         .isThrownBy(() -> pipelineService.update(pipeline, false, false));
   }
 
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldNotUpdatePipelineWithDifferentName() {
+    FailureStrategy failureStrategy =
+        FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
+
+    Pipeline saved_pipeline = Pipeline.builder()
+                                  .name(PIPELINE_NAME)
+                                  .appId(APP_ID)
+                                  .uuid(PIPELINE_ID)
+                                  .pipelineStages(asList(prepareStageSimple()))
+                                  .failureStrategies(asList(failureStrategy))
+                                  .build();
+
+    Pipeline updated_pipeline = Pipeline.builder()
+                                    .name(UPDATED_PIPELINE_NAME)
+                                    .appId(APP_ID)
+                                    .uuid(PIPELINE_ID)
+                                    .pipelineStages(asList(prepareStageSimple()))
+                                    .failureStrategies(asList(failureStrategy))
+                                    .build();
+
+    when(wingsPersistence.getWithAppId(any(), any(), any())).thenReturn(saved_pipeline);
+    when(pipelineQuery.filter(any(), any()).getKey()).thenReturn(new Key<>(Pipeline.class, "pipelines", PIPELINE_ID));
+
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> pipelineService.update(updated_pipeline, false, false));
+  }
+
   @NotNull
   private Pipeline getPipelineSimple(FailureStrategy failureStrategy, PipelineStage... pipelineStages) {
     Pipeline pipeline = Pipeline.builder()
-                            .name("pipeline1")
+                            .name(PIPELINE_NAME)
                             .appId(APP_ID)
                             .uuid(PIPELINE_ID)
                             .pipelineStages(asList(pipelineStages))
@@ -359,11 +392,11 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
         .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
     when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+    when(wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid())).thenReturn(pipeline);
 
-    pipeline.setName("Changed Pipeline");
+    pipeline.setName(UPDATED_PIPELINE_NAME);
     pipeline.setDescription("Description changed");
 
-    when(wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid())).thenReturn(pipeline);
     return pipeline;
   }
 
