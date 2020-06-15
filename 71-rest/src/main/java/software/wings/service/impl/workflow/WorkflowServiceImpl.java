@@ -47,7 +47,6 @@ import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.FeatureName.ASG_AMI_TRAFFIC_SHIFT;
-import static software.wings.beans.FeatureName.AWS_TRAFFIC_SHIFT;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
@@ -78,10 +77,6 @@ import static software.wings.sm.StepType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY;
 import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_SETUP;
-import static software.wings.sm.StepType.SPOTINST_ALB_SHIFT_DEPLOY;
-import static software.wings.sm.StepType.SPOTINST_ALB_SHIFT_SETUP;
-import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT;
-import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK;
 import static software.wings.sm.states.provision.TerraformProvisionState.INHERIT_APPROVED_PLAN;
 import static software.wings.sm.states.provision.TerraformProvisionState.RUN_PLAN_ONLY_KEY;
 import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
@@ -3569,23 +3564,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       filteredSelectNode = fetchStepTypeFromInfraMappingTypeForSelectNode(workflowPhase, workflow.getAppId());
     }
     List<StepType> filteredStepTypes = filterSelectNodesStep(stepTypesList, filteredSelectNode);
-    filteredStepTypes = filterSpotinstStepsForTrafficShift(filteredStepTypes, workflow.getAccountId());
     filteredStepTypes = filterAsgAmiStepsForTrafficShift(filteredStepTypes, workflow.getAccountId());
     StepType[] stepTypes = filteredStepTypes.stream().toArray(StepType[] ::new);
     return calculateCategorySteps(favorites, recent, stepTypes, workflowPhase, workflow.getAppId(),
         workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
-  }
-
-  @VisibleForTesting
-  List<StepType> filterSpotinstStepsForTrafficShift(List<StepType> steps, String accountId) {
-    if (featureFlagService.isEnabled(AWS_TRAFFIC_SHIFT, accountId)) {
-      return steps;
-    }
-    Set<StepType> spotinstTrafficShiftTypes = new HashSet<>(Arrays.asList(SPOTINST_ALB_SHIFT_SETUP,
-        SPOTINST_ALB_SHIFT_DEPLOY, SPOTINST_LISTENER_ALB_SHIFT, SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK));
-    return steps.stream()
-        .filter(stepType -> !spotinstTrafficShiftTypes.contains(stepType))
-        .collect(Collectors.toList());
   }
 
   @VisibleForTesting

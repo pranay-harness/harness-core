@@ -16,7 +16,6 @@ import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RUSHABH;
-import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -202,8 +201,6 @@ import static software.wings.sm.StepType.KUBERNETES_SWAP_SERVICE_SELECTORS;
 import static software.wings.sm.StepType.NEW_RELIC_DEPLOYMENT_MARKER;
 import static software.wings.sm.StepType.RESOURCE_CONSTRAINT;
 import static software.wings.sm.StepType.SERVICENOW_CREATE_UPDATE;
-import static software.wings.sm.StepType.SPOTINST_ALB_SHIFT_SETUP;
-import static software.wings.sm.StepType.SPOTINST_SETUP;
 import static software.wings.sm.StepType.TERRAFORM_APPLY;
 import static software.wings.sm.states.AwsCodeDeployState.ARTIFACT_S3_BUCKET_EXPRESSION;
 import static software.wings.sm.states.AwsCodeDeployState.ARTIFACT_S3_KEY_EXPRESSION;
@@ -4650,21 +4647,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
         .doesNotContain(APM.name(), LOG.name(), ARTIFACT.name());
-  }
-
-  @Test
-  @Owner(developers = SATYAM)
-  @Category(UnitTests.class)
-  public void testFilterSpotinstStepsForTrafficShift() {
-    WorkflowServiceImpl service = spy(WorkflowServiceImpl.class);
-    FeatureFlagService mockFF = mock(FeatureFlagService.class);
-    on(service).set("featureFlagService", mockFF);
-    doReturn(false).when(mockFF).isEnabled(any(), anyString());
-    List<StepType> initialSteps = Arrays.asList(SPOTINST_SETUP, SPOTINST_ALB_SHIFT_SETUP);
-    List<StepType> finalSteps = service.filterSpotinstStepsForTrafficShift(initialSteps, ACCOUNT_ID);
-    assertThat(finalSteps).isNotNull();
-    assertThat(finalSteps.size()).isEqualTo(1);
-    assertThat(finalSteps.get(0)).isEqualTo(SPOTINST_SETUP);
   }
 
   @Test
