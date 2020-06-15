@@ -12,25 +12,33 @@ import software.wings.beans.GcpConfig;
 
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Data
 @Builder
 public class GcbTaskParams implements ExecutionCapabilityDemander {
-  private GcpConfig gcpConfig;
-  private String projectId;
-  private String triggerId; // rework this into a list of options
-  private String branchName; // rework this into a list of options
-  private List<EncryptedDataDetail> encryptedDataDetails;
-  private Map<String, String> parameters;
-  private String activityId;
-  private String unitName;
-  private boolean injectEnvVars;
-  private String buildUrl;
+  public enum GcbTaskType { START, POLL }
+
+  @NotNull private String appId;
+  @NotNull private String unitName;
+  @NotNull private String buildUrl;
+  @NotNull private GcbTaskType type;
+  @NotNull private String projectId;
+  @NotNull private String activityId;
+  @NotNull private GcpConfig gcpConfig;
+  @NotNull private List<EncryptedDataDetail> encryptedDataDetails;
+
+  @Nullable private String buildId;
+  @Nullable private String triggerId; // rework this into a list of options
+  @Nullable private String branchName; // rework this into a list of options
+  @Nullable private Map<String, String> parameters;
   private long timeout;
   private long startTs;
-  private String appId;
+  private boolean injectEnvVars;
 
+  @NotNull
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return gcpConfig.fetchRequiredExecutionCapabilities();
