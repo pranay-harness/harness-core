@@ -80,7 +80,8 @@ public class DelegateConnectionDao {
       String accountId) {
     List<DelegateConnection> delegateConnections = persistence.createQuery(DelegateConnection.class)
                                                        .filter(DelegateConnectionKeys.accountId, accountId)
-                                                       .filter(DelegateConnectionKeys.disconnected, Boolean.FALSE)
+                                                       .field(DelegateConnectionKeys.disconnected)
+                                                       .notEqual(Boolean.TRUE)
                                                        .field(DelegateConnectionKeys.lastHeartbeat)
                                                        .greaterThan(currentTimeMillis() - EXPIRY_TIME.toMillis())
                                                        .project(DelegateConnectionKeys.delegateId, true)
