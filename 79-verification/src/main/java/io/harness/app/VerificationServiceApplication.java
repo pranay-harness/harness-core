@@ -384,8 +384,9 @@ public class VerificationServiceApplication extends Application<VerificationServ
   }
 
   private void registerServiceGuardIterators(Injector injector) {
+    // Increasing thread size to 20 for now. This needs to be redesigned to handle increasing accounts.
     ScheduledThreadPoolExecutor serviceGuardExecutor =
-        new ScheduledThreadPoolExecutor(15, new ThreadFactoryBuilder().setNameFormat("Iterator-ServiceGuard").build());
+        new ScheduledThreadPoolExecutor(20, new ThreadFactoryBuilder().setNameFormat("Iterator-ServiceGuard").build());
     registerIterator(injector, serviceGuardExecutor, new ServiceGuardDataCollectionJob(),
         AccountKeys.serviceGuardDataCollectionIteration, ofMinutes(1), 7);
     registerIterator(injector, serviceGuardExecutor, new ServiceGuardLogAnalysisJob(),

@@ -16,11 +16,26 @@ public class ServiceGuardLogAnalysisJob implements Handler<Account> {
   @Override
   public void handle(Account account) {
     final String accountId = account.getUuid();
-    logger.debug("triggering all analysis for account {}", accountId);
+    logger.info("triggering all analysis for account {}", accountId);
+    long startTime = System.currentTimeMillis();
     continuousVerificationService.triggerServiceGuardTimeSeriesAnalysis(accountId);
+    logger.info("[triggerServiceGuardTimeSeriesAnalysis] Total time taken to process accountId {} is {} (ms)", account,
+        System.currentTimeMillis() - startTime);
+    startTime = System.currentTimeMillis();
     continuousVerificationService.triggerLogsL1Clustering(accountId);
+    logger.info("[triggerLogsL1Clustering] Total time taken to process accountId {} is {} (ms)", account,
+        System.currentTimeMillis() - startTime);
+    startTime = System.currentTimeMillis();
     continuousVerificationService.triggerLogsL2Clustering(accountId);
+    logger.info("[triggerLogsL2Clustering] Total time taken to process accountId {} is {} (ms)", account,
+        System.currentTimeMillis() - startTime);
+    startTime = System.currentTimeMillis();
     continuousVerificationService.triggerLogDataAnalysis(accountId);
+    logger.info("[triggerLogDataAnalysis] Total time taken to process accountId {} is {} (ms)", account,
+        System.currentTimeMillis() - startTime);
+    startTime = System.currentTimeMillis();
     continuousVerificationService.triggerFeedbackAnalysis(accountId);
+    logger.info("[triggerFeedbackAnalysis] Total time taken to process accountId {} is {} (ms)", account,
+        System.currentTimeMillis() - startTime);
   }
 }
