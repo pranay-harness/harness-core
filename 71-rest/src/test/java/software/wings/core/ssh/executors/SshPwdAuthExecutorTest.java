@@ -1,6 +1,7 @@
 package software.wings.core.ssh.executors;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
@@ -20,7 +21,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
-import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 

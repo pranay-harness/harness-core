@@ -1,10 +1,10 @@
 package software.wings.resources;
 
+import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
 import com.google.common.io.Files;
@@ -14,6 +14,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.FileMetadata;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
@@ -30,7 +31,6 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.app.MainConfiguration;
 import software.wings.common.MongoIdempotentRegistry;
-import software.wings.delegatetasks.DelegateFile;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateService;

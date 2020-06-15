@@ -12,6 +12,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
@@ -31,7 +32,6 @@ import retrofit2.Response;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 

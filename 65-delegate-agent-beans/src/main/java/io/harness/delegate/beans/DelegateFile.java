@@ -1,10 +1,9 @@
-package software.wings.delegatetasks;
+package io.harness.delegate.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.beans.ChecksumType;
 import io.harness.beans.FileMetadata;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
-import software.wings.service.intfc.FileService;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,7 +15,7 @@ import java.io.InputStream;
  */
 public class DelegateFile extends FileMetadata {
   private String fileId;
-  private FileService.FileBucket bucket;
+  private FileBucket bucket;
   private String entityId;
   private String localFilePath;
 

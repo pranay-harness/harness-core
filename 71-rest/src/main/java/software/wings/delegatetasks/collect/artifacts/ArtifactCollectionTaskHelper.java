@@ -2,16 +2,17 @@ package software.wings.delegatetasks.collect.artifacts;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
@@ -32,7 +33,6 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
-import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;

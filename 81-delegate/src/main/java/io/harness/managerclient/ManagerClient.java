@@ -1,5 +1,6 @@
 package io.harness.managerclient;
 
+import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.rest.RestResponse;
 import retrofit2.Call;
@@ -13,7 +14,6 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Log;
-import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.service.impl.ThirdPartyApiCallLog;
