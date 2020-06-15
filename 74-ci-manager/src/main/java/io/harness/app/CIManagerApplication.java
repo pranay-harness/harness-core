@@ -25,7 +25,7 @@ import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
+import io.harness.ng.PersistenceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.queue.QueueController;
@@ -90,7 +90,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       }
     });
 
-    modules.addAll(new MongoModule().cumulativeDependencies());
+    modules.add(new PersistenceModule());
     addGuiceValidationModule(modules);
     modules.addAll(new CIManagerServiceModule(configuration, configuration.getManagerUrl()).cumulativeDependencies());
 

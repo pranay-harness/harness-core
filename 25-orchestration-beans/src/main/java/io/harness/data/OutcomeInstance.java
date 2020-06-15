@@ -3,29 +3,24 @@ package io.harness.data;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.ambiance.Level;
-import io.harness.ambiance.Level.LevelKeys;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.OutcomeInstance.OutcomeInstanceKeys;
 import io.harness.data.validator.Trimmed;
-import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.UuidAware;
-import io.harness.resolvers.ResolverUtils;
+import io.harness.persistence.UuidAccess;
 import lombok.Builder;
-import lombok.NonNull;
-import lombok.Setter;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
-import lombok.experimental.NonFinal;
-import lombok.experimental.UtilityClass;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.annotations.PrePersist;
+import lombok.experimental.Wither;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
@@ -33,41 +28,22 @@ import java.util.List;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "OutcomeInstanceKeys")
-@Indexes({
-  @Index(options = @IndexOptions(name = "levelRuntimeIdUniqueIdx", unique = true),
-      fields =
-      {
-        @Field(OutcomeInstanceKeys.planExecutionId)
-        , @Field(OutcomeInstanceKeys.levelRuntimeIdIdx), @Field(OutcomeInstanceKeys.name)
-      })
+@CompoundIndexes({
+  @CompoundIndex(def = "{'planExecutionId': 1, 'levelRuntimeIdIdx': 1, 'name': 1}", name = "levelRuntimeIdUniqueIdx",
+      unique = true)
   ,
-      @Index(options = @IndexOptions(name = "producedBySetupIdIdx"), fields = {
-        @Field(OutcomeInstanceKeys.planExecutionId)
-        , @Field(OutcomeInstanceKeys.producedBy + "." + LevelKeys.setupId), @Field(OutcomeInstanceKeys.name)
-      }), @Index(options = @IndexOptions(name = "planExecutionIdIdx"), fields = {
-        @Field(OutcomeInstanceKeys.planExecutionId)
-      })
+      @CompoundIndex(def = "{'planExecutionId': 1, 'producedBy.setupId': 1, 'name': 1}", name = "producedBySetupIdIdx"),
 })
-@Entity(value = "outcomeInstances", noClassnameStored = true)
-public class OutcomeInstance implements PersistentEntity, UuidAware, CreatedAtAware {
-  @Id @NonFinal @Setter String uuid;
-  @NonNull String planExecutionId;
+@Document("outcomeInstances")
+@TypeAlias("outcomeInstances")
+public class OutcomeInstance implements PersistentEntity, UuidAccess, CreatedAtAccess {
+  @Wither @Id String uuid;
+  @Indexed(name = "planExecutionIdIdx") @NotEmpty String planExecutionId;
   @Singular List<Level> levels;
   Level producedBy;
-  @NonNull @Trimmed String name;
-  @NonFinal String levelRuntimeIdIdx;
+  @NotEmpty @Trimmed String name;
+  String levelRuntimeIdIdx;
 
   Outcome outcome;
-  @NonFinal @Setter long createdAt;
-
-  @PrePersist
-  void populateLevelRuntimeIdIdx() {
-    levelRuntimeIdIdx = ResolverUtils.prepareLevelRuntimeIdIdx(levels);
-  }
-
-  @UtilityClass
-  public static class OutcomeInstanceKeys {
-    public final String producedByRuntimeId = OutcomeInstanceKeys.producedBy + "." + LevelKeys.runtimeId;
-    public final String producedBySetupId = OutcomeInstanceKeys.producedBy + "." + LevelKeys.setupId;
-  }
+  @Wither @CreatedDate long createdAt;
 }

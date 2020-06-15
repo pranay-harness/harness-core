@@ -13,6 +13,7 @@ import io.harness.adviser.impl.retry.RetryAdviserParameters;
 import io.harness.adviser.impl.success.OnSuccessAdviser;
 import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
+import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
@@ -87,6 +88,7 @@ import java.util.List;
 @OwnedBy(CDC)
 @Redesign
 @UtilityClass
+@ExcludeRedesign
 public class CustomExecutionUtils {
   private static final String BASIC_HTTP_STATE_URL_404 = "http://httpstat.us/404";
   private static final String BASIC_HTTP_STATE_URL_200 = "http://httpstat.us/200";

@@ -11,8 +11,8 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ServersModule;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.testlib.PersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
-import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import org.junit.rules.MethodRule;
@@ -54,7 +54,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         });
       }
     });
-    modules.addAll(new TestMongoModule().cumulativeDependencies());
+    modules.add(new PersistenceTestModule());
     modules.addAll(new CIManagerServiceModule(CIManagerConfiguration.builder().build(), null).cumulativeDependencies());
     return modules;
   }
