@@ -118,7 +118,7 @@ public class MetricAnalysisRecord extends Base implements Comparable<MetricAnaly
     }
   }
 
-  public void decompress() {
+  public void decompress(boolean onlyRiskScore) {
     if (isEmpty(metricAnalysisValuesCompressed) && isEmpty(transactionsCompressedJson)) {
       return;
     }
@@ -137,14 +137,17 @@ public class MetricAnalysisRecord extends Base implements Comparable<MetricAnaly
 
     try {
       String decompressedMetricAnalysisValues = deCompressString(getMetricAnalysisValuesCompressed());
+      setMetricAnalysisValuesCompressed(null);
       MetricAnalysisValues metricAnalysisValues =
           JsonUtils.asObject(decompressedMetricAnalysisValues, MetricAnalysisValues.class);
-      setTransactions(metricAnalysisValues.getTransactions());
       setOverallMetricScores(metricAnalysisValues.getOverallMetricScores());
+      if (onlyRiskScore) {
+        return;
+      }
+      setTransactions(metricAnalysisValues.getTransactions());
       setKeyTransactionMetricScores(metricAnalysisValues.getKeyTransactionMetricScores());
       setAnomalies(metricAnalysisValues.getAnomalies());
       setTransactionMetricSums(metricAnalysisValues.getTransactionMetricSums());
-      setMetricAnalysisValuesCompressed(null);
       return;
     } catch (IOException e) {
       throw new IllegalStateException(e);

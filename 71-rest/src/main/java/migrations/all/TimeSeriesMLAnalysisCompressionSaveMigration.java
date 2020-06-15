@@ -64,7 +64,7 @@ public class TimeSeriesMLAnalysisCompressionSaveMigration implements Migration {
   }
 
   private int aggregateRiskOfRecord(TimeSeriesMLAnalysisRecord mlAnalysisRecord) {
-    mlAnalysisRecord.decompress();
+    mlAnalysisRecord.decompress(false);
     int aggregatedRisk = -1;
     if (isEmpty(mlAnalysisRecord.getTransactions())) {
       return aggregatedRisk;
