@@ -3,6 +3,7 @@ package io.harness.cache;
 import static io.harness.cache.CacheBackend.REDIS;
 import static javax.cache.Caching.getCachingProvider;
 
+import com.google.common.io.Files;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
@@ -28,10 +29,14 @@ import org.jsr107.ri.annotations.guice.CachePutInterceptor;
 import org.jsr107.ri.annotations.guice.CacheRemoveAllInterceptor;
 import org.jsr107.ri.annotations.guice.CacheRemoveEntryInterceptor;
 import org.jsr107.ri.annotations.guice.CacheResultInterceptor;
+import org.redisson.config.Config;
+import org.redisson.config.ConfigSupport;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -118,13 +123,16 @@ public class CacheModule extends DependencyModule implements ServersModule {
   @Provides
   @Named("Redis")
   @Singleton
-  CacheManager getRedissonCacheManager() {
+  CacheManager getRedissonCacheManager() throws IOException {
     System.setProperty(CACHING_PROVIDER_CLASSPATH, "org.redisson.jcache.JCachingProvider");
     CachingProvider provider = getCachingProvider();
     URI uri = provider.getDefaultURI();
     File file = new File("redisson-jcache.yaml");
     if (file.exists()) {
       uri = file.toURI();
+      Config config = Config.fromYAML(uri.toURL());
+      config.setCodec(new RedissonKryoCodec());
+      Files.write(new ConfigSupport().toYAML(config).getBytes(StandardCharsets.UTF_8), file);
       logger.info("Found the redisson config in the working directory {}", uri);
     }
     return provider.getCacheManager(uri, provider.getDefaultClassLoader(), new Properties());
