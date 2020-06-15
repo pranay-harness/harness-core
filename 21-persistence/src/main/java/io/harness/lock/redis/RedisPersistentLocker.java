@@ -8,6 +8,7 @@ import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.dropwizard.lifecycle.Managed;
 import io.harness.data.structure.EmptyPredicate;
@@ -17,6 +18,7 @@ import io.harness.exception.WingsException;
 import io.harness.health.HealthMonitor;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.redis.RedisConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
 import org.redisson.api.RLock;
@@ -35,7 +37,7 @@ public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, M
   private static final String ERROR_MESSAGE = "Failed to acquire distributed lock for %s";
 
   @Inject
-  public RedisPersistentLocker(RedisLockConfig redisLockConfig) {
+  public RedisPersistentLocker(@Named("lock") RedisConfig redisLockConfig) {
     Config config = new Config();
     if (!redisLockConfig.isSentinel()) {
       config.useSingleServer().setAddress(redisLockConfig.getRedisUrl());

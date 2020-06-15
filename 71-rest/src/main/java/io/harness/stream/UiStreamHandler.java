@@ -1,4 +1,4 @@
-package software.wings.app;
+package io.harness.stream;
 
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;

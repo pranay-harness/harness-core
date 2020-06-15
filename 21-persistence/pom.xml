@@ -72,6 +72,10 @@
             <artifactId>dropwizard-lifecycle</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.atmosphere</groupId>
+            <artifactId>atmosphere-runtime</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.clojure</groupId>
             <artifactId>clojure</artifactId>
         </dependency>

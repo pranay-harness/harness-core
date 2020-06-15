@@ -34,9 +34,10 @@ import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.grpc.GrpcServerConfig;
 import io.harness.lock.DistributedLockImplementation;
-import io.harness.lock.redis.RedisLockConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.redis.RedisConfig;
 import io.harness.scheduler.SchedulerConfig;
+import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -119,7 +120,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
   @JsonProperty("salesforceConfig") private SalesforceConfig salesforceConfig = SalesforceConfig.builder().build();
   @JsonProperty("datadogConfig") private DatadogConfig datadogConfig;
-  @JsonProperty("redisLockConfig") private RedisLockConfig redisLockConfig;
+  @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
+  @JsonProperty("redisAtmosphereConfig") private RedisConfig redisAtmosphereConfig;
   @JsonProperty("defaultSalesContacts") private DefaultSalesContacts defaultSalesContacts;
   @JsonProperty("githubConfig") private GithubConfig githubConfig;
   @JsonProperty("linkedinConfig") private LinkedinConfig linkedinConfig;
@@ -144,6 +146,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("commandLibraryServiceConfig")
   private CommandLibraryServiceConfig commandLibraryServiceConfig = CommandLibraryServiceConfig.builder().build();
   @JsonProperty(value = "bugsnagApiKey") private String bugsnagApiKey;
+  @JsonProperty("atmosphereBroadcaster") private AtmosphereBroadcaster atmosphereBroadcaster;
 
   private int applicationPort;
   private boolean sslEnabled;

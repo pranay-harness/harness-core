@@ -1,4 +1,4 @@
-package software.wings.app;
+package io.harness.stream;
 
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.govern.Switch.unhandled;

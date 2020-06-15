@@ -110,6 +110,8 @@ import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.state.inspection.StateInspectionServiceImpl;
+import io.harness.stream.GuiceObjectFactory;
+import io.harness.stream.StreamModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -226,6 +228,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
+import javax.servlet.ServletRegistration;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
@@ -310,7 +313,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     CacheModule cacheModule = new CacheModule(configuration.getCacheConfig());
     modules.addAll(cacheModule.cumulativeDependencies());
-    StreamModule streamModule = new StreamModule(environment);
+    StreamModule streamModule = new StreamModule(configuration.getAtmosphereBroadcaster());
     modules.addAll(streamModule.cumulativeDependencies());
 
     modules.add(new AbstractModule() {
@@ -382,9 +385,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     managerCacheHandler.getNewRelicApplicationCache();
     managerCacheHandler.getWhitelistConfigCache();
 
-    injector.getInstance(BroadcasterFactory.class);
-    injector.getInstance(MetaBroadcaster.class);
-    injector.getInstance(AtmosphereServlet.class).framework().objectFactory(new GuiceObjectFactory(injector));
+    registerAtmosphereStreams(environment, injector);
 
     initializeFeatureFlags(injector);
 
@@ -481,6 +482,17 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     logger.info("Starting app done");
     logger.info("Manager is running on JRE: {}", System.getProperty("java.version"));
+  }
+
+  private void registerAtmosphereStreams(Environment environment, Injector injector) {
+    injector.getInstance(BroadcasterFactory.class);
+    injector.getInstance(MetaBroadcaster.class);
+    AtmosphereServlet atmosphereServlet = injector.getInstance(AtmosphereServlet.class);
+    atmosphereServlet.framework().objectFactory(new GuiceObjectFactory(injector));
+    ServletRegistration.Dynamic dynamic = environment.servlets().addServlet("StreamServlet", atmosphereServlet);
+    dynamic.setAsyncSupported(true);
+    dynamic.setLoadOnStartup(0);
+    dynamic.addMapping("/stream/*");
   }
 
   private void registerInprocPerpetualTaskServiceClients(Injector injector) {

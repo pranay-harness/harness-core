@@ -163,6 +163,7 @@ import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.DatadogConfig;
+import software.wings.beans.DelegateTaskBroadcast;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
@@ -173,6 +174,7 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ErrorStrategy;
+import software.wings.beans.Event;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.GcpConfig;
@@ -1701,5 +1703,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TimeSpan.class, 7425);
     kryo.register(BuiltImage.class, 7426);
     kryo.register(GcbTaskParams.GcbTaskType.class, 7427);
+    kryo.register(DelegateTaskBroadcast.class, 7428);
+    kryo.register(Event.class, 7429);
+    kryo.register(Event.Type.class, 7430);
   }
 }

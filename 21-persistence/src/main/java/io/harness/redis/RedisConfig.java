@@ -1,4 +1,4 @@
-package io.harness.lock.redis;
+package io.harness.redis;
 
 import com.google.inject.Singleton;
 
@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Singleton
-public class RedisLockConfig {
+public class RedisConfig {
   private boolean sentinel;
   private String masterName;
   private String redisUrl;
