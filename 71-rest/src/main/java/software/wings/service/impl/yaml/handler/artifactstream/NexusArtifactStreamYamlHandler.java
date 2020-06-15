@@ -1,11 +1,13 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -50,6 +52,9 @@ public class NexusArtifactStreamYamlHandler
   protected void toBean(NexusArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();
+    if (isEmpty(yaml.getRepositoryName())) {
+      throw new InvalidRequestException("Repository Name is mandatory");
+    }
     if (isNotEmpty(yaml.getArtifactPaths())) {
       bean.setArtifactPaths(yaml.getArtifactPaths());
       bean.setGroupId(yaml.getGroupId());
