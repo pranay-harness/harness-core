@@ -1700,5 +1700,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(GcbResult.class, 7424);
     kryo.register(TimeSpan.class, 7425);
     kryo.register(BuiltImage.class, 7426);
+    kryo.register(GcbTaskParams.GcbTaskType.class, 7427);
   }
 }
