@@ -1,6 +1,5 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.cvng.core.services.CVNextGenConstants.VERIFICATION_SERVICE_SECRET;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
@@ -247,15 +246,6 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
     assertThatThrownBy(
         () -> learningEngineService.checkIfAnalysisHasData(cvConfigId, MLAnalysisType.FEEDBACK_ANALYSIS, minute))
         .isInstanceOf(InvalidArgumentsException.class);
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void test_getVerificationServiceSecretKey_whenEnvVariableDefined() {
-    String verificationServiceSecret = generateUUID();
-    PowerMockito.when(System.getenv(VERIFICATION_SERVICE_SECRET)).thenReturn(verificationServiceSecret);
-    assertThat(verificationServiceSecretManager.getVerificationServiceSecretKey()).isEqualTo(verificationServiceSecret);
   }
 
   @Test

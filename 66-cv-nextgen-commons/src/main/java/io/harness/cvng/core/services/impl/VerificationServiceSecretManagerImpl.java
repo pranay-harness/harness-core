@@ -2,6 +2,7 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -23,10 +24,13 @@ public class VerificationServiceSecretManagerImpl implements VerificationService
           ServiceSecretKey.builder().serviceType(serviceType).serviceSecret(Misc.generateSecretKey()).build()));
     }
   }
-
+  @VisibleForTesting
+  String getEnv(String name) {
+    return System.getenv(name);
+  }
   @Override
   public String getVerificationServiceSecretKey() {
-    final String verificationServiceSecret = System.getenv(CVNextGenConstants.VERIFICATION_SERVICE_SECRET);
+    final String verificationServiceSecret = getEnv(CVNextGenConstants.VERIFICATION_SERVICE_SECRET);
     if (isNotEmpty(verificationServiceSecret)) {
       return verificationServiceSecret;
     }

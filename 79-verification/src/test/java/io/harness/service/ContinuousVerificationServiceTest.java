@@ -1255,7 +1255,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = RAGHU, intermittent = true)
   @Category(UnitTests.class)
   public void testTriggerTimeSeriesAlertIfNecessary() throws Exception {
     String configId = saveCvConfigForAlertTests();

@@ -34,7 +34,6 @@ import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -71,8 +70,6 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   @Attributes(required = true, title = "Metrics") private List<String> metrics;
 
   @Inject @SchemaIgnore private transient NewRelicService newRelicService;
-  @Inject @SchemaIgnore private transient FeatureFlagService featureFlagService;
-
   public NewRelicState(String name) {
     super(name, StateType.NEW_RELIC);
   }
