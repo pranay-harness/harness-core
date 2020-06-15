@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 import software.wings.beans.APMValidateCollectorConfig;
+import software.wings.beans.DatadogConfig;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.security.EncryptionService;
@@ -101,5 +102,29 @@ public class APMDelegateServiceTest {
     verify(mockRequestExecutor).executeRequest(argumentCaptor.capture());
     Call<Object> request = argumentCaptor.getValue();
     assertThat(request.request().url().toString()).contains(AZURE_TOKEN_URL);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testValidateConnection_datadog() throws Exception {
+    DatadogConfig config = DatadogConfig.builder()
+                               .accountId("accountId")
+                               .apiKey("testApiKey".toCharArray())
+                               .applicationKey("testAppKey".toCharArray())
+                               .url("https://app.datadoghq.com/v1/")
+                               .build();
+    APMValidateCollectorConfig validateCollectorConfig = config.createAPMValidateCollectorConfig();
+    boolean isValid = apmDelegateService.validateCollector(validateCollectorConfig);
+    verify(mockRequestExecutor).executeRequest(argumentCaptor.capture());
+    Call<Object> request = argumentCaptor.getValue();
+
+    assertThat(isValid).isTrue();
+    assertThat(request.request().url().toString()).contains(DatadogConfig.validationUrl);
+    assertThat(request.request().url().toString()).contains("api_key=testApiKey");
+    assertThat(request.request().url().toString()).contains("application_key=testAppKey");
+    assertThat(request.request().url().toString()).contains("from=");
+    assertThat(request.request().url().toString()).doesNotContain("to=");
+    assertThat(request.request().headers().names().size()).isEqualTo(1);
   }
 }

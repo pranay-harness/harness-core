@@ -76,7 +76,6 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
   private Map<String, String> optionsMapAPM() {
     Map<String, String> paramsMap = optionsMap();
     paramsMap.put("from", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
-    paramsMap.put("to", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
     return paramsMap;
   }
 
