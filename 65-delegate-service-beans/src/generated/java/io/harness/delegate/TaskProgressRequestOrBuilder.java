@@ -8,17 +8,32 @@ public interface TaskProgressRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.TaskProgressRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+   * @return Whether the accountId field is set.
+   */
+  boolean hasAccountId();
+  /**
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+   * @return The accountId.
+   */
+  io.harness.delegate.AccountId getAccountId();
+  /**
+   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+   */
+  io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder();
+
+  /**
+   * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
    * @return Whether the taskId field is set.
    */
   boolean hasTaskId();
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
    * @return The taskId.
    */
   io.harness.delegate.TaskId getTaskId();
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
    */
   io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder();
 }

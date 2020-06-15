@@ -32,8 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import java.util.function.Consumer;
 
 @Singleton
 @Slf4j
@@ -45,10 +44,11 @@ public class DelegateServiceGrpcClient {
     this.delegateServiceBlockingStub = delegateServiceBlockingStub;
   }
 
-  public TaskId submitTask(
-      TaskSetupAbstractions taskSetupAbstractions, TaskDetails taskDetails, List<Capability> capabilities) {
+  public TaskId submitTask(AccountId accountId, TaskSetupAbstractions taskSetupAbstractions, TaskDetails taskDetails,
+      List<Capability> capabilities) {
     SubmitTaskResponse response = delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
                                       .submitTask(SubmitTaskRequest.newBuilder()
+                                                      .setAccountId(accountId)
                                                       .setSetupAbstractions(taskSetupAbstractions)
                                                       .setDetails(taskDetails)
                                                       .addAllCapabilities(capabilities)
@@ -57,29 +57,30 @@ public class DelegateServiceGrpcClient {
     return response.getTaskId();
   }
 
-  public TaskExecutionStage cancelTask(TaskId taskId) {
-    CancelTaskResponse response = delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
-                                      .cancelTask(CancelTaskRequest.newBuilder().setTaskId(taskId).build());
+  public TaskExecutionStage cancelTask(AccountId accountId, TaskId taskId) {
+    CancelTaskResponse response =
+        delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+            .cancelTask(CancelTaskRequest.newBuilder().setAccountId(accountId).setTaskId(taskId).build());
 
     return response.getCanceledAtStage();
   }
 
-  public TaskExecutionStage taskProgress(TaskId taskId) {
-    TaskProgressResponse response = delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
-                                        .taskProgress(TaskProgressRequest.newBuilder().setTaskId(taskId).build());
+  public TaskExecutionStage taskProgress(AccountId accountId, TaskId taskId) {
+    TaskProgressResponse response =
+        delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+            .taskProgress(TaskProgressRequest.newBuilder().setAccountId(accountId).setTaskId(taskId).build());
 
     return response.getCurrentlyAtStage();
   }
 
-  public List<TaskExecutionStage> taskProgressUpdate(TaskId taskId) {
-    Iterator<TaskProgressUpdatesResponse> responseIterator =
-        delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
-            .taskProgressUpdates(TaskProgressUpdatesRequest.newBuilder().setTaskId(taskId).build());
+  public void taskProgressUpdate(
+      AccountId accountId, TaskId taskId, Consumer<TaskExecutionStage> taskExecutionStageConsumer) {
+    Iterator<TaskProgressUpdatesResponse> responseIterator = delegateServiceBlockingStub.taskProgressUpdates(
+        TaskProgressUpdatesRequest.newBuilder().setAccountId(accountId).setTaskId(taskId).build());
 
-    Iterable<TaskProgressUpdatesResponse> iterable = () -> responseIterator;
-    return StreamSupport.stream(iterable.spliterator(), false)
-        .map(TaskProgressUpdatesResponse::getCurrentlyAtStage)
-        .collect(Collectors.toList());
+    while (responseIterator.hasNext()) {
+      taskExecutionStageConsumer.accept(responseIterator.next().getCurrentlyAtStage());
+    }
   }
 
   public void registerPerpetualTaskClientEntrypoint(String type, PerpetualTaskClientEntrypoint entrypoint) {

@@ -28,7 +28,15 @@ public enum TaskExecutionStage implements com
       /**
        * <code>FINISHED = 4;</code>
        */
-      FINISHED(4), UNRECOGNIZED(-1),
+      FINISHED(4),
+      /**
+       * <code>FAILED = 5;</code>
+       */
+      FAILED(5),
+      /**
+       * <code>ABORTED = 6;</code>
+       */
+      ABORTED(6), UNRECOGNIZED(-1),
       ;
 
   /**
@@ -51,6 +59,14 @@ public enum TaskExecutionStage implements com
    * <code>FINISHED = 4;</code>
    */
   public static final int FINISHED_VALUE = 4;
+  /**
+   * <code>FAILED = 5;</code>
+   */
+  public static final int FAILED_VALUE = 5;
+  /**
+   * <code>ABORTED = 6;</code>
+   */
+  public static final int ABORTED_VALUE = 6;
 
   public final int getNumber() {
     if (this == UNRECOGNIZED) {
@@ -85,6 +101,10 @@ public enum TaskExecutionStage implements com
         return EXECUTING;
       case 4:
         return FINISHED;
+      case 5:
+        return FAILED;
+      case 6:
+        return ABORTED;
       default:
         return null;
     }

@@ -10,4 +10,6 @@ enum TaskExecutionStage {
   VALIDATING = 2;
   EXECUTING = 3;
   FINISHED = 4;
+  FAILED = 5;
+  ABORTED = 6;
 }

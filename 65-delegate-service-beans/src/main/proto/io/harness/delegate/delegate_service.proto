@@ -37,7 +37,8 @@ message SubmitTaskResponse {
 }
 
 message CancelTaskRequest {
-  TaskId task_id = 1;
+  AccountId account_id = 1;
+  TaskId task_id = 2;
 }
 
 message CancelTaskResponse {
@@ -45,7 +46,8 @@ message CancelTaskResponse {
 }
 
 message TaskProgressRequest {
-  TaskId task_id = 1;
+  AccountId account_id = 1;
+  TaskId task_id = 2;
 }
 
 message TaskProgressResponse {
@@ -53,7 +55,8 @@ message TaskProgressResponse {
 }
 
 message TaskProgressUpdatesRequest {
-  TaskId task_id = 1;
+  AccountId account_id = 1;
+  TaskId task_id = 2;
 }
 
 message TaskProgressUpdatesResponse {
