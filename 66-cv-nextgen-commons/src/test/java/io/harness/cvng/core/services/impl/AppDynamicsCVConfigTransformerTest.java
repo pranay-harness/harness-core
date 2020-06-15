@@ -40,7 +40,7 @@ public class AppDynamicsCVConfigTransformerTest extends CVConfigTransformerTestB
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void transformToDSConfig_precondition() {
-    assertThatThrownBy(() -> appDynamicsCVConfigTransformer.transformToDSConfig(Collections.emptyList()))
+    assertThatThrownBy(() -> appDynamicsCVConfigTransformer.transform(Collections.emptyList()))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("List of cvConfigs can not empty");
   }

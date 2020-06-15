@@ -19,6 +19,7 @@ public class SplunkDSConfig extends DSConfig {
   private String query;
   private String serviceInstanceIdentifier;
   private String eventType;
+  private String serviceIdentifier;
   @Override
   public DataSourceType getType() {
     return DataSourceType.SPLUNK;
@@ -43,6 +44,7 @@ public class SplunkDSConfig extends DSConfig {
     splunkCVConfig.setQuery(this.query);
     splunkCVConfig.setServiceInstanceIdentifier(this.serviceInstanceIdentifier);
     splunkCVConfig.setCategory(eventType);
+    splunkCVConfig.setServiceIdentifier(serviceIdentifier);
     return splunkCVConfig;
   }
 }

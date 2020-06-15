@@ -28,6 +28,7 @@ public class SplunkDSConfigTest extends DSConfigTestBase {
     splunkDSConfig.setQuery("exception");
     splunkDSConfig.setServiceInstanceIdentifier("host");
     splunkDSConfig.setEventType("QA");
+    splunkDSConfig.setServiceIdentifier("harness");
   }
   @Test
   @Owner(developers = KAMAL)
@@ -44,6 +45,7 @@ public class SplunkDSConfigTest extends DSConfigTestBase {
     assertThat(splunkCVConfig.getQuery()).isEqualTo(splunkDSConfig.getQuery());
     assertThat(splunkCVConfig.getCategory()).isEqualTo(splunkDSConfig.getEventType());
     assertThat(splunkCVConfig.getServiceInstanceIdentifier()).isEqualTo(splunkDSConfig.getServiceInstanceIdentifier());
+    assertThat(splunkCVConfig.getServiceIdentifier()).isEqualTo(splunkDSConfig.getServiceIdentifier());
   }
 
   @Test
@@ -62,6 +64,7 @@ public class SplunkDSConfigTest extends DSConfigTestBase {
     assertThat(splunkCVConfig.getQuery()).isEqualTo(splunkDSConfig.getQuery());
     assertThat(splunkCVConfig.getCategory()).isEqualTo(splunkDSConfig.getEventType());
     assertThat(splunkCVConfig.getServiceInstanceIdentifier()).isEqualTo(splunkDSConfig.getServiceInstanceIdentifier());
+    assertThat(splunkCVConfig.getServiceIdentifier()).isEqualTo(splunkDSConfig.getServiceIdentifier());
   }
 
   private SplunkCVConfig getSplunkCVConfig() {

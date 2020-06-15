@@ -30,10 +30,7 @@ public class DSConfigServiceImpl implements DSConfigService {
         injector.getInstance(dataSourceType.getCvConfigMapperClass());
     Map<String, List<CVConfig>> groupById =
         cvConfigs.stream().collect(Collectors.groupingBy(CVConfig::getGroupId, Collectors.toList()));
-    return groupById.values()
-        .stream()
-        .map(group -> cvConfigTransformer.transform(cvConfigs))
-        .collect(Collectors.toList());
+    return groupById.values().stream().map(group -> cvConfigTransformer.transform(group)).collect(Collectors.toList());
   }
 
   @Override

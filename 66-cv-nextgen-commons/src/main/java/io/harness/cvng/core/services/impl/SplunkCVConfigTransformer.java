@@ -14,12 +14,13 @@ public class SplunkCVConfigTransformer implements CVConfigTransformer<SplunkCVCo
   public SplunkDSConfig transformToDSConfig(List<SplunkCVConfig> cvConfigs) {
     Preconditions.checkArgument(
         cvConfigs.size() == 1, "Splunk Config should be of size 1 since it's a one to one mapping.");
-    SplunkDSConfig splunkDataSourceCVConfig = new SplunkDSConfig();
+    SplunkDSConfig splunkDSConfig = new SplunkDSConfig();
     SplunkCVConfig splunkCVConfig = cvConfigs.get(0);
-    splunkDataSourceCVConfig.populateCommonFields(splunkCVConfig);
-    splunkDataSourceCVConfig.setEventType(splunkCVConfig.getCategory());
-    splunkDataSourceCVConfig.setQuery(splunkCVConfig.getQuery());
-    splunkDataSourceCVConfig.setServiceInstanceIdentifier(splunkCVConfig.getServiceInstanceIdentifier());
-    return splunkDataSourceCVConfig;
+    splunkDSConfig.populateCommonFields(splunkCVConfig);
+    splunkDSConfig.setEventType(splunkCVConfig.getCategory());
+    splunkDSConfig.setQuery(splunkCVConfig.getQuery());
+    splunkDSConfig.setServiceInstanceIdentifier(splunkCVConfig.getServiceInstanceIdentifier());
+    splunkDSConfig.setServiceIdentifier(splunkCVConfig.getServiceIdentifier());
+    return splunkDSConfig;
   }
 }
