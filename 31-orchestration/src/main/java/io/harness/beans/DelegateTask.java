@@ -37,6 +37,7 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.validation.constraints.NotNull;
@@ -77,6 +78,8 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private String serviceTemplateId;
   private String artifactStreamId;
   private String workflowExecutionId;
+
+  private Map<String, String> setupAbstractions;
 
   private String version;
   private List<String> tags;
