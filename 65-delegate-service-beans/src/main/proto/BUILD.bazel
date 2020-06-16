@@ -9,7 +9,7 @@ proto_library(
         "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//:duration_proto",
         "@com_google_protobuf//:timestamp_proto",
-        "//64-delegate-beans/src/main/proto:64_delegate_beans_proto",
+        "//20-delegate-beans/src/main/proto:20_delegate_beans_proto",
     ],
     visibility = ["//visibility:public"],
 )
