@@ -35,6 +35,7 @@ import java.util.Map;
 @Slf4j
 public class BasicHttpStep implements Step, TaskExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("BASIC_HTTP").build();
+  private static final int socketTimeoutMillis = 10000;
 
   @Override
   public DelegateTask obtainTask(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
@@ -44,7 +45,7 @@ public class BasicHttpStep implements Step, TaskExecutable {
                                                 .body(parameters.getBody())
                                                 .header(parameters.getHeader())
                                                 .method(parameters.getMethod())
-                                                .socketTimeoutMillis(parameters.getSocketTimeoutMillis())
+                                                .socketTimeoutMillis(socketTimeoutMillis)
                                                 .build();
 
     String waitId = generateUuid();

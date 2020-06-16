@@ -36,6 +36,7 @@ import java.util.Map;
 @OwnedBy(HarnessTeam.CDC)
 public class BasicHttpChainStep implements Step, TaskChainExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("HTTP_CHAIN").build();
+  private static final int socketTimeoutMillis = 10000;
 
   @Override
   public TaskChainResponse startChainLink(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
@@ -68,7 +69,7 @@ public class BasicHttpChainStep implements Step, TaskChainExecutable {
                                                 .body(linkParam.getBody())
                                                 .header(linkParam.getHeader())
                                                 .method(linkParam.getMethod())
-                                                .socketTimeoutMillis(linkParam.getSocketTimeoutMillis())
+                                                .socketTimeoutMillis(socketTimeoutMillis)
                                                 .build();
 
     String waitId = generateUuid();

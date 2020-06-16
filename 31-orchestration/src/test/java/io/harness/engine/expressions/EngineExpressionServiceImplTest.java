@@ -11,8 +11,8 @@ import io.harness.ambiance.Ambiance;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.services.OutcomeService;
+import io.harness.engine.services.PlanExecutionService;
 import io.harness.execution.PlanExecution;
-import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
@@ -24,8 +24,8 @@ import org.junit.experimental.categories.Category;
 public class EngineExpressionServiceImplTest extends OrchestrationTest {
   @Inject EngineExpressionService engineExpressionService;
   @Inject OutcomeService outcomeService;
+  @Inject PlanExecutionService planExecutionService;
 
-  @Inject HPersistence hPersistence;
   private static final String OUTCOME_NAME = "dummyOutcome";
 
   private Ambiance ambiance;
@@ -35,7 +35,8 @@ public class EngineExpressionServiceImplTest extends OrchestrationTest {
   @Before
   public void setup() {
     ambiance = AmbianceTestUtils.buildAmbiance();
-    hPersistence.save(PlanExecution.builder().uuid(ambiance.getPlanExecutionId()).createdBy(EMBEDDED_USER).build());
+    planExecutionService.save(
+        PlanExecution.builder().uuid(ambiance.getPlanExecutionId()).createdBy(EMBEDDED_USER).build());
     outcomeService.consume(ambiance, OUTCOME_NAME, DummyOutcome.builder().test("harness").build(), null);
   }
 

@@ -7,7 +7,6 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutput;
 import io.harness.data.validator.Trimmed;
-import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
@@ -40,7 +39,7 @@ import javax.validation.constraints.NotNull;
 @Document("executionSweepingOutput")
 @TypeAlias("executionSweepingOutput")
 @FieldNameConstants(innerTypeName = "ExecutionSweepingOutputKeys")
-public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAccess, CreatedAtAccess {
+public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAccess {
   @Wither @Id String uuid;
   @NotNull String planExecutionId;
   @Singular List<Level> levels;
@@ -48,7 +47,7 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
   String levelRuntimeIdIdx;
 
   @Getter SweepingOutput value;
-  @Wither @CreatedDate long createdAt;
+  @Wither @CreatedDate Long createdAt;
 
   @Indexed(name = "validUntil_1", expireAfterSeconds = 0)
   @Builder.Default

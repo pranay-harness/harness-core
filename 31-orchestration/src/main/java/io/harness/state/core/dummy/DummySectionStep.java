@@ -33,13 +33,11 @@ public class DummySectionStep implements Step, ChildExecutable {
   public StepResponse handleChildResponse(
       Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     DummySectionStepParameters parameters = (DummySectionStepParameters) stepParameters;
-    StepResponseBuilder responseBuilder = StepResponse.builder().stepOutcome(
-        StepResponse.StepOutcome.builder()
-            .name("outcomeData")
-            .outcome(DummySectionOutcome.builder()
-                         .map(parameters.getData() == null ? null : parameters.getData().getMap())
-                         .build())
-            .build());
+    StepResponseBuilder responseBuilder =
+        StepResponse.builder().stepOutcome(StepResponse.StepOutcome.builder()
+                                               .name("outcomeData")
+                                               .outcome(DummySectionOutcome.builder().map(parameters.getData()).build())
+                                               .build());
     StepResponseNotifyData stepResponseNotifyData = (StepResponseNotifyData) responseDataMap.values().iterator().next();
     responseBuilder.status(stepResponseNotifyData.getStatus());
     return responseBuilder.build();

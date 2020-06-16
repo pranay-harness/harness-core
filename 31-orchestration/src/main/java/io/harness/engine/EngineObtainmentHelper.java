@@ -9,10 +9,9 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.services.NodeExecutionService;
+import io.harness.engine.services.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.persistence.HPersistence;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.references.RefObject;
@@ -26,9 +25,9 @@ import java.util.List;
 @OwnedBy(CDC)
 @Redesign
 public class EngineObtainmentHelper {
-  @Inject private HPersistence hPersistence;
   @Inject private ResolverRegistry resolverRegistry;
   @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private PlanExecutionService planExecutionService;
 
   public List<StepTransput> obtainInputs(
       Ambiance ambiance, List<RefObject> refObjects, List<? extends StepTransput> additionalInputs) {
@@ -46,11 +45,10 @@ public class EngineObtainmentHelper {
     return inputs;
   }
 
-  public PlanNode fetchExecutionNode(String nodeId, String executionInstanceId) {
-    PlanExecution instance =
-        hPersistence.createQuery(PlanExecution.class).filter(PlanExecutionKeys.uuid, executionInstanceId).get();
+  public PlanNode fetchExecutionNode(String nodeId, String planExecutionId) {
+    PlanExecution instance = planExecutionService.get(planExecutionId);
     if (instance == null) {
-      throw new InvalidRequestException("Execution Instance is null for id : " + executionInstanceId);
+      throw new InvalidRequestException("Execution Instance is null for id : " + planExecutionId);
     }
     Plan plan = instance.getPlan();
     return plan.fetchNode(nodeId);

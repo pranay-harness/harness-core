@@ -1,7 +1,5 @@
 package io.harness.engine;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -10,6 +8,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.engine.services.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.persistence.HPersistence;
@@ -26,6 +25,7 @@ import javax.validation.Valid;
 public class EngineServiceImpl implements EngineService {
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private ExecutionEngine executionEngine;
+  @Inject private PlanExecutionService planExecutionService;
 
   public PlanExecution startExecution(@Valid Plan plan, EmbeddedUser createdBy) {
     return startExecution(plan, null, createdBy);
@@ -33,7 +33,6 @@ public class EngineServiceImpl implements EngineService {
 
   public PlanExecution startExecution(@Valid Plan plan, InputArgs inputArgs, EmbeddedUser createdBy) {
     PlanExecution planExecution = PlanExecution.builder()
-                                      .uuid(generateUuid())
                                       .plan(plan)
                                       .inputArgs(inputArgs == null ? new InputArgs() : inputArgs)
                                       .status(Status.RUNNING)
@@ -45,9 +44,9 @@ public class EngineServiceImpl implements EngineService {
       logger.error("Cannot Start Execution for empty plan");
       return null;
     }
-    String savedPlanExecutionId = hPersistence.save(planExecution);
-    Ambiance ambiance = Ambiance.builder().inputArgs(inputArgs).planExecutionId(savedPlanExecutionId).build();
+    PlanExecution savedPlanExecution = planExecutionService.save(planExecution);
+    Ambiance ambiance = Ambiance.builder().inputArgs(inputArgs).planExecutionId(savedPlanExecution.getUuid()).build();
     executionEngine.triggerExecution(ambiance, planNode);
-    return planExecution;
+    return savedPlanExecution;
   }
 }

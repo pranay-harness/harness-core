@@ -10,21 +10,22 @@ import io.harness.references.RefObject;
 import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
 import lombok.Singular;
+import lombok.Value;
 
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
-@Getter
+@Value
+@Builder
 @OwnedBy(CDC)
 @Redesign
 public class PlanNode {
   // Identifiers
-  @NonNull String uuid;
-  @NonNull String name;
-  @NonNull StepType stepType;
-  @NonNull String identifier;
+  @NotNull String uuid;
+  @NotNull String name;
+  @NotNull StepType stepType;
+  @NotNull String identifier;
   String group;
 
   // Input/Outputs
@@ -36,25 +37,4 @@ public class PlanNode {
   @Singular List<FacilitatorObtainment> facilitatorObtainments;
 
   boolean skipExpressionChain;
-
-  @Builder
-  public PlanNode(@NonNull String uuid, @NonNull String name, @NonNull StepType stepType, @NonNull String identifier,
-      StepParameters stepParameters, @Singular List<RefObject> refObjects,
-      @Singular List<AdviserObtainment> adviserObtainments,
-      @Singular List<FacilitatorObtainment> facilitatorObtainments, boolean skipExpressionChain, String group) {
-    this.uuid = uuid;
-    this.name = name;
-    this.stepType = stepType;
-    this.identifier = identifier;
-    this.stepParameters = stepParameters;
-    this.refObjects = refObjects;
-    this.adviserObtainments = adviserObtainments;
-    this.facilitatorObtainments = facilitatorObtainments;
-    this.skipExpressionChain = skipExpressionChain;
-    this.group = group;
-  }
-
-  PlanNode(String uuid) {
-    this.uuid = uuid;
-  }
 }

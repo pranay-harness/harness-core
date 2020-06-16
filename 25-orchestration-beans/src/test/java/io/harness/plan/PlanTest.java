@@ -5,16 +5,11 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.google.inject.Inject;
-
 import io.harness.OrchestrationBeansTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.persistence.HPersistence;
-import io.harness.plan.Plan.PlanKeys;
 import io.harness.rule.Owner;
 import io.harness.state.StepType;
-import io.harness.testlib.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -25,22 +20,6 @@ public class PlanTest extends OrchestrationBeansTest {
   private static final String DUMMY_NODE_3_ID = generateUuid();
 
   private static final StepType DUMMY_STEP_TYPE = StepType.builder().type("DUMMY").build();
-
-  @Inject private HPersistence hPersistence;
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
-  @RealMongo
-  public void shouldTestExecutionPlanSave() {
-    String savedPlanId = hPersistence.save(buildDummyPlan());
-    assertThat(savedPlanId).isNotNull();
-    assertThat(savedPlanId).isEqualTo(PLAN_ID);
-    Plan savedPlan = hPersistence.createQuery(Plan.class).filter(PlanKeys.uuid, savedPlanId).get();
-
-    assertThat(savedPlan).isNotNull();
-    assertThat(savedPlan.getNodes()).hasSize(3);
-  }
 
   @Test
   @Owner(developers = PRASHANT)

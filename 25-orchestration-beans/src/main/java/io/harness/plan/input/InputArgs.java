@@ -6,6 +6,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.serializer.KryoUtils;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.Wither;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,8 +18,8 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @EqualsAndHashCode
 public class InputArgs {
-  private final Map<String, String> strMap;
-  private final Map<String, byte[]> bytesMap;
+  @Wither private final Map<String, String> strMap;
+  @Wither private final Map<String, byte[]> bytesMap;
 
   public InputArgs() {
     this.strMap = new HashMap<>();

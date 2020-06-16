@@ -3,6 +3,8 @@ package io.harness.functional;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.FunctionalTestRule.alpn;
 import static io.harness.rule.FunctionalTestRule.alpnJar;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.inject.Inject;
 
@@ -41,6 +43,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.mongodb.morphia.query.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 import software.wings.beans.Account;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
@@ -78,6 +82,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Inject DataLoaderRegistryHelper dataLoaderRegistryHelper;
   @Inject AuthHandler authHandler;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private MongoTemplate mongoTemplate;
   @Inject CommandLibraryServiceExecutor commandLibraryServiceExecutor;
 
   @Override
@@ -226,10 +231,9 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   }
 
   private PlanExecution getPlanExecution(String uuid) {
-    return wingsPersistence.createQuery(PlanExecution.class, excludeAuthority)
-        .filter(PlanExecutionKeys.uuid, uuid)
-        .project(PlanExecutionKeys.status, true)
-        .get();
+    Query query = query(where(PlanExecutionKeys.uuid).is(uuid));
+    query.fields().include(PlanExecutionKeys.status);
+    return mongoTemplate.findOne(query, PlanExecution.class);
   }
 
   public List<NodeExecution> getNodeExecutions(String planExecutionId) {

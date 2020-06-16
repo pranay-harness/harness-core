@@ -27,7 +27,7 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
   public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
     boolean pausePlan = pauseParents(stepStatusUpdateInfo.getNodeExecutionId(), stepStatusUpdateInfo.getInterruptId());
     if (pausePlan) {
-      planExecutionService.updateStatusWithOps(stepStatusUpdateInfo.getPlanExecutionId(), PAUSED, null);
+      planExecutionService.updateStatus(stepStatusUpdateInfo.getPlanExecutionId(), PAUSED);
     }
   }
 

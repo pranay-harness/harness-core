@@ -66,7 +66,6 @@ import io.harness.references.OutcomeRefObject;
 import io.harness.state.StepType;
 import io.harness.state.core.dummy.DummySectionStep;
 import io.harness.state.core.dummy.DummySectionStepParameters;
-import io.harness.state.core.dummy.DummySectionStepTransput;
 import io.harness.state.core.fork.ForkStep;
 import io.harness.state.core.fork.ForkStepParameters;
 import io.harness.state.core.section.SectionStep;
@@ -576,12 +575,12 @@ public class CustomExecutionUtils {
                 + "echo \"shell1.HI = ${section1.sectionChild.shellOutcome.sweepingOutputEnvVariables.HI}\"\n" // qualified
                 // outcome
                 + "echo \"scriptType = ${scriptType}\"\n" // child
-                + "echo \"section1.f1 = ${section1.data.map.f1}\"\n" // qualified
-                + "echo \"section1.f2 = ${section1.data.map.f2}\"\n" // qualified
-                + "echo \"sectionChild.f1 = ${sectionChild.data.map.f1}\"\n" // ancestor
-                + "echo \"sectionChild.f1 = ${section1.sectionChild.data.map.f1}\"\n" // qualified
-                + "echo \"sectionChild.f2 = ${sectionChild.data.map.f2}\"\n" // ancestor
-                + "echo \"sectionChild.f2 = ${section1.sectionChild.data.map.f2}\"\n" // qualified
+                + "echo \"section1.f1 = ${section1.data.f1}\"\n" // qualified
+                + "echo \"section1.f2 = ${section1.data.f2}\"\n" // qualified
+                + "echo \"sectionChild.f1 = ${sectionChild.data.f1}\"\n" // ancestor
+                + "echo \"sectionChild.f1 = ${section1.sectionChild.data.f1}\"\n" // qualified
+                + "echo \"sectionChild.f2 = ${sectionChild.data.f2}\"\n" // ancestor
+                + "echo \"sectionChild.f2 = ${section1.sectionChild.data.f2}\"\n" // qualified
                 + "echo \"shell1.HELLO = ${ancestor.sectionChild.shell1.variables.HELLO}\"\n"
                 + "echo \"shell1.HI = ${ancestor.sectionChild.shell1.variables.HI}\"\n"
                 + "echo \"shell1.HELLO = ${ancestor.sectionChild.shellOutcome.sweepingOutputEnvVariables.HELLO}\"\n"
@@ -591,12 +590,12 @@ public class CustomExecutionUtils {
                 + "echo \"shell1.HELLO = ${qualified.section1.sectionChild.shellOutcome.sweepingOutputEnvVariables.HELLO}\"\n"
                 + "echo \"shell1.HI = ${qualified.section1.sectionChild.shellOutcome.sweepingOutputEnvVariables.HI}\"\n"
                 + "echo \"scriptType = ${child.scriptType}\"\n"
-                + "echo \"section1.f1 = ${qualified.section1.data.map.f1}\"\n"
-                + "echo \"section1.f2 = ${qualified.section1.data.map.f2}\"\n"
-                + "echo \"sectionChild.f1 = ${ancestor.sectionChild.data.map.f1}\"\n"
-                + "echo \"sectionChild.f1 = ${qualified.section1.sectionChild.data.map.f1}\"\n"
-                + "echo \"sectionChild.f2 = ${ancestor.sectionChild.data.map.f2}\"\n"
-                + "echo \"sectionChild.f2 = ${qualified.section1.sectionChild.data.map.f2}\"\n")
+                + "echo \"section1.f1 = ${qualified.section1.data.f1}\"\n"
+                + "echo \"section1.f2 = ${qualified.section1.data.f2}\"\n"
+                + "echo \"sectionChild.f1 = ${ancestor.sectionChild.data.f1}\"\n"
+                + "echo \"sectionChild.f1 = ${qualified.section1.sectionChild.data.f1}\"\n"
+                + "echo \"sectionChild.f2 = ${ancestor.sectionChild.data.f2}\"\n"
+                + "echo \"sectionChild.f2 = ${qualified.section1.sectionChild.data.f2}\"\n")
             .outputVars("HELLO,HI")
             .sweepingOutputName("shell2")
             .build();
@@ -613,116 +612,106 @@ public class CustomExecutionUtils {
                                                                                                                // outcome
                 + "echo \"shell2.HELLO = ${shell2.variables.HELLO}\"\n" // output
                 + "echo \"shell2.HI = ${shell2.variables.HI}\"\n" // output
-                + "echo \"section1.f1 = ${section1.data.map.f1}\"\n" // qualified
+                + "echo \"section1.f1 = ${section1.data.f1}\"\n" // qualified
                 + "echo \"section1.f1 = ${section1.outcomeData.map.f1}\"\n" // qualified
-                + "echo \"section11.f1 = ${section1.sectionChild.data.map.f1}\"\n" // qualified
+                + "echo \"section11.f1 = ${section1.sectionChild.data.f1}\"\n" // qualified
                 + "echo \"section11.f1 = ${section1.sectionChild.outcomeData.map.f1}\"\n" // qualified
                 + "echo \"shell2.scriptType = ${section1.sectionChild.shell.scriptType}\"\n" // qualified
                 + "echo \"shell2.HELLO = ${section1.sectionChild.shell.data.sweepingOutputEnvVariables.HELLO}\"\n" // qualified
                 + "echo \"shell2.HI = ${section1.sectionChild.shell.data.sweepingOutputEnvVariables.HI}\"\n" // qualified
                 + "echo \"scriptType = ${scriptType}\"\n" // child
-                + "echo \"section2.f1 = ${section2.data.map.f1}\"\n" // qualified
-                + "echo \"section2.f2 = ${section2.data.map.f2}\"\n" // qualified
-                + "echo \"sectionChild.f1 = ${sectionChild.data.map.f1}\"\n" // ancestor
-                + "echo \"sectionChild.f1 = ${section2.sectionChild.data.map.f1}\"\n" // qualified
-                + "echo \"sectionChild.f2 = ${sectionChild.data.map.f2}\"\n" // ancestor
-                + "echo \"sectionChild.f2 = ${section2.sectionChild.data.map.f2}\"\n" // qualified
+                + "echo \"section2.f1 = ${section2.data.f1}\"\n" // qualified
+                + "echo \"section2.f2 = ${section2.data.f2}\"\n" // qualified
+                + "echo \"sectionChild.f1 = ${sectionChild.data.f1}\"\n" // ancestor
+                + "echo \"sectionChild.f1 = ${section2.sectionChild.data.f1}\"\n" // qualified
+                + "echo \"sectionChild.f2 = ${sectionChild.data.f2}\"\n" // ancestor
+                + "echo \"sectionChild.f2 = ${section2.sectionChild.data.f2}\"\n" // qualified
                 + "echo \"shell1.HELLO = ${qualified.section1.sectionChild.shell1.variables.HELLO}\"\n"
                 + "echo \"shell1.HI = ${qualified.section1.sectionChild.shell1.variables.HI}\"\n"
                 + "echo \"shell1.HELLO = ${qualified.section1.sectionChild.shellOutcome.sweepingOutputEnvVariables.HELLO}\"\n"
                 + "echo \"shell1.HI = ${qualified.section1.sectionChild.shellOutcome.sweepingOutputEnvVariables.HI}\"\n"
                 + "echo \"shell2.HELLO = ${output.shell2.variables.HELLO}\"\n"
                 + "echo \"shell2.HI = ${output.shell2.variables.HI}\"\n"
-                + "echo \"section1.f1 = ${qualified.section1.data.map.f1}\"\n"
+                + "echo \"section1.f1 = ${qualified.section1.data.f1}\"\n"
                 + "echo \"section1.f1 = ${qualified.section1.outcomeData.map.f1}\"\n"
-                + "echo \"section11.f1 = ${qualified.section1.sectionChild.data.map.f1}\"\n"
+                + "echo \"section11.f1 = ${qualified.section1.sectionChild.data.f1}\"\n"
                 + "echo \"section11.f1 = ${qualified.section1.sectionChild.outcomeData.map.f1}\"\n"
                 + "echo \"shell2.scriptType = ${qualified.section1.sectionChild.shell.scriptType}\"\n"
                 + "echo \"shell2.HELLO = ${qualified.section1.sectionChild.shell.data.sweepingOutputEnvVariables.HELLO}\"\n"
                 + "echo \"shell2.HI = ${qualified.section1.sectionChild.shell.data.sweepingOutputEnvVariables.HI}\"\n"
                 + "echo \"scriptType = ${child.scriptType}\"\n"
-                + "echo \"section2.f1 = ${qualified.section2.data.map.f1}\"\n"
-                + "echo \"section2.f2 = ${qualified.section2.data.map.f2}\"\n"
-                + "echo \"sectionChild.f1 = ${ancestor.sectionChild.data.map.f1}\"\n"
-                + "echo \"sectionChild.f1 = ${qualified.section2.sectionChild.data.map.f1}\"\n"
-                + "echo \"sectionChild.f2 = ${ancestor.sectionChild.data.map.f2}\"\n"
-                + "echo \"sectionChild.f2 = ${qualified.section2.sectionChild.data.map.f2}\"\n")
+                + "echo \"section2.f1 = ${qualified.section2.data.f1}\"\n"
+                + "echo \"section2.f2 = ${qualified.section2.data.f2}\"\n"
+                + "echo \"sectionChild.f1 = ${ancestor.sectionChild.data.f1}\"\n"
+                + "echo \"sectionChild.f1 = ${qualified.section2.sectionChild.data.f1}\"\n"
+                + "echo \"sectionChild.f2 = ${ancestor.sectionChild.data.f2}\"\n"
+                + "echo \"sectionChild.f2 = ${qualified.section2.sectionChild.data.f2}\"\n")
             .build();
 
     return Plan.builder()
         .uuid(generateUuid())
         .startingNodeId(section1NodeId)
-        .node(
-            PlanNode.builder()
-                .uuid(section1NodeId)
-                .name("Section 1")
-                .identifier("section1")
-                .stepType(DummySectionStep.STEP_TYPE)
-                .group("SECTION")
-                .stepParameters(
-                    DummySectionStepParameters.builder()
-                        .childNodeId(section11NodeId)
-                        .data(DummySectionStepTransput.builder().map(ImmutableMap.of("f1", "v11", "f2", "v12")).build())
-                        .build())
-                .adviserObtainment(
-                    AdviserObtainment.builder()
-                        .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
-                        .parameters(OnSuccessAdviserParameters.builder().nextNodeId(section2NodeId).build())
-                        .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                           .build())
-                .build())
-        .node(
-            PlanNode.builder()
-                .uuid(section11NodeId)
-                .name("Section 11")
-                .identifier("sectionChild")
-                .stepType(DummySectionStep.STEP_TYPE)
-                .group("SECTION")
-                .stepParameters(
-                    DummySectionStepParameters.builder()
-                        .childNodeId(shellScript11NodeId)
-                        .data(
-                            DummySectionStepTransput.builder().map(ImmutableMap.of("f1", "v111", "f2", "v112")).build())
-                        .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                           .build())
-                .build())
-        .node(
-            PlanNode.builder()
-                .uuid(section2NodeId)
-                .name("Section 2")
-                .identifier("section2")
-                .stepType(DummySectionStep.STEP_TYPE)
-                .group("SECTION")
-                .stepParameters(
-                    DummySectionStepParameters.builder()
-                        .childNodeId(section21NodeId)
-                        .data(DummySectionStepTransput.builder().map(ImmutableMap.of("f1", "v21", "f2", "v22")).build())
-                        .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                           .build())
-                .build())
-        .node(
-            PlanNode.builder()
-                .uuid(section21NodeId)
-                .name("Section 21")
-                .identifier("sectionChild")
-                .stepType(DummySectionStep.STEP_TYPE)
-                .group("SECTION")
-                .stepParameters(
-                    DummySectionStepParameters.builder()
-                        .childNodeId(shellScript2NodeId)
-                        .data(
-                            DummySectionStepTransput.builder().map(ImmutableMap.of("f1", "v211", "f2", "v212")).build())
-                        .build())
-                .facilitatorObtainment(FacilitatorObtainment.builder()
-                                           .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
-                                           .build())
-                .build())
+        .node(PlanNode.builder()
+                  .uuid(section1NodeId)
+                  .name("Section 1")
+                  .identifier("section1")
+                  .stepType(DummySectionStep.STEP_TYPE)
+                  .group("SECTION")
+                  .stepParameters(DummySectionStepParameters.builder()
+                                      .childNodeId(section11NodeId)
+                                      .data(ImmutableMap.of("f1", "v11", "f2", "v12"))
+                                      .build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(section2NodeId).build())
+                          .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(section11NodeId)
+                  .name("Section 11")
+                  .identifier("sectionChild")
+                  .stepType(DummySectionStep.STEP_TYPE)
+                  .group("SECTION")
+                  .stepParameters(DummySectionStepParameters.builder()
+                                      .childNodeId(shellScript11NodeId)
+                                      .data(ImmutableMap.of("f1", "v111", "f2", "v112"))
+                                      .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(section2NodeId)
+                  .name("Section 2")
+                  .identifier("section2")
+                  .stepType(DummySectionStep.STEP_TYPE)
+                  .group("SECTION")
+                  .stepParameters(DummySectionStepParameters.builder()
+                                      .childNodeId(section21NodeId)
+                                      .data(ImmutableMap.of("f1", "v21", "f2", "v22"))
+                                      .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(section21NodeId)
+                  .name("Section 21")
+                  .identifier("sectionChild")
+                  .stepType(DummySectionStep.STEP_TYPE)
+                  .group("SECTION")
+                  .stepParameters(DummySectionStepParameters.builder()
+                                      .childNodeId(shellScript2NodeId)
+                                      .data(ImmutableMap.of("f1", "v211", "f2", "v212"))
+                                      .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILD).build())
+                                             .build())
+                  .build())
         .node(PlanNode.builder()
                   .uuid(shellScript11NodeId)
                   .name("shell11")
