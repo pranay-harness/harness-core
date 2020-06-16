@@ -35,7 +35,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>19-grpc-api</artifactId>
+            <artifactId>13-grpc-api</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>

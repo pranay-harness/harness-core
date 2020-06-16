@@ -9,7 +9,7 @@ fi
 
 bazel ${OUTPUT_BASE} build \
   //19-delegate-tasks-beans/src/... \
-  //19-grpc-api/src/main/proto/... \
+  //13-grpc-api/src/main/proto/... \
   //64-delegate-beans/src/main/proto/... \
   //65-delegate-agent-beans/src/main/proto/... \
   //65-delegate-service-beans/src/main/proto/...
@@ -34,7 +34,7 @@ compile_proto_module() {
 }
 
 compile_proto_module 19-delegate-tasks-beans
-compile_proto_module 19-grpc-api
+compile_proto_module 13-grpc-api
 
 compile_proto_module 64-delegate-beans
 compile_proto_module 65-delegate-agent-beans

@@ -59,12 +59,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>15-api-services</artifactId>
+            <artifactId>13-grpc-api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>19-grpc-api</artifactId>
+            <artifactId>15-api-services</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
