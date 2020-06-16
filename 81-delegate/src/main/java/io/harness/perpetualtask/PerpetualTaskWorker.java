@@ -7,9 +7,11 @@ import static java.lang.System.currentTimeMillis;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.protobuf.util.Durations;
 import com.google.protobuf.util.Timestamps;
 
@@ -17,9 +19,9 @@ import io.grpc.StatusRuntimeException;
 import io.harness.flow.BackoffScheduler;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.LoggingListener;
-import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.DelayLogContext;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
+import io.harness.threading.Schedulable;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -42,11 +45,11 @@ import java.util.concurrent.atomic.AtomicReference;
 public class PerpetualTaskWorker {
   @Getter private final Map<PerpetualTaskId, PerpetualTaskAssignRecord> runningTaskMap = new ConcurrentHashMap<>();
 
-  private ScheduledExecutorService scheduledService;
+  private TimeLimiter perpetualTaskTimeLimiter;
+  private ScheduledExecutorService perpetualTaskTimeoutExecutor;
 
   private final AtomicBoolean firstFillUp = new AtomicBoolean(true);
   private final BackoffScheduler backoffScheduler;
-  private final TimeLimiter timeLimiter;
   private final PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient;
   private Map<String, PerpetualTaskExecutor> factoryMap;
 
@@ -71,11 +74,14 @@ public class PerpetualTaskWorker {
 
   @Inject
   public PerpetualTaskWorker(PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient,
-      Map<String, PerpetualTaskExecutor> factoryMap, TimeLimiter timeLimiter) {
-    this.factoryMap = factoryMap;
-    this.timeLimiter = timeLimiter;
+      Map<String, PerpetualTaskExecutor> factoryMap,
+      @Named("perpetualTaskExecutor") ExecutorService perpetualTaskExecutor,
+      @Named("perpetualTaskTimeoutExecutor") ScheduledExecutorService perpetualTaskTimeoutExecutor) {
     this.perpetualTaskServiceGrpcClient = perpetualTaskServiceGrpcClient;
-    scheduledService = new ManagedScheduledExecutorService("perpetual-task-worker");
+    this.factoryMap = factoryMap;
+    this.perpetualTaskTimeLimiter = new SimpleTimeLimiter(perpetualTaskExecutor);
+    this.perpetualTaskTimeoutExecutor = perpetualTaskTimeoutExecutor;
+
     backoffScheduler = new BackoffScheduler(getClass().getSimpleName(), Duration.ofMinutes(4), Duration.ofMinutes(14));
   }
 
@@ -164,13 +170,14 @@ public class PerpetualTaskWorker {
       long intervalSeconds = Durations.toSeconds(schedule.getInterval());
 
       PerpetualTaskLifecycleManager perpetualTaskLifecycleManager = new PerpetualTaskLifecycleManager(
-          task.getTaskId(), context, factoryMap, perpetualTaskServiceGrpcClient, timeLimiter);
+          task.getTaskId(), context, factoryMap, perpetualTaskServiceGrpcClient, perpetualTaskTimeLimiter);
 
       synchronized (runningTaskMap) {
         runningTaskMap.computeIfAbsent(task.getTaskId(), k -> {
           logger.info("Starting perpetual task with id: {}.", task.getTaskId().getId());
-          ScheduledFuture<?> taskHandle = scheduledService.scheduleWithFixedDelay(
-              perpetualTaskLifecycleManager::startTask, 0, intervalSeconds, TimeUnit.SECONDS);
+          ScheduledFuture<?> taskHandle = perpetualTaskTimeoutExecutor.scheduleWithFixedDelay(
+              new Schedulable("Throwable while executing perpetual task", perpetualTaskLifecycleManager::startTask), 0,
+              intervalSeconds, TimeUnit.SECONDS);
 
           PerpetualTaskHandle perpetualTaskHandle = new PerpetualTaskHandle(taskHandle, perpetualTaskLifecycleManager);
 

@@ -428,6 +428,29 @@ public class DelegateModule extends DependencyModule {
     return jenkinsExecutor;
   }
 
+  @Provides
+  @Singleton
+  @Named("perpetualTaskExecutor")
+  public ExecutorService perpetualTaskExecutor() {
+    ExecutorService perpetualTaskExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("perpetual-task-%d").setPriority(Thread.NORM_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { perpetualTaskExecutor.shutdownNow(); }));
+    return perpetualTaskExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("perpetualTaskTimeoutExecutor")
+  public ScheduledExecutorService perpetualTaskTimeoutExecutor() {
+    ScheduledExecutorService perpetualTaskTimeoutExecutor = new ScheduledThreadPoolExecutor(40,
+        new ThreadFactoryBuilder()
+            .setNameFormat("perpetual-task-timeout-%d")
+            .setPriority(Thread.NORM_PRIORITY)
+            .build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { perpetualTaskTimeoutExecutor.shutdownNow(); }));
+    return perpetualTaskTimeoutExecutor;
+  }
+
   @Override
   protected void configure() {
     bind(DelegateAgentService.class).to(DelegateAgentServiceImpl.class);
