@@ -1101,7 +1101,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void startTaskPolling() {
     rescheduleExecutor.scheduleAtFixedRate(
-        new Schedulable("Failed to schedule a task", () -> taskPollExecutor.submit(this ::pollForTask)), 0,
+        new Schedulable("Failed to poll for task", () -> taskPollExecutor.submit(this ::pollForTask)), 0,
         POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
     if (perpetualTaskWorker != null) {
       perpetualTaskWorker.start();

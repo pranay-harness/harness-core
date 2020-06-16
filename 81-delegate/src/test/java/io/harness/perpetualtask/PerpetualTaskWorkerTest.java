@@ -8,7 +8,7 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.util.concurrent.TimeLimiter;
+import com.google.inject.name.Named;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
@@ -16,6 +16,7 @@ import com.google.protobuf.util.Durations;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
 import io.harness.perpetualtask.k8s.watch.K8sWatchTaskParams;
 import io.harness.rule.Owner;
@@ -28,6 +29,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.KubernetesClusterConfig;
@@ -38,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 @Slf4j
 public class PerpetualTaskWorkerTest extends CategoryTest {
@@ -61,7 +65,11 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient;
   @Mock private Map<String, PerpetualTaskExecutor> factoryMap;
-  @Mock private TimeLimiter timeLimiter;
+  @Mock @Named("perpetualTaskExecutor") ExecutorService perpetualTaskExecutor;
+  @Spy
+  @Named("perpetualTaskTimeoutExecutor")
+  ScheduledExecutorService perpetualTaskTimeoutExecutor =
+      new ManagedScheduledExecutorService("perpetualTaskTimeoutExecutor");
   @InjectMocks private PerpetualTaskWorker worker;
 
   @Before
