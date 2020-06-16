@@ -1,9 +1,11 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -11,10 +13,12 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,6 +34,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,6 +46,7 @@ public class EnvironmentServiceImplTest extends WingsBaseTest {
   @Mock FeatureFlagService featureFlagService;
   @Mock AppService appService;
   @Mock InfrastructureDefinitionService infrastructureDefinitionService;
+  @Mock WorkflowExecutionService workflowExecutionService;
   @Inject private HarnessTagService harnessTagService;
   @InjectMocks @Inject EnvironmentServiceImpl environmentService;
 
@@ -113,5 +119,22 @@ public class EnvironmentServiceImplTest extends WingsBaseTest {
     assertThat(tagLinksWithEntityId).hasSize(1);
     assertTrue(tagLinksWithEntityId.stream().anyMatch(
         tagLink -> tagLink.getKey().equals("environmentType") && tagLink.getValue().equals("PROD")));
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldNoTDeleteIfRunningExecution() {
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    Environment env = Environment.Builder.anEnvironment()
+                          .uuid(ENV_ID)
+                          .name(ENV_NAME)
+                          .appId(APP_ID)
+                          .environmentType(EnvironmentType.PROD)
+                          .build();
+    environmentService.save(env);
+    when(workflowExecutionService.runningExecutionsForEnvironment(APP_ID, ENV_ID))
+        .thenReturn(ImmutableList.of("Execution Name 1"));
+    assertThatThrownBy(() -> environmentService.delete(APP_ID, ENV_ID)).isInstanceOf(InvalidRequestException.class);
   }
 }

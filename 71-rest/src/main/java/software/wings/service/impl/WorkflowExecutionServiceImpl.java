@@ -2592,6 +2592,22 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public List<String> runningExecutionsForEnvironment(String appId, String environmentId) {
+    List<WorkflowExecution> executions = wingsPersistence.createQuery(WorkflowExecution.class)
+                                             .filter(WorkflowExecutionKeys.appId, appId)
+                                             .filter(WorkflowExecutionKeys.envIds, environmentId)
+                                             .field(WorkflowExecutionKeys.status)
+                                             .in(ExecutionStatus.activeStatuses())
+                                             .project(WorkflowExecutionKeys.uuid, true)
+                                             .project(WorkflowExecutionKeys.name, true)
+                                             .asList();
+    if (isEmpty(executions)) {
+      return Collections.emptyList();
+    }
+    return executions.stream().map(WorkflowExecution::getName).collect(Collectors.toList());
+  }
+
+  @Override
   public boolean runningExecutionsPresent(String appId, String workflowId) {
     List<WorkflowExecution> runningExecutions = wingsPersistence.createQuery(WorkflowExecution.class)
                                                     .filter(WorkflowExecutionKeys.appId, appId)
