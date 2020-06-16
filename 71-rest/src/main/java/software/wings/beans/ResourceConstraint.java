@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.distribution.constraint.Constraint;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -42,8 +43,8 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "ResourceConstraintKeys")
 @Entity(value = "resourceConstraint", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class ResourceConstraint
-    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+public class ResourceConstraint implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
+                                           UpdatedByAware, AccountAccess {
   public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String NAME_KEY = "name";
 

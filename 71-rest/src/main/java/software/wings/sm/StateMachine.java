@@ -52,6 +52,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.common.Constants;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.exception.DuplicateStateNameException;
@@ -88,7 +89,7 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "StateMachineKeys")
 @Slf4j
-public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware {
+public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware, ApplicationAccess {
   @Id private String uuid;
   @Indexed @NotNull protected String appId;
   @Indexed private long createdAt;

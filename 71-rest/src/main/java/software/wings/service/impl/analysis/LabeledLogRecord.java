@@ -14,6 +14,7 @@ import com.google.common.collect.Sets;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,7 +39,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Entity(value = "supervisedLogRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class LabeledLogRecord implements GoogleDataStoreAware {
+public class LabeledLogRecord implements GoogleDataStoreAware, AccountAccess {
   private String label;
   private String accountId;
   private Set<String> feedbackIds;

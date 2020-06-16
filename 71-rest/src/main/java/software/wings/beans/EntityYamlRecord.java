@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -28,7 +29,7 @@ import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
         @Field(value = EntityYamlRecordKeys.createdAt, type = IndexType.DESC)
   })
 })
-public class EntityYamlRecord implements PersistentEntity, UuidAccess, CreatedAtAccess {
+public class EntityYamlRecord implements PersistentEntity, UuidAccess, CreatedAtAccess, AccountAccess {
   @Id private String uuid;
   private String accountId;
   private long createdAt;

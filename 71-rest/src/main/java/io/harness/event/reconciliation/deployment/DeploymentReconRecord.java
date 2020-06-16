@@ -2,6 +2,7 @@ package io.harness.event.reconciliation.deployment;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord.DeploymentReconRecordKeys;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
@@ -35,7 +36,7 @@ import java.util.Date;
         @Field(DeploymentReconRecordKeys.accountId), @Field(DeploymentReconRecordKeys.reconciliationStatus)
       }),
 })
-public class DeploymentReconRecord implements PersistentEntity, UuidAware {
+public class DeploymentReconRecord implements PersistentEntity, UuidAware, AccountAccess {
   @Id private String uuid;
   private String accountId;
   private long durationStartTs;

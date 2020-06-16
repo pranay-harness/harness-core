@@ -8,6 +8,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 import lombok.Builder;
@@ -54,7 +55,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "ResourceConstraintInstanceKeys")
 @Entity(value = "resourceConstraintInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class ResourceConstraintInstance implements PersistentRegularIterable, UuidAware {
+public class ResourceConstraintInstance implements PersistentRegularIterable, UuidAware, AccountAccess {
   public static final List<String> NOT_FINISHED_STATES =
       ImmutableList.<String>builder().add(State.ACTIVE.name()).add(State.BLOCKED.name()).build();
 

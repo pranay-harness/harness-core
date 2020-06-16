@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -47,8 +48,8 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "HarnessTagLinkKeys")
 @Entity(value = "tagLinks", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class HarnessTagLink
-    implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware, CreatedAtAware, CreatedByAware {
+public class HarnessTagLink implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware, CreatedAtAware,
+                                       CreatedByAware, AccountAccess {
   @Id private String uuid;
   @NotEmpty private String accountId;
   @NotEmpty private String appId;
