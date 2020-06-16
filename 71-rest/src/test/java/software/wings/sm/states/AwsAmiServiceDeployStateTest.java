@@ -20,12 +20,14 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -415,20 +417,35 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   public void testGetNewDesiredCounts() {
     // int instancesToBeAdded, String  oldAsgName, Map<String, Integer> existingDesiredCapacities
     String asgName = "asg";
-    AwsAmiResizeData newDesiredCounts = state.getNewDesiredCounts(2, asgName, singletonMap(asgName, 4));
+    AwsAmiResizeData newDesiredCounts = state.getNewDesiredCounts(2, asgName, singletonMap(asgName, 4), false);
     assertThat(newDesiredCounts.getAsgName()).isEqualTo(asgName);
     assertThat(newDesiredCounts.getDesiredCount()).isEqualTo(2);
 
-    newDesiredCounts = state.getNewDesiredCounts(4, asgName, singletonMap(asgName, 4));
+    newDesiredCounts = state.getNewDesiredCounts(2, asgName, singletonMap(asgName, 4), true);
     assertThat(newDesiredCounts.getAsgName()).isEqualTo(asgName);
     assertThat(newDesiredCounts.getDesiredCount()).isEqualTo(0);
 
-    newDesiredCounts = state.getNewDesiredCounts(4, asgName, singletonMap(asgName, 2));
+    newDesiredCounts = state.getNewDesiredCounts(4, asgName, singletonMap(asgName, 4), false);
     assertThat(newDesiredCounts.getAsgName()).isEqualTo(asgName);
     assertThat(newDesiredCounts.getDesiredCount()).isEqualTo(0);
 
-    newDesiredCounts = state.getNewDesiredCounts(4, asgName, emptyMap());
+    newDesiredCounts = state.getNewDesiredCounts(4, asgName, singletonMap(asgName, 2), false);
     assertThat(newDesiredCounts.getAsgName()).isEqualTo(asgName);
     assertThat(newDesiredCounts.getDesiredCount()).isEqualTo(0);
+
+    newDesiredCounts = state.getNewDesiredCounts(4, asgName, emptyMap(), false);
+    assertThat(newDesiredCounts.getAsgName()).isEqualTo(asgName);
+    assertThat(newDesiredCounts.getDesiredCount()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testIsFinalDeployState() {
+    AwsAmiServiceDeployState stateLocal = spy(new AwsAmiServiceDeployState("localState"));
+    stateLocal.setInstanceUnitType(PERCENTAGE);
+    assertThat(stateLocal.isFinalDeployState(110, AmiServiceSetupElement.builder().build())).isTrue();
+    stateLocal.setInstanceUnitType(COUNT);
+    assertThat(stateLocal.isFinalDeployState(2, AmiServiceSetupElement.builder().desiredInstances(1).build())).isTrue();
   }
 }
