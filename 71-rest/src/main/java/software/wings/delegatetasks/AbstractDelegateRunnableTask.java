@@ -40,7 +40,6 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   private String delegateHostname;
   @Getter private String delegateId;
   @Getter private String accountId;
-  @Getter private String appId;
   @Getter private String taskId;
   @Getter private String taskType;
   @Getter private boolean isAsync;
@@ -56,7 +55,6 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     this.taskId = delegateTaskPackage.getDelegateTaskId();
     this.parameters = delegateTaskPackage.getDelegateTask().getData().getParameters();
     this.accountId = delegateTaskPackage.getAccountId();
-    this.appId = delegateTaskPackage.getDelegateTask().getAppId();
     this.consumer = consumer;
     this.preExecute = preExecute;
     this.taskType = delegateTaskPackage.getDelegateTask().getData().getTaskType();
