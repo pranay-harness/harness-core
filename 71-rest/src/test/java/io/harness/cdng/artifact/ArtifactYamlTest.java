@@ -14,6 +14,7 @@ import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
+import io.harness.cdng.artifact.delegate.DockerArtifactServiceImpl;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.DeploymentStage;
@@ -57,6 +58,7 @@ public class ArtifactYamlTest extends CategoryTest {
     DockerHubArtifactConfig dockerArtifact = (DockerHubArtifactConfig) primary;
     assertThat(dockerArtifact.getImagePath()).isEqualTo("library/ubuntu");
     assertThat(dockerArtifact.getTag()).isEqualTo("latest");
+    assertThat(dockerArtifact.getTagRegex()).isEqualTo("groov*");
     assertThat(dockerArtifact.getArtifactType()).isEqualTo(ArtifactUtils.PRIMARY_ARTIFACT);
 
     SidecarArtifactWrapper sidecarArtifactWrapper = serviceSpec.getArtifacts().getSidecars().get(0);
@@ -83,6 +85,8 @@ public class ArtifactYamlTest extends CategoryTest {
     ArtifactSourceAttributes sourceAttributes = dockerArtifact.getSourceAttributes();
     assertThat(sourceAttributes).isInstanceOf(DockerArtifactSourceAttributes.class);
     DockerArtifactSourceAttributes dockerArtifactSourceAttributes = (DockerArtifactSourceAttributes) sourceAttributes;
+    assertThat(dockerArtifactSourceAttributes.getDelegateArtifactServiceClass())
+        .isEqualTo(DockerArtifactServiceImpl.class);
     assertThat(dockerArtifactSourceAttributes.getImagePath()).isEqualTo(dockerArtifact.getImagePath());
     assertThat(dockerArtifactSourceAttributes.getDockerhubConnector())
         .isEqualTo(dockerArtifact.getDockerhubConnector());

@@ -48,5 +48,9 @@ public class ArtifactSourceServiceImplTest extends CategoryTest {
         .getArtifactStreamByHash(WingsTestConstants.ACCOUNT_ID, "UNIQUE_HASH");
     artifactSourceResult = artifactSourceService.getArtifactStreamByHash(WingsTestConstants.ACCOUNT_ID, "UNIQUE_HASH");
     assertThat(artifactSourceResult).isEqualTo(artifactSource);
+
+    doReturn(artifactSource).when(artifactSourceDao).get(WingsTestConstants.ACCOUNT_ID, "UUID");
+    artifactSourceResult = artifactSourceService.get(WingsTestConstants.ACCOUNT_ID, "UUID");
+    assertThat(artifactSourceResult).isEqualTo(artifactSource);
   }
 }

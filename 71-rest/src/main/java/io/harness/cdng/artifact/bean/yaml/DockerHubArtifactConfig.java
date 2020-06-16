@@ -9,6 +9,7 @@ import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
+import io.harness.data.structure.EmptyPredicate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -65,6 +66,10 @@ public class DockerHubArtifactConfig implements ArtifactConfigWrapper {
 
   @Override
   public ArtifactSourceAttributes getSourceAttributes() {
+    // If both are empty, regex is latest among all docker artifacts.
+    if (EmptyPredicate.isEmpty(tag) && EmptyPredicate.isEmpty(tagRegex)) {
+      tagRegex = "*";
+    }
     return DockerArtifactSourceAttributes.builder()
         .dockerhubConnector(dockerhubConnector)
         .imagePath(imagePath)

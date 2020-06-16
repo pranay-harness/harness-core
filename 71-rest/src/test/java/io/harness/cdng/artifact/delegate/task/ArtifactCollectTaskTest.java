@@ -15,7 +15,7 @@ import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.DockerArtifactAttributes;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.connector.DockerhubConnectorConfig;
-import io.harness.cdng.artifact.delegate.DockerArtifactService;
+import io.harness.cdng.artifact.delegate.DockerArtifactServiceImpl;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ArtifactCollectTaskTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
-  @Mock private DockerArtifactService dockerArtifactService;
+  @Mock private DockerArtifactServiceImpl dockerArtifactService;
 
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private final DelegateTask collectionTask = DelegateTask.builder()

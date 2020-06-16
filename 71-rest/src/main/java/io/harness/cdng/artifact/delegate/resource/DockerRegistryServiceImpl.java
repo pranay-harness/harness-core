@@ -24,4 +24,14 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       throw new ArtifactServerException(ExceptionUtils.getMessage(exception), exception, WingsException.USER);
     }
   }
+
+  @Override
+  public ArtifactAttributes getLastSuccessfulBuildFromRegex(
+      DockerhubConnectorConfig connectorConfig, String imageName, String tagRegex) {
+    try {
+      return dockerPublicRegistryProcessor.getLastSuccessfulBuildFromRegex(connectorConfig, imageName, tagRegex);
+    } catch (Exception exception) {
+      throw new ArtifactServerException(ExceptionUtils.getMessage(exception), exception, WingsException.USER);
+    }
+  }
 }

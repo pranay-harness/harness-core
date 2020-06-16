@@ -56,4 +56,32 @@ public class DockerArtifactServiceImplTest extends CategoryTest {
     assertThat(attributes.getImagePath()).isEqualTo(sourceAttributes.getImagePath());
     assertThat(attributes.getTag()).isEqualTo(sourceAttributes.getTag());
   }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testIsRegex() {
+    DockerArtifactSourceAttributes sourceAttributes = DockerArtifactSourceAttributes.builder()
+                                                          .dockerhubConnector("connector")
+                                                          .imagePath("imagePath")
+                                                          .tag("tag")
+                                                          .tagRegex("tagRegex")
+                                                          .build();
+    boolean regex = dockerArtifactService.isRegex(sourceAttributes);
+    assertThat(regex).isTrue();
+    sourceAttributes = DockerArtifactSourceAttributes.builder()
+                           .dockerhubConnector("connector")
+                           .imagePath("imagePath")
+                           .tagRegex("tagRegex")
+                           .build();
+    regex = dockerArtifactService.isRegex(sourceAttributes);
+    assertThat(regex).isTrue();
+    sourceAttributes = DockerArtifactSourceAttributes.builder()
+                           .dockerhubConnector("connector")
+                           .imagePath("imagePath")
+                           .tag("tag")
+                           .build();
+    regex = dockerArtifactService.isRegex(sourceAttributes);
+    assertThat(regex).isFalse();
+  }
 }
