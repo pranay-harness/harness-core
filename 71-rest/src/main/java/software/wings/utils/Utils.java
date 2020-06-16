@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -190,9 +189,13 @@ public class Utils {
   }
 
   public static String appendPathToBaseUrl(String baseUrl, String path) {
-    URI uri = URI.create(baseUrl);
-    String fullURL = uri.toString() + "/" + path;
-    return uri.resolve(fullURL).normalize().toString();
+    if (baseUrl.charAt(baseUrl.length() - 1) != '/') {
+      baseUrl += '/';
+    }
+    if (path.length() > 0 && path.charAt(0) == '/') {
+      path = path.substring(1);
+    }
+    return baseUrl + path;
   }
 
   public static <T> List<T> safe(List<T> list) {
