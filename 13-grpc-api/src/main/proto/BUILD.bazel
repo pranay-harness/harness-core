@@ -2,7 +2,7 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_proto_grpc//java:defs.bzl", "java_grpc_compile")
 
 proto_library(
-    name = "19_grpc_api_proto",
+    name = "13_grpc_api_proto",
     srcs = glob(["**/*.proto"]),
     strip_import_prefix = "",
     deps = [
@@ -14,9 +14,9 @@ proto_library(
 )
 
 java_grpc_compile(
-    name = "19_grpc_api_java_proto",
+    name = "13_grpc_api_java_proto",
     deps = [
-        ":19_grpc_api_proto",
+        ":13_grpc_api_proto",
     ],
     visibility = ["//visibility:public"],
 )
