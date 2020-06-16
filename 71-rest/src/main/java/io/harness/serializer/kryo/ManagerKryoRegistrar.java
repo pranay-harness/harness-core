@@ -19,6 +19,7 @@ import com.splunk.HttpException;
 import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
 import io.harness.ccm.config.CCMConfig;
+import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.redesign.states.http.chain.BasicHttpChainStepParameters;
@@ -1714,5 +1715,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsAmiServiceTrafficShiftAlbDeployRequest.class, 7434);
     kryo.register(AwsAmiTrafficShiftAlbSwitchRouteRequest.class, 7435);
     kryo.register(AwsAmiTrafficShiftAlbStateExecutionData.class, 7436);
+    kryo.register(KustomizeCapability.class, 7437);
   }
 }
