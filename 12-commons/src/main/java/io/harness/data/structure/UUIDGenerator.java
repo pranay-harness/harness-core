@@ -1,5 +1,8 @@
 package io.harness.data.structure;
 
+import static com.fasterxml.uuid.Generators.timeBasedGenerator;
+import static org.apache.commons.codec.binary.Base64.decodeBase64;
+
 import org.apache.commons.codec.binary.Base64;
 
 import java.nio.ByteBuffer;
@@ -7,8 +10,6 @@ import java.util.UUID;
 
 /**
  * A universal unique ID generator.
- *
- * @author Rishi
  */
 public final class UUIDGenerator {
   private UUIDGenerator() {}
@@ -20,11 +21,26 @@ public final class UUIDGenerator {
    */
   public static String generateUuid() {
     UUID uuid = UUID.randomUUID();
+    return convertToBase64String(uuid);
+  }
+
+  public static String generateTimeBasedUuid() {
+    UUID uuid = timeBasedGenerator().generate();
+    return convertToBase64String(uuid);
+  }
+
+  protected static String convertToBase64String(UUID uuid) {
     byte[] bytes = new byte[16];
     ByteBuffer uuidBytes = ByteBuffer.wrap(bytes);
     uuidBytes.putLong(uuid.getMostSignificantBits());
     uuidBytes.putLong(uuid.getLeastSignificantBits());
     return Base64.encodeBase64URLSafeString(bytes);
+  }
+
+  protected static UUID convertFromBase64(String uuid) {
+    byte[] bytes = decodeBase64(uuid);
+    ByteBuffer bb = ByteBuffer.wrap(bytes);
+    return new UUID(bb.getLong(), bb.getLong());
   }
 
   /**
@@ -33,6 +49,6 @@ public final class UUIDGenerator {
    * @return the uuid
    */
   public static String convertBase64UuidToCanonicalForm(String base64Uuid) {
-    return UUID.nameUUIDFromBytes(Base64.decodeBase64(base64Uuid)).toString();
+    return UUID.nameUUIDFromBytes(decodeBase64(base64Uuid)).toString();
   }
 }
