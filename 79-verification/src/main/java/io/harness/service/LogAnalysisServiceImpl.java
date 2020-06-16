@@ -21,6 +21,7 @@ import static software.wings.service.intfc.analysis.ClusterLevel.H1;
 import static software.wings.service.intfc.analysis.ClusterLevel.H2;
 import static software.wings.service.intfc.analysis.ClusterLevel.HF;
 import static software.wings.service.intfc.analysis.ClusterLevel.L0;
+import static software.wings.service.intfc.analysis.ClusterLevel.L1;
 import static software.wings.service.intfc.analysis.ClusterLevel.L2;
 
 import com.google.common.base.Preconditions;
@@ -362,6 +363,11 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         break;
       case L1:
         deleteClusterLevel(cvConfigId, host, logCollectionMinute, ClusterLevel.L0, ClusterLevel.L1);
+        Set<String> hosts =
+            getHostsForMinute(appId, LogDataRecordKeys.cvConfigId, cvConfigId, logCollectionMinute, ClusterLevel.L0);
+        if (isEmpty(hosts)) {
+          deleteClusterLevel(cvConfigId, null, logCollectionMinute, L0, L1);
+        }
         if (isEmpty(getHostsForMinute(appId, LogDataRecordKeys.cvConfigId, cvConfigId, logCollectionMinute, L0, H0))) {
           try {
             learningEngineService.markCompleted(logsCVConfiguration.getAccountId(), null,

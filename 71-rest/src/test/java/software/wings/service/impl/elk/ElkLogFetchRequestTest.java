@@ -1,12 +1,12 @@
 package software.wings.service.impl.elk;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Sets;
 
-import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -14,13 +14,11 @@ import io.harness.serializer.JsonUtils;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import software.wings.WingsBaseTest;
 
 import java.util.concurrent.TimeUnit;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ElkLogFetchRequestTest extends CategoryTest {
+public class ElkLogFetchRequestTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
@@ -164,5 +162,41 @@ public class ElkLogFetchRequestTest extends CategoryTest {
         .endTime(1518724315175L)
         .queryType(ElkQueryType.TERM)
         .build();
+  }
+
+  private ElkLogFetchRequest getElkLogFetchRequest() {
+    return ElkLogFetchRequest.builder()
+        .query("exception")
+        .indices("logstash-*")
+        .hostnameField("beat.hostname")
+        .messageField("message")
+        .timestampField("@time")
+        .hosts(Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"))
+        .startTime(1518724315175L - TimeUnit.MINUTES.toMillis(1))
+        .endTime(1518724315175L)
+        .queryType(ElkQueryType.MATCH)
+        .build();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testConstructor_defaultValuesUnset() {
+    ElkLogFetchRequest logFetchRequest = ElkLogFetchRequest.builder().build();
+    assertThat(logFetchRequest.getQueryType()).isEqualTo(ElkQueryType.TERM);
+    assertThat(logFetchRequest.getTimestampField()).isEqualTo("@timestamp");
+
+    logFetchRequest.setQueryType(null);
+    assertThat(logFetchRequest.getQueryType()).isEqualTo(ElkQueryType.TERM);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testConstructor_defaultValuesSet() {
+    ElkLogFetchRequest logFetchRequest = getElkLogFetchRequest();
+    assertThat(logFetchRequest.getQueryType()).isEqualTo(ElkQueryType.MATCH);
+    assertThat(logFetchRequest.getTimestampField()).isEqualTo("@time");
+    assertThat(logFetchRequest.getQuery()).isEqualTo("exception");
   }
 }

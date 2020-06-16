@@ -1,5 +1,6 @@
 package software.wings.service.impl.elk;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 
 import io.harness.exception.WingsException;
@@ -21,17 +22,34 @@ import java.util.Stack;
  */
 
 @Data
-@Builder
 public class ElkLogFetchRequest {
   private final String query;
   private final String indices;
   private final String hostnameField;
   private final String messageField;
-  @Builder.Default private String timestampField = "@timestamp";
+  private String timestampField = "@timestamp";
   private final Set<String> hosts;
   private final long startTime;
   private final long endTime;
-  @Builder.Default private ElkQueryType queryType = ElkQueryType.TERM;
+  private ElkQueryType queryType = ElkQueryType.TERM;
+
+  @Builder
+  private ElkLogFetchRequest(String query, String indices, String hostnameField, String messageField,
+      String timestampField, Set<String> hosts, long startTime, long endTime, ElkQueryType queryType) {
+    this.query = query;
+    this.indices = indices;
+    this.hostnameField = hostnameField;
+    this.messageField = messageField;
+    this.timestampField = isEmpty(timestampField) ? this.timestampField : timestampField;
+    this.hosts = hosts;
+    this.startTime = startTime;
+    this.endTime = endTime;
+    this.queryType = queryType == null ? this.queryType : queryType;
+  }
+
+  public void setQueryType(ElkQueryType queryType) {
+    this.queryType = queryType == null ? this.queryType : queryType;
+  }
 
   public Object toElasticSearchJsonObject() {
     List<JSONObject> hostJsonObjects = new ArrayList<>();
