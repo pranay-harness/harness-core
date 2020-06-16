@@ -3,6 +3,7 @@ package software.wings.helpers.ext.pcf;
 import static io.harness.pcf.model.PcfConstants.APP_TOKEN;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_APP_LOG_TAILING;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCALAR;
+import static io.harness.pcf.model.PcfConstants.CF_DOCKER_CREDENTIALS;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
 import static io.harness.pcf.model.PcfConstants.CF_PLUGIN_HOME;
 import static io.harness.pcf.model.PcfConstants.HARNESS__ACTIVE__INDENTIFIER;
@@ -11,6 +12,7 @@ import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__INDENTIFIER;
 import static io.harness.pcf.model.PcfRouteType.PCF_ROUTE_TYPE_HTTP;
 import static io.harness.pcf.model.PcfRouteType.PCF_ROUTE_TYPE_TCP;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -45,6 +47,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.filesystem.FileIo;
 import io.harness.pcf.model.PcfRouteInfo;
 import io.harness.rule.Owner;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import org.cloudfoundry.doppler.LogMessage;
 import org.cloudfoundry.doppler.MessageType;
 import org.cloudfoundry.operations.CloudFoundryOperations;
@@ -77,8 +81,17 @@ import org.zeroturnaround.exec.StartedProcess;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.GcpConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
+import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
 
@@ -107,6 +120,7 @@ public class PivotalClientTest extends WingsBaseTest {
   @Spy PcfClientImpl mockedClient;
   public static String APP_NAME = "APP_NAME";
   public static String PATH = "path";
+  private static final String ADMIN = "admin";
 
   @Before
   public void setupMocks() throws Exception {
@@ -1349,5 +1363,64 @@ public class PivotalClientTest extends WingsBaseTest {
       assertThat(e instanceof PivotalClientApiException).isTrue();
       assertThat(e.getMessage()).contains("Failed to unset env var: HARNESS__STATUS__INDENTIFIER");
     }
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testEnvVariablesForDockerDeployment() {
+    reset(mockedClient);
+
+    SettingAttribute serverSetting = SettingAttribute.Builder.aSettingAttribute().build();
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().build();
+    artifactStreamAttributes.setServerSetting(serverSetting);
+    PcfCommandSetupRequest pcfCommandSetupRequest = PcfCommandSetupRequest.builder().build();
+    PcfCreateApplicationRequestData requestData = PcfCreateApplicationRequestData.builder().build();
+    pcfCommandSetupRequest.setArtifactStreamAttributes(artifactStreamAttributes);
+    requestData.setSetupRequest(pcfCommandSetupRequest);
+
+    // Non-Docker deployment
+    Map<String, String> environmentMapForPcfPush = mockedClient.getEnvironmentMapForPcfPush(requestData);
+    assertThat(environmentMapForPcfPush.containsKey(CF_DOCKER_CREDENTIALS)).isEqualTo(false);
+
+    // Docker deployment
+    artifactStreamAttributes.setDockerBasedDeployment(true);
+
+    // Docker Hub
+    DockerConfig dockerConfig = DockerConfig.builder()
+                                    .dockerRegistryUrl("DOCKER_URL")
+                                    .username(ADMIN)
+                                    .password(new ScmSecret().decryptToCharArray(new SecretName("harness_docker_v2")))
+                                    .accountId(Account.GLOBAL_ACCOUNT_ID)
+                                    .build();
+    serverSetting.setValue(dockerConfig);
+    environmentMapForPcfPush = mockedClient.getEnvironmentMapForPcfPush(requestData);
+    assertThat(environmentMapForPcfPush.containsKey(CF_DOCKER_CREDENTIALS)).isEqualTo(true);
+
+    // ECR
+    AwsConfig awsConfig =
+        AwsConfig.builder().accessKey("AKIAWQ5IKSASRV2RUSNP").secretKey("secretKey".toCharArray()).build();
+    serverSetting.setValue(awsConfig);
+    environmentMapForPcfPush = mockedClient.getEnvironmentMapForPcfPush(requestData);
+    assertThat(environmentMapForPcfPush.containsKey(CF_DOCKER_CREDENTIALS)).isEqualTo(true);
+
+    // Artifactory
+    ArtifactoryConfig artifactoryConfig =
+        ArtifactoryConfig.builder().username(ADMIN).password("key".toCharArray()).build();
+    serverSetting.setValue(artifactoryConfig);
+    environmentMapForPcfPush = mockedClient.getEnvironmentMapForPcfPush(requestData);
+    assertThat(environmentMapForPcfPush.containsKey(CF_DOCKER_CREDENTIALS)).isEqualTo(true);
+
+    // GCR
+    GcpConfig gcpConfig = GcpConfig.builder().serviceAccountKeyFileContent("privateKey".toCharArray()).build();
+    serverSetting.setValue(gcpConfig);
+    environmentMapForPcfPush = mockedClient.getEnvironmentMapForPcfPush(requestData);
+    assertThat(environmentMapForPcfPush.containsKey(CF_DOCKER_CREDENTIALS)).isEqualTo(true);
+
+    // Nexus
+    NexusConfig nexusConfig = NexusConfig.builder().username(ADMIN).password("key".toCharArray()).build();
+    serverSetting.setValue(nexusConfig);
+    environmentMapForPcfPush = mockedClient.getEnvironmentMapForPcfPush(requestData);
+    assertThat(environmentMapForPcfPush.containsKey(CF_DOCKER_CREDENTIALS)).isEqualTo(true);
   }
 }
