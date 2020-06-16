@@ -13,6 +13,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.services.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
@@ -35,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 public class RetryAdviseHandlerTest extends OrchestrationTest {
   @InjectMocks @Inject private RetryAdviseHandler retryAdviseHandler;
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
+  @Inject private PlanExecutionService planExecutionService;
 
   @Mock @Named("EngineExecutorService") private ExecutorService executorService;
 
@@ -55,7 +57,7 @@ public class RetryAdviseHandlerTest extends OrchestrationTest {
                        Level.builder().runtimeId(NODE_EXECUTION_ID).setupId(NODE_SETUP_ID).build()))
                    .build();
 
-    hPersistence.save(PlanExecution.builder().uuid(PLAN_EXECUTION_ID).createdBy(EMBEDDED_USER).build());
+    planExecutionService.save(PlanExecution.builder().uuid(PLAN_EXECUTION_ID).createdBy(EMBEDDED_USER).build());
 
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .uuid(NODE_EXECUTION_ID)

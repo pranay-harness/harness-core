@@ -8,58 +8,46 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.execution.status.Status;
-import io.harness.iterator.PersistentRegularIterable;
-import io.harness.persistence.CreatedAtAccess;
-import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAccess;
-import io.harness.persistence.CreatedByAware;
-import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.plan.Plan;
 import io.harness.plan.input.InputArgs;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 import lombok.experimental.FieldNameConstants;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
+import lombok.experimental.Wither;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
-import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
-@Data
+@Value
 @Builder
 @Redesign
 @FieldNameConstants(innerTypeName = "PlanExecutionKeys")
-@Entity(value = "planExecutions")
+@Document("planExecutions")
+@TypeAlias("planExecutions")
 @JsonIgnoreProperties(ignoreUnknown = true, value = {"plan"})
-public final class PlanExecution implements PersistentRegularIterable, CreatedAtAware, CreatedAtAccess, CreatedByAware,
-                                            CreatedByAccess, UpdatedAtAware, UuidAccess {
+public class PlanExecution implements PersistentEntity, CreatedByAccess, UuidAccess {
   public static final Duration TTL = ofDays(21);
 
-  @Id @NotNull private String uuid;
-  private EmbeddedUser createdBy;
-  private long createdAt;
-  private Plan plan;
-  private InputArgs inputArgs;
-  private Long nextIteration;
-  @Builder.Default private Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
+  @Wither @Id String uuid;
+  EmbeddedUser createdBy;
+  @Wither @CreatedDate Long createdAt;
+  Plan plan;
+  InputArgs inputArgs;
+  @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 
   Status status;
-  private Long startTs;
-  private Long endTs;
+  Long startTs;
+  Long endTs;
 
-  long lastUpdatedAt;
-
-  @Override
-  public void updateNextIteration(String fieldName, Long nextIteration) {
-    this.nextIteration = nextIteration;
-  }
-
-  @Override
-  public Long obtainNextIteration(String fieldName) {
-    return nextIteration;
-  }
+  @Wither @LastModifiedDate Long lastUpdatedAt;
 }

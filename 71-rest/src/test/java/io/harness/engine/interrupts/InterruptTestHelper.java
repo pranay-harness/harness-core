@@ -1,17 +1,21 @@
 package io.harness.engine.interrupts;
 
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+
 import com.google.inject.Inject;
 
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.execution.status.Status;
-import io.harness.persistence.HPersistence;
 import org.awaitility.Awaitility;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 
 import java.util.concurrent.TimeUnit;
 
 public class InterruptTestHelper {
-  @Inject HPersistence hPersistence;
+  @Inject private MongoTemplate mongoTemplate;
 
   public void waitForPlanStatus(String uuid, Status status) {
     Awaitility.await().atMost(5, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
@@ -29,9 +33,8 @@ public class InterruptTestHelper {
   }
 
   public PlanExecution fetchPlanExecutionStatus(String uuid) {
-    return hPersistence.createQuery(PlanExecution.class)
-        .filter(PlanExecutionKeys.uuid, uuid)
-        .project(PlanExecutionKeys.status, true)
-        .get();
+    Query query = query(where(PlanExecutionKeys.uuid).is(uuid));
+    query.fields().include(PlanExecutionKeys.status);
+    return mongoTemplate.findOne(query, PlanExecution.class);
   }
 }

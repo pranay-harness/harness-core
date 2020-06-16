@@ -56,7 +56,7 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
   }
 
   private void handleResponse(Ambiance ambiance, ChildrenExecutableResponse response) {
-    PlanExecution planExecution = Preconditions.checkNotNull(ambianceHelper.obtainExecutionInstance(ambiance));
+    PlanExecution planExecution = Preconditions.checkNotNull(ambianceHelper.obtainPlanExecution(ambiance));
     NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
     Plan plan = planExecution.getPlan();
     List<String> callbackIds = new ArrayList<>();

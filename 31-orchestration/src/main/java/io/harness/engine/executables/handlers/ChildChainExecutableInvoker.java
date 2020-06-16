@@ -54,7 +54,7 @@ public class ChildChainExecutableInvoker implements ExecutableInvoker {
 
   private void handleResponse(Ambiance ambiance, ChildChainResponse childChainResponse) {
     String childInstanceId = generateUuid();
-    PlanExecution planExecution = ambianceHelper.obtainExecutionInstance(ambiance);
+    PlanExecution planExecution = ambianceHelper.obtainPlanExecution(ambiance);
     NodeExecution nodeExecution = ambianceHelper.obtainNodeExecution(ambiance);
     Plan plan = planExecution.getPlan();
     PlanNode node = plan.fetchNode(childChainResponse.getChildNodeId());

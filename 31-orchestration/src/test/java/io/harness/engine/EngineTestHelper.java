@@ -1,16 +1,20 @@
 package io.harness.engine;
 
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+
 import com.google.inject.Inject;
 
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.persistence.HPersistence;
 import org.awaitility.Awaitility;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 
 import java.util.concurrent.TimeUnit;
 
 public class EngineTestHelper {
-  @Inject HPersistence hPersistence;
+  @Inject MongoTemplate mongoTemplate;
 
   public void waitForPlanCompletion(String uuid) {
     final String finalStatusEnding = "ED";
@@ -21,9 +25,8 @@ public class EngineTestHelper {
   }
 
   public PlanExecution getPlanExecutionStatus(String uuid) {
-    return hPersistence.createQuery(PlanExecution.class)
-        .filter(PlanExecutionKeys.uuid, uuid)
-        .project(PlanExecutionKeys.status, true)
-        .get();
+    Query query = query(where(PlanExecutionKeys.uuid).is(uuid));
+    query.fields().include(PlanExecutionKeys.status);
+    return mongoTemplate.findOne(query, PlanExecution.class);
   }
 }

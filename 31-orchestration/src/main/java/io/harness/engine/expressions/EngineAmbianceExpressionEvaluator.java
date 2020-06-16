@@ -68,7 +68,7 @@ public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator
               .build());
     }
 
-    PlanExecution planExecution = ambianceHelper.obtainExecutionInstance(ambiance);
+    PlanExecution planExecution = ambianceHelper.obtainPlanExecution(ambiance);
     if (planExecution == null) {
       return;
     }

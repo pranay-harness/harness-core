@@ -24,7 +24,7 @@ public class ResumeStepStatusUpdate implements StepStatusUpdate {
     boolean resumePlan =
         resumeParents(stepStatusUpdateInfo.getNodeExecutionId(), stepStatusUpdateInfo.getInterruptId());
     if (resumePlan) {
-      planExecutionService.updateStatusWithOps(stepStatusUpdateInfo.getPlanExecutionId(), RUNNING, null);
+      planExecutionService.updateStatus(stepStatusUpdateInfo.getPlanExecutionId(), RUNNING);
     }
   }
 

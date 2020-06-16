@@ -12,7 +12,6 @@ import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
-import org.mongodb.morphia.annotations.Id;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -38,7 +37,7 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @FieldNameConstants(innerTypeName = "PlanKeys")
 public class Plan implements PersistentEntity {
-  @Id @NonNull String uuid;
+  @NonNull String uuid;
 
   @Singular List<PlanNode> nodes;
 
@@ -53,7 +52,8 @@ public class Plan implements PersistentEntity {
   }
 
   public PlanNode fetchNode(String nodeId) {
-    int nodeIndex = Collections.binarySearch(nodes, new PlanNode(nodeId), Comparator.comparing(PlanNode::getUuid));
+    int nodeIndex = Collections.binarySearch(
+        nodes, PlanNode.builder().uuid(nodeId).build(), Comparator.comparing(PlanNode::getUuid));
     if (nodeIndex < 0) {
       throw new InvalidRequestException("No node found with Id :" + nodeId);
     }

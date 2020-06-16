@@ -7,10 +7,12 @@ import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.Map;
+
 @OwnedBy(CDC)
 @Value
 @Builder
 public class DummySectionStepParameters implements StepParameters {
   String childNodeId;
-  DummySectionStepTransput data;
+  Map<String, String> data;
 }

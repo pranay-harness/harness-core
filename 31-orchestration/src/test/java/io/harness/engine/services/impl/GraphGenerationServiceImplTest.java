@@ -14,6 +14,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.cache.MongoStore;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.services.GraphGenerationService;
+import io.harness.engine.services.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -48,6 +49,7 @@ import java.util.stream.Collectors;
  */
 public class GraphGenerationServiceImplTest extends OrchestrationTest {
   @Inject @Named("enginePersistence") private HPersistence hPersistence;
+  @Inject private PlanExecutionService planExecutionService;
   @Inject private MongoStore mongoStore;
   @Mock @Named("EngineExecutorService") private ExecutorService executorService;
   @InjectMocks @Inject private GraphGenerationService graphGenerationService;
@@ -64,22 +66,21 @@ public class GraphGenerationServiceImplTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldThrowInvalidRequestExceptionWhenPlanExecutionIdIsNull() {
     assertThatThrownBy(() -> graphGenerationService.generateGraph(null))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Plan Execution is null for id: null");
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("The given id must not be null!");
   }
 
   @Test
   @Owner(developers = ALEXEI)
+  @RealMongo
   @Category(UnitTests.class)
   public void shouldThrowInvalidRequestExceptionWhenNoNodesAreFound() {
     PlanExecution planExecution = PlanExecution.builder().uuid("plan_test_id").createdBy(createdBy()).build();
-    hPersistence.save(planExecution);
+    planExecutionService.save(planExecution);
 
     assertThatThrownBy(() -> graphGenerationService.generateGraph(planExecution.getUuid()))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("No nodes found for planExecutionId [" + planExecution.getUuid() + "]");
-
-    hPersistence.delete(planExecution);
   }
 
   @Test
@@ -88,7 +89,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldTestWithoutCache() {
     PlanExecution planExecution = PlanExecution.builder().uuid("plan_test_id").createdBy(createdBy()).build();
-    hPersistence.save(planExecution);
+    planExecutionService.save(planExecution);
 
     StepParameters forkStepParams =
         ForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
@@ -151,9 +152,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationTest {
         mongoStore.get(Graph.ALGORITHM_ID, Graph.STRUCTURE_HASH, planExecution.getUuid(), Collections.emptyList());
     assertThat(cachedGraph).isNotNull();
     assertThat(cachedGraph.structureHash()).isEqualTo(Graph.STRUCTURE_HASH);
-
     nodeExecutions.forEach(node -> hPersistence.delete(node));
-    hPersistence.delete(planExecution);
   }
 
   @Test
@@ -162,7 +161,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldTestWithCache() {
     PlanExecution planExecution = PlanExecution.builder().uuid("plan_test_id").createdBy(createdBy()).build();
-    hPersistence.save(planExecution);
+    planExecutionService.save(planExecution);
 
     NodeExecution dummyStart = NodeExecution.builder()
                                    .uuid("node1")
@@ -191,9 +190,6 @@ public class GraphGenerationServiceImplTest extends OrchestrationTest {
     assertThat(graphResponse).isNotNull();
     assertThat(graphResponse.getGraphVertex()).isNotNull();
     assertThat(graphResponse.getGraphVertex().getUuid()).isEqualTo(vertex.getUuid());
-
-    hPersistence.delete(dummyStart);
-    hPersistence.delete(planExecution);
   }
 
   private static Answer<?> executeRunnable(ArgumentCaptor<Runnable> runnableCaptor) {

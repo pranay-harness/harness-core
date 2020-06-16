@@ -296,7 +296,7 @@ public class ExecutionEngine {
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
       logger.info("Ending Execution");
-      planExecutionService.updateStatusWithOps(nodeExecution.getPlanExecutionId(), nodeExecution.getStatus(), null);
+      planExecutionService.updateStatus(nodeExecution.getPlanExecutionId(), nodeExecution.getStatus());
     }
   }
 

@@ -27,7 +27,7 @@ public class AmbianceHelper {
     return nodeExecutionService.get(nodeExecutionId);
   }
 
-  public PlanExecution obtainExecutionInstance(Ambiance ambiance) {
+  public PlanExecution obtainPlanExecution(Ambiance ambiance) {
     String planExecutionId = ambiance == null ? null : ambiance.getPlanExecutionId();
     if (planExecutionId == null) {
       return null;
