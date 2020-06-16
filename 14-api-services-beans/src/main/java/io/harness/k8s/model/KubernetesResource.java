@@ -8,6 +8,8 @@ import static io.harness.k8s.manifest.ObjectYamlUtils.readYaml;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.manifest.ObjectYamlUtils;
@@ -425,7 +427,8 @@ public class KubernetesResource {
     return null;
   }
 
-  private Object getK8sResource() {
+  @VisibleForTesting
+  Object getK8sResource() {
     Kind kind = Kind.valueOf(this.resourceId.getKind());
 
     switch (kind) {
