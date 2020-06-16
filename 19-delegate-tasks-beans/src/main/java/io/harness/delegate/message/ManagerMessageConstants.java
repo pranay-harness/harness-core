@@ -8,5 +8,4 @@ public interface ManagerMessageConstants {
   String USE_STORAGE_PROXY = "[USE_STORAGE_PROXY]";
   String JRE_VERSION = "[JRE_VERSION]";
   String UPDATE_PERPETUAL_TASK = "[UPDATE_PERPETUAL_TASK]";
-  String INVALID_TOKEN = "[INVALID_TOKEN]";
 }
