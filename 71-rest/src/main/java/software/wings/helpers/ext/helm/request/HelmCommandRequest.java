@@ -16,6 +16,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.GitConfig;
 import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
@@ -56,7 +57,11 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     executionCapabilities.add(HelmCommandCapability.builder().commandRequest(this).build());
     if (gitConfig != null) {
-      executionCapabilities.addAll(gitConfig.fetchRequiredExecutionCapabilities());
+      executionCapabilities.add(GitConnectionCapability.builder()
+                                    .gitConfig(gitConfig)
+                                    .settingAttribute(gitConfig.getSshSettingAttribute())
+                                    .encryptedDataDetails(getEncryptedDataDetails())
+                                    .build());
     }
     if (containerServiceParams != null) {
       executionCapabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities());
