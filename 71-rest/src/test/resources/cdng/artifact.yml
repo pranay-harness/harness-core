@@ -17,6 +17,7 @@ pipeline:
                     dockerhubConnector: "https://registry.hub.docker.com/"
                     imagePath: "library/ubuntu"
                     tag: "latest"
+                    tagRegex: "groov*"
                 sidecars:
                   - sidecar:
                       identifier: sidecar1

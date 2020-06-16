@@ -55,6 +55,6 @@ public class ArtifactCollectTask extends AbstractDelegateRunnableTask {
 
   @VisibleForTesting
   DelegateArtifactService getDelegateArtifactService(ArtifactTaskParameters taskParameters) {
-    return injector.getInstance(taskParameters.getAttributes().getDelegateArtifactService());
+    return injector.getInstance(taskParameters.getAttributes().getDelegateArtifactServiceClass());
   }
 }

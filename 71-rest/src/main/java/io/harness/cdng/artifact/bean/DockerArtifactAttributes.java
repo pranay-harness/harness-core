@@ -4,6 +4,8 @@ import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import org.jetbrains.annotations.NotNull;
+import software.wings.common.ComparatorUtils;
 
 @Value
 @Builder
@@ -27,5 +29,15 @@ public class DockerArtifactAttributes implements ArtifactAttributes {
         .identifier(artifactConfig.getIdentifier())
         .artifactType(artifactConfig.getArtifactType())
         .build();
+  }
+
+  @Override
+  public int compareTo(@NotNull ArtifactAttributes that) {
+    if (that instanceof DockerArtifactAttributes) {
+      DockerArtifactAttributes artifactAttributes = (DockerArtifactAttributes) that;
+      return ComparatorUtils.compareDecending(this.getTag(), artifactAttributes.getTag());
+    } else {
+      throw new IllegalArgumentException("ArtifactAttributes list doesn't have all DockerArtifactAttributes elements.");
+    }
   }
 }

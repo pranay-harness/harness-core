@@ -1,9 +1,8 @@
 package io.harness.cdng.artifact.bean.artifactsource;
 
 import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
-import io.harness.cdng.artifact.bean.connector.DockerhubConnectorConfig;
 import io.harness.cdng.artifact.delegate.DelegateArtifactService;
-import io.harness.cdng.artifact.delegate.DockerArtifactService;
+import io.harness.cdng.artifact.delegate.DockerArtifactServiceImpl;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -25,7 +24,7 @@ public class DockerArtifactSourceAttributes implements ArtifactSourceAttributes 
   String tagRegex;
 
   @Override
-  public Class<? extends DelegateArtifactService<DockerhubConnectorConfig>> getDelegateArtifactService() {
-    return DockerArtifactService.class;
+  public Class<? extends DelegateArtifactService> getDelegateArtifactServiceClass() {
+    return DockerArtifactServiceImpl.class;
   }
 }

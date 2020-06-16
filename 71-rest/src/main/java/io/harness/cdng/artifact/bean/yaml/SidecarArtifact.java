@@ -23,10 +23,4 @@ public class SidecarArtifact implements SidecarArtifactWrapper {
     this.artifact.setIdentifier(this.identifier);
     this.artifact.setArtifactType(ArtifactUtils.SIDECAR_ARTIFACT);
   }
-  @JsonProperty(ArtifactSourceType.GCR)
-  public void setGCR(GcrArtifactConfig sidecar) {
-    this.artifact = sidecar;
-    this.artifact.setIdentifier(this.identifier);
-    this.artifact.setArtifactType(ArtifactUtils.SIDECAR_ARTIFACT);
-  }
 }
