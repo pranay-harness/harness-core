@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  name: qa-shareprocessnamespace
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: nginx
+    spec:
+      shareProcessNamespace: true
+      containers:
+        - name: nginx
+          image: nginx
+          stdin: true
+          tty: true
+        - name: shell
+          image: busybox
+          securityContext:
+            capabilities:
+              add:
+                - SYS_PTRACE
+          stdin: true
+          tty: true

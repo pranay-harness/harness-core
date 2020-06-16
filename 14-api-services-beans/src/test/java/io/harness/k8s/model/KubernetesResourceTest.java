@@ -5,6 +5,7 @@ import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static junit.framework.TestCase.assertEquals;
@@ -22,6 +23,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.rule.Owner;
+import io.kubernetes.client.openapi.models.V1Deployment;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -570,5 +572,18 @@ public class KubernetesResourceTest extends CategoryTest {
           .extracting(ResponseMessage::getMessage)
           .containsExactly("Invalid request: Unhandled Kubernetes resource Job while adding labels to selector");
     }
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void testNullCreationTimestamp() throws Exception {
+    URL url = this.getClass().getResource("/deployment-null-creationtimestamp.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    assertThat(resource.getK8sResource()).isInstanceOfSatisfying(V1Deployment.class, dep -> {
+      assertThat(dep.getMetadata().getCreationTimestamp()).isNull();
+      assertThat(dep.getSpec().getTemplate().getMetadata().getCreationTimestamp()).isNull();
+    });
   }
 }
