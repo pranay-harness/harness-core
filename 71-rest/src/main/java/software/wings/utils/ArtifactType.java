@@ -4,6 +4,7 @@ import static io.harness.delegate.task.shell.ScriptType.POWERSHELL;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.Graph.Builder.aGraph;
+import static software.wings.beans.Graph.graphIdGenerator;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.AWS_AMI;
 import static software.wings.beans.command.CommandUnitType.CODE_DEPLOY;
@@ -29,7 +30,6 @@ import static software.wings.utils.PowerShellScriptsLoader.psScriptMap;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.harness.data.structure.UUIDGenerator;
 import software.wings.beans.GraphNode;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
@@ -72,7 +72,7 @@ public enum ArtifactType {
                          .withGraphName("Start")
                          .addNodes(getStartServiceNode("java -jar \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\""),
                              GraphNode.builder()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
+                                 .id(graphIdGenerator("node"))
                                  .name("Process Running")
                                  .type(PROCESS_CHECK_RUNNING.name())
                                  .properties(ImmutableMap.<String, Object>builder()
@@ -114,7 +114,7 @@ public enum ArtifactType {
                          .addNodes(getStopServiceNode(
                                        "\npgrep -f \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\" | xargs kill  || true"),
                              GraphNode.builder()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
+                                 .id(graphIdGenerator("node"))
                                  .name("Process Stopped")
                                  .type(PROCESS_CHECK_STOPPED.name())
                                  .properties(ImmutableMap.<String, Object>builder()
@@ -151,14 +151,14 @@ public enum ArtifactType {
                          .withGraphName("Install")
                          .addNodes(getSetupRuntimePathsNode(),
                              GraphNode.builder()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
+                                 .id(graphIdGenerator("node"))
                                  .name("Stop")
                                  .type(COMMAND.name())
                                  .properties(ImmutableMap.<String, Object>builder().put("referenceId", "Stop").build())
                                  .build(),
                              getCopyArtifactNode(), getCopyConfigsNode(),
                              GraphNode.builder()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
+                                 .id(graphIdGenerator("node"))
                                  .name("Start")
                                  .type(COMMAND.name())
                                  .properties(ImmutableMap.<String, Object>builder().put("referenceId", "Start").build())
@@ -235,7 +235,7 @@ public enum ArtifactType {
                   .withGraphName("Stop")
                   .addNodes(getStopServiceNode("echo \"service stop script should be added here\""),
                       GraphNode.builder()
-                          .id(UUIDGenerator.graphIdGenerator("node"))
+                          .id(graphIdGenerator("node"))
                           .name("Service Stopped")
                           .type(PROCESS_CHECK_STOPPED.name())
                           .properties(ImmutableMap.<String, Object>builder()
@@ -257,7 +257,7 @@ public enum ArtifactType {
                          .withGraphName("Install")
                          .addNodes(getSetupRuntimePathsNode(), getCopyArtifactNode(),
                              GraphNode.builder()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
+                                 .id(graphIdGenerator("node"))
                                  .name("Expand Artifact")
                                  .type(EXEC.name())
                                  .properties(ImmutableMap.<String, Object>builder()
@@ -315,7 +315,7 @@ public enum ArtifactType {
                   .withGraphName("Stop")
                   .addNodes(getStopServiceNode("echo \"service stop script should be added here\""),
                       GraphNode.builder()
-                          .id(UUIDGenerator.graphIdGenerator("node"))
+                          .id(graphIdGenerator("node"))
                           .name("Service Stopped")
                           .type(PROCESS_CHECK_STOPPED.name())
                           .properties(ImmutableMap.<String, Object>builder()
@@ -337,7 +337,7 @@ public enum ArtifactType {
                          .withGraphName("Install")
                          .addNodes(getSetupRuntimePathsNode(), getCopyArtifactNode(),
                              GraphNode.builder()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
+                                 .id(graphIdGenerator("node"))
                                  .name("Expand Artifact")
                                  .type(EXEC.name())
                                  .properties(ImmutableMap.<String, Object>builder()
@@ -369,7 +369,7 @@ public enum ArtifactType {
                                        .withGraphName("Setup Service Cluster")
                                        .addNodes(GraphNode.builder()
                                                      .origin(true)
-                                                     .id(UUIDGenerator.graphIdGenerator("node"))
+                                                     .id(graphIdGenerator("node"))
                                                      .name("Setup ECS Service")
                                                      .type(ECS_SETUP.name())
                                                      .build())
@@ -381,7 +381,7 @@ public enum ArtifactType {
                              .withGraphName("Setup Replication Controller")
                              .addNodes(GraphNode.builder()
                                            .origin(true)
-                                           .id(UUIDGenerator.graphIdGenerator("node"))
+                                           .id(graphIdGenerator("node"))
                                            .name("Setup Kubernetes Replication Controller")
                                            .type(KUBERNETES_SETUP.name())
                                            .build())
@@ -393,7 +393,7 @@ public enum ArtifactType {
                              .withGraphName("Resize Service Cluster")
                              .addNodes(GraphNode.builder()
                                            .origin(true)
-                                           .id(UUIDGenerator.graphIdGenerator("node"))
+                                           .id(graphIdGenerator("node"))
                                            .name("Resize ECS Service")
                                            .type(RESIZE.name())
                                            .build())
@@ -405,7 +405,7 @@ public enum ArtifactType {
                              .withGraphName("Resize Replication Controller")
                              .addNodes(GraphNode.builder()
                                            .origin(true)
-                                           .id(UUIDGenerator.graphIdGenerator("node"))
+                                           .id(graphIdGenerator("node"))
                                            .name("Resize Kubernetes Replication Controller")
                                            .type(RESIZE_KUBERNETES.name())
                                            .build())
@@ -458,7 +458,7 @@ public enum ArtifactType {
                   .withGraphName("Stop")
                   .addNodes(getStopServiceNode("echo \"service stop script should be added here\""),
                       GraphNode.builder()
-                          .id(UUIDGenerator.graphIdGenerator("node"))
+                          .id(graphIdGenerator("node"))
                           .name("Service Stopped")
                           .type(PROCESS_CHECK_STOPPED.name())
                           .properties(ImmutableMap.<String, Object>builder()
@@ -476,7 +476,7 @@ public enum ArtifactType {
                          .withGraphName("Install")
                          .addNodes(getSetupRuntimePathsNode(), getCopyArtifactNode(), getCopyConfigsNode(),
                              GraphNode.builder()
-                                 .id(UUIDGenerator.graphIdGenerator("node"))
+                                 .id(graphIdGenerator("node"))
                                  .name("Install")
                                  .type(EXEC.name())
                                  .properties(ImmutableMap.<String, Object>builder()
@@ -512,7 +512,7 @@ public enum ArtifactType {
                          .withGraphName(AWS_LAMBDA_COMMAND_NAME)
                          .addNodes(GraphNode.builder()
                                        .origin(true)
-                                       .id(UUIDGenerator.graphIdGenerator("node"))
+                                       .id(graphIdGenerator("node"))
                                        .name(AWS_LAMBDA_COMMAND_NAME)
                                        .type(AWS_LAMBDA.name())
                                        .build())
@@ -548,7 +548,7 @@ public enum ArtifactType {
                          .withGraphName("Amazon Code Deploy")
                          .addNodes(GraphNode.builder()
                                        .origin(true)
-                                       .id(UUIDGenerator.graphIdGenerator("node"))
+                                       .id(graphIdGenerator("node"))
                                        .name("Amazon Code Deploy")
                                        .type(CODE_DEPLOY.name())
                                        .build())
@@ -584,7 +584,7 @@ public enum ArtifactType {
                          .withGraphName(PCF_SETUP)
                          .addNodes(GraphNode.builder()
                                        .origin(true)
-                                       .id(UUIDGenerator.graphIdGenerator("node"))
+                                       .id(graphIdGenerator("node"))
                                        .name(PCF_SETUP)
                                        .type(PCF.name())
                                        .build())
@@ -599,7 +599,7 @@ public enum ArtifactType {
                          .withGraphName(PCF_RESIZE)
                          .addNodes(GraphNode.builder()
                                        .origin(true)
-                                       .id(UUIDGenerator.graphIdGenerator("node"))
+                                       .id(graphIdGenerator("node"))
                                        .name(PCF_RESIZE)
                                        .type(PCF.name())
                                        .build())
@@ -631,7 +631,7 @@ public enum ArtifactType {
                          .withGraphName(AMI_SETUP_COMMAND_NAME)
                          .addNodes(GraphNode.builder()
                                        .origin(true)
-                                       .id(UUIDGenerator.graphIdGenerator("node"))
+                                       .id(graphIdGenerator("node"))
                                        .name(AMI_SETUP_COMMAND_NAME)
                                        .type(AWS_AMI.name())
                                        .build())
@@ -650,7 +650,7 @@ public enum ArtifactType {
                          .withGraphName(ASG_COMMAND_NAME)
                          .addNodes(GraphNode.builder()
                                        .origin(true)
-                                       .id(UUIDGenerator.graphIdGenerator("node"))
+                                       .id(graphIdGenerator("node"))
                                        .name(ASG_COMMAND_NAME)
                                        .type(AWS_AMI.name())
                                        .build())
@@ -792,7 +792,7 @@ public enum ArtifactType {
   private static GraphNode getSetupRuntimePathsNode() {
     return GraphNode.builder()
         .origin(true)
-        .id(UUIDGenerator.graphIdGenerator("node"))
+        .id(graphIdGenerator("node"))
         .name("Setup Runtime Paths")
         .type(SETUP_ENV.name())
         .properties(ImmutableMap.<String, Object>builder()
@@ -803,7 +803,7 @@ public enum ArtifactType {
 
   private static GraphNode getCopyConfigsNode() {
     return GraphNode.builder()
-        .id(UUIDGenerator.graphIdGenerator("node"))
+        .id(graphIdGenerator("node"))
         .name("Copy Configs")
         .type(COPY_CONFIGS.name())
         .properties(ImmutableMap.<String, Object>builder().put("destinationParentPath", "$WINGS_RUNTIME_PATH").build())
@@ -812,7 +812,7 @@ public enum ArtifactType {
 
   private static GraphNode getCopyArtifactNode() {
     return GraphNode.builder()
-        .id(UUIDGenerator.graphIdGenerator("node"))
+        .id(graphIdGenerator("node"))
         .name("Copy Artifact")
         .type(SCP.name())
         .properties(ImmutableMap.<String, Object>builder()
@@ -825,7 +825,7 @@ public enum ArtifactType {
   private static GraphNode getStartServiceNode(String commandString) {
     return GraphNode.builder()
         .origin(true)
-        .id(UUIDGenerator.graphIdGenerator("node"))
+        .id(graphIdGenerator("node"))
         .type(EXEC.name())
         .name("Start Service")
         .properties(ImmutableMap.<String, Object>builder()
@@ -838,7 +838,7 @@ public enum ArtifactType {
   private static GraphNode getStopServiceNode(String commandString) {
     return GraphNode.builder()
         .origin(true)
-        .id(UUIDGenerator.graphIdGenerator("node"))
+        .id(graphIdGenerator("node"))
         .type(EXEC.name())
         .name("Stop Service")
         .properties(ImmutableMap.<String, Object>builder()
@@ -850,7 +850,7 @@ public enum ArtifactType {
 
   private static GraphNode getServiceRunningNode() {
     return GraphNode.builder()
-        .id(UUIDGenerator.graphIdGenerator("node"))
+        .id(graphIdGenerator("node"))
         .name("Service Running")
         .type(PROCESS_CHECK_RUNNING.name())
         .properties(ImmutableMap.<String, Object>builder()

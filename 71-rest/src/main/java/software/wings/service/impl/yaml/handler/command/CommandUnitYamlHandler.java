@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import io.harness.data.structure.UUIDGenerator;
+import static software.wings.beans.Graph.graphIdGenerator;
+
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import software.wings.beans.GraphNode;
@@ -37,7 +38,7 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
   }
 
   private String getNodeId() {
-    return UUIDGenerator.graphIdGenerator(YamlConstants.NODE_PREFIX);
+    return graphIdGenerator(YamlConstants.NODE_PREFIX);
   }
 
   protected Map<String, Object> getNodeProperties(ChangeContext<Y> changeContext) {

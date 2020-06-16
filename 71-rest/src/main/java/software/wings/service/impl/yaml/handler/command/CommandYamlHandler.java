@@ -4,13 +4,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Graph.graphIdGenerator;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.UUIDGenerator;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.EntityVersion;
@@ -182,7 +182,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
   }
 
   private String getLinkId() {
-    return UUIDGenerator.graphIdGenerator(YamlConstants.LINK_PREFIX);
+    return graphIdGenerator(YamlConstants.LINK_PREFIX);
   }
 
   @Override

@@ -12,7 +12,6 @@ import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.sm.TransitionType.SUCCESS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.harness.data.structure.UUIDGenerator;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.ArrayList;
@@ -21,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * The Class Graph.
@@ -36,6 +36,16 @@ public class Graph {
   private Map<String, Graph> subworkflows = new HashMap<>();
 
   @Transient private Optional<GraphNode> originState;
+
+  /**
+   * Graph id generator string.
+   *
+   * @param prefix the prefix
+   * @return the string
+   */
+  public static String graphIdGenerator(String prefix) {
+    return prefix + "_" + UUID.randomUUID().toString();
+  }
 
   /**
    * Gets graph name.
@@ -384,7 +394,7 @@ public class Graph {
                       .withFrom(nodes.get(i).getId())
                       .withTo(nodes.get(i + 1).getId())
                       .withType(SUCCESS.name())
-                      .withId(UUIDGenerator.graphIdGenerator("link"))
+                      .withId(graphIdGenerator("link"))
                       .build());
       }
       graph.setLinks(links);
