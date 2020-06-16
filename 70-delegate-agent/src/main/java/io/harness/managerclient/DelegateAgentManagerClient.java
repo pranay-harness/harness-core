@@ -1,6 +1,7 @@
 package io.harness.managerclient;
 
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
@@ -8,7 +9,7 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.service.DelegateAgentFileService;
+import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
 import okhttp3.MultipartBody;
@@ -48,23 +49,20 @@ public interface DelegateAgentManagerClient {
   @Multipart
   @POST("agent/delegateFiles/{delegateId}/profile-result")
   Call<RestResponse> saveProfileResult(@Path("delegateId") String delegateId, @Query("accountId") String accountId,
-      @Query("error") boolean error, @Query("fileBucket") DelegateAgentFileService.FileBucket bucket,
-      @Part MultipartBody.Part file);
+      @Query("error") boolean error, @Query("fileBucket") FileBucket bucket, @Part MultipartBody.Part file);
 
   @Multipart
   @POST("agent/delegateFiles/{delegateId}/tasks/{taskId}")
   Call<RestResponse<String>> uploadFile(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
-      @Query("accountId") String accountId, @Query("fileBucket") DelegateAgentFileService.FileBucket bucket,
-      @Part MultipartBody.Part file);
+      @Query("accountId") String accountId, @Query("fileBucket") FileBucket bucket, @Part MultipartBody.Part file);
 
   @GET("agent/delegateFiles/fileId")
   Call<RestResponse<String>> getFileIdByVersion(@Query("entityId") String entityId,
-      @Query("fileBucket") DelegateAgentFileService.FileBucket fileBucket, @Query("version") int version,
-      @Query("accountId") String accountId);
+      @Query("fileBucket") FileBucket fileBucket, @Query("version") int version, @Query("accountId") String accountId);
 
   @GET("agent/delegateFiles/download")
-  Call<ResponseBody> downloadFile(@Query("fileId") String fileId,
-      @Query("fileBucket") DelegateAgentFileService.FileBucket fileBucket, @Query("accountId") String accountId);
+  Call<ResponseBody> downloadFile(
+      @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
 
   @KryoResponse
   @GET("agent/delegates/{delegateId}/tasks/{taskId}/fail")
@@ -74,6 +72,10 @@ public interface DelegateAgentManagerClient {
   @GET("agent/delegateFiles/downloadConfig")
   Call<ResponseBody> downloadFile(@Query("fileId") String fileId, @Query("accountId") String accountId,
       @Query("appId") String appId, @Query("activityId") String activityId);
+
+  @GET("agent/delegateFiles/metainfo")
+  Call<RestResponse<DelegateFile>> getMetaInfo(
+      @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
 
   @GET("agent/delegates/delegateScripts")
   Call<RestResponse<DelegateScripts>> getDelegateScripts(

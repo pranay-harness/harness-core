@@ -1,7 +1,5 @@
 package io.harness.managerclient;
 
-import io.harness.delegate.beans.DelegateFile;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.rest.RestResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -44,10 +42,6 @@ public interface ManagerClient {
       @Query("workflowExecutionId") String workflowExecutionId, @Query("serviceId") String serviceId,
       @Query("clusterLevel") ClusterLevel clusterLevel, @Query("delegateTaskId") String delegateTaskId,
       @Query("stateType") StateType stateType, @Body List<LogElement> metricData);
-
-  @GET("agent/delegateFiles/metainfo")
-  Call<RestResponse<DelegateFile>> getMetaInfo(
-      @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
 
   @KryoResponse
   @PUT("agent/delegates/{delegateId}/tasks/{taskId}/acquire")
