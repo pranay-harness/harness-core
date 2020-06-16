@@ -18,7 +18,6 @@ import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.DelegateAgentManagerClient;
-import io.harness.managerclient.ManagerClient;
 import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
@@ -58,7 +57,6 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   private static final int DEFAULT_MAX_CACHED_ARTIFACT = 2;
   private static final long ARTIFACT_FILE_SIZE_LIMIT = 4L * 1024L * 1024L * 1024L; // 4GB
 
-  private ManagerClient managerClient;
   private DelegateAgentManagerClient delegateAgentManagerClient;
   private DelegateConfiguration delegateConfiguration;
 
@@ -71,9 +69,8 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
   @Inject
-  public DelegateFileManagerImpl(ManagerClient managerClient, DelegateAgentManagerClient delegateAgentManagerClient,
-      DelegateConfiguration delegateConfiguration) {
-    this.managerClient = managerClient;
+  public DelegateFileManagerImpl(
+      DelegateAgentManagerClient delegateAgentManagerClient, DelegateConfiguration delegateConfiguration) {
     this.delegateAgentManagerClient = delegateAgentManagerClient;
     this.delegateConfiguration = delegateConfiguration;
     Executors
@@ -216,7 +213,8 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
 
   @Override
   public DelegateFile getMetaInfo(FileBucket fileBucket, String fileId, String accountId) throws IOException {
-    RestResponse<DelegateFile> restResponse = execute(managerClient.getMetaInfo(fileId, fileBucket, accountId));
+    RestResponse<DelegateFile> restResponse =
+        execute(delegateAgentManagerClient.getMetaInfo(fileId, fileBucket, accountId));
     if (restResponse == null) {
       logger.error("Unknown error occurred while retrieving metainfo for file {} from bucket {}", fileId, fileBucket);
       throw new WingsException(format(
