@@ -282,6 +282,10 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     @Deprecated private String timeStampFormat;
     private String timestampFormat;
 
+    public void setTimestampFormat(String format) {
+      this.timestampFormat = format;
+    }
+
     public String getTimestampFormat() {
       return isNotEmpty(timestampFormat) ? timestampFormat : timeStampFormat;
     }
