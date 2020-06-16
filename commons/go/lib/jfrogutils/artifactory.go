@@ -104,7 +104,7 @@ func NewArtifactoryClient(log *zap.SugaredLogger, opts ...ArtifactoryClientOptio
 
 	// Ensure that one of basic auth, api key or access token is provided.
 	if a.userName == "" && a.apiKey == "" && a.accessToken == "" {
-		return nil, fmt.Errorf("Provide one of basic auth, api key or access token")
+		return nil, fmt.Errorf("Provide one of basic auth, api key or access token for jfrog client creation")
 	}
 
 	return a, nil
@@ -138,9 +138,9 @@ func (a *artifactory) Upload(ctx context.Context, srcFilePattern, targetReposito
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
 	err := cmd.Run()
-	if ctx.Err() == context.DeadlineExceeded {
-		logCommandExecWarning(a.log, "time out while executing jfrog cli for upload", stderr.String(), printableArgs, start, err)
-		return err
+	if ctxErr := ctx.Err(); ctxErr == context.DeadlineExceeded {
+		logCommandExecWarning(a.log, "time out while executing jfrog cli for upload", stderr.String(), printableArgs, start, ctxErr)
+		return ctxErr
 	}
 
 	if err != nil {
@@ -157,7 +157,7 @@ func (a *artifactory) Upload(ctx context.Context, srcFilePattern, targetReposito
 	}
 
 	if uploadStatus.Status == failureUploadStatus {
-		err = fmt.Errorf("failed to upload files to jfrog")
+		err := fmt.Errorf("failed to upload files to jfrog")
 		warnMsg := "failed to upload all the files to jfrog"
 		logUploadFailureWarning(a.log, warnMsg, printableArgs, uploadStatus.Totals.Failure, uploadStatus.Totals.Success, start, err)
 		return err
