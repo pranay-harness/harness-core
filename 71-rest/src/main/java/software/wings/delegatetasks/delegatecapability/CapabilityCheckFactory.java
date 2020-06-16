@@ -9,6 +9,7 @@ import io.harness.delegate.task.executioncapability.AwsRegionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import io.harness.delegate.task.executioncapability.ChartMuseumCapabilityCheck;
 import io.harness.delegate.task.executioncapability.HttpConnectionExecutionCapabilityCheck;
+import io.harness.delegate.task.executioncapability.KustomizeCapabilityCheck;
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SocketConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SystemEnvCapabilityCheck;
@@ -44,6 +45,7 @@ public class CapabilityCheckFactory {
   @Inject ClusterMasterUrlCapabilityCheck clusterMasterUrlCapabilityCheck;
   @Inject ShellConnectionCapabilityCheck shellConnectionCapabilityCheck;
   @Inject GitConnectionCapabilityCheck gitConnectionCapabilityCheck;
+  @Inject KustomizeCapabilityCheck kustomizeCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     switch (capabilityCheckType) {
@@ -83,6 +85,8 @@ public class CapabilityCheckFactory {
         return shellConnectionCapabilityCheck;
       case GIT_CONNECTION:
         return gitConnectionCapabilityCheck;
+      case KUSTOMIZE:
+        return kustomizeCapabilityCheck;
       default:
         return null;
     }
