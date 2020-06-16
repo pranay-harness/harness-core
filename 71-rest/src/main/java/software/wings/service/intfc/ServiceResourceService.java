@@ -508,12 +508,14 @@ public interface ServiceResourceService extends OwnedByApplication {
   void setK8v2ServiceFromAppManifest(ApplicationManifest applicationManifest, AppManifestSource appManifestSource);
 
   ManifestFile createValuesYaml(String appId, String serviceId, ManifestFile manifestFile);
+
   ManifestFile createManifestFile(
       String appId, String serviceId, ManifestFile manifestFile, AppManifestKind appManifestKind);
 
   ManifestFile getManifestFile(String appId, String serviceId, String manifestFileId);
 
   ManifestFile updateValuesYaml(String appId, String serviceId, String manifestFileId, ManifestFile manifestFile);
+
   ManifestFile updateManifestFile(String appId, String serviceId, String manifestFileId, ManifestFile manifestFile,
       AppManifestKind appManifestKind);
 

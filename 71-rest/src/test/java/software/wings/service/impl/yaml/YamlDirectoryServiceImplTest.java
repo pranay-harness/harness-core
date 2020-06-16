@@ -14,8 +14,12 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.appmanifest.AppManifestKind.OC_PARAMS;
+import static software.wings.beans.appmanifest.AppManifestKind.VALUES;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.template.TemplateGallery.GalleryKey;
 import static software.wings.beans.yaml.YamlConstants.APPLICATION_TEMPLATE_LIBRARY_FOLDER;
@@ -25,6 +29,7 @@ import static software.wings.common.TemplateConstants.SHELL_SCRIPT;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -46,11 +51,15 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
+import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.common.TemplateConstants;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.template.TemplateGalleryService;
@@ -75,6 +84,7 @@ public class YamlDirectoryServiceImplTest extends WingsBaseTest {
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private TemplateGalleryService templateGalleryService;
+  @Mock private EnvironmentService environmentService;
   @InjectMocks private YamlDirectoryServiceImpl yamlDirectoryService = new YamlDirectoryServiceImpl();
 
   @Before
@@ -88,7 +98,7 @@ public class YamlDirectoryServiceImplTest extends WingsBaseTest {
   public void test_doTemplateLibraryForApp() {
     final String accountid = "accountid";
     final String appid = "appid";
-    final Application application = Application.Builder.anApplication().accountId(accountid).appId(appid).build();
+    final Application application = anApplication().accountId(accountid).appId(appid).build();
     DirectoryPath directoryPath = new DirectoryPath("/Setup/Applications/app");
     TemplateFolder templateFolder = TemplateFolder.builder().uuid("root_folder").name("harness").build();
     doReturn(templateFolder)
@@ -178,7 +188,7 @@ public class YamlDirectoryServiceImplTest extends WingsBaseTest {
         .isEqualTo(yamlDirectoryService.getRootPath() + PATH_DELIMITER + GLOBAL_TEMPLATE_LIBRARY_FOLDER + PATH_DELIMITER
             + folderName);
     template.setAppId("random");
-    Application mockApp = Application.Builder.anApplication().name("random").build();
+    Application mockApp = anApplication().name("random").build();
     when(appService.get("random")).thenReturn(mockApp);
     assertThat(yamlDirectoryService.getRootPathByTemplate(template))
         .isEqualTo(yamlDirectoryService.getRootPathByApp(mockApp) + PATH_DELIMITER + APPLICATION_TEMPLATE_LIBRARY_FOLDER
@@ -311,5 +321,224 @@ public class YamlDirectoryServiceImplTest extends WingsBaseTest {
     settingAttribute.setValue(SpotInstConfig.builder().build());
     yamlDirectoryService.getRootPathBySettingAttribute(settingAttribute);
     assertThat(path).isEqualTo("Setup/Cloud Providers");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void getRootPathByManifestFileForValues() {
+    rootPathForValuesService();
+    rootPathForValuesEnvService();
+    rootPathForValuesEnv();
+  }
+
+  private void rootPathForValuesService() {
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .serviceId(SERVICE_ID)
+                                          .kind(VALUES)
+                                          .storeType(StoreType.Remote)
+                                          .accountId(ACCOUNT_ID)
+                                          .build();
+    appManifest.setAppId(APP_ID);
+
+    doReturn(AppManifestSource.SERVICE).when(applicationManifestService).getAppManifestType(appManifest);
+    doReturn(anApplication().name("My App").accountId(ACCOUNT_ID).uuid(APP_ID).build()).when(appService).get(APP_ID);
+    doReturn(Service.builder().uuid(SERVICE_ID).name("backend").build())
+        .when(serviceResourceService)
+        .getWithDetails(APP_ID, SERVICE_ID);
+
+    final String path = yamlDirectoryService.getRootPathByManifestFile(ManifestFile.builder().build(), appManifest);
+
+    assertThat(path).isEqualTo("Setup/Applications/My App/Services/backend/Values");
+  }
+
+  private void rootPathForValuesEnvService() {
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .serviceId(SERVICE_ID)
+                                          .envId(ENV_ID)
+                                          .kind(VALUES)
+                                          .storeType(StoreType.Remote)
+                                          .accountId(ACCOUNT_ID)
+                                          .build();
+    appManifest.setAppId(APP_ID);
+
+    doReturn(AppManifestSource.ENV_SERVICE).when(applicationManifestService).getAppManifestType(appManifest);
+    doReturn(anApplication().name("My App").accountId(ACCOUNT_ID).uuid(APP_ID).build()).when(appService).get(APP_ID);
+    doReturn(Service.builder().uuid(SERVICE_ID).name("backend").build())
+        .when(serviceResourceService)
+        .getWithDetails(APP_ID, SERVICE_ID);
+    doReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).accountId(ACCOUNT_ID).name("Production").build())
+        .when(environmentService)
+        .get(APP_ID, ENV_ID, true);
+
+    final String path = yamlDirectoryService.getRootPathByManifestFile(ManifestFile.builder().build(), appManifest);
+
+    assertThat(path).isEqualTo("Setup/Applications/My App/Environments/Production/Values/Services/backend");
+  }
+
+  private void rootPathForValuesEnv() {
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .envId(ENV_ID)
+                                          .kind(VALUES)
+                                          .storeType(StoreType.Remote)
+                                          .accountId(ACCOUNT_ID)
+                                          .build();
+    appManifest.setAppId(APP_ID);
+
+    doReturn(AppManifestSource.ENV).when(applicationManifestService).getAppManifestType(appManifest);
+    doReturn(anApplication().name("My App").accountId(ACCOUNT_ID).uuid(APP_ID).build()).when(appService).get(APP_ID);
+    doReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).accountId(ACCOUNT_ID).name("Production").build())
+        .when(environmentService)
+        .get(APP_ID, ENV_ID, true);
+
+    final String path = yamlDirectoryService.getRootPathByManifestFile(ManifestFile.builder().build(), appManifest);
+
+    assertThat(path).isEqualTo("Setup/Applications/My App/Environments/Production/Values");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void getRootPathByManifestFileForK8sManifest() {
+    rootPathForManifestService();
+    rootPathForManifestEnvService();
+    rootPathForManifestEnv();
+  }
+
+  private void rootPathForManifestService() {
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .serviceId(SERVICE_ID)
+                                          .kind(K8S_MANIFEST)
+                                          .storeType(StoreType.Remote)
+                                          .accountId(ACCOUNT_ID)
+                                          .build();
+    appManifest.setAppId(APP_ID);
+
+    doReturn(AppManifestSource.SERVICE).when(applicationManifestService).getAppManifestType(appManifest);
+    doReturn(anApplication().name("My App").accountId(ACCOUNT_ID).uuid(APP_ID).build()).when(appService).get(APP_ID);
+    doReturn(Service.builder().uuid(SERVICE_ID).name("backend").build())
+        .when(serviceResourceService)
+        .getWithDetails(APP_ID, SERVICE_ID);
+
+    final String path = yamlDirectoryService.getRootPathByManifestFile(ManifestFile.builder().build(), appManifest);
+
+    assertThat(path).isEqualTo("Setup/Applications/My App/Services/backend/Manifests/Files");
+  }
+
+  private void rootPathForManifestEnvService() {
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .serviceId(SERVICE_ID)
+                                          .envId(ENV_ID)
+                                          .kind(K8S_MANIFEST)
+                                          .storeType(StoreType.Remote)
+                                          .accountId(ACCOUNT_ID)
+                                          .build();
+    appManifest.setAppId(APP_ID);
+
+    doReturn(AppManifestSource.ENV_SERVICE).when(applicationManifestService).getAppManifestType(appManifest);
+    doReturn(anApplication().name("My App").accountId(ACCOUNT_ID).uuid(APP_ID).build()).when(appService).get(APP_ID);
+    doReturn(Service.builder().uuid(SERVICE_ID).name("backend").build())
+        .when(serviceResourceService)
+        .getWithDetails(APP_ID, SERVICE_ID);
+    doReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).accountId(ACCOUNT_ID).name("Production").build())
+        .when(environmentService)
+        .get(APP_ID, ENV_ID, true);
+
+    final String path = yamlDirectoryService.getRootPathByManifestFile(ManifestFile.builder().build(), appManifest);
+
+    assertThat(path).isEqualTo("Setup/Applications/My App/Environments/Production/Values/Services/backend");
+  }
+
+  private void rootPathForManifestEnv() {
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .envId(ENV_ID)
+                                          .kind(VALUES)
+                                          .storeType(StoreType.Remote)
+                                          .accountId(ACCOUNT_ID)
+                                          .build();
+    appManifest.setAppId(APP_ID);
+
+    doReturn(AppManifestSource.ENV).when(applicationManifestService).getAppManifestType(appManifest);
+    doReturn(anApplication().name("My App").accountId(ACCOUNT_ID).uuid(APP_ID).build()).when(appService).get(APP_ID);
+    doReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).accountId(ACCOUNT_ID).name("Production").build())
+        .when(environmentService)
+        .get(APP_ID, ENV_ID, true);
+
+    final String path = yamlDirectoryService.getRootPathByManifestFile(ManifestFile.builder().build(), appManifest);
+
+    assertThat(path).isEqualTo("Setup/Applications/My App/Environments/Production/Values");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void getRootPathByManifestFileForOcParams() {
+    rootPathForOcParamsService();
+    rootPathForOcParamsEnvService();
+    rootPathForOcParamsEnv();
+  }
+
+  private void rootPathForOcParamsService() {
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .serviceId(SERVICE_ID)
+                                          .kind(OC_PARAMS)
+                                          .storeType(StoreType.Remote)
+                                          .accountId(ACCOUNT_ID)
+                                          .build();
+    appManifest.setAppId(APP_ID);
+
+    doReturn(AppManifestSource.SERVICE).when(applicationManifestService).getAppManifestType(appManifest);
+    doReturn(anApplication().name("My App").accountId(ACCOUNT_ID).uuid(APP_ID).build()).when(appService).get(APP_ID);
+    doReturn(Service.builder().uuid(SERVICE_ID).name("backend").build())
+        .when(serviceResourceService)
+        .getWithDetails(APP_ID, SERVICE_ID);
+
+    final String path = yamlDirectoryService.getRootPathByManifestFile(ManifestFile.builder().build(), appManifest);
+
+    assertThat(path).isEqualTo("Setup/Applications/My App/Services/backend/OC Params");
+  }
+
+  private void rootPathForOcParamsEnvService() {
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .serviceId(SERVICE_ID)
+                                          .envId(ENV_ID)
+                                          .kind(OC_PARAMS)
+                                          .storeType(StoreType.Remote)
+                                          .accountId(ACCOUNT_ID)
+                                          .build();
+    appManifest.setAppId(APP_ID);
+
+    doReturn(AppManifestSource.ENV_SERVICE).when(applicationManifestService).getAppManifestType(appManifest);
+    doReturn(anApplication().name("My App").accountId(ACCOUNT_ID).uuid(APP_ID).build()).when(appService).get(APP_ID);
+    doReturn(Service.builder().uuid(SERVICE_ID).name("backend").build())
+        .when(serviceResourceService)
+        .getWithDetails(APP_ID, SERVICE_ID);
+    doReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).accountId(ACCOUNT_ID).name("Production").build())
+        .when(environmentService)
+        .get(APP_ID, ENV_ID, true);
+
+    final String path = yamlDirectoryService.getRootPathByManifestFile(ManifestFile.builder().build(), appManifest);
+
+    assertThat(path).isEqualTo("Setup/Applications/My App/Environments/Production/OC Params/Services/backend");
+  }
+
+  private void rootPathForOcParamsEnv() {
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .envId(ENV_ID)
+                                          .kind(OC_PARAMS)
+                                          .storeType(StoreType.Remote)
+                                          .accountId(ACCOUNT_ID)
+                                          .build();
+    appManifest.setAppId(APP_ID);
+
+    doReturn(AppManifestSource.ENV).when(applicationManifestService).getAppManifestType(appManifest);
+    doReturn(anApplication().name("My App").accountId(ACCOUNT_ID).uuid(APP_ID).build()).when(appService).get(APP_ID);
+    doReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).accountId(ACCOUNT_ID).name("Production").build())
+        .when(environmentService)
+        .get(APP_ID, ENV_ID, true);
+
+    final String path = yamlDirectoryService.getRootPathByManifestFile(ManifestFile.builder().build(), appManifest);
+
+    assertThat(path).isEqualTo("Setup/Applications/My App/Environments/Production/OC Params");
   }
 }

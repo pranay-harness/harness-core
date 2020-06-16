@@ -18,6 +18,8 @@ import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.Service.GLOBAL_SERVICE_NAME_FOR_YAML;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.appmanifest.AppManifestKind.OC_PARAMS;
+import static software.wings.beans.appmanifest.AppManifestKind.VALUES;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.APPLICATION_TEMPLATE_LIBRARY_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
@@ -40,6 +42,7 @@ import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.PCF_OVERRIDES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
@@ -2293,13 +2296,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             .toString();
       case SERVICE:
         notNullCheck("Service not found", service);
-        boolean valuesYaml = AppManifestKind.VALUES == applicationManifest.getKind();
 
         StringBuilder builder = new StringBuilder(getRootPathByService(service, getRootPathByApp(application)))
                                     .append(PATH_DELIMITER)
-                                    .append(valuesYaml ? VALUES_FOLDER : MANIFEST_FOLDER);
+                                    .append(getServiceFolderForManifest(applicationManifest.getKind()));
 
-        if (fromManifestFile && !valuesYaml) {
+        if (shouldGoInsideManifestFiles(fromManifestFile, applicationManifest.getKind())) {
           builder.append(PATH_DELIMITER).append(MANIFEST_FILE_FOLDER);
         }
 
@@ -2307,6 +2309,21 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       default:
         unhandled(appManifestSource);
         throw new InvalidRequestException("Invalid application manifest type");
+    }
+  }
+
+  private boolean shouldGoInsideManifestFiles(boolean fromManifestFile, AppManifestKind kind) {
+    return fromManifestFile && (kind != VALUES && kind != OC_PARAMS);
+  }
+
+  private String getServiceFolderForManifest(AppManifestKind kind) {
+    switch (kind) {
+      case VALUES:
+        return VALUES_FOLDER;
+      case OC_PARAMS:
+        return OC_PARAMS_FOLDER;
+      default:
+        return MANIFEST_FOLDER;
     }
   }
 
@@ -2319,6 +2336,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
       case HELM_CHART_OVERRIDE:
         folderName = HELM_CHART_OVERRIDE_FOLDER;
+        break;
+      case OC_PARAMS:
+        folderName = OC_PARAMS_FOLDER;
         break;
 
       default:

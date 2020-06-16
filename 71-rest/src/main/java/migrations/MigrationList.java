@@ -345,6 +345,7 @@ public class MigrationList {
         .add(Pair.of(314, VaultConfigRenewalIntervalMigration.class))
         .add(Pair.of(315, TrimURLsForAPMVerificationSettings.class))
         .add(Pair.of(316, PipelineWorkflowExecutionActionQlMigration.class))
+        .add(Pair.of(317, BaseMigration.class))
         .build();
   }
 }
