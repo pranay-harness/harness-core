@@ -2,7 +2,7 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_proto_grpc//java:defs.bzl", "java_proto_compile")
 
 proto_library(
-    name = "64_delegate_beans_proto",
+    name = "20_delegate_beans_proto",
     srcs = glob(["**/*.proto"]),
     strip_import_prefix = "",
     deps = [
@@ -14,9 +14,9 @@ proto_library(
 )
 
 java_proto_compile(
-    name = "64_delegate_beans_java_proto",
+    name = "20_delegate_beans_java_proto",
     deps = [
-        ":64_delegate_beans_proto",
+        ":20_delegate_beans_proto",
     ],
     visibility = ["//visibility:public"],
 )
