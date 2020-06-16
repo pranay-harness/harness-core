@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package io.harness.product.ci.proto.addon;
+package io.harness.product.ci.addon.proto;
 
 option java_multiple_files = true;
 option go_package = "ciaddonpb";
 
-import "product/ci/proto/progress.proto";
+import "product/ci/addon/proto/progress.proto";
 
 enum ErrorType {
   NO_ERROR = 0;
@@ -16,7 +16,17 @@ enum ErrorType {
 enum ArtifactType {
   S3 = 0;
   GCS = 1;
-  NEXUS = 2;
+  JFROG = 2;
+
+  // Docker registries
+  GCR = 3;
+  ECR = 4;
+  DOCKERHUB = 5;
+}
+
+enum AuthType {
+  BASIC_AUTH = 0;
+  SECRET_FILE = 1;
 }
 
 message Error {
@@ -29,10 +39,16 @@ message TaskId {
   string id = 1;
 }
 
+// Details of connector
+message Connector {
+  string id = 1;
+  AuthType auth = 2;
+}
+
 // Details on where to upload files/images
 message DestinationArtifact {
   string destination = 1;
-  string connector = 2;
+  Connector connector = 2;
   ArtifactType artifact_type = 3;
 }
 
@@ -45,25 +61,22 @@ message BuildImage {
 
 // Details of files to upload
 message UploadFiles {
-  repeated string file_pattern = 1;     // List of files or wild-card file patterns to be uploaded
+  string file_pattern = 1;              // Wild-card file pattern to be uploaded
   DestinationArtifact destination = 2;  // location to copy the file
 }
 
-message UploadFilesRequest {
-  repeated UploadFiles files = 1;
-}
-
-message UploadFilesResponse {
-  TaskId task_id = 1;  // UUID
-}
-
-message BuildUploadImageRequest {
+message BuildUploadImage {
   BuildImage image = 1;
   DestinationArtifact destination = 2;
 }
 
-message BuildUploadImageResponse {
+message PublishArtifactsRequest {
   TaskId task_id = 1;
+  repeated UploadFiles files = 2;
+  repeated BuildUploadImage images = 3;
+}
+
+message PublishArtifactsResponse {
 }
 
 message TaskProgressRequest {
@@ -85,15 +98,11 @@ message TaskProgressUpdatesResponse {
 }
 
 service CIAddon {
-  // Asynchronous RPC to upload list of files/file-patterns to a destination location
-  // It returns a UUID called task_id
+  // Asynchronous RPC to upload files as well as build docker images and publish them
+  // It takes a list of files/file_patterns and uploads them to a destination location
+  // It also takes a list of local Dockerfiles, builds them and upload to specified destination location
   // call RPC TaskProgress() or TaskProgressUpdates() with this task_id to get the status
-  rpc UploadFiles(UploadFilesRequest) returns (UploadFilesResponse);
-
-  // This asynchronous RPC accepts a local Dockerfile, builds it and uploads to destination location
-  // It returns a UUID called task_id
-  // call RPC TaskProgress() or TaskProgressUpdates() with this task_id to get the status
-  rpc BuildUploadImage(BuildUploadImageRequest) returns (BuildUploadImageResponse);
+  rpc PublishArtifacts(PublishArtifactsRequest) returns (PublishArtifactsResponse);
 
   // Synchronous RPC to get progress of a given task_id
   rpc TaskProgress(TaskProgressRequest) returns (TaskProgressResponse);
