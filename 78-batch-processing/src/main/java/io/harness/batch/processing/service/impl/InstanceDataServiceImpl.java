@@ -96,7 +96,7 @@ public class InstanceDataServiceImpl implements InstanceDataService {
           .totalResource(instanceData.getTotalResource())
           .build();
     } else {
-      logger.error("Instance detail not found clusterId {} instanceId {}", clusterId, instanceId);
+      logger.warn("Instance detail not found clusterId {} instanceId {}", clusterId, instanceId);
       return PrunedInstanceData.builder().build();
     }
   }

@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,5 +19,12 @@ public class BatchConfiguration {
   public BatchMainConfig batchMainConfig() throws IOException {
     File configFile = new File("batch-processing-config.yml");
     return new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), BatchMainConfig.class);
+  }
+
+  @Bean
+  public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
+    ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
+    threadPoolTaskScheduler.setPoolSize(4);
+    return threadPoolTaskScheduler;
   }
 }
