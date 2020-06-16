@@ -492,9 +492,9 @@ public class AwsElbHelperServiceDelegateImpl
       timeLimiter.callWithTimeout(() -> {
         AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
             getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-        List<String> instanceIds =
-            awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(awsConfig, encryptionDetails, region, asgName);
         while (true) {
+          List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
+              awsConfig, encryptionDetails, region, asgName);
           if (allTargetsRegistered(amazonElasticLoadBalancingClient, instanceIds, targetGroupArn, logCallback)) {
             logCallback.saveExecutionLog(format("All targets registered for Asg: [%s]", asgName));
             return true;

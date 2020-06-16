@@ -120,22 +120,22 @@ public class AwsAmiServiceDeployState extends State {
 
   @Attributes(title = "Command") @DefaultValue(ASG_COMMAND_NAME) private String commandName = ASG_COMMAND_NAME;
 
-  @Inject protected transient AwsHelperService awsHelperService;
-  @Inject protected transient SettingsService settingsService;
-  @Inject protected transient ServiceResourceService serviceResourceService;
-  @Inject protected transient ServiceTemplateService serviceTemplateService;
-  @Inject protected transient InfrastructureMappingService infrastructureMappingService;
-  @Inject protected transient ArtifactStreamService artifactStreamService;
-  @Inject protected transient SecretManager secretManager;
-  @Inject protected transient EncryptionService encryptionService;
-  @Inject protected transient ActivityService activityService;
-  @Inject protected transient DelegateService delegateService;
-  @Inject protected transient LogService logService;
-  @Inject protected transient SweepingOutputService sweepingOutputService;
-  @Inject private transient HostService hostService;
-  @Inject private transient AwsUtils awsUtils;
-  @Inject private transient AwsAsgHelperServiceManager awsAsgHelperServiceManager;
-  @Inject private transient ServiceTemplateHelper serviceTemplateHelper;
+  @Inject protected AwsHelperService awsHelperService;
+  @Inject protected SettingsService settingsService;
+  @Inject protected ServiceResourceService serviceResourceService;
+  @Inject protected ServiceTemplateService serviceTemplateService;
+  @Inject protected InfrastructureMappingService infrastructureMappingService;
+  @Inject protected ArtifactStreamService artifactStreamService;
+  @Inject protected SecretManager secretManager;
+  @Inject protected EncryptionService encryptionService;
+  @Inject protected ActivityService activityService;
+  @Inject protected DelegateService delegateService;
+  @Inject protected LogService logService;
+  @Inject protected SweepingOutputService sweepingOutputService;
+  @Inject private HostService hostService;
+  @Inject private AwsUtils awsUtils;
+  @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
+  @Inject private ServiceTemplateHelper serviceTemplateHelper;
   @Inject private AwsStateHelper awsStateHelper;
 
   public AwsAmiServiceDeployState(String name) {
@@ -274,8 +274,9 @@ public class AwsAmiServiceDeployState extends State {
       classicLbs = infrastructureMapping.getStageClassicLoadBalancers();
       targetGroupArns = infrastructureMapping.getStageTargetGroupArns();
     } else {
-      AwsAmiResizeData awsAmiResizeData = getNewDesiredCounts(
-          totalNewInstancesToBeAdded, serviceSetupElement.getOldAutoScalingGroupName(), existingDesiredCapacities);
+      AwsAmiResizeData awsAmiResizeData =
+          getNewDesiredCounts(totalNewInstancesToBeAdded, serviceSetupElement.getOldAutoScalingGroupName(),
+              existingDesiredCapacities, isFinalDeployState(instanceCountLocal, serviceSetupElement));
       if (awsAmiResizeData != null) {
         newDesiredCapacities.add(awsAmiResizeData);
         String asgName = awsAmiResizeData.getAsgName();
@@ -404,15 +405,15 @@ public class AwsAmiServiceDeployState extends State {
   }
 
   @VisibleForTesting
-  AwsAmiResizeData getNewDesiredCounts(
-      int instancesToBeAdded, String oldAsgName, Map<String, Integer> existingDesiredCapacities) {
+  AwsAmiResizeData getNewDesiredCounts(int instancesToBeAdded, String oldAsgName,
+      Map<String, Integer> existingDesiredCapacities, boolean isFinalDeployState) {
     Integer desiredCountForOldAsg = 0;
     if (isNotBlank(oldAsgName)) {
       desiredCountForOldAsg = existingDesiredCapacities.get(oldAsgName);
       if (desiredCountForOldAsg == null) {
         desiredCountForOldAsg = 0;
       }
-      if (desiredCountForOldAsg <= instancesToBeAdded) {
+      if (desiredCountForOldAsg <= instancesToBeAdded || isFinalDeployState) {
         desiredCountForOldAsg = 0;
       } else {
         desiredCountForOldAsg -= instancesToBeAdded;
@@ -421,6 +422,15 @@ public class AwsAmiServiceDeployState extends State {
     }
 
     return null;
+  }
+
+  @VisibleForTesting
+  boolean isFinalDeployState(int instanceCountLocal, AmiServiceSetupElement element) {
+    if (PERCENTAGE == getInstanceUnitType()) {
+      return instanceCountLocal >= 100;
+    } else {
+      return instanceCountLocal >= element.getDesiredInstances();
+    }
   }
 
   protected AwsAmiDeployStateExecutionData prepareStateExecutionData(String activityId,
