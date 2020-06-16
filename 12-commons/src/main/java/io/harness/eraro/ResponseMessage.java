@@ -14,4 +14,5 @@ public class ResponseMessage {
   @Default private Level level = ERROR;
 
   private String message;
+  private Throwable exception;
 }

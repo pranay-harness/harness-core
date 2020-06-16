@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.CVHistogram;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
@@ -24,6 +25,7 @@ import javax.ws.rs.QueryParam;
 @Path("/cv-nextgen/splunk")
 @Produces("application/json")
 @Scope(PermissionAttribute.ResourceType.SETTING)
+@ExposeInternalException()
 public class SplunkResource {
   @Inject private SplunkAnalysisService splunkAnalysisService;
   @GET
