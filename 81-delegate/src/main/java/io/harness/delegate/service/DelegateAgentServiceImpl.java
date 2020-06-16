@@ -11,7 +11,6 @@ import static io.harness.delegate.configuration.InstallUtils.installKubectl;
 import static io.harness.delegate.configuration.InstallUtils.installKustomize;
 import static io.harness.delegate.configuration.InstallUtils.installOc;
 import static io.harness.delegate.configuration.InstallUtils.installTerraformConfigInspect;
-import static io.harness.delegate.message.ManagerMessageConstants.INVALID_TOKEN;
 import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
@@ -45,6 +44,7 @@ import static io.harness.delegate.message.MessageConstants.WATCHER_PROCESS;
 import static io.harness.delegate.message.MessageConstants.WATCHER_VERSION;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
+import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.isLocked;
@@ -725,7 +725,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       migrate(StringUtils.substringAfter(message, MIGRATE));
     } else if (StringUtils.startsWith(message, JRE_VERSION)) {
       updateJreVersion(StringUtils.substringAfter(message, JRE_VERSION));
-    } else if (StringUtils.contains(message, INVALID_TOKEN)) {
+    } else if (StringUtils.contains(message, INVALID_TOKEN.name())) {
       initiateSelfDestruct();
     } else if (!StringUtils.equals(message, "X")) {
       logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
@@ -803,7 +803,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       response = call.execute();
       return response.body();
     } finally {
-      if (response != null && !response.isSuccessful() && response.errorBody().string().contains("INVALID_TOKEN")) {
+      if (response != null && !response.isSuccessful()
+          && response.errorBody().string().contains(INVALID_TOKEN.name())) {
         initiateSelfDestruct();
         response.errorBody().close();
       }
