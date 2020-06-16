@@ -9,6 +9,7 @@ import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGE_P
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.Service;
@@ -37,22 +38,35 @@ public class DeploymentStagePlanCreator implements SupportDefinedExecutorPlanCre
 
   @Override
   public CreateExecutionPlanResponse createPlan(DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
-    final CreateExecutionPlanResponse planForExecution =
-        createPlanForExecution(deploymentStage.getDeployment().getExecution(), context);
-    final CreateExecutionPlanResponse planForService =
-        createPlanForService(deploymentStage.getDeployment().getService(), context);
-    final CreateExecutionPlanResponse planForInfrastructure =
-        createPlanForInfrastructure(deploymentStage.getDeployment().getInfrastructure(), context);
-    final PlanNode deploymentStageNode =
-        prepareDeploymentNode(deploymentStage, context, planForExecution, planForService, planForInfrastructure);
+    try {
+      prePlanning(deploymentStage, context);
+      final CreateExecutionPlanResponse planForExecution =
+          createPlanForExecution(deploymentStage.getDeployment().getExecution(), context);
+      final CreateExecutionPlanResponse planForService =
+          createPlanForService(deploymentStage.getDeployment().getService(), context);
+      final CreateExecutionPlanResponse planForInfrastructure =
+          createPlanForInfrastructure(deploymentStage.getDeployment().getInfrastructure(), context);
+      final PlanNode deploymentStageNode =
+          prepareDeploymentNode(deploymentStage, context, planForExecution, planForService, planForInfrastructure);
 
-    return CreateExecutionPlanResponse.builder()
-        .planNode(deploymentStageNode)
-        .planNodes(planForService.getPlanNodes())
-        .planNodes(planForInfrastructure.getPlanNodes())
-        .planNodes(planForExecution.getPlanNodes())
-        .startingNodeId(deploymentStageNode.getUuid())
-        .build();
+      return CreateExecutionPlanResponse.builder()
+          .planNode(deploymentStageNode)
+          .planNodes(planForService.getPlanNodes())
+          .planNodes(planForInfrastructure.getPlanNodes())
+          .planNodes(planForExecution.getPlanNodes())
+          .startingNodeId(deploymentStageNode.getUuid())
+          .build();
+    } finally {
+      postPlanning(deploymentStage, context);
+    }
+  }
+
+  private void postPlanning(DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
+    PlanCreatorConfigUtils.setCurrentStageConfig(null, context);
+  }
+
+  private void prePlanning(DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
+    PlanCreatorConfigUtils.setCurrentStageConfig(deploymentStage, context);
   }
 
   private CreateExecutionPlanResponse createPlanForInfrastructure(

@@ -14,7 +14,6 @@ import java.util.List;
 @JsonTypeName(DeploymentStage.DEPLOYMENT_NAME)
 public class DeploymentStage implements CDStage {
   public static final String DEPLOYMENT_NAME = "deployment";
-  String type = DEPLOYMENT_NAME;
   String identifier;
   String displayName;
   Deployment deployment;

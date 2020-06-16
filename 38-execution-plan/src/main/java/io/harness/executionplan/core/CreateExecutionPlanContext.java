@@ -10,4 +10,5 @@ public interface CreateExecutionPlanContext {
   String getAccountId();
   <T> Optional<T> getAttribute(String key);
   <T> void addAttribute(String key, T value);
+  void removeAttribute(String key);
 }

@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.steps.PipelineSetupStep;
@@ -45,7 +46,7 @@ public class PipelinePlanCreator implements SupportDefinedExecutorPlanCreator<CD
   }
 
   private void addArgumentsToContext(CDPipeline pipeline, CreateExecutionPlanContext context) {
-    context.addAttribute("CD_PIPELINE_CONFIG", pipeline);
+    PlanCreatorConfigUtils.setPipelineConfig(pipeline, context);
   }
 
   private CreateExecutionPlanResponse createPlanForStages(
