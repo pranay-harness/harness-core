@@ -33,6 +33,10 @@
             <artifactId>jackson-dataformat-yaml</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.uuid</groupId>
+            <artifactId>java-uuid-generator</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.github.reinert</groupId>
             <artifactId>jjschema</artifactId>
         </dependency>
