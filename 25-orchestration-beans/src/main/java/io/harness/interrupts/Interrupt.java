@@ -5,12 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.persistence.CreatedAtAccess;
-import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAccess;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.UpdatedAtAccess;
-import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAccess;
 import io.harness.state.io.StepParameters;
 import lombok.Builder;
@@ -19,8 +15,12 @@ import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
+import lombok.experimental.Wither;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotNull;
 
@@ -28,19 +28,19 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 @Redesign
-@Entity(value = "interrupts")
+@Document(value = "interrupts")
+@TypeAlias(value = "interrupts")
 @FieldNameConstants(innerTypeName = "InterruptKeys")
-public class Interrupt implements PersistentEntity, UuidAccess, CreatedAtAccess, CreatedAtAware, UpdatedAtAccess,
-                                  UpdatedAtAware, CreatedByAccess {
+public class Interrupt implements PersistentEntity, UuidAccess, CreatedByAccess {
   public enum State { REGISTERED, PROCESSING, PROCESSED_SUCCESSFULLY, PROCESSED_UNSUCCESSFULLY, DISCARDED }
 
-  @Id @NotNull String uuid;
+  @Wither @Id @NotNull String uuid;
   @NonNull ExecutionInterruptType type;
   @NonNull String planExecutionId;
   String nodeExecutionId;
   StepParameters parameters;
   EmbeddedUser createdBy;
-  @NonFinal @Setter long lastUpdatedAt;
-  @NonFinal @Setter long createdAt;
+  @Wither @LastModifiedDate Long lastUpdatedAt;
+  @Wither @CreatedDate Long createdAt;
   @NonFinal @Setter @Builder.Default State state = State.REGISTERED;
 }
