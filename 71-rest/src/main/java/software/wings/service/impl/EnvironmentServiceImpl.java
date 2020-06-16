@@ -105,6 +105,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
@@ -150,6 +151,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private PersistentLocker persistentLocker;
   @Inject private WorkflowService workflowService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private TriggerService triggerService;
   @Inject private YamlPushService yamlPushService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
@@ -545,6 +547,15 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     if (refTriggers != null && refTriggers.size() > 0) {
       throw new InvalidRequestException(format("Environment is referenced by %d %s [%s].", refTriggers.size(),
                                             plural("trigger", refTriggers.size()), Joiner.on(", ").join(refTriggers)),
+          USER);
+    }
+
+    List<String> runningExecutions =
+        workflowExecutionService.runningExecutionsForEnvironment(environment.getAppId(), environment.getUuid());
+    if (isNotEmpty(runningExecutions)) {
+      throw new InvalidRequestException(
+          format("Environment:[%s] couldn't be deleted. [%d] Running executions present: [%s]", environment.getName(),
+              runningExecutions.size(), String.join(", ", runningExecutions)),
           USER);
     }
   }

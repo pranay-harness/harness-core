@@ -266,4 +266,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   Map<String, String> getDeploymentTags(String accountId, List<NameValuePair> tags);
 
   Set<String> getWorkflowExecutionsWithTag(String accountId, String key, String value);
+
+  List<String> runningExecutionsForEnvironment(String appId, String environmentId);
 }
