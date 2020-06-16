@@ -9,6 +9,7 @@ import com.google.cloud.datastore.Key;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.AllArgsConstructor;
@@ -39,7 +40,7 @@ import java.util.Optional;
 @Entity(value = "supervisedTSThreshold", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @Slf4j
-public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAware {
+public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAware, AccountAccess {
   public static final String connector = ":";
 
   @Id private String uuid;

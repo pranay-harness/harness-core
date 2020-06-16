@@ -2,6 +2,7 @@ package software.wings.beans.infrastructure;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -25,7 +26,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "terraformConfig")
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "TerraformConfigKeys")
-public class TerraformConfig implements PersistentEntity, UuidAware, CreatedAtAware {
+public class TerraformConfig implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @Indexed @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore @Indexed private long createdAt;

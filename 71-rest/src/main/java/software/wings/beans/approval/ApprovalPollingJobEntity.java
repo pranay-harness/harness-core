@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.persistence.AccountAccess;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +29,7 @@ import java.util.Set;
 @ToString(exclude = "scriptString")
 @Entity(value = "approvalPollingJob")
 @HarnessEntity(exportable = false)
-public class ApprovalPollingJobEntity implements PersistentRegularIterable {
+public class ApprovalPollingJobEntity implements PersistentRegularIterable, AccountAccess {
   String appId;
   String accountId;
   String stateExecutionInstanceId;

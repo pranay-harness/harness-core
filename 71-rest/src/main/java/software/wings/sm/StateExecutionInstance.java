@@ -29,6 +29,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.simpleframework.xml.Transient;
 import software.wings.api.PhaseElement;
 import software.wings.beans.LoopEnvStateParams;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
 import java.time.OffsetDateTime;
@@ -64,7 +65,8 @@ import javax.annotation.Nullable;
 })
 @Entity(value = "stateExecutionInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class StateExecutionInstance implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class StateExecutionInstance
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, ApplicationAccess {
   @Id private String uuid;
   @Indexed protected String appId;
   @Indexed private long createdAt;

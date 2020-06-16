@@ -20,6 +20,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.BarrierInstancePipeline.BarrierInstancePipelineKeys;
 import software.wings.beans.BarrierInstanceWorkflow.BarrierInstanceWorkflowKeys;
+import software.wings.beans.entityinterface.ApplicationAccess;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -39,7 +40,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "BarrierInstanceKeys")
 @Entity(value = "barrierInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class BarrierInstance implements PersistentEntity, UuidAware, PersistentRegularIterable {
+public class BarrierInstance implements PersistentEntity, UuidAware, PersistentRegularIterable, ApplicationAccess {
   @Id private String uuid;
   @Indexed @NotNull protected String appId;
 

@@ -17,6 +17,7 @@ import lombok.Data;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
+import software.wings.beans.entityinterface.ApplicationAccess;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,8 @@ import javax.validation.constraints.NotNull;
 @Data
 @Entity(value = "pipelineExecutions", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class PipelineExecution implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware {
+public class PipelineExecution
+    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, ApplicationAccess {
   public static final String PIPELINE_ID_KEY = "pipelineId";
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;

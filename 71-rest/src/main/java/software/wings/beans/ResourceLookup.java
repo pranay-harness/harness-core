@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -52,7 +53,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Entity(value = "resourceLookup", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class ResourceLookup implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class ResourceLookup implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;

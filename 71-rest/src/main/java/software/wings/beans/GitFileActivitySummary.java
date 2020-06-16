@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -35,7 +36,8 @@ import javax.validation.constraints.NotNull;
   }, options = @IndexOptions(name = "gitCommits_for_appId_indx"))
 })
 @HarnessEntity(exportable = true)
-public class GitFileActivitySummary implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class GitFileActivitySummary
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) String uuid;
   private String accountId;
   private String commitId;

@@ -45,6 +45,7 @@ import software.wings.beans.Activity.ActivityKeys;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.State;
@@ -72,8 +73,8 @@ import javax.validation.constraints.NotNull;
       , @Field(value = ActivityKeys.serviceInstanceId), @Field(value = ActivityKeys.status),
           @Field(value = ActivityKeys.createdAt, type = IndexType.DESC)
     }))
-public class Activity
-    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+public class Activity implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
+                                 UpdatedByAware, ApplicationAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @Indexed @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;
