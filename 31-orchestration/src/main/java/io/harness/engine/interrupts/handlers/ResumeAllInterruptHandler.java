@@ -11,7 +11,6 @@ import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
@@ -23,9 +22,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.status.Status;
 import io.harness.interrupts.Interrupt;
-import io.harness.interrupts.Interrupt.InterruptKeys;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.persistence.HPersistence;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -33,7 +30,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class ResumeAllInterruptHandler implements InterruptHandler {
-  @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -41,11 +37,10 @@ public class ResumeAllInterruptHandler implements InterruptHandler {
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
-    String savedInterruptId = validateAndSave(interrupt);
-    return hPersistence.createQuery(Interrupt.class).filter(InterruptKeys.uuid, savedInterruptId).get();
+    return validateAndSave(interrupt);
   }
 
-  private String validateAndSave(Interrupt interrupt) {
+  private Interrupt validateAndSave(Interrupt interrupt) {
     List<Interrupt> interrupts = interruptService.fetchActiveInterrupts(interrupt.getPlanExecutionId());
     Optional<Interrupt> pauseAllOptional =
         filterAndGetFirst(interrupts, presentInterrupt -> presentInterrupt.getType() == PAUSE_ALL);
@@ -62,7 +57,7 @@ public class ResumeAllInterruptHandler implements InterruptHandler {
     waitNotifyEngine.doneWith(
         pauseAllInterrupt.getUuid(), StatusNotifyResponseData.builder().status(Status.SUCCEEDED).build());
     interrupt.setState(PROCESSING);
-    return hPersistence.save(interrupt);
+    return interruptService.save(interrupt);
   }
 
   @Override

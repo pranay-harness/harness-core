@@ -13,7 +13,6 @@ import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.engine.helpers.AbortHelper;
 import io.harness.engine.interrupts.InterruptHandler;
@@ -23,8 +22,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
 import io.harness.interrupts.Interrupt;
-import io.harness.interrupts.Interrupt.InterruptKeys;
-import io.harness.persistence.HPersistence;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,32 +30,29 @@ import javax.validation.Valid;
 
 @Slf4j
 public class AbortAllInterruptHandler implements InterruptHandler {
-  @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private AbortHelper abortHelper;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
-    String savedInterruptId = validateAndSave(interrupt);
-    Interrupt savedInterrupt =
-        hPersistence.createQuery(Interrupt.class).filter(InterruptKeys.uuid, savedInterruptId).get();
+    Interrupt savedInterrupt = validateAndSave(interrupt);
     return handleInterrupt(savedInterrupt);
   }
 
-  private String validateAndSave(@Valid @NonNull Interrupt interrupt) {
+  private Interrupt validateAndSave(@Valid @NonNull Interrupt interrupt) {
     List<Interrupt> interrupts = interruptService.fetchActiveInterrupts(interrupt.getPlanExecutionId());
     if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == ABORT_ALL)) {
       throw new InvalidRequestException("Execution already has ABORT_ALL interrupt", ABORT_ALL_ALREADY, USER);
     }
     if (isEmpty(interrupts)) {
-      return hPersistence.save(interrupt);
+      return interruptService.save(interrupt);
     }
 
     interrupts.forEach(savedInterrupt
         -> interruptService.markProcessed(
             savedInterrupt.getUuid(), savedInterrupt.getState() == PROCESSING ? PROCESSED_SUCCESSFULLY : DISCARDED));
-    return hPersistence.save(interrupt);
+    return interruptService.save(interrupt);
   }
 
   @Override

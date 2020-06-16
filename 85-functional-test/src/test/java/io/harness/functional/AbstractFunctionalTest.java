@@ -244,10 +244,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   }
 
   public List<Interrupt> getPlanInterrupts(String planExecutionId) {
-    return wingsPersistence.createQuery(Interrupt.class, excludeAuthority)
-        .filter(InterruptKeys.planExecutionId, planExecutionId)
-        .order(Sort.descending(InterruptKeys.createdAt))
-        .asList();
+    return mongoTemplate.find(query(where(InterruptKeys.planExecutionId).is(planExecutionId)), Interrupt.class);
   }
 
   private AnalysisContext getWorkflowExecutionWithVerification(
