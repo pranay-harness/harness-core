@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cdng.executionplan.CDPlanCreatorType;
+import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.CDPhase;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
@@ -37,16 +38,29 @@ public class PhasePlanCreator implements SupportDefinedExecutorPlanCreator<CDPha
 
   @Override
   public CreateExecutionPlanResponse createPlan(CDPhase phase, CreateExecutionPlanContext context) {
-    final List<CreateExecutionPlanResponse> planForSteps = getPlanForSteps(context, phase.getSteps());
-    final List<CreateExecutionPlanResponse> planForRollbackSteps =
-        getPlanForSteps(context, emptyIfNull(phase.getRollbackSteps()));
-    final PlanNode phasePlanNode = preparePhaseNode(phase, context, planForSteps, planForRollbackSteps);
-    return CreateExecutionPlanResponse.builder()
-        .planNode(phasePlanNode)
-        .planNodes(getPlanNodes(planForSteps))
-        .planNodes(getPlanNodes(planForRollbackSteps))
-        .startingNodeId(phasePlanNode.getUuid())
-        .build();
+    try {
+      prePlanning(phase, context);
+      final List<CreateExecutionPlanResponse> planForSteps = getPlanForSteps(context, phase.getSteps());
+      final List<CreateExecutionPlanResponse> planForRollbackSteps =
+          getPlanForSteps(context, emptyIfNull(phase.getRollbackSteps()));
+      final PlanNode phasePlanNode = preparePhaseNode(phase, context, planForSteps, planForRollbackSteps);
+      return CreateExecutionPlanResponse.builder()
+          .planNode(phasePlanNode)
+          .planNodes(getPlanNodes(planForSteps))
+          .planNodes(getPlanNodes(planForRollbackSteps))
+          .startingNodeId(phasePlanNode.getUuid())
+          .build();
+    } finally {
+      postPlanning(phase, context);
+    }
+  }
+
+  private void prePlanning(CDPhase phase, CreateExecutionPlanContext context) {
+    PlanCreatorConfigUtils.setCurrentPhaseConfig(phase, context);
+  }
+
+  private void postPlanning(CDPhase phase, CreateExecutionPlanContext context) {
+    PlanCreatorConfigUtils.setCurrentPhaseConfig(null, context);
   }
 
   @NotNull

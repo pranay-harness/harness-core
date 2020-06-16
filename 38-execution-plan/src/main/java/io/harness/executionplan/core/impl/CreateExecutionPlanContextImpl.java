@@ -24,4 +24,9 @@ public class CreateExecutionPlanContextImpl implements CreateExecutionPlanContex
   public <T> void addAttribute(String key, T value) {
     attributes.put(key, value);
   }
+
+  @Override
+  public void removeAttribute(String key) {
+    attributes.remove(key);
+  }
 }
