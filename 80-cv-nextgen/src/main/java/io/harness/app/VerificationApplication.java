@@ -2,6 +2,7 @@ package io.harness.app;
 
 import static com.google.inject.matcher.Matchers.not;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -20,6 +21,8 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.app.cvng.client.VerificationManagerClientModule;
+import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.govern.ProviderModule;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
@@ -98,13 +101,20 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.addAll(new MongoModule().cumulativeDependencies());
     modules.add(new CVServiceModule(configuration));
     modules.add(new MetricRegistryModule(metricRegistry));
-
+    modules.add(new VerificationManagerClientModule(configuration.getManagerUrl()));
     Injector injector = Guice.createInjector(modules);
+    initializeServiceSecretKeys(injector);
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     registerAuthFilters(environment, injector);
   }
 
   private void registerAuthFilters(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(VerificationServiceAuthenticationFilter.class));
+  }
+
+  private void initializeServiceSecretKeys(Injector injector) {
+    injector.getInstance(VerificationServiceSecretManager.class).initializeServiceSecretKeys();
+    VERIFICATION_SERVICE_SECRET.set(
+        injector.getInstance(VerificationServiceSecretManager.class).getVerificationServiceSecretKey());
   }
 }

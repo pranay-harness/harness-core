@@ -6,6 +6,6 @@ import lombok.Value;
 
 @Value
 @Builder
-public class DataCollectionInfo implements PerpetualTaskClientParams {
+public class DataCollectionPerpetualTaskClientParams implements PerpetualTaskClientParams {
   String cvConfigId;
 }

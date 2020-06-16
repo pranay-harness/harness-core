@@ -11,7 +11,7 @@ import io.harness.perpetualtask.PerpetualTaskType;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DataCollectionTaskServiceImpl implements DataCollectionTaskService {
+public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskService {
   @Inject private PerpetualTaskService perpetualTaskService;
   @Override
   public String create(String accountId, String cvConfigId) {

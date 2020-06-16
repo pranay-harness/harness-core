@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ManagerDelegateAndCVNextGen" type="Multirun" factoryName="Multirun" separateTabs="true" startOneByOne="false" markFailedProcess="true" hideSuccessProcess="false" delayTime="0">
+    <runConfiguration name="WingsApplication" type="Application" />
+    <runConfiguration name="DelegateApplication" type="Application" />
+    <runConfiguration name="CVNextGenApp" type="Application" />
+    <method v="2" />
+  </configuration>
+</component>
