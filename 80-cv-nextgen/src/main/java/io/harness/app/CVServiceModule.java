@@ -53,6 +53,7 @@ public class CVServiceModule extends AbstractModule {
       bind(VersionInfoManager.class).toInstance(versionInfoManager);
       bind(HPersistence.class).to(MongoPersistence.class);
       bind(VerificationServiceSecretManager.class).to(VerificationServiceSecretManagerImpl.class);
+      bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

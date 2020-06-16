@@ -20,8 +20,8 @@ import software.wings.WingsBaseTest;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DataCollectionTaskServiceImplTest extends WingsBaseTest {
-  @Inject private DataCollectionTaskService dataCollectionTaskService;
+public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
+  @Inject private CVDataCollectionTaskService dataCollectionTaskService;
   @Inject private PerpetualTaskService perpetualTaskService;
   private String accountId;
   private String cvConfigId;

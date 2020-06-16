@@ -17,9 +17,9 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class DataCollectionPerpetualTaskServiceClient
-    implements PerpetualTaskServiceClient, PerpetualTaskServiceInprocClient<DataCollectionInfo> {
+    implements PerpetualTaskServiceClient, PerpetualTaskServiceInprocClient<DataCollectionPerpetualTaskClientParams> {
   @Override
-  public String create(String accountId, DataCollectionInfo clientParams) {
+  public String create(String accountId, DataCollectionPerpetualTaskClientParams clientParams) {
     throw new UnsupportedOperationException("This is implemented in the service layer.");
   }
 

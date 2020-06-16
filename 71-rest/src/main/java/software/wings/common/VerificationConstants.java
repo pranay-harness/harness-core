@@ -199,7 +199,6 @@ public class VerificationConstants {
 
   public static final int TIMESCALEDB_STRING_DATATYPE = 12;
   public static final int TIMESCALEDB_BOOLEAN_DATATYPE = 16;
-  public static final String CV_NEXT_GEN_SERVICE_ENDPOINTS_PREFIX = "cv-next-gen/service/";
 
   // Add to this list whenever we add more states to this type of collection
   // don't remove ELK or SUmo  from this list unless we move to new data collection framework
