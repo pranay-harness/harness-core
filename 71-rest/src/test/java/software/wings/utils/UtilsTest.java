@@ -3,6 +3,7 @@ package software.wings.utils;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.Utils.escapifyString;
 import static software.wings.utils.Utils.getNameWithNextRevision;
@@ -74,7 +75,7 @@ public class UtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testAppendPathToBaseUrl() {
     assertThat(Utils.appendPathToBaseUrl("https://example.com", "hello")).isEqualTo("https://example.com/hello");
@@ -96,8 +97,12 @@ public class UtilsTest extends CategoryTest {
         .isEqualTo("https://example.com/path1/path2/hello/q=abc&abc=%20abc");
     assertThat(Utils.appendPathToBaseUrl("https://example.com", "q=abc&abc=%20abc"))
         .isEqualTo("https://example.com/q=abc&abc=%20abc");
-    assertThat(Utils.appendPathToBaseUrl("https://example.com", "./hello")).isEqualTo("https://example.com/hello");
-    assertThat(Utils.appendPathToBaseUrl("http://example.com", "./hello")).isEqualTo("http://example.com/hello");
+    assertThat(Utils.appendPathToBaseUrl("https://example.com", "")).isEqualTo("https://example.com/");
+    assertThat(
+        Utils.appendPathToBaseUrl("http://35.239.148.216:8080/",
+            "/api/v1/query_range?start=1592243889&end=1592245089&step=60s&query=container_cpu_usage_seconds_total{container=\"harness-example\",pod=\"harness-example-prod-deployment-canary-7d458cfcb7-z95b6\"}"))
+        .isEqualTo(
+            "http://35.239.148.216:8080/api/v1/query_range?start=1592243889&end=1592245089&step=60s&query=container_cpu_usage_seconds_total{container=\"harness-example\",pod=\"harness-example-prod-deployment-canary-7d458cfcb7-z95b6\"}");
   }
 
   @Test
