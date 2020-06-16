@@ -745,7 +745,8 @@ public class PcfClientImpl implements PcfClient {
     return result;
   }
 
-  private Map<String, String> getEnvironmentMapForPcfPush(PcfCreateApplicationRequestData requestData) {
+  @VisibleForTesting
+  Map<String, String> getEnvironmentMapForPcfPush(PcfCreateApplicationRequestData requestData) {
     Map<String, String> environmentMapForPcfExecutor = getEnvironmentMapForPcfExecutor(requestData.getConfigPathVar());
     ArtifactStreamAttributes artifactStreamAttributes = requestData.getSetupRequest().getArtifactStreamAttributes();
     if (artifactStreamAttributes.isDockerBasedDeployment()) {
