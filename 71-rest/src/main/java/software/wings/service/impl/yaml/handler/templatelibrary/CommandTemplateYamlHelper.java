@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.templatelibrary;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.Graph.graphIdGenerator;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import com.google.common.collect.Lists;
@@ -9,7 +10,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Graph;
@@ -113,7 +113,7 @@ public class CommandTemplateYamlHelper {
   }
 
   private String getLinkId() {
-    return UUIDGenerator.graphIdGenerator(YamlConstants.LINK_PREFIX);
+    return graphIdGenerator(YamlConstants.LINK_PREFIX);
   }
   private String getCommandUnitSubTypeFromYaml(AbstractCommandUnit.Yaml commandUnitYaml) {
     if (commandUnitYaml.getCommandUnitType().equals(COMMAND.name())) {

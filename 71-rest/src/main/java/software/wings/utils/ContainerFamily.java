@@ -1,9 +1,9 @@
 package software.wings.utils;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static io.harness.data.structure.UUIDGenerator.graphIdGenerator;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Graph.Builder.aGraph;
+import static software.wings.beans.Graph.graphIdGenerator;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
