@@ -21,6 +21,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.app.ManagerCacheRegistrar.NEW_RELIC_APPLICATION_CACHE;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -123,6 +124,7 @@ import software.wings.features.GitOpsFeature;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.prune.PruneEvent;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
@@ -152,7 +154,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.CryptoUtils;
-import software.wings.utils.ManagerCacheHandler;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 
@@ -167,6 +168,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import javax.cache.Cache;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -197,7 +199,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private CEInfraSetupHandlerFactory ceInfraSetupHandlerFactory;
 
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
-  @Inject private ManagerCacheHandler harnessCacheManager;
+  @Inject @Named(NEW_RELIC_APPLICATION_CACHE) private Cache<String, NewRelicApplications> newRelicApplicationCache;
   @Inject private EnvironmentService envService;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private EventPublishHelper eventPublishHelper;
@@ -946,7 +948,7 @@ public class SettingsServiceImpl implements SettingsService {
       yamlPushService.pushYamlChangeSet(settingAttribute.getAccountId(), savedSettingAttributes,
           updatedSettingAttribute, Type.UPDATE, settingAttribute.isSyncFromGit(), isRename);
     }
-    harnessCacheManager.getNewRelicApplicationCache().remove(updatedSettingAttribute.getUuid());
+    newRelicApplicationCache.remove(updatedSettingAttribute.getUuid());
 
     if (updatedSettingAttribute.getValue() instanceof CloudCostAware) {
       ccmSettingService.maskCCMConfig(updatedSettingAttribute);
@@ -1053,7 +1055,7 @@ public class SettingsServiceImpl implements SettingsService {
 
     if (deleted && shouldBeSynced(settingAttribute, pushToGit)) {
       yamlPushService.pushYamlChangeSet(accountId, settingAttribute, null, Type.DELETE, syncFromGit, false);
-      harnessCacheManager.getNewRelicApplicationCache().remove(settingAttribute.getUuid());
+      newRelicApplicationCache.remove(settingAttribute.getUuid());
     } else {
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, settingAttribute);
     }

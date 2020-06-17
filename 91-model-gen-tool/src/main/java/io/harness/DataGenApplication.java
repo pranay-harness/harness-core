@@ -48,7 +48,6 @@ import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateProfileService;
-import software.wings.utils.ManagerCacheHandler;
 
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
@@ -131,17 +130,6 @@ public class DataGenApplication extends Application<MainConfiguration> {
         }
       }
     });
-
-    // Access all caches before coming out of maintenance
-    ManagerCacheHandler managerCacheHandler = injector.getInstance(ManagerCacheHandler.class);
-
-    managerCacheHandler.getUserCache();
-    managerCacheHandler.getUserPermissionInfoCache();
-    managerCacheHandler.getUserRestrictionInfoCache();
-    managerCacheHandler.getApiKeyPermissionInfoCache();
-    managerCacheHandler.getApiKeyRestrictionInfoCache();
-    managerCacheHandler.getNewRelicApplicationCache();
-    managerCacheHandler.getWhitelistConfigCache();
 
     String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
 

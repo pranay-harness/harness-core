@@ -430,7 +430,9 @@ public enum ErrorCode {
 
   ENGINE_OUTCOME_EXCEPTION,
 
-  ENGINE_SWEEPING_OUTPUT_EXCEPTION;
+  ENGINE_SWEEPING_OUTPUT_EXCEPTION,
+
+  CACHE_NOT_FOUND_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;

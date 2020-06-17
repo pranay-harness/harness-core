@@ -24,7 +24,7 @@ public class HarnessCacheManagerImpl implements HarnessCacheManager {
   public <K, V> Cache<K, V> getCache(
       String cacheName, Class<K> keyType, Class<V> valueType, Factory<ExpiryPolicy> expiryPolicy) {
     if (isNotEmpty(cacheConfig.getDisabledCaches()) && cacheConfig.getDisabledCaches().contains(cacheName)) {
-      return null;
+      return new NoOpCache<>();
     }
 
     MutableConfiguration<K, V> jCacheConfiguration = new MutableConfiguration<>();

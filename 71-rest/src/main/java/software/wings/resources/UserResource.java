@@ -78,7 +78,6 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.signup.BugsnagErrorReporter;
 import software.wings.utils.AccountPermissionUtils;
-import software.wings.utils.ManagerCacheHandler;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
@@ -91,6 +90,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
+import javax.cache.Cache;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -131,7 +131,7 @@ public class UserResource {
   private AccountService accountService;
   private AuthenticationManager authenticationManager;
   private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
-  private ManagerCacheHandler managerCacheHandler;
+  private Map<String, Cache<?, ?>> caches;
   private HarnessUserGroupService harnessUserGroupService;
   private UserGroupService userGroupService;
   private AccountPermissionUtils accountPermissionUtils;
@@ -144,7 +144,7 @@ public class UserResource {
   @Inject
   public UserResource(UserService userService, AuthService authService, AccountService accountService,
       AccountPermissionUtils accountPermissionUtils, AuthenticationManager authenticationManager,
-      TwoFactorAuthenticationManager twoFactorAuthenticationManager, ManagerCacheHandler managerCacheHandler,
+      TwoFactorAuthenticationManager twoFactorAuthenticationManager, Map<String, Cache<?, ?>> caches,
       HarnessUserGroupService harnessUserGroupService, UserGroupService userGroupService,
       MainConfiguration mainConfiguration, AccountPasswordExpirationJob accountPasswordExpirationJob,
       ReCaptchaVerifier reCaptchaVerifier) {
@@ -154,7 +154,7 @@ public class UserResource {
     this.accountPermissionUtils = accountPermissionUtils;
     this.authenticationManager = authenticationManager;
     this.twoFactorAuthenticationManager = twoFactorAuthenticationManager;
-    this.managerCacheHandler = managerCacheHandler;
+    this.caches = caches;
     this.harnessUserGroupService = harnessUserGroupService;
     this.userGroupService = userGroupService;
     this.mainConfiguration = mainConfiguration;
@@ -326,7 +326,7 @@ public class UserResource {
   public RestResponse resetCache() {
     User authUser = UserThreadLocal.get();
     if (harnessUserGroupService.isHarnessSupportUser(authUser.getUuid())) {
-      managerCacheHandler.resetAllCaches();
+      caches.values().forEach(Cache::clear);
     } else {
       return Builder.aRestResponse()
           .withResponseMessages(Lists.newArrayList(

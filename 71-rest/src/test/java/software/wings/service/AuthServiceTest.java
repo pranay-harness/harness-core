@@ -75,7 +75,6 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
-import software.wings.utils.ManagerCacheHandler;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
@@ -97,7 +96,6 @@ public class AuthServiceTest extends WingsBaseTest {
   private static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   @Mock private GenericDbCache cache;
-  @Mock private static ManagerCacheHandler managerCacheHandler;
   @Mock private Cache<String, User> userCache;
   @Mock private Cache<String, AuthToken> authTokenCache;
   @Mock private HPersistence persistence;
@@ -122,13 +120,9 @@ public class AuthServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {
     initMocks(this);
     on(mainConfiguration).set("portal", portalConfig);
-    when(managerCacheHandler.getUserCache()).thenReturn(userCache);
     when(userCache.get(USER_ID)).thenReturn(User.Builder.anUser().uuid(USER_ID).build());
-
-    when(managerCacheHandler.getAuthTokenCache()).thenReturn(authTokenCache);
     when(authTokenCache.get(VALID_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 86400000L));
     when(authTokenCache.get(EXPIRED_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 0L));
-
     when(cache.get(Application.class, APP_ID)).thenReturn(anApplication().uuid(APP_ID).appId(APP_ID).build());
     when(cache.get(Environment.class, ENV_ID))
         .thenReturn(anEnvironment().appId(APP_ID).uuid(ENV_ID).environmentType(EnvironmentType.NON_PROD).build());

@@ -167,7 +167,6 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.signup.SignupException;
 import software.wings.signup.BlackListedDomainChecker;
 import software.wings.signup.SignupServiceImpl;
-import software.wings.utils.ManagerCacheHandler;
 import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
@@ -223,7 +222,6 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private AuthService authService;
   @Mock private UserGroupService userGroupService;
-  @Mock private ManagerCacheHandler managerCacheHandler;
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private AuthenticationManager authenticationManager;
   @Mock private UserServiceLimitChecker userServiceLimitChecker;
@@ -262,7 +260,6 @@ public class UserServiceTest extends WingsBaseTest {
     doNothing()
         .when(userServiceLimitChecker)
         .limitCheck(Mockito.anyString(), anyListOf(User.class), anySetOf(String.class));
-    when(managerCacheHandler.getUserCache()).thenReturn(cache);
 
     when(wingsPersistence.createQuery(User.class)).thenReturn(query);
     when(query.filter(any(), any())).thenReturn(query);

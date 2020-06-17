@@ -17,6 +17,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.app.ManagerCacheRegistrar.USER_CACHE;
 import static software.wings.beans.AccountRole.AccountRoleBuilder.anAccountRole;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ApplicationRole.ApplicationRoleBuilder.anApplicationRole;
@@ -40,6 +41,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.amazonaws.services.codedeploy.model.InvalidOperationException;
 import com.auth0.jwt.JWT;
@@ -175,7 +177,6 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.marketplace.gcp.GCPBillingPollingService;
 import software.wings.service.intfc.signup.SignupException;
 import software.wings.service.intfc.signup.SignupSpamChecker;
-import software.wings.utils.ManagerCacheHandler;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -242,7 +243,7 @@ public class UserServiceImpl implements UserService {
   @Inject private UserGroupService userGroupService;
   @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private AppService appService;
-  @Inject private ManagerCacheHandler managerCacheHandler;
+  @Inject @Named(USER_CACHE) private Cache<String, User> userCache;
   @Inject private AuthHandler authHandler;
   @Inject private SecretManager secretManager;
   @Inject private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
@@ -2316,7 +2317,6 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User getUserFromCacheOrDB(String userId) {
-    Cache<String, User> userCache = managerCacheHandler.getUserCache();
     User user = null;
     try {
       if (userCache == null) {
@@ -2344,8 +2344,8 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void evictUserFromCache(String userId) {
-    Preconditions.checkNotNull(managerCacheHandler.getUserCache(), "User cache can't be null");
-    managerCacheHandler.getUserCache().remove(userId);
+    Preconditions.checkNotNull(userCache, "User cache can't be null");
+    userCache.remove(userId);
   }
 
   /* (non-Javadoc)

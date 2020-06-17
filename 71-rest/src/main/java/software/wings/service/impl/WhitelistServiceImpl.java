@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.validation.Validator.notNullCheck;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.app.ManagerCacheRegistrar.WHITELIST_CACHE;
 import static software.wings.beans.security.access.WhitelistStatus.ACTIVE;
 
 import com.google.inject.Inject;
@@ -33,7 +34,6 @@ import software.wings.features.IpWhitelistingFeature;
 import software.wings.features.api.PremiumFeature;
 import software.wings.features.api.RestrictedApi;
 import software.wings.service.intfc.WhitelistService;
-import software.wings.utils.ManagerCacheHandler;
 
 import java.util.Arrays;
 import java.util.List;
@@ -49,9 +49,9 @@ import javax.validation.executable.ValidateOnExecution;
 public class WhitelistServiceImpl implements WhitelistService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private MainConfiguration mainConfiguration;
-  @Inject private ManagerCacheHandler managerCacheHandler;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject @Named(WHITELIST_CACHE) private Cache<String, WhitelistConfig> whitelistConfigCache;
   @Inject @Named(IpWhitelistingFeature.FEATURE_NAME) private PremiumFeature ipWhitelistingFeature;
 
   @Override
@@ -114,19 +114,18 @@ public class WhitelistServiceImpl implements WhitelistService {
   }
 
   public List<Whitelist> getWhitelistConfig(String accountId) {
-    Cache<String, WhitelistConfig> cache = managerCacheHandler.getWhitelistConfigCache();
     WhitelistConfig value;
 
     // Cache should never be null, but just in case
-    if (cache == null) {
+    if (whitelistConfigCache == null) {
       value = getWhitelistConfigFromDB(accountId);
       return value.getWhitelistList();
     }
 
-    value = cache.get(accountId);
+    value = whitelistConfigCache.get(accountId);
     if (value == null) {
       value = getWhitelistConfigFromDB(accountId);
-      cache.put(accountId, value);
+      whitelistConfigCache.put(accountId, value);
     }
 
     return value.getWhitelistList();
@@ -144,8 +143,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   }
 
   private void evictWhitelistConfigCache(String accountId) {
-    Cache<String, WhitelistConfig> cache = managerCacheHandler.getWhitelistConfigCache();
-    cache.remove(accountId);
+    whitelistConfigCache.remove(accountId);
   }
 
   private boolean isValidIPAddress(String ipAddress, List<Whitelist> whitelistConfigList) {

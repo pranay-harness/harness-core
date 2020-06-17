@@ -212,7 +212,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachineExecutor;
-import software.wings.utils.ManagerCacheHandler;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
 import software.wings.yaml.gitSync.GitSyncEntitiesExpiryHandler;
 
@@ -220,11 +219,13 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.servlet.ServletRegistration;
@@ -374,15 +375,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     Injector injector = Guice.createInjector(modules);
 
     // Access all caches before coming out of maintenance
-    ManagerCacheHandler managerCacheHandler = injector.getInstance(ManagerCacheHandler.class);
-
-    managerCacheHandler.getUserCache();
-    managerCacheHandler.getUserPermissionInfoCache();
-    managerCacheHandler.getUserRestrictionInfoCache();
-    managerCacheHandler.getApiKeyPermissionInfoCache();
-    managerCacheHandler.getApiKeyRestrictionInfoCache();
-    managerCacheHandler.getNewRelicApplicationCache();
-    managerCacheHandler.getWhitelistConfigCache();
+    injector.getInstance(new Key<Map<String, Cache<?, ?>>>() {});
 
     registerAtmosphereStreams(environment, injector);
 
