@@ -17,6 +17,7 @@ package io.harness.stream.redisson;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.stream.redisson.RedissonFactory.REDIS_ENV_NAMESPACE;
 
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,7 @@ public class RedissonBroadcaster extends AbstractBroadcasterProxy {
   private final AtomicBoolean isClosed = new AtomicBoolean();
   private RTopic topic;
   private Integer messageListenerRegistrationId;
+  private static final String BROADCASTER_PREFIX = "hStreams";
 
   @Override
   public Broadcaster initialize(String id, AtmosphereConfig config) {
@@ -59,7 +61,11 @@ public class RedissonBroadcaster extends AbstractBroadcasterProxy {
     if (redissonClient == null) {
       redissonClient = RedissonFactory.getRedissonClient(config);
     }
-    topic = redissonClient.getTopic(getID(), redissonClient.getConfig().getCodec());
+    String broadcasterNamespace = isEmpty(config.getServletConfig().getInitParameter(REDIS_ENV_NAMESPACE))
+        ? BROADCASTER_PREFIX
+        : config.getServletConfig().getInitParameter(REDIS_ENV_NAMESPACE).concat(":").concat(BROADCASTER_PREFIX);
+    String topicName = String.format("%s:%s", broadcasterNamespace, getID());
+    topic = redissonClient.getTopic(topicName, redissonClient.getConfig().getCodec());
     config.shutdownHook(() -> {
       redissonClient.shutdown();
       isClosed.set(true);

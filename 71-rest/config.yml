@@ -106,6 +106,7 @@ redisLockConfig:
     - "redis://redis2:26379"
     - "redis://redis3:26379"
   envNamespace: ""
+  readMode: SLAVE
 
 atmosphereBroadcaster: HAZELCAST
 
@@ -118,6 +119,7 @@ redisAtmosphereConfig:
     - "redis://redis2:26379"
     - "redis://redis3:26379"
   envNamespace: ""
+  readMode: MASTER
 
 githubConfig:
   clientId: githubClientId
@@ -266,7 +268,7 @@ portal:
 
 cacheConfig:
   cacheBackend: HAZELCAST
-  cacheNamespace: harness-cache
+  cacheNamespace: ""
   disabledCaches: []
 
 featuresEnabled: ""

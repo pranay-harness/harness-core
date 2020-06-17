@@ -1,5 +1,6 @@
 package io.harness.lock.redis;
 
+import static io.harness.redis.RedisReadMode.SLAVE;
 import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -44,6 +45,8 @@ public class RedisPersistentLockerTest extends PersistenceTest {
     initMocks(this);
     PowerMockito.mockStatic(Redisson.class);
     RedisConfig config = mock(RedisConfig.class);
+    when(config.isSentinel()).thenReturn(true);
+    when(config.getReadMode()).thenReturn(SLAVE);
     client = mock(RedissonClient.class);
     when(Redisson.create(any())).thenReturn(client);
     redisPersistentLocker = new RedisPersistentLocker(config);
