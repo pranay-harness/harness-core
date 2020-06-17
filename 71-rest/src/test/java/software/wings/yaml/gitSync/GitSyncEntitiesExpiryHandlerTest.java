@@ -74,7 +74,7 @@ public class GitSyncEntitiesExpiryHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ABHINAV)
+  @Owner(developers = ABHINAV, intermittent = true)
   @Category(UnitTests.class)
   public void testGitCommits() {
     final String connectorId = "gitConnectorId";

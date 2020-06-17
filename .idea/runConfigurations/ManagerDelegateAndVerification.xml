@@ -1,8 +1,8 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="ManagerDelegateAndVerification" type="Multirun" factoryName="Multirun" separateTabs="false" startOneByOne="false" markFailedProcess="false" hideSuccessProcess="true" delayTime="0">
-    <runConfiguration name="WingsApplication" type="Application" />
-    <runConfiguration name="DelegateApplication" type="Application" />
-    <runConfiguration name="VerificationServiceApplication" type="Application" />
+    <runConfiguration name="DelegateApp" type="Application" />
+    <runConfiguration name="VerificationSvcApp" type="Application" />
+    <runConfiguration name="WingsApp" type="Application" />
     <method v="2" />
   </configuration>
 </component>

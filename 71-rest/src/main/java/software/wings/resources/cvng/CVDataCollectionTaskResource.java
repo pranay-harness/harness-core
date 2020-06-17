@@ -7,7 +7,8 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.cvng.CVDataCollectionTaskService;
+import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Slf4j
 @Scope(SERVICE)
+@ExposeInternalException(withStackTrace = true)
 public class CVDataCollectionTaskResource {
   @Inject private CVDataCollectionTaskService dataCollectionTaskService;
 

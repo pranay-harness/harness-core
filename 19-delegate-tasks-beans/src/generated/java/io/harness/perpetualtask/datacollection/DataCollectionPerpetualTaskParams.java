@@ -17,6 +17,7 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
   }
   private DataCollectionPerpetualTaskParams() {
     cvConfigId_ = "";
+    dataCollectionInfo_ = com.google.protobuf.ByteString.EMPTY;
   }
 
   @java.
@@ -51,6 +52,10 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
             java.lang.String s = input.readStringRequireUtf8();
 
             cvConfigId_ = s;
+            break;
+          }
+          case 18: {
+            dataCollectionInfo_ = input.readBytes();
             break;
           }
           default: {
@@ -117,6 +122,16 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     }
   }
 
+  public static final int DATA_COLLECTION_INFO_FIELD_NUMBER = 2;
+  private com.google.protobuf.ByteString dataCollectionInfo_;
+  /**
+   * <code>bytes data_collection_info = 2[json_name = "dataCollectionInfo"];</code>
+   * @return The dataCollectionInfo.
+   */
+  public com.google.protobuf.ByteString getDataCollectionInfo() {
+    return dataCollectionInfo_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -135,6 +150,9 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     if (!getCvConfigIdBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 1, cvConfigId_);
     }
+    if (!dataCollectionInfo_.isEmpty()) {
+      output.writeBytes(2, dataCollectionInfo_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -147,6 +165,9 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     size = 0;
     if (!getCvConfigIdBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, cvConfigId_);
+    }
+    if (!dataCollectionInfo_.isEmpty()) {
+      size += com.google.protobuf.CodedOutputStream.computeBytesSize(2, dataCollectionInfo_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -166,6 +187,8 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
 
     if (!getCvConfigId().equals(other.getCvConfigId()))
       return false;
+    if (!getDataCollectionInfo().equals(other.getDataCollectionInfo()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -180,6 +203,8 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     hash = (19 * hash) + getDescriptor().hashCode();
     hash = (37 * hash) + CV_CONFIG_ID_FIELD_NUMBER;
     hash = (53 * hash) + getCvConfigId().hashCode();
+    hash = (37 * hash) + DATA_COLLECTION_INFO_FIELD_NUMBER;
+    hash = (53 * hash) + getDataCollectionInfo().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -300,6 +325,8 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
       super.clear();
       cvConfigId_ = "";
 
+      dataCollectionInfo_ = com.google.protobuf.ByteString.EMPTY;
+
       return this;
     }
 
@@ -332,6 +359,7 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
       io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams result =
           new io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams(this);
       result.cvConfigId_ = cvConfigId_;
+      result.dataCollectionInfo_ = dataCollectionInfo_;
       onBuilt();
       return result;
     }
@@ -377,6 +405,9 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
       if (!other.getCvConfigId().isEmpty()) {
         cvConfigId_ = other.cvConfigId_;
         onChanged();
+      }
+      if (other.getDataCollectionInfo() != com.google.protobuf.ByteString.EMPTY) {
+        setDataCollectionInfo(other.getDataCollectionInfo());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -471,6 +502,38 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
       checkByteStringIsUtf8(value);
 
       cvConfigId_ = value;
+      onChanged();
+      return this;
+    }
+
+    private com.google.protobuf.ByteString dataCollectionInfo_ = com.google.protobuf.ByteString.EMPTY;
+    /**
+     * <code>bytes data_collection_info = 2[json_name = "dataCollectionInfo"];</code>
+     * @return The dataCollectionInfo.
+     */
+    public com.google.protobuf.ByteString getDataCollectionInfo() {
+      return dataCollectionInfo_;
+    }
+    /**
+     * <code>bytes data_collection_info = 2[json_name = "dataCollectionInfo"];</code>
+     * @param value The dataCollectionInfo to set.
+     * @return This builder for chaining.
+     */
+    public Builder setDataCollectionInfo(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      dataCollectionInfo_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>bytes data_collection_info = 2[json_name = "dataCollectionInfo"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearDataCollectionInfo() {
+      dataCollectionInfo_ = getDefaultInstance().getDataCollectionInfo();
       onChanged();
       return this;
     }

@@ -6,4 +6,5 @@ option java_multiple_files = true;
 
 message DataCollectionPerpetualTaskParams {
   string cv_config_id = 1;
+  bytes data_collection_info = 2;
 }
