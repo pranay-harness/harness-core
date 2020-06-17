@@ -24,6 +24,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.ELK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCS_HELM_REPO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GIT;
+import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HTTP_HELM_REPO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.INSTANA;
 import static software.wings.settings.SettingValue.SettingVariableTypes.JENKINS;
@@ -76,11 +77,11 @@ import java.util.stream.Collectors;
 @Singleton
 public class SettingServiceHelper {
   private static final String REFERENCED_SECRET_ERROR_MSG = "Unable to copy encryption details";
-  public static final Set<SettingVariableTypes> ATTRIBUTES_USING_REFERENCES =
-      Sets.immutableEnumSet(AWS, AZURE, GCP, KUBERNETES_CLUSTER, PCF, SPOT_INST, APP_DYNAMICS, NEW_RELIC, INSTANA,
-          PROMETHEUS, DATA_DOG, DYNA_TRACE, CLOUD_WATCH, DATA_DOG_LOG, BUG_SNAG, ELK, SPLUNK, SUMO, LOGZ,
-          APM_VERIFICATION, JENKINS, BAMBOO, DOCKER, NEXUS, ARTIFACTORY, SMB, SFTP, AMAZON_S3_HELM_REPO, GCS_HELM_REPO,
-          HTTP_HELM_REPO, AZURE_ARTIFACTS_PAT, GIT, SMTP, JIRA, SERVICENOW, WINRM_CONNECTION_ATTRIBUTES);
+  public static final Set<SettingVariableTypes> ATTRIBUTES_USING_REFERENCES = Sets.immutableEnumSet(AWS, AZURE, GCP,
+      KUBERNETES_CLUSTER, PCF, SPOT_INST, APP_DYNAMICS, NEW_RELIC, INSTANA, PROMETHEUS, DATA_DOG, DYNA_TRACE,
+      CLOUD_WATCH, DATA_DOG_LOG, BUG_SNAG, ELK, SPLUNK, SUMO, LOGZ, APM_VERIFICATION, JENKINS, BAMBOO, DOCKER, NEXUS,
+      ARTIFACTORY, SMB, SFTP, AMAZON_S3_HELM_REPO, GCS_HELM_REPO, HTTP_HELM_REPO, AZURE_ARTIFACTS_PAT, GIT, SMTP, JIRA,
+      SERVICENOW, WINRM_CONNECTION_ATTRIBUTES, HOST_CONNECTION_ATTRIBUTES);
 
   @Inject private SecretManager secretManager;
   @Inject private ManagerDecryptionService managerDecryptionService;

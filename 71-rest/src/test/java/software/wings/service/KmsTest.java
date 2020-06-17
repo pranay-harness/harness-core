@@ -1586,7 +1586,7 @@ public class KmsTest extends WingsBaseTest {
       assertThat(wingsPersistence.createQuery(SettingAttribute.class).count())
           .isEqualTo(numOfSettingAttributes - (i + 1));
       assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-          .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes - (i + 1));
+          .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes);
     }
   }
 
@@ -1606,7 +1606,7 @@ public class KmsTest extends WingsBaseTest {
 
     settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
     wingsPersistence.save(settingAttributes);
-    validateSettingAttributes(settingAttributes, numOfEncryptedValsForKms + numOfSettingAttributes);
+    validateSettingAttributes(settingAttributes, numOfEncryptedValsForKms + 2 * numOfSettingAttributes);
   }
 
   @Test
@@ -1636,7 +1636,7 @@ public class KmsTest extends WingsBaseTest {
       assertThat(wingsPersistence.createQuery(SettingAttribute.class).count())
           .isEqualTo(numOfSettingAttributes - idsToDelete.size());
       assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-          .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes - idsToDelete.size());
+          .isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes);
     }
   }
 
@@ -2785,19 +2785,15 @@ public class KmsTest extends WingsBaseTest {
       wingsPersistence.delete(accountId, SettingAttribute.class, attributeId);
       encryptedDatas =
           wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).asList();
-      if (i == numOfSettingAttributes - 1) {
-        assertThat(encryptedDatas.isEmpty()).isTrue();
-      } else {
-        assertThat(encryptedDatas).hasSize(1);
-        encryptedData = encryptedDatas.get(0);
-        assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
-        assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
-        assertThat(encryptedData.isEnabled()).isTrue();
-        assertThat(encryptedData.getKmsId()).isNotNull();
-        assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
-        assertThat(encryptedData.getParents()).hasSize(numOfSettingAttributes - (i + 1));
-        assertThat(encryptedData.containsParent(attributeId, appDynamicsConfig.getSettingType())).isFalse();
-      }
+      assertThat(encryptedDatas).hasSize(1);
+      encryptedData = encryptedDatas.get(0);
+      assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
+      assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
+      assertThat(encryptedData.isEnabled()).isTrue();
+      assertThat(encryptedData.getKmsId()).isNotNull();
+      assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
+      assertThat(encryptedData.getParents()).hasSize(numOfSettingAttributes - (i + 1));
+      assertThat(encryptedData.containsParent(attributeId, appDynamicsConfig.getSettingType())).isFalse();
       i++;
     }
   }
@@ -2860,19 +2856,15 @@ public class KmsTest extends WingsBaseTest {
       encryptedDatas = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                            .filter("encryptionType", EncryptionType.KMS)
                            .asList();
-      if (i == numOfSettingAttributes - 1) {
-        assertThat(encryptedDatas.isEmpty()).isTrue();
-      } else {
-        assertThat(encryptedDatas).hasSize(1);
-        encryptedData = encryptedDatas.get(0);
-        assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.KMS);
-        assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
-        assertThat(encryptedData.isEnabled()).isTrue();
-        assertThat(encryptedData.getKmsId()).isEqualTo(fromConfig.getUuid());
-        assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
-        assertThat(encryptedData.getParents()).hasSize(numOfSettingAttributes - (i + 1));
-        assertThat(encryptedData.containsParent(attributeId, appDynamicsConfig.getSettingType())).isFalse();
-      }
+      assertThat(encryptedDatas).hasSize(1);
+      encryptedData = encryptedDatas.get(0);
+      assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.KMS);
+      assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
+      assertThat(encryptedData.isEnabled()).isTrue();
+      assertThat(encryptedData.getKmsId()).isEqualTo(fromConfig.getUuid());
+      assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
+      assertThat(encryptedData.getParents()).hasSize(numOfSettingAttributes - (i + 1));
+      assertThat(encryptedData.containsParent(attributeId, appDynamicsConfig.getSettingType())).isFalse();
       i++;
     }
   }

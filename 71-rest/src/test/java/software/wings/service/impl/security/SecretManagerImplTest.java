@@ -1,11 +1,18 @@
 package software.wings.service.impl.security;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
+import static io.harness.security.encryption.EncryptionType.GCP_KMS;
+import static io.harness.security.encryption.EncryptionType.KMS;
+import static io.harness.security.encryption.EncryptionType.LOCAL;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -14,6 +21,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
+import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
 
@@ -29,6 +37,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -54,7 +63,6 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.GcpKmsService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
@@ -80,7 +88,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Inject @InjectMocks private KmsService kmsService;
   @Inject @InjectMocks private GcpSecretsManagerService gcpSecretsManagerService;
-  @Inject @InjectMocks private SecretManager secretManager;
+  @Inject @InjectMocks private SecretManagerImpl secretManager;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   private String secretName = "secretName";
   private String secretValue = "secretValue";
@@ -104,7 +112,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
 
     gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
-    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setEncryptionType(GCP_KMS);
     gcpKmsConfig.setAccountId(account.getUuid());
     gcpKmsConfig.setDefault(true);
 
@@ -126,14 +134,13 @@ public class SecretManagerImplTest extends WingsBaseTest {
                                       .accountId(account.getUuid())
                                       .enabled(true)
                                       .kmsId(gcpKmsConfig.getUuid())
-                                      .encryptionType(EncryptionType.GCP_KMS)
+                                      .encryptionType(GCP_KMS)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
                                       .base64Encoded(false)
                                       .name("Dummy record")
                                       .type(SettingVariableTypes.GCP_KMS)
                                       .build();
-
     when(gcpKmsService.encrypt(
              eq(secretValue), eq(account.getUuid()), any(GcpKmsConfig.class), any(EncryptedData.class)))
         .thenReturn(encryptedData);
@@ -151,7 +158,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
 
     GcpKmsConfig gcpKmsConfig1 = new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials);
-    gcpKmsConfig1.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig1.setEncryptionType(GCP_KMS);
     gcpKmsConfig1.setAccountId(account.getUuid());
     gcpKmsConfig1.setDefault(true);
 
@@ -163,7 +170,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
                                       .accountId(account.getUuid())
                                       .enabled(true)
                                       .kmsId(gcpKmsConfig.getUuid())
-                                      .encryptionType(EncryptionType.GCP_KMS)
+                                      .encryptionType(GCP_KMS)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
                                       .base64Encoded(false)
@@ -195,7 +202,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
 
     GcpKmsConfig gcpKmsConfig1 = new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials);
-    gcpKmsConfig1.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig1.setEncryptionType(GCP_KMS);
     gcpKmsConfig1.setAccountId(account.getUuid());
     gcpKmsConfig1.setDefault(true);
 
@@ -207,7 +214,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
                                       .accountId(account.getUuid())
                                       .enabled(true)
                                       .kmsId(gcpKmsConfig.getUuid())
-                                      .encryptionType(EncryptionType.GCP_KMS)
+                                      .encryptionType(GCP_KMS)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
                                       .base64Encoded(false)
@@ -236,7 +243,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
 
     GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials);
-    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setEncryptionType(GCP_KMS);
     gcpKmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
     gcpKmsConfig.setDefault(true);
 
@@ -248,7 +255,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
                                       .accountId(account.getUuid())
                                       .enabled(true)
                                       .kmsId(gcpKmsConfig.getUuid())
-                                      .encryptionType(EncryptionType.GCP_KMS)
+                                      .encryptionType(GCP_KMS)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
                                       .base64Encoded(false)
@@ -259,8 +266,8 @@ public class SecretManagerImplTest extends WingsBaseTest {
     String encryptedDataId = wingsPersistence.save(encryptedData);
     encryptedData.setUuid(encryptedDataId);
 
-    boolean transitionEventsCreated = secretManager.transitionSecrets(
-        account.getUuid(), EncryptionType.GCP_KMS, gcpKmsConfig.getUuid(), EncryptionType.KMS, "kmsConfigId");
+    boolean transitionEventsCreated =
+        secretManager.transitionSecrets(account.getUuid(), GCP_KMS, gcpKmsConfig.getUuid(), KMS, "kmsConfigId");
 
     assertThat(transitionEventsCreated).isTrue();
   }
@@ -273,7 +280,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
                                       .accountId(account.getUuid())
                                       .enabled(true)
                                       .kmsId(gcpKmsConfig.getUuid())
-                                      .encryptionType(EncryptionType.GCP_KMS)
+                                      .encryptionType(GCP_KMS)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
                                       .base64Encoded(false)
@@ -338,7 +345,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
                                       .accountId(account.getUuid())
                                       .enabled(true)
                                       .kmsId(gcpKmsConfig.getUuid())
-                                      .encryptionType(EncryptionType.GCP_KMS)
+                                      .encryptionType(GCP_KMS)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
                                       .base64Encoded(false)
@@ -421,7 +428,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
                                       .accountId(account.getUuid())
                                       .enabled(true)
                                       .kmsId(gcpKmsConfig.getUuid())
-                                      .encryptionType(EncryptionType.GCP_KMS)
+                                      .encryptionType(GCP_KMS)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
                                       .base64Encoded(false)
@@ -492,7 +499,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
                                       .accountId(accountId)
                                       .enabled(true)
                                       .kmsId(accountId)
-                                      .encryptionType(EncryptionType.LOCAL)
+                                      .encryptionType(LOCAL)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
                                       .base64Encoded(false)
@@ -506,7 +513,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
                                        .accountId(accountId)
                                        .enabled(true)
                                        .kmsId(accountId)
-                                       .encryptionType(EncryptionType.LOCAL)
+                                       .encryptionType(LOCAL)
                                        .encryptionKey("Dummy Key")
                                        .encryptedValue("Dummy Value".toCharArray())
                                        .base64Encoded(false)
@@ -580,7 +587,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
                                       .accountId(accountId)
                                       .enabled(true)
                                       .kmsId(accountId)
-                                      .encryptionType(EncryptionType.LOCAL)
+                                      .encryptionType(LOCAL)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
                                       .base64Encoded(false)
@@ -614,7 +621,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
                                       .accountId(accountId)
                                       .enabled(true)
                                       .kmsId(accountId)
-                                      .encryptionType(EncryptionType.LOCAL)
+                                      .encryptionType(LOCAL)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
                                       .base64Encoded(false)
@@ -640,7 +647,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
                                       .accountId(accountId)
                                       .enabled(true)
                                       .kmsId(accountId)
-                                      .encryptionType(EncryptionType.LOCAL)
+                                      .encryptionType(LOCAL)
                                       .encryptionKey("Dummy Key")
                                       .encryptedValue("Dummy Value".toCharArray())
                                       .base64Encoded(false)
@@ -664,11 +671,57 @@ public class SecretManagerImplTest extends WingsBaseTest {
     encryptedDataInDB.setUsageRestrictions(usageRestrictions);
     encryptedDataInDB.setScopedToAccount(false);
 
-    String editedSecretId = ((SecretManagerImpl) secretManager).saveEncryptedData(encryptedDataInDB);
+    String editedSecretId = secretManager.saveEncryptedData(encryptedDataInDB);
 
     EncryptedData editedEncryptedDataInDB = wingsPersistence.get(EncryptedData.class, editedSecretId);
     assertThat(editedEncryptedDataInDB).isNotNull();
     assertThat(editedEncryptedDataInDB.isScopedToAccount()).isFalse();
     assertThat(editedSecretId).isEqualTo(secretId);
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(UnitTests.class)
+  public void testSetEncryptedValueToFileContentWithBackupEncryptedValue() {
+    for (EncryptionType encryptionType : EncryptionType.values()) {
+      EncryptedData encryptedData = EncryptedData.builder()
+                                        .encryptionType(encryptionType)
+                                        .encryptedValue("DummyValue".toCharArray())
+                                        .backupEncryptionType(encryptionType)
+                                        .backupEncryptedValue("BackupDummyValue".toCharArray())
+                                        .build();
+      Mockito.doNothing().when(fileService).downloadToStream(anyString(), any(), any());
+
+      secretManager.setEncryptedValueToFileContent(encryptedData);
+
+      if (ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptionType)) {
+        assertEquals("", new String(encryptedData.getEncryptedValue()));
+        assertEquals("", new String(encryptedData.getBackupEncryptedValue()));
+      } else {
+        assertEquals("DummyValue", new String(encryptedData.getEncryptedValue()));
+        assertEquals("BackupDummyValue", new String(encryptedData.getBackupEncryptedValue()));
+      }
+    }
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(UnitTests.class)
+  public void testSetEncryptedValueToFileContentWithoutBackupEncryptedValue() {
+    for (EncryptionType encryptionType : EncryptionType.values()) {
+      EncryptedData encryptedData =
+          EncryptedData.builder().encryptionType(encryptionType).encryptedValue("DummyValue".toCharArray()).build();
+      Mockito.doNothing().when(fileService).downloadToStream(anyString(), any(), any());
+
+      secretManager.setEncryptedValueToFileContent(encryptedData);
+
+      if (ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptionType)) {
+        assertEquals("", new String(encryptedData.getEncryptedValue()));
+        assertNull(encryptedData.getBackupEncryptedValue());
+      } else {
+        assertEquals("DummyValue", new String(encryptedData.getEncryptedValue()));
+        assertNull(encryptedData.getBackupEncryptedValue());
+      }
+    }
   }
 }

@@ -27,4 +27,5 @@ public class EncryptedRecordData implements EncryptedRecord {
   private String backupEncryptionKey;
   private String backupKmsId;
   private EncryptionType backupEncryptionType;
+  private boolean base64Encoded;
 }

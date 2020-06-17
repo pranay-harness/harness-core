@@ -94,7 +94,6 @@ public class LocalEncryptionServiceImpl implements LocalEncryptionService {
 
   @Override
   public File decryptFile(File file, String accountId, EncryptedData encryptedData) {
-    fileService.download(String.valueOf(encryptedData.getEncryptedValue()), file, CONFIGS);
     return EncryptionUtils.decrypt(file, encryptedData.getEncryptionKey(), encryptedData.isBase64Encoded());
   }
 

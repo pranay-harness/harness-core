@@ -176,6 +176,7 @@ public interface SecretManager extends OwnedByAccount {
         .encryptedValue(encryptedData.getEncryptedValue())
         .kmsId(encryptedData.getKmsId())
         .encryptionType(encryptedData.getEncryptionType())
+        .base64Encoded(encryptedData.isBase64Encoded())
         .build();
   }
 }

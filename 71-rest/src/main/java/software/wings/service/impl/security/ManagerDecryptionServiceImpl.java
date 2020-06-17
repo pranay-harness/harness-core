@@ -5,11 +5,13 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
+import static io.harness.security.SimpleEncryption.CHARSET;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.encoding.EncodingUtils;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.security.SimpleEncryption;
@@ -25,6 +27,7 @@ import software.wings.service.intfc.security.ManagerDecryptionService;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -54,6 +57,10 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
         .forEach(encryptedDataDetail -> {
           SimpleEncryption encryption = new SimpleEncryption(encryptedDataDetail.getEncryptedData().getEncryptionKey());
           char[] decryptChars = encryption.decryptChars(encryptedDataDetail.getEncryptedData().getEncryptedValue());
+          if (encryptedDataDetail.getEncryptedData().isBase64Encoded()) {
+            byte[] decodedBytes = EncodingUtils.decodeBase64(decryptChars);
+            decryptChars = CHARSET.decode(ByteBuffer.wrap(decodedBytes)).array();
+          }
           Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
           if (f != null) {
             f.setAccessible(true);

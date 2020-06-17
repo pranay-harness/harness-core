@@ -19,6 +19,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeCount;
+import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.security.encryption.EncryptionType.AWS_SECRETS_MANAGER;
 import static io.harness.security.encryption.EncryptionType.AZURE_VAULT;
 import static io.harness.security.encryption.EncryptionType.CUSTOM;
@@ -151,10 +152,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -176,7 +179,7 @@ public class SecretManagerImpl implements SecretManager {
   // Prefix YAML ingestion generated secret names with this prefix
   private static final String YAML_PREFIX = "YAML_";
 
-  private static final long MAX_IMPORT_FILE_SIZE = 10 * 1024 * 1024L;
+  static final Set<EncryptionType> ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD = EnumSet.of(LOCAL, GCP_KMS, KMS);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private KmsService kmsService;
@@ -390,14 +393,41 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId) {
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, refId);
+  public Optional<EncryptedDataDetail> encryptedDataDetails(
+      String accountId, String fieldName, String encryptedDataId) {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedDataId);
     if (encryptedData == null) {
-      logger.info("No encrypted record set for field {} for id: {}", fieldName, refId);
+      logger.info("No encrypted record set for field {} for id: {}", fieldName, encryptedDataId);
       return Optional.empty();
     }
+
     EncryptionConfig encryptionConfig =
         getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
+
+    if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE) {
+      setEncryptedValueToFileContent(encryptedData);
+    }
+
+    // PL-1836: Need to preprocess global KMS and turn the KMS encryption into a LOCAL encryption.
+    EncryptedRecordData encryptedRecordData;
+    if (encryptionConfig.isGlobalKms()) {
+      logger.info(
+          "Pre-processing the encrypted secret by global KMS secret manager for secret {}", encryptedData.getUuid());
+
+      encryptedRecordData = globalEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
+          encryptedData, accountId, encryptionConfig);
+
+      // The encryption type will be set to LOCAL only if manager was able to decrypt.
+      // If the decryption failed, we need to retain the kms encryption config, otherwise delegate task would
+      // fail.
+      if (encryptedRecordData.getEncryptionType() == LOCAL) {
+        encryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
+        logger.info("Replaced it with LOCAL encryption for secret {}", encryptedData.getUuid());
+      }
+    } else {
+      encryptedRecordData = SecretManager.buildRecordData(encryptedData);
+    }
+
     EncryptedDataDetail encryptedDataDetail;
     if (encryptionConfig.getEncryptionType() == CUSTOM) {
       encryptedDataDetail = customSecretsManagerEncryptionService.buildEncryptedDataDetail(
@@ -405,12 +435,13 @@ public class SecretManagerImpl implements SecretManager {
       encryptedDataDetail.setFieldName(fieldName);
     } else {
       encryptedDataDetail = EncryptedDataDetail.builder()
-                                .encryptedData(SecretManager.buildRecordData(encryptedData))
+                                .encryptedData(encryptedRecordData)
                                 .encryptionConfig(encryptionConfig)
                                 .fieldName(fieldName)
                                 .build();
     }
-    return Optional.of(encryptedDataDetail);
+
+    return Optional.ofNullable(encryptedDataDetail);
   }
 
   @Override
@@ -454,49 +485,13 @@ public class SecretManagerImpl implements SecretManager {
             id = id.substring(id.indexOf(':') + 1);
           }
 
-          EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, id);
-          if (encryptedData == null) {
-            logger.info("No encrypted record set for field {} for id: {}", f.getName(), id);
+          Optional<EncryptedDataDetail> encryptedDataDetail =
+              encryptedDataDetails(object.getAccountId(), f.getName(), id);
+          if (encryptedDataDetail.isPresent()) {
+            encryptedDataDetails.add(encryptedDataDetail.get());
+          } else {
             continue;
           }
-
-          String accountId = object.getAccountId();
-          EncryptionConfig encryptionConfig =
-              getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
-
-          // PL-1836: Need to preprocess global KMS and turn the KMS encryption into a LOCAL encryption.
-          EncryptedRecordData encryptedRecordData;
-          if (encryptionConfig.isGlobalKms()) {
-            logger.info("Pre-processing the encrypted secret by global KMS secret manager for secret {}",
-                encryptedData.getUuid());
-
-            encryptedRecordData = globalEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
-                encryptedData, accountId, encryptionConfig);
-
-            // The encryption type will be set to LOCAL only if manager was able to decrypt.
-            // If the decryption failed, we need to retain the kms encryption config, otherwise delegate task would
-            // fail.
-            if (encryptedRecordData.getEncryptionType() == LOCAL) {
-              encryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
-              logger.info("Replaced it with LOCAL encryption for secret {}", encryptedData.getUuid());
-            }
-          } else {
-            encryptedRecordData = SecretManager.buildRecordData(encryptedData);
-          }
-
-          EncryptedDataDetail encryptedDataDetail;
-          if (encryptionConfig.getEncryptionType() == CUSTOM) {
-            encryptedDataDetail = customSecretsManagerEncryptionService.buildEncryptedDataDetail(
-                encryptedData, (CustomSecretsManagerConfig) encryptionConfig);
-            encryptedDataDetail.setFieldName(f.getName());
-          } else {
-            encryptedDataDetail = EncryptedDataDetail.builder()
-                                      .encryptedData(encryptedRecordData)
-                                      .encryptionConfig(encryptionConfig)
-                                      .fieldName(f.getName())
-                                      .build();
-          }
-          encryptedDataDetails.add(encryptedDataDetail);
 
           if (isNotEmpty(workflowExecutionId)) {
             WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
@@ -504,9 +499,9 @@ public class SecretManagerImpl implements SecretManager {
               logger.warn("No workflow execution with id {} found.", workflowExecutionId);
             } else {
               SecretUsageLog usageLog = SecretUsageLog.builder()
-                                            .encryptedDataId(encryptedData.getUuid())
+                                            .encryptedDataId(id)
                                             .workflowExecutionId(workflowExecutionId)
-                                            .accountId(encryptedData.getAccountId())
+                                            .accountId(object.getAccountId())
                                             .appId(workflowExecution.getAppId())
                                             .envId(workflowExecution.getEnvId())
                                             .build();
@@ -520,6 +515,22 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     return encryptedDataDetails;
+  }
+
+  @VisibleForTesting
+  public void setEncryptedValueToFileContent(EncryptedData encryptedData) {
+    if (ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())) {
+      ByteArrayOutputStream os = new ByteArrayOutputStream();
+      fileService.downloadToStream(String.valueOf(encryptedData.getEncryptedValue()), os, CONFIGS);
+      encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(os.toByteArray())).array());
+    }
+
+    if (isNotEmpty(encryptedData.getBackupEncryptedValue())
+        && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getBackupEncryptionType())) {
+      ByteArrayOutputStream os = new ByteArrayOutputStream();
+      fileService.downloadToStream(String.valueOf(encryptedData.getBackupEncryptedValue()), os, CONFIGS);
+      encryptedData.setBackupEncryptedValue(CHARSET.decode(ByteBuffer.wrap(os.toByteArray())).array());
+    }
   }
 
   @Override
@@ -1809,6 +1820,7 @@ public class SecretManagerImpl implements SecretManager {
     EncryptionType encryptionType = encryptedData.getEncryptionType();
     switch (encryptionType) {
       case LOCAL:
+        fileService.download(String.valueOf(encryptedData.getEncryptedValue()), readInto, CONFIGS);
         return localEncryptionService.decryptFile(readInto, accountId, encryptedData);
 
       case KMS:

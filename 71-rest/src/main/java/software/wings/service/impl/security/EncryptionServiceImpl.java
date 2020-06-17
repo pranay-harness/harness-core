@@ -5,12 +5,14 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
+import static io.harness.security.SimpleEncryption.CHARSET;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.security.SimpleEncryption;
@@ -29,6 +31,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -113,42 +116,58 @@ public class EncryptionServiceImpl implements EncryptionService {
 
   @Override
   public char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) {
+    char[] decryptedValue;
     switch (encryptedDataDetail.getEncryptionConfig().getEncryptionType()) {
       case LOCAL:
         SimpleEncryption encryption = new SimpleEncryption(encryptedDataDetail.getEncryptedData().getEncryptionKey());
-        return encryption.decryptChars(encryptedDataDetail.getEncryptedData().getEncryptedValue());
+        decryptedValue = encryption.decryptChars(encryptedDataDetail.getEncryptedData().getEncryptedValue());
+        break;
 
       case KMS:
-        return secretManagementDelegateService.decrypt(
+        decryptedValue = secretManagementDelegateService.decrypt(
             encryptedDataDetail.getEncryptedData(), (KmsConfig) encryptedDataDetail.getEncryptionConfig());
+        break;
 
       case GCP_KMS:
-        return secretManagementDelegateService.decrypt(
+        decryptedValue = secretManagementDelegateService.decrypt(
             encryptedDataDetail.getEncryptedData(), (GcpKmsConfig) encryptedDataDetail.getEncryptionConfig());
+        break;
 
       case VAULT:
-        return secretManagementDelegateService.decrypt(
+        decryptedValue = secretManagementDelegateService.decrypt(
             encryptedDataDetail.getEncryptedData(), (VaultConfig) encryptedDataDetail.getEncryptionConfig());
+        break;
 
       case AWS_SECRETS_MANAGER:
-        return secretManagementDelegateService.decrypt(encryptedDataDetail.getEncryptedData(),
+        decryptedValue = secretManagementDelegateService.decrypt(encryptedDataDetail.getEncryptedData(),
             (AwsSecretsManagerConfig) encryptedDataDetail.getEncryptionConfig());
+        break;
 
       case AZURE_VAULT:
-        return secretManagementDelegateService.decrypt(
+        decryptedValue = secretManagementDelegateService.decrypt(
             encryptedDataDetail.getEncryptedData(), (AzureVaultConfig) encryptedDataDetail.getEncryptionConfig());
+        break;
 
       case CYBERARK:
-        return secretManagementDelegateService.decrypt(
+        decryptedValue = secretManagementDelegateService.decrypt(
             encryptedDataDetail.getEncryptedData(), (CyberArkConfig) encryptedDataDetail.getEncryptionConfig());
+        break;
 
       case CUSTOM:
-        return secretManagementDelegateService.decrypt(encryptedDataDetail.getEncryptedData(),
+        decryptedValue = secretManagementDelegateService.decrypt(encryptedDataDetail.getEncryptedData(),
             (CustomSecretsManagerConfig) encryptedDataDetail.getEncryptionConfig());
+        break;
 
       default:
         throw new IllegalStateException(
             "invalid encryption type: " + encryptedDataDetail.getEncryptedData().getEncryptionType());
     }
+
+    if (decryptedValue != null && encryptedDataDetail.getEncryptedData().isBase64Encoded()) {
+      byte[] decodedBytes = EncodingUtils.decodeBase64(decryptedValue);
+      decryptedValue = CHARSET.decode(ByteBuffer.wrap(decodedBytes)).array();
+    }
+
+    return decryptedValue;
   }
 }

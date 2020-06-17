@@ -203,6 +203,7 @@ public class GlobalEncryptDecryptClient {
           .encryptionType(LOCAL)
           .encryptionKey(randomEncryptionKey)
           .encryptedValue(reEncryptedValue)
+          .base64Encoded(encryptedRecord.isBase64Encoded())
           .build();
     } catch (DelegateRetryableException | SecretManagementDelegateException e) {
       logger.warn(

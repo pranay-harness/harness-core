@@ -1158,7 +1158,7 @@ public class VaultTest extends WingsBaseTest {
 
     settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
     wingsPersistence.save(settingAttributes);
-    validateSettingAttributes(settingAttributes, numOfEncRecords + numOfSettingAttributes);
+    validateSettingAttributes(settingAttributes, numOfEncRecords + 2 * numOfSettingAttributes);
   }
 
   @Test
@@ -1605,19 +1605,15 @@ public class VaultTest extends WingsBaseTest {
                            .filter(EncryptedDataKeys.accountId, accountId)
                            .filter(EncryptedDataKeys.encryptionType, EncryptionType.VAULT)
                            .asList();
-      if (i == numOfSettingAttributes - 1) {
-        assertThat(encryptedDatas.isEmpty()).isTrue();
-      } else {
-        assertThat(encryptedDatas).hasSize(1);
-        encryptedData = encryptedDatas.get(0);
-        assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.VAULT);
-        assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
-        assertThat(encryptedData.isEnabled()).isTrue();
-        assertThat(encryptedData.getKmsId()).isEqualTo(fromConfig.getUuid());
-        assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
-        assertThat(encryptedData.getParents()).hasSize(numOfSettingAttributes - (i + 1));
-        assertThat(encryptedData.containsParent(attributeId, appDynamicsConfig.getSettingType())).isFalse();
-      }
+      assertThat(encryptedDatas).hasSize(1);
+      encryptedData = encryptedDatas.get(0);
+      assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.VAULT);
+      assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
+      assertThat(encryptedData.isEnabled()).isTrue();
+      assertThat(encryptedData.getKmsId()).isEqualTo(fromConfig.getUuid());
+      assertThat(encryptedData.getType()).isEqualTo(SettingVariableTypes.APP_DYNAMICS);
+      assertThat(encryptedData.getParents()).hasSize(numOfSettingAttributes - (i + 1));
+      assertThat(encryptedData.containsParent(attributeId, appDynamicsConfig.getSettingType())).isFalse();
       i++;
     }
   }

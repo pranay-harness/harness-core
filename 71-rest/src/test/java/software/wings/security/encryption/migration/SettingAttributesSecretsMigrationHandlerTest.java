@@ -210,7 +210,7 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
     assertThat(updatedSettingAttribute.isSecretsMigrated()).isTrue();
 
     EncryptedData updatedEncryptedData = wingsPersistence.get(EncryptedData.class, encryptedData.getUuid());
-    assertThat(updatedEncryptedData).isNull();
+    assertThat(updatedEncryptedData.getParents()).isEmpty();
   }
 
   @Test
