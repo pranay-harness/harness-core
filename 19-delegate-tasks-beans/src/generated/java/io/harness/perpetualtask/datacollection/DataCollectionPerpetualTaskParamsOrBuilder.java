@@ -18,4 +18,10 @@ public interface DataCollectionPerpetualTaskParamsOrBuilder extends
    * @return The bytes for cvConfigId.
    */
   com.google.protobuf.ByteString getCvConfigIdBytes();
+
+  /**
+   * <code>bytes data_collection_info = 2[json_name = "dataCollectionInfo"];</code>
+   * @return The dataCollectionInfo.
+   */
+  com.google.protobuf.ByteString getDataCollectionInfo();
 }

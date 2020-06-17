@@ -1,4 +1,4 @@
-package io.harness.cvng;
+package io.harness.cvng.perpetualtask;
 
 public interface CVDataCollectionTaskService {
   String create(String accountId, String cvConfigId);

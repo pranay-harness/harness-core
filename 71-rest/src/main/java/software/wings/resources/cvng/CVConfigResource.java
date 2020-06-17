@@ -6,6 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.entities.CVConfig;
+import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import retrofit2.http.Body;
@@ -28,7 +29,8 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(PermissionAttribute.ResourceType.SETTING)
 public class CVConfigResource {
-  @Inject CVConfigService cvConfigService;
+  @Inject private CVConfigService cvConfigService;
+  @Inject private CVDataCollectionTaskService dataCollectionTaskService;
   @GET
   @Path("{cvConfigId}")
   @Timed
@@ -43,7 +45,11 @@ public class CVConfigResource {
   @ExceptionMetered
   public RestResponse<CVConfig> saveCVConfig(
       @QueryParam("accountId") @Valid final String accountId, @Body CVConfig cvConfig) {
-    return new RestResponse<>(cvConfigService.save(cvConfig));
+    // TODO: this API is not called from UI anymore. So we can use this to create a CVConfig that also creates the
+    // perpetual task for now. Need to remove it once perpetual tasks are created from cv next gen service.
+    RestResponse<CVConfig> restResponse = new RestResponse<>(cvConfigService.save(cvConfig));
+    dataCollectionTaskService.create(accountId, cvConfig.getUuid());
+    return restResponse;
   }
 
   @POST
