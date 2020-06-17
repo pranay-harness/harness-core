@@ -11,6 +11,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
@@ -41,6 +42,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -54,6 +56,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -89,6 +92,11 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   @Mock private LimitCheckerFactory mockLimitCheckerFactory;
   @Mock protected FeatureFlagService featureFlagService;
   @Inject @InjectMocks private PipelineServiceImpl pipelineServiceImpl;
+
+  @Before
+  public void setup() {
+    when(featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, ACCOUNT_ID)).thenReturn(true);
+  }
 
   @Test
   @Owner(developers = POOJA)
@@ -468,7 +476,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     pseWorkflowVariables.put("Environment", "${env}");
     pseWorkflowVariables.put("Infrastructure_KUBERNETES", "${infra2}");
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, workflowVariables, pseWorkflowVariables, envWorkflowVariable, "env");
+        pipelineVariables, true, workflowVariables, pseWorkflowVariables, envWorkflowVariable, "env", false);
     assertThat(envVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra1,infra2");
   }
 
@@ -505,7 +513,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     pseWorkflowVariables.put("Service", "${srv}");
     pseWorkflowVariables.put("Infrastructure_KUBERNETES", "${infra2}");
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, workflowVariables, pseWorkflowVariables, serviceWorkflowVariable, "srv");
+        pipelineVariables, true, workflowVariables, pseWorkflowVariables, serviceWorkflowVariable, "srv", false);
     assertThat(serviceVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra1,infra2");
   }
 
@@ -531,7 +539,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                            .build();
 
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), serviceVariableNewPhase, "srv");
+        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), serviceVariableNewPhase, "srv", false);
     assertThat(serviceVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra2");
     assertThat(serviceVarStored.getMetadata().get(Variable.INFRA_ID)).isEqualTo("infra_id_1");
   }
@@ -557,7 +565,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                                Variable.INFRA_ID, "infra_id_2", Variable.ENTITY_TYPE, SERVICE))
                                            .build();
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), serviceVariableNewPhase, "srv");
+        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), serviceVariableNewPhase, "srv", false);
     assertThat(serviceVarStored.getMetadata().get(Variable.INFRA_ID)).isEqualTo("infra_id_1,infra_id_2");
   }
 
@@ -583,7 +591,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
 
     assertThatThrownBy(()
                            -> pipelineServiceImpl.updateStoredVariable(pipelineVariables, true, new ArrayList<>(),
-                               new HashMap<>(), serviceVariableNewPhase, "srv"))
+                               new HashMap<>(), serviceVariableNewPhase, "srv", false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(
             "The same Workflow variable name srv cannot be used for Services using different Artifact types. Change the name of the variable in one or more Workflow.");
@@ -611,7 +619,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
 
     assertThatThrownBy(()
                            -> pipelineServiceImpl.updateStoredVariable(pipelineVariables, true, new ArrayList<>(),
-                               new HashMap<>(), infraVariableNewPhase, "infra"))
+                               new HashMap<>(), infraVariableNewPhase, "infra", false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(
             "The same Workflow variable name infra cannot be used for InfraDefinitions using different Environment. Change the name of the variable in one or more Workflow.");
@@ -627,8 +635,12 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     metadataStored.put(Variable.RELATED_FIELD, "srv1");
     metadataStored.put(Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION);
     List<Variable> pipelineVariables = new ArrayList<>();
-    Variable infraVarStored =
-        aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("infra").metadata(metadataStored).build();
+    Variable infraVarStored = aVariable()
+                                  .entityType(INFRASTRUCTURE_DEFINITION)
+                                  .name("infra")
+                                  .metadata(metadataStored)
+                                  .allowMultipleValues(false)
+                                  .build();
     pipelineVariables.add(infraVarStored);
     Variable infraVariableNewPhase = aVariable()
                                          .entityType(INFRASTRUCTURE_DEFINITION)
@@ -638,8 +650,9 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                          .build();
 
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra");
+        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra", true);
     assertThat(infraVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("srv1,srv2");
+    assertThat(infraVarStored.isAllowMultipleValues()).isFalse();
   }
 
   // When Infra templatised in both phases, with same var,service templatised in one phase, concrete in another
@@ -652,8 +665,12 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     metadataStored.put(Variable.RELATED_FIELD, "srv1");
     metadataStored.put(Variable.ENTITY_TYPE, INFRASTRUCTURE_DEFINITION);
     List<Variable> pipelineVariables = new ArrayList<>();
-    Variable infraVarStored =
-        aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("infra").metadata(metadataStored).build();
+    Variable infraVarStored = aVariable()
+                                  .entityType(INFRASTRUCTURE_DEFINITION)
+                                  .name("infra")
+                                  .metadata(metadataStored)
+                                  .allowMultipleValues(true)
+                                  .build();
     pipelineVariables.add(infraVarStored);
     Variable infraVariableNewPhase = aVariable()
                                          .entityType(INFRASTRUCTURE_DEFINITION)
@@ -663,9 +680,10 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                          .build();
 
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra");
+        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra", false);
     assertThat(infraVarStored.getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("srv1");
     assertThat(infraVarStored.getMetadata().get(Variable.SERVICE_ID)).isEqualTo("service_id_2");
+    assertThat(infraVarStored.isAllowMultipleValues()).isFalse();
   }
 
   // When Infra templatised in both phases, with same var,service concrete in both
@@ -689,7 +707,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
                                          .build();
 
     pipelineServiceImpl.updateStoredVariable(
-        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra");
+        pipelineVariables, true, new ArrayList<>(), new HashMap<>(), infraVariableNewPhase, "infra", true);
     assertThat(infraVarStored.getMetadata().get(Variable.SERVICE_ID)).isEqualTo("serviceID_1,serviceID_2");
   }
 
@@ -738,6 +756,8 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     assertThat(pipelineVariables).isNotEmpty();
     assertThat(pipelineVariables.get(0).getName()).isEqualTo("env");
     assertThat(pipelineVariables.get(0).getMetadata().get(Variable.RELATED_FIELD)).isEqualTo("infra1,infra2");
+    assertThat(pipelineVariables.get(1).isAllowMultipleValues()).isTrue();
+    assertThat(pipelineVariables.get(2).isAllowMultipleValues()).isTrue();
   }
 
   @Test
