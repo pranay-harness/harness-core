@@ -10,6 +10,7 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -18,8 +19,10 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -103,10 +106,12 @@ import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateExecutionData;
@@ -131,6 +136,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private WorkflowService workflowService;
   @Mock private PipelineService pipelineService;
+  @Mock private UserGroupService userGroupService;
+  @Mock private DeploymentAuthHandler deploymentAuthHandler;
 
   @Mock private ServiceResourceService serviceResourceServiceMock;
   @Mock private StateMachineExecutionSimulator stateMachineExecutionSimulator;
@@ -323,10 +330,144 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     UserThreadLocal.set(user);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(anyString(), anyList())).thenReturn(true);
 
     boolean success =
         workflowExecutionService.approveOrRejectExecution(APP_ID, asList(userGroup.getUuid()), approvalDetails);
     assertThat(success).isEqualTo(true);
+    UserThreadLocal.unset();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testRejectWithUserGroupNegative() {
+    String approvalId = generateUuid();
+    ApprovalDetails approvalDetails = new ApprovalDetails();
+    approvalDetails.setApprovalId(approvalId);
+    approvalDetails.setAction(Action.REJECT);
+
+    User user = createUser(USER_ID);
+    saveUserToPersistence(user);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+    saveUserGroupToPersistence(userGroup);
+
+    UserThreadLocal.set(user);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(anyString(), anyList())).thenReturn(false);
+
+    boolean success =
+        workflowExecutionService.approveOrRejectExecution(APP_ID, asList(userGroup.getUuid()), approvalDetails);
+    assertThat(success).isEqualTo(false);
+    UserThreadLocal.unset();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC0_testVerifyAuthorizedToAcceptOrReject() {
+    User user = createUser(USER_ID);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+
+    UserThreadLocal.set(null);
+
+    boolean success =
+        workflowExecutionService.verifyAuthorizedToAcceptOrReject(asList(userGroup.getUuid()), APP_ID, generateUuid());
+    assertThat(success).isEqualTo(true);
+    UserThreadLocal.unset();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC1_testVerifyAuthorizedToAcceptOrReject() {
+    User user = createUser(USER_ID);
+
+    UserThreadLocal.set(user);
+    when(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(null, null)).thenReturn(true);
+    boolean success = workflowExecutionService.verifyAuthorizedToAcceptOrReject(null, APP_ID, generateUuid());
+    assertThat(success).isEqualTo(true);
+    UserThreadLocal.unset();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC2_testVerifyAuthorizedToAcceptOrReject() {
+    User user = createUser(USER_ID);
+
+    UserThreadLocal.set(user);
+    doNothing().when(deploymentAuthHandler).authorizeWorkflowOrPipelineForExecution(any(), anyString());
+
+    when(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(null, null)).thenReturn(false);
+    boolean success = workflowExecutionService.verifyAuthorizedToAcceptOrReject(null, APP_ID, generateUuid());
+    assertThat(success).isEqualTo(true);
+    UserThreadLocal.unset();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC3_testVerifyAuthorizedToAcceptOrReject() {
+    User user = createUser(USER_ID);
+    doNothing().when(deploymentAuthHandler).authorizeWorkflowOrPipelineForExecution(any(), anyString());
+
+    UserThreadLocal.set(user);
+    when(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(anyString(), anyList())).thenReturn(false);
+
+    boolean success = workflowExecutionService.verifyAuthorizedToAcceptOrReject(null, null, generateUuid());
+    assertThat(success).isEqualTo(true);
+    UserThreadLocal.unset();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC4_testVerifyAuthorizedToAcceptOrReject() {
+    User user = createUser(USER_ID);
+
+    UserThreadLocal.set(user);
+    when(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(anyString(), anyList())).thenReturn(true);
+
+    boolean success = workflowExecutionService.verifyAuthorizedToAcceptOrReject(null, APP_ID, null);
+    assertThat(success).isEqualTo(true);
+    UserThreadLocal.unset();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC5_testVerifyAuthorizedToAcceptOrReject() {
+    User user = createUser(USER_ID);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+
+    UserThreadLocal.set(user);
+    String entityId = generateUuid();
+    when(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(anyString(), anyList())).thenReturn(true);
+
+    doNothing().when(deploymentAuthHandler).authorizeWorkflowOrPipelineForExecution(any(), anyString());
+    boolean success =
+        workflowExecutionService.verifyAuthorizedToAcceptOrReject(asList(userGroup.getUuid()), APP_ID, entityId);
+    assertThat(success).isEqualTo(true);
+    UserThreadLocal.unset();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC6_testVerifyAuthorizedToAcceptOrReject() {
+    User user = createUser(USER_ID);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+
+    UserThreadLocal.set(user);
+    String entityId = generateUuid();
+    when(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(anyString(), anyList())).thenReturn(false);
+
+    doNothing().when(deploymentAuthHandler).authorizeWorkflowOrPipelineForExecution(any(), anyString());
+    boolean success =
+        workflowExecutionService.verifyAuthorizedToAcceptOrReject(asList(userGroup.getUuid()), APP_ID, entityId);
+    assertThat(success).isEqualTo(false);
+    UserThreadLocal.unset();
   }
 
   @Test
@@ -345,10 +486,36 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     UserThreadLocal.set(user);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(anyString(), anyList())).thenReturn(true);
 
     boolean success =
         workflowExecutionService.approveOrRejectExecution(APP_ID, asList(userGroup.getUuid()), approvalDetails);
     assertThat(success).isEqualTo(true);
+    UserThreadLocal.unset();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testApproveWithUserGroupNegative() {
+    String approvalId = generateUuid();
+    ApprovalDetails approvalDetails = new ApprovalDetails();
+    approvalDetails.setApprovalId(approvalId);
+    approvalDetails.setAction(Action.APPROVE);
+
+    User user = createUser(USER_ID);
+    saveUserToPersistence(user);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+    saveUserGroupToPersistence(userGroup);
+
+    UserThreadLocal.set(user);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(anyString(), anyList())).thenReturn(false);
+
+    boolean success =
+        workflowExecutionService.approveOrRejectExecution(APP_ID, asList(userGroup.getUuid()), approvalDetails);
+    assertThat(success).isEqualTo(false);
+    UserThreadLocal.unset();
   }
 
   @Test(expected = InvalidRequestException.class)
