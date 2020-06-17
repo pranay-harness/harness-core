@@ -41,10 +41,7 @@ import software.wings.beans.PipelineStageGroupedInfo.PipelineStageGroupedInfoBui
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.PermissionAttribute;
-import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.PermissionAttribute.PermissionType;
-import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -71,12 +68,12 @@ public class PipelineResumeUtils {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PipelineService pipelineService;
-  @Inject private AuthHandler authHandler;
+  @Inject private DeploymentAuthHandler deploymentAuthHandler;
 
   public Pipeline getPipelineForResume(String appId, int parallelIndexToResume, WorkflowExecution prevWorkflowExecution,
       ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap) {
     checkPipelineResumeAvailable(prevWorkflowExecution);
-    authorizeTriggerPipelineResume(appId, prevWorkflowExecution);
+    deploymentAuthHandler.authorize(appId, prevWorkflowExecution);
     String pipelineId = prevWorkflowExecution.getWorkflowId();
     ExecutionArgs executionArgs = prevWorkflowExecution.getExecutionArgs();
     Pipeline pipeline = pipelineService.readPipelineWithResolvedVariables(
@@ -206,7 +203,6 @@ public class PipelineResumeUtils {
 
   public List<PipelineStageGroupedInfo> getResumeStages(String appId, WorkflowExecution prevWorkflowExecution) {
     checkPipelineResumeAvailable(prevWorkflowExecution);
-    authorizeReadPipelineResume(appId, prevWorkflowExecution);
     String pipelineId = prevWorkflowExecution.getWorkflowId();
     ExecutionArgs executionArgs = prevWorkflowExecution.getExecutionArgs();
     Pipeline pipeline = pipelineService.readPipelineWithResolvedVariables(
@@ -239,12 +235,10 @@ public class PipelineResumeUtils {
 
       PipelineStageExecution stageExecution = pipelineStageExecutions.get(i);
 
-      if (foundFailedStage) {
-        if (!pipelineStage.isParallel()) {
-          // We already found a failed stage and the new stage is not parallel with previous ones. So we stop our
-          // iteration.
-          break;
-        }
+      if (foundFailedStage && !pipelineStage.isParallel()) {
+        // We already found a failed stage and the new stage is not parallel with previous ones. So we stop our
+        // iteration.
+        break;
       }
 
       // Check for compatibility.
@@ -288,7 +282,6 @@ public class PipelineResumeUtils {
 
   public List<WorkflowExecution> getResumeHistory(String appId, WorkflowExecution prevWorkflowExecution) {
     checkPipelineResumeHistoryAvailable(prevWorkflowExecution);
-    authorizeReadPipelineResume(appId, prevWorkflowExecution);
     String pipelineResumeId = prevWorkflowExecution.getPipelineResumeId();
     if (isEmpty(pipelineResumeId)) {
       return new ArrayList<>();
@@ -308,23 +301,7 @@ public class PipelineResumeUtils {
   }
 
   @VisibleForTesting
-  public void authorizeTriggerPipelineResume(String appId, WorkflowExecution workflowExecution) {
-    String pipelineId = workflowExecution.getWorkflowId();
-    List<PermissionAttribute> permissionAttributeList =
-        Collections.singletonList(new PermissionAttribute(PermissionType.DEPLOYMENT, Action.EXECUTE));
-    authHandler.authorize(permissionAttributeList, Collections.singletonList(appId), pipelineId);
-  }
-
-  @VisibleForTesting
-  public void authorizeReadPipelineResume(String appId, WorkflowExecution workflowExecution) {
-    String pipelineId = workflowExecution.getWorkflowId();
-    List<PermissionAttribute> permissionAttributeList =
-        Collections.singletonList(new PermissionAttribute(PermissionType.DEPLOYMENT, Action.READ));
-    authHandler.authorize(permissionAttributeList, Collections.singletonList(appId), pipelineId);
-  }
-
-  @VisibleForTesting
-  public void checkPipelineResumeAvailable(WorkflowExecution prevWorkflowExecution) {
+  void checkPipelineResumeAvailable(WorkflowExecution prevWorkflowExecution) {
     if (prevWorkflowExecution.getWorkflowType() != PIPELINE) {
       throw new InvalidRequestException(
           format("Pipeline resume not available for workflow executions: %s", prevWorkflowExecution.getUuid()));
@@ -361,7 +338,7 @@ public class PipelineResumeUtils {
   }
 
   @VisibleForTesting
-  public void checkPipelineResumeHistoryAvailable(WorkflowExecution prevWorkflowExecution) {
+  void checkPipelineResumeHistoryAvailable(WorkflowExecution prevWorkflowExecution) {
     if (prevWorkflowExecution.getWorkflowType() != PIPELINE) {
       throw new InvalidRequestException(
           format("Pipeline resume not available for workflow executions: %s", prevWorkflowExecution.getUuid()));
@@ -374,7 +351,7 @@ public class PipelineResumeUtils {
    * differ.
    */
   @VisibleForTesting
-  public void checkStageAndStageExecution(PipelineStage stage, PipelineStageExecution stageExecution) {
+  void checkStageAndStageExecution(PipelineStage stage, PipelineStageExecution stageExecution) {
     if (stageExecution.getStatus() == SKIPPED) {
       // Don't check for skipped stage executions as they have no workflow executions attached to them.
       return;

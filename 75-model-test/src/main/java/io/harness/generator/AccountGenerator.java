@@ -123,7 +123,7 @@ public class AccountGenerator {
     return wingsPersistence.createQuery(Account.class).filter(AccountKeys.accountName, account.getAccountName()).get();
   }
 
-  public Account ensureGenericTest() {
+  private Account ensureGenericTest() {
     Account account = ensureAccount(Builder.anAccount()
                                         .withUuid(ACCOUNT_ID)
                                         .withAccountName("Harness")
@@ -145,7 +145,7 @@ public class AccountGenerator {
    * necessary entities. This gonna evolve over the time and hence
    * we are not reusing `ensureGenericTest`.
    */
-  public Account ensureHarnessTest() {
+  private Account ensureHarnessTest() {
     Account account =
         ensureAccount(getOrCreateAccount("1234567890123456789012", "Harness Test", "Harness", AccountType.PAID));
     account = ensureAccount(account);
@@ -153,7 +153,7 @@ public class AccountGenerator {
     return account;
   }
 
-  public Account ensureRbacTest() {
+  private Account ensureRbacTest() {
     Account account =
         ensureAccount(getOrCreateAccount("BAC4567890123456789012", "Rbac Test", "Harness", AccountType.PAID));
     ensureTestUser(account);
@@ -161,7 +161,7 @@ public class AccountGenerator {
   }
 
   // TODO: this needs serious refactoring
-  public Account ensureAccount(Account account) {
+  private Account ensureAccount(Account account) {
     Account current = exists(account);
     if (current != null) {
       return current;
@@ -182,7 +182,7 @@ public class AccountGenerator {
     return account;
   }
 
-  public Account getOrCreateAccount(String accountId, String accountName, String companyName, String accountType) {
+  private Account getOrCreateAccount(String accountId, String accountName, String companyName, String accountType) {
     Account account = anAccount().withAccountName(accountName).withCompanyName(companyName).build();
 
     account = exists(account);
@@ -244,7 +244,7 @@ public class AccountGenerator {
         Account.GLOBAL_ACCOUNT_ID, ActionType.LOGIN_REQUEST_TASK, new RateLimit(300, 1, TimeUnit.MINUTES));
   }
 
-  public Account ensureDefaultUsers(Account account) {
+  private Account ensureDefaultUsers(Account account) {
     UpdateOperations<Role> roleUpdateOperations = wingsPersistence.createUpdateOperations(Role.class);
     roleUpdateOperations.set("accountId", ACCOUNT_ID);
     wingsPersistence.update(
@@ -280,7 +280,7 @@ public class AccountGenerator {
     return account;
   }
 
-  public Account ensureTestUser(Account account) {
+  private Account ensureTestUser(Account account) {
     User testUser =
         ensureUser(testUserUuid, testUserName, testEmail, scmSecret.decryptToCharArray(defaultPassword), account);
     addUserToUserGroup(testUser, account.getUuid(), UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
@@ -344,7 +344,7 @@ public class AccountGenerator {
     return wingsPersistence.get(User.class, newUser.getUuid());
   }
 
-  public Account ensureRandom(Randomizer.Seed seed, Owners owners) {
+  Account ensureRandom(Randomizer.Seed seed, Owners owners) {
     EnhancedRandom random = Randomizer.instance(seed);
     Accounts predefined = random.nextObject(Accounts.class);
     return ensurePredefined(seed, owners, predefined);

@@ -2,7 +2,6 @@ package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 
@@ -105,6 +104,7 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
     populateApprovalStateAuthorizationData(executionDetails);
     return setExecutionData(executionDetails);
   }
+
   private Map<String, ExecutionDataValue> setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
     putNotNull(executionDetails, "activityId",
         ExecutionDataValue.builder().displayName("Activity Id").value(activityId).build());
@@ -212,7 +212,7 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
 
   private void populateApprovalStateAuthorizationData(Map<String, ExecutionDataValue> executionDetails) {
     if (workflowExecutionService != null) {
-      isAuthorized = workflowExecutionService.verifyAuthorizedToAcceptOrReject(userGroups, asList(appId), workflowId);
+      isAuthorized = workflowExecutionService.verifyAuthorizedToAcceptOrReject(userGroups, appId, workflowId);
     }
 
     if (isAuthorized) {

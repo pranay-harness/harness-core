@@ -201,7 +201,7 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   WorkflowExecution fetchWorkflowExecution(
       String appId, List<String> serviceIds, List<String> envIds, String workflowId);
 
-  boolean verifyAuthorizedToAcceptOrReject(List<String> userGroupIds, List<String> appIds, String workflowId);
+  boolean verifyAuthorizedToAcceptOrReject(List<String> userGroupIds, String appId, String workflowId);
 
   List<WorkflowExecution> listWaitingOnDeployments(String appId, String workflowExecutionId);
 

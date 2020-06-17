@@ -18,27 +18,28 @@ import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionIn
 import software.wings.graphql.schema.mutation.execution.payload.QLStartExecutionPayload;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.AppService;
-
-import java.util.Collections;
-import java.util.List;
 
 @OwnedBy(CDC)
 @Slf4j
 public class StartExecutionDataFetcher extends BaseMutatorDataFetcher<QLStartExecutionInput, QLStartExecutionPayload> {
-  @Inject PipelineExecutionController pipelineExecutionController;
-  @Inject WorkflowExecutionController workflowExecutionController;
-  @Inject AppService appService;
+  @Inject private PipelineExecutionController pipelineExecutionController;
+  @Inject private WorkflowExecutionController workflowExecutionController;
+  @Inject private AppService appService;
+  @Inject private DeploymentAuthHandler deploymentAuthHandler;
 
-  public static final String APPLICATION_DOES_NOT_EXIST_MSG = "Application does not exist";
+  private static final String APPLICATION_DOES_NOT_EXIST_MSG = "Application does not exist";
 
   @Inject
   public StartExecutionDataFetcher(PipelineExecutionController pipelineExecutionController,
-      WorkflowExecutionController workflowExecutionController, AppService appService) {
+      WorkflowExecutionController workflowExecutionController, AppService appService,
+      DeploymentAuthHandler deploymentAuthHandler) {
     super(QLStartExecutionInput.class, QLStartExecutionPayload.class);
     this.pipelineExecutionController = pipelineExecutionController;
     this.workflowExecutionController = workflowExecutionController;
     this.appService = appService;
+    this.deploymentAuthHandler = deploymentAuthHandler;
   }
 
   @Override
@@ -53,20 +54,18 @@ public class StartExecutionDataFetcher extends BaseMutatorDataFetcher<QLStartExe
 
       validateAppBelongsToAccount(triggerExecutionInput, mutationContext);
 
-      PermissionAttribute permissionAttribute =
-          new PermissionAttribute(PermissionAttribute.PermissionType.DEPLOYMENT, PermissionAttribute.Action.EXECUTE);
-      List<PermissionAttribute> permissionAttributeList = Collections.singletonList(permissionAttribute);
-
       QLExecutionType executionType = triggerExecutionInput.getExecutionType();
       QLStartExecutionPayload response;
       switch (executionType) {
         case PIPELINE:
-          response = pipelineExecutionController.startPipelineExecution(
-              triggerExecutionInput, mutationContext, permissionAttributeList);
+          deploymentAuthHandler.authorizePipelineExecution(
+              triggerExecutionInput.getApplicationId(), triggerExecutionInput.getEntityId());
+          response = pipelineExecutionController.startPipelineExecution(triggerExecutionInput, mutationContext);
           break;
         case WORKFLOW:
-          response = workflowExecutionController.startWorkflowExecution(
-              triggerExecutionInput, mutationContext, permissionAttributeList);
+          deploymentAuthHandler.authorizeWorkflowExecution(
+              triggerExecutionInput.getApplicationId(), triggerExecutionInput.getEntityId());
+          response = workflowExecutionController.startWorkflowExecution(triggerExecutionInput, mutationContext);
           break;
         default:
           throw new UnsupportedOperationException("Unsupported execution type: " + executionType);

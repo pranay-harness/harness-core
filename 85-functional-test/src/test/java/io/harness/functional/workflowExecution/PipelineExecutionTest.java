@@ -125,7 +125,7 @@ public class PipelineExecutionTest extends AbstractFunctionalTest {
         bearerToken, application.getUuid(), artifactStream.getUuid(), 0);
   }
 
-  public Workflow constructCanaryOrchestrationWorkflow() {
+  private Workflow constructCanaryOrchestrationWorkflow() {
     List<PhaseStep> phaseSteps = Lists.newArrayList();
     phaseSteps.add(aPhaseStep(PhaseStepType.SELECT_NODE, PhaseStepType.SELECT_NODE.name()).build());
     phaseSteps.add(aPhaseStep(PhaseStepType.DISABLE_SERVICE, PhaseStepType.DISABLE_SERVICE.name()).build());

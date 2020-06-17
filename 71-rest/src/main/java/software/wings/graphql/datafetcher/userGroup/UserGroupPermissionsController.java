@@ -80,13 +80,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserGroupPermissionsController {
   @Inject AppFilterController appFilterController;
-  final String SELECTED = "SELECTED";
-  final String NON_PROD = "NON_PROD";
-  final String PROD = "PROD";
-  final String ALL = "ALL";
-  final String TEMPLATES = "TEMPLATES";
 
-  public UserGroup addAppPermissionToUserGroupObject(UserGroup userGroup, QLAppPermission appPermissions) {
+  private static final String SELECTED = "SELECTED";
+  private static final String NON_PROD = "NON_PROD";
+  private static final String PROD = "PROD";
+  private static final String ALL = "ALL";
+  private static final String TEMPLATES = "TEMPLATES";
+
+  UserGroup addAppPermissionToUserGroupObject(UserGroup userGroup, QLAppPermission appPermissions) {
     AppPermission appPermissionEntity = convertToAppPermissionEntity(appPermissions);
     // Adding this app Permission to the set
     Set<AppPermission> appPermissionSet =
@@ -99,8 +100,7 @@ public class UserGroupPermissionsController {
     return userGroup;
   }
 
-  public UserGroup addAccountPermissionToUserGroupObject(
-      UserGroup userGroup, QLAccountPermissionType accountPermissionType) {
+  UserGroup addAccountPermissionToUserGroupObject(UserGroup userGroup, QLAccountPermissionType accountPermissionType) {
     // Adding the account Permissions
     PermissionType newAccountPermission = mapAccountPermissions(accountPermissionType);
     Set<PermissionType> permissions =
@@ -118,7 +118,7 @@ public class UserGroupPermissionsController {
    *   Utility functions to convert GraphQL InputTypes to the userGroup Types of portal
    */
   // user Given Account Permissions to the portal permissionType
-  public PermissionType mapAccountPermissions(QLAccountPermissionType permissionType) {
+  private PermissionType mapAccountPermissions(QLAccountPermissionType permissionType) {
     switch (permissionType) {
       case CREATE_AND_DELETE_APPLICATION:
         return APPLICATION_CREATE_DELETE;
@@ -153,10 +153,10 @@ public class UserGroupPermissionsController {
         return DELETE;
       case EXECUTE:
         return EXECUTE;
-      case EXECUTE_PIPELINE:
-        return EXECUTE_PIPELINE;
       case EXECUTE_WORKFLOW:
         return EXECUTE_WORKFLOW;
+      case EXECUTE_PIPELINE:
+        return EXECUTE_PIPELINE;
       default:
         logger.error("Invalid Action {} given by the user", action.toString());
     }
@@ -277,7 +277,7 @@ public class UserGroupPermissionsController {
     }
   }
 
-  public AppPermission convertToAppPermissionEntity(QLAppPermission permission) {
+  private AppPermission convertToAppPermissionEntity(QLAppPermission permission) {
     // Converting the GraphQL actions to portal actions
     Set<QLActions> actionsList = permission.getActions();
     addDeploymentPermissions(actionsList);
@@ -337,7 +337,7 @@ public class UserGroupPermissionsController {
   }
 
   // Populate the AccountPermission entity
-  public Set<AppPermission> populateUserGroupAppPermissionEntity(QLUserGroupPermissions permissions) {
+  Set<AppPermission> populateUserGroupAppPermissionEntity(QLUserGroupPermissions permissions) {
     if (permissions == null) {
       return Collections.emptySet();
     }
@@ -351,7 +351,7 @@ public class UserGroupPermissionsController {
   }
 
   // Populate the AccountPermission entity
-  public AccountPermissions populateUserGroupAccountPermissionEntity(QLUserGroupPermissions permissions) {
+  AccountPermissions populateUserGroupAccountPermissionEntity(QLUserGroupPermissions permissions) {
     if (permissions == null || permissions.getAccountPermissions() == null) {
       return null;
     }
@@ -502,7 +502,7 @@ public class UserGroupPermissionsController {
     return QLPipelinePermissions.builder().envIds(envPermissions.getIds()).build();
   }
 
-  public List<QLAppPermission> populateUserGroupAppPermissionOutput(Set<AppPermission> appPermissions) {
+  private List<QLAppPermission> populateUserGroupAppPermissionOutput(Set<AppPermission> appPermissions) {
     List<QLAppPermission> userGroupAppPermissions = null;
     if (appPermissions != null) {
       userGroupAppPermissions =
@@ -566,7 +566,7 @@ public class UserGroupPermissionsController {
     }
   }
 
-  public QLAccountPermissions populateUserGroupAccountPermission(AccountPermissions permissions) {
+  private QLAccountPermissions populateUserGroupAccountPermission(AccountPermissions permissions) {
     Set<QLAccountPermissionType> outputPermissions = null;
     if (permissions == null) {
       return null;
@@ -579,7 +579,7 @@ public class UserGroupPermissionsController {
     return QLAccountPermissions.builder().accountPermissionTypes(outputPermissions).build();
   }
 
-  public QLGroupPermissions populateUserGroupPermissions(UserGroup userGroup) {
+  QLGroupPermissions populateUserGroupPermissions(UserGroup userGroup) {
     QLAccountPermissions accountPermissions = populateUserGroupAccountPermission(userGroup.getAccountPermissions());
     List<QLAppPermission> appPermissions = populateUserGroupAppPermissionOutput(userGroup.getAppPermissions());
     return QLGroupPermissions.builder().appPermissions(appPermissions).accountPermissions(accountPermissions).build();

@@ -17,17 +17,17 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 
-import java.util.List;
-
 @OwnedBy(CDC)
 @Singleton
 public class TriggerAuthHandler {
   @Inject private AuthHandler authHandler;
+  @Inject private DeploymentAuthHandler deploymentAuthHandler;
   @Inject private EnvironmentService environmentService;
   @Inject private AuthService authService;
   @Inject private PipelineService pipelineService;
@@ -70,13 +70,9 @@ public class TriggerAuthHandler {
   }
 
   void authorizeWorkflowOrPipeline(String appId, String workflowOrPipelineId, boolean existing) {
-    if (isEmpty(workflowOrPipelineId)) {
-      if (existing) {
-        return;
-      }
+    if (isEmpty(workflowOrPipelineId) && existing) {
+      return;
     }
-    PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, Action.EXECUTE);
-    List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
-    authHandler.authorize(permissionAttributeList, asList(appId), workflowOrPipelineId);
+    deploymentAuthHandler.authorizeWorkflowOrPipelineForExecution(appId, workflowOrPipelineId);
   }
 }

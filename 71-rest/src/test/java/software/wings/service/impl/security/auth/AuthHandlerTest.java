@@ -91,7 +91,8 @@ public class AuthHandlerTest extends WingsBaseTest {
 
   private List<PermissionType> accountPermissionTypes =
       asList(ACCOUNT_MANAGEMENT, APPLICATION_CREATE_DELETE, USER_PERMISSION_MANAGEMENT, TEMPLATE_MANAGEMENT);
-  private List<Action> allActions = asList(Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE, Action.EXECUTE);
+  private List<Action> allActions = asList(
+      Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE, Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW);
 
   private List<String> appIds = asList(APP_ID, "appId1", "appId2", "appId3");
   private Service service1 = Service.builder().uuid(generateUuid()).appId(APP_ID).build();
@@ -730,11 +731,13 @@ public class AuthHandlerTest extends WingsBaseTest {
 
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getWorkflowPermissions().get(workflow1.getUuid()))
         .isNotNull()
-        .containsExactlyInAnyOrder(Action.UPDATE, Action.READ, Action.EXECUTE, Action.DELETE);
+        .containsExactlyInAnyOrder(
+            Action.UPDATE, Action.READ, Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW, Action.DELETE);
 
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getWorkflowPermissions().get(workflow2.getUuid()))
         .isNotNull()
-        .containsExactlyInAnyOrder(Action.UPDATE, Action.READ, Action.EXECUTE, Action.DELETE);
+        .containsExactlyInAnyOrder(
+            Action.UPDATE, Action.READ, Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW, Action.DELETE);
 
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getWorkflowPermissions().get(workflow3.getUuid()))
         .isNotNull()
@@ -745,7 +748,8 @@ public class AuthHandlerTest extends WingsBaseTest {
         .containsOnlyKeys(pipeline5.getUuid());
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions().get(pipeline5.getUuid()))
         .isNotNull()
-        .containsExactlyInAnyOrder(Action.UPDATE, Action.READ, Action.EXECUTE, Action.DELETE);
+        .containsExactlyInAnyOrder(
+            Action.UPDATE, Action.READ, Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW, Action.DELETE);
 
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions())
         .isNotNull()

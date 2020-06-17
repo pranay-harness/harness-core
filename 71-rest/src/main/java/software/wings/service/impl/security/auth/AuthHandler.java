@@ -252,7 +252,7 @@ public class AuthHandler {
 
     Set<Action> actions = permissionMap.get(entityId);
 
-    if (actions == null) {
+    if (isEmpty(actions)) {
       actions = new HashSet<>();
       permissionMap.put(entityId, actions);
     }
@@ -270,7 +270,7 @@ public class AuthHandler {
     Map<Action, Set<String>> finalPermissionMap = permissionMap;
     actionSet.forEach(action -> {
       Set<String> existingEntityIdSet = finalPermissionMap.get(action);
-      if (existingEntityIdSet == null) {
+      if (isEmpty(existingEntityIdSet)) {
         existingEntityIdSet = new HashSet<>();
         finalPermissionMap.put(action, existingEntityIdSet);
       }
@@ -288,7 +288,7 @@ public class AuthHandler {
     Map<Action, Set<String>> finalPermissionMap = permissionMap;
     pipelineIdActionMap.forEach((pipelineId, action) -> {
       Set<String> existingPipelineIdSet = finalPermissionMap.get(action);
-      if (existingPipelineIdSet == null) {
+      if (isEmpty(existingPipelineIdSet)) {
         existingPipelineIdSet = new HashSet<>();
         finalPermissionMap.put(action, existingPipelineIdSet);
       }
@@ -306,7 +306,7 @@ public class AuthHandler {
     Map<Action, Set<EnvInfo>> finalPermissionMap = permissionMap;
     actionSet.forEach(action -> {
       Set<EnvInfo> existingEnvIdSet = finalPermissionMap.get(action);
-      if (existingEnvIdSet == null) {
+      if (isEmpty(existingEnvIdSet)) {
         existingEnvIdSet = new HashSet<>();
         finalPermissionMap.put(action, existingEnvIdSet);
       }
@@ -319,7 +319,7 @@ public class AuthHandler {
       Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap, Set<String> appIds,
       PermissionType permissionType, Filter entityFilter, Set<Action> actions) {
     final HashSet<Action> fixedEntityActions =
-        Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE);
+        Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW);
     appIds.forEach(appId -> {
       AppPermissionSummary appPermissionSummary = appPermissionMap.get(appId);
       if (appPermissionSummary == null) {
@@ -452,7 +452,7 @@ public class AuthHandler {
 
           Set<String> envIdSet =
               getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
-          if (entityActions.contains(Action.EXECUTE)) {
+          if (entityActions.contains(Action.EXECUTE_PIPELINE) || entityActions.contains(Action.EXECUTE_WORKFLOW)) {
             Set<String> updatedEnvIdSet =
                 addToExistingEntityIdSet(finalAppPermissionSummary.getDeploymentExecutePermissionsForEnvs(), envIdSet);
             finalAppPermissionSummary.setDeploymentExecutePermissionsForEnvs(updatedEnvIdSet);
@@ -509,7 +509,7 @@ public class AuthHandler {
       Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap, Set<String> appIds,
       PermissionType permissionType, Filter entityFilter, Set<Action> actions) {
     final HashSet<Action> fixedEntityActions =
-        Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE);
+        Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW);
     appIds.forEach(appId -> {
       AppPermissionSummary appPermissionSummary = appPermissionMap.get(appId);
       if (appPermissionSummary == null) {
@@ -702,7 +702,7 @@ public class AuthHandler {
     });
 
     Set<String> appIdSetForWorkflowPermission = permissionTypeAppIdSetMap.get(WORKFLOW);
-    if (appIdSetForWorkflowPermission == null) {
+    if (isEmpty(appIdSetForWorkflowPermission)) {
       appIdSetForWorkflowPermission = new HashSet<>();
       permissionTypeAppIdSetMap.put(WORKFLOW, appIdSetForWorkflowPermission);
     }
@@ -711,7 +711,7 @@ public class AuthHandler {
     appIdSetForWorkflowPermission.addAll(permissionTypeAppIdSetMap.get(PIPELINE));
 
     Set<String> appIdSetForEnvPermission = permissionTypeAppIdSetMap.get(ENV);
-    if (appIdSetForEnvPermission == null) {
+    if (isEmpty(appIdSetForEnvPermission)) {
       appIdSetForEnvPermission = new HashSet<>();
       permissionTypeAppIdSetMap.put(ENV, appIdSetForEnvPermission);
     }
@@ -725,7 +725,7 @@ public class AuthHandler {
     return permissionTypeAppIdSetMap;
   }
 
-  public Set<String> getAppIdsByFilter(Set<String> allAppIds, GenericEntityFilter appFilter) {
+  private Set<String> getAppIdsByFilter(Set<String> allAppIds, GenericEntityFilter appFilter) {
     if (appFilter == null || FilterType.ALL.equals(appFilter.getFilterType())) {
       return new HashSet<>(allAppIds);
     }
@@ -780,7 +780,7 @@ public class AuthHandler {
     authService.checkIfUserAllowedToDeployToEnv(appId, envId);
   }
 
-  public void setEntityIdFilter(List<PermissionAttribute> requiredPermissionAttributes,
+  private void setEntityIdFilter(List<PermissionAttribute> requiredPermissionAttributes,
       UserRequestContext userRequestContext, List<String> appIds) {
     String entityFieldName = getEntityFieldName(requiredPermissionAttributes);
 
@@ -852,7 +852,7 @@ public class AuthHandler {
         }
 
         Set<String> entityIdCollection = entityPermissions.get(action);
-        if (CollectionUtils.isNotEmpty(entityIdCollection)) {
+        if (isNotEmpty(entityIdCollection)) {
           entityIds.addAll(entityIdCollection);
         }
       }
@@ -1497,7 +1497,7 @@ public class AuthHandler {
 
     AppPermission deploymentPermission =
         AppPermission.builder()
-            .actions(Sets.newHashSet(Action.READ, Action.EXECUTE))
+            .actions(Sets.newHashSet(Action.READ, Action.EXECUTE_WORKFLOW, Action.EXECUTE_PIPELINE))
             .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
             .entityFilter(new EnvFilter(null, Sets.newHashSet(envFilterType)))
             .permissionType(PermissionType.DEPLOYMENT)
@@ -1539,7 +1539,8 @@ public class AuthHandler {
   }
 
   private Set<Action> getAllActions() {
-    return Sets.newHashSet(Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE);
+    return Sets.newHashSet(
+        Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE_WORKFLOW, Action.EXECUTE_PIPELINE);
   }
 
   private Set<Action> getAllNonDeploymentActions() {

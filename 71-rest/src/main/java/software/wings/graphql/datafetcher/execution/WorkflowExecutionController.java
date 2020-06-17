@@ -154,8 +154,8 @@ public class WorkflowExecutionController {
         .artifacts(artifacts);
   }
 
-  public QLStartExecutionPayload startWorkflowExecution(QLStartExecutionInput triggerExecutionInput,
-      MutationContext mutationContext, List<PermissionAttribute> permissionAttributes) {
+  QLStartExecutionPayload startWorkflowExecution(
+      QLStartExecutionInput triggerExecutionInput, MutationContext mutationContext) {
     String appId = triggerExecutionInput.getApplicationId();
     try (AutoLogContext ignore = new AppLogContext(appId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
       String workflowId = triggerExecutionInput.getEntityId();
@@ -177,8 +177,6 @@ public class WorkflowExecutionController {
 
       try (
           AutoLogContext ignore1 = new WorkflowLogContext(workflowId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
-        authHandler.authorize(permissionAttributes, Collections.singletonList(appId), workflowId);
-
         String envId = resolveEnvId(workflow, variableInputs);
         authHandler.checkIfUserAllowedToDeployToEnv(appId, envId);
 

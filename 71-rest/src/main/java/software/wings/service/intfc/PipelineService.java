@@ -37,6 +37,8 @@ public interface PipelineService extends OwnedByApplication {
   PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest, boolean withDetails,
       Integer previousExecutionsCount, boolean withTags, String tagFilter);
 
+  Pipeline getPipeline(String appId, String pipelineId);
+
   /**
    * Read pipeline pipeline.
    *

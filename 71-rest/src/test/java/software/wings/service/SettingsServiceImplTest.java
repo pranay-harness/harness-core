@@ -814,7 +814,8 @@ public class SettingsServiceImplTest extends WingsBaseTest {
       when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(APP_ID_1));
       when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class))).thenReturn(newHashSet(ENV_ID_1));
 
-      List<Action> allActions = asList(Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE, Action.EXECUTE);
+      List<Action> allActions = asList(
+          Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE, Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW);
 
       EnvFilter envFilter1 = new EnvFilter();
       envFilter1.setFilterTypes(Sets.newHashSet(PROD));

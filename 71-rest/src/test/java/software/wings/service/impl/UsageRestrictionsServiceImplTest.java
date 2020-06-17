@@ -125,8 +125,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
   private static Set<Action> readAction = newHashSet(Action.READ);
   private static Set<Action> updateAndReadAction = newHashSet(Action.UPDATE, Action.READ);
-  private static Set<Action> allActions =
-      newHashSet(Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE, Action.EXECUTE);
+  private static Set<Action> allActions = newHashSet(
+      Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE, Action.EXECUTE_WORKFLOW, Action.EXECUTE_PIPELINE);
 
   private String SETTING_ATTRIBUTE_ID = "SETTING_ATTRIBUTE_ID";
 

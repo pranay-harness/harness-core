@@ -268,7 +268,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   private AppPermission getEnvPermission() {
-    List<Action> allActions = asList(Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE, Action.EXECUTE);
+    List<Action> allActions = asList(
+        Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE, Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW);
     EnvFilter envFilter = new EnvFilter();
     envFilter.setFilterTypes(Sets.newHashSet(PROD));
 
