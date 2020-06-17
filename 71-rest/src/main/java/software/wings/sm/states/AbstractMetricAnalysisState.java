@@ -58,6 +58,7 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -388,7 +389,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     for (NewRelicMetricAnalysis metricAnalysisRecord : deploymentTimeSeriesAnalysis.getMetricAnalyses()) {
       if (metricAnalysisRecord.getRiskLevel() == RiskLevel.HIGH
           || (AnalysisTolerance.fromInt(context.getTolerance()) == AnalysisTolerance.LOW
-                 && metricAnalysisRecord.getRiskLevel() != RiskLevel.LOW)) {
+                 && !Arrays.asList(RiskLevel.LOW, RiskLevel.NA).contains(metricAnalysisRecord.getRiskLevel()))) {
         executionStatus = ExecutionStatus.FAILED;
         break;
       }
