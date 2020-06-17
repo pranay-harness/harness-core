@@ -917,22 +917,29 @@ public class PipelineServiceImpl implements PipelineService {
       }
       return;
     }
+    int infraVarsCount = Math.toIntExact(
+        workflowVariables.stream().filter(t -> INFRASTRUCTURE_DEFINITION == t.obtainEntityType()).count());
     for (Variable variable : workflowVariables) {
       notEmptyCheck("Empty variable name", variable.getName());
       String value = pseWorkflowVariables.get(variable.getName());
       if (variable.obtainEntityType() == null) {
         handleNonEntityVariables(pipelineVariables, variable, value);
       } else {
+        boolean allowMulti = false;
+        if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, workflow.getAccountId())
+            && infraVarsCount == 1 && INFRASTRUCTURE_DEFINITION == variable.obtainEntityType()) {
+          allowMulti = true;
+        }
         // Entity variables.
-        handleEntityVariables(
-            pipelineVariables, withFinalValuesOnly, infraRefator, workflowVariables, pseWorkflowVariables, variable);
+        handleEntityVariables(pipelineVariables, withFinalValuesOnly, infraRefator, workflowVariables,
+            pseWorkflowVariables, variable, allowMulti);
       }
     }
   }
 
   private void handleEntityVariables(List<Variable> pipelineVariables, boolean withFinalValuesOnly,
       boolean infraRefactor, List<Variable> workflowVariables, Map<String, String> pseWorkflowVariables,
-      Variable variable) {
+      Variable variable, boolean allowMulti) {
     String value = pseWorkflowVariables.get(variable.getName());
     if (isNotEmpty(value)) {
       String variableName = matchesVariablePattern(value) ? getName(value) : null;
@@ -953,10 +960,11 @@ public class PipelineServiceImpl implements PipelineService {
             // Set variable value as workflow templatized variable name.
             pipelineVariable.setValue(variable.getName());
           }
+          pipelineVariable.setAllowMultipleValues(allowMulti);
           pipelineVariables.add(pipelineVariable);
         } else {
           updateStoredVariable(pipelineVariables, infraRefactor, workflowVariables, pseWorkflowVariables,
-              pipelineVariable, variableName);
+              pipelineVariable, variableName, allowMulti);
         }
       }
     }
@@ -992,7 +1000,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   @VisibleForTesting
   void updateStoredVariable(List<Variable> pipelineVariables, boolean infraRefator, List<Variable> workflowVariables,
-      Map<String, String> pseWorkflowVariables, Variable variable, String variableName) {
+      Map<String, String> pseWorkflowVariables, Variable variable, String variableName, boolean allowMulti) {
     Variable storedVar = getContainedVariable(pipelineVariables, variableName);
     if (storedVar != null) {
       if (ENVIRONMENT == storedVar.obtainEntityType()) {
@@ -1000,6 +1008,7 @@ public class PipelineServiceImpl implements PipelineService {
       } else if (SERVICE == storedVar.obtainEntityType()) {
         mergeMetadataServiceVariable(variable, storedVar);
       } else if (INFRASTRUCTURE_DEFINITION == storedVar.obtainEntityType()) {
+        storedVar.setAllowMultipleValues(allowMulti && storedVar.isAllowMultipleValues());
         mergeMetadataInfraVariable(variable, storedVar);
       }
     }

@@ -26,6 +26,7 @@ public class Variable {
   private boolean fixed;
   private String allowedValues;
   private List<String> allowedList;
+  private boolean allowMultipleValues;
   private transient List<ArtifactStreamSummary> artifactStreamSummaries;
 
   public static final String ENTITY_TYPE = "entityType";
@@ -164,6 +165,7 @@ public class Variable {
     private Map<String, Object> metadata = new HashMap<>();
     private String allowedValues;
     private List<String> allowedList;
+    private boolean allowMultipleValues;
 
     private VariableBuilder() {}
 
@@ -183,6 +185,11 @@ public class Variable {
 
     public VariableBuilder mandatory(boolean mandatory) {
       this.mandatory = mandatory;
+      return this;
+    }
+
+    public VariableBuilder allowMultipleValues(boolean allowMultipleValues) {
+      this.allowMultipleValues = allowMultipleValues;
       return this;
     }
 
@@ -255,6 +262,7 @@ public class Variable {
       variable.setName(name);
       variable.setDescription(description);
       variable.setMandatory(mandatory);
+      variable.setAllowMultipleValues(allowMultipleValues);
       variable.setValue(value);
       variable.setFixed(fixed);
       variable.setType(type);
