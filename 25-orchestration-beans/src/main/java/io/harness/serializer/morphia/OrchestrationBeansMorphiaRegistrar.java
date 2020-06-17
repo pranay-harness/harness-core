@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.adviser.AdviserParameters;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
-import io.harness.execution.NodeExecution;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.PassThroughData;
@@ -29,7 +28,6 @@ import java.util.Set;
 public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
-    set.add(NodeExecution.class);
     set.add(StepTransput.class);
     set.add(FacilitatorParameters.class);
     set.add(AdviserParameters.class);

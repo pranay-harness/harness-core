@@ -4,7 +4,6 @@ import static io.harness.execution.status.Status.PAUSED;
 import static io.harness.execution.status.Status.RUNNING;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.services.PlanExecutionService;
@@ -12,10 +11,8 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.persistence.HPersistence;
 
 public class ResumeStepStatusUpdate implements StepStatusUpdate {
-  @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
 

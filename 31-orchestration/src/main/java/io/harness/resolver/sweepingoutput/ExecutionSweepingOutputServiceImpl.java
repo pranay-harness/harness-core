@@ -6,7 +6,6 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.ambiance.Ambiance;
@@ -17,7 +16,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.EngineAmbianceExpressionEvaluator;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.EngineExpressionEvaluator;
-import io.harness.persistence.HPersistence;
 import io.harness.references.RefObject;
 import io.harness.resolvers.ResolverUtils;
 
@@ -29,7 +27,6 @@ import java.util.List;
 @Redesign
 @Singleton
 public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutputService {
-  @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private Injector injector;
   @Inject private ExecutionSweepingOutputInstanceRepository repository;
 

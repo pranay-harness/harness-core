@@ -13,4 +13,9 @@ public class InterruptProcessingFailedException extends WingsException {
     super(null, null, ErrorCode.ENGINE_INTERRUPT_PROCESSING_EXCEPTION, Level.ERROR, null, null);
     super.param(DETAILS_KEY, HarnessStringUtils.join("", "[Interrupt Type: ", interruptType.toString(), "]", message));
   }
+
+  public InterruptProcessingFailedException(ExecutionInterruptType interruptType, String message, Throwable cause) {
+    super(message, cause, ErrorCode.ENGINE_INTERRUPT_PROCESSING_EXCEPTION, Level.ERROR, null, null);
+    super.param(DETAILS_KEY, HarnessStringUtils.join("", "[Interrupt Type: ", interruptType.toString(), "]", message));
+  }
 }

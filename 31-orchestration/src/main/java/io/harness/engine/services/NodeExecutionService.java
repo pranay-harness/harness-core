@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
 import lombok.NonNull;
-import org.mongodb.morphia.query.UpdateOperations;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -26,12 +26,17 @@ public interface NodeExecutionService {
 
   List<NodeExecution> fetchNodeExecutionsByStatuses(@NonNull String planExecutionId, EnumSet<Status> statuses);
 
-  NodeExecution update(@NonNull String nodeExecutionId, @NonNull Consumer<UpdateOperations<NodeExecution>> ops);
+  NodeExecution update(@NonNull String nodeExecutionId, @NonNull Consumer<Update> ops);
 
   NodeExecution updateStatusWithOps(
-      @NonNull String nodeExecutionId, @NonNull Status targetStatus, Consumer<UpdateOperations<NodeExecution>> ops);
+      @NonNull String nodeExecutionId, @NonNull Status targetStatus, Consumer<Update> ops);
 
-  default NodeExecution updateStatusWithOps(@NonNull String nodeExecutionId, @NonNull Status targetStatus) {
+  default NodeExecution updateStatus(@NonNull String nodeExecutionId, @NonNull Status targetStatus) {
     return updateStatusWithOps(nodeExecutionId, targetStatus, null);
   }
+
+  NodeExecution save(NodeExecution nodeExecution);
+
+  List<NodeExecution> fetchChildrenNodeExecutionsByStatuses(
+      String planExecutionId, List<String> parentIds, EnumSet<Status> statuses);
 }
