@@ -309,6 +309,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
     registerWorkflowIterator(injector, workflowVerificationExecutor, new WorkflowFeedbackAnalysisJob(),
         AnalysisContextKeys.feedbackIteration, MLAnalysisType.LOG_ML, ofSeconds(30), 4);
     registerCreateCVTaskIterator(injector, workflowVerificationExecutor, ofSeconds(30), 4);
+    registerIterator(injector, workflowVerificationExecutor, new CVDataCollectionJob(),
+        AccountKeys.workflowDataCollectionIteration, ofSeconds(CV_TASK_CRON_POLL_INTERVAL_SEC), 4);
   }
 
   private void registerWorkflowIterator(Injector injector, ScheduledThreadPoolExecutor workflowVerificationExecutor,
@@ -391,8 +393,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
         AccountKeys.serviceGuardDataCollectionIteration, ofMinutes(1), 7);
     registerIterator(injector, serviceGuardExecutor, new ServiceGuardLogAnalysisJob(),
         AccountKeys.serviceGuardDataAnalysisIteration, ofMinutes(1), 7);
-    registerIterator(injector, serviceGuardExecutor, new CVDataCollectionJob(),
-        AccountKeys.workflowDataCollectionIteration, ofSeconds(CV_TASK_CRON_POLL_INTERVAL_SEC), 7);
     registerAlertsCleanupIterator(injector, serviceGuardExecutor, ofMinutes(2), 7);
   }
 
