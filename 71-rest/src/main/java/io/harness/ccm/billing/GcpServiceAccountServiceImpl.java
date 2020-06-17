@@ -7,7 +7,6 @@ import static java.util.Collections.singletonList;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -25,7 +24,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.ccm.setup.config.CESetUpConfig;
-import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
 
@@ -66,26 +64,21 @@ public class GcpServiceAccountServiceImpl implements GcpServiceAccountService {
   }
 
   @Override
-  public ServiceAccount create(String serviceAccountId, String displayName) {
+  public ServiceAccount create(String serviceAccountId, String displayName) throws IOException {
     initService();
     ServiceAccount serviceAccount = null;
-    try {
-      serviceAccount = new ServiceAccount();
-      serviceAccount.setDisplayName(displayName);
 
-      CreateServiceAccountRequest request = new CreateServiceAccountRequest();
-      request.setAccountId(serviceAccountId);
-      request.setServiceAccount(serviceAccount);
-      CESetUpConfig ceSetUpConfig = mainConfiguration.getCeSetUpConfig();
-      String projectId = ceSetUpConfig.getGcpProjectId();
-      serviceAccount = iamService.projects().serviceAccounts().create("projects/" + projectId, request).execute();
-    } catch (GoogleJsonResponseException e) {
-      throw new InvalidRequestException("Google was unable to create a service account.", e);
-    } catch (IOException ioe) {
-      logger.error("Unable to create service account.", ioe);
-      return null;
-    }
-    return serviceAccount;
+    serviceAccount = new ServiceAccount();
+    serviceAccount.setDisplayName(displayName);
+
+    CreateServiceAccountRequest request = new CreateServiceAccountRequest();
+    request.setAccountId(serviceAccountId);
+    request.setServiceAccount(serviceAccount);
+    CESetUpConfig ceSetUpConfig = mainConfiguration.getCeSetUpConfig();
+    String projectId = ceSetUpConfig.getGcpProjectId();
+
+    logger.info("Creating the service account {} in project {}.", serviceAccountId, projectId);
+    return iamService.projects().serviceAccounts().create("projects/" + projectId, request).execute();
   }
 
   @Override

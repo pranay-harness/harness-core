@@ -1,10 +1,15 @@
 package io.harness.ccm.config;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.iam.v1.model.ServiceAccount;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.ccm.billing.GcpServiceAccountService;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.service.intfc.AccountService;
@@ -28,18 +33,28 @@ public class CEGcpServiceAccountServiceImpl implements CEGcpServiceAccountServic
 
   @Override
   public String create(String accountId) {
-    Account account = accountService.get(accountId);
-    String serviceAccountId = getServiceAccountId(account);
-    String displayName = getServiceAccountDisplayName(account);
-    ServiceAccount serviceAccount = gcpServiceAccountService.create(serviceAccountId, displayName);
-    if (serviceAccount != null) {
-      gcpServiceAccountDao.save(GcpServiceAccount.builder()
-                                    .serviceAccountId(serviceAccountId)
-                                    .gcpUniqueId(serviceAccount.getUniqueId())
-                                    .accountId(accountId)
-                                    .email(serviceAccount.getEmail())
-                                    .build());
-      return serviceAccount.getEmail();
+    try (AutoLogContext ignore0 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      Account account = accountService.get(accountId);
+      String serviceAccountId = getServiceAccountId(account);
+      String displayName = getServiceAccountDisplayName(account);
+      ServiceAccount serviceAccount = null;
+      try {
+        serviceAccount = gcpServiceAccountService.create(serviceAccountId, displayName);
+      } catch (GoogleJsonResponseException e) {
+        logger.error("Google was unable to create a service account.", e);
+      } catch (IOException ioe) {
+        logger.error("Unable to create service account.", ioe);
+      }
+
+      if (serviceAccount != null) {
+        gcpServiceAccountDao.save(GcpServiceAccount.builder()
+                                      .serviceAccountId(serviceAccountId)
+                                      .gcpUniqueId(serviceAccount.getUniqueId())
+                                      .accountId(accountId)
+                                      .email(serviceAccount.getEmail())
+                                      .build());
+        return serviceAccount.getEmail();
+      }
     }
     return null;
   }
@@ -74,7 +89,7 @@ public class CEGcpServiceAccountServiceImpl implements CEGcpServiceAccountServic
 
   private String getCompliedSubstring(String s, int maxLength) {
     String substring;
-    String compliedAccountName = s.toLowerCase().replaceAll("[^a-z0-9]", "-");
+    String compliedAccountName = s.toLowerCase().replaceAll("[^a-z0-9]", "");
     if (compliedAccountName.length() < maxLength) {
       substring = compliedAccountName;
     } else {
