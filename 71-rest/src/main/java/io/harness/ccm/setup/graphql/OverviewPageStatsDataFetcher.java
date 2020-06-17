@@ -118,7 +118,7 @@ public class OverviewPageStatsDataFetcher
       Thread.currentThread().interrupt();
     }
 
-    return overviewStatsDataBuilder.build();
+    return overviewStatsDataBuilder.ceEnabledClusterPresent(getCEEnabledCloudProvider(accountId)).build();
   }
 
   void modifyOverviewStatsBuilder(FieldValueList row, QLCEOverviewStatsDataBuilder overviewStatsDataBuilder) {
@@ -172,5 +172,17 @@ public class OverviewPageStatsDataFetcher
         .field(SettingAttributeKeys.category)
         .equal(SettingCategory.CE_CONNECTOR.toString())
         .asList();
+  }
+
+  protected boolean getCEEnabledCloudProvider(String accountId) {
+    return null
+        != persistence.createQuery(SettingAttribute.class)
+               .field(SettingAttributeKeys.accountId)
+               .equal(accountId)
+               .field(SettingAttributeKeys.category)
+               .equal(SettingCategory.CLOUD_PROVIDER.toString())
+               .field(SettingAttributeKeys.isCEEnabled)
+               .equal(true)
+               .get();
   }
 }
