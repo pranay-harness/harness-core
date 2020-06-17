@@ -79,6 +79,7 @@ import software.wings.security.AuthRuleFilter;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
 import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -90,7 +91,6 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WhitelistService;
-import software.wings.utils.ManagerCacheHandler;
 import software.wings.utils.ResourceTestRule;
 
 import java.util.Date;
@@ -124,8 +124,6 @@ public class SecureResourceTest extends CategoryTest {
   private static GenericDbCache genericDbCache = mock(GenericDbCache.class);
   private static AccountService accountService = mock(AccountService.class);
   private static HPersistence hPersistence = mock(HPersistence.class);
-  private static ManagerCacheHandler managerCacheHandler = mock(ManagerCacheHandler.class);
-
   private static AppService appService = mock(AppService.class);
   private static UserService userService = mock(UserService.class);
   private static UserGroupService userGroupService = mock(UserGroupService.class);
@@ -138,16 +136,17 @@ public class SecureResourceTest extends CategoryTest {
   private static HarnessUserGroupService harnessUserGroupService = mock(HarnessUserGroupService.class);
   private static SecretManager secretManager = mock(SecretManager.class);
   private static GraphQLUtils graphQLUtils = mock(GraphQLUtils.class);
+  private static Cache<String, AuthToken> authTokenCache = Mockito.mock(Cache.class);
+  private static Cache<String, User> userCache = Mockito.mock(Cache.class);
+  private static Cache<String, UserPermissionInfo> cachePermissionInfo = Mockito.mock(Cache.class);
+  private static Cache<String, UserRestrictionInfo> cacheRestrictionInfo = Mockito.mock(Cache.class);
 
   private static AuthService authService = new AuthServiceImpl(genericDbCache, hPersistence, userService,
-      userGroupService, usageRestrictionsService, managerCacheHandler, configuration, verificationServiceSecretManager,
-      authHandler, harnessUserGroupService, secretManager);
+      userGroupService, usageRestrictionsService, authTokenCache, userCache, cacheRestrictionInfo, cachePermissionInfo,
+      configuration, verificationServiceSecretManager, authHandler, harnessUserGroupService, secretManager);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(authService, authHandler, appService, userService,
       accountService, whitelistService, harnessUserGroupService, graphQLUtils);
-
-  Cache<String, User> cache = Mockito.mock(Cache.class);
-  Cache<String, UserPermissionInfo> cachePermissionInfo = Mockito.mock(Cache.class);
 
   /**
    * The constant resources.
@@ -249,15 +248,9 @@ public class SecureResourceTest extends CategoryTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(managerCacheHandler.getUserCache()).thenReturn(cache);
-    when(cache.get(USER_ID)).thenReturn(user);
-    when(managerCacheHandler.getUserPermissionInfoCache()).thenReturn(cachePermissionInfo);
+    when(userCache.get(USER_ID)).thenReturn(user);
     when(cachePermissionInfo.get(ACCOUNT_ID + "~" + USER_ID)).thenReturn(userPermissionInfo);
-
-    Cache<String, AuthToken> authTokenCache = (Cache<String, AuthToken>) mock(Cache.class);
-    when(managerCacheHandler.getAuthTokenCache()).thenReturn(authTokenCache);
     when(authTokenCache.get(VALID_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, TOKEN_EXPIRY_IN_MILLIS));
-
     when(genericDbCache.get(Account.class, ACCOUNT_ID))
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
     when(genericDbCache.get(Application.class, APP_ID))

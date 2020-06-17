@@ -4,9 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.validation.Validator.notNullCheck;
+import static software.wings.app.ManagerCacheRegistrar.HARNESS_API_KEY_CACHE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.beans.AuthType;
 import io.harness.beans.ClientType;
@@ -24,7 +26,6 @@ import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.utils.CryptoUtils;
-import software.wings.utils.ManagerCacheHandler;
 
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
@@ -40,7 +41,7 @@ import javax.ws.rs.core.HttpHeaders;
 public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SecretManager secretManager;
-  @Inject private ManagerCacheHandler managerCacheHandler;
+  @Inject @Named(HARNESS_API_KEY_CACHE) private Cache<String, String> harnessApiKeyCache;
 
   @Override
   public String generate(String clientType) {
@@ -59,7 +60,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
                                 .encryptedKey(EncryptionUtils.encrypt(apiKey.getBytes(Charset.forName("UTF-8")), null))
                                 .clientType(clientTypeObject)
                                 .build());
-      managerCacheHandler.getHarnessApiKeyCache().put(clientType, apiKey);
+      harnessApiKeyCache.put(clientType, apiKey);
     }
     return apiKey;
   }
@@ -83,7 +84,6 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
       throw new InvalidArgumentsException("Invalid client type : " + clientType);
     }
 
-    Cache<String, String> harnessApiKeyCache = managerCacheHandler.getHarnessApiKeyCache();
     String apiKey = harnessApiKeyCache.get(clientType);
     if (apiKey == null) {
       HarnessApiKey globalApiKey =
@@ -112,7 +112,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
     HarnessApiKey apiKeyObject = getApiKeyObject(ClientType.valueOf(clientType));
     if (apiKeyObject != null) {
       wingsPersistence.delete(HarnessApiKey.class, apiKeyObject.getUuid());
-      managerCacheHandler.getHarnessApiKeyCache().remove(clientType);
+      harnessApiKeyCache.remove(clientType);
       return true;
     }
 

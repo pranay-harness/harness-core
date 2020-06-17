@@ -4,12 +4,16 @@ import static org.mockito.Mockito.mock;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
+import io.harness.cache.HarnessCacheManager;
 import io.harness.manage.ManagedExecutorService;
 import io.harness.shell.ShellExecutionService;
 import io.harness.shell.ShellExecutionServiceImpl;
@@ -122,9 +126,20 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.cache.Cache;
+import javax.cache.expiry.AccessedExpiryPolicy;
+import javax.cache.expiry.Duration;
 
 @Slf4j
 public class WingsTestModule extends AbstractModule {
+  @Provides
+  @Named("TestCache")
+  @Singleton
+  public Cache<Integer, Integer> getTestCache(HarnessCacheManager harnessCacheManager) {
+    return harnessCacheManager.getCache(
+        "TestCache", Integer.class, Integer.class, AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES));
+  }
+
   @Override
   protected void configure() {
     DelegateFileManager mockDelegateFileManager = mock(DelegateFileManager.class);
@@ -206,6 +221,11 @@ public class WingsTestModule extends AbstractModule {
     searchEntityMultibinder.addBinding().to(EnvironmentSearchEntity.class);
     searchEntityMultibinder.addBinding().to(WorkflowSearchEntity.class);
     searchEntityMultibinder.addBinding().to(PipelineSearchEntity.class);
+
+    MapBinder<String, Cache<?, ?>> mapBinder =
+        MapBinder.newMapBinder(binder(), TypeLiteral.get(String.class), new TypeLiteral<Cache<?, ?>>() {});
+    mapBinder.addBinding("TestCache").to(Key.get(new TypeLiteral<Cache<Integer, Integer>>() {
+    }, Names.named("TestCache")));
   }
 
   @Provides

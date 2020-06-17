@@ -10,16 +10,19 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.System.currentTimeMillis;
-import static java.util.Objects.requireNonNull;
 import static java.util.function.Function.identity;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.app.ManagerCacheRegistrar.APIKEY_CACHE;
+import static software.wings.app.ManagerCacheRegistrar.APIKEY_PERMISSION_CACHE;
+import static software.wings.app.ManagerCacheRegistrar.APIKEY_RESTRICTION_CACHE;
 
 import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -50,7 +53,6 @@ import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.utils.CryptoUtils;
-import software.wings.utils.ManagerCacheHandler;
 
 import java.util.ArrayList;
 import java.util.Base64;
@@ -72,7 +74,9 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private UserGroupService userGroupService;
-  @Inject private ManagerCacheHandler managerCacheHandler;
+  @Inject @Named(APIKEY_CACHE) private Cache<String, ApiKeyEntry> apiKeyCache;
+  @Inject @Named(APIKEY_PERMISSION_CACHE) private Cache<String, UserPermissionInfo> apiKeyPermissionInfoCache;
+  @Inject @Named(APIKEY_RESTRICTION_CACHE) private Cache<String, UserRestrictionInfo> apiKeyRestrictionInfoCache;
   @Inject private AuthHandler authHandler;
   @Inject private AuthService authService;
   @Inject private ExecutorService executorService;
@@ -135,12 +139,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   }
 
   private void evictApiKeyAndRebuildCache(String apiKey, String accountId, boolean rebuild) {
-    Cache<String, ApiKeyEntry> apiKeyCache = requireNonNull(managerCacheHandler.getApiKeyCache());
-    Cache<String, UserPermissionInfo> apiKeyPermissionInfoCache =
-        requireNonNull(managerCacheHandler.getApiKeyPermissionInfoCache());
-    Cache<String, UserRestrictionInfo> apiKeyRestrictionInfoCache =
-        requireNonNull(managerCacheHandler.getApiKeyRestrictionInfoCache());
-
     boolean apiKeyPresent = apiKeyCache.remove(apiKey);
     boolean apiKeyPresentInPermissions = apiKeyPermissionInfoCache.remove(apiKey);
     boolean apiKeyPresentInRestrictions = apiKeyRestrictionInfoCache.remove(apiKey);
@@ -305,7 +303,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   }
 
   private ApiKeyEntry getApiKeyFromCacheOrDB(String apiKey, String accountId, boolean details) {
-    Cache<String, ApiKeyEntry> apiKeyCache = managerCacheHandler.getApiKeyCache();
     if (apiKeyCache == null) {
       logger.warn("apiKeyCache is null. Fetch from DB");
       return getByKeyFromDB(apiKey, accountId, details);
@@ -333,23 +330,22 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Override
   public UserPermissionInfo getApiKeyPermissions(ApiKeyEntry apiKeyEntry, String accountId) {
     String apiKey = apiKeyEntry.getDecryptedKey();
-    Cache<String, UserPermissionInfo> apiKeyPermissionsCache = managerCacheHandler.getApiKeyPermissionInfoCache();
-    if (apiKeyPermissionsCache == null) {
+    if (apiKeyPermissionInfoCache == null) {
       logger.warn("apiKey permissions cache is null. Fetch from DB");
       return authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
     } else {
       UserPermissionInfo apiKeyPermissionInfo;
       try {
-        apiKeyPermissionInfo = apiKeyPermissionsCache.get(apiKey);
+        apiKeyPermissionInfo = apiKeyPermissionInfoCache.get(apiKey);
         if (apiKeyPermissionInfo == null) {
           apiKeyPermissionInfo = authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
-          apiKeyPermissionsCache.put(apiKey, apiKeyPermissionInfo);
+          apiKeyPermissionInfoCache.put(apiKey, apiKeyPermissionInfo);
         }
       } catch (Exception ex) {
         // If there was any exception, remove that entry from cache
-        apiKeyPermissionsCache.remove(apiKey);
+        apiKeyPermissionInfoCache.remove(apiKey);
         apiKeyPermissionInfo = authHandler.evaluateUserPermissionInfo(accountId, apiKeyEntry.getUserGroups(), null);
-        apiKeyPermissionsCache.put(apiKey, apiKeyPermissionInfo);
+        apiKeyPermissionInfoCache.put(apiKey, apiKeyPermissionInfo);
       }
       return apiKeyPermissionInfo;
     }
@@ -359,7 +355,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   public UserRestrictionInfo getApiKeyRestrictions(
       ApiKeyEntry apiKeyEntry, UserPermissionInfo userPermissionInfo, String accountId) {
     String apiKey = apiKeyEntry.getDecryptedKey();
-    Cache<String, UserRestrictionInfo> apiKeyRestrictionInfoCache = managerCacheHandler.getApiKeyRestrictionInfoCache();
     if (apiKeyRestrictionInfoCache == null) {
       logger.warn("apiKey restrictions cache is null. Fetch from DB");
       return authService.getUserRestrictionInfoFromDB(accountId, userPermissionInfo, apiKeyEntry.getUserGroups());
@@ -395,8 +390,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public void evictAndRebuildPermissions(String accountId, boolean rebuild) {
-    Cache<String, UserPermissionInfo> permissionsCache = managerCacheHandler.getApiKeyPermissionInfoCache();
-
     PageResponse pageResponse = list(PageRequestBuilder.aPageRequest().build(), accountId, false, true);
     List<ApiKeyEntry> apiKeyEntryList = pageResponse.getResponse();
     if (isEmpty(apiKeyEntryList)) {
@@ -407,7 +400,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     apiKeyEntryList.forEach(apiKeyEntry -> {
       String apiKey = apiKeyEntry.getDecryptedKey();
-      boolean hasPermissions = permissionsCache.remove(apiKey);
+      boolean hasPermissions = apiKeyPermissionInfoCache.remove(apiKey);
       if (hasPermissions) {
         keys.add(apiKey);
       }

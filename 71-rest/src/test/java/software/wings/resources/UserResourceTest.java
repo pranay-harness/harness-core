@@ -53,11 +53,12 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.signup.BugsnagErrorReporter;
 import software.wings.utils.AccountPermissionUtils;
-import software.wings.utils.ManagerCacheHandler;
 import software.wings.utils.ResourceTestRule;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.Map;
+import javax.cache.Cache;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.GenericType;
 
@@ -68,7 +69,7 @@ public class UserResourceTest extends WingsBaseTest {
   public static final UserService USER_SERVICE = mock(UserService.class);
   public static final HarnessUserGroupService HARNESS_USER_GROUP_SERVICE = mock(HarnessUserGroupService.class);
   public static final UserGroupService USER_GROUP_SERVICE = mock(UserGroupService.class);
-  public static final ManagerCacheHandler CACHE_HELPER = mock(ManagerCacheHandler.class);
+  public static final Map<String, Cache<?, ?>> CACHES = mock(Map.class);
   public static final AuthService AUTH_SERVICE = mock(AuthService.class);
   public static final AccountService ACCOUNT_SERVICE = mock(AccountService.class);
   public static final MainConfiguration MAIN_CONFIGURATION = mock(MainConfiguration.class);
@@ -89,7 +90,7 @@ public class UserResourceTest extends WingsBaseTest {
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
           .addResource(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, ACCOUNT_PERMISSION_UTILS,
-              AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER, CACHE_HELPER, HARNESS_USER_GROUP_SERVICE,
+              AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER, CACHES, HARNESS_USER_GROUP_SERVICE,
               USER_GROUP_SERVICE, MAIN_CONFIGURATION, ACCOUNT_PASSWORD_EXPIRATION_JOB, RE_CAPTCHA_VERIFIER))
           .addProvider(WingsExceptionMapper.class)
           .addProvider(MultiPartFeature.class)

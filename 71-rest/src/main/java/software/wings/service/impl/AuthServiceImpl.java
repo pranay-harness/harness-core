@@ -16,6 +16,10 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.app.ManagerCacheRegistrar.AUTH_TOKEN_CACHE;
+import static software.wings.app.ManagerCacheRegistrar.USER_CACHE;
+import static software.wings.app.ManagerCacheRegistrar.USER_PERMISSION_CACHE;
+import static software.wings.app.ManagerCacheRegistrar.USER_RESTRICTION_CACHE;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -35,6 +39,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -106,7 +111,6 @@ import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
-import software.wings.utils.ManagerCacheHandler;
 
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
@@ -133,7 +137,10 @@ public class AuthServiceImpl implements AuthService {
   private UserService userService;
   private UserGroupService userGroupService;
   private UsageRestrictionsService usageRestrictionsService;
-  private ManagerCacheHandler managerCacheHandler;
+  private Cache<String, AuthToken> authTokenCache;
+  private Cache<String, User> userCache;
+  private Cache<String, UserRestrictionInfo> userRestrictionInfoCache;
+  private Cache<String, UserPermissionInfo> userPermissionInfoCache;
   private MainConfiguration configuration;
   private VerificationServiceSecretManager verificationServiceSecretManager;
   private AuthHandler authHandler;
@@ -147,15 +154,21 @@ public class AuthServiceImpl implements AuthService {
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, HPersistence persistence, UserService userService,
       UserGroupService userGroupService, UsageRestrictionsService usageRestrictionsService,
-      ManagerCacheHandler managerCacheHandler, MainConfiguration configuration,
-      VerificationServiceSecretManager verificationServiceSecretManager, AuthHandler authHandler,
-      HarnessUserGroupService harnessUserGroupService, SecretManager secretManager) {
+      @Named(AUTH_TOKEN_CACHE) Cache<String, AuthToken> authTokenCache,
+      @Named(USER_CACHE) Cache<String, User> userCache,
+      @Named(USER_RESTRICTION_CACHE) Cache<String, UserRestrictionInfo> userRestrictionInfoCache,
+      @Named(USER_PERMISSION_CACHE) Cache<String, UserPermissionInfo> userPermissionInfoCache,
+      MainConfiguration configuration, VerificationServiceSecretManager verificationServiceSecretManager,
+      AuthHandler authHandler, HarnessUserGroupService harnessUserGroupService, SecretManager secretManager) {
     this.dbCache = dbCache;
     this.persistence = persistence;
     this.userService = userService;
     this.userGroupService = userGroupService;
     this.usageRestrictionsService = usageRestrictionsService;
-    this.managerCacheHandler = managerCacheHandler;
+    this.authTokenCache = authTokenCache;
+    this.userCache = userCache;
+    this.userRestrictionInfoCache = userRestrictionInfoCache;
+    this.userPermissionInfoCache = userPermissionInfoCache;
     this.configuration = configuration;
     this.verificationServiceSecretManager = verificationServiceSecretManager;
     this.authHandler = authHandler;
@@ -186,7 +199,6 @@ public class AuthServiceImpl implements AuthService {
 
   private AuthToken getAuthToken(String authTokenId) {
     AuthToken authToken = null;
-    Cache<String, AuthToken> authTokenCache = managerCacheHandler.getAuthTokenCache();
     if (authTokenCache != null) {
       authToken = authTokenCache.get(authTokenId);
     }
@@ -201,7 +213,6 @@ public class AuthServiceImpl implements AuthService {
 
   private void addAuthTokenToCache(AuthToken authToken) {
     if (authToken != null) {
-      Cache<String, AuthToken> authTokenCache = managerCacheHandler.getAuthTokenCache();
       if (authTokenCache != null) {
         authTokenCache.put(authToken.getUuid(), authToken);
       }
@@ -231,7 +242,6 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private User getUserFromCacheOrDB(String userId) {
-    Cache<String, User> userCache = managerCacheHandler.getUserCache();
     if (userCache == null) {
       logger.warn("userCache is null. Fetch from DB");
       return userService.get(userId);
@@ -467,7 +477,6 @@ public class AuthServiceImpl implements AuthService {
     AuthToken authToken = validateToken(utoken);
     if (authToken != null) {
       persistence.delete(AuthToken.class, authToken.getUuid());
-      Cache<String, AuthToken> authTokenCache = managerCacheHandler.getAuthTokenCache();
       if (authTokenCache != null) {
         authTokenCache.remove(authToken.getUuid());
       }
@@ -532,8 +541,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public UserPermissionInfo getUserPermissionInfo(String accountId, User user, boolean cacheOnly) {
-    Cache<String, UserPermissionInfo> cache = managerCacheHandler.getUserPermissionInfoCache();
-    if (cache == null) {
+    if (userPermissionInfoCache == null) {
       if (cacheOnly) {
         return null;
       }
@@ -544,14 +552,14 @@ public class AuthServiceImpl implements AuthService {
     String key = getCacheKey(accountId, user.getUuid());
     UserPermissionInfo value;
     try {
-      value = cache.get(key);
+      value = userPermissionInfoCache.get(key);
       if (value == null) {
         if (cacheOnly) {
           return null;
         }
 
         value = getUserPermissionInfoFromDB(accountId, user);
-        cache.put(key, value);
+        userPermissionInfoCache.put(key, value);
       }
       return value;
     } catch (Exception e) {
@@ -565,8 +573,7 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public UserRestrictionInfo getUserRestrictionInfo(
       String accountId, User user, UserPermissionInfo userPermissionInfo, boolean cacheOnly) {
-    Cache<String, UserRestrictionInfo> cache = managerCacheHandler.getUserRestrictionInfoCache();
-    if (cache == null) {
+    if (userRestrictionInfoCache == null) {
       if (cacheOnly) {
         return null;
       }
@@ -577,13 +584,13 @@ public class AuthServiceImpl implements AuthService {
     String key = getCacheKey(accountId, user.getUuid());
     UserRestrictionInfo value;
     try {
-      value = cache.get(key);
+      value = userRestrictionInfoCache.get(key);
       if (value == null) {
         if (cacheOnly) {
           return null;
         }
         value = getUserRestrictionInfoFromDB(accountId, user, userPermissionInfo);
-        cache.put(key, value);
+        userRestrictionInfoCache.put(key, value);
       }
       return value;
     } catch (Exception ignored) {
@@ -609,18 +616,15 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public void evictUserPermissionAndRestrictionCacheForAccount(
       String accountId, boolean rebuildUserPermissionInfo, boolean rebuildUserRestrictionInfo) {
-    evictAndRebuild(accountId, rebuildUserPermissionInfo, managerCacheHandler.getUserPermissionInfoCache(),
-        UserPermissionInfo.class);
-    evictAndRebuild(accountId, rebuildUserRestrictionInfo, managerCacheHandler.getUserRestrictionInfoCache(),
-        UserRestrictionInfo.class);
+    evictAndRebuild(accountId, rebuildUserPermissionInfo, userPermissionInfoCache, UserPermissionInfo.class);
+    evictAndRebuild(accountId, rebuildUserRestrictionInfo, userRestrictionInfoCache, UserRestrictionInfo.class);
     apiKeyService.evictAndRebuildPermissionsAndRestrictions(
         accountId, rebuildUserPermissionInfo || rebuildUserRestrictionInfo);
   }
 
   @Override
   public void evictUserPermissionCacheForAccount(String accountId, boolean rebuildUserPermissionInfo) {
-    evictAndRebuild(accountId, rebuildUserPermissionInfo, managerCacheHandler.getUserPermissionInfoCache(),
-        UserPermissionInfo.class);
+    evictAndRebuild(accountId, rebuildUserPermissionInfo, userPermissionInfoCache, UserPermissionInfo.class);
     apiKeyService.evictAndRebuildPermissions(accountId, rebuildUserPermissionInfo);
   }
 
@@ -642,7 +646,6 @@ public class AuthServiceImpl implements AuthService {
             return;
           }
 
-          Cache<String, User> userCache = managerCacheHandler.getUserCache();
           if (userCache == null) {
             return;
           }
@@ -657,7 +660,7 @@ public class AuthServiceImpl implements AuthService {
           UserPermissionInfo userPermissionInfo = getUserPermissionInfo(accountId, user, true);
           if (userPermissionInfo == null) {
             userPermissionInfo = authHandler.evaluateUserPermissionInfo(accountId, userGroups, user);
-            managerCacheHandler.getUserPermissionInfoCache().put(key, userPermissionInfo);
+            userPermissionInfoCache.put(key, userPermissionInfo);
           }
 
           if (infoClass.getSimpleName().equals("UserRestrictionInfo")) {
@@ -666,8 +669,6 @@ public class AuthServiceImpl implements AuthService {
             UserRestrictionInfo userRestrictionInfo = getUserRestrictionInfo(accountId, user, userPermissionInfo, true);
             if (userRestrictionInfo == null) {
               userRestrictionInfo = getUserRestrictionInfoFromDB(accountId, userPermissionInfo, userGroups);
-              Cache<String, UserRestrictionInfo> userRestrictionInfoCache =
-                  managerCacheHandler.getUserRestrictionInfoCache();
               if (userRestrictionInfoCache != null) {
                 userRestrictionInfoCache.put(key, userRestrictionInfo);
               }
@@ -701,11 +702,8 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void evictUserPermissionAndRestrictionCacheForAccount(String accountId, List<String> memberIds) {
-    Cache<String, UserPermissionInfo> userPermissionInfoCache = managerCacheHandler.getUserPermissionInfoCache();
     removeFromCache(userPermissionInfoCache, accountId, memberIds);
-
-    Cache<String, UserRestrictionInfo> userRestrictionscache = managerCacheHandler.getUserRestrictionInfoCache();
-    removeFromCache(userRestrictionscache, accountId, memberIds);
+    removeFromCache(userRestrictionInfoCache, accountId, memberIds);
   }
 
   private UserPermissionInfo getUserPermissionInfoFromDB(String accountId, User user) {

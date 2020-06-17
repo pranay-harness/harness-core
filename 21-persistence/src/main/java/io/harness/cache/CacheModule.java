@@ -10,6 +10,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 
 import com.hazelcast.cache.HazelcastCachingProvider;
@@ -23,14 +24,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.intercept.MethodInvocation;
 import org.jsr107.ri.annotations.CacheContextSource;
 import org.jsr107.ri.annotations.DefaultCacheKeyGenerator;
-import org.jsr107.ri.annotations.DefaultCacheResolverFactory;
 import org.jsr107.ri.annotations.guice.CacheLookupUtil;
 import org.jsr107.ri.annotations.guice.CachePutInterceptor;
 import org.jsr107.ri.annotations.guice.CacheRemoveAllInterceptor;
 import org.jsr107.ri.annotations.guice.CacheRemoveEntryInterceptor;
 import org.jsr107.ri.annotations.guice.CacheResultInterceptor;
 import org.redisson.config.Config;
-import org.redisson.config.ConfigSupport;
 
 import java.io.Closeable;
 import java.io.File;
@@ -43,6 +42,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.annotation.CacheKeyGenerator;
 import javax.cache.annotation.CachePut;
@@ -132,7 +132,7 @@ public class CacheModule extends DependencyModule implements ServersModule {
       uri = file.toURI();
       Config config = Config.fromYAML(uri.toURL());
       config.setCodec(new RedissonKryoCodec());
-      Files.write(new ConfigSupport().toYAML(config).getBytes(StandardCharsets.UTF_8), file);
+      Files.write(config.toYAML().getBytes(StandardCharsets.UTF_8), file);
       logger.info("Found the redisson config in the working directory {}", uri);
     }
     return provider.getCacheManager(uri, provider.getDefaultClassLoader(), new Properties());
@@ -184,12 +184,6 @@ public class CacheModule extends DependencyModule implements ServersModule {
     return new HarnessCacheManagerImpl(cacheManager, cacheConfig);
   }
 
-  @Provides
-  @Singleton
-  public CacheResolverFactory getCacheResolverFactory(HarnessCacheManager harnessCacheManager) {
-    return new DefaultCacheResolverFactory(cacheManager);
-  }
-
   public static <T, R> Supplier<R> bind(Function<T, R> fn, T val) {
     return () -> fn.apply(val);
   }
@@ -199,7 +193,9 @@ public class CacheModule extends DependencyModule implements ServersModule {
     if (cacheConfig.getCacheBackend() == REDIS) {
       bind(RedissonKryoCodec.class).toInstance(new RedissonKryoCodec());
     }
+    MapBinder.newMapBinder(binder(), TypeLiteral.get(String.class), new TypeLiteral<Cache<?, ?>>() {});
 
+    bind(CacheResolverFactory.class).to(GuiceCacheResolverFactory.class);
     bind(CacheKeyGenerator.class).to(DefaultCacheKeyGenerator.class);
     bind(new TypeLiteral<CacheContextSource<MethodInvocation>>() {}).to(CacheLookupUtil.class);
 

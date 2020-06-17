@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static software.wings.app.ManagerCacheRegistrar.NEW_RELIC_APPLICATION_CACHE;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
@@ -13,6 +14,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.eraro.ErrorCode;
@@ -55,7 +57,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState.Method;
 import software.wings.sm.states.NewRelicState;
 import software.wings.sm.states.NewRelicState.Metric;
-import software.wings.utils.ManagerCacheHandler;
 
 import java.io.IOException;
 import java.net.URL;
@@ -80,7 +81,7 @@ public class NewRelicServiceImpl implements NewRelicService {
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
-  @Inject private ManagerCacheHandler managerCacheHandler;
+  @Inject @Named(NEW_RELIC_APPLICATION_CACHE) private Cache<String, NewRelicApplications> newRelicApplicationCache;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionContextFactory executionContextFactory;
   @Inject private MLServiceUtils mlServiceUtils;
@@ -191,8 +192,6 @@ public class NewRelicServiceImpl implements NewRelicService {
                                             .build();
       switch (stateType) {
         case NEW_RELIC:
-          Cache<String, NewRelicApplications> newRelicApplicationCache =
-              managerCacheHandler.getNewRelicApplicationCache();
           String key = settingAttribute.getUuid();
           NewRelicApplications applications;
           try {
