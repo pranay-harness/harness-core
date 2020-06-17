@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,5 +18,5 @@ public class DeploymentConfigSpec {
   private DeploymentStrategy strategy;
   private V1PodTemplateSpec template;
   private Boolean test;
-  private List<DeploymentTriggerPolicy> triggers = new ArrayList();
+  private List<DeploymentTriggerPolicy> triggers;
 }
