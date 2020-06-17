@@ -75,6 +75,7 @@ type eksCluster {
 }
 
 type OverviewStatsData {
+  ceEnabledClusterPresent: Boolean
   cloudConnectorsPresent: Boolean
   awsConnectorsPresent: Boolean
   gcpConnectorsPresent: Boolean

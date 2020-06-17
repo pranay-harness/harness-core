@@ -86,9 +86,14 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   public static final String preAggQueryKey = "preAggQueryKey";
 
   public static final String DATA_SET_NAME_TEMPLATE = "BillingReport_%s";
-  private static final String TEMP_TABLE_SCHEDULED_QUERY_TEMPLATE =
-      "SELECT * FROM `%s.%s.awsCurTable_*` WHERE _TABLE_SUFFIX = CONCAT(CAST(EXTRACT(YEAR from "
-      + "TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),'_' , LPAD(CAST(EXTRACT(MONTH from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),2,'0'));";
+  private static final String TEMP_TABLE_SCHEDULED_QUERY_TEMPLATE = "SELECT * FROM `%s.%s.aws*`%n"
+      + "WHERE _TABLE_SUFFIX = CONCAT((SELECT * from (select (CASE (SELECT COUNT(1) %n"
+      + "FROM `%s.%s.awsCurTable_*` WHERE %n"
+      + "_TABLE_SUFFIX = CONCAT(CAST(EXTRACT(YEAR from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string)%n"
+      + ",'_' , LPAD(CAST(EXTRACT(MONTH from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),2,'0'))) > 0%n"
+      + "WHEN TRUE THEN \"CurTable_\" ELSE \"cur_\" END))),CAST(EXTRACT(YEAR from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),%n"
+      + "'_' , LPAD(CAST(EXTRACT(MONTH from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),2,'0'));";
+
   private static final String AWS_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE = "DELETE FROM `%s.preAggregated`%n"
       + "WHERE DATE(startTime) >= DATE_SUB(@run_date , INTERVAL 3 DAY) AND cloudProvider = \"AWS\";%n"
       + "INSERT INTO `%s.preAggregated` (startTime, awsBlendedRate,awsBlendedCost,awsUnblendedRate, awsUnblendedCost,"
@@ -182,7 +187,8 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
 
     // Create Scheduled query for the Fallback Temp Table
     String scheduledQueryName1 = String.format(SCHEDULED_QUERY_TEMPLATE, uniqueSuffixFromAccountId);
-    String query1 = String.format(TEMP_TABLE_SCHEDULED_QUERY_TEMPLATE, gcpProjectId, dstDataSetId);
+    String query1 =
+        String.format(TEMP_TABLE_SCHEDULED_QUERY_TEMPLATE, gcpProjectId, dstDataSetId, gcpProjectId, dstDataSetId);
     CreateTransferConfigRequest scheduledTransferConfigRequest =
         getTransferConfigRequest(dstDataSetId, scheduledQueryName1, false, query1);
     executeDataTransferJobCreate(scheduledTransferConfigRequest, dataTransferServiceClient);

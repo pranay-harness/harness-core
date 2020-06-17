@@ -79,6 +79,7 @@ public class OverviewPageStatsDataFetcherTest extends AbstractDataFetcherTest {
                                        .build();
     settingValue.setType(SettingVariableTypes.CE_AWS.toString());
     doReturn(Arrays.asList(ceConnector)).when(overviewPageStatsDataFetcher).getCEConnectors(ACCOUNT1_ID);
+    doReturn(true).when(overviewPageStatsDataFetcher).getCEEnabledCloudProvider(ACCOUNT1_ID);
 
     BigQuery mockBigQuery = mock(BigQuery.class);
     when(configuration.getCeSetUpConfig()).thenReturn(CESetUpConfig.builder().gcpProjectId(GCP_PROJECT_ID).build());
@@ -108,6 +109,7 @@ public class OverviewPageStatsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getGcpConnectorsPresent()).isFalse();
     assertThat(data.getApplicationDataPresent()).isFalse();
     assertThat(data.getClusterDataPresent()).isTrue();
+    assertThat(data.getCeEnabledClusterPresent()).isTrue();
   }
 
   @Test
