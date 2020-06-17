@@ -13,16 +13,16 @@ import ru.vyarus.guice.validator.ValidationModule;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
-public class CDNextGenModule extends AbstractModule {
-  private final CDNextGenConfiguration appConfig;
+public class NextGenModule extends AbstractModule {
+  private final NextGenConfiguration appConfig;
 
-  public CDNextGenModule(CDNextGenConfiguration appConfig) {
+  public NextGenModule(NextGenConfiguration appConfig) {
     this.appConfig = appConfig;
   }
 
   @Override
   protected void configure() {
-    bind(CDNextGenConfiguration.class).toInstance(appConfig);
+    bind(NextGenConfiguration.class).toInstance(appConfig);
 
     install(new ProviderModule() {
       @Provides

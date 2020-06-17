@@ -6,18 +6,20 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.data.validator.EntityName;
 import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(NON_NULL)
-public class UpdateProjectRequest {
+public class UpdateOrganizationDTO {
   @NotEmpty @EntityName String name;
-  @Size(max = 1024) String description;
-  @Size(min = 1, max = 128) List<String> owners;
-  @Size(max = 128) List<String> tags;
+  @NotEmpty String color;
+  @NotNull @Size(max = 1024) String description;
+  @NotNull @Singular @Size(max = 128) List<String> tags;
 }

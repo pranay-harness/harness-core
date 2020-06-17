@@ -5,8 +5,8 @@ import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Singular;
-import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -26,7 +26,7 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-@Value
+@Data
 @Builder
 @FieldNameConstants(innerTypeName = "OrganizationKeys")
 @Entity(value = "organizations", noClassnameStored = true)
@@ -40,15 +40,13 @@ import javax.validation.constraints.Size;
 public class Organization {
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   @Trimmed @NotEmpty String accountId;
-
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @EntityName String name;
   @NotEmpty String color;
   @NotNull @Size(max = 1024) String description;
   @NotNull @Singular @Size(max = 128) List<String> tags;
-  // TODO{phoenikx} Add collaborators once there is clarity on the same
-
   @Wither @CreatedDate Long createdAt;
   @Wither @LastModifiedDate Long lastModifiedAt;
   @Wither @Version Long version;
+  @Builder.Default Boolean deleted = Boolean.FALSE;
 }

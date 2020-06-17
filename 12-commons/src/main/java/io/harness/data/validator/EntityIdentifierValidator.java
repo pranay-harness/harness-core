@@ -1,15 +1,27 @@
 package io.harness.data.validator;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import com.google.common.annotations.VisibleForTesting;
+
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 public class EntityIdentifierValidator implements ConstraintValidator<EntityIdentifier, String> {
-  // Min Length : 3 characters
   // Max Length : 64 characters
-  // Chars Allowed : Alphanumeric, Hyphen, Underscore
-  // Should Start & End with Alphanumeric characters
-  private static final Pattern pattern = Pattern.compile("^[a-zA-Z0-9][\\w-_]{1,62}[a-zA-Z0-9]$");
+  // Start with: Alphabets, characters, Underscore  or $
+  // Chars Allowed : Alphanumeric, Underscore, $
+  public static final Pattern IDENTIFIER_PATTERN = Pattern.compile("^[a-zA-Z_$][0-9a-zA-Z_$]{1,63}$");
+  public static final Set<String> NOT_ALLOWED_WORDS =
+      Stream
+          .of("or", "and", "eq", "ne", "lt", "gt", "le", "ge", "div", "mod", "not", "null", "true", "false", "new",
+              "var", "return")
+          .collect(Collectors.toCollection(HashSet::new));
 
   @Override
   public void initialize(EntityIdentifier constraintAnnotation) {
@@ -17,12 +29,17 @@ public class EntityIdentifierValidator implements ConstraintValidator<EntityIden
   }
 
   @Override
-  public boolean isValid(String value, ConstraintValidatorContext context) {
-    return isValidEntityIdentifier(value);
+  public boolean isValid(String identifier, ConstraintValidatorContext context) {
+    return isNotBlank(identifier) && matchesIdentifierPattern(identifier) && hasAllowedWords(identifier);
   }
 
-  // A static method added in case we need to do the same validation on some string w/o the annotation.
-  public static boolean isValidEntityIdentifier(String value) {
-    return value != null && pattern.matcher(value).matches();
+  @VisibleForTesting
+  boolean matchesIdentifierPattern(String identifier) {
+    return IDENTIFIER_PATTERN.matcher(identifier).matches();
+  }
+
+  @VisibleForTesting
+  boolean hasAllowedWords(String identifier) {
+    return identifier != null && !NOT_ALLOWED_WORDS.contains(identifier);
   }
 }

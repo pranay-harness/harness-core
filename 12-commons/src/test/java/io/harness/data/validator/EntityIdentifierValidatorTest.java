@@ -1,45 +1,76 @@
 package io.harness.data.validator;
 
-import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.data.validator.EntityIdentifierValidator.NOT_ALLOWED_WORDS;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import lombok.Builder;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.Random;
-import java.util.regex.Pattern;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
 public class EntityIdentifierValidatorTest {
-  private static final Pattern ALLOWED_CHARS_PATTERN = Pattern.compile("[a-zA-Z0-9-_]+");
+  private Validator validator;
 
   @Builder
   static class EntityIdentifierValidatorTestStructure {
     @EntityIdentifier String identifier;
   }
 
+  @Before
+  public void setUp() {
+    ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+    validator = factory.getValidator();
+  }
+
   @Test
-  @Owner(developers = ANKIT)
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testEntityIdentifierValidator_For_NotAllowedWords() {
+    int violationCount =
+        NOT_ALLOWED_WORDS.stream()
+            .mapToInt(identifier
+                -> validator.validate(EntityIdentifierValidatorTestStructure.builder().identifier(identifier).build())
+                       .size())
+            .sum();
+
+    assertEquals(
+        "Violation count should be same as NOT_ALLOWED_WORDS set size", NOT_ALLOWED_WORDS.size(), violationCount);
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testEntityIdentifierValidator_For_NullValue_And_EmptyString() {
+    assertEquals("Null identifier should not be allowed", 1,
+        validator.validate(EntityIdentifierValidatorTestStructure.builder().build()).size());
+    assertEquals("Null identifier should not be allowed", 1,
+        validator.validate(EntityIdentifierValidatorTestStructure.builder().identifier(" ").build()).size());
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testEntityIdentifierValidator() {
-    assertFalse(EntityIdentifierValidator.isValidEntityIdentifier(null));
+    assertEquals("Null identifier should not be allowed", 1,
+        validator.validate(EntityIdentifierValidatorTestStructure.builder().build()).size());
 
-    ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-    Validator validator = factory.getValidator();
-
+    EntityIdentifierValidator entityIdentifierValidator = new EntityIdentifierValidator();
     for (int i = 0; i < 5000; i++) {
       String identifier = generateRandomAsciiString();
       int violationsCount =
           validator.validate(EntityIdentifierValidatorTestStructure.builder().identifier(identifier).build()).size();
-      if (isValidEntityIdentifier(identifier)) {
+      if (isValidEntityIdentifier(identifier, entityIdentifierValidator)) {
         assertEquals("identifier : " + identifier, 0, violationsCount);
       } else {
         assertTrue("identifier : " + identifier, violationsCount > 0);
@@ -52,16 +83,14 @@ public class EntityIdentifierValidatorTest {
     return random.substring(0, new Random().nextInt(100));
   }
 
-  private static boolean isValidEntityIdentifier(String identifier) {
-    if (identifier == null || identifier.length() < 3 || identifier.length() > 64) {
+  private static boolean isValidEntityIdentifier(
+      String identifier, EntityIdentifierValidator entityIdentifierValidator) {
+    if (isBlank(identifier)) {
       return false;
     }
 
-    char startChar = identifier.charAt(0);
-    char endChar = identifier.charAt(identifier.length() - 1);
-    boolean hasAllowedChars = ALLOWED_CHARS_PATTERN.matcher(identifier).matches();
-
-    return hasAllowedChars && isLetterOrDigit(startChar) && isLetterOrDigit(endChar);
+    return entityIdentifierValidator.matchesIdentifierPattern(identifier)
+        && entityIdentifierValidator.hasAllowedWords(identifier);
   }
 
   private static boolean isLetterOrDigit(char c) {

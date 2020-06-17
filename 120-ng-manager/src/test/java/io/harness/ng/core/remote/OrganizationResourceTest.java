@@ -2,6 +2,7 @@ package io.harness.ng.core.remote;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.rule.OwnerRule.PHOENIKX;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -9,13 +10,15 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.BaseTest;
-import io.harness.ng.core.dto.CreateOrganizationRequest;
+import io.harness.ng.core.dto.CreateOrganizationDTO;
 import io.harness.ng.core.dto.OrganizationDTO;
-import io.harness.ng.core.dto.UpdateOrganizationRequest;
+import io.harness.ng.core.dto.UpdateOrganizationDTO;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.data.domain.Page;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 public class OrganizationResourceTest extends BaseTest {
@@ -25,33 +28,33 @@ public class OrganizationResourceTest extends BaseTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testCreateOrganization() {
-    CreateOrganizationRequest request = random(CreateOrganizationRequest.class);
+    CreateOrganizationDTO createOrganizationDTO = random(CreateOrganizationDTO.class);
 
-    OrganizationDTO organizationDto = organizationResource.createOrganization(request);
+    OrganizationDTO organizationDto = organizationResource.create(createOrganizationDTO);
 
     assertThat(organizationDto).isNotNull();
     assertThat(organizationDto.getId()).isNotNull();
-    assertThat(organizationResource.getOrganization(organizationDto.getId()).orElse(null)).isEqualTo(organizationDto);
+    assertThat(organizationResource.get(organizationDto.getId()).orElse(null)).isEqualTo(organizationDto);
   }
 
   @Test
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testUpdateOrganization() {
-    CreateOrganizationRequest createRequest = random(CreateOrganizationRequest.class);
-    OrganizationDTO createdOrganization = organizationResource.createOrganization(createRequest);
+    CreateOrganizationDTO createRequest = random(CreateOrganizationDTO.class);
+    OrganizationDTO createdOrganization = organizationResource.create(createRequest);
     String organizationId = createdOrganization.getId();
-    UpdateOrganizationRequest updateRequest = random(UpdateOrganizationRequest.class);
+    UpdateOrganizationDTO updateOrganizationDTO = random(UpdateOrganizationDTO.class);
 
     Optional<OrganizationDTO> updatedOrganizationOptional =
-        organizationResource.updateOrganization(organizationId, updateRequest);
+        organizationResource.update(organizationId, updateOrganizationDTO);
 
-    OrganizationDTO updatedOrganization = organizationResource.getOrganization(organizationId).orElse(null);
+    OrganizationDTO updatedOrganization = organizationResource.get(organizationId).orElse(null);
     assertThat(updatedOrganization).isNotNull();
-    assertThat(updateRequest.getColor()).isEqualTo(updatedOrganization.getColor());
-    assertThat(updateRequest.getDescription()).isEqualTo(updatedOrganization.getDescription());
-    assertThat(updateRequest.getTags()).isEqualTo(updatedOrganization.getTags());
-    assertThat(updateRequest.getName()).isEqualTo(updatedOrganization.getName());
+    assertThat(updateOrganizationDTO.getColor()).isEqualTo(updatedOrganization.getColor());
+    assertThat(updateOrganizationDTO.getDescription()).isEqualTo(updatedOrganization.getDescription());
+    assertThat(updateOrganizationDTO.getTags()).isEqualTo(updatedOrganization.getTags());
+    assertThat(updateOrganizationDTO.getName()).isEqualTo(updatedOrganization.getName());
 
     assertThat(updatedOrganization.getAccountId()).isEqualTo(createdOrganization.getAccountId());
     assertThat(updatedOrganization.getIdentifier()).isEqualTo(createdOrganization.getIdentifier());
@@ -62,10 +65,10 @@ public class OrganizationResourceTest extends BaseTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testUpdateNonExistentOrganization() {
-    UpdateOrganizationRequest updateRequest = random(UpdateOrganizationRequest.class);
+    UpdateOrganizationDTO updateRequest = random(UpdateOrganizationDTO.class);
 
     Optional<OrganizationDTO> updatedOrganizationOptional =
-        organizationResource.updateOrganization(randomAlphabetic(10), updateRequest);
+        organizationResource.update(randomAlphabetic(10), updateRequest);
 
     assertThat(updatedOrganizationOptional).isNotPresent();
   }
@@ -75,13 +78,46 @@ public class OrganizationResourceTest extends BaseTest {
   @Category(UnitTests.class)
   public void testListOrganizations() {
     String accountId = randomAlphabetic(10);
-    assertThat(organizationResource.getOrganizationsForAccount(accountId)).isEmpty();
+    assertThat(organizationResource.list(accountId, "", 0, 10, new ArrayList<>())).isEmpty();
 
-    CreateOrganizationRequest createRequest = random(CreateOrganizationRequest.class);
-    createRequest.setAccountId(accountId);
-    OrganizationDTO createdOrganization = organizationResource.createOrganization(createRequest);
+    CreateOrganizationDTO firstOrganizationDTO = random(CreateOrganizationDTO.class);
+    firstOrganizationDTO.setAccountId(accountId);
+    OrganizationDTO firstOrganization = organizationResource.create(firstOrganizationDTO);
 
-    assertThat(organizationResource.getOrganizationsForAccount(accountId)).isNotEmpty();
-    assertThat(organizationResource.getOrganizationsForAccount(accountId)).hasSize(1);
+    assertThat(organizationResource.list(accountId, "", 0, 10, new ArrayList<>())).isNotEmpty();
+    assertThat(organizationResource.list(accountId, "", 0, 10, new ArrayList<>())).hasSize(1);
+
+    CreateOrganizationDTO secondOrganizationDTO = random(CreateOrganizationDTO.class);
+    String secondOrgIdentifier = "test_identifier";
+    secondOrganizationDTO.setAccountId(accountId);
+    secondOrganizationDTO.setIdentifier(secondOrgIdentifier);
+    OrganizationDTO secondOrganization = organizationResource.create(secondOrganizationDTO);
+
+    Page<OrganizationDTO> organizationList =
+        organizationResource.list(accountId, "identifier==" + secondOrgIdentifier, 0, 10, new ArrayList<>());
+
+    assertThat(organizationList.getTotalElements()).isEqualTo(1);
+    assertThat(organizationList.getContent()).isNotNull();
+    assertThat(organizationList.getContent().size()).isEqualTo(1);
+
+    OrganizationDTO fetchedOrganizationDTO = organizationList.getContent().get(0);
+
+    assertThat(fetchedOrganizationDTO.getAccountId()).isEqualTo(accountId);
+    assertThat(fetchedOrganizationDTO.getIdentifier()).isEqualTo(secondOrgIdentifier);
+    assertThat(fetchedOrganizationDTO.getId()).isEqualTo(secondOrganization.getId());
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testDelete() {
+    CreateOrganizationDTO organizationDTO = random(CreateOrganizationDTO.class);
+    String accountId = randomAlphabetic(10);
+    organizationDTO.setAccountId(accountId);
+    OrganizationDTO firstOrganization = organizationResource.create(organizationDTO);
+
+    boolean isDeleted = organizationResource.delete(firstOrganization.getId());
+    assertThat(isDeleted).isTrue();
+    assertThat(organizationResource.get(firstOrganization.getId()).isPresent()).isFalse();
   }
 }

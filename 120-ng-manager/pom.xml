@@ -9,12 +9,25 @@
     <artifactId>120-ng-manager</artifactId>
     <dependencies>
         <dependency>
+            <groupId>com.github.rutledgepaulv</groupId>
+            <artifactId>rest-query-engine</artifactId>
+            <version>0.7.1</version>
+        </dependency>
+        <dependency>
             <groupId>com.smoketurner</groupId>
             <artifactId>dropwizard-swagger</artifactId>
         </dependency>
         <dependency>
             <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-mongodb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.guice</groupId>
+            <artifactId>spring-guice</artifactId>
         </dependency>
         <dependency>
             <groupId>ru.vyarus</groupId>
@@ -107,7 +120,7 @@
                 <groupId>com.github.chrisdchristo</groupId>
                 <artifactId>capsule-maven-plugin</artifactId>
                 <configuration>
-                    <appClass>io.harness.ng.CDNextGenApplication</appClass>
+                    <appClass>io.harness.ng.NextGenApplication</appClass>
                     <type>fat</type>
                     <manifest>
                         <entry>
@@ -142,7 +155,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <configuration>
-                    <mainClass>io.harness.ng.CDNextGenApplication</mainClass>
+                    <mainClass>io.harness.ng.NextGenApplication</mainClass>
                     <arguments>
                         <argument>server</argument>
                         <argument>./config.yml</argument>

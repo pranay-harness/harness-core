@@ -1,17 +1,16 @@
 package io.harness.ng.core.remote;
 
-import com.google.inject.Singleton;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.harness.ng.core.dto.CreateOrganizationRequest;
+import io.harness.ng.core.dto.CreateOrganizationDTO;
 import io.harness.ng.core.dto.OrganizationDTO;
-import io.harness.ng.core.dto.UpdateOrganizationRequest;
+import io.harness.ng.core.dto.UpdateOrganizationDTO;
 import io.harness.ng.core.entities.Organization;
 import lombok.SneakyThrows;
+import lombok.experimental.UtilityClass;
 
-@Singleton
-public final class OrganizationMapper {
-  Organization toOrganization(CreateOrganizationRequest createOrgRequest) {
+@UtilityClass
+public class OrganizationMapper {
+  static Organization toOrganization(CreateOrganizationDTO createOrgRequest) {
     return Organization.builder()
         .accountId(createOrgRequest.getAccountId())
         .tags(createOrgRequest.getTags())
@@ -22,7 +21,7 @@ public final class OrganizationMapper {
         .build();
   }
 
-  OrganizationDTO writeDto(Organization organization) {
+  static OrganizationDTO writeDto(Organization organization) {
     return OrganizationDTO.builder()
         .id(organization.getId())
         .accountId(organization.getAccountId())
@@ -35,8 +34,9 @@ public final class OrganizationMapper {
   }
 
   @SneakyThrows
-  Organization applyUpdateToOrganization(Organization organization, UpdateOrganizationRequest request) {
-    String jsonString = new ObjectMapper().writer().writeValueAsString(request);
+  static Organization applyUpdateToOrganization(
+      Organization organization, UpdateOrganizationDTO updateOrganizationDTO) {
+    String jsonString = new ObjectMapper().writer().writeValueAsString(updateOrganizationDTO);
     return new ObjectMapper().readerForUpdating(organization).readValue(jsonString);
   }
 }

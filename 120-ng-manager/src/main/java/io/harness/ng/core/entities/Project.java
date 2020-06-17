@@ -7,8 +7,8 @@ import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Singular;
-import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -28,7 +28,7 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-@Value
+@Data
 @Builder
 @FieldNameConstants(innerTypeName = "ProjectKeys")
 @Indexes({
@@ -45,10 +45,13 @@ public class Project implements PersistentEntity, AccountAccess {
   @Trimmed @NotEmpty String orgId;
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @EntityName String name;
+  @Trimmed @NotEmpty String color;
+  @NotNull @Size(max = 1024) String purpose;
   @NotNull @Size(max = 1024) String description;
   @Singular @Size(min = 1, max = 128) List<String> owners;
   @NotNull @Singular @Size(max = 128) List<String> tags;
   @Wither @CreatedDate Long createdAt;
   @Wither @LastModifiedDate Long lastModifiedAt;
   @Wither @Version Long version;
+  @Builder.Default Boolean deleted = Boolean.FALSE;
 }
