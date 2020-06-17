@@ -85,6 +85,9 @@ public class ElkDataCollectionInfoV2 extends LogDataCollectionInfoV2 {
 
   @Override
   public Optional<EncryptionConfig> getEncryptionConfig() {
+    if (getEncryptedDataDetails().isEmpty()) {
+      return Optional.empty();
+    }
     return Optional.of(getEncryptedDataDetails().get(0).getEncryptionConfig());
   }
 
