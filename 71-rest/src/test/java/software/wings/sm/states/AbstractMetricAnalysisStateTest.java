@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,8 +49,11 @@ import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
@@ -167,6 +171,19 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse, 1);
     saveMetricAnalysisRecord(RiskLevel.LOW);
+    ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
+
+    validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponse_LowAndNARiskWithLowTolerance() {
+    Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
+    createMetaDataExecutionData(ExecutionStatus.RUNNING);
+    saveAnalysisContext(dataAnalysisResponse, 1);
+    saveMetricAnalysisRecord(RiskLevel.LOW, RiskLevel.NA);
     ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
 
     validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.SUCCESS);
@@ -490,14 +507,15 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
     wingsPersistence.save(analysisContext);
   }
 
-  private void saveMetricAnalysisRecord(RiskLevel riskLevel) {
-    wingsPersistence.save(
-        NewRelicMetricAnalysisRecord.builder()
-            .analysisMinute(5)
-            .appId(appId)
-            .stateExecutionId(stateExecutionId)
-            .metricAnalyses(Lists.newArrayList(
-                NewRelicMetricAnalysis.builder().metricName(generateUuid()).riskLevel(riskLevel).build()))
-            .build());
+  private void saveMetricAnalysisRecord(RiskLevel... riskLevel) {
+    List<NewRelicMetricAnalysis> analyses = new ArrayList<>();
+    Arrays.asList(riskLevel).forEach(
+        risk -> { analyses.add(NewRelicMetricAnalysis.builder().metricName(generateUuid()).riskLevel(risk).build()); });
+    wingsPersistence.save(NewRelicMetricAnalysisRecord.builder()
+                              .analysisMinute(5)
+                              .appId(appId)
+                              .stateExecutionId(stateExecutionId)
+                              .metricAnalyses(analyses)
+                              .build());
   }
 }
