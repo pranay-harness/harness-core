@@ -2,6 +2,8 @@ package software.wings.helpers.ext.gcb.models;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static software.wings.helpers.ext.gcb.models.GcbBuildStatus.QUEUED;
+import static software.wings.helpers.ext.gcb.models.GcbBuildStatus.WORKING;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -41,4 +43,11 @@ public class GcbBuildDetails {
   private List<String> tags;
   private List<String> secrets;
   private Map<String, TimeSpan> timing;
+
+  /**
+   * @return boolean
+   */
+  public boolean isWorking() {
+    return status == WORKING || status == QUEUED;
+  }
 }

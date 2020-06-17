@@ -1,8 +1,12 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.delegate.beans.TaskData.asyncTaskData;
 import static io.harness.rule.OwnerRule.VGLIJIN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -12,6 +16,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.TaskType.GCB;
+import static software.wings.sm.states.GcbState.GcbDelegateResponse.gcbDelegateResponseOf;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -25,12 +31,14 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -39,10 +47,14 @@ import software.wings.api.GcbExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.command.GcbTaskParams;
+import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
+import software.wings.helpers.ext.gcb.models.GcbBuildStatus;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
@@ -114,7 +126,8 @@ public class GcbStateTest extends CategoryTest {
   @Owner(developers = VGLIJIN)
   @Category(UnitTests.class)
   public void shouldMarkActivityAsSuccessTask() {
-    GcbDelegateResponse gcbDelegateResponse = GcbDelegateResponse.builder().activityId("activityId").build();
+    GcbDelegateResponse gcbDelegateResponse = gcbDelegateResponseOf(
+        GcbTaskParams.builder().build(), GcbBuildDetails.builder().status(GcbBuildStatus.SUCCESS).build());
     GcbExecutionData gcbExecutionData = mock(GcbExecutionData.class);
     when(execution.getStateExecutionData()).thenReturn(gcbExecutionData);
     when(execution.getAppId()).thenReturn("appId");
@@ -125,7 +138,8 @@ public class GcbStateTest extends CategoryTest {
 
     state.handleAsyncResponse(execution, response);
     verify(activityService)
-        .updateStatus(gcbDelegateResponse.getActivityId(), execution.getAppId(), gcbExecutionData.getStatus());
+        .updateStatus(
+            gcbDelegateResponse.getParams().getActivityId(), execution.getAppId(), gcbExecutionData.getStatus());
     verify(state).handleSweepingOutput(any(SweepingOutputService.class), eq(execution), eq(gcbExecutionData));
   }
 
@@ -140,5 +154,80 @@ public class GcbStateTest extends CategoryTest {
     String activityUuid = state.createActivity(execution);
     verify(activityService).save(any(Activity.class));
     assertThat(activityUuid).isEqualTo(mockUuid);
+  }
+
+  @Test
+  @Owner(developers = VGLIJIN)
+  @Category(UnitTests.class)
+  public void handleAbortEventShouldSetErrorMessage() {
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+    GcbExecutionData gcbExecutionData = mock(GcbExecutionData.class);
+
+    when(executionContext.getStateExecutionData()).thenReturn(gcbExecutionData);
+    state.handleAbortEvent(executionContext);
+    verify(gcbExecutionData).setErrorMsg(anyString());
+  }
+
+  @Test
+  @Owner(developers = VGLIJIN)
+  @Category(UnitTests.class)
+  public void handleAsyncResponseShouldReturnWIthFailStatus() {
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+    ErrorNotifyResponseData error = ErrorNotifyResponseData.builder().errorMessage("error").build();
+
+    ExecutionResponse expected = ExecutionResponse.builder().executionStatus(FAILED).errorMessage("error").build();
+
+    ExecutionResponse actual = state.handleAsyncResponse(executionContext, ImmutableMap.of("activityId", error));
+
+    assertThat(actual).isEqualTo(expected);
+  }
+
+  @Test
+  @Owner(developers = VGLIJIN)
+  @Category(UnitTests.class)
+  public void shouldStartPollTask() {
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+    GcbDelegateResponse delegateResponse = gcbDelegateResponseOf(
+        GcbTaskParams.builder().build(), GcbBuildDetails.builder().status(GcbBuildStatus.WORKING).build());
+    ExecutionResponse executionResponse = ExecutionResponse.builder().build();
+
+    doReturn(executionResponse).when(state).startPollTask(executionContext, delegateResponse);
+
+    ExecutionResponse actual =
+        state.handleAsyncResponse(executionContext, ImmutableMap.of("activityId", delegateResponse));
+    verify(state).startPollTask(executionContext, delegateResponse);
+    assertThat(actual).isEqualTo(executionResponse);
+  }
+
+  @Test
+  @Owner(developers = VGLIJIN)
+  @Category(UnitTests.class)
+  public void shouldQueuePollDelegateTask() {
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+    GcbTaskParams gcbTaskParams = GcbTaskParams.builder().build();
+    GcbDelegateResponse delegateResponse =
+        gcbDelegateResponseOf(gcbTaskParams, GcbBuildDetails.builder().status(GcbBuildStatus.WORKING).build());
+    GcbExecutionData gcbExecutionData = mock(GcbExecutionData.class);
+
+    doReturn(gcbExecutionData).when(executionContext).getStateExecutionData();
+    when(executionContext.fetchRequiredApp()).thenReturn(mock(Application.class));
+    when(executionContext.fetchRequiredApp().getAccountId()).thenReturn("accountId");
+    when(executionContext.fetchRequiredApp().getAppId()).thenReturn("appId");
+    when(executionContext.fetchInfraMappingId()).thenReturn("infrastructureId");
+
+    ExecutionResponse actual = state.startPollTask(executionContext, delegateResponse);
+    ArgumentCaptor<DelegateTask> delegateTaskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(delegateTaskCaptor.capture());
+
+    assertThat(actual.isAsync()).isTrue();
+    assertThat(actual.getStateExecutionData()).isEqualTo(gcbExecutionData);
+    assertThat(actual.getExecutionStatus()).isEqualTo(RUNNING);
+
+    DelegateTask delegateTask = delegateTaskCaptor.getValue();
+
+    assertThat(delegateTask.getAccountId()).isEqualTo("accountId");
+    assertThat(delegateTask.getAppId()).isEqualTo("appId");
+    assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo("infrastructureId");
+    assertThat(delegateTask.getData()).isEqualTo(asyncTaskData(GCB.name(), gcbTaskParams));
   }
 }

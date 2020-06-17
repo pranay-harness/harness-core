@@ -13,6 +13,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
+import org.jetbrains.annotations.NotNull;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -56,6 +57,7 @@ public class GcbServiceImpl implements GcbService {
     }
   }
 
+  @NotNull
   @Override
   public GcbBuildDetails getBuild(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String projectId, String buildId) {
@@ -64,6 +66,9 @@ public class GcbServiceImpl implements GcbService {
           getRestClient(GcbRestClient.class, GcbRestClient.baseUrl)
               .getBuild(getBasicAuthHeader(gcpConfig, encryptionDetails), projectId, buildId)
               .execute();
+      if (!response.isSuccessful()) {
+        throw new GcbClientException(response.errorBody().string());
+      }
       return response.body();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
@@ -78,7 +83,10 @@ public class GcbServiceImpl implements GcbService {
           getRestClient(GcbRestClient.class, GcbRestClient.baseUrl)
               .runTrigger(getBasicAuthHeader(gcpConfig, encryptionDetails), projectId, triggerId, repoSource)
               .execute();
-      return response.body();
+      if (response.isSuccessful()) {
+        return response.body();
+      }
+      throw new GcbClientException(response.errorBody().string());
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
     }
