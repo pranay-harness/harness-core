@@ -18,7 +18,7 @@ import java.util.Set;
 import javax.ws.rs.Path;
 
 @Getter
-public class CDNextGenConfiguration extends Configuration {
+public class NextGenConfiguration extends Configuration {
   public static final String BASE_PACKAGE = "io.harness.ng";
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;

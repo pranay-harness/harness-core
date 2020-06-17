@@ -49,7 +49,7 @@ mongo:
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
-  indexManagerMode: MANUAL
+  indexManagerMode: AUTO
 
 # [secondary-db]: Uncomment the following if you want to connect to another database
 #secondary-mongo:

@@ -14,11 +14,13 @@ import javax.validation.constraints.Size;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CreateProjectRequest {
+public class CreateProjectDTO {
   @Trimmed @NotEmpty String accountId;
   @Trimmed @NotEmpty String orgId;
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @EntityName String name;
+  @Trimmed @NotEmpty String color;
+  @Size(max = 1024) String purpose;
   @Size(max = 1024) String description = "";
   @Size(min = 1, max = 128) List<String> owners;
   @Size(max = 128) List<String> tags = new ArrayList<>();

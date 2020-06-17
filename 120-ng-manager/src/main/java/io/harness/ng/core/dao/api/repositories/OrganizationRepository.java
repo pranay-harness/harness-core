@@ -4,9 +4,9 @@ import io.harness.annotation.HarnessRepo;
 import io.harness.ng.core.entities.Organization;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
-import java.util.List;
+import java.util.Optional;
 
 @HarnessRepo
 public interface OrganizationRepository extends PagingAndSortingRepository<Organization, String> {
-  List<Organization> findByAccountId(String accountId);
+  Optional<Organization> findByIdAndDeletedNot(String id, boolean deleted);
 }

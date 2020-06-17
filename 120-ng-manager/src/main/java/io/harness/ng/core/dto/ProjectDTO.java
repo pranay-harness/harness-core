@@ -16,6 +16,8 @@ public class ProjectDTO {
   String orgId;
   String identifier;
   String name;
+  String color;
+  String purpose;
   String description;
   List<String> owners;
   List<String> tags;

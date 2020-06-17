@@ -2,7 +2,7 @@ package io.harness.ng;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.ng.CDNextGenConfiguration.getResourceClasses;
+import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -31,11 +31,11 @@ import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 
 @Slf4j
-public class CDNextGenApplication extends Application<CDNextGenConfiguration> {
+public class NextGenApplication extends Application<NextGenConfiguration> {
   private static final String APPLICATION_NAME = "CD NextGen Application";
 
   public static void main(String[] args) throws Exception {
-    new CDNextGenApplication().run(args);
+    new NextGenApplication().run(args);
   }
 
   @Override
@@ -44,24 +44,24 @@ public class CDNextGenApplication extends Application<CDNextGenConfiguration> {
   }
 
   @Override
-  public void initialize(Bootstrap<CDNextGenConfiguration> bootstrap) {
+  public void initialize(Bootstrap<NextGenConfiguration> bootstrap) {
     initializeLogging();
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
-    bootstrap.addBundle(new SwaggerBundle<CDNextGenConfiguration>() {
+    bootstrap.addBundle(new SwaggerBundle<NextGenConfiguration>() {
       @Override
-      protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(CDNextGenConfiguration appConfig) {
+      protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(NextGenConfiguration appConfig) {
         return appConfig.getSwaggerBundleConfiguration();
       }
     });
   }
 
   @Override
-  public void run(CDNextGenConfiguration appConfig, Environment environment) {
-    logger.info("Starting CD Next Gen Application ...");
+  public void run(NextGenConfiguration appConfig, Environment environment) {
+    logger.info("Starting Next Gen Application ...");
 
-    Injector injector = Guice.createInjector(new CDNextGenModule(appConfig));
+    Injector injector = Guice.createInjector(new NextGenModule(appConfig));
 
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
@@ -73,7 +73,7 @@ public class CDNextGenApplication extends Application<CDNextGenConfiguration> {
     registerCharsetResponseFilter(environment, injector);
   }
 
-  private void registerCorsFilter(CDNextGenConfiguration appConfig, Environment environment) {
+  private void registerCorsFilter(NextGenConfiguration appConfig, Environment environment) {
     FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
     String allowedOrigins = String.join(",", appConfig.getAllowedOrigins());
     cors.setInitParameters(of("allowedOrigins", allowedOrigins, "allowedHeaders",

@@ -15,7 +15,7 @@ import javax.validation.constraints.Size;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CreateOrganizationRequest {
+public class CreateOrganizationDTO {
   @Trimmed @NotEmpty String accountId;
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @EntityName String name;
