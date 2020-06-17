@@ -14,6 +14,7 @@ import io.harness.ng.core.dto.UpdateProjectDTO;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.services.api.ProjectService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -47,6 +48,7 @@ public class ProjectResource {
   private final RestQueryFilterParser restQueryFilterParser;
 
   @POST
+  @ApiOperation(value = "Create a Project", nickname = "postProject")
   @Consumes(MediaType.APPLICATION_JSON)
   public ProjectDTO create(@NotNull @Valid CreateProjectDTO createProjectDTO) {
     Project project = projectService.create(toProject(createProjectDTO));
@@ -55,12 +57,14 @@ public class ProjectResource {
 
   @GET
   @Path("{projectId}")
+  @ApiOperation(value = "Gets a Project by id", nickname = "getProject")
   public Optional<ProjectDTO> get(@PathParam("projectId") @NotEmpty String projectId) {
     Optional<Project> project = projectService.get(projectId);
     return project.map(ProjectMapper::writeDTO);
   }
 
   @GET
+  @ApiOperation(value = "Gets Project list", nickname = "getProjectList")
   public Page<ProjectDTO> list(@QueryParam("orgId") String organizationId, @QueryParam("filter") String filterQuery,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
       @QueryParam("sort") List<String> sort) {
@@ -76,6 +80,7 @@ public class ProjectResource {
 
   @PUT
   @Path("{projectId}")
+  @ApiOperation(value = "Update a project by id", nickname = "putProject")
   @Consumes(MediaType.APPLICATION_JSON)
   public Optional<ProjectDTO> update(
       @PathParam("projectId") @NotEmpty String projectId, @NotNull @Valid UpdateProjectDTO updateProjectDTO) {
@@ -89,6 +94,7 @@ public class ProjectResource {
 
   @DELETE
   @Path("{projectId}")
+  @ApiOperation(value = "Delete a project by id", nickname = "deleteProject")
   @Consumes(MediaType.TEXT_HTML)
   public boolean delete(@PathParam("projectId") @NotEmpty String projectId) {
     return projectService.delete(projectId);
