@@ -33,7 +33,10 @@ public class NextGenConfiguration extends Configuration {
     String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
-    defaultSwaggerBundleConfiguration.setHost("{{host}}");
+    defaultSwaggerBundleConfiguration.setHost(
+        "localhost"); // TODO, we should set the appropriate host here ex: qa.harness.io etc
+    defaultSwaggerBundleConfiguration.setTitle("CD NextGen API Reference");
+    defaultSwaggerBundleConfiguration.setVersion("2.0");
 
     return Optional.ofNullable(swaggerBundleConfiguration).orElse(defaultSwaggerBundleConfiguration);
   }

@@ -14,6 +14,7 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.services.api.OrganizationService;
 import io.harness.ng.core.utils.PageUtils;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -45,6 +46,7 @@ public class OrganizationResource {
   private final RestQueryFilterParser restQueryFilterParser;
 
   @POST
+  @ApiOperation(value = "Create an Organization", nickname = "postOrganization")
   public OrganizationDTO create(@NotNull @Valid CreateOrganizationDTO request) {
     Organization organization = organizationService.create(toOrganization(request));
     return writeDto(organization);
@@ -52,12 +54,14 @@ public class OrganizationResource {
 
   @GET
   @Path("{organizationId}")
+  @ApiOperation(value = "Get an Organization", nickname = "getOrganization")
   public Optional<OrganizationDTO> get(@PathParam("organizationId") @NotEmpty String organizationId) {
     Optional<Organization> organizationOptional = organizationService.get(organizationId);
     return organizationOptional.map(OrganizationMapper::writeDto);
   }
 
   @GET
+  @ApiOperation(value = "Get Organization list", nickname = "getOrganizationList")
   public Page<OrganizationDTO> list(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("filter") String filter, @QueryParam("page") @DefaultValue("0") int page,
       @QueryParam("size") @DefaultValue("100") int size, @QueryParam("sort") @DefaultValue("[]") List<String> sort) {
@@ -69,6 +73,7 @@ public class OrganizationResource {
 
   @PUT
   @Path("{organizationId}")
+  @ApiOperation(value = "Update Organization by id", nickname = "putOrganization")
   public Optional<OrganizationDTO> update(@PathParam("organizationId") @NotEmpty String organizationId,
       @NotNull @Valid UpdateOrganizationDTO updateOrganizationDTO) {
     Optional<Organization> organizationOptional = organizationService.get(organizationId);
@@ -83,6 +88,7 @@ public class OrganizationResource {
 
   @DELETE
   @Path("{organizationId}")
+  @ApiOperation(value = "Delete Organization by id", nickname = "deleteOrganization")
   @Consumes(MediaType.TEXT_HTML)
   public boolean delete(@PathParam("organizationId") String organizationId) {
     return organizationService.delete(organizationId);
