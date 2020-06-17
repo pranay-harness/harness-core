@@ -3,6 +3,7 @@ package io.harness.utils;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -30,5 +31,12 @@ public class ProcessControlTest extends CategoryTest {
     String pid = Reflect.on(process).get("pid").toString();
     ProcessControl.ensureKilled(pid, Duration.ofSeconds(5));
     assertThat(process.isAlive()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldNotThrowForNullPid() throws Exception {
+    assertThatCode(() -> ProcessControl.ensureKilled(null, Duration.ofSeconds(5))).doesNotThrowAnyException();
   }
 }
