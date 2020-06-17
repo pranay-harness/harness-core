@@ -5,7 +5,7 @@ import com.google.api.services.iam.v1.model.ServiceAccount;
 import java.io.IOException;
 
 public interface GcpServiceAccountService {
-  ServiceAccount create(String serviceAccountId, String displayName);
+  ServiceAccount create(String serviceAccountId, String displayName) throws IOException;
   void setIamPolicies(String serviceAccountEmail) throws IOException;
   void addRoleToServiceAccount(String serviceAccountEmail, String role);
 }

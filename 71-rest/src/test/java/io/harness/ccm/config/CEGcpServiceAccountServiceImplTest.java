@@ -26,7 +26,7 @@ public class CEGcpServiceAccountServiceImplTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
   private String accountName = "ACCOUNT_NAME";
   private Account account;
-  private String serviceAccountId = "harness-ce-account-name-accou"; // truncation is expected.
+  private String serviceAccountId = "harness-ce-accountname-accou"; // truncation is expected.
   private GcpServiceAccount gcpServiceAccount;
 
   @Mock AccountService accountService;

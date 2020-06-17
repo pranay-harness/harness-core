@@ -28,6 +28,8 @@ import org.mockito.junit.MockitoRule;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
 
+import java.io.IOException;
+
 public class GcpOrganizationServiceImplTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
   private String gcpOrganizationId1 = "GCP_ORGANIZATION_ID_1";
@@ -49,7 +51,7 @@ public class GcpOrganizationServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Before
-  public void setUp() {
+  public void setUp() throws IOException {
     gcpOrganization1 = GcpOrganization.builder()
                            .accountId(accountId)
                            .organizationName(organizationName1)
