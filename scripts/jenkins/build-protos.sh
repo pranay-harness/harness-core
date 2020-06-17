@@ -11,8 +11,8 @@ bazel ${OUTPUT_BASE} build \
   //19-delegate-tasks-beans/src/... \
   //13-grpc-api/src/main/proto/... \
   //20-delegate-beans/src/main/proto/... \
-  //65-delegate-agent-beans/src/main/proto/... \
-  //65-delegate-service-beans/src/main/proto/...
+  //21-delegate-agent-beans/src/main/proto/... \
+  //22-delegate-service-beans/src/main/proto/...
 
 compile_proto_module() {
   module=$1
@@ -37,7 +37,7 @@ compile_proto_module 19-delegate-tasks-beans
 compile_proto_module 13-grpc-api
 
 compile_proto_module 20-delegate-beans
-compile_proto_module 65-delegate-agent-beans
-compile_proto_module 65-delegate-service-beans
+compile_proto_module 21-delegate-agent-beans
+compile_proto_module 22-delegate-service-beans
 
 rm -f bazel-bin bazel-out bazel-portal bazel-testlogs

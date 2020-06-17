@@ -13,8 +13,10 @@
         <module>15-api-services</module>
         <module>19-delegate-tasks-beans</module>
         <module>20-delegate-tasks</module>
-        <module>21-persistence</module>
         <module>20-delegate-beans</module>
+        <module>21-delegate-agent-beans</module>
+        <module>21-persistence</module>
+        <module>22-delegate-service-beans</module>
         <module>24-common-entities</module>
         <module>25-orchestration-beans</module>
         <module>31-orchestration</module>
@@ -22,8 +24,6 @@
         <module>38-execution-plan</module>
         <module>57-command-library-common</module>
         <module>64-events-framework</module>
-        <module>65-delegate-agent-beans</module>
-        <module>65-delegate-service-beans</module>
         <module>66-cv-nextgen-commons</module>
         <module>67-cv-nextgen-rest</module>
         <module>70-delegate-agent</module>
