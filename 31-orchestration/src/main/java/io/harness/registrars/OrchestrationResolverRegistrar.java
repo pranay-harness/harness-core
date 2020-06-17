@@ -3,10 +3,10 @@ package io.harness.registrars;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.services.OutcomeService;
+import io.harness.engine.outcomes.OutcomeService;
+import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.references.RefType;
 import io.harness.registries.registrar.ResolverRegistrar;
-import io.harness.resolver.sweepingoutput.ExecutionSweepingOutputService;
 import io.harness.resolvers.Resolver;
 import org.apache.commons.lang3.tuple.Pair;
 

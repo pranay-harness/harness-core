@@ -14,7 +14,7 @@ import com.google.inject.Singleton;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.services.OutcomeService;
+import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.ExecutionMode;

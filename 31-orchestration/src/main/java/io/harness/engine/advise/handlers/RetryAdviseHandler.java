@@ -10,7 +10,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.DelayEventHelper;
 import io.harness.engine.advise.AdviseHandler;
-import io.harness.engine.helpers.RetryHelper;
+import io.harness.engine.interrupts.helpers.RetryHelper;
 import io.harness.engine.resume.EngineWaitRetryCallback;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;

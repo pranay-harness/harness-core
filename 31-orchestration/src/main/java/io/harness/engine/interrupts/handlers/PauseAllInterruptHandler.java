@@ -13,10 +13,10 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.inject.Inject;
 
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.resume.EngineResumeAllCallback;
-import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.status.PausedStepStatusUpdate;
 import io.harness.engine.status.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;

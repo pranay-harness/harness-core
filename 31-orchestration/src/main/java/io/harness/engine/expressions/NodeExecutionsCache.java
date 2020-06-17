@@ -6,7 +6,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.engine.services.NodeExecutionService;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import lombok.Builder;
 import lombok.Value;

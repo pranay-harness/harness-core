@@ -4,7 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
-import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
+import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.engine.interrupts.steps.SimpleStepAsyncParams;
 import io.harness.facilitator.FacilitatorObtainment;

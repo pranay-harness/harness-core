@@ -1,7 +1,7 @@
 package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
-import io.harness.adviser.impl.retry.RetryAdviserParameters;
+import io.harness.advisers.retry.RetryAdviserParameters;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;

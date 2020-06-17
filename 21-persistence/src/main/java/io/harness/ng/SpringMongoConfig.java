@@ -30,7 +30,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-@EnableMongoRepositories(basePackages = {"io.harness"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
+@EnableMongoRepositories(
+    basePackages = {"io.harness.engine", "io.harness.ng"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
 @EnableMongoAuditing
 @Configuration
 @GuiceModule

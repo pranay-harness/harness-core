@@ -8,10 +8,10 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
-import io.harness.adviser.impl.fail.OnFailAdviserParameters;
-import io.harness.adviser.impl.retry.RetryAdviserParameters;
-import io.harness.adviser.impl.success.OnSuccessAdviser;
-import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
+import io.harness.advisers.fail.OnFailAdviserParameters;
+import io.harness.advisers.retry.RetryAdviserParameters;
+import io.harness.advisers.success.OnSuccessAdviser;
+import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;

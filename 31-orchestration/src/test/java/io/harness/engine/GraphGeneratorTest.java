@@ -11,7 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.services.OutcomeService;
+import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.facilitator.modes.ExecutionMode;

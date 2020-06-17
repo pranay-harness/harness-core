@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.engine.EngineService;
-import io.harness.engine.services.GraphGenerationService;
+import io.harness.engine.graph.GraphGenerationService;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.plan.Plan;
