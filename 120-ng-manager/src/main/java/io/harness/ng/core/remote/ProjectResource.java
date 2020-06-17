@@ -55,14 +55,12 @@ public class ProjectResource {
 
   @GET
   @Path("{projectId}")
-  @Consumes(MediaType.TEXT_HTML)
   public Optional<ProjectDTO> get(@PathParam("projectId") @NotEmpty String projectId) {
     Optional<Project> project = projectService.get(projectId);
     return project.map(ProjectMapper::writeDTO);
   }
 
   @GET
-  @Consumes(MediaType.TEXT_HTML)
   public Page<ProjectDTO> list(@QueryParam("orgId") String organizationId, @QueryParam("filter") String filterQuery,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
       @QueryParam("sort") List<String> sort) {
