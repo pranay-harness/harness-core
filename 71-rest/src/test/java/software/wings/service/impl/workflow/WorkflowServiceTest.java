@@ -4555,6 +4555,30 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void shouldGetWorkflowWithAppId() {
+    Workflow workflow = workflowService.createWorkflow(constructBuildWorkflow());
+
+    Workflow workflowFetched = workflowService.getWorkflow(workflow.getAppId(), workflow.getUuid());
+    assertThat(workflowFetched).isNotNull();
+    assertThat(workflowFetched.getUuid()).isEqualTo(workflow.getUuid());
+    assertThat(workflowFetched.getAppId()).isEqualTo(workflow.getAppId());
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void shouldGetPipelineWithAppIdNull() {
+    Workflow workflow = new Workflow();
+    workflow.setAppId(generateUuid());
+    workflow.setUuid(generateUuid());
+
+    Workflow workflowFetched = workflowService.getWorkflow(workflow.getAppId(), workflow.getUuid());
+    assertThat(workflowFetched).isNull();
+  }
+
+  @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void categoriesForK8sBlueGreenWorkflow() throws IllegalArgumentException {

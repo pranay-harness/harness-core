@@ -422,7 +422,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     Pipeline pipelineFetched = pipelineService.getPipeline(APP_ID, PIPELINE_ID);
     assertThat(pipelineFetched).isNotNull();
     assertThat(pipelineFetched.getUuid()).isEqualTo(PIPELINE_ID);
-    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
+    verify(wingsPersistence, times(1)).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
   @Test
@@ -435,7 +435,7 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     Pipeline pipelineFetched = pipelineService.getPipeline(APP_ID, PIPELINE_ID);
     assertThat(pipelineFetched).isNull();
-    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
+    verify(wingsPersistence, times(1)).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
   @Test
