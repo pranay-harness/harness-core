@@ -92,7 +92,7 @@ func (s *s3Uploader) UploadReader(key string, reader io.Reader) (string, string,
 
 //UploadReaderWithContext calls underlying UploadReaderWithContext with the given context
 func (s *s3Uploader) UploadReaderWithContext(ctx context.Context, key string, reader io.Reader) (string, string, error) {
-	return s.UploadReaderWithContext(ctx, key, reader)
+	return s.uploadReader(ctx, key, reader)
 }
 
 //UploadFile uploads the given file with Background context
