@@ -1,6 +1,8 @@
 package io.harness.cache;
 
 import static io.harness.cache.CacheBackend.REDIS;
+import static io.harness.cache.HarnessCacheManagerImpl.CACHE_PREFIX;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
@@ -35,6 +37,7 @@ public class HarnessCacheManagerImplTest extends CategoryTest {
   private static final String DISABLED_CACHE_NAME = "disabledCache";
   private HarnessCacheManager harnessCacheManager;
   private CacheManager cacheManager;
+  private String cacheNamespace;
 
   @Before
   public void setup() {
@@ -46,6 +49,9 @@ public class HarnessCacheManagerImplTest extends CategoryTest {
                                   .disabledCaches(Collections.singleton(DISABLED_CACHE_NAME))
                                   .build();
     this.harnessCacheManager = new HarnessCacheManagerImpl(cacheManager, cacheConfig);
+    this.cacheNamespace = isEmpty(cacheConfig.getCacheNamespace())
+        ? CACHE_PREFIX
+        : cacheConfig.getCacheNamespace().concat("/").concat(CACHE_PREFIX);
   }
 
   @Test
@@ -53,11 +59,12 @@ public class HarnessCacheManagerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_getCache_shouldReturnCache() {
     String cacheName = "testCache";
-    when(cacheManager.getCache(cacheName, String.class, Object.class)).thenReturn(new NoOpCache<>());
+    String internalCacheName = String.format("%s/%s", cacheNamespace, cacheName);
+    when(cacheManager.getCache(internalCacheName, String.class, Object.class)).thenReturn(new NoOpCache<>());
     Cache<String, Object> cache = harnessCacheManager.getCache(
         cacheName, String.class, Object.class, AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES));
     assertThat(cache).isNotNull();
-    verify(cacheManager, times(1)).getCache(cacheName, String.class, Object.class);
+    verify(cacheManager, times(1)).getCache(internalCacheName, String.class, Object.class);
     verify(cacheManager, times(0)).createCache(any(), any());
   }
 
@@ -66,13 +73,15 @@ public class HarnessCacheManagerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_getCache_shouldCreateCache() {
     String cacheName = "testCache";
+    String internalCacheName = String.format("%s/%s", cacheNamespace, cacheName);
     Factory<ExpiryPolicy> expiryPolicy = AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES);
-    when(cacheManager.getCache(cacheName, String.class, Integer.class)).thenReturn(null);
-    when(cacheManager.createCache(eq(cacheName), any(MutableConfiguration.class))).thenReturn(new NoOpCache<>());
+    when(cacheManager.getCache(internalCacheName, String.class, Integer.class)).thenReturn(null);
+    when(cacheManager.createCache(eq(internalCacheName), any(MutableConfiguration.class)))
+        .thenReturn(new NoOpCache<>());
     Cache<String, Integer> cache = harnessCacheManager.getCache(cacheName, String.class, Integer.class, expiryPolicy);
     assertThat(cache).isNotNull();
-    verify(cacheManager, times(1)).getCache(cacheName, String.class, Integer.class);
-    verify(cacheManager, times(1)).createCache(eq(cacheName), configCaptor.capture());
+    verify(cacheManager, times(1)).getCache(internalCacheName, String.class, Integer.class);
+    verify(cacheManager, times(1)).createCache(eq(internalCacheName), configCaptor.capture());
 
     MutableConfiguration<String, Integer> cacheConfiguration = configCaptor.getValue();
 
@@ -90,14 +99,17 @@ public class HarnessCacheManagerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_getCache_shouldReturnCacheAfterError_Hazelcast() {
     String cacheName = "testCache";
+    String internalCacheName = String.format("%s/%s", cacheNamespace, cacheName);
     Factory<ExpiryPolicy> expiryPolicy = AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES);
-    when(cacheManager.getCache(cacheName, String.class, Integer.class)).thenReturn(null).thenReturn(new NoOpCache<>());
-    when(cacheManager.createCache(eq(cacheName), any(MutableConfiguration.class)))
-        .thenThrow(new CacheException("A cache named " + cacheName + " already exists."));
+    when(cacheManager.getCache(internalCacheName, String.class, Integer.class))
+        .thenReturn(null)
+        .thenReturn(new NoOpCache<>());
+    when(cacheManager.createCache(eq(internalCacheName), any(MutableConfiguration.class)))
+        .thenThrow(new CacheException("A cache named " + internalCacheName + " already exists."));
     Cache<String, Integer> cache = harnessCacheManager.getCache(cacheName, String.class, Integer.class, expiryPolicy);
     assertThat(cache).isNotNull();
-    verify(cacheManager, times(2)).getCache(cacheName, String.class, Integer.class);
-    verify(cacheManager, times(1)).createCache(eq(cacheName), any(MutableConfiguration.class));
+    verify(cacheManager, times(2)).getCache(internalCacheName, String.class, Integer.class);
+    verify(cacheManager, times(1)).createCache(eq(internalCacheName), any(MutableConfiguration.class));
   }
 
   @Test
@@ -105,14 +117,17 @@ public class HarnessCacheManagerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_getCache_shouldReturnCacheAfterError_RedisAndCaffeine() {
     String cacheName = "testCache";
+    String internalCacheName = String.format("%s/%s", cacheNamespace, cacheName);
     Factory<ExpiryPolicy> expiryPolicy = AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES);
-    when(cacheManager.getCache(cacheName, String.class, Integer.class)).thenReturn(null).thenReturn(new NoOpCache<>());
-    when(cacheManager.createCache(eq(cacheName), any(MutableConfiguration.class)))
-        .thenThrow(new CacheException("Cache " + cacheName + " already exists"));
+    when(cacheManager.getCache(internalCacheName, String.class, Integer.class))
+        .thenReturn(null)
+        .thenReturn(new NoOpCache<>());
+    when(cacheManager.createCache(eq(internalCacheName), any(MutableConfiguration.class)))
+        .thenThrow(new CacheException("Cache " + internalCacheName + " already exists"));
     Cache<String, Integer> cache = harnessCacheManager.getCache(cacheName, String.class, Integer.class, expiryPolicy);
     assertThat(cache).isNotNull();
-    verify(cacheManager, times(2)).getCache(cacheName, String.class, Integer.class);
-    verify(cacheManager, times(1)).createCache(eq(cacheName), any(MutableConfiguration.class));
+    verify(cacheManager, times(2)).getCache(internalCacheName, String.class, Integer.class);
+    verify(cacheManager, times(1)).createCache(eq(internalCacheName), any(MutableConfiguration.class));
   }
 
   @Test(expected = CacheException.class)
@@ -120,13 +135,16 @@ public class HarnessCacheManagerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_getCache_shouldThrowError() {
     String cacheName = "testCache";
+    String internalCacheName = String.format("%s/%s", cacheNamespace, cacheName);
     Factory<ExpiryPolicy> expiryPolicy = AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES);
-    when(cacheManager.getCache(cacheName, String.class, Integer.class)).thenReturn(null).thenReturn(new NoOpCache<>());
-    when(cacheManager.createCache(eq(cacheName), any(MutableConfiguration.class)))
+    when(cacheManager.getCache(internalCacheName, String.class, Integer.class))
+        .thenReturn(null)
+        .thenReturn(new NoOpCache<>());
+    when(cacheManager.createCache(eq(internalCacheName), any(MutableConfiguration.class)))
         .thenThrow(new CacheException("Connection failed"));
     Cache<String, Integer> cache = harnessCacheManager.getCache(cacheName, String.class, Integer.class, expiryPolicy);
     assertThat(cache).isNotNull();
-    verify(cacheManager, times(1)).getCache(cacheName, String.class, Integer.class);
-    verify(cacheManager, times(1)).createCache(eq(cacheName), any(MutableConfiguration.class));
+    verify(cacheManager, times(1)).getCache(internalCacheName, String.class, Integer.class);
+    verify(cacheManager, times(1)).createCache(eq(internalCacheName), any(MutableConfiguration.class));
   }
 }

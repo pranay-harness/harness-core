@@ -24,6 +24,7 @@ import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.redisson.config.ReadMode;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +38,7 @@ public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, M
   private static final String ERROR_MESSAGE = "Failed to acquire distributed lock for %s";
 
   @Inject
-  public RedisPersistentLocker(@Named("lock") RedisConfig redisLockConfig) {
+  RedisPersistentLocker(@Named("lock") RedisConfig redisLockConfig) {
     Config config = new Config();
     if (!redisLockConfig.isSentinel()) {
       config.useSingleServer().setAddress(redisLockConfig.getRedisUrl());
@@ -46,6 +47,7 @@ public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, M
       for (String sentinelUrl : redisLockConfig.getSentinelUrls()) {
         config.useSentinelServers().addSentinelAddress(sentinelUrl);
       }
+      config.useSentinelServers().setReadMode(ReadMode.valueOf(redisLockConfig.getReadMode().name()));
     }
     logger.info("Starting redis client");
     this.client = Redisson.create(config);

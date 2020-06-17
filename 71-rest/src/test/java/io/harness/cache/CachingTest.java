@@ -1,4 +1,4 @@
-package software.wings.utils;
+package io.harness.cache;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -82,8 +83,10 @@ public class CachingTest extends WingsBaseTest {
      * @param y the y
      * @return the cacheable object
      */
-    @CacheResult(cacheName = "TestCache")
-    public CacheableObject getCacheableObject(@CacheKey int x, int y) {
+    @CacheResult(
+        cacheName = "TestCache", exceptionCacheName = "ExceptionTestCache", cachedExceptions = WingsException.class)
+    CacheableObject
+    getCacheableObject(@CacheKey int x, int y) {
       CacheableObject toReturn = new CacheableObject();
       toReturn.setX(x);
       callCount++;

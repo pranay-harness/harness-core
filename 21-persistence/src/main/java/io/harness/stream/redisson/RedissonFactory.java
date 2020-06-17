@@ -25,6 +25,7 @@ import org.atmosphere.cpr.AtmosphereServlet;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.redisson.config.ReadMode;
 
 import java.util.Arrays;
 import java.util.List;
@@ -37,6 +38,8 @@ public class RedissonFactory {
   private static final String REDIS_SERVER = RedissonBroadcaster.class.getName() + ".server";
   private static final String REDIS_SENTINELS = RedissonBroadcaster.class.getName() + ".sentinels";
   private static final String REDIS_SENTINEL_MASTER_NAME = RedissonBroadcaster.class.getName() + ".master.name";
+  static final String REDIS_ENV_NAMESPACE = RedissonBroadcaster.class.getName() + ".env.namespace";
+  private static final String REDIS_READ_MODE = RedissonBroadcaster.class.getName() + ".read.mode";
   private enum RedisType { SINGLE, SENTINEL }
 
   static RedissonClient getRedissonClient(AtmosphereConfig config) {
@@ -54,6 +57,8 @@ public class RedissonFactory {
       for (String sentinelAddress : sentinelAddresses) {
         redissonConfig.useSentinelServers().addSentinelAddress(sentinelAddress);
       }
+      ReadMode readMode = ReadMode.valueOf(config.getServletConfig().getInitParameter(REDIS_READ_MODE));
+      redissonConfig.useSentinelServers().setReadMode(readMode);
     }
     redissonConfig.setCodec(new RedissonKryoCodec());
 
@@ -73,7 +78,9 @@ public class RedissonFactory {
       atmosphereServlet.framework()
           .addInitParameter(REDIS_TYPE, RedisType.SENTINEL.toString())
           .addInitParameter(REDIS_SENTINEL_MASTER_NAME, redisConfig.getMasterName())
-          .addInitParameter(REDIS_SENTINELS, String.join(",", redisConfig.getSentinelUrls()));
+          .addInitParameter(REDIS_SENTINELS, String.join(",", redisConfig.getSentinelUrls()))
+          .addInitParameter(REDIS_READ_MODE, redisConfig.getReadMode().name());
     }
+    atmosphereServlet.framework().addInitParameter(REDIS_ENV_NAMESPACE, redisConfig.getEnvNamespace());
   }
 }

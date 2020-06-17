@@ -20,4 +20,5 @@ public class RedisConfig {
   private String redisUrl;
   private List<String> sentinelUrls;
   private String envNamespace;
+  private RedisReadMode readMode;
 }

@@ -14,6 +14,7 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import io.harness.cache.HarnessCacheManager;
+import io.harness.exception.WingsException;
 import io.harness.manage.ManagedExecutorService;
 import io.harness.shell.ShellExecutionService;
 import io.harness.shell.ShellExecutionServiceImpl;
@@ -140,6 +141,14 @@ public class WingsTestModule extends AbstractModule {
         "TestCache", Integer.class, Integer.class, AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES));
   }
 
+  @Provides
+  @Named("ExceptionTestCache")
+  @Singleton
+  public Cache<Integer, WingsException> getExceptionTestCache(HarnessCacheManager harnessCacheManager) {
+    return harnessCacheManager.getCache("ExceptionTestCache", Integer.class, WingsException.class,
+        AccessedExpiryPolicy.factoryOf(Duration.TEN_MINUTES));
+  }
+
   @Override
   protected void configure() {
     DelegateFileManager mockDelegateFileManager = mock(DelegateFileManager.class);
@@ -226,6 +235,8 @@ public class WingsTestModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), TypeLiteral.get(String.class), new TypeLiteral<Cache<?, ?>>() {});
     mapBinder.addBinding("TestCache").to(Key.get(new TypeLiteral<Cache<Integer, Integer>>() {
     }, Names.named("TestCache")));
+    mapBinder.addBinding("ExceptionTestCache").to(Key.get(new TypeLiteral<Cache<Integer, WingsException>>() {
+    }, Names.named("ExceptionTestCache")));
   }
 
   @Provides
