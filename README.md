@@ -318,8 +318,6 @@ portal/tools/go/go_setup.sh
 ### Install Bazel
 4. On mac: `brew install bazel`
    * Other platforms: Install bazel locally by following user guide [here](https://docs.bazel.build/versions/master/install.html). Note that bazel version is automatically managed since then and is guaranteed to be same across all machines for each specific revision.
-5. Install gazelle: `go get github.com/bazelbuild/bazel-gazelle/cmd/gazelle`
-   *  we are using gazelle for bazel build file creation 
 
 
 ### IDE
