@@ -49,7 +49,7 @@ public class ContainerDeploymentManagerHelperTest extends WingsBaseTest {
                                                              .withComputeProviderSettingId(SETTING_ID)
                                                              .build();
 
-    K8sClusterConfig k8sClusterConfig = containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping);
+    K8sClusterConfig k8sClusterConfig = containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping, null);
     assertThat(k8sClusterConfig).isNotNull();
     assertThat(k8sClusterConfig.getCloudProviderName()).isEqualTo(SETTING_NAME);
     assertThat(k8sClusterConfig.getClusterName()).isNull();

@@ -247,8 +247,9 @@ public class ContainerInstanceSyncPerpetualTaskClient
   }
   private K8sClusterConfig getK8sClusterConfig(
       boolean isK8sContainerType, ContainerInfrastructureMapping containerInfrastructureMapping) {
-    return isK8sContainerType ? containerDeploymentManagerHelper.getK8sClusterConfig(containerInfrastructureMapping)
-                              : null;
+    return isK8sContainerType
+        ? containerDeploymentManagerHelper.getK8sClusterConfig(containerInfrastructureMapping, null)
+        : null;
   }
 
   private List<EncryptedDataDetail> getEncryptedDataDetails(

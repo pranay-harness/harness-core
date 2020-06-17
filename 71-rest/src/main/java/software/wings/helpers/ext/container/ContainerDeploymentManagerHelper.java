@@ -148,8 +148,9 @@ public class ContainerDeploymentManagerHelper {
     }
     notNullCheck("SettingAttribute", settingAttribute);
 
-    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
-        (EncryptableSetting) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(),
+            containerInfraMapping.getAppId(), context.getWorkflowExecutionId());
     return ContainerServiceParams.builder()
         .settingAttribute(settingAttribute)
         .containerServiceName(containerServiceName)
@@ -163,7 +164,8 @@ public class ContainerDeploymentManagerHelper {
         .build();
   }
 
-  public K8sClusterConfig getK8sClusterConfig(ContainerInfrastructureMapping containerInfraMapping) {
+  public K8sClusterConfig getK8sClusterConfig(
+      ContainerInfrastructureMapping containerInfraMapping, ExecutionContext context) {
     SettingAttribute settingAttribute;
     AzureKubernetesCluster azureKubernetesCluster = null;
     GcpKubernetesCluster gcpKubernetesCluster = null;
@@ -197,8 +199,9 @@ public class ContainerDeploymentManagerHelper {
     notNullCheck("SettingAttribute", settingAttribute);
     cloudProviderName = settingAttribute.getName();
 
-    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
-        (EncryptableSetting) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(),
+            containerInfraMapping.getAppId(), context != null ? context.getWorkflowExecutionId() : null);
 
     return K8sClusterConfig.builder()
         .cloudProvider(settingAttribute.getValue())

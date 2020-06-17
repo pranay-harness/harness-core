@@ -141,7 +141,7 @@ public class HelmChartConfigHelperService {
 
     HelmRepoConfig helmRepoConfig = (HelmRepoConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptionDataDetails =
-        secretManager.getEncryptionDetails(helmRepoConfig, context.getAppId(), null);
+        secretManager.getEncryptionDetails(helmRepoConfig, context.getAppId(), context.getWorkflowExecutionId());
 
     String repoName = generateRepoName(helmRepoConfig, settingAttribute.getUuid(), context.getWorkflowExecutionId());
 
@@ -158,8 +158,8 @@ public class HelmChartConfigHelperService {
           connectorSettingAttribute);
 
       SettingValue value = connectorSettingAttribute.getValue();
-      List<EncryptedDataDetail> connectorEncryptedDataDetails =
-          secretManager.getEncryptionDetails((EncryptableSetting) value, context.getAppId(), null);
+      List<EncryptedDataDetail> connectorEncryptedDataDetails = secretManager.getEncryptionDetails(
+          (EncryptableSetting) value, context.getAppId(), context.getWorkflowExecutionId());
 
       helmChartConfigParamsBuilder.connectorConfig(value).connectorEncryptedDataDetails(connectorEncryptedDataDetails);
     }
