@@ -20,4 +20,5 @@ public interface EncryptedRecord {
   String getBackupEncryptionKey(); // Only relevant in case of GLOBAL secret manager.
   String getBackupKmsId(); // Only relevant in case of GLOBAL secret manager.
   EncryptionType getBackupEncryptionType(); // Only relevant in case of GLOBAL secret manager.
+  boolean isBase64Encoded();
 }

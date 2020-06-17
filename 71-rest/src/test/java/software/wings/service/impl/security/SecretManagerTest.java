@@ -53,6 +53,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.TemporaryFolder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -80,6 +81,7 @@ import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.GcpKmsService;
@@ -120,6 +122,9 @@ public class SecretManagerTest extends CategoryTest {
   @Inject @InjectMocks private SecretManagerImpl secretManager;
 
   @Rule public ExpectedException expectedEx = ExpectedException.none();
+
+  @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+  @Inject private FileService fileService;
 
   @Before
   public void setup() {
@@ -367,7 +372,7 @@ public class SecretManagerTest extends CategoryTest {
     String kmsId = UUIDGenerator.generateUuid();
     when(mockEncryptedData.getKmsId()).thenReturn(kmsId);
     KmsConfig kmsConfig = mock(KmsConfig.class);
-    when(kmsConfig.isGlobalKms()).thenReturn(true);
+    when(kmsConfig.isGlobalKms()).thenReturn(false);
     when(secretManagerConfigService.getSecretManager(ACCOUNT_ID, kmsId)).thenReturn(kmsConfig);
     String refId = UUIDGenerator.generateUuid();
     when(wingsPersistence.get(EncryptedData.class, refId)).thenReturn(mockEncryptedData);

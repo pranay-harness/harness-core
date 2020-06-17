@@ -683,10 +683,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     for (EncryptedDataParent encryptedDataParent : secretParentsUpdateDetail.getParentsToRemove()) {
       encryptedData.removeParent(encryptedDataParent);
     }
-    if (encryptedData.getParents().isEmpty() && encryptedData.getType() != SettingVariableTypes.SECRET_TEXT) {
-      delete(encryptedData);
-    } else {
-      save(encryptedData);
-    }
+
+    save(encryptedData);
   }
 }

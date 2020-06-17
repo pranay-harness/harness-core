@@ -308,8 +308,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     }
 
     assertThat(wingsPersistence.createQuery(SettingAttribute.class).count()).isEqualTo(0);
-    assertThat(wingsPersistence.createQuery(EncryptedData.class).count())
-        .isEqualTo(expectedNumOfEncryptedRecords - numOfSettingAttributes);
+    assertThat(wingsPersistence.createQuery(EncryptedData.class).count()).isEqualTo(expectedNumOfEncryptedRecords);
   }
 
   protected List<SettingAttribute> getSettingAttributes(String accountId, int numOfSettingAttributes) {

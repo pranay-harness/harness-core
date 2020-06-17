@@ -1,6 +1,9 @@
 package software.wings.service.impl.security;
 
+import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.security.SimpleEncryption.CHARSET;
+import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -10,10 +13,13 @@ import com.google.common.collect.Lists;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.data.encoding.EncodingUtils;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
+import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
@@ -21,8 +27,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.LocalEncryptionConfig;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
@@ -70,5 +78,28 @@ public class EncryptionServiceTest extends CategoryTest {
     for (EncryptableSettingWithEncryptionDetails details : resultDetailsList) {
       assertThat(details.getEncryptableSetting().isDecrypted()).isTrue();
     }
+  }
+
+  @Test
+  @Owner(developers = ANKIT)
+  @Category(UnitTests.class)
+  public void testGetDecryptedValue() {
+    byte[] encryptedBytes =
+        new SimpleEncryption("TestEncryptionKey").encrypt(EncodingUtils.encodeBase64("Dummy").getBytes(CHARSET));
+
+    EncryptedRecordData encryptedRecordData =
+        EncryptedRecordData.builder()
+            .encryptionType(EncryptionType.LOCAL)
+            .encryptionKey("TestEncryptionKey")
+            .base64Encoded(true)
+            .encryptedValue(CHARSET.decode(ByteBuffer.wrap(encryptedBytes)).array())
+            .build();
+
+    EncryptedDataDetail build = EncryptedDataDetail.builder()
+                                    .encryptionConfig(new LocalEncryptionConfig())
+                                    .encryptedData(encryptedRecordData)
+                                    .build();
+
+    assertEquals("Dummy", new String(encryptionService.getDecryptedValue(build)));
   }
 }
