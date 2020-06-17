@@ -29,22 +29,24 @@ public class ProcessControl {
   }
 
   public static void ensureKilled(String pid, Duration timeout) {
-    long timeoutMs = timeout.toMillis();
-    try {
-      int tries = 0;
-      int totalTries = 10;
-      boolean isRunning = new ProcessExecutor().command("kill", "-0", pid).execute().getExitValue() == 0;
-      while (tries < 10 && isRunning) {
-        new ProcessExecutor().command("kill", pid).execute();
-        sleep(Duration.ofMillis(timeoutMs / totalTries));
-        tries += 1;
-        isRunning = new ProcessExecutor().command("kill", "-0", pid).execute().getExitValue() == 0;
+    if (pid != null) {
+      long timeoutMs = timeout.toMillis();
+      try {
+        int tries = 0;
+        int totalTries = 10;
+        boolean isRunning = new ProcessExecutor().command("kill", "-0", pid).execute().getExitValue() == 0;
+        while (tries < 10 && isRunning) {
+          new ProcessExecutor().command("kill", pid).execute();
+          sleep(Duration.ofMillis(timeoutMs / totalTries));
+          tries += 1;
+          isRunning = new ProcessExecutor().command("kill", "-0", pid).execute().getExitValue() == 0;
+        }
+        new ProcessExecutor().command("kill", "-9", pid).execute();
+      } catch (IOException | TimeoutException e) {
+        throw new GeneralException("Error killing process " + pid, e);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
       }
-      new ProcessExecutor().command("kill", "-9", pid).execute();
-    } catch (IOException | TimeoutException e) {
-      throw new GeneralException("Error killing process " + pid, e);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
     }
   }
 }
