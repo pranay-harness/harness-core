@@ -10,6 +10,8 @@ import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
@@ -23,12 +25,12 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 public class GcbExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String buildUrl;
-  private Map<String, String> jobParameters;
-  private Map<String, String> envVars;
-  private String activityId;
-  private Map<String, String> metadata;
-  private String buildId;
-  private String description;
+  @Nullable private Map<String, String> jobParameters;
+  @Nullable private Map<String, String> envVars;
+  @NotNull private String activityId;
+  @Nullable private Map<String, String> metadata;
+  @Nullable private String buildId;
+  @Nullable private String description;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -49,14 +51,26 @@ public class GcbExecutionData extends StateExecutionData implements DelegateTask
       executionDetails.put("envVars", executionDataValue("Environment Variables", removeNullValues(envVars)));
     }
 
-    executionDetails.put("buildNumber", executionDataValue("Build Number", buildId));
-    executionDetails.put("description", executionDataValue("Description", description));
-    executionDetails.put("build", executionDataValue("Build Url", buildUrl));
+    if (isNotEmpty(buildId)) {
+      executionDetails.put("buildNumber", executionDataValue("Build Number", buildId));
+    }
+
+    if (isNotEmpty(description)) {
+      executionDetails.put("description", executionDataValue("Description", description));
+    }
+
+    if (isNotEmpty(buildUrl)) {
+      executionDetails.put("build", executionDataValue("Build Url", buildUrl));
+    }
 
     if (isNotEmpty(metadata)) {
       executionDetails.put("metadata", executionDataValue("Meta-Data", valueOf(removeNullValues(metadata))));
     }
-    executionDetails.put("activityId", executionDataValue("Activity Id", activityId));
+
+    if (isNotEmpty(activityId)) {
+      putNotNull(executionDetails, "activityId", executionDataValue("Activity Id", activityId));
+    }
+
     return executionDetails;
   }
 }

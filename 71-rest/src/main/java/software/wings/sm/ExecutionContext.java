@@ -36,7 +36,7 @@ public interface ExecutionContext {
 
   Object evaluateExpression(String expression, StateExecutionContext stateExecutionContext);
 
-  StateExecutionData getStateExecutionData();
+  <T extends StateExecutionData> T getStateExecutionData();
 
   boolean isRetry();
 
