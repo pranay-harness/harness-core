@@ -10,24 +10,24 @@ import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
-import io.harness.persistence.converters.DurationConverter;
 import io.harness.plan.PlanNode;
 import io.harness.serializer.KryoUtils;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
-import org.mongodb.morphia.annotations.Converters;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Duration;
 import java.util.List;
@@ -38,16 +38,16 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Redesign
 @FieldNameConstants(innerTypeName = "NodeExecutionKeys")
-@Converters({DurationConverter.class})
-@Entity(value = "nodeExecutions")
-public final class NodeExecution implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+@Document("nodeExecutions")
+@TypeAlias("nodeExecutions")
+public final class NodeExecution implements PersistentEntity, UuidAware {
   // Immutable
   @Id String uuid;
   @NotNull String planExecutionId;
   @Singular List<Level> levels;
   @NotNull PlanNode node;
   @NotNull ExecutionMode mode;
-  @Indexed long createdAt;
+  @Default @Indexed(name = "createdAt_1") @CreatedDate Long createdAt = System.currentTimeMillis();
   private Long startTs;
   private Long endTs;
   private Duration initialWaitDuration;
@@ -64,7 +64,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware, Created
   String previousId;
 
   // Mutable
-  long lastUpdatedAt;
+  @Default @LastModifiedDate Long lastUpdatedAt = System.currentTimeMillis();
   Status status;
   private Long expiryTs;
 

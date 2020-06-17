@@ -75,7 +75,7 @@ public class SpringMongoConfig extends AbstractMongoConfiguration {
         converterRegistrar.registerConverters(converterSet);
       }
     } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
-      throw new GeneralException("Failed initializing morphia", e);
+      throw new GeneralException("Failed initializing Spring Data Converters", e);
     }
     return new ArrayList<>(converterSet);
   }

@@ -3,18 +3,20 @@ package io.harness.engine.helpers;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.execution.status.Status.DISCONTINUING;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
-import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toList;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
+import com.mongodb.client.result.UpdateResult;
 import io.harness.ambiance.Ambiance;
 import io.harness.engine.AmbianceHelper;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.interrupts.InterruptProcessingFailedException;
 import io.harness.engine.services.NodeExecutionService;
+import io.harness.engine.services.NodeExecutionUpdateFailedException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.status.Status;
@@ -23,15 +25,14 @@ import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.facilitator.modes.TaskSpawningExecutableResponse;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.persistence.HPersistence;
 import io.harness.plan.PlanNode;
 import io.harness.registries.state.StepRegistry;
 import io.harness.state.Step;
 import io.harness.tasks.TaskExecutor;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -40,15 +41,14 @@ import javax.validation.constraints.NotNull;
 
 @Slf4j
 public class AbortHelper {
-  @Inject @Named("enginePersistence") HPersistence hPersistence;
   @Inject private StepRegistry stepRegistry;
-  @Inject private ExecutionEngine executionEngine;
   @Inject private AmbianceHelper ambianceHelper;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
+  @Inject private MongoTemplate mongoTemplate;
+  @Inject private ExecutionEngine engine;
 
   public void discontinueMarkedInstance(NodeExecution nodeExecution, Status finalStatus) {
-    boolean updated = false;
     try {
       Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
       PlanNode node = nodeExecution.getNode();
@@ -63,24 +63,17 @@ public class AbortHelper {
         ((Abortable) currentState).handleAbort(ambiance, nodeExecution.getResolvedStepParameters(), executableResponse);
       }
 
-      UpdateOperations<NodeExecution> ops = hPersistence.createUpdateOperations(NodeExecution.class);
-      ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
-      ops.set(NodeExecutionKeys.status, finalStatus);
-
-      Query<NodeExecution> query = hPersistence.createQuery(NodeExecution.class, excludeAuthority)
-                                       .filter(NodeExecutionKeys.uuid, nodeExecution.getUuid());
-      NodeExecution updatedNodeExecution = hPersistence.findAndModify(query, ops, HPersistence.returnNewOptions);
-      if (updatedNodeExecution != null) {
-        updated = true;
-        executionEngine.endTransition(updatedNodeExecution, finalStatus, null, null);
-      }
-    } catch (Exception e) {
-      logger.error("Error in discontinuing", e);
-    }
-    if (!updated) {
+      NodeExecution updatedNodeExecution = nodeExecutionService.update(nodeExecution.getUuid(),
+          ops
+          -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()).set(NodeExecutionKeys.status, finalStatus));
+      engine.endTransition(updatedNodeExecution, finalStatus, null, null);
+    } catch (NodeExecutionUpdateFailedException ex) {
       throw new InterruptProcessingFailedException(ABORT_ALL,
           "Abort failed for execution Plan :" + nodeExecution.getPlanExecutionId()
-              + "for NodeExecutionId: " + nodeExecution.getUuid());
+              + "for NodeExecutionId: " + nodeExecution.getUuid(),
+          ex);
+    } catch (Exception e) {
+      logger.error("Error in discontinuing", e);
     }
   }
 
@@ -94,7 +87,7 @@ public class AbortHelper {
       return false;
     }
     List<String> leafInstanceIds = getAllLeafInstanceIds(interrupt, allNodeExecutions, statuses);
-    UpdateOperations<NodeExecution> ops = hPersistence.createUpdateOperations(NodeExecution.class);
+    Update ops = new Update();
     ops.set(NodeExecutionKeys.status, DISCONTINUING);
     ops.addToSet(NodeExecutionKeys.interruptHistories,
         InterruptEffect.builder()
@@ -103,13 +96,10 @@ public class AbortHelper {
             .interruptType(interrupt.getType())
             .build());
 
-    Query<NodeExecution> query = hPersistence.createQuery(NodeExecution.class, excludeAuthority)
-                                     .filter(NodeExecutionKeys.planExecutionId, interrupt.getPlanExecutionId())
-                                     .field(NodeExecutionKeys.uuid)
-                                     .in(leafInstanceIds);
-    // Set the status to DISCONTINUING
-    UpdateResults updateResult = hPersistence.update(query, ops);
-    if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() == 0) {
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(interrupt.getPlanExecutionId()))
+                      .addCriteria(where(NodeExecutionKeys.uuid).in(leafInstanceIds));
+    UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);
+    if (!updateResult.wasAcknowledged()) {
       logger.warn(
           "No NodeExecutions could be marked as DISCONTINUING -  planExecutionId: {}", interrupt.getPlanExecutionId());
       return false;
@@ -129,13 +119,8 @@ public class AbortHelper {
       return allInstanceIds;
     }
 
-    List<NodeExecution> children = hPersistence.createQuery(NodeExecution.class, excludeAuthority)
-                                       .filter(NodeExecutionKeys.planExecutionId, interrupt.getPlanExecutionId())
-                                       .field(NodeExecutionKeys.parentId)
-                                       .in(parentIds)
-                                       .field(NodeExecutionKeys.status)
-                                       .in(statuses)
-                                       .asList();
+    List<NodeExecution> children =
+        nodeExecutionService.fetchChildrenNodeExecutionsByStatuses(interrupt.getPlanExecutionId(), parentIds, statuses);
 
     // get distinct parent Ids
     List<String> parentIdsHavingChildren =

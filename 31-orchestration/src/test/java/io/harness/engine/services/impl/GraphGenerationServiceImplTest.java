@@ -15,12 +15,12 @@ import io.harness.cache.MongoStore;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.services.GraphGenerationService;
 import io.harness.engine.services.PlanExecutionService;
+import io.harness.engine.services.repositories.NodeExecutionRepository;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.ExecutionMode;
-import io.harness.persistence.HPersistence;
 import io.harness.plan.PlanNode;
 import io.harness.presentation.Graph;
 import io.harness.presentation.GraphVertex;
@@ -48,8 +48,8 @@ import java.util.stream.Collectors;
  * Test class for {@link GraphGenerationServiceImpl}
  */
 public class GraphGenerationServiceImplTest extends OrchestrationTest {
-  @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private PlanExecutionService planExecutionService;
+  @Inject private NodeExecutionRepository nodeExecutionRepository;
   @Inject private MongoStore mongoStore;
   @Mock @Named("EngineExecutorService") private ExecutorService executorService;
   @InjectMocks @Inject private GraphGenerationService graphGenerationService;
@@ -88,9 +88,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationTest {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestWithoutCache() {
-    PlanExecution planExecution = PlanExecution.builder().uuid("plan_test_id").createdBy(createdBy()).build();
-    planExecutionService.save(planExecution);
-
+    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
     StepParameters forkStepParams =
         ForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
     NodeExecution fork = NodeExecution.builder()
@@ -131,7 +129,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationTest {
                                       .parentId(fork.getUuid())
                                       .build();
     List<NodeExecution> nodeExecutions = Lists.newArrayList(fork, parallelNode1, parallelNode2);
-    hPersistence.save(nodeExecutions);
+    nodeExecutionRepository.saveAll(nodeExecutions);
 
     Graph graph = graphGenerationService.generateGraph(planExecution.getUuid());
     assertThat(graph).isNotNull();
@@ -152,7 +150,6 @@ public class GraphGenerationServiceImplTest extends OrchestrationTest {
         mongoStore.get(Graph.ALGORITHM_ID, Graph.STRUCTURE_HASH, planExecution.getUuid(), Collections.emptyList());
     assertThat(cachedGraph).isNotNull();
     assertThat(cachedGraph.structureHash()).isEqualTo(Graph.STRUCTURE_HASH);
-    nodeExecutions.forEach(node -> hPersistence.delete(node));
   }
 
   @Test
@@ -160,11 +157,8 @@ public class GraphGenerationServiceImplTest extends OrchestrationTest {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestWithCache() {
-    PlanExecution planExecution = PlanExecution.builder().uuid("plan_test_id").createdBy(createdBy()).build();
-    planExecutionService.save(planExecution);
-
+    PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
     NodeExecution dummyStart = NodeExecution.builder()
-                                   .uuid("node1")
                                    .planExecutionId(planExecution.getUuid())
                                    .mode(ExecutionMode.SYNC)
                                    .node(PlanNode.builder()
@@ -174,7 +168,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationTest {
                                              .identifier("identifier1")
                                              .build())
                                    .build();
-    hPersistence.save(dummyStart);
+    nodeExecutionRepository.save(dummyStart);
 
     GraphVertex vertex = GraphVertex.builder().uuid(dummyStart.getUuid()).name(dummyStart.getNode().getName()).build();
 

@@ -21,7 +21,6 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
 import io.harness.facilitator.modes.chain.child.ChildChainResponse;
-import io.harness.persistence.HPersistence;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.waiter.NotifyCallback;
@@ -34,7 +33,6 @@ public class ChildChainExecutableInvoker implements ExecutableInvoker {
   @Inject private AmbianceHelper ambianceHelper;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
   @Override
@@ -70,7 +68,7 @@ public class ChildChainExecutableInvoker implements ExecutableInvoker {
                                            .parentId(nodeExecution.getUuid())
                                            .additionalInputs(childChainResponse.getAdditionalInputs())
                                            .build();
-    hPersistence.save(childNodeExecution);
+    nodeExecutionService.save(childNodeExecution);
     executorService.submit(
         ExecutionEngineDispatcher.builder().ambiance(clonedAmbiance).executionEngine(engine).build());
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();

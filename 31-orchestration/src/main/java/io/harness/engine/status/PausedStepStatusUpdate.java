@@ -3,9 +3,10 @@ package io.harness.engine.status;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.execution.status.Status.PAUSED;
 import static io.harness.execution.status.Status.flowingStatuses;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.services.PlanExecutionService;
@@ -13,13 +14,13 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.persistence.HPersistence;
-import io.harness.persistence.HQuery;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 
 import java.util.List;
 
 public class PausedStepStatusUpdate implements StepStatusUpdate {
-  @Inject @Named("enginePersistence") private HPersistence hPersistence;
+  @Inject private MongoTemplate mongoTemplate;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
 
@@ -36,13 +37,10 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
     if (nodeExecution.getParentId() == null) {
       return true;
     }
-
-    List<NodeExecution> flowingChildren = hPersistence.createQuery(NodeExecution.class, HQuery.excludeAuthority)
-                                              .filter(NodeExecutionKeys.parentId, nodeExecution.getParentId())
-                                              .field(NodeExecutionKeys.status)
-                                              .in(flowingStatuses())
-                                              .project(NodeExecutionKeys.uuid, true)
-                                              .asList();
+    Query query = query(where(NodeExecutionKeys.parentId).is(nodeExecution.getParentId()))
+                      .addCriteria(where(NodeExecutionKeys.status).in(flowingStatuses()));
+    query.fields().include(NodeExecutionKeys.uuid);
+    List<NodeExecution> flowingChildren = mongoTemplate.find(query, NodeExecution.class);
     if (isEmpty(flowingChildren)) {
       // Update Status
       nodeExecutionService.updateStatusWithOps(nodeExecution.getParentId(), PAUSED,

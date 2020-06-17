@@ -3,6 +3,7 @@ package io.harness.functional;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.FunctionalTestRule.alpn;
 import static io.harness.rule.FunctionalTestRule.alpnJar;
+import static org.springframework.data.domain.Sort.Direction;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
@@ -42,7 +43,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
-import org.mongodb.morphia.query.Sort;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import software.wings.beans.Account;
@@ -237,10 +238,9 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   }
 
   public List<NodeExecution> getNodeExecutions(String planExecutionId) {
-    return wingsPersistence.createQuery(NodeExecution.class, excludeAuthority)
-        .filter(NodeExecutionKeys.planExecutionId, planExecutionId)
-        .order(Sort.descending(NodeExecutionKeys.createdAt))
-        .asList();
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .with(Sort.by(Direction.DESC, NodeExecutionKeys.createdAt));
+    return mongoTemplate.find(query, NodeExecution.class);
   }
 
   public List<Interrupt> getPlanInterrupts(String planExecutionId) {

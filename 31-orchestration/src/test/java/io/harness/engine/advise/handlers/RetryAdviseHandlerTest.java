@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.OrchestrationTest;
 import io.harness.adviser.advise.RetryAdvise;
@@ -13,12 +12,11 @@ import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.services.PlanExecutionService;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
-import io.harness.persistence.HPersistence;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
 import io.harness.state.StepType;
@@ -27,18 +25,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 public class RetryAdviseHandlerTest extends OrchestrationTest {
   @InjectMocks @Inject private RetryAdviseHandler retryAdviseHandler;
-  @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private PlanExecutionService planExecutionService;
-
-  @Mock @Named("EngineExecutorService") private ExecutorService executorService;
+  @Inject private NodeExecutionService nodeExecutionService;
 
   private static final String PLAN_EXECUTION_ID = generateUuid();
   private static final String NODE_EXECUTION_ID = generateUuid();
@@ -72,7 +66,7 @@ public class RetryAdviseHandlerTest extends OrchestrationTest {
                                       .startTs(System.currentTimeMillis())
                                       .status(Status.FAILED)
                                       .build();
-    hPersistence.save(nodeExecution);
+    nodeExecutionService.save(nodeExecution);
     advise = RetryAdvise.builder().waitInterval(0).retryNodeExecutionId(NODE_EXECUTION_ID).build();
   }
 
@@ -82,9 +76,7 @@ public class RetryAdviseHandlerTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldTestHandleAdvise() {
     retryAdviseHandler.handleAdvise(ambiance, advise);
-    List<NodeExecution> executions = hPersistence.createQuery(NodeExecution.class)
-                                         .filter(NodeExecutionKeys.planExecutionId, PLAN_EXECUTION_ID)
-                                         .asList();
+    List<NodeExecution> executions = nodeExecutionService.fetchNodeExecutions(PLAN_EXECUTION_ID);
     assertThat(executions).hasSize(2);
     NodeExecution newNodeExecution =
         executions.stream().filter(ex -> !ex.getUuid().equals(NODE_EXECUTION_ID)).findFirst().orElse(null);

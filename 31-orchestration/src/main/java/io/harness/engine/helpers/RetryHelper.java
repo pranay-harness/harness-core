@@ -1,13 +1,14 @@
 package io.harness.engine.helpers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.persistence.HQuery.excludeAuthority;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import com.mongodb.client.result.UpdateResult;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.engine.AmbianceHelper;
@@ -17,12 +18,11 @@ import io.harness.engine.services.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.status.Status;
-import io.harness.persistence.HPersistence;
 import io.harness.plan.PlanNode;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,60 +33,53 @@ public class RetryHelper {
   @Inject private AmbianceHelper ambianceHelper;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private ExecutionEngine engine;
-  @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
+  @Inject private MongoTemplate mongoTemplate;
 
   public void retryNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(nodeExecutionService.get(nodeExecutionId));
     PlanNode node = nodeExecution.getNode();
-    String newUuid = generateUuid();
+    NodeExecution newNodeExecution = cloneForRetry(nodeExecution);
+
     Ambiance ambiance = ambianceHelper.fetchAmbianceForRetry(nodeExecution);
     ambiance.addLevel(Level.builder()
                           .setupId(node.getUuid())
-                          .runtimeId(newUuid)
+                          .runtimeId(newNodeExecution.getUuid())
                           .stepType(node.getStepType())
                           .identifier(node.getIdentifier())
                           .group(node.getGroup())
                           .build());
-    NodeExecution newNodeExecution = cloneForRetry(nodeExecution);
-    newNodeExecution.setUuid(newUuid);
     newNodeExecution.setLevels(ambiance.getLevels());
-    String savedNodeExecutionId = hPersistence.save(newNodeExecution);
-    updateRelationShips(nodeExecution, savedNodeExecutionId);
+    NodeExecution savedNodeExecution = nodeExecutionService.save(newNodeExecution);
+    updateRelationShips(nodeExecution, savedNodeExecution.getUuid());
     updateOldExecution(nodeExecution);
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(ambiance).executionEngine(engine).build());
   }
 
   private NodeExecution cloneForRetry(NodeExecution nodeExecution) {
     NodeExecution newNodeExecution = nodeExecution.deepCopy();
+    newNodeExecution.setUuid(null);
     newNodeExecution.setStartTs(null);
     newNodeExecution.setStatus(Status.QUEUED);
     List<String> retryIds = isEmpty(nodeExecution.getRetryIds()) ? new ArrayList<>() : nodeExecution.getRetryIds();
     retryIds.add(0, nodeExecution.getUuid());
     newNodeExecution.setRetryIds(retryIds);
     newNodeExecution.setExecutableResponses(new ArrayList<>());
-    return newNodeExecution;
+    return nodeExecutionService.save(newNodeExecution);
   }
 
   private void updateRelationShips(NodeExecution nodeExecution, String newNodeExecutionId) {
-    UpdateOperations<NodeExecution> ops =
-        hPersistence.createUpdateOperations(NodeExecution.class).set(NodeExecutionKeys.previousId, newNodeExecutionId);
-    Query<NodeExecution> query = hPersistence.createQuery(NodeExecution.class, excludeAuthority)
-                                     .filter(NodeExecutionKeys.previousId, nodeExecution.getUuid());
-    UpdateResults updateResult = hPersistence.update(query, ops);
-    if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() == 0) {
+    Update ops = new Update().set(NodeExecutionKeys.previousId, newNodeExecutionId);
+    Query query = query(where(NodeExecutionKeys.previousId).is(nodeExecution.getUuid()));
+    UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);
+    if (updateResult.wasAcknowledged()) {
       logger.warn("No previous nodeExecutions could be updated for this nodeExecutionId: {}", nodeExecution.getUuid());
     }
   }
 
   private void updateOldExecution(NodeExecution nodeExecution) {
-    UpdateOperations<NodeExecution> ops =
-        hPersistence.createUpdateOperations(NodeExecution.class).set(NodeExecutionKeys.oldRetry, Boolean.TRUE);
-    Query<NodeExecution> query = hPersistence.createQuery(NodeExecution.class, excludeAuthority)
-                                     .filter(NodeExecutionKeys.uuid, nodeExecution.getUuid());
-    UpdateResults updateResult = hPersistence.update(query, ops);
-    if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() == 0) {
-      logger.warn("No previous nodeExecutions could be updated for this nodeExecutionId: {}", nodeExecution.getUuid());
-    }
+    Update ops = new Update().set(NodeExecutionKeys.oldRetry, Boolean.TRUE);
+    Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecution.getUuid()));
+    mongoTemplate.findAndModify(query, ops, NodeExecution.class);
   }
 }

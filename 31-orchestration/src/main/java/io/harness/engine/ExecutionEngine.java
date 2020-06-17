@@ -6,7 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.execution.status.Status.RUNNING;
 import static io.harness.execution.status.Status.resumableStatuses;
-import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.ng.SpringDataMongoUtils.setUnset;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.common.base.Preconditions;
@@ -46,7 +46,6 @@ import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.facilitator.PassThroughData;
 import io.harness.logging.AutoLogContext;
-import io.harness.persistence.HPersistence;
 import io.harness.plan.PlanNode;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
@@ -64,8 +63,7 @@ import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -82,7 +80,6 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @OwnedBy(CDC)
 public class ExecutionEngine {
-  @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Injector injector;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
@@ -99,6 +96,7 @@ public class ExecutionEngine {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private InterruptService interruptService;
+  @Inject private MongoTemplate mongoTemplate;
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
@@ -128,8 +126,11 @@ public class ExecutionEngine {
           engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
       StepParameters resolvedStepParameters =
           (StepParameters) engineExpressionService.resolve(ambiance, node.getStepParameters());
-      nodeExecution = Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),
-          ops -> setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters)));
+      if (resolvedStepParameters != null) {
+        nodeExecution = Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),
+            ops -> setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters)));
+      }
+
       facilitateExecution(ambiance, nodeExecution, inputs);
     } catch (Exception exception) {
       handleError(ambiance, exception);
@@ -158,7 +159,7 @@ public class ExecutionEngine {
             .parentId(previousNodeExecution == null ? null : previousNodeExecution.getParentId())
             .previousId(previousNodeExecution == null ? null : previousNodeExecution.getUuid())
             .build();
-    hPersistence.save(nodeExecution);
+    nodeExecutionService.save(nodeExecution);
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).executionEngine(this).build());
   }
 
@@ -220,7 +221,11 @@ public class ExecutionEngine {
   }
 
   public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponse stepResponse) {
-    NodeExecution nodeExecution = concludeNodeExecution(nodeExecutionId, stepResponse);
+    NodeExecution nodeExecution =
+        nodeExecutionService.updateStatusWithOps(nodeExecutionId, stepResponse.getStatus(), ops -> {
+          setUnset(ops, NodeExecutionKeys.endTs, System.currentTimeMillis());
+          setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
+        });
     // TODO => handle before node execution update
     Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
     List<StepOutcomeRef> outcomeRefs = handleOutcomes(ambiance, stepResponse.stepOutcomeMap());
@@ -250,18 +255,6 @@ public class ExecutionEngine {
       return;
     }
     handleAdvise(ambiance, advise);
-  }
-
-  private NodeExecution concludeNodeExecution(@NonNull String nodeExecutionId, @NonNull StepResponse stepResponse) {
-    UpdateOperations<NodeExecution> operations = hPersistence.createUpdateOperations(NodeExecution.class)
-                                                     .set(NodeExecutionKeys.status, stepResponse.getStatus())
-                                                     .set(NodeExecutionKeys.endTs, System.currentTimeMillis());
-    if (stepResponse.getFailureInfo() != null) {
-      operations.set(NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
-    }
-    Query<NodeExecution> query =
-        hPersistence.createQuery(NodeExecution.class).filter(NodeExecutionKeys.uuid, nodeExecutionId);
-    return hPersistence.findAndModify(query, operations, HPersistence.returnNewOptions);
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -306,9 +299,8 @@ public class ExecutionEngine {
     adviseHandler.handleAdvise(ambiance, advise);
   }
 
-  public void resume(String nodeInstanceId, Map<String, ResponseData> response, boolean asyncError) {
-    NodeExecution nodeExecution =
-        hPersistence.createQuery(NodeExecution.class).filter(NodeExecutionKeys.uuid, nodeInstanceId).get();
+  public void resume(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError) {
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
     try (AutoLogContext ignore = ambiance.autoLogContext()) {
       if (!resumableStatuses().contains(nodeExecution.getStatus())) {
@@ -317,7 +309,7 @@ public class ExecutionEngine {
         return;
       }
       if (nodeExecution.getStatus() != RUNNING) {
-        nodeExecution = Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(nodeInstanceId, RUNNING));
+        nodeExecution = Preconditions.checkNotNull(nodeExecutionService.updateStatus(nodeExecutionId, RUNNING));
       }
       executorService.execute(EngineResumeExecutor.builder()
                                   .nodeExecution(nodeExecution)

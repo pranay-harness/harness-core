@@ -1,7 +1,6 @@
 package io.harness.engine;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
@@ -11,7 +10,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.engine.services.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
-import io.harness.persistence.HPersistence;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.plan.input.InputArgs;
@@ -23,7 +21,6 @@ import javax.validation.Valid;
 @OwnedBy(HarnessTeam.CDC)
 @Slf4j
 public class EngineServiceImpl implements EngineService {
-  @Inject @Named("enginePersistence") private HPersistence hPersistence;
   @Inject private ExecutionEngine executionEngine;
   @Inject private PlanExecutionService planExecutionService;
 

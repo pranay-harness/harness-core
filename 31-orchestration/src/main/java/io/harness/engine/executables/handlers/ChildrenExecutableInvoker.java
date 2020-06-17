@@ -26,7 +26,6 @@ import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
-import io.harness.persistence.HPersistence;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.waiter.NotifyCallback;
@@ -39,7 +38,6 @@ import java.util.concurrent.ExecutorService;
 @OwnedBy(CDC)
 @Redesign
 public class ChildrenExecutableInvoker implements ExecutableInvoker {
-  @Inject private HPersistence hPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private ExecutionEngine engine;
   @Inject private NodeExecutionService nodeExecutionService;
@@ -76,7 +74,7 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
                                              .parentId(nodeExecution.getUuid())
                                              .additionalInputs(child.getAdditionalInputs())
                                              .build();
-      hPersistence.save(childNodeExecution);
+      nodeExecutionService.save(childNodeExecution);
       executorService.submit(
           ExecutionEngineDispatcher.builder().ambiance(clonedAmbiance).executionEngine(engine).build());
     }
