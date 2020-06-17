@@ -10,10 +10,10 @@ import io.harness.ccm.cluster.entities.K8sWorkload.K8sWorkloadKeys;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Criteria;
-import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,7 +47,7 @@ public class K8sWorkloadDao {
         (name, values) -> values.forEach(value -> criteriaList.add(query.criteria(LABEL_FIELD + name).equal(value))));
 
     query.or(criteriaList.toArray(new Criteria[0]));
-    return query.asList(new FindOptions());
+    return fetchWorkloads(query.fetch().iterator());
   }
 
   // to get the list of workloads having workload names in the given set and one of the label key equal to label name
@@ -59,14 +59,22 @@ public class K8sWorkloadDao {
                                    .field(K8sWorkloadKeys.name)
                                    .in(workloadNames);
     query.criteria(LABEL_FIELD + labelName).exists();
-    return query.asList(new FindOptions());
+    return fetchWorkloads(query.fetch().iterator());
   }
 
   public List<K8sWorkload> list(Query<K8sWorkload> query) {
-    return query.asList(new FindOptions());
+    return fetchWorkloads(query.fetch().iterator());
   }
 
   private String encode(String decoded) {
     return decoded.replace('.', '~');
+  }
+
+  private List<K8sWorkload> fetchWorkloads(Iterator<K8sWorkload> iterator) {
+    List<K8sWorkload> workloads = new ArrayList<>();
+    while (iterator.hasNext()) {
+      workloads.add(iterator.next());
+    }
+    return workloads;
   }
 }
