@@ -67,4 +67,12 @@ public class CECommunicationsServiceImplTest extends WingsBaseTest {
     communicationsService.update(accountId2, defaultEmail, type, true);
     verify(communicationsDao).save(eq(newCommunications));
   }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testDelete() throws Exception {
+    communicationsService.delete(accountId, email, type);
+    verify(communicationsDao).delete(eq(uuid));
+  }
 }

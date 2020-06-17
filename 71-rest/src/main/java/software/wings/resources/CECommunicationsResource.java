@@ -17,9 +17,11 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.Scope;
 
 import java.util.List;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
@@ -48,6 +50,26 @@ public class CECommunicationsResource {
   public RestResponse update(@QueryParam("accountId") String accountId, @QueryParam("type") CommunicationType type,
       @QueryParam("enable") boolean enable) {
     communicationsService.update(accountId, getUserEmail(), type, enable);
+    return new RestResponse();
+  }
+
+  @POST
+  @Path("{accountId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse enableViaEmail(@PathParam("accountId") String accountId,
+      @QueryParam("type") CommunicationType type, @QueryParam("email") String email) {
+    communicationsService.update(accountId, email, type, true);
+    return new RestResponse();
+  }
+
+  @DELETE
+  @Path("{accountId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse removeEmail(@PathParam("accountId") String accountId, @QueryParam("type") CommunicationType type,
+      @QueryParam("email") String email) {
+    communicationsService.delete(accountId, email, type);
     return new RestResponse();
   }
 

@@ -31,6 +31,14 @@ public class CECommunicationsServiceImpl implements CECommunicationsService {
     }
   }
 
+  @Override
+  public void delete(String accountId, String email, CommunicationType type) {
+    CECommunications entry = get(accountId, email, type);
+    if (entry != null) {
+      ceCommunicationsDao.delete(entry.getUuid());
+    }
+  }
+
   public List<CECommunications> getEnabledEntries(String accountId, CommunicationType type) {
     return ceCommunicationsDao.getEnabledEntries(accountId, type);
   }

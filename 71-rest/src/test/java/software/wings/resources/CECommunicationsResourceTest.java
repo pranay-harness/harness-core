@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -65,5 +66,27 @@ public class CECommunicationsResourceTest extends CategoryTest {
                                   .post(entity(communications, MediaType.APPLICATION_JSON),
                                       new GenericType<RestResponse<CECommunications>>() {}))
         .isInstanceOf(ProcessingException.class);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testAddEmail() {
+    RESOURCES.client()
+        .target(format("/ceCommunications/%s?type=%s&email=%s", accountId, type, email))
+        .request()
+        .post(entity(communications, MediaType.APPLICATION_JSON), new GenericType<RestResponse<CECommunications>>() {});
+    verify(communicationsService).update(accountId, email, type, true);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testRemoveEmail() {
+    RESOURCES.client()
+        .target(format("/ceCommunications/%s?type=%s&email=%s", accountId, type, email))
+        .request()
+        .delete(new GenericType<RestResponse<CECommunications>>() {});
+    verify(communicationsService).delete(accountId, email, type);
   }
 }
