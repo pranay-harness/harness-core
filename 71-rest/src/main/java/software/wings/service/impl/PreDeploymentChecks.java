@@ -33,7 +33,7 @@ public class PreDeploymentChecks {
     this.pipelinePreDeploymentValidator = pipelinePreDeploymentValidator;
   }
 
-  public void checkIfWorkflowUsingRestrictedFeatures(@NotNull Workflow workflow) {
+  void checkIfWorkflowUsingRestrictedFeatures(@NotNull Workflow workflow) {
     String accountType = accountService.getAccountType(workflow.getAccountId()).orElse(AccountType.PAID);
     List<ValidationError> validationErrorList = workflowPreDeploymentValidator.validate(accountType, workflow);
     if (isNotEmpty(validationErrorList)) {
@@ -44,7 +44,7 @@ public class PreDeploymentChecks {
     }
   }
 
-  public void checkIfPipelineUsingRestrictedFeatures(@NotNull Pipeline pipeline) {
+  void checkIfPipelineUsingRestrictedFeatures(@NotNull Pipeline pipeline) {
     String accountType = accountService.getAccountType(pipeline.getAccountId()).orElse(AccountType.PAID);
     List<ValidationError> validationErrorList = pipelinePreDeploymentValidator.validate(accountType, pipeline);
     if (isNotEmpty(validationErrorList)) {

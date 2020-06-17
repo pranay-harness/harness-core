@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.InfrastructureConstants.QUEUING_RC_NAME;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
@@ -52,7 +51,6 @@ import software.wings.beans.deployment.WorkflowVariablesMetadata;
 import software.wings.beans.execution.WorkflowExecutionInfo;
 import software.wings.features.DeploymentHistoryFeature;
 import software.wings.features.api.RestrictedFeature;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -60,7 +58,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
-import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -93,9 +91,11 @@ public class ExecutionResource {
   @Inject private AppService appService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private StateInspectionService stateInspectionService;
-  @Inject private AuthHandler authHandler;
+  @Inject private DeploymentAuthHandler deploymentAuthHandler;
   @Inject private AuthService authService;
   @Inject @Named(DeploymentHistoryFeature.FEATURE_NAME) private RestrictedFeature deploymentHistoryFeature;
+
+  private static final String EXECUTION_DOES_NOT_EXIST = "No workflow execution exists for id: ";
 
   /**
    * List.
@@ -200,18 +200,16 @@ public class ExecutionResource {
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<WorkflowExecution> triggerExecution(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
-    PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, Action.EXECUTE);
-    List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
     if (pipelineId != null && executionArgs != null && executionArgs.getWorkflowType() == WorkflowType.PIPELINE) {
       executionArgs.setPipelineId(pipelineId);
-      authHandler.authorize(permissionAttributeList, asList(appId), pipelineId);
+      deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
     } else {
       if (executionArgs != null) {
         if (executionArgs.getOrchestrationId() != null) {
-          authHandler.authorize(permissionAttributeList, asList(appId), executionArgs.getOrchestrationId());
+          deploymentAuthHandler.authorizeWorkflowExecution(appId, executionArgs.getOrchestrationId());
           authService.checkIfUserAllowedToDeployToEnv(appId, envId);
         } else if (executionArgs.getPipelineId() != null) {
-          authHandler.authorize(permissionAttributeList, asList(appId), executionArgs.getPipelineId());
+          deploymentAuthHandler.authorizePipelineExecution(appId, executionArgs.getPipelineId());
         }
       }
     }
@@ -242,7 +240,8 @@ public class ExecutionResource {
       @QueryParam("parallelIndexToResume") int parallelIndexToResume,
       @QueryParam("workflowExecutionId") String workflowExecutionId) {
     WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
-    requireWorkflowExecution(workflowExecutionId, workflowExecution);
+    notNullCheck(EXECUTION_DOES_NOT_EXIST + workflowExecutionId, workflowExecution);
+    deploymentAuthHandler.authorize(appId, workflowExecution);
     WorkflowExecution resumedExecution =
         workflowExecutionService.triggerPipelineResumeExecution(appId, parallelIndexToResume, workflowExecution);
     resumedExecution.setStateMachine(null);
@@ -253,11 +252,11 @@ public class ExecutionResource {
   @Timed
   @ExceptionMetered
   @Path("resumeStages")
-  @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
+  @AuthRule(permissionType = DEPLOYMENT, action = READ)
   public RestResponse<List<PipelineStageGroupedInfo>> getResumeStages(
       @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workflowExecutionId) {
     WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
-    requireWorkflowExecution(workflowExecutionId, workflowExecution);
+    notNullCheck(EXECUTION_DOES_NOT_EXIST + workflowExecutionId, workflowExecution);
     return new RestResponse<>(workflowExecutionService.getResumeStages(appId, workflowExecution));
   }
 
@@ -265,11 +264,11 @@ public class ExecutionResource {
   @Timed
   @ExceptionMetered
   @Path("resumeHistory")
-  @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
+  @AuthRule(permissionType = DEPLOYMENT, action = READ)
   public RestResponse<List<WorkflowExecution>> getResumeHistory(
       @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workflowExecutionId) {
     WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
-    requireWorkflowExecution(workflowExecutionId, workflowExecution);
+    notNullCheck(EXECUTION_DOES_NOT_EXIST + workflowExecutionId, workflowExecution);
     return new RestResponse<>(workflowExecutionService.getResumeHistory(appId, workflowExecution));
   }
 
@@ -283,6 +282,7 @@ public class ExecutionResource {
       @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workflowExecutionId) {
     WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
     notNullCheck("No Workflow Execution exist for Id: " + workflowExecutionId, workflowExecution);
+    deploymentAuthHandler.authorize(appId, workflowExecution);
     WorkflowExecution rollbackWorkflowExecution =
         workflowExecutionService.triggerRollbackExecutionWorkflow(appId, workflowExecution);
     rollbackWorkflowExecution.setStateMachine(null);
@@ -299,6 +299,7 @@ public class ExecutionResource {
       @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workflowExecutionId) {
     WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
     notNullCheck("No Workflow Execution exist for Id: " + workflowExecutionId, workflowExecution);
+    deploymentAuthHandler.authorize(appId, workflowExecution);
     RollbackConfirmation rollbackConfirmation =
         workflowExecutionService.getOnDemandRollbackConfirmation(appId, workflowExecution);
     return new RestResponse<>(rollbackConfirmation);
@@ -321,29 +322,8 @@ public class ExecutionResource {
       @PathParam("workflowExecutionId") String workflowExecutionId, ExecutionInterrupt executionInterrupt) {
     executionInterrupt.setAppId(appId);
     executionInterrupt.setExecutionUuid(workflowExecutionId);
-    authorize(appId, workflowExecutionId, EXECUTE);
+    deploymentAuthHandler.authorize(appId, workflowExecutionId);
     return new RestResponse<>(workflowExecutionService.triggerExecutionInterrupt(executionInterrupt));
-  }
-
-  private void authorize(String appId, String workflowExecutionId, Action requiredAction) {
-    PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, requiredAction);
-    List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
-    WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
-    if (workflowExecution.getPipelineSummary() != null) {
-      String pipelineId = workflowExecution.getPipelineSummary().getPipelineId();
-      notNullCheck("Pipeline id is null for execution " + workflowExecutionId, pipelineId);
-      authHandler.authorize(permissionAttributeList, asList(appId), pipelineId);
-    } else {
-      String workflowId = workflowExecution.getWorkflowId();
-      notNullCheck("Workflow id is null for execution " + workflowExecutionId, workflowId);
-      authHandler.authorize(permissionAttributeList, asList(appId), workflowId);
-    }
-
-    if (requiredAction == EXECUTE) {
-      String envId = workflowExecution.getEnvId();
-      authService.checkIfUserAllowedToDeployToEnv(appId, envId);
-    }
   }
 
   /**
@@ -361,7 +341,7 @@ public class ExecutionResource {
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<Boolean> updateNotes(@QueryParam("appId") String appId,
       @PathParam("workflowExecutionId") String workflowExecutionId, ExecutionArgs executionArgs) {
-    authorize(appId, workflowExecutionId, EXECUTE);
+    deploymentAuthHandler.authorize(appId, workflowExecutionId);
     return new RestResponse<>(workflowExecutionService.updateNotes(appId, workflowExecutionId, executionArgs));
   }
 
@@ -386,7 +366,7 @@ public class ExecutionResource {
             appId, workflowExecutionId, stateExecutionId, approvalDetails);
 
     if (isEmpty(approvalStateExecutionData.getUserGroups())) {
-      authorize(appId, workflowExecutionId, EXECUTE);
+      deploymentAuthHandler.authorize(appId, workflowExecutionId);
     }
 
     return new RestResponse<>(workflowExecutionService.approveOrRejectExecution(
@@ -544,7 +524,7 @@ public class ExecutionResource {
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<Set<WorkflowExecutionBaseline>> markAsBaseline(@QueryParam("appId") String appId,
       @QueryParam("isBaseline") boolean isBaseline, @PathParam("workflowExecutionId") String workflowExecutionId) {
-    authorize(appId, workflowExecutionId, EXECUTE);
+    deploymentAuthHandler.authorize(appId, workflowExecutionId);
     return new RestResponse<>(workflowExecutionService.markBaseline(appId, workflowExecutionId, isBaseline));
   }
 
@@ -611,7 +591,7 @@ public class ExecutionResource {
 
     if (isEmpty(userGroups)) {
       try {
-        authorize(appId, workflowExecutionId, EXECUTE);
+        deploymentAuthHandler.authorize(appId, workflowExecutionId);
       } catch (WingsException e) {
         ApprovalAuthorization approvalAuthorization = new ApprovalAuthorization();
         approvalAuthorization.setAuthorized(false);
@@ -626,7 +606,7 @@ public class ExecutionResource {
   @Path("{workflowExecutionId}/constraint-executions")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
   public RestResponse<ConcurrentExecutionResponse> getExecutionsForConstraint(@QueryParam("appId") String appId,
       @PathParam("workflowExecutionId") String workflowExecutionId, @QueryParam("unit") String unit,
       @QueryParam("resourceConstraintName") String resourceConstraintName) {
@@ -650,7 +630,7 @@ public class ExecutionResource {
   @Path("nodeSubGraphs/{workflowExecutionId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
   public RestResponse<Map<String, GraphGroup>> getNodeSubGraphs(@QueryParam("appId") String appId,
       @PathParam("workflowExecutionId") String workflowExecutionId, Map<String, List<String>> selectedNodes) {
     if (isEmpty(selectedNodes)) {
@@ -670,9 +650,5 @@ public class ExecutionResource {
       throw new InvalidRequestException("workflowExecutionId is required", USER);
     }
     return new RestResponse<>(workflowExecutionService.getWorkflowExecutionInfo(workflowExecutionId));
-  }
-
-  private void requireWorkflowExecution(String workflowExecutionId, WorkflowExecution workflowExecution) {
-    notNullCheck("No workflow execution exists for id: " + workflowExecutionId, workflowExecution);
   }
 }

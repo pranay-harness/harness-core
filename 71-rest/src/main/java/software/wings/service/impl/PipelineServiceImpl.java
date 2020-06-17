@@ -365,6 +365,11 @@ public class PipelineServiceImpl implements PipelineService {
     return referencedPipelines;
   }
 
+  @Override
+  public Pipeline getPipeline(String appId, String pipelineId) {
+    return wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
+  }
+
   private void ensurePipelineSafeToDelete(Pipeline pipeline) {
     boolean runningExecutions =
         workflowExecutionService.runningExecutionsPresent(pipeline.getAppId(), pipeline.getUuid());

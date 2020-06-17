@@ -412,6 +412,33 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void shouldGetPipelineWithAppId() {
+    Pipeline pipeline = Pipeline.builder().name("pipeline1").appId(APP_ID).uuid(PIPELINE_ID).build();
+
+    when(wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid())).thenReturn(pipeline);
+
+    Pipeline pipelineFetched = pipelineService.getPipeline(APP_ID, PIPELINE_ID);
+    assertThat(pipelineFetched).isNotNull();
+    assertThat(pipelineFetched.getUuid()).isEqualTo(PIPELINE_ID);
+    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void shouldGetPipelineWithAppIdNull() {
+    Pipeline pipeline = Pipeline.builder().name("pipeline1").appId(APP_ID).uuid(PIPELINE_ID).build();
+
+    when(wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid())).thenReturn(null);
+
+    Pipeline pipelineFetched = pipelineService.getPipeline(APP_ID, PIPELINE_ID);
+    assertThat(pipelineFetched).isNull();
+    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
+  }
+
+  @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetPipelineWithServices() {

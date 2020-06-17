@@ -50,7 +50,6 @@ import software.wings.graphql.schema.type.QLPipelineExecution.QLPipelineExecutio
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTag;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute;
-import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.WorkflowLogContext;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -123,8 +122,8 @@ public class PipelineExecutionController {
         .build();
   }
 
-  public QLStartExecutionPayload startPipelineExecution(QLStartExecutionInput triggerExecutionInput,
-      MutationContext mutationContext, List<PermissionAttribute> permissionAttributes) {
+  QLStartExecutionPayload startPipelineExecution(
+      QLStartExecutionInput triggerExecutionInput, MutationContext mutationContext) {
     String appId = triggerExecutionInput.getApplicationId();
     try (AutoLogContext ignore = new AppLogContext(appId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
       String pipelineId = triggerExecutionInput.getEntityId();
@@ -144,7 +143,6 @@ public class PipelineExecutionController {
       Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
       notNullCheck("Pipeline " + pipelineId + " doesn't exist in the specified application " + appId, pipeline, USER);
 
-      authorizePipelineExecution(triggerExecutionInput, permissionAttributes, appId);
       String envId = resolveEnvId(pipeline, variableInputs);
 
       List<String> extraVariables = new ArrayList<>();
@@ -324,15 +322,7 @@ public class PipelineExecutionController {
     }
   }
 
-  public void authorizePipelineExecution(
-      QLStartExecutionInput triggerExecutionInput, List<PermissionAttribute> permissionAttributeList, String appId) {
-    authHandler.authorize(
-        permissionAttributeList, Collections.singletonList(appId), triggerExecutionInput.getEntityId());
-    logger.info("Authorization successful for executing pipeline: {} for User {}", triggerExecutionInput.getEntityId(),
-        UserThreadLocal.get());
-  }
-
-  public List<String> getArtifactNeededServices(QLServiceInputsForExecutionParams parameters) {
+  List<String> getArtifactNeededServices(QLServiceInputsForExecutionParams parameters) {
     String appId = parameters.getApplicationId();
     try (AutoLogContext ignore = new AppLogContext(appId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
       String pipelineId = parameters.getEntityId();

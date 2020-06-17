@@ -701,7 +701,7 @@ public class User extends Base implements Principal {
       return new Builder();
     }
 
-    public Builder passwordExpired(boolean passwordExpired) {
+    Builder passwordExpired(boolean passwordExpired) {
       this.passwordExpired = passwordExpired;
       return this;
     }
@@ -781,7 +781,7 @@ public class User extends Base implements Principal {
       return this;
     }
 
-    public Builder lastLogin(long lastLogin) {
+    Builder lastLogin(long lastLogin) {
       this.lastLogin = lastLogin;
       return this;
     }
@@ -801,12 +801,12 @@ public class User extends Base implements Principal {
       return this;
     }
 
-    public Builder firstLogin(boolean firstLogin) {
+    Builder firstLogin(boolean firstLogin) {
       this.firstLogin = firstLogin;
       return this;
     }
 
-    public Builder statsFetchedOn(long statsFetchedOn) {
+    Builder statsFetchedOn(long statsFetchedOn) {
       this.statsFetchedOn = statsFetchedOn;
       return this;
     }
@@ -851,7 +851,7 @@ public class User extends Base implements Principal {
       return this;
     }
 
-    public Builder totpSecretKey(String totpSecretKey) {
+    Builder totpSecretKey(String totpSecretKey) {
       this.totpSecretKey = totpSecretKey;
       return this;
     }

@@ -1,8 +1,6 @@
 package software.wings.resources;
 
 import static software.wings.common.VerificationConstants.COLLECT_CV_DATA;
-import static software.wings.security.PermissionAttribute.Action.EXECUTE;
-import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 
@@ -23,6 +21,7 @@ import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.apm.APMSetupTestNodeData;
+import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
@@ -40,6 +39,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Slf4j
 public class ContinuousVerificationResource {
+  @Inject private DeploymentAuthHandler deploymentAuthHandler;
   @Inject private ContinuousVerificationService cvManagerService;
 
   @GET
@@ -83,12 +83,12 @@ public class ContinuousVerificationResource {
   @POST
   @Path(VerificationConstants.NOTIFY_WORKFLOW_VERIFICATION_STATE)
   @Timed
-  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE)
   public RestResponse<Boolean> notifyWorkflowVerificationState(@QueryParam("accountId") String accountId,
       @Valid @QueryParam("appId") String appId, @Valid @QueryParam("workflowId") String workflowId,
       @Valid @QueryParam("workflowExecutionId") String workflowExecutionId,
       @Valid @QueryParam("stateExecutionId") String stateExecutionId,
       @Valid @QueryParam("status") ExecutionStatus status) {
+    deploymentAuthHandler.authorizeWithWorkflowExecutionId(appId, workflowExecutionId);
     return new RestResponse<>(cvManagerService.notifyWorkflowVerificationState(appId, stateExecutionId, status));
   }
 

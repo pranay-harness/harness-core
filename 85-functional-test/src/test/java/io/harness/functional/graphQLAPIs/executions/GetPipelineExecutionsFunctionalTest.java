@@ -112,7 +112,7 @@ public class GetPipelineExecutionsFunctionalTest extends AbstractFunctionalTest 
   @Test
   @Owner(developers = POOJA)
   @Category(FunctionalTests.class)
-  public void shouldGetPipelineExecutionwithPipeline() {
+  public void shouldGetPipelineExecutionWithPipeline() {
     Artifact artifact = getArtifact(service, service.getAppId());
     ExecutionArgs executionArgs = prepareExecutionArgs(savedPipeline, Collections.singletonList(artifact));
     WorkflowExecution workflowExecution = startPipeline(application.getAppId(), environment.getUuid(), executionArgs);

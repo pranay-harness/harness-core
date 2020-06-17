@@ -64,7 +64,6 @@ import static software.wings.beans.FeatureName.WE_STATUS_UPDATE;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER;
-import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.sm.InfraMappingSummary.Builder.anInfraMappingSummary;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateType.APPROVAL;
@@ -211,9 +210,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidBaselineConfigurationException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.security.PermissionAttribute;
-import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.ArtifactStreamHelper;
 import software.wings.service.impl.WorkflowTree.WorkflowTreeBuilder;
@@ -223,6 +219,7 @@ import software.wings.service.impl.deployment.checks.DeploymentFreezeChecker;
 import software.wings.service.impl.pipeline.PipelineServiceHelper;
 import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.workflow.queuing.WorkflowConcurrencyHelper;
 import software.wings.service.intfc.AlertService;
@@ -231,7 +228,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
-import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
 import software.wings.service.intfc.BuildSourceService;
@@ -365,13 +361,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private HostService hostService;
   @Inject private WorkflowConcurrencyHelper workflowConcurrencyHelper;
   @Inject private ResourceConstraintService resourceConstraintService;
-  @Inject private AuthService authService;
   @Inject private RollbackStateMachineGenerator rollbackStateMachineGenerator;
   @Inject private ResourceLookupFilterHelper resourceLookupFilterHelper;
   @Inject private PipelineResumeUtils pipelineResumeUtils;
   @Inject private ApiKeyService apiKeyService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private ArtifactStreamHelper artifactStreamHelper;
+  @Inject private DeploymentAuthHandler deploymentAuthHandler;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -492,10 +488,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public boolean approveOrRejectExecution(String appId, List<String> userGroupIds, ApprovalDetails approvalDetails) {
-    if (isNotEmpty(userGroupIds)) {
-      if (!verifyAuthorizedToAcceptOrReject(userGroupIds, asList(appId), null)) {
-        throw new InvalidRequestException("User not authorized to accept or reject the approval");
-      }
+    if (isNotEmpty(userGroupIds) && !verifyAuthorizedToAcceptOrReject(userGroupIds, appId, null)) {
+      throw new InvalidRequestException("User not authorized to accept or reject the approval");
     }
 
     User user = UserThreadLocal.get();
@@ -674,9 +668,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               ApprovalStateExecutionData approvalStateExecutionData = (ApprovalStateExecutionData) stateExecutionData;
               approvalStateExecutionData.setUserGroupList(
                   userGroupService.fetchUserGroupNamesFromIds(approvalStateExecutionData.getUserGroups()));
-              approvalStateExecutionData.setAuthorized(
-                  verifyAuthorizedToAcceptOrReject(approvalStateExecutionData.getUserGroups(),
-                      asList(pipeline.getAppId()), pipelineExecution.getPipelineId()));
+              approvalStateExecutionData.setAuthorized(verifyAuthorizedToAcceptOrReject(
+                  approvalStateExecutionData.getUserGroups(), pipeline.getAppId(), pipelineExecution.getPipelineId()));
               approvalStateExecutionData.setAppId(pipeline.getAppId());
               approvalStateExecutionData.setWorkflowId(pipelineExecution.getPipelineId());
             }
@@ -2095,8 +2088,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public WorkflowExecution triggerRollbackExecutionWorkflow(String appId, WorkflowExecution workflowExecution) {
     try (AutoLogContext ignore1 = new AccountLogContext(workflowExecution.getAccountId(), OVERRIDE_ERROR)) {
-      authorizeOnDemandRollback(appId, workflowExecution);
-
       if (!getOnDemandRollbackAvailable(appId, workflowExecution)) {
         throw new InvalidRequestException("On demand rollback should not be available for this execution");
       }
@@ -2118,20 +2109,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  private void authorizeOnDemandRollback(String appId, WorkflowExecution workflowExecution) {
-    String workflowId = workflowExecution.getWorkflowId();
-    PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, Action.EXECUTE);
-    List<PermissionAttribute> permissionAttributeList = Collections.singletonList(permissionAttribute);
-    authHandler.authorize(permissionAttributeList, Collections.singletonList(appId), workflowId);
-    authService.checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
-  }
-
   @Override
   public RollbackConfirmation getOnDemandRollbackConfirmation(String appId, WorkflowExecution workflowExecution) {
     String accountId = workflowExecution.getAccountId();
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      authorizeOnDemandRollback(appId, workflowExecution);
-
       if (alreadyRolledBack(workflowExecution)) {
         throw new InvalidRequestException("Rollback Execution is not available as already Rolled back");
       }
@@ -3843,7 +3824,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public boolean verifyAuthorizedToAcceptOrReject(List<String> userGroupIds, List<String> appIds, String workflowId) {
+  public boolean verifyAuthorizedToAcceptOrReject(List<String> userGroupIds, String appId, String workflowId) {
     User user = UserThreadLocal.get();
     if (user == null) {
       return true;
@@ -3851,14 +3832,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     if (isEmpty(userGroupIds)) {
       try {
-        if (isEmpty(appIds) || isBlank(workflowId)) {
+        if (isBlank(appId) || isBlank(workflowId)) {
           return true;
         }
-
-        PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, EXECUTE);
-        List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
-
-        authHandler.authorize(permissionAttributeList, appIds, workflowId);
+        deploymentAuthHandler.authorizeWorkflowOrPipelineForExecution(appId, workflowId);
         return true;
       } catch (WingsException e) {
         return false;
@@ -3910,10 +3887,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     ApprovalAuthorization approvalAuthorization = new ApprovalAuthorization();
     approvalAuthorization.setAuthorized(true);
 
-    if (isNotEmpty(userGroupIds)) {
-      if (!verifyAuthorizedToAcceptOrReject(userGroupIds, asList(appId), null)) {
-        approvalAuthorization.setAuthorized(false);
-      }
+    if (isNotEmpty(userGroupIds) && !verifyAuthorizedToAcceptOrReject(userGroupIds, appId, null)) {
+      approvalAuthorization.setAuthorized(false);
     }
 
     return approvalAuthorization;

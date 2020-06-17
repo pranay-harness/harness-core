@@ -300,7 +300,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           .thenComparingInt(Stencil::getDisplayOrder)
           .thenComparing(Stencil::getType);
   private static final String WORKFLOW_WAS_DELETED = "Workflow was deleted";
-  public static final String ORCHESTRATION_WORKFLOW = "OrchestrationWorkflow";
+  private static final String ORCHESTRATION_WORKFLOW = "OrchestrationWorkflow";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StencilPostProcessor stencilPostProcessor;
@@ -572,6 +572,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest) {
     PageResponse<Workflow> response = listWorkflows(pageRequest, 0, false, null);
     return response == null ? new PageResponse<>() : response;
+  }
+
+  @Override
+  public Workflow getWorkflow(String appId, String workflowId) {
+    return wingsPersistence.getWithAppId(Workflow.class, appId, workflowId);
   }
 
   /**

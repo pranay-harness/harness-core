@@ -25,7 +25,8 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.security.PermissionAttribute.Action.CREATE;
 import static software.wings.security.PermissionAttribute.Action.DELETE;
-import static software.wings.security.PermissionAttribute.Action.EXECUTE;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
@@ -755,12 +756,12 @@ public class AuthServiceImpl implements AuthService {
     if (isEmpty(actions)) {
       return Optional.empty();
     }
-
-    AppPermission appPermission = AppPermission.builder()
-                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-                                      .permissionType(PermissionType.ALL_APP_ENTITIES)
-                                      .actions(Sets.newHashSet(READ, UPDATE, DELETE, CREATE, EXECUTE))
-                                      .build();
+    AppPermission appPermission =
+        AppPermission.builder()
+            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+            .permissionType(PermissionType.ALL_APP_ENTITIES)
+            .actions(Sets.newHashSet(READ, UPDATE, DELETE, CREATE, EXECUTE_PIPELINE, EXECUTE_WORKFLOW))
+            .build();
 
     AccountPermissions accountPermissions =
         AccountPermissions.builder()

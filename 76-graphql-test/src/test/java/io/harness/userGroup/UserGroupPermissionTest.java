@@ -764,7 +764,7 @@ mutation {
                              deployments     : {
                                                      %s
                                                },
-                              actions:        [EXECUTE,READ]
+                              actions:        [EXECUTE_WORKFLOW, EXECUTE_PIPELINE,READ]
                              },
                              {
                              permissionType :PIPELINE,
@@ -800,7 +800,9 @@ mutation {
     List<String> envList = Arrays.asList(environment1.getUuid(), environment2.getUuid());
     Set<String> ids = new HashSet<>(envList);
     EnvFilter envFilter = EnvFilter.builder().ids(ids).filterTypes(new HashSet<>(Arrays.asList("SELECTED"))).build();
-    Set<Action> deploymentActions = new HashSet<>(Arrays.asList(Action.EXECUTE, Action.READ));
+    Set<Action> deploymentActions =
+        new HashSet<>(Arrays.asList(Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW, Action.READ));
+
     AppPermission deploymentPermissions = AppPermission.builder()
                                               .permissionType(DEPLOYMENT)
                                               .entityFilter(envFilter)

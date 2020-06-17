@@ -12,9 +12,13 @@ import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
@@ -47,6 +51,7 @@ import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
@@ -59,10 +64,12 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.User;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -75,12 +82,16 @@ import software.wings.resources.WorkflowResource;
 import software.wings.rules.Listeners;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionSimulator;
@@ -100,7 +111,7 @@ import java.util.Map;
  */
 @Listeners(GeneralNotifyEventListener.class)
 public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
-  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject @InjectMocks private WorkflowExecutionService workflowExecutionService;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StateMachineExecutionSimulator stateMachineExecutionSimulator;
@@ -113,6 +124,10 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private ServiceInstanceService serviceInstanceService;
   @Mock private User user;
+  @Mock private DeploymentAuthHandler deploymentAuthHandler;
+  @Mock private WorkflowService workflowService;
+  @Mock private PipelineService pipelineService;
+  @Mock private AuthService authService;
 
   @Before
   public void init() {
@@ -323,8 +338,52 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
     user = eventTestHelper.createUser(null);
     UserThreadLocal.set(user);
     String workflowId = generateUuid();
-    when(authHandler.authorize(any(), any(), any())).thenReturn(true);
-    assertThat(workflowExecutionService.verifyAuthorizedToAcceptOrReject(null, asList(APP_ID), workflowId)).isTrue();
+    Workflow workflow = new Workflow();
+    workflow.setUuid(generateUuid());
+    doNothing().when(deploymentAuthHandler).authorizeWorkflowOrPipelineForExecution(anyString(), anyString());
+    assertThat(workflowExecutionService.verifyAuthorizedToAcceptOrReject(null, APP_ID, workflowId)).isTrue();
+    UserThreadLocal.unset();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void shouldGetApprovalAuthorizationWorkflow() {
+    user = eventTestHelper.createUser(null);
+    UserThreadLocal.set(user);
+
+    Workflow workflow = aWorkflow()
+                            .accountId(generateUuid())
+                            .uuid(generateUuid())
+                            .appId(generateUuid())
+                            .name("workflow-name")
+                            .envId(generateUuid())
+                            .build();
+
+    when(workflowService.getWorkflow(anyString(), anyString())).thenReturn(workflow);
+    doNothing().when(authService).authorize(anyString(), anyList(), anyString(), any(), anyList());
+    assertThat(workflowExecutionService.verifyAuthorizedToAcceptOrReject(null, APP_ID, workflow.getUuid())).isTrue();
+    UserThreadLocal.unset();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void shouldGetApprovalAuthorizationPipeline() {
+    user = eventTestHelper.createUser(null);
+    UserThreadLocal.set(user);
+
+    Pipeline pipeline = Pipeline.builder()
+                            .accountId(generateUuid())
+                            .uuid(generateUuid())
+                            .appId(generateUuid())
+                            .name("pipeline-name")
+                            .build();
+
+    when(pipelineService.getPipeline(anyString(), anyString())).thenReturn(pipeline);
+    doNothing().when(authService).authorize(anyString(), anyList(), anyString(), any(), anyList());
+    assertThat(workflowExecutionService.verifyAuthorizedToAcceptOrReject(null, APP_ID, pipeline.getUuid())).isTrue();
+    UserThreadLocal.unset();
   }
 
   @Test

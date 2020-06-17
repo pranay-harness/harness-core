@@ -1,0 +1,584 @@
+package software.wings.service.impl.security.auth;
+
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UJJAWAL;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.google.inject.Inject;
+
+import io.harness.beans.WorkflowType;
+import io.harness.category.element.UnitTests;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
+import io.harness.rule.Owner;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import software.wings.WingsBaseTest;
+import software.wings.beans.Pipeline;
+import software.wings.beans.User;
+import software.wings.beans.User.Builder;
+import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
+import software.wings.security.UserRequestContext;
+import software.wings.security.UserThreadLocal;
+import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.PipelineSummary;
+
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class DeploymentAuthHandlerTest extends WingsBaseTest {
+  @Mock private AuthService authService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private WorkflowService workflowService;
+  @Mock private PipelineService pipelineService;
+  @InjectMocks @Inject private DeploymentAuthHandler deploymentAuthHandler;
+
+  private static final String appId = generateUuid();
+  private static final String envId = generateUuid();
+  private static final String entityId = generateUuid();
+
+  User user;
+
+  @Before
+  public void setUp() {
+    UserRequestContext userRequestContext = UserRequestContext.builder().accountId(generateUuid()).build();
+    user = Builder.anUser().uuid(generateUuid()).userRequestContext(userRequestContext).build();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowExecutionWithId() {
+    try {
+      UserThreadLocal.set(user);
+      PipelineSummary pipelineSummary =
+          PipelineSummary.builder().pipelineId(entityId).pipelineName("pipeline-name").build();
+      WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                                .uuid(generateUuid())
+                                                .pipelineSummary(pipelineSummary)
+                                                .workflowId(entityId)
+                                                .envId(generateUuid())
+                                                .build();
+
+      when(workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecution.getUuid()))
+          .thenReturn(workflowExecution);
+      doNothing().when(authService).checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
+      doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+
+      deploymentAuthHandler.authorize(appId, workflowExecution.getUuid());
+    } catch (Exception e) {
+      assertThat(e).isNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowExecutionWithIdNullEnvId() {
+    try {
+      UserThreadLocal.set(user);
+      PipelineSummary pipelineSummary =
+          PipelineSummary.builder().pipelineId(entityId).pipelineName("pipeline-name").build();
+      WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                                .uuid(generateUuid())
+                                                .pipelineSummary(pipelineSummary)
+                                                .workflowId(entityId)
+                                                .build();
+
+      when(workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecution.getUuid()))
+          .thenReturn(workflowExecution);
+      doNothing().when(authService).checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
+      doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+
+      deploymentAuthHandler.authorize(appId, workflowExecution.getUuid());
+    } catch (Exception e) {
+      assertThat(e).isNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowExecutionWithIdNullSummary() {
+    try {
+      UserThreadLocal.set(user);
+      WorkflowExecution workflowExecution =
+          WorkflowExecution.builder().uuid(generateUuid()).workflowId(entityId).envId(generateUuid()).build();
+
+      when(workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecution.getUuid()))
+          .thenReturn(workflowExecution);
+      doNothing().when(authService).checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
+      doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+
+      deploymentAuthHandler.authorize(appId, workflowExecution.getUuid());
+    } catch (Exception e) {
+      assertThat(e).isNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowExecutionWithIdNullEnvIdNullSummary() {
+    try {
+      UserThreadLocal.set(user);
+      WorkflowExecution workflowExecution =
+          WorkflowExecution.builder().uuid(generateUuid()).workflowId(entityId).build();
+
+      when(workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecution.getUuid()))
+          .thenReturn(workflowExecution);
+      doNothing().when(authService).checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
+      doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+
+      deploymentAuthHandler.authorize(appId, workflowExecution.getUuid());
+    } catch (Exception e) {
+      assertThat(e).isNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowExecution() {
+    try {
+      UserThreadLocal.set(user);
+      doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      deploymentAuthHandler.authorizeWorkflowExecution(appId, entityId);
+    } catch (Exception e) {
+      assertThat(e).isNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowExecutionWithNullUser() {
+    try {
+      UserThreadLocal.set(null);
+      doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      deploymentAuthHandler.authorizeWorkflowExecution(appId, entityId);
+    } catch (Exception e) {
+      assertThat(e).isNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowExecutionWithUserNotAuthorized() {
+    try {
+      UserThreadLocal.set(user);
+      doThrow(new Exception(ErrorCode.ACCESS_DENIED.getDescription()))
+          .when(authService)
+          .authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      deploymentAuthHandler.authorizeWorkflowExecution(appId, entityId);
+    } catch (Exception e) {
+      assertThat(e).isNotNull();
+      assertThat(e.getMessage()).isNotNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizePipelineExecution() {
+    try {
+      UserThreadLocal.set(user);
+      doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      deploymentAuthHandler.authorizePipelineExecution(appId, entityId);
+    } catch (Exception e) {
+      assertThat(e).isNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizePipelineExecutionWithNullUser() {
+    try {
+      UserThreadLocal.set(null);
+      doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      deploymentAuthHandler.authorizePipelineExecution(appId, entityId);
+    } catch (Exception e) {
+      assertThat(e).isNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizePipelineExecutionWithUserNotAuthorized() {
+    try {
+      UserThreadLocal.set(user);
+      doThrow(new Exception(ErrorCode.ACCESS_DENIED.getDescription()))
+          .when(authService)
+          .authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      deploymentAuthHandler.authorizePipelineExecution(appId, entityId);
+    } catch (Exception e) {
+      assertThat(e).isNotNull();
+      assertThat(e.getMessage()).isNotNull();
+
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowOrPipelineForExecutionForWorkflowUnauthorizedUser() {
+    Workflow workflow = new Workflow();
+    workflow.setUuid(entityId);
+    try {
+      UserThreadLocal.set(user);
+      when(workflowService.getWorkflow(appId, entityId)).thenReturn(workflow);
+
+      doThrow(new Exception(ErrorCode.ACCESS_DENIED.getDescription()))
+          .when(authService)
+          .authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      deploymentAuthHandler.authorizeWorkflowOrPipelineForExecution(appId, entityId);
+    } catch (Exception e) {
+      assertThat(e).isNotNull();
+      assertThat(e.getMessage()).isNotNull();
+
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowOrPipelineForExecutionForWorkflowNullUser() {
+    Workflow workflow = new Workflow();
+    workflow.setUuid(entityId);
+    try {
+      UserThreadLocal.set(null);
+      when(workflowService.getWorkflow(appId, entityId)).thenReturn(workflow);
+
+      doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      deploymentAuthHandler.authorizeWorkflowOrPipelineForExecution(appId, entityId);
+    } catch (Exception e) {
+      assertThat(e).isNull();
+      assertThat(e.getMessage()).isNull();
+
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowOrPipelineForExecutionForWorkflowAuthlUser() {
+    Workflow workflow = new Workflow();
+    workflow.setUuid(entityId);
+    try {
+      UserThreadLocal.set(user);
+      when(workflowService.getWorkflow(appId, entityId)).thenReturn(workflow);
+
+      doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      deploymentAuthHandler.authorizeWorkflowOrPipelineForExecution(appId, entityId);
+    } catch (Exception e) {
+      assertThat(e).isNull();
+      assertThat(e.getMessage()).isNull();
+
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowOrPipelineForExecutionForPipelineWorkflowNull() {
+    Workflow workflow = new Workflow();
+    workflow.setUuid(entityId);
+
+    Pipeline pipeline = new Pipeline();
+    pipeline.setUuid(entityId);
+
+    try {
+      UserThreadLocal.set(user);
+      when(workflowService.getWorkflow(appId, entityId)).thenReturn(null);
+      when(pipelineService.getPipeline(appId, entityId)).thenReturn(null);
+      doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+
+      deploymentAuthHandler.authorizeWorkflowOrPipelineForExecution(appId, entityId);
+    } catch (InvalidRequestException e) {
+      assertThat(e).isNotNull();
+      assertThat(e.getMessage()).isNotNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowOrPipelineForExecutionForPipelineAuthUser() {
+    Workflow workflow = new Workflow();
+    workflow.setUuid(entityId);
+
+    Pipeline pipeline = new Pipeline();
+    pipeline.setUuid(entityId);
+
+    try {
+      UserThreadLocal.set(user);
+      when(workflowService.getWorkflow(appId, entityId)).thenReturn(null);
+      when(pipelineService.getPipeline(appId, entityId)).thenReturn(pipeline);
+      doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+
+      deploymentAuthHandler.authorizeWorkflowOrPipelineForExecution(appId, entityId);
+    } catch (Exception e) {
+      assertThat(e).isNull();
+      assertThat(e.getMessage()).isNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeWorkflowOrPipelineForExecutionForPipelineUnauthUser() {
+    Workflow workflow = new Workflow();
+    workflow.setUuid(entityId);
+
+    Pipeline pipeline = new Pipeline();
+    pipeline.setUuid(entityId);
+
+    try {
+      UserThreadLocal.set(user);
+      when(workflowService.getWorkflow(appId, entityId)).thenReturn(null);
+      when(pipelineService.getPipeline(appId, entityId)).thenReturn(pipeline);
+
+      doThrow(new Exception(ErrorCode.ACCESS_DENIED.getDescription()))
+          .when(authService)
+          .authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      deploymentAuthHandler.authorizeWorkflowOrPipelineForExecution(appId, entityId);
+    } catch (Exception e) {
+      assertThat(e).isNotNull();
+      assertThat(e.getMessage()).isNotNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeFromWorkflowExecutionUnAuthuser() {
+    Workflow workflow = new Workflow();
+    workflow.setUuid(entityId);
+
+    Pipeline pipeline = new Pipeline();
+    pipeline.setUuid(entityId);
+
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .appId(appId)
+                                              .uuid(generateUuid())
+                                              .workflowType(WorkflowType.ORCHESTRATION)
+                                              .workflowId(entityId)
+                                              .build();
+
+    try {
+      UserThreadLocal.set(user);
+      when(workflowService.getWorkflow(appId, entityId)).thenReturn(null);
+      when(pipelineService.getPipeline(appId, entityId)).thenReturn(pipeline);
+
+      doThrow(new Exception(ErrorCode.ACCESS_DENIED.getDescription()))
+          .when(authService)
+          .authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      deploymentAuthHandler.authorize(appId, workflowExecution);
+      verify(authService, times(0)).checkIfUserAllowedToDeployToEnv(eq(appId), anyString());
+    } catch (Exception e) {
+      assertThat(e).isNotNull();
+      assertThat(e.getMessage()).isNotNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeFromWorkflowExecutionUnAuthuserForPipeline() {
+    Workflow workflow = new Workflow();
+    workflow.setUuid(entityId);
+
+    Pipeline pipeline = new Pipeline();
+    pipeline.setUuid(entityId);
+
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .appId(appId)
+                                              .uuid(generateUuid())
+                                              .workflowType(WorkflowType.PIPELINE)
+                                              .workflowId(entityId)
+                                              .build();
+
+    try {
+      UserThreadLocal.set(user);
+      when(workflowService.getWorkflow(appId, entityId)).thenReturn(null);
+      when(pipelineService.getPipeline(appId, entityId)).thenReturn(pipeline);
+
+      doThrow(new Exception(ErrorCode.ACCESS_DENIED.getDescription()))
+          .when(authService)
+          .authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      deploymentAuthHandler.authorize(appId, workflowExecution);
+      verify(authService, times(0)).checkIfUserAllowedToDeployToEnv(eq(appId), anyString());
+    } catch (Exception e) {
+      assertThat(e).isNotNull();
+      assertThat(e.getMessage()).isNotNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeFromWorkflowExecutionIdUnAuthuser() {
+    Workflow workflow = new Workflow();
+    workflow.setUuid(entityId);
+
+    Pipeline pipeline = new Pipeline();
+    pipeline.setUuid(entityId);
+
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .appId(appId)
+                                              .uuid(generateUuid())
+                                              .workflowType(WorkflowType.ORCHESTRATION)
+                                              .workflowId(entityId)
+                                              .build();
+
+    try {
+      UserThreadLocal.set(user);
+      when(workflowService.getWorkflow(appId, entityId)).thenReturn(null);
+      when(pipelineService.getPipeline(appId, entityId)).thenReturn(pipeline);
+
+      doThrow(new Exception(ErrorCode.ACCESS_DENIED.getDescription()))
+          .when(authService)
+          .authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      when(workflowExecutionService.getWorkflowExecution(appId, workflowExecution.getUuid()))
+          .thenReturn(workflowExecution);
+      deploymentAuthHandler.authorizeWithWorkflowExecutionId(appId, workflowExecution.getUuid());
+      verify(authService, times(0)).checkIfUserAllowedToDeployToEnv(eq(appId), anyString());
+    } catch (Exception e) {
+      assertThat(e).isNotNull();
+      assertThat(e.getMessage()).isNotNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeFromWorkflowExecutionIdAuthuser() {
+    Workflow workflow = new Workflow();
+    workflow.setUuid(entityId);
+
+    Pipeline pipeline = new Pipeline();
+    pipeline.setUuid(entityId);
+
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .envId(envId)
+                                              .appId(appId)
+                                              .uuid(generateUuid())
+                                              .workflowType(WorkflowType.ORCHESTRATION)
+                                              .workflowId(entityId)
+                                              .build();
+
+    try {
+      UserThreadLocal.set(user);
+      when(workflowService.getWorkflow(appId, entityId)).thenReturn(null);
+      when(pipelineService.getPipeline(appId, entityId)).thenReturn(pipeline);
+
+      doThrow(new Exception(ErrorCode.ACCESS_DENIED.getDescription()))
+          .when(authService)
+          .authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      when(workflowExecutionService.getWorkflowExecution(appId, workflowExecution.getUuid()))
+          .thenReturn(workflowExecution);
+      doNothing().when(authService).checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
+      deploymentAuthHandler.authorize(appId, workflowExecution);
+      verify(authService, atLeastOnce()).checkIfUserAllowedToDeployToEnv(eq(appId), eq(workflowExecution.getEnvId()));
+    } catch (Exception e) {
+      assertThat(e).isNotNull();
+      assertThat(e.getMessage()).isNotNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void testAuthorizeFromWorkflowExecutionIdAuthusers() {
+    Workflow workflow = new Workflow();
+    workflow.setUuid(entityId);
+
+    Pipeline pipeline = new Pipeline();
+    pipeline.setUuid(entityId);
+
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .envId(envId)
+                                              .appId(appId)
+                                              .uuid(generateUuid())
+                                              .workflowType(WorkflowType.ORCHESTRATION)
+                                              .workflowId(entityId)
+                                              .build();
+
+    try {
+      UserThreadLocal.set(user);
+      when(workflowService.getWorkflow(appId, entityId)).thenReturn(null);
+      when(pipelineService.getPipeline(appId, entityId)).thenReturn(pipeline);
+
+      doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+      when(workflowExecutionService.getWorkflowExecution(appId, workflowExecution.getUuid()))
+          .thenReturn(workflowExecution);
+      doNothing().when(authService).checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
+      deploymentAuthHandler.authorizeWithWorkflowExecutionId(appId, workflowExecution.getUuid());
+      verify(authService, atLeastOnce()).checkIfUserAllowedToDeployToEnv(eq(appId), eq(workflowExecution.getEnvId()));
+    } catch (Exception e) {
+      assertThat(e).isNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+}

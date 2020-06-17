@@ -526,38 +526,6 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Test(expected = Test.None.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testAuthorizeTriggerPipelineResume() {
-    authorizeExecuteDeployments();
-    pipelineResumeUtils.authorizeTriggerPipelineResume(APP_ID, prepareFailedPipelineExecution());
-  }
-
-  @Test(expected = Exception.class)
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
-  public void testAuthorizeTriggerPipelineResumeFailure() {
-    authorizeReadDeployments();
-    pipelineResumeUtils.authorizeTriggerPipelineResume(APP_ID, prepareFailedPipelineExecution());
-  }
-
-  @Test(expected = Test.None.class)
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
-  public void testAuthorizeReadPipelineResume() {
-    authorizeReadDeployments();
-    pipelineResumeUtils.authorizeReadPipelineResume(APP_ID, prepareFailedPipelineExecution());
-  }
-
-  @Test(expected = Exception.class)
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
-  public void testAuthorizeReadPipelineResumeFailure() {
-    authorizeExecuteDeployments();
-    pipelineResumeUtils.authorizeReadPipelineResume(APP_ID, prepareFailedPipelineExecution());
-  }
-
-  @Test(expected = Test.None.class)
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
   public void testCheckPipelineResumeAvailable() {
     WorkflowExecution workflowExecution = prepareFailedPipelineExecutionWithNotActiveExecutions();
     pipelineResumeUtils.checkPipelineResumeAvailable(workflowExecution);
@@ -712,10 +680,6 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
 
   private void authorizeReadDeployments() {
     authorizeDeployments(Action.READ);
-  }
-
-  private void authorizeExecuteDeployments() {
-    authorizeDeployments(Action.EXECUTE);
   }
 
   private void authorizeDeployments(Action action) {

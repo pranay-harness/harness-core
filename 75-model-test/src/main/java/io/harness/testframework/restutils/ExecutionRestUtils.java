@@ -44,11 +44,6 @@ public class ExecutionRestUtils {
                                                                          .body(executionArgs, ObjectMapperType.GSON)
                                                                          .post("/executions")
                                                                          .as(workflowExecutionType.getType());
-
-    assertThat(savedWorkflowExecutionResponse.getResource())
-        .withFailMessage(savedWorkflowExecutionResponse.toString())
-        .isNotNull();
-
     return savedWorkflowExecutionResponse.getResource();
   }
 
@@ -107,7 +102,7 @@ public class ExecutionRestUtils {
     return status;
   }
 
-  public static String getWorkflowExecutionStatus(
+  private static String getWorkflowExecutionStatus(
       String bearerToken, Account account, String appId, String executionId) {
     Map<Object, Object> resource = getWorkflowExecution(bearerToken, account, appId, executionId);
     return resource.get("status").toString();
