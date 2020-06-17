@@ -408,7 +408,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 : windowEndTimeManager;
 
             Preconditions.checkState(
-                isNotEmpty(instances), "No instances found for application %s" + dataCollectionInfo.getNewRelicAppId());
+                isNotEmpty(instances), "No instances found for application %s", dataCollectionInfo.getNewRelicAppId());
             logger.debug("AnalysisType is Predictive. So we're collecting metrics by application instead of host/node");
             callables.add(() -> fetchAndSaveMetricsForNode(instances.get(0), metricBatches, endTimeForCollection));
           } else {
