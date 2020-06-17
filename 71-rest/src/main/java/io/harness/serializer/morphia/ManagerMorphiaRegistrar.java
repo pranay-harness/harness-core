@@ -380,7 +380,6 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
-import software.wings.beans.ecs.ECSPollingJobEntity;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
@@ -856,7 +855,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(EcrArtifactStream.class);
     set.add(EcsContainerTask.class);
     set.add(EcsInfrastructureMapping.class);
-    set.add(ECSPollingJobEntity.class);
     set.add(EcsServiceSpecification.class);
     set.add(ElasticsearchBulkMigrationJob.class);
     set.add(ElkCVConfiguration.class);

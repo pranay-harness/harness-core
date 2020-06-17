@@ -165,7 +165,6 @@ import software.wings.scheduler.YamlChangeSetPruneJob;
 import software.wings.scheduler.account.LicenseCheckHandler;
 import software.wings.scheduler.approval.ApprovalPollingHandler;
 import software.wings.scheduler.audit.EntityAuditRecordHandler;
-import software.wings.scheduler.ecs.ECSPollingHandler;
 import software.wings.scheduler.events.segment.SegmentGroupEventJob;
 import software.wings.scheduler.marketplace.gcp.GCPBillingHandler;
 import software.wings.scheduler.persistance.PersistentLockCleanup;
@@ -766,7 +765,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(InstanceSyncHandler.class).registerIterators();
     injector.getInstance(LicenseCheckHandler.class).registerIterators();
     injector.getInstance(ApprovalPollingHandler.class).registerIterators();
-    injector.getInstance(ECSPollingHandler.class).registerIterators();
     injector.getInstance(GCPBillingHandler.class).registerIterators();
     injector.getInstance(SegmentGroupEventJob.class).registerIterators();
     injector.getInstance(BarrierServiceImpl.class).registerIterators();
