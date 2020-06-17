@@ -586,4 +586,35 @@ public class KubernetesResourceTest extends CategoryTest {
       assertThat(dep.getSpec().getTemplate().getMetadata().getCreationTimestamp()).isNull();
     });
   }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testTriggersInDeploymentConfig() throws Exception {
+    UnaryOperator<Object> appendRevision = t -> t + "-1";
+
+    URL url = this.getClass().getResource("/deployment-config-null-trigger.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    String oldName = (String) resource.getField("metadata.name");
+    resource.transformName(appendRevision);
+    assertThat(resource.getField("metadata.name")).isEqualTo(oldName + "-1");
+    assertThat(resource.getField("spec.triggers")).isNull();
+
+    url = this.getClass().getResource("/deployment-config.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    resource = processYaml(fileContents).get(0);
+    oldName = (String) resource.getField("metadata.name");
+    resource.transformName(appendRevision);
+    assertThat(resource.getField("metadata.name")).isEqualTo(oldName + "-1");
+    assertThat(resource.getField("spec.triggers[0].type")).isEqualTo("ConfigChange");
+
+    url = this.getClass().getResource("/deployment-config-empty-triggers.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    resource = processYaml(fileContents).get(0);
+    oldName = (String) resource.getField("metadata.name");
+    resource.transformName(appendRevision);
+    assertThat(resource.getField("metadata.name")).isEqualTo(oldName + "-1");
+    assertThat((List) resource.getField("spec.triggers")).isEmpty();
+  }
 }
