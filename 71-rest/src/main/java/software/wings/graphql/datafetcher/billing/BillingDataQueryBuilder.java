@@ -200,9 +200,6 @@ public class BillingDataQueryBuilder {
       if (!isGroupByClusterTypePresent(groupBy)) {
         addClusterTypeGroupBy(groupBy);
       }
-      if (!isGroupByClusterNamePresent(groupBy)) {
-        addClusterNameGroupBy(groupBy);
-      }
     }
 
     selectQuery.addCustomFromTable(schema.getBillingDataTable());
@@ -680,16 +677,8 @@ public class BillingDataQueryBuilder {
     return groupByList.stream().anyMatch(groupBy -> groupBy == QLCCMEntityGroupBy.Cluster);
   }
 
-  private boolean isGroupByClusterNamePresent(List<QLCCMEntityGroupBy> groupByList) {
-    return groupByList.stream().anyMatch(groupBy -> groupBy == QLCCMEntityGroupBy.ClusterName);
-  }
-
   private boolean isGroupByClusterTypePresent(List<QLCCMEntityGroupBy> groupByList) {
     return groupByList.stream().anyMatch(groupBy -> groupBy == QLCCMEntityGroupBy.ClusterType);
-  }
-
-  public void addClusterNameGroupBy(List<QLCCMEntityGroupBy> groupByList) {
-    groupByList.add(QLCCMEntityGroupBy.ClusterName);
   }
 
   public void addClusterTypeGroupBy(List<QLCCMEntityGroupBy> groupByList) {
