@@ -8,8 +8,8 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.inject.Inject;
 
-import io.harness.engine.services.NodeExecutionService;
-import io.harness.engine.services.PlanExecutionService;
+import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.ExecutionInterruptType;

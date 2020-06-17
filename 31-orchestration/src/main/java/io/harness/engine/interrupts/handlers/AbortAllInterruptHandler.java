@@ -14,10 +14,10 @@ import static io.harness.interrupts.Interrupt.State.PROCESSING;
 
 import com.google.inject.Inject;
 
-import io.harness.engine.helpers.AbortHelper;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
-import io.harness.engine.services.NodeExecutionService;
+import io.harness.engine.interrupts.helpers.AbortHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;

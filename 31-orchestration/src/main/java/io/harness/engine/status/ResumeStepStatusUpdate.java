@@ -5,8 +5,8 @@ import static io.harness.execution.status.Status.RUNNING;
 
 import com.google.inject.Inject;
 
-import io.harness.engine.services.NodeExecutionService;
-import io.harness.engine.services.PlanExecutionService;
+import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.ExecutionInterruptType;

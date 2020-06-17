@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.services.OutcomeService;
+import io.harness.engine.outcomes.OutcomeService;
 import io.harness.expression.LateBindingMap;
 import io.harness.references.OutcomeRefObject;
 import lombok.Builder;

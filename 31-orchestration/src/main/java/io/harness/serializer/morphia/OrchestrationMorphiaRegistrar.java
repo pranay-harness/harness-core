@@ -1,8 +1,8 @@
 package io.harness.serializer.morphia;
 
-import io.harness.adviser.impl.ignore.IgnoreAdviserParameters;
-import io.harness.adviser.impl.retry.RetryAdviserParameters;
-import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
+import io.harness.advisers.ignore.IgnoreAdviserParameters;
+import io.harness.advisers.retry.RetryAdviserParameters;
+import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;

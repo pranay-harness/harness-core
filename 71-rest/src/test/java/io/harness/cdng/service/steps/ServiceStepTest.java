@@ -15,7 +15,7 @@ import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.service.Service;
 import io.harness.cdng.service.ServiceSpec;
 import io.harness.cdng.service.beans.ServiceOutcome;
-import io.harness.engine.services.OutcomeService;
+import io.harness.engine.outcomes.OutcomeService;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepResponseNotifyData;

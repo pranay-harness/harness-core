@@ -12,9 +12,9 @@ import static io.harness.interrupts.Interrupt.State.PROCESSING;
 
 import com.google.inject.Inject;
 
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
-import io.harness.engine.services.NodeExecutionService;
 import io.harness.engine.status.ResumeStepStatusUpdate;
 import io.harness.engine.status.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;

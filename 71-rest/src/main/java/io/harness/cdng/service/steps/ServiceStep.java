@@ -19,7 +19,7 @@ import io.harness.cdng.service.beans.ServiceOutcome.Artifacts.ArtifactsBuilder;
 import io.harness.cdng.service.beans.ServiceOutcome.ServiceOutcomeBuilder;
 import io.harness.data.Outcome;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.engine.services.OutcomeService;
+import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.FailureType;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.plancreator.beans.StepGroup;

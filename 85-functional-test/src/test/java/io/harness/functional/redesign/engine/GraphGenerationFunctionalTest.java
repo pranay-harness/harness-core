@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.Outcome;
+import io.harness.engine.graph.GraphGenerationService;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.ExecutionMode;
@@ -47,7 +48,7 @@ import java.util.Map;
 import javax.ws.rs.core.GenericType;
 
 /**
- * Functional Tests for {@link io.harness.engine.services.GraphGenerationService}
+ * Functional Tests for {@link GraphGenerationService}
  */
 public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
   private static final String BASIC_HTTP_STEP_TYPE = "BASIC_HTTP";

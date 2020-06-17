@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import graph.StepInfoGraph;
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdviserType;
-import io.harness.adviser.impl.success.OnSuccessAdviserParameters;
+import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;

@@ -4,10 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
-import io.harness.adviser.impl.fail.OnFailAdviser;
-import io.harness.adviser.impl.ignore.IgnoreAdviser;
-import io.harness.adviser.impl.retry.RetryAdviser;
-import io.harness.adviser.impl.success.OnSuccessAdviser;
+import io.harness.advisers.fail.OnFailAdviser;
+import io.harness.advisers.ignore.IgnoreAdviser;
+import io.harness.advisers.retry.RetryAdviser;
+import io.harness.advisers.success.OnSuccessAdviser;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.registries.registrar.AdviserRegistrar;
 import org.apache.commons.lang3.tuple.Pair;
