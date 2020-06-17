@@ -178,8 +178,6 @@ deploymentSummary {"name": "infraMappingId_k8sDeploymentKeyReleaseNameAndNumber"
 deploymentSummary {"name": "inframappingId_containerlabelsAndVersion", "background": true} {"infraMappingId": 1, "containerDeploymentKey.labels": 1, "containerDeploymentKey.newVersion": 1, "createdAt": -1}
 deploymentTimeSeriesEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 deploymentTimeSeriesEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
-ecsPollingJobEntity {"name": "clusterName_1", "background": true} {"clusterName": 1}
-ecsPollingJobEntity {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 ecsServiceSpecification {"name": "accountId_1", "background": true} {"accountId": 1}
 ecsServiceSpecification {"name": "appId_1", "background": true} {"appId": 1}
 ecsServiceSpecification {"name": "createdAt_1", "background": true} {"createdAt": 1}
