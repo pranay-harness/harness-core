@@ -265,7 +265,7 @@ public class K8sStateHelper {
     GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
     notNullCheck("Git config not found", gitConfig);
     List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails(gitConfig, appManifest.getAppId(), null);
+        secretManager.getEncryptionDetails(gitConfig, appManifest.getAppId(), context.getWorkflowExecutionId());
 
     if (appManifest.getStoreType() != StoreType.OC_TEMPLATES) {
       // Normalization is done for folders only. This should ideally be done at Delegate side where we know folder/file.
@@ -537,7 +537,7 @@ public class K8sStateHelper {
     Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
     String artifactStreamId = artifact == null ? null : artifact.getArtifactStreamId();
 
-    K8sClusterConfig k8sClusterConfig = containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping);
+    K8sClusterConfig k8sClusterConfig = containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping, context);
     k8sClusterConfig.setNamespace(context.renderExpression(k8sClusterConfig.getNamespace()));
     KubernetesHelperService.validateNamespace(k8sClusterConfig.getNamespace());
 
@@ -726,7 +726,8 @@ public class K8sStateHelper {
         K8sInstanceSyncTaskParameters.builder()
             .accountId(containerInfrastructureMapping.getAccountId())
             .appId(containerInfrastructureMapping.getAppId())
-            .k8sClusterConfig(containerDeploymentManagerHelper.getK8sClusterConfig(containerInfrastructureMapping))
+            .k8sClusterConfig(
+                containerDeploymentManagerHelper.getK8sClusterConfig(containerInfrastructureMapping, null))
             .namespace(namespace)
             .releaseName(releaseName)
             .build();

@@ -163,7 +163,7 @@ public class ApplicationManifestUtils {
         GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
         notNullCheck("Git config not found", gitConfig);
         List<EncryptedDataDetail> encryptionDetails =
-            secretManager.getEncryptionDetails(gitConfig, app.getUuid(), null);
+            secretManager.getEncryptionDetails(gitConfig, app.getUuid(), context.getWorkflowExecutionId());
 
         GitFetchFilesConfig gitFetchFileConfig = GitFetchFilesConfig.builder()
                                                      .gitConfig(gitConfig)

@@ -336,7 +336,7 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
     infraMapping.setEnvId(ENV_ID);
 
     doReturn(infraMapping).when(infraMappingService).get(APP_ID, INFRA_MAPPING_ID);
-    doReturn(k8sClusterConfig).when(containerDeploymentManagerHelper).getK8sClusterConfig(infraMapping);
+    doReturn(k8sClusterConfig).when(containerDeploymentManagerHelper).getK8sClusterConfig(infraMapping, null);
     doReturn(singletonList("tag1")).when(k8sStateHelper).fetchTagsFromK8sTaskParams(Mockito.any());
     doReturn(singletonList("tag2")).when(awsCommandHelper).getAwsConfigTagsFromK8sConfig(Mockito.any());
     mockStatic(UUIDGenerator.class);
