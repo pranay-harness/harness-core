@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -66,6 +67,7 @@ import software.wings.utils.KubernetesConvention;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -260,9 +262,10 @@ public class KubernetesSwapServiceSelectors extends State {
     ContainerServiceParams containerServiceParams =
         containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, "", context);
 
+    List<String> taskTags = k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams);
     if (containerMasterUrlHelper.masterUrlRequired(containerInfraMapping)) {
       boolean masterUrlPresent = containerMasterUrlHelper.fetchMasterUrlAndUpdateInfraMapping(
-          containerInfraMapping, containerServiceParams, getSyncContext(context, containerInfraMapping));
+          containerInfraMapping, containerServiceParams, getSyncContext(context, containerInfraMapping, taskTags));
       if (!masterUrlPresent) {
         throw new InvalidRequestException("No Valid Master Url for" + containerInfraMapping.getClass().getName()
                 + "Id : " + containerInfraMapping.getUuid(),
@@ -291,6 +294,7 @@ public class KubernetesSwapServiceSelectors extends State {
                                               .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                                               .build())
                                     .envId(env.getUuid())
+                                    .tags(isNotEmpty(taskTags) ? taskTags : null)
                                     .infrastructureMappingId(containerInfraMapping.getUuid())
                                     .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
@@ -309,12 +313,13 @@ public class KubernetesSwapServiceSelectors extends State {
   }
 
   private SyncTaskContext getSyncContext(
-      ExecutionContext context, ContainerInfrastructureMapping containerInfrastructureMapping) {
+      ExecutionContext context, ContainerInfrastructureMapping containerInfrastructureMapping, List<String> taskTags) {
     return SyncTaskContext.builder()
         .accountId(context.getAccountId())
         .appId(context.getAppId())
         .envId(containerInfrastructureMapping.getEnvId())
         .infrastructureMappingId(containerInfrastructureMapping.getUuid())
+        .tags(isNotEmpty(taskTags) ? taskTags : null)
         .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
         .build();
   }
