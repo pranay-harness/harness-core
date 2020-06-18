@@ -73,6 +73,7 @@ public class GcbStateTest extends CategoryTest {
   @Mock private ExecutionContextImpl execution;
   @Mock private DelegateService delegateService;
   @Mock private SecretManager secretManager;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   @InjectMocks private GcbState state = spy(new GcbState("gcb"));
 
@@ -132,7 +133,8 @@ public class GcbStateTest extends CategoryTest {
     when(execution.getStateExecutionData()).thenReturn(gcbExecutionData);
     when(execution.getAppId()).thenReturn("appId");
     when(gcbExecutionData.getStatus()).thenReturn(ExecutionStatus.SUCCESS);
-    doNothing().when(state).handleSweepingOutput(any(SweepingOutputService.class), eq(execution), eq(gcbExecutionData));
+    when(gcbExecutionData.withDelegateResponse(gcbDelegateResponse)).thenReturn(gcbExecutionData);
+    doNothing().when(state).handleSweepingOutput(eq(sweepingOutputService), eq(execution), eq(gcbExecutionData));
 
     Map<String, ResponseData> response = ImmutableMap.of("", gcbDelegateResponse);
 
@@ -140,7 +142,7 @@ public class GcbStateTest extends CategoryTest {
     verify(activityService)
         .updateStatus(
             gcbDelegateResponse.getParams().getActivityId(), execution.getAppId(), gcbExecutionData.getStatus());
-    verify(state).handleSweepingOutput(any(SweepingOutputService.class), eq(execution), eq(gcbExecutionData));
+    verify(state).handleSweepingOutput(eq(sweepingOutputService), eq(execution), eq(gcbExecutionData));
   }
 
   @Test
