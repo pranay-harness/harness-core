@@ -201,8 +201,8 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
             (Map<String, Object>) ((Map<String, Object>) properties.get(ApprovalStateKeys.approvalStateParams))
                 .get("serviceNowApprovalParams");
         if (snowParams.containsKey("approval") || snowParams.containsKey("rejection")) {
-          snowParams.keySet().removeAll(
-              Arrays.asList("approvalValue", "rejectionValue", "approvalField", "rejectionField"));
+          snowParams.keySet().removeAll(Arrays.asList("approvalValue", "rejectionValue", "approvalField",
+              "rejectionField", "approvalOperator", "rejectionOperator"));
         }
       }
     }

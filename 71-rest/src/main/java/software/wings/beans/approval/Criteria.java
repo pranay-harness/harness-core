@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,11 +36,13 @@ public class Criteria {
     }
     return conditions.entrySet()
         .stream()
+        .sorted(Collections.reverseOrder(
+            Comparator.comparing(Map.Entry::getKey))) // To make sure state gets displayed before approval
         .map(condition
             -> StringUtils.capitalize(condition.getKey()) + " should be "
                 + (condition.getValue().size() > 1 ? "any of " + String.join("/", condition.getValue())
                                                    : condition.getValue().get(0)))
-        .collect(Collectors.joining(" " + operator.name() + ",\n"));
+        .collect(Collectors.joining(" " + operator.name().toLowerCase() + "\n"));
   }
 
   public boolean satisfied(Map<String, String> currentStatus) {
