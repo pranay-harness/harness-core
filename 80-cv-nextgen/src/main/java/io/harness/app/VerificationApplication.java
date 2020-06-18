@@ -22,6 +22,7 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.app.cvng.client.VerificationManagerClientModule;
+import io.harness.cvng.core.resources.DataCollectionResource;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.govern.ProviderModule;
 import io.harness.metrics.HarnessMetricRegistry;
@@ -30,11 +31,14 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.security.VerificationServiceAuthenticationFilter;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
@@ -99,13 +103,14 @@ public class VerificationApplication extends Application<VerificationConfigurati
       }
     });
     modules.addAll(new MongoModule().cumulativeDependencies());
-    modules.add(new CVServiceModule(configuration));
+    modules.add(new CVServiceModule());
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new VerificationManagerClientModule(configuration.getManagerUrl()));
     Injector injector = Guice.createInjector(modules);
     initializeServiceSecretKeys(injector);
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     registerAuthFilters(environment, injector);
+    registerResources(environment, injector);
   }
 
   private void registerAuthFilters(Environment environment, Injector injector) {
@@ -116,5 +121,16 @@ public class VerificationApplication extends Application<VerificationConfigurati
     injector.getInstance(VerificationServiceSecretManager.class).initializeServiceSecretKeys();
     VERIFICATION_SERVICE_SECRET.set(
         injector.getInstance(VerificationServiceSecretManager.class).getVerificationServiceSecretKey());
+  }
+
+  private void registerResources(Environment environment, Injector injector) {
+    Reflections reflections = new Reflections(DataCollectionResource.class.getPackage().getName());
+
+    Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
+    for (Class<?> resource : resourceClasses) {
+      if (Resource.isAcceptable(resource)) {
+        environment.jersey().register(injector.getInstance(resource));
+      }
+    }
   }
 }

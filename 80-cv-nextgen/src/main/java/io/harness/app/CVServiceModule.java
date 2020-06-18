@@ -4,7 +4,9 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
+import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
+import io.harness.cvng.core.services.impl.TimeSeriesServiceImpl;
 import io.harness.cvng.core.services.impl.VerificationServiceSecretManagerImpl;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
@@ -23,17 +25,6 @@ import java.util.concurrent.TimeUnit;
  * @author Raghu
  */
 public class CVServiceModule extends AbstractModule {
-  private VerificationConfiguration configuration;
-
-  /**
-   * Creates a guice module for portal app.
-   *
-   * @param configuration Dropwizard configuration
-   */
-  public CVServiceModule(VerificationConfiguration configuration) {
-    this.configuration = configuration;
-  }
-
   /* (non-Javadoc)
    * @see com.google.inject.AbstractModule#configure()
    */
@@ -54,6 +45,7 @@ public class CVServiceModule extends AbstractModule {
       bind(HPersistence.class).to(MongoPersistence.class);
       bind(VerificationServiceSecretManager.class).to(VerificationServiceSecretManagerImpl.class);
       bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
+      bind(TimeSeriesService.class).to(TimeSeriesServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

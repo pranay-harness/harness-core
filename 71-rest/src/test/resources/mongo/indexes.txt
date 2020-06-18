@@ -627,10 +627,6 @@ timeSeriesMetricTemplates {"name": "cvConfigId_1", "background": true} {"cvConfi
 timeSeriesMetricTemplates {"name": "unique_Idx", "unique": true} {"stateExecutionId": 1, "cvConfigId": 1}
 timeSeriesMetricTemplates {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 timeSeriesRawData {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-timeSeriesRecords {"name": "accountId_1", "background": true} {"accountId": 1}
-timeSeriesRecords {"name": "cvConfigId_1", "background": true} {"cvConfigId": 1}
-timeSeriesRecords {"name": "projectIdentifier_1", "background": true} {"projectIdentifier": 1}
-timeSeriesRecords {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 timeSeriesRiskSummary {"name": "accountId_1", "background": true} {"accountId": 1}
 timeSeriesRiskSummary {"name": "appId_1", "background": true} {"appId": 1}
 timeSeriesRiskSummary {"name": "createdAt_1", "background": true} {"createdAt": 1}

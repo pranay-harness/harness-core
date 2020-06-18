@@ -10,7 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
+import io.harness.cvng.CVNextGenCommonBaseTest;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
@@ -33,7 +33,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MetricPackServiceImplTest extends CVNextGenBaseTest {
+public class MetricPackServiceImplTest extends CVNextGenCommonBaseTest {
   @Inject private MetricPackService metricPackService;
   @Inject private HPersistence hPersistence;
   private String accountId;

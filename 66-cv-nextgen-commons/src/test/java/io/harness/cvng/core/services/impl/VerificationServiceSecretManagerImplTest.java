@@ -10,13 +10,13 @@ import static org.mockito.Mockito.spy;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
+import io.harness.cvng.CVNextGenCommonBaseTest;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class VerificationServiceSecretManagerImplTest extends CVNextGenBaseTest {
+public class VerificationServiceSecretManagerImplTest extends CVNextGenCommonBaseTest {
   @Inject private VerificationServiceSecretManager verificationServiceSecretManager;
   @Test
   @Owner(developers = KAMAL)
