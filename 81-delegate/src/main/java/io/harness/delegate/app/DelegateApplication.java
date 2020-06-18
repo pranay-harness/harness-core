@@ -16,11 +16,14 @@ import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractTarget;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 import ch.qos.logback.classic.LoggerContext;
 import com.ning.http.client.AsyncHttpClient;
@@ -31,13 +34,27 @@ import io.harness.event.client.EventPublisher;
 import io.harness.event.client.impl.EventPublisherConstants;
 import io.harness.event.client.impl.appender.AppenderModule;
 import io.harness.event.client.impl.appender.AppenderModule.Config;
+import io.harness.govern.ProviderModule;
 import io.harness.grpc.ManagerGrpcClientModule;
 import io.harness.grpc.pingpong.PingPongClient;
 import io.harness.grpc.pingpong.PingPongModule;
 import io.harness.managerclient.ManagerClientModule;
 import io.harness.perpetualtask.PerpetualTaskWorkerModule;
 import io.harness.serializer.KryoModule;
+import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.YamlUtils;
+import io.harness.serializer.kryo.ApiServiceKryoRegister;
+import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
+import io.harness.serializer.kryo.CVNextGenRestBeansKryoRegistrar;
+import io.harness.serializer.kryo.CommonsKryoRegistrar;
+import io.harness.serializer.kryo.DelegateAgentKryoRegister;
+import io.harness.serializer.kryo.DelegateKryoRegister;
+import io.harness.serializer.kryo.DelegateTasksKryoRegister;
+import io.harness.serializer.kryo.ManagerKryoRegistrar;
+import io.harness.serializer.kryo.NGKryoRegistrar;
+import io.harness.serializer.kryo.OrchestrationBeansKryoRegistrar;
+import io.harness.serializer.kryo.OrchestrationKryoRegister;
+import io.harness.serializer.kryo.PersistenceRegistrar;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.utils.ProcessControl;
@@ -59,6 +76,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -124,6 +142,28 @@ public class DelegateApplication {
 
     List<Module> modules = new ArrayList<>();
     modules.add(new KryoModule());
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar> > registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar> >builder()
+            .add(ApiServiceKryoRegister.class)
+            .add(CVNextGenCommonsBeansKryoRegistrar.class)
+            .add(CVNextGenRestBeansKryoRegistrar.class)
+            .add(CommonsKryoRegistrar.class)
+            .add(DelegateAgentKryoRegister.class)
+            .add(DelegateKryoRegister.class)
+            .add(DelegateTasksKryoRegister.class)
+            .add(ManagerKryoRegistrar.class)
+            .add(NGKryoRegistrar.class)
+            .add(OrchestrationBeansKryoRegistrar.class)
+            .add(OrchestrationKryoRegister.class)
+            .add(PersistenceRegistrar.class)
+            .build();
+      }
+    });
+
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {

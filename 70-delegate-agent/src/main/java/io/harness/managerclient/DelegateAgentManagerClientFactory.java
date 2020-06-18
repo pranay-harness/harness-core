@@ -31,6 +31,7 @@ public class DelegateAgentManagerClientFactory implements Provider<DelegateAgent
   private static boolean sendVersionHeader = true;
 
   @Inject private VersionInfoManager versionInfoManager;
+  @Inject private KryoConverterFactory kryoConverterFactory;
 
   private String baseUrl;
   private TokenGenerator tokenGenerator;
@@ -53,7 +54,7 @@ public class DelegateAgentManagerClientFactory implements Provider<DelegateAgent
     Retrofit retrofit = new Retrofit.Builder()
                             .baseUrl(baseUrl)
                             .client(getUnsafeOkHttpClient())
-                            .addConverterFactory(new KryoConverterFactory())
+                            .addConverterFactory(kryoConverterFactory)
                             .addConverterFactory(JacksonConverterFactory.create(objectMapper))
                             .build();
     return retrofit.create(DelegateAgentManagerClient.class);

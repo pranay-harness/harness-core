@@ -1,0 +1,154 @@
+package io.harness.serializer;
+
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
+
+import com.google.api.client.util.Base64;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+import com.esotericsoftware.kryo.Registration;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.pool.KryoPool;
+import com.esotericsoftware.kryo.util.IntMap;
+import io.harness.reflection.CodeUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.reflections.Reflections;
+
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Set;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
+
+@Singleton
+@Slf4j
+public class KryoSerializer {
+  static void check(IntMap<Registration> previousState, IntMap<Registration> newState) {
+    for (IntMap.Entry entry : newState.entries()) {
+      final Registration newRegistration = (Registration) entry.value;
+      final Registration previousRegistration = previousState.get(newRegistration.getId());
+
+      if (previousRegistration == null) {
+        continue;
+      }
+
+      if (previousRegistration.getType() == newRegistration.getType()) {
+        continue;
+      }
+
+      throw new IllegalStateException(format("The id %d changed its class from %s to %s", newRegistration.getId(),
+          previousRegistration.getType().getCanonicalName(), newRegistration.getType().getCanonicalName()));
+    }
+  }
+
+  static Set<Class<? extends KryoRegistrar>> reflectionRegistrars() {
+    Reflections reflections = new Reflections("io.harness.serializer.kryo");
+    return reflections.getSubTypesOf(KryoRegistrar.class);
+  }
+
+  private final KryoPool pool;
+
+  @Inject
+  public KryoSerializer(Set<Class<? extends KryoRegistrar>> registrars) {
+    kryo(registrars, true);
+    pool = new KryoPool.Builder(() -> kryo(registrars, false)).softReferences().build();
+  }
+
+  private HKryo kryo(Set<Class<? extends KryoRegistrar>> registrars, boolean check) {
+    if (check) {
+      // Reflections have race issue and rarely but form time to time returns less.
+      // We are checking here only if we missed something, not exact match on purpose
+      Set<Class<? extends KryoRegistrar>> reflectionRegistrars = reflectionRegistrars();
+      reflectionRegistrars.removeAll(registrars);
+      if (isNotEmpty(reflectionRegistrars)) {
+        throw new IllegalStateException(String.format("You are missing %s", reflectionRegistrars));
+      }
+    }
+    final ClassResolver classResolver = new ClassResolver();
+    HKryo kryo = new HKryo(classResolver);
+    try {
+      for (Class<? extends KryoRegistrar> kryoRegistrarClass : registrars) {
+        final IntMap<Registration> previousState = new IntMap<>(classResolver.getRegistrations());
+        kryo.setCurrentLocation(CodeUtils.location(kryoRegistrarClass));
+
+        Constructor<?> constructor = kryoRegistrarClass.getConstructor();
+        final KryoRegistrar kryoRegistrar = (KryoRegistrar) constructor.newInstance();
+        kryoRegistrar.register(kryo);
+        if (check) {
+          check(previousState, classResolver.getRegistrations());
+        }
+      }
+
+    } catch (
+        NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException exception) {
+      logger.error("Unexpected exception", exception);
+    }
+
+    return kryo;
+  }
+
+  public String asString(Object obj) {
+    return Base64.encodeBase64String(asBytes(obj));
+  }
+
+  public byte[] asBytes(Object obj) {
+    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    writeToStream(obj, outputStream);
+    return outputStream.toByteArray();
+  }
+
+  public byte[] asDeflatedBytes(Object obj) {
+    try {
+      final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+      final DeflaterOutputStream outputStream = new DeflaterOutputStream(byteStream);
+      writeToStream(obj, outputStream);
+      outputStream.finish();
+      return byteStream.toByteArray();
+    } catch (Exception exception) {
+      throw new RuntimeException(exception);
+    }
+  }
+
+  private void writeToStream(Object obj, OutputStream outputStream) {
+    try {
+      Output output = new Output(outputStream);
+      pool.run(kryo -> {
+        kryo.writeClassAndObject(output, obj);
+        return null;
+      });
+      output.flush();
+    } catch (Exception exception) {
+      throw new RuntimeException(exception);
+    }
+  }
+
+  public <T> T clone(T object) {
+    return pool.run(kryo -> kryo.copy(object));
+  }
+
+  public Object asObject(byte[] bytes) {
+    Input input = new Input(bytes);
+    Object obj = pool.run(kryo -> kryo.readClassAndObject(input));
+    input.close();
+    return obj;
+  }
+
+  public Object asInflatedObject(byte[] bytes) {
+    Input input = new Input(new InflaterInputStream(new Input(bytes)));
+    Object obj = pool.run(kryo -> kryo.readClassAndObject(input));
+    input.close();
+    return obj;
+  }
+
+  public Object asObject(String base64) {
+    return asObject(Base64.decodeBase64(base64));
+  }
+
+  public boolean isRegistered(Class cls) {
+    return pool.run(kryo -> kryo.getClassResolver().getRegistration(cls) != null);
+  }
+}

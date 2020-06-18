@@ -1,6 +1,7 @@
 package io.harness.app;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 
@@ -12,6 +13,7 @@ import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.intfc.YAMLToObject;
 import io.harness.beans.DelegateTask;
 import io.harness.govern.DependencyModule;
+import io.harness.managerclient.KryoConverterFactory;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.managerclient.ManagerClientFactory;
 import io.harness.persistence.HPersistence;
@@ -35,9 +37,14 @@ public class CIManagerServiceModule extends DependencyModule {
     this.managerBaseUrl = managerBaseUrl;
   }
 
+  @Provides
+  @Singleton
+  ManagerClientFactory managerClientFactory(KryoConverterFactory kryoConverterFactory) {
+    return new ManagerClientFactory(managerBaseUrl, new ServiceTokenGenerator(), kryoConverterFactory);
+  }
+
   @Override
   protected void configure() {
-    ServiceTokenGenerator tokenGenerator = new ServiceTokenGenerator();
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
     taskExecutorMap.addBinding(DelegateTask.TASK_IDENTIFIER).to(EmptyTaskExecutor.class);
@@ -47,7 +54,7 @@ public class CIManagerServiceModule extends DependencyModule {
     bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
     bind(CIPipelineService.class).to(CIPipelineServiceImpl.class);
-    bind(ManagerCIResource.class).toProvider(new ManagerClientFactory(managerBaseUrl, tokenGenerator));
+    bind(ManagerCIResource.class).toProvider(ManagerClientFactory.class);
     bind(CIServiceAuthSecretKey.class).to(CIServiceAuthSecretKeyImpl.class);
   }
 
