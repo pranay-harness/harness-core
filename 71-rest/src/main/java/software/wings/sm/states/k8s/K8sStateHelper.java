@@ -1000,7 +1000,7 @@ public class K8sStateHelper {
         request.getAccountId(), request.getK8sClusterConfig().getCloudProvider());
   }
 
-  private List<String> getDelegateNameAsTagFromK8sCloudProvider(String accountId, SettingValue settingValue) {
+  public List<String> getDelegateNameAsTagFromK8sCloudProvider(String accountId, SettingValue settingValue) {
     if (!featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, accountId)) {
       return emptyList();
     }

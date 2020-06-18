@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -30,7 +31,6 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
@@ -75,6 +75,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.k8s.K8sStateHelper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -85,17 +86,18 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public abstract class ContainerServiceDeploy extends State {
-  @Inject @Transient private transient SettingsService settingsService;
-  @Inject @Transient private transient DelegateService delegateService;
-  @Inject @Transient private transient ServiceResourceService serviceResourceService;
-  @Inject @Transient private transient ActivityService activityService;
-  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
-  @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
-  @Inject @Transient private transient SecretManager secretManager;
-  @Inject @Transient private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
-  @Inject @Transient protected transient FeatureFlagService featureFlagService;
-  @Inject @Transient private transient AwsCommandHelper awsCommandHelper;
+  @Inject private SettingsService settingsService;
+  @Inject private DelegateService delegateService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ActivityService activityService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private SecretManager secretManager;
+  @Inject private ContainerDeploymentManagerHelper containerDeploymentHelper;
+  @Inject protected FeatureFlagService featureFlagService;
+  @Inject private AwsCommandHelper awsCommandHelper;
   @Inject private SweepingOutputService sweepingOutputService;
+  @Inject private K8sStateHelper k8sStateHelper;
 
   ContainerServiceDeploy(String name, String type) {
     super(name, type);
@@ -190,13 +192,25 @@ public abstract class ContainerServiceDeploy extends State {
                                                             .deploymentType(deploymentType.name())
                                                             .build();
 
+      List<String> allTaskTags = new ArrayList<>();
+      List<String> cloudProviderTags = k8sStateHelper.getDelegateNameAsTagFromK8sCloudProvider(
+          contextData.settingAttribute.getAccountId(), contextData.settingAttribute.getValue());
+      if (isNotEmpty(cloudProviderTags)) {
+        allTaskTags.addAll(cloudProviderTags);
+      }
+
+      List<String> awsConfigTags = awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext);
+      if (isNotEmpty(awsConfigTags)) {
+        allTaskTags.addAll(awsConfigTags);
+      }
+
       String waitId = UUID.randomUUID().toString();
       String delegateTaskId = delegateService.queueTask(
           DelegateTask.builder()
               .accountId(contextData.app.getAccountId())
               .appId(contextData.appId)
               .waitId(waitId)
-              .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+              .tags(isNotEmpty(allTaskTags) ? allTaskTags : null)
               .data(TaskData.builder()
                         .async(true)
                         .taskType(TaskType.COMMAND.name())

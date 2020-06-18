@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -25,7 +26,6 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.CommandStateExecutionData.Builder;
@@ -71,7 +71,9 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.k8s.K8sStateHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -92,17 +94,18 @@ public abstract class ContainerServiceSetup extends State {
   private String maxInstances; // Number for first time when using "Same as already running" in the UI
   private ResizeStrategy resizeStrategy;
   private int serviceSteadyStateTimeout; // Minutes
-  @Inject @Transient protected SettingsService settingsService;
-  @Inject @Transient protected ServiceResourceService serviceResourceService;
-  @Inject @Transient protected InfrastructureMappingService infrastructureMappingService;
-  @Inject @Transient protected ArtifactStreamService artifactStreamService;
-  @Inject @Transient protected FeatureFlagService featureFlagService;
-  @Inject @Transient protected SecretManager secretManager;
-  @Inject @Transient protected EncryptionService encryptionService;
-  @Inject @Transient protected ActivityService activityService;
-  @Inject @Transient protected DelegateService delegateService;
-  @Inject @Transient private AwsCommandHelper awsCommandHelper;
-  @Inject @Transient private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject protected SettingsService settingsService;
+  @Inject protected ServiceResourceService serviceResourceService;
+  @Inject protected InfrastructureMappingService infrastructureMappingService;
+  @Inject protected ArtifactStreamService artifactStreamService;
+  @Inject protected FeatureFlagService featureFlagService;
+  @Inject protected SecretManager secretManager;
+  @Inject protected EncryptionService encryptionService;
+  @Inject protected ActivityService activityService;
+  @Inject protected DelegateService delegateService;
+  @Inject private AwsCommandHelper awsCommandHelper;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private K8sStateHelper k8sStateHelper;
 
   ContainerServiceSetup(String name, String type) {
     super(name, type);
@@ -158,6 +161,13 @@ public abstract class ContainerServiceSetup extends State {
         throw new InvalidArgumentsException(Pair.of("Cloud Provider", "Missing, check service infrastructure"));
       }
 
+      List<String> allTaskTags = new ArrayList<>();
+      List<String> cloudProviderTags = k8sStateHelper.getDelegateNameAsTagFromK8sCloudProvider(
+          settingAttribute.getAccountId(), settingAttribute.getValue());
+      if (isNotEmpty(cloudProviderTags)) {
+        allTaskTags.addAll(cloudProviderTags);
+      }
+
       List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
           (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
@@ -203,6 +213,10 @@ public abstract class ContainerServiceSetup extends State {
                                                             .serviceVariables(serviceVariables)
                                                             .safeDisplayServiceVariables(safeDisplayServiceVariables)
                                                             .build();
+      List<String> awsConfigTags = awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext);
+      if (isNotEmpty(awsConfigTags)) {
+        allTaskTags.addAll(awsConfigTags);
+      }
 
       String delegateTaskId =
           delegateService.queueTask(DelegateTask.builder()
@@ -216,7 +230,7 @@ public abstract class ContainerServiceSetup extends State {
                                                   .timeout(TimeUnit.HOURS.toMillis(1))
                                                   .build())
                                         .envId(env.getUuid())
-                                        .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+                                        .tags(isNotEmpty(allTaskTags) ? allTaskTags : null)
                                         .infrastructureMappingId(infrastructureMapping.getUuid())
                                         .build());
 
