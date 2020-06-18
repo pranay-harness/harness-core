@@ -86,6 +86,12 @@ public class MongoDataStoreServiceImpl implements DataStoreService {
   }
 
   @Override
+  public <T extends GoogleDataStoreAware> PageResponse<T> list(
+      Class<T> clazz, PageRequest<T> pageRequest, boolean getTotalRecords) {
+    return list(clazz, pageRequest);
+  }
+
+  @Override
   public <T extends GoogleDataStoreAware> T getEntity(Class<T> clazz, String id) {
     return wingsPersistence.get(clazz, id);
   }

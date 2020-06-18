@@ -70,8 +70,14 @@ public class GoogleDataStoreServiceImpl implements DataStoreService {
 
   @Override
   public <T extends GoogleDataStoreAware> PageResponse<T> list(Class<T> clazz, PageRequest<T> pageRequest) {
+    return list(clazz, pageRequest, true);
+  }
+
+  @Override
+  public <T extends GoogleDataStoreAware> PageResponse<T> list(
+      Class<T> clazz, PageRequest<T> pageRequest, boolean getTotalRecords) {
     QueryResults<Entity> results = readResults(clazz, pageRequest);
-    int total = getNumberOfResults(clazz, pageRequest);
+    int total = getTotalRecords ? getNumberOfResults(clazz, pageRequest) : 0;
     List<T> rv = new ArrayList<>();
     while (results.hasNext()) {
       try {

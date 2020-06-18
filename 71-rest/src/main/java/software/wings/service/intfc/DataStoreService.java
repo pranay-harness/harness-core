@@ -10,6 +10,8 @@ public interface DataStoreService {
   <T extends GoogleDataStoreAware> void save(Class<T> clazz, List<T> records, boolean ignoreDuplicate);
 
   <T extends GoogleDataStoreAware> PageResponse<T> list(Class<T> clazz, PageRequest<T> pageRequest);
+  <T extends GoogleDataStoreAware> PageResponse<T> list(
+      Class<T> clazz, PageRequest<T> pageRequest, boolean getTotalRecords);
   <T extends GoogleDataStoreAware> T getEntity(Class<T> clazz, String id);
   <T extends GoogleDataStoreAware> void incrementField(Class<T> clazz, String id, String fieldName, int incrementCount);
 
