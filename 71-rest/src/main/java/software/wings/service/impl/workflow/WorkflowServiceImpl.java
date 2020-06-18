@@ -2158,21 +2158,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       String appId, List<ArtifactVariable> artifactVariables, WorkflowExecution workflowExecution) {
     String accountId = appService.getAccountIdByAppId(appId);
     if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, accountId)) {
-      if (workflowExecution != null) {
+      if (workflowExecution != null && workflowExecution.getExecutionArgs() != null) {
         List<ArtifactVariable> previousArtifactVariables = workflowExecution.getExecutionArgs().getArtifactVariables();
-        for (ArtifactVariable artifactVariable : artifactVariables) {
-          for (ArtifactVariable previousArtifactVariable : previousArtifactVariables) {
-            if (artifactVariable.getName().equals(previousArtifactVariable.getName())
-                && artifactVariable.getEntityType() == previousArtifactVariable.getEntityType()
-                && artifactVariable.getEntityId().equals(previousArtifactVariable.getEntityId())
-                && previousArtifactVariable.getArtifactStreamMetadata() != null
-                && isNotEmpty(artifactVariable.getAllowedList())
-                && artifactVariable.getAllowedList().contains(
-                       previousArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId())) {
-              artifactVariable.setArtifactStreamMetadata(previousArtifactVariable.getArtifactStreamMetadata());
-              artifactVariable.setUiDisplayName(previousArtifactVariable.getUiDisplayName());
-
-              break;
+        if (isNotEmpty(previousArtifactVariables)) {
+          for (ArtifactVariable artifactVariable : artifactVariables) {
+            for (ArtifactVariable previousArtifactVariable : previousArtifactVariables) {
+              if (artifactVariable.getName().equals(previousArtifactVariable.getName())
+                  && artifactVariable.getEntityType() == previousArtifactVariable.getEntityType()
+                  && artifactVariable.getEntityId().equals(previousArtifactVariable.getEntityId())
+                  && previousArtifactVariable.getArtifactStreamMetadata() != null
+                  && isNotEmpty(artifactVariable.getAllowedList())
+                  && artifactVariable.getAllowedList().contains(
+                         previousArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId())) {
+                artifactVariable.setArtifactStreamMetadata(previousArtifactVariable.getArtifactStreamMetadata());
+                artifactVariable.setUiDisplayName(previousArtifactVariable.getUiDisplayName());
+                break;
+              }
             }
           }
         }
