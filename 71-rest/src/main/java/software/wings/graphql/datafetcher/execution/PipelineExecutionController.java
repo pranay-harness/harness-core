@@ -147,7 +147,7 @@ public class PipelineExecutionController {
 
       List<String> extraVariables = new ArrayList<>();
       Map<String, String> variableValues =
-          validateAndResolvePipelineVariables(pipeline, variableInputs, envId, extraVariables);
+          validateAndResolvePipelineVariables(pipeline, variableInputs, envId, extraVariables, false);
       List<Artifact> artifacts = validateAndGetArtifactsFromServiceInputs(variableValues, serviceInputs, pipeline);
       ExecutionArgs executionArgs = new ExecutionArgs();
       executionArgs.setWorkflowType(WorkflowType.PIPELINE);
@@ -186,7 +186,7 @@ public class PipelineExecutionController {
     }
   }
 
-  private String resolveEnvId(Pipeline pipeline, List<QLVariableInput> variableInputs) {
+  public String resolveEnvId(Pipeline pipeline, List<QLVariableInput> variableInputs) {
     List<Variable> pipelineVariables = pipeline.getPipelineVariables();
     String templatizedEnvName = getTemplatizedEnvVariableName(pipelineVariables);
     if (templatizedEnvName == null) {
@@ -235,8 +235,8 @@ public class PipelineExecutionController {
     return artifacts;
   }
 
-  private Map<String, String> validateAndResolvePipelineVariables(
-      Pipeline pipeline, List<QLVariableInput> variableInputs, String envId, List<String> extraVariables) {
+  public Map<String, String> validateAndResolvePipelineVariables(Pipeline pipeline,
+      List<QLVariableInput> variableInputs, String envId, List<String> extraVariables, boolean isTriggerFlow) {
     List<Variable> pipelineVariables = pipeline.getPipelineVariables();
     if (isEmpty(pipelineVariables)) {
       return new HashMap<>();
@@ -260,6 +260,12 @@ public class PipelineExecutionController {
                 pipeline.getAppId(), variableValue.getValue(), variableInPipeline, pipeline, envId);
             pipelineVariableValues.put(variableInput.getName(), value);
             break;
+          case EXPRESSION:
+            if (isTriggerFlow) {
+              continue;
+            } else {
+              throw new UnsupportedOperationException("Expression Type not supported");
+            }
           default:
             throw new UnsupportedOperationException("Value Type " + type + " Not supported");
         }
@@ -342,7 +348,7 @@ public class PipelineExecutionController {
         String envId = resolveEnvId(pipeline, variableInputs);
         List<String> extraVariables = new ArrayList<>();
         Map<String, String> variableValues =
-            validateAndResolvePipelineVariables(pipeline, variableInputs, envId, extraVariables);
+            validateAndResolvePipelineVariables(pipeline, variableInputs, envId, extraVariables, false);
         DeploymentMetadata finalDeploymentMetadata =
             pipelineService.fetchDeploymentMetadata(appId, pipeline, variableValues);
         if (finalDeploymentMetadata != null) {

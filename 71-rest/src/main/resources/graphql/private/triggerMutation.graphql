@@ -1,0 +1,157 @@
+extend type Mutation {
+  createTrigger(input: CreateTriggerInput!): TriggerPayload @dataFetcher(name: createTrigger)
+}
+
+input CreateTriggerInput {
+  clientMutationId: String
+  name: String!
+  applicationId: String!
+  description: String
+  condition: TriggerConditionInput!
+  action: TriggerActionInput!
+}
+
+input TriggerConditionInput {
+  conditionType: ConditionType!
+  artifactConditionInput: ArtifactConditionInput
+  pipelineConditionInput: PipelineConditionInput
+  scheduleConditionInput: ScheduleConditionInput
+  webhookConditionInput: WebhookConditionInput
+}
+
+input ArtifactConditionInput {
+  artifactSourceId: String!
+  artifactFilter: String
+  regex: Boolean
+}
+
+input PipelineConditionInput {
+  pipelineId: String!
+}
+
+input ScheduleConditionInput {
+  onNewArtifactOnly: Boolean
+  cronExpression: String!
+}
+
+input WebhookConditionInput {
+  webhookSourceType: WebhookSource!
+  githubEvent: GitHubEvent
+  bitbucketEvent: BitbucketEvent
+  gitlabEvent: GitlabEvent
+  branchRegex: String
+}
+
+input GitHubEvent {
+  event: GitHubEventType
+  action: GitHubAction
+}
+
+enum GitHubEventType {
+  PULL_REQUEST
+  PUSH
+  PING
+  DELETE
+  ANY
+  RELEASE
+  PACKAGE
+}
+
+enum GitHubAction {
+  CLOSED
+  EDITED
+  OPENED
+  REOPENED
+  ASSIGNED
+  UNASSIGNED
+  LABELED
+  UNLABELED
+  SYNCHRONIZED
+  REVIEW_REQUESTED
+  REVIEW_REQUESTED_REMOVED
+  PACKAGE_PUBLISHED
+  CREATED
+  PUBLISHED
+  RELEASED
+  UNPUBLISHED
+  DELETED
+  PRE_RELEASED
+}
+
+enum BitbucketEvent {
+  PING
+  DIAGNOSTICS_PING
+  ALL
+
+  PUSH_ANY
+  ANY
+  FORK
+  UPDATED
+  COMMIT_COMMENT_CREATED
+
+  BUILD_STATUS_CREATED
+  BUILD_STATUS_UPDATED
+  PUSH
+  REFS_CHANGED
+
+  ISSUE_ANY
+  ISSUE_CREATED
+  ISSUE_UPDATED
+  ISSUE_COMMENT_CREATED
+
+  PULL_REQUEST_ANY
+  PULL_REQUEST_CREATED
+  PULL_REQUEST_UPDATED
+  PULL_REQUEST_APPROVED
+  PULL_REQUEST_APPROVAL_REMOVED
+  PULL_REQUEST_MERGED
+  PULL_REQUEST_DECLINED
+  PULL_REQUEST_COMMENT_CREATED
+  PULL_REQUEST_COMMENT_UPDATED
+  PULL_REQUEST_COMMENT_DELETED
+}
+
+enum GitlabEvent {
+  PULL_REQUEST
+  PUSH
+  PING
+  ANY
+}
+
+enum ConditionType {
+  ON_NEW_ARTIFACT
+  ON_PIPELINE_COMPLETION
+  ON_SCHEDULE
+  ON_WEBHOOK
+}
+
+input TriggerActionInput {
+  executionType: ExecutionType!
+  entityId: String!
+  variables: [VariableInput]
+  artifactSelections: [ArtifactSelectionInput]
+}
+
+input ArtifactSelectionInput {
+  serviceId: String!
+  artifactSelectionType: ArtifactSelectionType!
+  artifactSourceId: String
+  regex: Boolean
+  artifactFilter: String
+  workflowId: String
+  pipelineId: String
+}
+
+enum ArtifactSelectionType {
+  FROM_TRIGGERING_ARTIFACT
+  FROM_TRIGGERING_PIPELINE
+  FROM_PAYLOAD_SOURCE
+  LAST_COLLECTED
+  LAST_DEPLOYED_WORKFLOW
+  LAST_DEPLOYED_PIPELINE
+}
+
+type TriggerPayload {
+  clientMutationId: String
+  trigger: Trigger
+}

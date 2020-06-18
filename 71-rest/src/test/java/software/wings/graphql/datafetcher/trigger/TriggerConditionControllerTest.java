@@ -3,11 +3,17 @@ package software.wings.graphql.datafetcher.trigger;
 import static io.harness.rule.OwnerRule.MILAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.WebHookToken;
@@ -21,19 +27,26 @@ import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
+import software.wings.graphql.schema.type.trigger.QLConditionType;
+import software.wings.graphql.schema.type.trigger.QLCreateTriggerInput;
 import software.wings.graphql.schema.type.trigger.QLOnNewArtifact;
 import software.wings.graphql.schema.type.trigger.QLOnPipelineCompletion;
 import software.wings.graphql.schema.type.trigger.QLOnSchedule;
 import software.wings.graphql.schema.type.trigger.QLOnWebhook;
-import software.wings.graphql.schema.type.trigger.TriggerConditionController;
+import software.wings.graphql.schema.type.trigger.QLTriggerConditionInput;
+import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.PipelineService;
 
 import java.util.Arrays;
+import java.util.Collections;
 
-public class TriggerConditionControllerTest {
+@PrepareForTest(TriggerConditionController.class)
+@RunWith(PowerMockRunner.class)
+public class TriggerConditionControllerTest extends CategoryTest {
   @Test
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
-  public void shouldReturnArtifactTriggerCondition() {
+  public void populateTriggerConditionShouldReturnArtifactTriggerCondition() {
     ArtifactTriggerCondition artifactTriggerCondition = ArtifactTriggerCondition.builder()
                                                             .artifactStreamId("sourceId")
                                                             .artifactSourceName("sourceName")
@@ -58,7 +71,7 @@ public class TriggerConditionControllerTest {
   @Test
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
-  public void shouldReturnPipelineTriggerCondition() {
+  public void populateTriggerConditionShouldReturnPipelineTriggerCondition() {
     PipelineTriggerCondition pipelineTrigerCondition =
         PipelineTriggerCondition.builder().pipelineId("pipelineId").pipelineName("pipelineName").build();
     pipelineTrigerCondition.setConditionType(TriggerConditionType.PIPELINE_COMPLETION);
@@ -77,7 +90,7 @@ public class TriggerConditionControllerTest {
   @Test
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
-  public void shouldReturnScheduledTriggerCondition() {
+  public void populateTriggerConditionShouldReturnScheduledTriggerCondition() {
     ScheduledTriggerCondition scheduledTriggerCondition = ScheduledTriggerCondition.builder()
                                                               .cronExpression("cronExpression")
                                                               .cronDescription("cronDescription")
@@ -99,7 +112,8 @@ public class TriggerConditionControllerTest {
   @Test
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
-  public void shouldReturnWebhookTriggerConditionWithGithubWebhookSourceWithPullRequestEventAndAction() {
+  public void
+  populateTriggerConditionShouldReturnWebhookTriggerConditionWithGithubWebhookSourceWithPullRequestEventAndAction() {
     String accountId = "1234";
     MainConfiguration mainConfiguration = Mockito.mock(MainConfiguration.class);
     PortalConfig portalConfig = Mockito.mock(PortalConfig.class);
@@ -143,7 +157,8 @@ public class TriggerConditionControllerTest {
   @Test
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
-  public void shouldReturnWebhookTriggerConditionWithGithubWebhookSourceWithPackageEventAndAction() {
+  public void
+  populateTriggerConditionShouldReturnWebhookTriggerConditionWithGithubWebhookSourceWithPackageEventAndAction() {
     String accountId = "1234";
     MainConfiguration mainConfiguration = Mockito.mock(MainConfiguration.class);
     PortalConfig portalConfig = Mockito.mock(PortalConfig.class);
@@ -187,7 +202,7 @@ public class TriggerConditionControllerTest {
   @Test
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
-  public void shouldReturnWebhookTriggerConditionWithGithubWebhookSourceWithReleaseAction() {
+  public void populateTriggerConditionShouldReturnWebhookTriggerConditionWithGithubWebhookSourceWithReleaseAction() {
     String accountId = "1234";
     MainConfiguration mainConfiguration = Mockito.mock(MainConfiguration.class);
     PortalConfig portalConfig = Mockito.mock(PortalConfig.class);
@@ -231,7 +246,7 @@ public class TriggerConditionControllerTest {
   @Test
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
-  public void shouldReturnWebhookTriggerConditionWithGitlabWebhookSource() {
+  public void populateTriggerConditionShouldReturnWebhookTriggerConditionWithGitlabWebhookSource() {
     String accountId = "1234";
     MainConfiguration mainConfiguration = Mockito.mock(MainConfiguration.class);
     PortalConfig portalConfig = Mockito.mock(PortalConfig.class);
@@ -272,7 +287,7 @@ public class TriggerConditionControllerTest {
   @Test
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
-  public void shouldReturnWebhookTriggerConditionWithBitBucketWebhookSource() {
+  public void populateTriggerConditionShouldReturnWebhookTriggerConditionWithBitBucketWebhookSource() {
     String accountId = "1234";
     MainConfiguration mainConfiguration = Mockito.mock(MainConfiguration.class);
     PortalConfig portalConfig = Mockito.mock(PortalConfig.class);
@@ -310,5 +325,144 @@ public class TriggerConditionControllerTest {
     assertThat(qlOnWebhook.getWebhookEvent()).isNotNull();
     assertThat(qlOnWebhook.getWebhookEvent().getEvent()).isEqualTo("pullrequest");
     assertThat(qlOnWebhook.getWebhookEvent().getAction()).isEqualTo("created");
+  }
+
+  @Mock PipelineService pipelineService;
+
+  @Mock ArtifactStreamService artifactStreamService;
+
+  @Test
+  @Owner(developers = MILAN)
+  @Category(UnitTests.class)
+  public void resolveTriggerConditionShouldReturnOnNewArtifactConditionType() throws Exception {
+    QLTriggerConditionInput qlTriggerConditionInput =
+        QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_NEW_ARTIFACT).build();
+    QLCreateTriggerInput qlCreateTriggerInput =
+        QLCreateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    ArtifactTriggerCondition artifactTriggerCondition = ArtifactTriggerCondition.builder()
+                                                            .artifactSourceName("name")
+                                                            .artifactStreamId("id")
+                                                            .artifactFilter("filter")
+                                                            .regex(true)
+                                                            .build();
+
+    PowerMockito.spy(TriggerConditionController.class);
+    PowerMockito.doReturn(artifactTriggerCondition)
+        .when(TriggerConditionController.class, "validateAndResolveOnNewArtifactConditionType", qlCreateTriggerInput,
+            artifactStreamService);
+
+    ArtifactTriggerCondition retreivedArtifactTriggerCondition =
+        (ArtifactTriggerCondition) TriggerConditionController.resolveTriggerCondition(
+            qlCreateTriggerInput, pipelineService, artifactStreamService);
+
+    assertThat(retreivedArtifactTriggerCondition.getArtifactStreamId())
+        .isEqualTo(artifactTriggerCondition.getArtifactStreamId());
+    assertThat(retreivedArtifactTriggerCondition.getArtifactSourceName())
+        .isEqualTo(artifactTriggerCondition.getArtifactSourceName());
+    assertThat(retreivedArtifactTriggerCondition.getArtifactFilter())
+        .isEqualTo(artifactTriggerCondition.getArtifactFilter());
+    assertThat(retreivedArtifactTriggerCondition.isRegex()).isEqualTo(artifactTriggerCondition.isRegex());
+  }
+
+  @Test
+  @Owner(developers = MILAN)
+  @Category(UnitTests.class)
+  public void resolveTriggerConditionShouldReturnOnPipelineCompletionConditionType() throws Exception {
+    QLTriggerConditionInput qlTriggerConditionInput =
+        QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_PIPELINE_COMPLETION).build();
+    QLCreateTriggerInput qlCreateTriggerInput =
+        QLCreateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    PipelineTriggerCondition pipelineTriggerCondition =
+        PipelineTriggerCondition.builder().pipelineId("id").pipelineName("name").build();
+
+    PowerMockito.spy(TriggerConditionController.class);
+    PowerMockito.doReturn(pipelineTriggerCondition)
+        .when(TriggerConditionController.class, "validateAndResolveOnPipelineCompletionConditionType",
+            qlCreateTriggerInput, pipelineService);
+
+    PipelineTriggerCondition retreivedPipelineTriggerCondition =
+        (PipelineTriggerCondition) TriggerConditionController.resolveTriggerCondition(
+            qlCreateTriggerInput, pipelineService, artifactStreamService);
+
+    assertThat(pipelineTriggerCondition.getPipelineId()).isEqualTo(retreivedPipelineTriggerCondition.getPipelineId());
+    assertThat(pipelineTriggerCondition.getPipelineName())
+        .isEqualTo(retreivedPipelineTriggerCondition.getPipelineName());
+  }
+
+  @Test
+  @Owner(developers = MILAN)
+  @Category(UnitTests.class)
+  public void resolveTriggerConditionShouldReturnOnScheduleConditionType() throws Exception {
+    QLTriggerConditionInput qlTriggerConditionInput =
+        QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_SCHEDULE).build();
+    QLCreateTriggerInput qlCreateTriggerInput =
+        QLCreateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    ScheduledTriggerCondition scheduledTriggerCondition = ScheduledTriggerCondition.builder()
+                                                              .cronExpression("expression")
+                                                              .cronDescription("description")
+                                                              .onNewArtifactOnly(true)
+                                                              .build();
+
+    PowerMockito.spy(TriggerConditionController.class);
+    PowerMockito.doReturn(scheduledTriggerCondition)
+        .when(TriggerConditionController.class, "validateAndResolveOnScheduleConditionType", qlCreateTriggerInput);
+
+    ScheduledTriggerCondition retreivedScheduledTriggerCondition =
+        (ScheduledTriggerCondition) TriggerConditionController.resolveTriggerCondition(
+            qlCreateTriggerInput, pipelineService, artifactStreamService);
+
+    assertThat(retreivedScheduledTriggerCondition.getCronExpression())
+        .isEqualTo(scheduledTriggerCondition.getCronExpression());
+    assertThat(retreivedScheduledTriggerCondition.getCronDescription())
+        .isEqualTo(scheduledTriggerCondition.getCronDescription());
+    assertThat(retreivedScheduledTriggerCondition.isOnNewArtifactOnly())
+        .isEqualTo(scheduledTriggerCondition.isOnNewArtifactOnly());
+  }
+
+  @Test
+  @Owner(developers = MILAN)
+  @Category(UnitTests.class)
+  public void resolveTriggerConditionShouldReturnOnWebhookConditionTypeWithGithubEvent() throws Exception {
+    QLTriggerConditionInput qlTriggerConditionInput =
+        QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_WEBHOOK).build();
+    QLCreateTriggerInput qlCreateTriggerInput =
+        QLCreateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    WebHookToken webHookToken =
+        WebHookToken.builder().payload("payload").httpMethod("POST").webHookToken("token").build();
+
+    WebHookTriggerCondition webHookTriggerCondition =
+        WebHookTriggerCondition.builder()
+            .webHookToken(webHookToken)
+            .webhookSource(WebhookSource.GITHUB)
+            .eventTypes(Collections.singletonList(WebhookEventType.PULL_REQUEST))
+            .actions(Collections.singletonList(GithubAction.OPENED))
+            .branchRegex("regex")
+            .build();
+
+    PowerMockito.spy(TriggerConditionController.class);
+    PowerMockito.doReturn(webHookTriggerCondition)
+        .when(TriggerConditionController.class, "validateAndResolveOnWebhookConditionType", qlCreateTriggerInput);
+
+    WebHookTriggerCondition retrievedWebHookTriggerCondition =
+        (WebHookTriggerCondition) TriggerConditionController.resolveTriggerCondition(
+            qlCreateTriggerInput, pipelineService, artifactStreamService);
+
+    assertThat(retrievedWebHookTriggerCondition.getWebHookToken().getPayload())
+        .isEqualTo(webHookTriggerCondition.getWebHookToken().getPayload());
+    assertThat(retrievedWebHookTriggerCondition.getWebHookToken().getHttpMethod())
+        .isEqualTo(webHookTriggerCondition.getWebHookToken().getHttpMethod());
+    assertThat(retrievedWebHookTriggerCondition.getWebHookToken().getPayload())
+        .isEqualTo(webHookTriggerCondition.getWebHookToken().getPayload());
+    assertThat(retrievedWebHookTriggerCondition.getWebhookSource())
+        .isEqualTo(webHookTriggerCondition.getWebhookSource());
+    assertThat(retrievedWebHookTriggerCondition.getEventTypes().get(0))
+        .isEqualTo(webHookTriggerCondition.getEventTypes().get(0));
+    assertThat(retrievedWebHookTriggerCondition.getActions().get(0))
+        .isEqualTo(webHookTriggerCondition.getActions().get(0));
+    assertThat(retrievedWebHookTriggerCondition.getBranchRegex()).isEqualTo(webHookTriggerCondition.getBranchRegex());
   }
 }

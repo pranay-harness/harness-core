@@ -8,8 +8,6 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.trigger.Trigger;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.type.trigger.QLTrigger.QLTriggerBuilder;
-import software.wings.graphql.schema.type.trigger.TriggerActionController;
-import software.wings.graphql.schema.type.trigger.TriggerConditionController;
 
 @OwnedBy(CDC)
 @UtilityClass

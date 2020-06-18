@@ -67,6 +67,7 @@ enum DataFetcherEnum {
   tagsInUseConnection
   tags
   trigger
+  createTrigger
   triggerConnection
   triggerStats
   workflow
