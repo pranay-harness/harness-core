@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.entity.HarnessApiKey;
 import io.harness.entity.ServiceSecretKey;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
@@ -10,6 +11,7 @@ public class CommonEntitiesMorphiaRegister implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(ServiceSecretKey.class);
+    set.add(HarnessApiKey.class);
   }
 
   @Override

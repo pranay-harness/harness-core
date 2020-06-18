@@ -12,14 +12,14 @@ import com.google.inject.name.Named;
 
 import io.harness.beans.AuthType;
 import io.harness.beans.ClientType;
+import io.harness.entity.HarnessApiKey;
+import io.harness.entity.HarnessApiKey.HarnessApiKeyKeys;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.security.EncryptionUtils;
 import io.harness.security.annotations.HarnessApiKeyAuth;
-import software.wings.beans.HarnessApiKey;
-import software.wings.beans.HarnessApiKey.HarnessApiKeyKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.SecretManager;

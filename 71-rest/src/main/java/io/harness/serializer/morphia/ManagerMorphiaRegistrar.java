@@ -212,7 +212,6 @@ import software.wings.beans.GcsFileMetadata;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileActivitySummary;
-import software.wings.beans.HarnessApiKey;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.HostConnectionAttributes;
@@ -888,7 +887,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(GitSyncError.class);
     set.add(GitSyncWebhook.class);
     set.add(GovernanceConfig.class);
-    set.add(HarnessApiKey.class);
     set.add(HarnessTag.class);
     set.add(HarnessTagLink.class);
     set.add(HarnessUserGroup.class);

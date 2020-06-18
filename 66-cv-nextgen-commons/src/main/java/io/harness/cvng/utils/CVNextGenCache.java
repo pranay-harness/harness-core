@@ -1,6 +1,7 @@
 package io.harness.cvng.utils;
 
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -8,6 +9,8 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
+import io.harness.entity.HarnessApiKey;
+import io.harness.entity.HarnessApiKey.HarnessApiKeyKeys;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,9 +40,10 @@ public class CVNextGenCache {
           .build(new CacheLoader<String, byte[]>() {
             @Override
             public byte[] load(String clientType) {
-              return (byte[]) hPersistence.getCollection(DEFAULT_STORE, "harnessApiKeys")
-                  .findOne(new BasicDBObject("clientType", clientType))
-                  .get("encryptedKey");
+              HarnessApiKey harnessApiKey = hPersistence.createQuery(HarnessApiKey.class, excludeAuthority)
+                                                .filter(HarnessApiKeyKeys.clientType, clientType)
+                                                .get();
+              return harnessApiKey.getEncryptedKey();
             }
           });
 

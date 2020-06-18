@@ -19,7 +19,9 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -1258,28 +1260,33 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU, intermittent = true)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testTriggerTimeSeriesAlertIfNecessary() throws Exception {
+    ExecutorService spyExecutorService = spy(executorService);
+    doAnswer(invocationOnMock -> {
+      invocationOnMock.getArgumentAt(0, Runnable.class).run();
+      return null;
+    })
+        .when(spyExecutorService)
+        .submit(any(Runnable.class));
+    writeField(continuousVerificationService, "executorService", spyExecutorService, true);
     String configId = saveCvConfigForAlertTests();
     CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, configId);
     when(cvConfigurationService.getConfiguration(anyString())).thenReturn(cvConfiguration);
 
     // disabled alert should not throw alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 10);
-    waitForTaskDrain();
     assertThat(wingsPersistence.createQuery(Alert.class, excludeAuthority).asList()).isEmpty();
 
     cvConfiguration.setAlertEnabled(true);
     wingsPersistence.save(cvConfiguration);
     // lower than threshold, no alert should be thrown
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.4, 10);
-    waitForTaskDrain();
     assertThat(wingsPersistence.createQuery(Alert.class, excludeAuthority).asList()).isEmpty();
 
     // throw alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 10);
-    waitForTaskDrain();
     waitForAlert(1, Optional.empty());
     List<Alert> alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
 
@@ -1301,14 +1308,12 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     // same minute should not throw another alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 10);
-    waitForTaskDrain();
     waitForAlert(1, Optional.empty());
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
     assertThat(alerts).hasSize(1);
 
     // diff minute within an hour should not throw an alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 20);
-    waitForTaskDrain();
     waitForAlert(1, Optional.empty());
 
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
@@ -1317,7 +1322,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     // diff minute after an hour but within 4 hours should not throw an alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 80);
-    waitForTaskDrain();
     waitForAlert(1, Optional.empty());
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
     assertThat(alerts).hasSize(1);
@@ -1325,7 +1329,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     // diff minute after 4 hours should trigger an alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 250);
-    waitForTaskDrain();
     waitForAlert(2, Optional.empty());
 
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
@@ -1334,7 +1337,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     // diff minute within an hour of last alert should not trigger an alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 90);
-    waitForTaskDrain();
     waitForAlert(2, Optional.empty());
 
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
@@ -1343,7 +1345,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     // less risk score should close all the alerts
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.4, 90);
-    waitForTaskDrain();
     waitForAlert(2, Optional.of(AlertStatus.Closed));
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
     assertThat(alerts).hasSize(2);
@@ -1351,7 +1352,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     // new risk should open another alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 90);
-    waitForTaskDrain();
     waitForAlert(3, Optional.empty());
     assertThat(wingsPersistence.createQuery(Alert.class, excludeAuthority)
                    .filter(AlertKeys.status, AlertStatus.Closed)
@@ -3906,16 +3906,5 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
       tryCount++;
       sleep(ofMillis(500));
     } while (numOfAlerts < expectedNumOfAlerts && tryCount < 10);
-  }
-
-  private void waitForTaskDrain() {
-    int queuedTasks = ((ThreadPoolExecutor) executorService).getQueue().size();
-    int tryCount = 0;
-    while (queuedTasks != 0 && tryCount < 10) {
-      sleep(ofMillis(500));
-      queuedTasks = ((ThreadPoolExecutor) executorService).getQueue().size();
-    }
-
-    assertThat(tryCount).isLessThan(10);
   }
 }

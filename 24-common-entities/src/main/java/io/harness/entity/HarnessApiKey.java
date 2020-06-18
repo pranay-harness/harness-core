@@ -1,4 +1,4 @@
-package software.wings.beans;
+package io.harness.entity;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ClientType;

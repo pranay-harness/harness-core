@@ -15,6 +15,7 @@ import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -33,6 +34,7 @@ import io.harness.cvng.utils.CVNextGenCache;
 import io.harness.entity.ServiceSecretKey.ServiceType;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.security.annotations.DelegateAuth;
@@ -61,6 +63,7 @@ import javax.ws.rs.core.MultivaluedMap;
 @Priority(AUTHENTICATION)
 @Slf4j
 public class VerificationServiceAuthenticationFilter implements ContainerRequestFilter {
+  private String PREFIX_BEARER = "Bearer";
   @Context private ResourceInfo resourceInfo;
   @Inject private CVNextGenCache cvNextGenCache;
   @Inject private VerificationServiceSecretManager verificationServiceSecretManager;
@@ -73,7 +76,8 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     }
 
     if (isHarnessClientApi(resourceInfo)) {
-      String apiKeyFromHeader = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+      String apiKeyFromHeader = extractToken(containerRequestContext, PREFIX_BEARER);
+
       ClientType[] clientTypes = getClientTypesFromHarnessApiKeyAuth(resourceInfo);
       if (isEmpty(clientTypes)) {
         throw new WingsException(INVALID_TOKEN, USER);
@@ -103,7 +107,8 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     throw new WingsException(INVALID_CREDENTIAL, USER);
   }
 
-  private ClientType[] getClientTypesFromHarnessApiKeyAuth(ResourceInfo resourceInfo) {
+  @VisibleForTesting
+  ClientType[] getClientTypesFromHarnessApiKeyAuth(ResourceInfo resourceInfo) {
     Method resourceMethod = resourceInfo.getResourceMethod();
     HarnessApiKeyAuth methodAnnotations = resourceMethod.getAnnotation(HarnessApiKeyAuth.class);
     if (null != methodAnnotations) {
@@ -119,7 +124,8 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     return null;
   }
 
-  private boolean isHarnessClientApi(ResourceInfo resourceInfo) {
+  @VisibleForTesting
+  boolean isHarnessClientApi(ResourceInfo resourceInfo) {
     return resourceInfo.getResourceMethod().getAnnotation(HarnessApiKeyAuth.class) != null
         || resourceInfo.getResourceClass().getAnnotation(HarnessApiKeyAuth.class) != null;
   }
@@ -266,5 +272,13 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
 
   private String getDecryptedKey(byte[] encryptedKey) {
     return new String(EncryptionUtils.decrypt(encryptedKey, null), Charset.forName("UTF-8"));
+  }
+
+  private String extractToken(ContainerRequestContext requestContext, String prefix) {
+    String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+    if (authorizationHeader == null || !authorizationHeader.startsWith(prefix)) {
+      throw new UnauthorizedException("Invalid token", USER_ADMIN);
+    }
+    return authorizationHeader.substring(prefix.length()).trim();
   }
 }
