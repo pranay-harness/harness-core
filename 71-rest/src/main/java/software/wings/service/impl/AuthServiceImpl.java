@@ -423,6 +423,15 @@ public class AuthServiceImpl implements AuthService {
     } catch (JOSEException e) {
       throw new WingsException(INVALID_TOKEN);
     }
+
+    try {
+      Date expirationDate = encryptedJWT.getJWTClaimsSet().getExpirationTime();
+      if (System.currentTimeMillis() > expirationDate.getTime()) {
+        throw new InvalidRequestException("Unauthorized", EXPIRED_TOKEN, null);
+      }
+    } catch (ParseException ex) {
+      throw new InvalidRequestException("Unauthorized", ex, EXPIRED_TOKEN, null);
+    }
   }
 
   @Override
