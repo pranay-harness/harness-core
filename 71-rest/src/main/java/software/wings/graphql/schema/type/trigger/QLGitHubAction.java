@@ -1,0 +1,22 @@
+package software.wings.graphql.schema.type.trigger;
+
+public enum QLGitHubAction {
+  CLOSED,
+  EDITED,
+  OPENED,
+  REOPENED,
+  ASSIGNED,
+  UNASSIGNED,
+  LABELED,
+  UNLABELED,
+  SYNCHRONIZED,
+  REVIEW_REQUESTED,
+  REVIEW_REQUESTED_REMOVED,
+  PACKAGE_PUBLISHED,
+  CREATED,
+  PUBLISHED,
+  RELEASED,
+  UNPUBLISHED,
+  DELETED,
+  PRE_RELEASED
+}

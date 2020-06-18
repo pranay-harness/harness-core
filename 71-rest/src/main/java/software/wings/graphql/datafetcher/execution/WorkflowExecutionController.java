@@ -182,7 +182,7 @@ public class WorkflowExecutionController {
 
         List<String> extraVariables = new ArrayList<>();
         Map<String, String> variableValues =
-            validateAndResolveWorkflowVariables(workflow, variableInputs, envId, extraVariables);
+            validateAndResolveWorkflowVariables(workflow, variableInputs, envId, extraVariables, false);
         List<Artifact> artifacts = validateAndGetArtifactsFromServiceInputs(variableValues, serviceInputs, workflow);
         ExecutionArgs executionArgs = new ExecutionArgs();
         executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
@@ -241,8 +241,8 @@ public class WorkflowExecutionController {
     return artifacts;
   }
 
-  private Map<String, String> validateAndResolveWorkflowVariables(
-      Workflow workflow, List<QLVariableInput> variableInputs, String envId, List<String> extraVariablesInAPI) {
+  public Map<String, String> validateAndResolveWorkflowVariables(Workflow workflow,
+      List<QLVariableInput> variableInputs, String envId, List<String> extraVariablesInAPI, boolean isTriggerFlow) {
     List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
     if (isEmpty(workflowVariables)) {
       List<String> extraVariables = variableInputs.stream().map(t -> t.getName()).collect(Collectors.toList());
@@ -269,6 +269,12 @@ public class WorkflowExecutionController {
                 workflow.getAppId(), variableValue.getValue(), variableInWorkflow, workflow, envId);
             workflowVariableValues.put(variableInput.getName(), value);
             break;
+          case EXPRESSION:
+            if (isTriggerFlow) {
+              continue;
+            } else {
+              throw new UnsupportedOperationException("Expression Type not supported");
+            }
           default:
             throw new UnsupportedOperationException("Value Type " + type + " Not supported");
         }
@@ -337,7 +343,7 @@ public class WorkflowExecutionController {
     }
   }
 
-  private String resolveEnvId(Workflow workflow, List<QLVariableInput> variableInputs) {
+  public String resolveEnvId(Workflow workflow, List<QLVariableInput> variableInputs) {
     if (!workflow.checkEnvironmentTemplatized()) {
       return workflow.getEnvId();
     }
@@ -394,7 +400,7 @@ public class WorkflowExecutionController {
 
         List<String> extraVariables = new ArrayList<>();
         Map<String, String> variableValues =
-            validateAndResolveWorkflowVariables(workflow, variableInputs, envId, extraVariables);
+            validateAndResolveWorkflowVariables(workflow, variableInputs, envId, extraVariables, false);
 
         DeploymentMetadata finalDeploymentMetadata =
             workflowService.fetchDeploymentMetadata(appId, workflow, variableValues, null, null, false, null);

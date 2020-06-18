@@ -8,7 +8,8 @@ import software.wings.graphql.schema.type.QLEnum;
 @OwnedBy(CDC)
 public enum QLVariableValueType implements QLEnum {
   ID,
-  NAME;
+  NAME,
+  EXPRESSION;
 
   @Override
   public String getStringValue() {
