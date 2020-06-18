@@ -20,6 +20,7 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -106,6 +107,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -129,9 +131,11 @@ import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
+import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
@@ -200,6 +204,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private OpenShiftManagerService openShiftManagerService;
+  @Mock private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
   @Inject @InjectMocks private K8sStateHelper k8sStateHelper;
 
@@ -262,6 +267,9 @@ public class K8sStateHelperTest extends WingsBaseTest {
                         .build());
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
         .thenAnswer(i -> i.getArguments()[0]);
+    doReturn(K8sClusterConfig.builder().build())
+        .when(containerDeploymentManagerHelper)
+        .getK8sClusterConfig(any(), any());
   }
 
   @Test
@@ -622,7 +630,9 @@ public class K8sStateHelperTest extends WingsBaseTest {
     delegateTask = captor.getValue();
     assertThat(delegateTask.getTags()).isEmpty();
 
-    settingAttribute.setValue(KubernetesClusterConfig.builder().build());
+    doReturn(K8sClusterConfig.builder().cloudProvider(KubernetesClusterConfig.builder().build()).build())
+        .when(containerDeploymentManagerHelper)
+        .getK8sClusterConfig(any(), any());
     wingsPersistence.save(settingAttribute);
     k8sStateHelper.getPodList(infrastructureMapping, "default", "releaseName");
     captor = ArgumentCaptor.forClass(DelegateTask.class);
@@ -630,8 +640,12 @@ public class K8sStateHelperTest extends WingsBaseTest {
     delegateTask = captor.getValue();
     assertThat(delegateTask.getTags()).isEmpty();
 
-    settingAttribute.setValue(
-        KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build());
+    doReturn(K8sClusterConfig.builder()
+                 .cloudProvider(
+                     KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build())
+                 .build())
+        .when(containerDeploymentManagerHelper)
+        .getK8sClusterConfig(any(), any());
     wingsPersistence.save(settingAttribute);
     k8sStateHelper.getPodList(infrastructureMapping, "default", "releaseName");
     captor = ArgumentCaptor.forClass(DelegateTask.class);
@@ -746,6 +760,9 @@ public class K8sStateHelperTest extends WingsBaseTest {
     when(evaluator.substitute(anyString(), any(), any(), anyString())).thenReturn("default");
     when(serviceResourceService.getHelmVersionWithDefault(anyString(), anyString()))
         .thenReturn(HelmConstants.HelmVersion.V2);
+    doReturn(K8sClusterConfig.builder().build())
+        .when(containerDeploymentManagerHelper)
+        .getK8sClusterConfig(any(ContainerInfrastructureMapping.class), eq(context));
 
     SettingAttribute settingAttribute = aSettingAttribute()
                                             .withUuid(SETTING_ID)
@@ -771,8 +788,12 @@ public class K8sStateHelperTest extends WingsBaseTest {
     assertThat(delegateTask.getTags()).isEmpty();
 
     when(featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
-    settingAttribute.setValue(
-        KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build());
+    doReturn(K8sClusterConfig.builder()
+                 .cloudProvider(
+                     KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build())
+                 .build())
+        .when(containerDeploymentManagerHelper)
+        .getK8sClusterConfig(any(ContainerInfrastructureMapping.class), eq(context));
     wingsPersistence.save(settingAttribute);
     k8sStateHelper.queueK8sDelegateTask(context, K8sRollingDeployTaskParameters.builder().build());
     captor = ArgumentCaptor.forClass(DelegateTask.class);

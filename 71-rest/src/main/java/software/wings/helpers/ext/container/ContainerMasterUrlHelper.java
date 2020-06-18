@@ -5,13 +5,17 @@ import static io.harness.exception.WingsException.USER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.service.impl.ContainerServiceParams;
@@ -24,6 +28,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 public class ContainerMasterUrlHelper {
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject InfrastructureMappingService infrastructureMappingService;
+  @Inject ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
   public boolean fetchMasterUrlAndUpdateInfraMapping(ContainerInfrastructureMapping containerInfraMapping,
       ContainerServiceParams containerServiceParams, SyncTaskContext syncTaskContext) {
@@ -45,6 +50,25 @@ public class ContainerMasterUrlHelper {
       logger.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
+  }
+
+  public String fetchMasterUrl(
+      ContainerServiceParams containerServiceParams, ContainerInfrastructureMapping infraMapping) {
+    if (infraMapping instanceof DirectKubernetesInfrastructureMapping) {
+      final SettingAttribute settingAttribute = containerServiceParams.getSettingAttribute();
+      if (settingAttribute.getValue() instanceof KubernetesClusterConfig) {
+        return ((KubernetesClusterConfig) settingAttribute.getValue()).getMasterUrl();
+      }
+    }
+    return fetchMasterUrl(containerServiceParams,
+        SyncTaskContext.builder()
+            .accountId(infraMapping.getAccountId())
+            .appId(infraMapping.getAppId())
+            .envId(infraMapping.getEnvId())
+            .infrastructureMappingId(infraMapping.getUuid())
+            .infraStructureDefinitionId(infraMapping.getInfrastructureDefinitionId())
+            .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
+            .build());
   }
 
   public boolean masterUrlRequired(ContainerInfrastructureMapping containerInfraMapping) {

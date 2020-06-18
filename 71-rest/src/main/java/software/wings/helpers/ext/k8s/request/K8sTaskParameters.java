@@ -37,6 +37,7 @@ public class K8sTaskParameters implements TaskParameters, ActivityAccess, Execut
       executionCapabilities.add(
           KustomizeCapability.builder().kustomizeConfig(fetchKustomizeConfig((ManifestAwareTaskParams) this)).build());
     }
+
     return executionCapabilities;
   }
 

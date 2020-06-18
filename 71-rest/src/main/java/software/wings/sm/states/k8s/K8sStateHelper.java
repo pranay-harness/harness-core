@@ -92,6 +92,7 @@ import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
+import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
@@ -171,6 +172,7 @@ public class K8sStateHelper {
   @Inject private KustomizeHelper kustomizeHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private OpenShiftManagerService openShiftManagerService;
+  @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
 
   private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
 

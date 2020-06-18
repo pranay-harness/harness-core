@@ -67,6 +67,7 @@ public class ContainerDeploymentManagerHelper {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private AwsEcrHelperServiceManager awsEcrHelperServiceManager;
+  @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
 
   public List<InstanceStatusSummary> getInstanceStatusSummaryFromContainerInfoList(
       List<ContainerInfo> containerInfos, ServiceTemplateElement serviceTemplateElement) {
@@ -150,13 +151,13 @@ public class ContainerDeploymentManagerHelper {
 
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(),
-            containerInfraMapping.getAppId(), context.getWorkflowExecutionId());
+            containerInfraMapping.getAppId(), context != null ? context.getWorkflowExecutionId() : null);
     return ContainerServiceParams.builder()
         .settingAttribute(settingAttribute)
         .containerServiceName(containerServiceName)
         .encryptionDetails(encryptionDetails)
         .clusterName(clusterName)
-        .namespace(context.renderExpression(namespace))
+        .namespace(context != null ? context.renderExpression(namespace) : namespace)
         .region(region)
         .subscriptionId(subscriptionId)
         .resourceGroup(resourceGroup)
@@ -211,6 +212,8 @@ public class ContainerDeploymentManagerHelper {
         .clusterName(clusterName)
         .namespace(namespace)
         .cloudProviderName(cloudProviderName)
+        .masterUrl(containerMasterUrlHelper.fetchMasterUrl(
+            getContainerServiceParams(containerInfraMapping, null, context), containerInfraMapping))
         .build();
   }
 }
