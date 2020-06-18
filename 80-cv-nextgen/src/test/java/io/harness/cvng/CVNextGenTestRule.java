@@ -3,6 +3,8 @@ package io.harness.cvng;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
+import io.harness.app.CVServiceModule;
+import io.harness.app.cvng.client.VerificationManagerClientModule;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
@@ -49,12 +51,14 @@ public class CVNextGenTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         });
       }
     });
+    modules.add(new VerificationManagerClientModule("test-host"));
     modules.add(new ProviderModule() {
 
     });
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
     modules.addAll(new TestMongoModule().cumulativeDependencies());
     modules.add(new CVNextGenCommonsServiceModule());
+    modules.add(new CVServiceModule());
     return modules;
   }
 
