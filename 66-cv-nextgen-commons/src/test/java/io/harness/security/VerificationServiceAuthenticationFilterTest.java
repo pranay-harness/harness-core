@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ClientType;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenBaseTest;
+import io.harness.cvng.CVNextGenCommonBaseTest;
 import io.harness.entity.HarnessApiKey;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
@@ -28,7 +28,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.HttpHeaders;
 
-public class VerificationServiceAuthenticationFilterTest extends CVNextGenBaseTest {
+public class VerificationServiceAuthenticationFilterTest extends CVNextGenCommonBaseTest {
   @Mock private ResourceInfo resourceInfo;
   @Mock private ContainerRequestContext containerRequestContext;
   @Inject private HPersistence hPersistence;
