@@ -22,6 +22,7 @@ import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Log;
 import software.wings.beans.command.GcbTaskParams;
 import software.wings.helpers.ext.gcb.GcbService;
+import software.wings.helpers.ext.gcb.models.BuildOperationDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
 import software.wings.helpers.ext.gcb.models.RepoSource;
 import software.wings.service.intfc.security.EncryptionService;
@@ -71,8 +72,10 @@ public class GcbTask extends AbstractDelegateRunnableTask {
   }
 
   protected GcbDelegateResponse startGcbBuild(final @NotNull GcbTaskParams params) {
-    GcbBuildDetails buildDetails = triggerGcb(params);
+    BuildOperationDetails buildOperationDetails = triggerGcb(params);
+    GcbBuildDetails buildDetails = buildOperationDetails.getOperationMeta().getBuild();
     params.setBuildId(buildDetails.getId());
+    params.setBuildName(buildOperationDetails.getName());
     return gcbDelegateResponseOf(params, buildDetails);
   }
 
@@ -91,14 +94,11 @@ public class GcbTask extends AbstractDelegateRunnableTask {
     return gcbDelegateResponseOf(params, build);
   }
 
-  protected GcbBuildDetails triggerGcb(final @NotNull GcbTaskParams params) {
+  protected BuildOperationDetails triggerGcb(final @NotNull GcbTaskParams params) {
     RepoSource repoSource = new RepoSource();
     repoSource.setBranchName(params.getBranchName());
-    return gcbService
-        .runTrigger(params.getGcpConfig(), params.getEncryptedDataDetails(), params.getProjectId(),
-            params.getTriggerId(), repoSource)
-        .getOperationMeta()
-        .getBuild();
+    return gcbService.runTrigger(params.getGcpConfig(), params.getEncryptedDataDetails(), params.getProjectId(),
+        params.getTriggerId(), repoSource);
   }
 
   // similar to JenkinsTask#sameConsoleLogs(activityId, stateName, commandExecutionStatus, appId, consoleOutput)

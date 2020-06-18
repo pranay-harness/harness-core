@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.helpers.ext.gcb.models.GcbBuildStatus.QUEUED;
 import static software.wings.helpers.ext.gcb.models.GcbBuildStatus.WORKING;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotations.dev.OwnedBy;
@@ -47,6 +48,7 @@ public class GcbBuildDetails {
   /**
    * @return boolean
    */
+  @JsonIgnore
   public boolean isWorking() {
     return status == WORKING || status == QUEUED;
   }

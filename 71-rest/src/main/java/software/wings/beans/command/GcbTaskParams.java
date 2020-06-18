@@ -31,6 +31,7 @@ public class GcbTaskParams implements ExecutionCapabilityDemander {
   @NotNull private List<EncryptedDataDetail> encryptedDataDetails;
 
   @Nullable private String buildId;
+  @Nullable private String buildName;
   @Nullable private String triggerId; // rework this into a list of options
   @Nullable private String branchName; // rework this into a list of options
   @Nullable private Map<String, String> parameters;

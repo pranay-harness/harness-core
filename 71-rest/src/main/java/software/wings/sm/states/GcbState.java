@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
-import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.beans.TaskData.asyncTaskData;
 import static java.util.Collections.singletonList;
@@ -29,10 +28,10 @@ import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -202,17 +201,18 @@ public class GcbState extends State implements SweepingOutputStateMixin {
           .build();
     }
 
-    GcbDelegateResponse gcbDelegateResponse = (GcbDelegateResponse) notifyResponseData;
-    if (gcbDelegateResponse.isWorking()) {
-      return startPollTask(context, gcbDelegateResponse);
+    GcbDelegateResponse delegateResponse = (GcbDelegateResponse) notifyResponseData;
+    if (delegateResponse.isWorking()) {
+      return startPollTask(context, delegateResponse);
     }
     final GcbExecutionData gcbExecutionData = context.getStateExecutionData();
-    activityService.updateStatus(gcbDelegateResponse.getParams().getActivityId(), context.getAppId(), SUCCESS);
+    activityService.updateStatus(
+        delegateResponse.getParams().getActivityId(), context.getAppId(), delegateResponse.getStatus());
 
-    handleSweepingOutput(sweepingOutputService, context, gcbExecutionData);
+    handleSweepingOutput(sweepingOutputService, context, gcbExecutionData.withDelegateResponse(delegateResponse));
 
     return ExecutionResponse.builder()
-        .executionStatus(gcbDelegateResponse.getStatus())
+        .executionStatus(delegateResponse.getStatus())
         .stateExecutionData(gcbExecutionData)
         .build();
   }
@@ -247,18 +247,18 @@ public class GcbState extends State implements SweepingOutputStateMixin {
   }
 
   @Data
-  @AllArgsConstructor
+  @RequiredArgsConstructor
   @EqualsAndHashCode(callSuper = false)
   public static final class GcbDelegateResponse implements DelegateTaskNotifyResponseData {
-    @NotNull private ExecutionStatus status;
-    @NotNull private GcbBuildDetails build;
-    @NotNull private GcbTaskParams params;
+    @NotNull private final ExecutionStatus status;
+    @NotNull private final GcbBuildDetails build;
+    @NotNull private final GcbTaskParams params;
     @Nullable private DelegateMetaInfo delegateMetaInfo;
 
     @NotNull
     public static GcbDelegateResponse gcbDelegateResponseOf(
         @NotNull final GcbTaskParams params, @NotNull final GcbBuildDetails build) {
-      return new GcbDelegateResponse(build.getStatus().getExecutionStatus(), build, params, null);
+      return new GcbDelegateResponse(build.getStatus().getExecutionStatus(), build, params);
     }
 
     public boolean isWorking() {
