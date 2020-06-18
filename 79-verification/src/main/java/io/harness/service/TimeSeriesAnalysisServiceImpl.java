@@ -174,7 +174,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .addFilter(TimeSeriesMetricRecordKeys.level, Operator.EQ, ClusterLevel.HF)
             .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.GE, dataCollectionMinute)
             .build();
-    return !dataStoreService.list(TimeSeriesDataRecord.class, pageRequest).isEmpty();
+    return !dataStoreService.list(TimeSeriesDataRecord.class, pageRequest, false).isEmpty();
   }
 
   @Override
@@ -464,7 +464,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
             .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.GE, analysisStartMinute)
             .build();
-    List<TimeSeriesDataRecord> response = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest).getResponse();
+    List<TimeSeriesDataRecord> response =
+        dataStoreService.list(TimeSeriesDataRecord.class, pageRequest, false).getResponse();
     List<NewRelicMetricDataRecord> results =
         TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(response);
     return results.stream()
@@ -488,7 +489,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
             .addFilter(TimeSeriesMetricRecordKeys.dataCollectionMinute, Operator.GE, analysisStartMinute)
             .build();
-    List<TimeSeriesDataRecord> response = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest).getResponse();
+    List<TimeSeriesDataRecord> response =
+        dataStoreService.list(TimeSeriesDataRecord.class, pageRequest, false).getResponse();
     List<NewRelicMetricDataRecord> results =
         TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(response);
     if (isEmpty(results)) {
@@ -500,7 +502,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
               .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.LT_EQ, analysisMinute)
               .addFilter(NewRelicMetricDataRecordKeys.dataCollectionMinute, Operator.GE, analysisStartMinute)
               .build();
-      results = dataStoreService.list(NewRelicMetricDataRecord.class, newRelicRequest).getResponse();
+      results = dataStoreService.list(NewRelicMetricDataRecord.class, newRelicRequest, false).getResponse();
     }
     return results.stream()
         .filter(dataRecord -> ClusterLevel.H0 != dataRecord.getLevel() && ClusterLevel.HF != dataRecord.getLevel())
@@ -526,7 +528,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .withLimit(UNLIMITED)
             .addFilter(TimeSeriesMetricRecordKeys.workflowExecutionId, Operator.EQ, workflowExecutionId)
             .build();
-    PageResponse<TimeSeriesDataRecord> results = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+    PageResponse<TimeSeriesDataRecord> results = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest, false);
     if (results.isEmpty()) {
       return -1;
     }
@@ -569,7 +571,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
               .build();
 
       PageResponse<NewRelicMetricDataRecord> results =
-          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest);
+          dataStoreService.list(NewRelicMetricDataRecord.class, pageRequest, false);
       if (results.isEmpty()) {
         continue;
       }
@@ -666,7 +668,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .addFilter(TimeSeriesMetricRecordKeys.groupName, Operator.EQ, groupName)
             .addOrder(TimeSeriesMetricRecordKeys.dataCollectionMinute, orderType)
             .build();
-    final PageResponse<TimeSeriesDataRecord> results = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+    final PageResponse<TimeSeriesDataRecord> results =
+        dataStoreService.list(TimeSeriesDataRecord.class, pageRequest, false);
     List<TimeSeriesDataRecord> dataRecords =
         results.stream()
             .filter(dataRecord
@@ -699,7 +702,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .addOrder(NewRelicMetricDataRecordKeys.dataCollectionMinute, OrderType.DESC)
             .build();
 
-    final PageResponse<TimeSeriesDataRecord> results = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+    final PageResponse<TimeSeriesDataRecord> results =
+        dataStoreService.list(TimeSeriesDataRecord.class, pageRequest, false);
     List<TimeSeriesDataRecord> dataRecords =
         results.stream()
             .filter(dataRecord
@@ -739,7 +743,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .addOrder(TimeSeriesMetricRecordKeys.dataCollectionMinute, OrderType.DESC)
             .build();
     final PageResponse<TimeSeriesDataRecord> dataRecords =
-        dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+        dataStoreService.list(TimeSeriesDataRecord.class, pageRequest, false);
     dataRecords.forEach(dataRecord -> dataRecord.setLevel(ClusterLevel.HF));
     dataStoreService.save(TimeSeriesDataRecord.class, dataRecords, false);
   }
@@ -935,7 +939,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .addOrder(TimeSeriesMetricRecordKeys.dataCollectionMinute, OrderType.DESC)
             .build();
 
-    final PageResponse<TimeSeriesDataRecord> results = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+    final PageResponse<TimeSeriesDataRecord> results =
+        dataStoreService.list(TimeSeriesDataRecord.class, pageRequest, false);
     if (isEmpty(results)) {
       return -1;
     }
@@ -990,7 +995,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         }
 
         final PageResponse<TimeSeriesDataRecord> dataRecordKeys =
-            dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+            dataStoreService.list(TimeSeriesDataRecord.class, pageRequest, false);
 
         results = TimeSeriesDataRecord.getNewRelicDataRecordsFromTimeSeriesDataRecords(dataRecordKeys.getResponse());
         results.stream()
@@ -1149,7 +1154,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .addOrder(TimeSeriesMetricRecordKeys.dataCollectionMinute, OrderType.DESC)
             .build();
 
-    final PageResponse<TimeSeriesDataRecord> results = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+    final PageResponse<TimeSeriesDataRecord> results =
+        dataStoreService.list(TimeSeriesDataRecord.class, pageRequest, false);
     if (isEmpty(results)) {
       return Optional.empty();
     }
