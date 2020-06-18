@@ -506,8 +506,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
           executionData.setCurrentStatus(
               currentStatus.entrySet()
                   .stream()
-                  .map(status -> StringUtils.capitalize(status.getKey()) + " is equal to " + status.getValue())
-                  .collect(Collectors.joining(",\n")));
+                  .map(status -> StringUtils.capitalize(status.getKey()) + " is " + status.getValue())
+                  .collect(Collectors.joining(" and\n")));
         }
 
         if (executionData.getSnowApproval() != null && executionData.getSnowApproval().satisfied(currentStatus)) {
