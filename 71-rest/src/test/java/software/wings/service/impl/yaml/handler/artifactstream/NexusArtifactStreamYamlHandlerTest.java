@@ -79,4 +79,45 @@ public class NexusArtifactStreamYamlHandlerTest extends BaseYamlHandlerTest {
     when(yamlHelper.getServiceId(APP_ID, "Setup/Applications/a1/Services/s1/as1/test.yaml")).thenReturn(SERVICE_ID);
     yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
   }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void upsertFromYamlWithoutRepositoryFormat() {
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(settingsService.getByName(ACCOUNT_ID, APP_ID, "nexus 2 dev")).thenReturn(settingAttribute);
+    NexusArtifactStream.Yaml baseYaml = NexusArtifactStream.Yaml.builder()
+                                            .repositoryName("releases")
+                                            .groupId("mygroup")
+                                            .artifactPaths(asList("todolist"))
+                                            .harnessApiVersion("1.0")
+                                            .serverName("nexus 2 dev")
+                                            .build();
+    ChangeContext changeContext = ChangeContext.Builder.aChangeContext()
+                                      .withYamlType(YamlType.ARTIFACT_STREAM)
+                                      .withYaml(baseYaml)
+                                      .withChange(GitFileChange.Builder.aGitFileChange()
+                                                      .withFilePath("Setup/Applications/a1/Services/s1/as1/test.yaml")
+                                                      .withFileContent("harnessApiVersion: '1.0'\n"
+                                                          + "type: NEXUS\n"
+                                                          + "artifactPaths:\n"
+                                                          + "- todolist\n"
+                                                          + "groupId: mygroup\n"
+                                                          + "metadataOnly: true\n"
+                                                          + "repositoryName: releases\n"
+                                                          + "serverName: nexus 2 dev")
+                                                      .withAccountId(ACCOUNT_ID)
+                                                      .withChangeType(MODIFY)
+                                                      .build())
+                                      .build();
+    Application application = Application.Builder.anApplication().name("a1").uuid(APP_ID).accountId(ACCOUNT_ID).build();
+    when(appService.getAppByName(ACCOUNT_ID, "a1")).thenReturn(application);
+    when(appService.get(APP_ID)).thenReturn(application);
+    when(yamlHelper.getAppId(
+             changeContext.getChange().getAccountId(), "Setup/Applications/a1/Services/s1/as1/test.yaml"))
+        .thenReturn(APP_ID);
+    when(yamlHelper.getServiceId(APP_ID, "Setup/Applications/a1/Services/s1/as1/test.yaml")).thenReturn(SERVICE_ID);
+    yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+  }
 }

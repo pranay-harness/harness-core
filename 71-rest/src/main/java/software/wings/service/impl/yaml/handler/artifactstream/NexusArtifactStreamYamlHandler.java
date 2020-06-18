@@ -52,6 +52,9 @@ public class NexusArtifactStreamYamlHandler
   protected void toBean(NexusArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
     Yaml yaml = changeContext.getYaml();
+    if (isEmpty(yaml.getRepositoryFormat())) {
+      throw new InvalidRequestException("Repository Format is mandatory");
+    }
     if (isEmpty(yaml.getRepositoryName())) {
       throw new InvalidRequestException("Repository Name is mandatory");
     }
