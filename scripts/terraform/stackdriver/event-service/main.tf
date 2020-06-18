@@ -16,13 +16,13 @@ locals {
   prod_filter_prefix = join("\n", [
     "resource.labels.cluster_name=\"prod-private-uswest1-primary\"",
     "resource.labels.container_name=\"event-service\"",
-    "resource.labels.namespace_id=\"harness\""
+    "resource.labels.namespace_name=\"harness\""
   ])
 
   freemium_filter_prefix = join("\n", [
     "resource.type=\"container\"",
     "resource.labels.container_name=\"event-service\"",
-    "resource.labels.namespace_id=\"harness-free\""
+    "resource.labels.namespace_name=\"harness-free\""
   ])
 
   filter_prefix = (var.deployment == "qa"     ? local.qa_filter_prefix :
