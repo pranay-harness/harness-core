@@ -69,6 +69,8 @@ import java.util.stream.Stream;
 @OwnedBy(CDC)
 @Slf4j
 public class GcbState extends State implements SweepingOutputStateMixin {
+  public static final String GCB_LOGS = "GCB Output";
+
   @Getter @Setter private List<ParameterEntry> jobParameters = Lists.newArrayList();
 
   @Getter @Setter private String gcpConfigId;
@@ -150,7 +152,7 @@ public class GcbState extends State implements SweepingOutputStateMixin {
                                       .parameters(evaluatedParameters)
                                       .activityId(activityId)
                                       .buildUrl(gcbBuildUrl)
-                                      .unitName("COMMAND_UNIT_NAME")
+                                      .unitName(GCB_LOGS)
                                       .appId(appId)
                                       .build();
 
