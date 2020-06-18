@@ -39,6 +39,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AzureKubernetesInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -142,7 +143,8 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws Exception {
-    when(containerMasterUrlHelper.fetchMasterUrl(any(), any())).thenReturn("master_url");
+    when(containerMasterUrlHelper.fetchMasterUrl(any(ContainerServiceParams.class), any(SyncTaskContext.class)))
+        .thenReturn("master_url");
 
     ChangeContext<AzureKubernetesInfrastructureMapping.Yaml> changeContext =
         getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
