@@ -51,7 +51,7 @@ resource "google_monitoring_dashboard" "dev_db_dashboard" {
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_dev_db_index_issues\" resource.type=\"gke_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_dev_db_index_issues\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM"
@@ -81,7 +81,7 @@ resource "google_monitoring_dashboard" "dev_db_dashboard" {
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_dev_db_factory_issues\" resource.type=\"gke_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_dev_db_factory_issues\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM"

@@ -20,7 +20,7 @@ locals {
   ])
 
   freemium_filter_prefix = join("\n", [
-    "resource.type=\"container\"",
+    "resource.type=\"k8s_container\"",
     "resource.labels.container_name=\"manager\"",
     "resource.labels.namespace_name:\"manager-free-\""
   ])
