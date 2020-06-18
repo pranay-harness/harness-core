@@ -103,12 +103,12 @@ public class MongoQueueTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void shouldNotGetMessageBeforeEarliestGet() throws InterruptedException {
     TestTopicQueuableObject message = new TestTopicQueuableObject(1);
-    message.setEarliestGet(new Date(System.currentTimeMillis() + 200));
+    message.setEarliestGet(new Date(System.currentTimeMillis() + 400));
     topicProducer.send(message);
 
     assertThat(queue.get(Duration.ZERO, Duration.ZERO)).isNull();
 
-    sleep(ofMillis(200));
+    sleep(ofMillis(401));
 
     assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isNotNull();
   }

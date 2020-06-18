@@ -24,6 +24,9 @@ import java.util.zip.InflaterInputStream;
 
 @UtilityClass
 @Slf4j
+@Deprecated // There is a race between the kryo initialization through reflection and the loading of all jars.
+            // In some rare cases this leaves the kryo registration map incomplete and it makes a lot of the
+            // communications to fail. Use KryoSerializer instead.
 public class KryoUtils {
   public static synchronized Kryo kryo() {
     final ClassResolver classResolver = new ClassResolver();
@@ -40,7 +43,7 @@ public class KryoUtils {
         kryoRegistrar.register(kryo);
 
         try {
-          check(previousState, classResolver.getRegistrations());
+          KryoSerializer.check(previousState, classResolver.getRegistrations());
         } catch (Exception exception) {
           throw new IllegalStateException(
               format("Check for registration of %s failed", clazz.getCanonicalName()), exception);
@@ -55,24 +58,6 @@ public class KryoUtils {
   }
 
   private static final KryoPool pool = new KryoPool.Builder(KryoUtils::kryo).softReferences().build();
-
-  static void check(IntMap<Registration> previousState, IntMap<Registration> newState) {
-    for (IntMap.Entry entry : newState.entries()) {
-      final Registration newRegistration = (Registration) entry.value;
-      final Registration previousRegistration = previousState.get(newRegistration.getId());
-
-      if (previousRegistration == null) {
-        continue;
-      }
-
-      if (previousRegistration.getType() == newRegistration.getType()) {
-        continue;
-      }
-
-      throw new IllegalStateException(format("The id %d changed its class from %s to %s", newRegistration.getId(),
-          previousRegistration.getType().getCanonicalName(), newRegistration.getType().getCanonicalName()));
-    }
-  }
 
   public static String asString(Object obj) {
     return Base64.encodeBase64String(asBytes(obj));

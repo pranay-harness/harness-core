@@ -6,6 +6,7 @@ import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SEC
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static java.util.Arrays.asList;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -31,6 +32,22 @@ import io.harness.persistence.Store;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.serializer.KryoModule;
+import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.kryo.ApiServiceKryoRegister;
+import io.harness.serializer.kryo.CIBeansRegistrar;
+import io.harness.serializer.kryo.CIExecutionRegistrar;
+import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
+import io.harness.serializer.kryo.CVNextGenRestBeansKryoRegistrar;
+import io.harness.serializer.kryo.CommonsKryoRegistrar;
+import io.harness.serializer.kryo.DelegateAgentKryoRegister;
+import io.harness.serializer.kryo.DelegateKryoRegister;
+import io.harness.serializer.kryo.DelegateTasksKryoRegister;
+import io.harness.serializer.kryo.ManagerKryoRegistrar;
+import io.harness.serializer.kryo.NGKryoRegistrar;
+import io.harness.serializer.kryo.OrchestrationBeansKryoRegistrar;
+import io.harness.serializer.kryo.OrchestrationKryoRegister;
+import io.harness.serializer.kryo.PersistenceRegistrar;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -82,6 +99,31 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
     logger.info("Leaving startup maintenance mode");
     List<Module> modules = new ArrayList<>();
+    modules.add(new KryoModule());
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .add(ApiServiceKryoRegister.class)
+            .add(CIBeansRegistrar.class)
+            .add(CIExecutionRegistrar.class)
+            .add(CommonsKryoRegistrar.class)
+            .add(CVNextGenCommonsBeansKryoRegistrar.class)
+            .add(CVNextGenRestBeansKryoRegistrar.class)
+            .add(DelegateAgentKryoRegister.class)
+            .add(DelegateKryoRegister.class)
+            .add(DelegateTasksKryoRegister.class)
+            .add(ManagerKryoRegistrar.class)
+            .add(NGKryoRegistrar.class)
+            .add(OrchestrationBeansKryoRegistrar.class)
+            .add(OrchestrationKryoRegister.class)
+            .add(PersistenceRegistrar.class)
+            .build();
+      }
+    });
+
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

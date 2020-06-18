@@ -27,9 +27,13 @@ public class ManagerClientFactory implements Provider<ManagerCIResource> {
   private String baseUrl;
   private ServiceTokenGenerator tokenGenerator;
 
-  public ManagerClientFactory(String baseUrl, ServiceTokenGenerator tokenGenerator) {
+  private KryoConverterFactory kryoConverterFactory;
+
+  public ManagerClientFactory(
+      String baseUrl, ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
     this.baseUrl = baseUrl;
     this.tokenGenerator = tokenGenerator;
+    this.kryoConverterFactory = kryoConverterFactory;
   }
 
   @Override
@@ -41,7 +45,7 @@ public class ManagerClientFactory implements Provider<ManagerCIResource> {
     Retrofit retrofit = new Retrofit.Builder()
                             .baseUrl(baseUrl)
                             .client(getUnsafeOkHttpClient())
-                            .addConverterFactory(new KryoConverterFactory())
+                            .addConverterFactory(kryoConverterFactory)
                             .addConverterFactory(JacksonConverterFactory.create(objectMapper))
                             .build();
     return retrofit.create(ManagerCIResource.class);

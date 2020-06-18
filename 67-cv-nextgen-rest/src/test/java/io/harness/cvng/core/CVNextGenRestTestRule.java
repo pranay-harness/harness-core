@@ -5,7 +5,6 @@ import com.google.inject.Module;
 
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.CVNextGenRestServiceModule;
-import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -50,9 +49,6 @@ public class CVNextGenRestTestRule implements InjectorRuleMixin, MethodRule, Mon
           }
         });
       }
-    });
-    modules.add(new ProviderModule() {
-
     });
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
     modules.addAll(new TestMongoModule().cumulativeDependencies());

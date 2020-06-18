@@ -18,7 +18,7 @@ public class ManagerClientFactoryTest extends CIExecutionTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldCreateManagerClientFactory() throws IOException {
-    ManagerClientFactory managerClientFactory = new ManagerClientFactory(BASE_URL, null);
+    ManagerClientFactory managerClientFactory = new ManagerClientFactory(BASE_URL, null, new KryoConverterFactory());
     assertThat(managerClientFactory.get()).isNotNull();
   }
 }
