@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UJJAWAL;
@@ -283,6 +284,17 @@ public class AuthServiceTest extends WingsBaseTest {
                                GLOBAL_ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Access denied");
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldNotValidateExpiredDelegateToken() {
+    String expiredToken =
+        "eyJlbmMiOiJBMTI4R0NNIiwiYWxnIjoiZGlyIn0..SFvYSml0znPxoa7K.JcsFw5GiYevubqqzjy-nQyDMzjtA64YhxZjnQz6VH7lRCAGP5JML9Ov86rSRV1V7Kb-a12UvTNzqEqdJ4PCLv4R7GA5SzCwxLEYrlTLtUWX40r0GKuRGoiJVJqax2bBy3gOqDftETZCm_90lD3NxDeJ__RICl4osp9IxCKmlfGyoqriAswoEvkVtu0wjRlvBS-FtY42AeyCf9XIH5rppw-AsXoHH40M6_8FN-mFkilfqv3QKPaGL6Zph.1ipAjbMS834AKSotvHy4sg";
+    assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, expiredToken))
+        .isInstanceOf(WingsException.class)
+        .hasMessageContaining("Unauthorized");
   }
 
   @Test

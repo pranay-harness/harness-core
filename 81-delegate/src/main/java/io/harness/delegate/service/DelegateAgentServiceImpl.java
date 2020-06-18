@@ -44,6 +44,7 @@ import static io.harness.delegate.message.MessageConstants.WATCHER_PROCESS;
 import static io.harness.delegate.message.MessageConstants.WATCHER_VERSION;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
+import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.filesystem.FileIo.acquireLock;
@@ -727,6 +728,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       updateJreVersion(StringUtils.substringAfter(message, JRE_VERSION));
     } else if (StringUtils.contains(message, INVALID_TOKEN.name())) {
       initiateSelfDestruct();
+    } else if (StringUtils.contains(message, EXPIRED_TOKEN.name())) {
+      logger.warn("Delegate used expired token. New token must be generated.");
     } else if (!StringUtils.equals(message, "X")) {
       logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       try {
@@ -803,9 +806,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       response = call.execute();
       return response.body();
     } finally {
-      if (response != null && !response.isSuccessful()
-          && response.errorBody().string().contains(INVALID_TOKEN.name())) {
-        initiateSelfDestruct();
+      if (response != null && !response.isSuccessful()) {
+        if (response.errorBody().string().contains(INVALID_TOKEN.name())) {
+          initiateSelfDestruct();
+        } else if (response.code() == EXPIRED_TOKEN.getStatus().getStatusCode()) {
+          logger.warn("Delegate was not authorized to invoke manager. New token should be generated.");
+        }
         response.errorBody().close();
       }
     }
