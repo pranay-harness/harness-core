@@ -251,7 +251,7 @@ genericEvent {"name": "earliestGet_1", "background": true, "expireAfterSeconds":
 genericEvent {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 gitCommits {"name": "appId_1", "background": true} {"appId": 1}
 gitCommits {"name": "createdAt_1", "background": true} {"createdAt": 1}
-gitCommits {"name": "gitCommitAccountIdCreatedAt", "background": true} {"accountId": 1, "createdAt": 1}
+gitCommits {"name": "gitCommitAccountIdCreatedAtDesc", "background": true} {"accountId": 1, "createdAt": -1}
 gitCommits {"name": "gitCommitAccountIdLastUpdatedAT", "background": true} {"accountId": 1, "lastUpdatedAt": -1}
 gitCommits {"name": "gitCommitIdx", "unique": true} {"accountId": 1, "commitId": 1}
 gitCommits {"name": "gitCommitStatusLastUpdatedIdx", "background": true} {"accountId": 1, "status": 1, "lastUpdatedAt": -1}
