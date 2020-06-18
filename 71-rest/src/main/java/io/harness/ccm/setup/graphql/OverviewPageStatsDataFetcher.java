@@ -2,6 +2,7 @@ package io.harness.ccm.setup.graphql;
 
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.countStringValueConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityCloudProviderConst;
+import static io.harness.persistence.HQuery.excludeValidate;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.FieldValueList;
@@ -176,7 +177,7 @@ public class OverviewPageStatsDataFetcher
 
   protected boolean getCEEnabledCloudProvider(String accountId) {
     return null
-        != persistence.createQuery(SettingAttribute.class)
+        != persistence.createQuery(SettingAttribute.class, excludeValidate)
                .field(SettingAttributeKeys.accountId)
                .equal(accountId)
                .field(SettingAttributeKeys.category)
