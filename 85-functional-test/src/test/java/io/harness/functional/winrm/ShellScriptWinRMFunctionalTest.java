@@ -71,7 +71,7 @@ public class ShellScriptWinRMFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category(FunctionalTests.class)
   //@Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunTemplatizedWinRmWorkflow() {
@@ -96,7 +96,7 @@ public class ShellScriptWinRMFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldCreateAndRunWinRmWorkflow() {
     service = serviceGenerator.ensurePredefined(seed, owners, ServiceGenerator.Services.GENERIC_TEST);
