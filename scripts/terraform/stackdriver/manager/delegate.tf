@@ -245,7 +245,7 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_rebroadcast\" resource.type=\"gke_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_rebroadcast\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM"
@@ -260,7 +260,7 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_response\" resource.type=\"gke_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_response\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM",
@@ -278,7 +278,7 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_creation_by_type\" resource.type=\"gke_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_creation_by_type\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM"
@@ -308,7 +308,7 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_acquire_by_owner\" resource.type=\"gke_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_acquire_by_owner\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM"
@@ -323,7 +323,7 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_validate\" resource.type=\"gke_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_validate\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM"
@@ -347,13 +347,13 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
         }
       },
       {
-        "title": "Prod Delegate Task Creation by Sync Async",
+        "title": "Delegate Task Creation by Sync Async",
         "xyChart": {
           "dataSets": [
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_creation_by_mode\" resource.type=\"gke_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_creation_by_mode\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM",
@@ -380,13 +380,13 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
         }
       },
       {
-        "title": "Prod Delegate Task Acquire by Account",
+        "title": "Delegate Task Acquire by Account",
         "xyChart": {
           "dataSets": [
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_acquire_by_owner\" resource.type=\"gke_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_acquire_by_owner\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM",
@@ -418,13 +418,13 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
         }
       },
       {
-        "title": "Prod Delegate Task Acquire by Task Group",
+        "title": "Delegate Task Acquire by Task Group",
         "xyChart": {
           "dataSets": [
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_acquire_by_type\" resource.type=\"gke_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_acquire_by_type\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM",
@@ -456,13 +456,13 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
         }
       },
       {
-        "title": "Prod Delegate Task Validation by Task Group",
+        "title": "Delegate Task Validation by Task Group",
         "xyChart": {
           "dataSets": [
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_validate\" resource.type=\"gke_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_validate\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM",
@@ -494,13 +494,13 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
         }
       },
       {
-        "title": "Prod Delegate Task Assignment by Task Group",
+        "title": "Delegate Task Assignment by Task Group",
         "xyChart": {
           "dataSets": [
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_assigning\" resource.type=\"gke_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_assigning\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM",
@@ -532,13 +532,13 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
         }
       },
       {
-        "title": "Prod Delegate Rebroadcast by Account",
+        "title": "Delegate Rebroadcast by Account",
         "xyChart": {
           "dataSets": [
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_rebroadcast\" resource.type=\"gke_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_rebroadcast\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM",
@@ -576,7 +576,7 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
             {
               "timeSeriesQuery": {
                 "timeSeriesFilter": {
-                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_no_eligible\" resource.type=\"gke_container\"",
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_no_eligible\" resource.type=\"k8s_container\"",
                   "aggregation": {
                     "perSeriesAligner": "ALIGN_RATE",
                     "crossSeriesReducer": "REDUCE_SUM",

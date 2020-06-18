@@ -139,7 +139,7 @@ public class StackDriverLogDataCollectionTaskTest extends WingsBaseTest {
     resourceLabels.put("project_id", "qa-setup");
     resourceLabels.put("cluster_name", "qa-private");
     resourceLabels.put("container_name", "verification-svc");
-    resourceLabels.put("namespace_id", "harness");
+    resourceLabels.put("namespace_name", "harness");
     resourceLabels.put("instance_id", "4826274342064220385");
     monitoredResource.setLabels(resourceLabels);
     monitoredResource.put("type", "container");
