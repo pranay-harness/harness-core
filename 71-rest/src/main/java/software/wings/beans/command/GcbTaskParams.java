@@ -37,6 +37,7 @@ public class GcbTaskParams implements ExecutionCapabilityDemander {
   private long timeout;
   private long startTs;
   private boolean injectEnvVars;
+  @Builder.Default private int pollFrequency = 5;
 
   @NotNull
   @Override

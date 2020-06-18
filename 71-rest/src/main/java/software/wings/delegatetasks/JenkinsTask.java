@@ -256,7 +256,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       Future<BuildWithDetails> jenkinsBuildWithDetailsFuture = null;
       Future<Void> saveConsoleLogs = null;
       try {
-        jenkinsBuildWithDetailsFuture = jenkinsExecutor.submit(() -> jenkinsBuild.details());
+        jenkinsBuildWithDetailsFuture = jenkinsExecutor.submit(jenkinsBuild::details);
         jenkinsBuildWithDetails = jenkinsBuildWithDetailsFuture.get(180, TimeUnit.SECONDS);
         BuildWithDetails finalJenkinsBuildWithDetails = jenkinsBuildWithDetails;
         saveConsoleLogs = jenkinsExecutor.submit(() -> {

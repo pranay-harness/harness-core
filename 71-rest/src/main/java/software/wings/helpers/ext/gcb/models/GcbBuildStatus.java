@@ -4,26 +4,32 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 
 @OwnedBy(CDC)
 public enum GcbBuildStatus {
-  STATUS_UNKNOWN(ExecutionStatus.FAILED),
-  QUEUED(ExecutionStatus.QUEUED),
-  WORKING(ExecutionStatus.RUNNING),
-  SUCCESS(ExecutionStatus.SUCCESS),
-  FAILURE(ExecutionStatus.FAILED),
-  INTERNAL_ERROR(ExecutionStatus.ERROR),
-  TIMEOUT(ExecutionStatus.EXPIRED),
-  CANCELLED(ExecutionStatus.ABORTED),
-  EXPIRED(ExecutionStatus.EXPIRED);
+  STATUS_UNKNOWN(ExecutionStatus.FAILED, CommandExecutionStatus.FAILURE),
+  QUEUED(ExecutionStatus.QUEUED, CommandExecutionStatus.QUEUED),
+  WORKING(ExecutionStatus.RUNNING, CommandExecutionStatus.RUNNING),
+  SUCCESS(ExecutionStatus.SUCCESS, CommandExecutionStatus.SUCCESS),
+  FAILURE(ExecutionStatus.FAILED, CommandExecutionStatus.FAILURE),
+  INTERNAL_ERROR(ExecutionStatus.ERROR, CommandExecutionStatus.FAILURE),
+  TIMEOUT(ExecutionStatus.EXPIRED, CommandExecutionStatus.FAILURE),
+  CANCELLED(ExecutionStatus.ABORTED, CommandExecutionStatus.FAILURE),
+  EXPIRED(ExecutionStatus.EXPIRED, CommandExecutionStatus.FAILURE);
 
   private final ExecutionStatus status;
+  private final CommandExecutionStatus commandExecutionStatus;
 
-  GcbBuildStatus(ExecutionStatus status) {
+  GcbBuildStatus(ExecutionStatus status, CommandExecutionStatus commandExecutionStatus) {
     this.status = status;
+    this.commandExecutionStatus = commandExecutionStatus;
   }
 
   public ExecutionStatus getExecutionStatus() {
     return status;
+  }
+  public CommandExecutionStatus getCommandExecutionStatus() {
+    return commandExecutionStatus;
   }
 }

@@ -10,6 +10,7 @@ import static software.wings.sm.states.EcsServiceDeploy.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.states.EcsServiceSetup.ECS_SERVICE_SETUP_COMMAND;
 import static software.wings.sm.states.EcsSetupRollback.ECS_DAEMON_SERVICE_ROLLBACK_COMMAND;
 import static software.wings.sm.states.EcsSteadyStateCheck.ECS_STEADY_STATE_CHECK_COMMAND_NAME;
+import static software.wings.sm.states.GcbState.GCB_LOGS;
 import static software.wings.sm.states.HelmDeployState.HELM_COMMAND_NAME;
 import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
 import static software.wings.sm.states.KubernetesSteadyStateCheck.KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME;
@@ -49,7 +50,7 @@ public class CommandUnitDetails {
   public enum CommandUnitType {
     COMMAND("COMMAND"),
     JENKINS(COMMAND_UNIT_NAME),
-    GCB(COMMAND_UNIT_NAME),
+    GCB(GCB_LOGS),
     HELM(HELM_COMMAND_NAME),
     KUBERNETES_STEADY_STATE_CHECK(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME),
     ECS_STEADY_STATE_CHECK(ECS_STEADY_STATE_CHECK_COMMAND_NAME),
