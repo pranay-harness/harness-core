@@ -41,6 +41,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.InvalidTokenException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -325,8 +326,7 @@ public class AuthServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldThrowThrowInavlidTokenForDelegate() {
     assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, "Dummy"))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.INVALID_TOKEN.name());
+        .isInstanceOf(InvalidTokenException.class);
   }
 
   @Test
@@ -334,8 +334,7 @@ public class AuthServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenUnableToDecryptToken() {
     assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, getDelegateToken()))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.INVALID_TOKEN.name());
+        .isInstanceOf(InvalidTokenException.class);
   }
 
   private String getDelegateToken() {

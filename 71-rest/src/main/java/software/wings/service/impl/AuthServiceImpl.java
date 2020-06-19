@@ -60,6 +60,7 @@ import io.harness.entity.ServiceSecretKey.ServiceType;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.InvalidTokenException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HPersistence;
@@ -386,42 +387,37 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void validateDelegateToken(String accountId, String tokenString) {
-    logger.info("Delegate token validation, account id [{}] token requested", accountId);
     Account account = dbCache.get(Account.class, accountId);
 
     if (account == null || GLOBAL_ACCOUNT_ID.equals(accountId)) {
-      logger.error("Account Id {} does not exist in manager. So, rejecting delegate register request.", accountId);
-      throw new InvalidRequestException("Access denied");
+      throw new InvalidRequestException("Access denied", USER_ADMIN);
     }
 
     EncryptedJWT encryptedJWT;
     try {
       encryptedJWT = EncryptedJWT.parse(tokenString);
     } catch (ParseException e) {
-      logger.error("Invalid token for delegate " + tokenString, e);
-      throw new WingsException(INVALID_TOKEN);
+      throw new InvalidTokenException("Invalid delegate token format", USER_ADMIN);
     }
 
     byte[] encodedKey;
     try {
       encodedKey = Hex.decodeHex(account.getAccountKey().toCharArray());
     } catch (DecoderException e) {
-      logger.error("Invalid hex account key " + account.getAccountKey(), e);
-      throw new WingsException(DEFAULT_ERROR_CODE); // ShouldNotHappen
+      throw new WingsException(DEFAULT_ERROR_CODE, USER_ADMIN);
     }
 
     JWEDecrypter decrypter;
     try {
       decrypter = new DirectDecrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
     } catch (KeyLengthException e) {
-      logger.error("Invalid account key " + account.getAccountKey(), e);
-      throw new WingsException(DEFAULT_ERROR_CODE);
+      throw new WingsException(DEFAULT_ERROR_CODE, USER_ADMIN);
     }
 
     try {
       encryptedJWT.decrypt(decrypter);
     } catch (JOSEException e) {
-      throw new WingsException(INVALID_TOKEN);
+      throw new InvalidTokenException("Invalid delegate token", USER_ADMIN);
     }
 
     try {
