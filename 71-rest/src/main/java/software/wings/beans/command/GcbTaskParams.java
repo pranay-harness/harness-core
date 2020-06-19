@@ -9,6 +9,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.GcpConfig;
+import software.wings.sm.states.gcbconfigs.GcbOptions;
 
 import java.util.List;
 import java.util.Map;
@@ -23,17 +24,14 @@ public class GcbTaskParams implements ExecutionCapabilityDemander {
 
   @NotNull private String appId;
   @NotNull private String unitName;
-  @NotNull private String buildUrl;
   @NotNull private GcbTaskType type;
-  @NotNull private String projectId;
   @NotNull private String activityId;
   @NotNull private GcpConfig gcpConfig;
   @NotNull private List<EncryptedDataDetail> encryptedDataDetails;
 
   @Nullable private String buildId;
+  @NotNull private GcbOptions gcbOptions;
   @Nullable private String buildName;
-  @Nullable private String triggerId; // rework this into a list of options
-  @Nullable private String branchName; // rework this into a list of options
   @Nullable private Map<String, String> parameters;
   private long timeout;
   private long startTs;

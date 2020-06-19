@@ -59,6 +59,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.GcbState.GcbDelegateResponse;
+import software.wings.sm.states.gcbconfigs.GcbOptions;
 
 import java.util.Collections;
 import java.util.Map;
@@ -73,6 +74,7 @@ public class GcbStateTest extends CategoryTest {
   @Mock private ExecutionContextImpl execution;
   @Mock private DelegateService delegateService;
   @Mock private SecretManager secretManager;
+  @Mock private GcbOptions gcbOptions;
   @Mock private SweepingOutputService sweepingOutputService;
 
   @InjectMocks private GcbState state = spy(new GcbState("gcb"));
@@ -108,7 +110,7 @@ public class GcbStateTest extends CategoryTest {
     Application application = mock(Application.class);
     doReturn(application).when(execution).fetchRequiredApp();
     when(application.getAppId()).thenReturn("appId");
-
+    when(gcbOptions.getGcpConfigId()).thenReturn("gcpConfigId");
     GcpConfig gcpConfig = mock(GcpConfig.class);
     doReturn(gcpConfig).when(execution).getGlobalSettingValue(any(), any());
     doReturn("workflowExecutionId").when(execution).getWorkflowExecutionId();

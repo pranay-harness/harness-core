@@ -54,6 +54,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.gcbconfigs.GcbOptions;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import software.wings.stencils.DefaultValue;
 
@@ -72,11 +73,7 @@ public class GcbState extends State implements SweepingOutputStateMixin {
 
   @Getter @Setter private List<ParameterEntry> jobParameters = Lists.newArrayList();
 
-  @Getter @Setter private String gcpConfigId;
-  @Getter @Setter private String gcbBuildUrl;
-  @Getter @Setter private String projectId; // extract
-  @Getter @Setter private String triggerId;
-  @Getter @Setter private String branchName;
+  @Getter @Setter private GcbOptions gcbOptions;
   @Getter @Setter private String sweepingOutputName;
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
 
@@ -139,18 +136,16 @@ public class GcbState extends State implements SweepingOutputStateMixin {
 
     final Application application = context.fetchRequiredApp();
     final String appId = application.getAppId();
-    final GcpConfig config = context.getGlobalSettingValue(context.getAccountId(), gcpConfigId);
+    final GcpConfig config = context.getGlobalSettingValue(context.getAccountId(), gcbOptions.getGcpConfigId());
     GcbTaskParams gcbTaskParams = GcbTaskParams.builder()
                                       .gcpConfig(config)
                                       .type(START)
-                                      .projectId(projectId)
-                                      .triggerId(triggerId)
-                                      .branchName(branchName)
+                                      .gcbOptions(gcbOptions)
                                       .encryptedDataDetails(secretManager.getEncryptionDetails(
                                           config, context.getAppId(), context.getWorkflowExecutionId()))
                                       .parameters(evaluatedParameters)
                                       .activityId(activityId)
-                                      .buildUrl(gcbBuildUrl)
+                                      .unitName("COMMAND_UNIT_NAME")
                                       .unitName(GCB_LOGS)
                                       .appId(appId)
                                       .build();

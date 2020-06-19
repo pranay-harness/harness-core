@@ -1,14 +1,13 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toCollection;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
-import software.wings.beans.command.GcbTaskParams;
+import software.wings.helpers.ext.gcb.GcbRestClient;
+import software.wings.helpers.ext.gcs.GcsRestClient;
 
-import java.util.LinkedList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -24,10 +23,6 @@ public class GcbValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return stream(getParameters())
-        .filter(GcbTaskParams.class ::isInstance)
-        .map(GcbTaskParams.class ::cast)
-        .map(GcbTaskParams::getBuildUrl)
-        .collect(toCollection(LinkedList::new));
+    return Arrays.asList(GcbRestClient.baseUrl, GcsRestClient.baseUrl);
   }
 }
