@@ -4,7 +4,7 @@ resource "google_logging_metric" "ce_publish_requests" {
   filter = join("\n", [
     local.filter_prefix,
     "jsonPayload.logger=\"io.harness.event.grpc.EventPublisherServerImpl\"",
-    "jsonPayload.message=\"Received publish request\""
+    "jsonPayload.message:\"Received publish request\""
   ])
   metric_descriptor {
     metric_kind = "DELTA"

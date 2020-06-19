@@ -23,6 +23,7 @@ module "manager" {
 module "delegate-agent" {
   source = "./delegate-agent"
   deployment = var.deployment
+  projectId = var.projectId
 }
 
 module "delegate-watcher" {
