@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package io.harness.product.ci.engine.proto;
+
+option java_multiple_files = true;
+option go_package = "cienginepb";
+
+message Execution {
+  repeated Step steps = 1;
+}
+
+message StepContext {
+  int32 num_retries = 1;
+  int64 execution_timeout_secs = 2;
+}
+
+message RunStep {
+  repeated string commands = 1;
+  StepContext context = 2;
+}
+
+message SaveCacheStep {
+  string key = 1;
+  repeated string paths = 2;
+}
+
+message Step {
+  string id = 1;
+  string display_name = 2;
+  oneof step {
+    RunStep run = 3;
+    SaveCacheStep save_cache = 4;
+  }
+}
