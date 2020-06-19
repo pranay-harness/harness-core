@@ -43,23 +43,12 @@ public abstract class BasePodSpecBuilder {
 
   private PodFluent.SpecNested<PodBuilder> getBaseSpec(PodParams<ContainerParams> podParams) {
     List<LocalObjectReference> imageSecrets = new ArrayList<>();
-    List<Container> containers = new ArrayList<>();
 
     Set<String> volumesToCreate = new HashSet<>();
     Map<String, LocalObjectReference> imageSecretByName = new HashMap<>();
-    for (ContainerParams containerParams : podParams.getContainerParamsList()) {
-      if (containerParams.getVolumeToMountPath() != null) {
-        containerParams.getVolumeToMountPath().forEach(
-            (volumeName, volumeMountPath) -> volumesToCreate.add(volumeName));
-      }
-
-      ContainerSpecBuilderResponse containerSpecBuilderResponse = containerSpecBuilder.createSpec(containerParams);
-      containers.add(containerSpecBuilderResponse.getContainerBuilder().build());
-      if (containerSpecBuilderResponse.getImageSecret() != null) {
-        LocalObjectReference imageSecret = containerSpecBuilderResponse.getImageSecret();
-        imageSecretByName.put(imageSecret.getName(), imageSecret);
-      }
-    }
+    List<Container> containers = getContainers(podParams.getContainerParamsList(), volumesToCreate, imageSecretByName);
+    List<Container> initContainers =
+        getContainers(podParams.getInitContainerParamsList(), volumesToCreate, imageSecretByName);
 
     imageSecretByName.forEach((imageName, imageSecret) -> imageSecrets.add(imageSecret));
 
@@ -76,7 +65,31 @@ public abstract class BasePodSpecBuilder {
         .endMetadata()
         .withNewSpec()
         .withContainers(containers)
+        .withInitContainers(initContainers)
         .withImagePullSecrets(imageSecrets)
         .withVolumes(volumes);
+  }
+
+  private List<Container> getContainers(List<ContainerParams> containerParamsList, Set<String> volumesToCreate,
+      Map<String, LocalObjectReference> imageSecretByName) {
+    List<Container> containers = new ArrayList<>();
+    if (containerParamsList == null) {
+      return containers;
+    }
+
+    for (ContainerParams containerParams : containerParamsList) {
+      if (containerParams.getVolumeToMountPath() != null) {
+        containerParams.getVolumeToMountPath().forEach(
+            (volumeName, volumeMountPath) -> volumesToCreate.add(volumeName));
+      }
+
+      ContainerSpecBuilderResponse containerSpecBuilderResponse = containerSpecBuilder.createSpec(containerParams);
+      containers.add(containerSpecBuilderResponse.getContainerBuilder().build());
+      if (containerSpecBuilderResponse.getImageSecret() != null) {
+        LocalObjectReference imageSecret = containerSpecBuilderResponse.getImageSecret();
+        imageSecretByName.put(imageSecret.getName(), imageSecret);
+      }
+    }
+    return containers;
   }
 }

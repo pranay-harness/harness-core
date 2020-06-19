@@ -14,6 +14,7 @@ public abstract class PodParams<T extends ContainerParams> {
   @NonNull private String namespace;
   private Map<String, String> labels;
   private List<T> containerParamsList;
+  private List<T> initContainerParamsList;
 
   public abstract PodParams.Type getType();
 

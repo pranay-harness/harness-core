@@ -6,27 +6,34 @@ package software.wings.delegatetasks.citasks.cik8handler.container;
  * container specification builder.
  */
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.KubernetesConvention.getKubernetesRegistrySecretName;
 
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
+import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import software.wings.beans.ci.pod.ContainerParams;
 import software.wings.beans.ci.pod.ContainerResourceParams;
+import software.wings.beans.ci.pod.SecretKeyParams;
 import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public abstract class BaseContainerSpecBuilder {
   public ContainerSpecBuilderResponse createSpec(ContainerParams containerParams) {
@@ -44,10 +51,11 @@ public abstract class BaseContainerSpecBuilder {
   private ContainerSpecBuilderResponse getBaseSpec(ContainerParams containerParams) {
     notNullCheck("Container parameters should be specified", containerParams);
 
-    List<EnvVar> envVars = new ArrayList<>();
-    if (containerParams.getEnvVars() != null) {
-      containerParams.getEnvVars().forEach(
-          (name, val) -> envVars.add(new EnvVarBuilder().withName(name).withValue(val).build()));
+    List<EnvVar> envVars = getContainerEnvVars(containerParams.getEnvVars(), containerParams.getSecretEnvVars());
+    List<ContainerPort> containerPorts = new ArrayList<>();
+    if (containerParams.getPorts() != null) {
+      containerParams.getPorts().forEach(
+          port -> containerPorts.add(new ContainerPortBuilder().withContainerPort(port).build()));
     }
 
     List<VolumeMount> volumeMounts = new ArrayList<>();
@@ -75,7 +83,12 @@ public abstract class BaseContainerSpecBuilder {
                                             .withArgs(containerParams.getArgs())
                                             .withEnv(envVars)
                                             .withResources(resourceRequirements)
+                                            .withPorts(containerPorts)
                                             .withVolumeMounts(volumeMounts);
+
+    if (isNotEmpty(containerParams.getWorkingDir())) {
+      containerBuilder.withWorkingDir(containerParams.getWorkingDir());
+    }
 
     return ContainerSpecBuilderResponse.builder().containerBuilder(containerBuilder).imageSecret(imageSecret).build();
   }
@@ -108,5 +121,26 @@ public abstract class BaseContainerSpecBuilder {
     }
 
     return builder.build();
+  }
+
+  private List<EnvVar> getContainerEnvVars(Map<String, String> envVars, Map<String, SecretKeyParams> secretEnvVars) {
+    List<EnvVar> ctrEnvVars = new ArrayList<>();
+    if (envVars != null) {
+      envVars.forEach((name, val) -> ctrEnvVars.add(new EnvVarBuilder().withName(name).withValue(val).build()));
+    }
+    if (secretEnvVars != null) {
+      secretEnvVars.forEach(
+          (name, secretKeyParam)
+              -> ctrEnvVars.add(new EnvVarBuilder()
+                                    .withName(name)
+                                    .withValueFrom(new EnvVarSourceBuilder()
+                                                       .withSecretKeyRef(new SecretKeySelectorBuilder()
+                                                                             .withKey(secretKeyParam.getKey())
+                                                                             .withName(secretKeyParam.getSecretName())
+                                                                             .build())
+                                                       .build())
+                                    .build()));
+    }
+    return ctrEnvVars;
   }
 }
