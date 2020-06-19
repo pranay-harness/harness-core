@@ -419,6 +419,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       mlAnalysisResponse.setOverallMetricScores(new HashMap<>());
     }
     double riskScore = computeRiskScore(mlAnalysisResponse);
+    mlAnalysisResponse.setRiskScore(riskScore);
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(
         cvConfigId, riskScore, mlAnalysisResponse.getAnalysisMinute());
     mlAnalysisResponse.bundleAsJosnAndCompress();

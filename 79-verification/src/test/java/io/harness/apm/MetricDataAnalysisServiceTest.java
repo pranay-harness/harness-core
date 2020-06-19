@@ -273,6 +273,35 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  public void testSaveAnalysisRecordsML_savesRiskScore() throws IOException {
+    File file = new File(getClass().getClassLoader().getResource("./247_analysis_record_with_risk.json.zip").getFile());
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
+        JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
+    assertThat(timeSeriesMLAnalysisRecord.getRiskScore()).isEqualTo(0, offset(0.0001));
+    double riskScore = timeSeriesMLAnalysisRecord.getOverallMetricScores()
+                           .values()
+                           .stream()
+                           .mapToDouble(score -> score)
+                           .max()
+                           .orElse(0.0);
+    final NewRelicCVServiceConfiguration newRelicCVServiceConfiguration =
+        NewRelicCVServiceConfiguration.builder().build();
+    final String cvConfigId = wingsPersistence.save(newRelicCVServiceConfiguration);
+    final LearningEngineAnalysisTask learningEngineAnalysisTask =
+        LearningEngineAnalysisTask.builder().state_execution_id(generateUuid()).cluster_level(0).build();
+    final String taskId = wingsPersistence.save(learningEngineAnalysisTask);
+    timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+    metricDataAnalysisService.saveAnalysisRecordsML(accountId, StateType.NEW_RELIC, appId,
+        learningEngineAnalysisTask.getState_execution_id(), null, DEFAULT_GROUP_NAME, 10, taskId, null, cvConfigId,
+        timeSeriesMLAnalysisRecord, null);
+    final TimeSeriesMLAnalysisRecord savedAnalysisRecord =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority).get();
+    assertThat(savedAnalysisRecord.getRiskScore()).isEqualTo(riskScore, offset(0.0001));
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
   public void testSaveAnalysisRecordsML_throwsAlerts() throws IOException {
     when(verificationManagerClient.triggerCVAlert(anyString(), any(ContinuousVerificationAlertData.class)))
         .then(invocation -> {

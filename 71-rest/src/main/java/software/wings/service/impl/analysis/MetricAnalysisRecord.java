@@ -84,6 +84,8 @@ public class MetricAnalysisRecord extends Base implements Comparable<MetricAnaly
 
   @Indexed private String accountId;
 
+  private double riskScore;
+
   @JsonIgnore
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
