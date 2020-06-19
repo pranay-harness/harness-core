@@ -2,22 +2,24 @@
 
 set +e
 
+PROJECTS="CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|DEL|DOC|DX|ER|PL|SEC|SWAT"
+
 # Check commit message if there's a single commit
 if [ $(git rev-list --count $ghprbActualCommit ^origin/master)  -eq 1 ]; then
     ghprbPullTitle=$(git log -1 --format="%s" $ghprbActualCommit)
 fi
 
-PR_MESSAGE=`echo "${ghprbPullTitle}" | grep -iE '\[(CCM|CCE|CD|CDP|CDC|CE|CI|CV|CVNG|CDNG|DOC|ER|HAR|LE|PL|SEC|SWAT|DX)-[0-9]+]:'`
+PR_MESSAGE=`echo "${ghprbPullTitle}" | grep -iE "\[(${PROJECTS})-[0-9]+]:"`
 
 if [ -z "$PR_MESSAGE" ]
 then
     echo The PR title \"${ghprbPullTitle}\"
     echo "does not match the expectations"
-    echo 'Make sure that your message starts with [CCM|CCE|CD|CDP|CDC|CE|CI|CV|CVNG|CDNG|DOC|ER|HAR|LE|PL|SEC|SWAT|DX-<number>]: <description>'
+    echo "Make sure that your message starts with [${PROJECTS}-<number>]: <description>"
     exit 1
 fi
 
-KEY=`echo "${ghprbPullTitle}" | grep -o -iqE '(CCM|CCE|CD|CDP|CDC|CE|CI|CV|CVNG|CDNG|DOC|ER|HAR|LE|PL|SEC|SWAT|DX)-[0-9]+'`
+KEY=`echo "${ghprbPullTitle}" | grep -o -iqE "(${PROJECTS})-[0-9]+"`
 
 
 #TODO: enable priorities check
