@@ -104,7 +104,7 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
             .commands(CONTAINER_BASH_EXEC_CMD)
             .args(containerArgs)
             .gitFetchFilesConfig(gitFetchFilesConfig)
-            .workingDir(workingDir)
+            .stepExecWorkingDir(workingDir)
             .stepExecVolumeName(stepExecVolumeName)
             .build();
 

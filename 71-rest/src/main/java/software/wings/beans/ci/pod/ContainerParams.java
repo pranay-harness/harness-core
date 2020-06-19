@@ -14,7 +14,10 @@ public abstract class ContainerParams {
   private ImageDetails imageDetails;
   private List<String> commands;
   private List<String> args;
+  private String workingDir;
+  private List<Integer> ports;
   private Map<String, String> envVars;
+  private Map<String, SecretKeyParams> secretEnvVars;
   private Map<String, String> volumeToMountPath;
   private ContainerResourceParams containerResourceParams;
 
