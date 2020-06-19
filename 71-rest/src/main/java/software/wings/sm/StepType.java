@@ -25,10 +25,8 @@ import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
-import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
 import static software.wings.beans.PhaseStepType.ECS_UPDATE_ROUTE_53_DNS_WEIGHT;
-import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -62,7 +60,6 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_STE
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_SWAP_TARGET_GROUPS;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_SWAP_TARGET_GROUPS_ROLLBACK;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_UPGRADE_CONTAINERS;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.ELB;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.GCP_CLUSTER_SETUP_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.JIRA;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.KUBERNETES_ROLLBACK_CONTAINERS;
@@ -159,7 +156,6 @@ import software.wings.sm.states.EcsServiceRollback;
 import software.wings.sm.states.EcsServiceSetup;
 import software.wings.sm.states.EcsSetupRollback;
 import software.wings.sm.states.EcsSteadyStateCheck;
-import software.wings.sm.states.ElasticLoadBalancerState;
 import software.wings.sm.states.ElkAnalysisState;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.GcbState;
@@ -260,8 +256,6 @@ public enum StepType {
   // SSH
   AWS_NODE_SELECT(AwsNodeSelectState.class, SELECT_NODE_NAME, asList(AWS_SSH), asList(INFRASTRUCTURE_NODE, SELECT_NODE),
       asList(DeploymentType.SSH, DeploymentType.WINRM), asList(PhaseType.NON_ROLLBACK)),
-  ELASTIC_LOAD_BALANCER(ElasticLoadBalancerState.class, ELB, asList(AWS_SSH), asList(ENABLE_SERVICE, DISABLE_SERVICE),
-      asList(DeploymentType.SSH), asList(PhaseType.NON_ROLLBACK)),
 
   // DC SSH
   DC_NODE_SELECT(DcNodeSelectState.class, SELECT_NODE_NAME, asList(WorkflowStepType.DC_SSH),
