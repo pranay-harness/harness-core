@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.internal;
 
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.lang.String.format;
@@ -12,10 +13,12 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.AutoLogContext;
+import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -93,9 +96,12 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
         } else {
           logger.error("Failed to assign any Delegate to perpetual task {} ", taskId, sue);
         }
+
+        // TODO: we should not log errors for delegates not being assigned, we need a red bell alert for that.
+      } catch (WingsException exception) {
+        ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
       } catch (Exception e) {
         logger.error("Failed to assign any Delegate to perpetual task {} ", taskId, e);
-        return;
       }
     }
   }
