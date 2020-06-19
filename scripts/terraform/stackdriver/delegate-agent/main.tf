@@ -2,6 +2,10 @@ variable "deployment" {
   type = string
 }
 
+variable "projectId" {
+  type = string
+}
+
 locals {
   qa_filter_prefix = join("\n", [
     "labels.managerHost=\"qa.harness.io\"",
