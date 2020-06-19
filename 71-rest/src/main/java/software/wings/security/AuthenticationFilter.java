@@ -7,6 +7,7 @@ import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -21,6 +22,7 @@ import io.harness.context.GlobalContext;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.manage.GlobalContextManager;
+import io.harness.persistence.AccountLogContext;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.PublicApi;
@@ -250,12 +252,14 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     MultivaluedMap<String, String> queryParameters = containerRequestContext.getUriInfo().getQueryParameters();
 
     String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
-    String header = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-    if (header != null && header.contains("Delegate")) {
-      authService.validateDelegateToken(
-          accountId, substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate "));
-    } else {
-      throw new IllegalStateException("Invalid header:" + header);
+    try (AccountLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      String header = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+      if (header != null && header.contains("Delegate")) {
+        authService.validateDelegateToken(
+            accountId, substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate "));
+      } else {
+        throw new IllegalStateException("Invalid header:" + header);
+      }
     }
   }
 
