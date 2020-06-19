@@ -28,6 +28,7 @@ import software.wings.helpers.ext.gcb.models.RepoSource;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.GcbState;
 import software.wings.sm.states.GcbState.GcbDelegateResponse;
+import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -83,8 +84,8 @@ public class GcbTask extends AbstractDelegateRunnableTask {
     GcbBuildDetails build;
     do {
       sleep(Duration.ofSeconds(params.getPollFrequency()));
-      build = gcbService.getBuild(
-          params.getGcpConfig(), params.getEncryptedDataDetails(), params.getProjectId(), params.getBuildId());
+      build = gcbService.getBuild(params.getGcpConfig(), params.getEncryptedDataDetails(),
+          params.getGcbOptions().getProjectId(), params.getBuildId());
       String gcbOutput = gcbService.fetchBuildLogs(
           params.getGcpConfig(), params.getEncryptedDataDetails(), build.getLogsBucket(), params.getBuildId());
 
@@ -96,9 +97,23 @@ public class GcbTask extends AbstractDelegateRunnableTask {
 
   protected BuildOperationDetails triggerGcb(final @NotNull GcbTaskParams params) {
     RepoSource repoSource = new RepoSource();
-    repoSource.setBranchName(params.getBranchName());
-    return gcbService.runTrigger(params.getGcpConfig(), params.getEncryptedDataDetails(), params.getProjectId(),
-        params.getTriggerId(), repoSource);
+    GcbTriggerBuildSpec.GcbTriggerSource source = params.getGcbOptions().getTriggerSpec().getSource();
+    String sourceId = params.getGcbOptions().getTriggerSpec().getSourceId();
+    switch (source) {
+      case TAG:
+        repoSource.setTagName(sourceId);
+        break;
+      case BRANCH:
+        repoSource.setBranchName(sourceId);
+        break;
+      case COMMIT:
+        repoSource.setCommitSha(sourceId);
+        break;
+      default:
+        break;
+    }
+    return gcbService.runTrigger(params.getGcpConfig(), params.getEncryptedDataDetails(),
+        params.getGcbOptions().getProjectId(), params.getGcbOptions().getTriggerSpec().getName(), repoSource);
   }
 
   // similar to JenkinsTask#sameConsoleLogs(activityId, stateName, commandExecutionStatus, appId, consoleOutput)

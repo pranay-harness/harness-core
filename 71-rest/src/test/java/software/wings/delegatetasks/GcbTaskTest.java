@@ -48,6 +48,8 @@ import software.wings.helpers.ext.gcb.models.GcbBuildStatus;
 import software.wings.helpers.ext.gcb.models.OperationMeta;
 import software.wings.helpers.ext.gcb.models.RepoSource;
 import software.wings.sm.states.GcbState.GcbDelegateResponse;
+import software.wings.sm.states.gcbconfigs.GcbOptions;
+import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -126,15 +128,20 @@ public class GcbTaskTest extends CategoryTest {
   public void shouldExecuteSuccessfullyWhenBuildPasses() {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     RepoSource repoSource = new RepoSource();
+    GcbOptions gcbOptions = new GcbOptions();
+    GcbTriggerBuildSpec triggerConfig = new GcbTriggerBuildSpec();
+    triggerConfig.setName(TRIGGER_ID);
+    triggerConfig.setSource(GcbTriggerBuildSpec.GcbTriggerSource.BRANCH);
+    triggerConfig.setSourceId(BRANCH_NAME);
+    gcbOptions.setTriggerSpec(triggerConfig);
+    gcbOptions.setProjectId(PROJECT_ID);
     repoSource.setBranchName(BRANCH_NAME);
     GcbTaskParams taskParams = GcbTaskParams.builder()
                                    .type(START)
                                    .activityId(ACTIVITY_ID)
                                    .gcpConfig(gcpConfig)
                                    .encryptedDataDetails(encryptedDataDetails)
-                                   .branchName(BRANCH_NAME)
-                                   .projectId(PROJECT_ID)
-                                   .triggerId(TRIGGER_ID)
+                                   .gcbOptions(gcbOptions)
                                    .build();
     BuildOperationDetails buildOperationDetails = new BuildOperationDetails();
     OperationMeta operationMeta = new OperationMeta();
@@ -172,14 +179,20 @@ public class GcbTaskTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldWaitForTheBuildToComplete() {
     List<EncryptedDataDetail> encryptedDataDetails = Collections.emptyList();
+    GcbOptions gcbOptions = new GcbOptions();
+    GcbTriggerBuildSpec triggerBuildSpec = new GcbTriggerBuildSpec();
+    triggerBuildSpec.setSource(GcbTriggerBuildSpec.GcbTriggerSource.BRANCH);
+    triggerBuildSpec.setSourceId(BRANCH_NAME);
+    triggerBuildSpec.setName(TRIGGER_ID);
+    gcbOptions.setTriggerSpec(triggerBuildSpec);
+    gcbOptions.setProjectId(PROJECT_ID);
+
     GcbTaskParams taskParams = GcbTaskParams.builder()
                                    .type(POLL)
                                    .activityId(ACTIVITY_ID)
                                    .gcpConfig(gcpConfig)
                                    .encryptedDataDetails(encryptedDataDetails)
-                                   .branchName(BRANCH_NAME)
-                                   .projectId(PROJECT_ID)
-                                   .triggerId(TRIGGER_ID)
+                                   .gcbOptions(gcbOptions)
                                    .buildId(BUILD_ID)
                                    .pollFrequency(0)
                                    .build();

@@ -806,6 +806,9 @@ import software.wings.sm.states.KubernetesSteadyStateCheckResponse;
 import software.wings.sm.states.KubernetesSwapServiceSelectorsResponse;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.sm.states.ShellScriptState;
+import software.wings.sm.states.gcbconfigs.GcbOptions;
+import software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec;
+import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
 import software.wings.sm.states.spotinst.SpotInstDeployStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
@@ -1718,5 +1721,11 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsAmiTrafficShiftAlbStateExecutionData.class, 7436);
     kryo.register(KustomizeCapability.class, 7437);
     kryo.register(CVDataCollectionInfo.class, 7438);
+    kryo.register(GcbOptions.class, 7439);
+    kryo.register(GcbTriggerBuildSpec.class, 7440);
+    kryo.register(GcbRemoteBuildSpec.class, 7441);
+    kryo.register(GcbOptions.GcbSpecSource.class, 7442);
+    kryo.register(GcbTriggerBuildSpec.GcbTriggerSource.class, 7443);
+    kryo.register(GcbRemoteBuildSpec.RemoteFileSource.class, 7444);
   }
 }
