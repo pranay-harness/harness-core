@@ -136,7 +136,6 @@ import software.wings.sm.states.EcsServiceRollback;
 import software.wings.sm.states.EcsServiceSetup;
 import software.wings.sm.states.EcsSetupRollback;
 import software.wings.sm.states.EcsSteadyStateCheck;
-import software.wings.sm.states.ElasticLoadBalancerState;
 import software.wings.sm.states.ElkAnalysisState;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvLoopState;
@@ -409,13 +408,6 @@ public enum StateType implements StateTypeDescriptor {
   APPROVAL(ApprovalState.class, OTHERS, asList(), PIPELINE_STENCILS, ORCHESTRATION_STENCILS, COMMON),
 
   APPROVAL_RESUME(ApprovalResumeState.class, OTHERS, emptyList(), NONE),
-
-  /**
-   * The Load balancer.
-   */
-  ELASTIC_LOAD_BALANCER(ElasticLoadBalancerState.class, COMMANDS, "Elastic Load Balancer",
-      Lists.newArrayList(InfrastructureMappingType.AWS_SSH, InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
-      asList(ENABLE_SERVICE, DISABLE_SERVICE), ORCHESTRATION_STENCILS),
 
   /**
    * Jenkins state type.
