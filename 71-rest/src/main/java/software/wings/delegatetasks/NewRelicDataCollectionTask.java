@@ -1,7 +1,6 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_NON_SPECIAL_CHARS;
@@ -16,7 +15,6 @@ import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.ERROR;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.REQUSET_PER_MINUTE;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
@@ -407,10 +405,11 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 ? windowStartTimeManager + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime())
                 : windowEndTimeManager;
 
-            Preconditions.checkState(
-                isNotEmpty(instances), "No instances found for application %s", dataCollectionInfo.getNewRelicAppId());
             logger.debug("AnalysisType is Predictive. So we're collecting metrics by application instead of host/node");
-            callables.add(() -> fetchAndSaveMetricsForNode(instances.get(0), metricBatches, endTimeForCollection));
+            callables.add(()
+                              -> fetchAndSaveMetricsForNode(
+                                  NewRelicApplicationInstance.builder().host(DEFAULT_GROUP_NAME).build(), metricBatches,
+                                  endTimeForCollection));
           } else {
             for (NewRelicApplicationInstance node : instances) {
               if (!dataCollectionInfo.getHosts().keySet().contains(node.getHost())) {
