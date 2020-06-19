@@ -41,13 +41,11 @@ import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.LateBindingMap;
-import io.harness.expression.LateBindingValue;
 import io.harness.expression.SecretString;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import io.harness.serializer.KryoUtils;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -123,7 +121,7 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingValue;
-import software.wings.sm.ExecutionContextImpl.ServiceVariables.ServiceVariablesBuilder;
+import software.wings.sm.LateBindingServiceVariables.LateBindingServiceVariablesBuilder;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -171,7 +169,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
-  private transient Map<String, Object> contextMap;
+  @Getter private transient Map<String, Object> contextMap;
   @Getter private transient VariableResolverTracker variableResolverTracker = new VariableResolverTracker();
 
   /**
@@ -740,37 +738,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return matcher.replaceAll("__");
   }
 
-  @Builder
-  static class ServiceEncryptedVariable implements LateBindingValue {
-    private ServiceVariable serviceVariable;
-    private ExecutionContextImpl executionContext;
-    private boolean adoptDelegateDecryption;
-    private FeatureFlagService featureFlagService;
-    private int expressionFunctorToken;
-
-    @Override
-    public Object bind() {
-      if (adoptDelegateDecryption
-          && (featureFlagService.isEnabled(FeatureName.TWO_PHASE_SECRET_DECRYPTION, executionContext.getAccountId())
-                 || featureFlagService.isEnabled(
-                        FeatureName.THREE_PHASE_SECRET_DECRYPTION, executionContext.getAccountId()))) {
-        return "${secretManager.obtain(\"" + serviceVariable.getSecretTextName() + "\", " + expressionFunctorToken
-            + ")}";
-      }
-      executionContext.managerDecryptionService.decrypt(serviceVariable,
-          executionContext.secretManager.getEncryptionDetails(
-              serviceVariable, executionContext.getAppId(), executionContext.getWorkflowExecutionId()));
-      SecretString value = SecretString.builder().value(new String(serviceVariable.getValue())).build();
-
-      // Cache the secret as service variable if they are available.
-      if (executionContext.contextMap.containsKey(SERVICE_VARIABLE)) {
-        ((Map<String, Object>) executionContext.contextMap.get(SERVICE_VARIABLE)).put(serviceVariable.getName(), value);
-      }
-      return value;
-    }
-  }
-
-  private void prepareVariables(EncryptedFieldMode encryptedFieldMode, ServiceVariable serviceVariable,
+  protected void prepareVariables(EncryptedFieldMode encryptedFieldMode, ServiceVariable serviceVariable,
       Map<String, Object> variables, boolean adoptDelegateDecryption, int expressionFunctorToken) {
     String variableName = renderExpression(serviceVariable.getName());
 
@@ -784,86 +752,16 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
           serviceVariable.setAccountId(app.getAccountId());
         }
         variables.put(variableName,
-            ServiceEncryptedVariable.builder()
+            LateBindingServiceEncryptedVariable.builder()
                 .serviceVariable(serviceVariable)
                 .adoptDelegateDecryption(adoptDelegateDecryption)
                 .expressionFunctorToken(expressionFunctorToken)
                 .executionContext(this)
+                .managerDecryptionService(managerDecryptionService)
+                .secretManager(secretManager)
                 .featureFlagService(featureFlagService)
                 .build());
       }
-    }
-  }
-
-  @Builder
-  static class ServiceVariables implements LateBindingValue {
-    private EncryptedFieldMode encryptedFieldMode;
-    private List<NameValuePair> phaseOverrides;
-
-    private ExecutionContextImpl executionContext;
-    private ManagerDecryptionService managerDecryptionService;
-    private SecretManager secretManager;
-    private boolean adoptDelegateDecryption;
-    private int expressionFunctorToken;
-
-    @Override
-    public Object bind() {
-      String key = encryptedFieldMode == OBTAIN_VALUE ? SERVICE_VARIABLE : SAFE_DISPLAY_SERVICE_VARIABLE;
-      executionContext.contextMap.remove(key);
-
-      Map<String, Object> variables = isEmpty(phaseOverrides)
-          ? new HashMap<>()
-          : phaseOverrides.stream().collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
-
-      List<ServiceVariable> serviceVariables = executionContext.prepareServiceVariables(
-          encryptedFieldMode == MASKED ? EncryptedFieldComputeMode.MASKED : EncryptedFieldComputeMode.OBTAIN_META);
-
-      if (isNotEmpty(serviceVariables)) {
-        serviceVariables.forEach(serviceVariable -> {
-          executionContext.prepareVariables(
-              encryptedFieldMode, serviceVariable, variables, adoptDelegateDecryption, expressionFunctorToken);
-        });
-      }
-      executionContext.contextMap.put(key, variables);
-      return variables;
-    }
-  }
-
-  @Builder
-  static class EnvironmentVariables implements LateBindingValue {
-    private ExecutionContextImpl executionContext;
-    private ServiceVariableService serviceVariableService;
-    private ManagerDecryptionService managerDecryptionService;
-    private SecretManager secretManager;
-    private boolean adoptDelegateDecryption;
-    private int expressionFunctorToken;
-
-    @Override
-    public Object bind() {
-      Map<String, Object> variables = new HashMap<>();
-
-      Environment environment = executionContext.getEnv();
-
-      if (environment == null) {
-        executionContext.contextMap.put(ENVIRONMENT_VARIABLE, variables);
-        return variables;
-      }
-
-      executionContext.contextMap.remove(ENVIRONMENT_VARIABLE);
-
-      List<ServiceVariable> serviceVariables = serviceVariableService.getServiceVariablesForEntity(
-          executionContext.getAppId(), environment.getUuid(), OBTAIN_VALUE);
-
-      executionContext.prepareServiceVariables(EncryptedFieldComputeMode.OBTAIN_META);
-
-      if (isNotEmpty(serviceVariables)) {
-        serviceVariables.forEach(serviceVariable -> {
-          executionContext.prepareVariables(EncryptedFieldMode.OBTAIN_VALUE, serviceVariable, variables,
-              adoptDelegateDecryption, expressionFunctorToken);
-        });
-      }
-      executionContext.contextMap.put(ENVIRONMENT_VARIABLE, variables);
-      return variables;
     }
   }
 
@@ -905,8 +803,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       evaluator.addFunctor("shell", shellScriptFunctor);
     }
 
-    ServiceVariablesBuilder serviceVariablesBuilder =
-        ServiceVariables.builder()
+    LateBindingServiceVariablesBuilder serviceVariablesBuilder =
+        LateBindingServiceVariables.builder()
             .phaseOverrides(phaseElement == null ? null : phaseElement.getVariableOverrides())
             .executionContext(this)
             .managerDecryptionService(managerDecryptionService)
@@ -920,8 +818,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       contextMap.put(SAFE_DISPLAY_SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(MASKED).build());
     }
 
-    EnvironmentVariables environmentVariables =
-        EnvironmentVariables.builder()
+    LateBindingEnvironmentVariables environmentVariables =
+        LateBindingEnvironmentVariables.builder()
             .executionContext(this)
             .serviceVariableService(serviceVariableService)
             .managerDecryptionService(managerDecryptionService)
