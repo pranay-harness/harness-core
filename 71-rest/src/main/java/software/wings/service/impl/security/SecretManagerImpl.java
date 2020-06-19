@@ -90,7 +90,6 @@ import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.ConfigFile.ConfigFileKeys;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -2168,11 +2167,13 @@ public class SecretManagerImpl implements SecretManager {
 
     if (update && newEncryptedFile != null) {
       // update parent's file size
-      List<UuidAware> configFiles =
+      List<UuidAware> entities =
           getSecretUsage(accountId, recordId).stream().map(SecretSetupUsage::getEntity).collect(Collectors.toList());
-      configFiles.forEach(configFile -> {
-        ((ConfigFile) configFile).setSize(uploadFileSize);
-        wingsPersistence.save((ConfigFile) configFile);
+      entities.forEach(entity -> {
+        if (entity instanceof ConfigFile) {
+          ((ConfigFile) entity).setSize(uploadFileSize);
+          wingsPersistence.save((ConfigFile) entity);
+        }
       });
     }
 
@@ -2235,17 +2236,10 @@ public class SecretManagerImpl implements SecretManager {
       throw new SecretManagementException(USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
 
-    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
-                                       .filter(ACCOUNT_ID_KEY, accountId)
-                                       .filter(ConfigFileKeys.encryptedFileId, uuid)
-                                       .asList();
-    if (!configFiles.isEmpty()) {
-      StringBuilder errorMessage = new StringBuilder("Being used by ");
-      for (ConfigFile configFile : configFiles) {
-        errorMessage.append(configFile.getFileName()).append(", ");
-      }
-
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, errorMessage.toString(), USER);
+    Set<SecretSetupUsage> secretSetupUsages = getSecretUsage(accountId, uuid);
+    if (!secretSetupUsages.isEmpty()) {
+      String reason = "Can not delete file because it is still being used. See setup usage(s) of the secret.";
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, USER);
     }
 
     switch (encryptedData.getEncryptionType()) {
