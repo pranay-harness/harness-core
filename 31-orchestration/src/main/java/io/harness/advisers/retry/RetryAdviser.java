@@ -17,7 +17,7 @@ import io.harness.adviser.advise.RetryAdvise;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.AmbianceHelper;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 
 import java.util.List;
@@ -25,7 +25,7 @@ import java.util.List;
 @OwnedBy(CDC)
 @Redesign
 public class RetryAdviser implements Adviser {
-  @Inject AmbianceHelper ambianceHelper;
+  @Inject private NodeExecutionService nodeExecutionService;
 
   public static final AdviserType ADVISER_TYPE = AdviserType.builder().type(AdviserType.RETRY).build();
 
@@ -36,7 +36,8 @@ public class RetryAdviser implements Adviser {
     }
     RetryAdviserParameters parameters = (RetryAdviserParameters) advisingEvent.getAdviserParameters();
     Ambiance ambiance = advisingEvent.getAmbiance();
-    NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
+    NodeExecution nodeExecution =
+        Preconditions.checkNotNull(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId()));
     if (nodeExecution.retryCount() < parameters.getRetryCount()) {
       int waitInterval = calculateWaitInterval(parameters.getWaitIntervalList(), nodeExecution.retryCount());
       return RetryAdvise.builder().retryNodeExecutionId(nodeExecution.getUuid()).waitInterval(waitInterval).build();

@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -17,23 +16,6 @@ import io.harness.execution.PlanExecution;
 @Redesign
 public class AmbianceHelper {
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private NodeExecutionService nodeExecutionService;
-
-  public NodeExecution obtainNodeExecution(Ambiance ambiance) {
-    String nodeExecutionId = ambiance == null ? null : ambiance.obtainCurrentRuntimeId();
-    if (nodeExecutionId == null) {
-      return null;
-    }
-    return nodeExecutionService.get(nodeExecutionId);
-  }
-
-  public PlanExecution obtainPlanExecution(Ambiance ambiance) {
-    String planExecutionId = ambiance == null ? null : ambiance.getPlanExecutionId();
-    if (planExecutionId == null) {
-      return null;
-    }
-    return planExecutionService.get(planExecutionId);
-  }
 
   public Ambiance fetchAmbiance(NodeExecution nodeExecution) {
     if (nodeExecution == null) {

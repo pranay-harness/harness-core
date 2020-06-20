@@ -8,8 +8,8 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.AmbianceHelper;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.functors.ExecutionSweepingOutputFunctor;
 import io.harness.engine.expressions.functors.NodeExecutionAncestorFunctor;
 import io.harness.engine.expressions.functors.NodeExecutionChildFunctor;
@@ -34,8 +34,8 @@ import javax.validation.constraints.NotNull;
 public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   @Inject private OutcomeService outcomeService;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
-  @Inject private AmbianceHelper ambianceHelper;
   @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private PlanExecutionService planExecutionService;
 
   private final Ambiance ambiance;
   private final Set<NodeExecutionEntityType> entityTypes;
@@ -68,7 +68,7 @@ public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator
               .build());
     }
 
-    PlanExecution planExecution = ambianceHelper.obtainPlanExecution(ambiance);
+    PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
     if (planExecution == null) {
       return;
     }
