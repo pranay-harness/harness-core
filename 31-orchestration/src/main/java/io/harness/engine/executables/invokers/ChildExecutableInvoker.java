@@ -11,12 +11,12 @@ import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.AmbianceHelper;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -34,9 +34,9 @@ import java.util.concurrent.ExecutorService;
 @OwnedBy(CDC)
 @Redesign
 public class ChildExecutableInvoker implements ExecutableInvoker {
-  @Inject private AmbianceHelper ambianceHelper;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private PlanExecutionService planExecutionService;
   @Inject private ExecutionEngine engine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
@@ -51,8 +51,8 @@ public class ChildExecutableInvoker implements ExecutableInvoker {
 
   private void handleResponse(Ambiance ambiance, ChildExecutableResponse response) {
     String childInstanceId = generateUuid();
-    PlanExecution planExecution = ambianceHelper.obtainPlanExecution(ambiance);
-    NodeExecution nodeExecution = ambianceHelper.obtainNodeExecution(ambiance);
+    PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
+    NodeExecution nodeExecution = nodeExecutionService.get(ambiance.obtainCurrentRuntimeId());
     Plan plan = planExecution.getPlan();
     PlanNode node = plan.fetchNode(response.getChildNodeId());
     Ambiance clonedAmbiance = ambiance.cloneForChild();

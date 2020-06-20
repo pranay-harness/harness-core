@@ -16,7 +16,7 @@ import io.harness.adviser.advise.RetryAdvise;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.AmbianceHelper;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
 import io.harness.interrupts.RepairActionCode;
@@ -41,7 +41,7 @@ public class RetryAdviserTest extends OrchestrationTest {
 
   @InjectMocks @Inject RetryAdviser retryAdviser;
 
-  @Mock AmbianceHelper ambianceHelper;
+  @Mock NodeExecutionService nodeExecutionService;
 
   private Ambiance ambiance;
 
@@ -83,7 +83,7 @@ public class RetryAdviserTest extends OrchestrationTest {
                                       .startTs(System.currentTimeMillis())
                                       .status(Status.FAILED)
                                       .build();
-    when(ambianceHelper.obtainNodeExecution(ambiance)).thenReturn(nodeExecution);
+    when(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId())).thenReturn(nodeExecution);
     AdvisingEvent advisingEvent = AdvisingEvent.builder()
                                       .ambiance(ambiance)
                                       .status(Status.FAILED)
@@ -115,7 +115,7 @@ public class RetryAdviserTest extends OrchestrationTest {
             .status(Status.FAILED)
             .retryIds(Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid()))
             .build();
-    when(ambianceHelper.obtainNodeExecution(ambiance)).thenReturn(nodeExecution);
+    when(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId())).thenReturn(nodeExecution);
     AdvisingEvent advisingEvent = AdvisingEvent.builder()
                                       .ambiance(ambiance)
                                       .status(Status.FAILED)
@@ -147,7 +147,7 @@ public class RetryAdviserTest extends OrchestrationTest {
             .status(Status.FAILED)
             .retryIds(Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid()))
             .build();
-    when(ambianceHelper.obtainNodeExecution(ambiance)).thenReturn(nodeExecution);
+    when(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId())).thenReturn(nodeExecution);
     AdvisingEvent advisingEvent = AdvisingEvent.builder()
                                       .ambiance(ambiance)
                                       .status(Status.FAILED)

@@ -6,7 +6,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.engine.AmbianceHelper;
 import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -26,7 +25,6 @@ import java.util.Map;
 
 public class TaskExecutableInvoker implements ExecutableInvoker {
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
-  @Inject private AmbianceHelper ambianceHelper;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
 
@@ -39,7 +37,8 @@ public class TaskExecutableInvoker implements ExecutableInvoker {
   }
 
   private void handleResponse(@NonNull Ambiance ambiance, @NonNull Task task) {
-    NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
+    NodeExecution nodeExecution =
+        Preconditions.checkNotNull(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId()));
     TaskExecutor taskExecutor = taskExecutorMap.get(task.getTaskIdentifier());
     String taskId = Preconditions.checkNotNull(taskExecutor.queueTask(ambiance, task));
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();

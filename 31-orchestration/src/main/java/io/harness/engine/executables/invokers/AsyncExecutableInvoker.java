@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.AmbianceHelper;
 import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -32,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AsyncExecutableInvoker implements ExecutableInvoker {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private AmbianceHelper ambianceHelper;
 
   @Override
   public void invokeExecutable(InvokerPackage invokerPackage) {
@@ -44,7 +42,8 @@ public class AsyncExecutableInvoker implements ExecutableInvoker {
   }
 
   private void handleResponse(Ambiance ambiance, AsyncExecutableResponse response) {
-    NodeExecution nodeExecution = Preconditions.checkNotNull(ambianceHelper.obtainNodeExecution(ambiance));
+    NodeExecution nodeExecution =
+        Preconditions.checkNotNull(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId()));
     PlanNode node = nodeExecution.getNode();
     if (isEmpty(response.getCallbackIds())) {
       logger.error("StepResponse has no callbackIds - currentState : " + node.getName()
