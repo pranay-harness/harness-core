@@ -230,7 +230,7 @@ resource "google_logging_metric" "delegate_process_restarted" {
   }
 }
 
-resource "google_monitoring_dashboard" "delegate_dashboard" {
+resource "google_monitoring_dashboard" "delegate_tasks_dashboard" {
   dashboard_json = <<EOF
 
 {
@@ -238,6 +238,36 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
   "gridLayout": {
     "columns": "2",
     "widgets": [
+      {
+        "title": "Heatmap of task assigment",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "metric.type=\"logging.googleapis.com/user/x_${var.deployment}_delegate_tasks_queue_time\" resource.type=\"k8s_container\"",
+                  "aggregation": {
+                    "perSeriesAligner": "ALIGN_DELTA",
+                    "crossSeriesReducer": "REDUCE_SUM"
+                  },
+                  "secondaryAggregation": {}
+                },
+                "unitOverride": "ms"
+              },
+              "plotType": "HEATMAP",
+              "minAlignmentPeriod": "60s"
+            }
+          ],
+          "timeshiftDuration": "0s",
+          "yAxis": {
+            "label": "y1Axis",
+            "scale": "LINEAR"
+          },
+          "chartOptions": {
+            "mode": "COLOR"
+          }
+        }
+      },
       {
         "title": "Task Creation, Response, and Rebroadcast",
         "xyChart": {
