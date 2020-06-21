@@ -6,43 +6,43 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executables.invokers.AsyncExecutableInvoker;
-import io.harness.engine.executables.invokers.ChildChainExecutableInvoker;
-import io.harness.engine.executables.invokers.ChildExecutableInvoker;
-import io.harness.engine.executables.invokers.ChildrenExecutableInvoker;
-import io.harness.engine.executables.invokers.SyncExecutableInvoker;
-import io.harness.engine.executables.invokers.TaskChainExecutableInvoker;
-import io.harness.engine.executables.invokers.TaskExecutableInvoker;
+import io.harness.engine.executables.invokers.AsyncStrategy;
+import io.harness.engine.executables.invokers.ChildChainStrategy;
+import io.harness.engine.executables.invokers.ChildStrategy;
+import io.harness.engine.executables.invokers.ChildrenStrategy;
+import io.harness.engine.executables.invokers.SyncStrategy;
+import io.harness.engine.executables.invokers.TaskChainStrategy;
+import io.harness.engine.executables.invokers.TaskStrategy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitator.modes.ExecutionMode;
 
 @OwnedBy(CDC)
 @Redesign
 public class ExecutableInvokerFactory {
-  @Inject private AsyncExecutableInvoker asyncExecutableInvoker;
-  @Inject private SyncExecutableInvoker syncExecutableInvoker;
-  @Inject private ChildrenExecutableInvoker childrenExecutableInvoker;
-  @Inject private ChildExecutableInvoker childExecutableInvoker;
-  @Inject private TaskExecutableInvoker taskExecutableInvoker;
-  @Inject private TaskChainExecutableInvoker taskChainExecutableInvoker;
-  @Inject private ChildChainExecutableInvoker childChainExecutableInvoker;
+  @Inject private AsyncStrategy asyncStrategy;
+  @Inject private SyncStrategy syncStrategy;
+  @Inject private ChildrenStrategy childrenStrategy;
+  @Inject private ChildStrategy childStrategy;
+  @Inject private TaskStrategy taskStrategy;
+  @Inject private TaskChainStrategy taskChainStrategy;
+  @Inject private ChildChainStrategy childChainStrategy;
 
   public ExecutableInvoker obtainInvoker(ExecutionMode mode) {
     switch (mode) {
       case ASYNC:
-        return asyncExecutableInvoker;
+        return new ExecutableInvoker(asyncStrategy);
       case SYNC:
-        return syncExecutableInvoker;
+        return new ExecutableInvoker(syncStrategy);
       case CHILDREN:
-        return childrenExecutableInvoker;
+        return new ExecutableInvoker(childrenStrategy);
       case CHILD:
-        return childExecutableInvoker;
+        return new ExecutableInvoker(childStrategy);
       case TASK:
-        return taskExecutableInvoker;
+        return new ExecutableInvoker(taskStrategy);
       case TASK_CHAIN:
-        return taskChainExecutableInvoker;
+        return new ExecutableInvoker(taskChainStrategy);
       case CHILD_CHAIN:
-        return childChainExecutableInvoker;
+        return new ExecutableInvoker(childChainStrategy);
       default:
         throw new InvalidRequestException("No Invoker present for execution mode :" + mode);
     }

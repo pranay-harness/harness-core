@@ -1,7 +1,7 @@
 package io.harness.engine.executables.invokers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.execution.status.Status.QUEUED;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.inject.Inject;
@@ -9,11 +9,9 @@ import com.google.inject.name.Named;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
-import io.harness.annotations.Redesign;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.ExecutionEngineDispatcher;
-import io.harness.engine.executables.ExecutableInvoker;
+import io.harness.engine.executables.InvokeStrategy;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -21,9 +19,8 @@ import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.status.Status;
-import io.harness.facilitator.modes.child.ChildExecutable;
-import io.harness.facilitator.modes.child.ChildExecutableResponse;
+import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
+import io.harness.facilitator.modes.chain.child.ChildChainResponse;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.waiter.NotifyCallback;
@@ -31,30 +28,34 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import java.util.concurrent.ExecutorService;
 
-@OwnedBy(CDC)
-@Redesign
-public class ChildExecutableInvoker implements ExecutableInvoker {
+public class ChildChainStrategy implements InvokeStrategy {
+  @Inject private ExecutionEngine engine;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private ExecutionEngine engine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
   @Override
-  public void invokeExecutable(InvokerPackage invokerPackage) {
+  public void invoke(InvokerPackage invokerPackage) {
+    ChildChainExecutable childChainExecutable = (ChildChainExecutable) invokerPackage.getStep();
     Ambiance ambiance = invokerPackage.getAmbiance();
-    ChildExecutable childExecutable = (ChildExecutable) invokerPackage.getStep();
-    ChildExecutableResponse response =
-        childExecutable.obtainChild(ambiance, invokerPackage.getParameters(), invokerPackage.getInputs());
-    handleResponse(ambiance, response);
+    ChildChainResponse childChainResponse;
+    if (invokerPackage.isStart()) {
+      childChainResponse =
+          childChainExecutable.executeFirstChild(ambiance, invokerPackage.getParameters(), invokerPackage.getInputs());
+    } else {
+      childChainResponse = childChainExecutable.executeNextChild(ambiance, invokerPackage.getParameters(),
+          invokerPackage.getInputs(), invokerPackage.getPassThroughData(), invokerPackage.getResponseDataMap());
+    }
+    handleResponse(ambiance, childChainResponse);
   }
 
-  private void handleResponse(Ambiance ambiance, ChildExecutableResponse response) {
+  private void handleResponse(Ambiance ambiance, ChildChainResponse childChainResponse) {
     String childInstanceId = generateUuid();
     PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
     NodeExecution nodeExecution = nodeExecutionService.get(ambiance.obtainCurrentRuntimeId());
     Plan plan = planExecution.getPlan();
-    PlanNode node = plan.fetchNode(response.getChildNodeId());
+    PlanNode node = plan.fetchNode(childChainResponse.getChildNodeId());
     Ambiance clonedAmbiance = ambiance.cloneForChild();
     clonedAmbiance.addLevel(Level.fromPlanNode(childInstanceId, node));
     NodeExecution childNodeExecution = NodeExecution.builder()
@@ -62,10 +63,10 @@ public class ChildExecutableInvoker implements ExecutableInvoker {
                                            .node(node)
                                            .planExecutionId(nodeExecution.getPlanExecutionId())
                                            .levels(clonedAmbiance.getLevels())
-                                           .status(Status.QUEUED)
+                                           .status(QUEUED)
                                            .notifyId(childInstanceId)
                                            .parentId(nodeExecution.getUuid())
-                                           .additionalInputs(response.getAdditionalInputs())
+                                           .additionalInputs(childChainResponse.getAdditionalInputs())
                                            .build();
     nodeExecutionService.save(childNodeExecution);
     executorService.submit(
@@ -73,6 +74,6 @@ public class ChildExecutableInvoker implements ExecutableInvoker {
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, childInstanceId);
     nodeExecutionService.update(
-        nodeExecution.getUuid(), ops -> ops.addToSet(NodeExecutionKeys.executableResponses, response));
+        nodeExecution.getUuid(), ops -> ops.addToSet(NodeExecutionKeys.executableResponses, childChainResponse));
   }
 }

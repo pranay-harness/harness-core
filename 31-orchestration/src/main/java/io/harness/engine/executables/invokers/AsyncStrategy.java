@@ -10,7 +10,7 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executables.ExecutableInvoker;
+import io.harness.engine.executables.InvokeStrategy;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
@@ -28,12 +28,12 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 @Redesign
-public class AsyncExecutableInvoker implements ExecutableInvoker {
+public class AsyncStrategy implements InvokeStrategy {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
-  public void invokeExecutable(InvokerPackage invokerPackage) {
+  public void invoke(InvokerPackage invokerPackage) {
     AsyncExecutable asyncExecutable = (AsyncExecutable) invokerPackage.getStep();
     Ambiance ambiance = invokerPackage.getAmbiance();
     AsyncExecutableResponse asyncExecutableResponse =
