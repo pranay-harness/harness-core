@@ -21,7 +21,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
-import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -214,7 +213,6 @@ public class ShellScriptStep implements Step, TaskExecutable {
                 featureFlagService.isEnabled(LOCAL_DELEGATE_CONFIG_OVERRIDE, getAccountId(ambiance)))
             .keyName(keyName);
 
-    int expressionFunctorToken = HashGenerator.generateIntegerHash();
     return DelegateTask.builder()
         .accountId(getAccountId(ambiance))
         .waitId(activityId)
@@ -225,7 +223,7 @@ public class ShellScriptStep implements Step, TaskExecutable {
                   .taskType(TaskType.SCRIPT.name())
                   .parameters(new Object[] {shellScriptParameters.build()})
                   .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                  .expressionFunctorToken(expressionFunctorToken)
+                  .expressionFunctorToken(ambiance.getExpressionFunctorToken())
                   .build())
         .envId(environment == null ? null : environment.getUuid())
         .infrastructureMappingId(infrastructureMapping == null ? null : infrastructureMapping.getUuid())

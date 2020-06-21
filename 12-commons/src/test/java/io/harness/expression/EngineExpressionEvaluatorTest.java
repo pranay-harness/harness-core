@@ -180,6 +180,38 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
+  public void testHasSecretExpressions() {
+    assertThat(EngineExpressionEvaluator.hasSecretExpressions(null)).isFalse();
+    assertThat(EngineExpressionEvaluator.hasSecretExpressions("abc")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasSecretExpressions("abc ${")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasSecretExpressions("abc ${}")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasSecretExpressions("abc ${ab}")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasSecretExpressions("abc ${secretManager.ab} ${cd}")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasSecretExpressions("abc ${ab} ${secretManager.cd}")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasSecretExpressions("abc ${secretManager.ab} ${secretManager.cd}")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testFindSecretExpressions() {
+    assertThat(EngineExpressionEvaluator.findSecretExpressions(null)).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc ${")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc ${}")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc ${ab}")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc ${ab} ${cd}")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc ${secretManager.ab} ${cd}"))
+        .containsExactly("${secretManager.ab}");
+    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc ${ab} ${secretManager.cd}"))
+        .containsExactly("${secretManager.cd}");
+    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc ${secretManager.ab} ${secretManager.cd}"))
+        .containsExactly("${secretManager.ab}", "${secretManager.cd}");
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
   public void testValidVariableName() {
     assertThat(EngineExpressionEvaluator.validVariableName(null)).isFalse();
     assertThat(EngineExpressionEvaluator.validVariableName("")).isFalse();

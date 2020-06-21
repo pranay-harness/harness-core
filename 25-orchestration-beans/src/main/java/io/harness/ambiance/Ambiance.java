@@ -15,7 +15,9 @@ import io.harness.serializer.KryoUtils;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Transient;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,11 +29,14 @@ import javax.validation.constraints.NotNull;
 @OwnedBy(CDC)
 @Redesign
 @FieldNameConstants(innerTypeName = "AmbianceKeys")
+@Getter
 @EqualsAndHashCode
 public class Ambiance {
-  @Getter @NotNull InputArgs inputArgs;
-  @Getter @NotNull List<Level> levels;
-  @Getter @NotNull String planExecutionId;
+  @NotNull InputArgs inputArgs;
+  @NotNull List<Level> levels;
+  @NotNull String planExecutionId;
+
+  @Setter @Transient int expressionFunctorToken;
 
   @Builder
   public Ambiance(InputArgs inputArgs, List<Level> levels, String planExecutionId) {

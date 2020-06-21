@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.functors.ExecutionSweepingOutputFunctor;
@@ -46,6 +47,10 @@ public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator
       Set<NodeExecutionEntityType> entityTypes, boolean refObjectSpecific) {
     super(variableResolverTracker);
     this.ambiance = ambiance;
+    if (ambiance.getExpressionFunctorToken() == 0) {
+      ambiance.setExpressionFunctorToken(HashGenerator.generateIntegerHash());
+    }
+
     this.entityTypes = entityTypes == null ? NodeExecutionEntityType.allEntities() : entityTypes;
     this.refObjectSpecific = refObjectSpecific;
   }
