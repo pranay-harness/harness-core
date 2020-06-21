@@ -7,7 +7,7 @@ public enum QLActions implements QLEnum {
   READ,
   UPDATE,
   DELETE,
-  EXECUTE,
+  @Deprecated EXECUTE,
   EXECUTE_WORKFLOW,
   EXECUTE_PIPELINE;
   @Override

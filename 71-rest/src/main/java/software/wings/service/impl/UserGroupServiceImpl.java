@@ -20,6 +20,8 @@ import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELIN
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -122,7 +124,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup save(UserGroup userGroup) {
-    notNullCheck(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());
+    notNullCheck(UserGroupKeys.accountId, userGroup.getAccountId());
     checkUserGroupsCountWithinLimit(userGroup.getAccountId());
     checkForUserGroupWithSameName(userGroup);
 
@@ -161,10 +163,10 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public PageResponse<UserGroup> list(String accountId, PageRequest<UserGroup> req, boolean loadUsers) {
-    notNullCheck(UserGroup.ACCOUNT_ID_KEY, accountId, USER);
+    notNullCheck(UserGroupKeys.accountId, accountId, USER);
     Account account = accountService.get(accountId);
     notNullCheck("account", account, USER);
-    req.addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId);
+    req.addFilter(UserGroupKeys.accountId, Operator.EQ, accountId);
     PageResponse<UserGroup> res = wingsPersistence.query(UserGroup.class, req);
     // Using a custom comparator since our mongo apis don't support alphabetical sorting with case insensitivity.
     // Currently, it only supports ASC and DSC.
@@ -206,10 +208,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (userGroup == null) {
       return null;
     }
-    UserGroup userGroupSummary = new UserGroup();
-    userGroupSummary.setName(userGroup.getName());
-    userGroupSummary.setUuid(userGroup.getUuid());
-    return userGroupSummary;
+    return UserGroup.builder().uuid(userGroup.getUuid()).name(userGroup.getName()).build();
   }
 
   @Override
@@ -223,7 +222,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public void deleteByAccountId(String accountId) {
     List<UserGroup> userGroups =
-        wingsPersistence.createQuery(UserGroup.class).filter(UserGroup.ACCOUNT_ID_KEY, accountId).asList();
+        wingsPersistence.createQuery(UserGroup.class).filter(UserGroupKeys.accountId, accountId).asList();
     for (UserGroup userGroup : userGroups) {
       delete(accountId, userGroup.getUuid(), true);
     }
@@ -238,8 +237,8 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Nullable
   public UserGroup getByName(String accountId, String name) {
     return wingsPersistence.createQuery(UserGroup.class)
-        .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
-        .filter(UserGroup.NAME_KEY, name)
+        .filter(UserGroupKeys.accountId, accountId)
+        .filter(UserGroupKeys.name, name)
         .get();
   }
 
@@ -249,8 +248,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     names = names.stream().filter(StringUtils::isNotEmpty).collect(toList());
 
     Query<UserGroup> query = wingsPersistence.createQuery(UserGroup.class)
-                                 .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
-                                 .field(UserGroup.NAME_KEY)
+                                 .filter(UserGroupKeys.accountId, accountId)
+                                 .field(UserGroupKeys.name)
                                  .in(names);
 
     List<UserGroup> userGroups = new LinkedList<>();
@@ -266,7 +265,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public UserGroup get(String accountId, String userGroupId, boolean loadUsers) {
     UserGroup userGroup = wingsPersistence.createQuery(UserGroup.class)
-                              .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
+                              .filter(UserGroupKeys.accountId, accountId)
                               .filter(UserGroup.ID_KEY, userGroupId)
                               .get();
 
@@ -304,8 +303,8 @@ public class UserGroupServiceImpl implements UserGroupService {
           ErrorCode.UPDATE_NOT_ALLOWED, "Can not update name/description of Account Administrator user group");
     }
     UpdateOperations<UserGroup> operations =
-        wingsPersistence.createUpdateOperations(UserGroup.class).set("name", userGroup.getName());
-    setUnset(operations, "description", userGroup.getDescription());
+        wingsPersistence.createUpdateOperations(UserGroup.class).set(UserGroupKeys.name, userGroup.getName());
+    setUnset(operations, UserGroupKeys.description, userGroup.getDescription());
     return update(userGroup, operations);
   }
 
@@ -321,11 +320,11 @@ public class UserGroupServiceImpl implements UserGroupService {
       pagerDutyService.validateCreateTestEvent(newNotificationSettings.getPagerDutyIntegrationKey());
     }
 
-    UpdateOperations<UserGroup> update =
-        wingsPersistence.createUpdateOperations(UserGroup.class).set("notificationSettings", newNotificationSettings);
+    UpdateOperations<UserGroup> update = wingsPersistence.createUpdateOperations(UserGroup.class)
+                                             .set(UserGroupKeys.notificationSettings, newNotificationSettings);
 
     Query<UserGroup> query = wingsPersistence.createQuery(UserGroup.class)
-                                 .field(UserGroup.ACCOUNT_ID_KEY)
+                                 .field(UserGroupKeys.accountId)
                                  .equal(accountId)
                                  .field("_id")
                                  .equal(groupId);
@@ -368,7 +367,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         : Sets.newHashSet(existingUserGroup.getMemberIds());
 
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
-    setUnset(operations, "memberIds", newMemberIds);
+    setUnset(operations, UserGroupKeys.memberIds, newMemberIds);
     UserGroup updatedUserGroup = update(userGroup, operations);
 
     // auditing addition/removal of users in/from user group
@@ -432,8 +431,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     checkImplicitPermissions(accountPermissions, accountId, userGroup.getName());
     checkDeploymentPermissions(userGroup);
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
-    setUnset(operations, "appPermissions", appPermissions);
-    setUnset(operations, "accountPermissions", accountPermissions);
+    setUnset(operations, UserGroupKeys.appPermissions, appPermissions);
+    setUnset(operations, UserGroupKeys.accountPermissions, accountPermissions);
     UserGroup updatedUserGroup = update(userGroup, operations);
     evictUserPermissionInfoCacheForUserGroup(updatedUserGroup);
     return updatedUserGroup;
@@ -443,7 +442,6 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (isEmpty(userGroup.getAppPermissions())) {
       return;
     }
-
     Set<AppPermission> newAppPermissions = new HashSet<>();
     for (AppPermission appPermission : userGroup.getAppPermissions()) {
       if (isNotEmpty(appPermission.getActions())
@@ -471,8 +469,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     checkImplicitPermissions(userGroup.getAccountPermissions(), userGroup.getAccountId(), userGroup.getName());
     checkDeploymentPermissions(userGroup);
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
-    setUnset(operations, "appPermissions", userGroup.getAppPermissions());
-    setUnset(operations, "accountPermissions", userGroup.getAccountPermissions());
+    setUnset(operations, UserGroupKeys.appPermissions, userGroup.getAppPermissions());
+    setUnset(operations, UserGroupKeys.accountPermissions, userGroup.getAccountPermissions());
     UserGroup updatedUserGroup = update(userGroup, operations);
     evictUserPermissionInfoCacheForUserGroup(updatedUserGroup);
     userGroup = wingsPersistence.get(UserGroup.class, userGroup.getUuid());
@@ -491,8 +489,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     Set<PermissionType> permissions = accountPermissions.getPermissions();
-    if (isNotEmpty(permissions) && permissions.contains(PermissionType.USER_PERMISSION_MANAGEMENT)
-        && !permissions.contains(PermissionType.USER_PERMISSION_READ)) {
+    if (isNotEmpty(permissions) && permissions.contains(USER_PERMISSION_MANAGEMENT)
+        && !permissions.contains(USER_PERMISSION_READ)) {
       logger.info("Received account permissions {} are not in proper format for account {}, userGroupName {}",
           permissions, accountId, name);
       throw new InvalidRequestException("Invalid account permission.", ErrorCode.INVALID_ACCOUNT_PERMISSION, USER);
@@ -503,16 +501,16 @@ public class UserGroupServiceImpl implements UserGroupService {
   public boolean existsLinkedUserGroup(String ssoId) {
     return 0
         != wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
-               .filter(UserGroup.LINKED_SSO_ID_KEY, ssoId)
+               .filter(UserGroupKeys.linkedSsoId, ssoId)
                .count();
   }
 
   private UserGroup update(UserGroup userGroup, UpdateOperations<UserGroup> operations) {
     notNullCheck("uuid", userGroup.getUuid());
-    notNullCheck(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());
+    notNullCheck(UserGroupKeys.accountId, userGroup.getAccountId());
     Query<UserGroup> query = wingsPersistence.createQuery(UserGroup.class)
                                  .filter(ID_KEY, userGroup.getUuid())
-                                 .filter(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());
+                                 .filter(UserGroupKeys.accountId, userGroup.getAccountId());
     wingsPersistence.update(query, operations);
     return get(userGroup.getAccountId(), userGroup.getUuid());
   }
@@ -525,7 +523,7 @@ public class UserGroupServiceImpl implements UserGroupService {
       return false;
     }
     Query<UserGroup> userGroupQuery = wingsPersistence.createQuery(UserGroup.class)
-                                          .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
+                                          .filter(UserGroupKeys.accountId, accountId)
                                           .filter(ID_KEY, userGroupId);
     boolean deleted = wingsPersistence.delete(userGroupQuery);
     if (deleted) {
@@ -542,9 +540,9 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup getDefaultUserGroup(String accountId) {
     return wingsPersistence.createQuery(UserGroup.class)
         .filter(UserGroupKeys.accountId, accountId)
-        .field(UserGroup.NAME_KEY)
+        .field(UserGroupKeys.name)
         .equal(DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
-        .field(UserGroup.IS_DEFAULT_KEY)
+        .field(UserGroupKeys.isDefault)
         .equal(true)
         .get();
   }
@@ -570,15 +568,15 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public List<UserGroup> getUserGroupsByAccountId(String accountId, User user) {
     PageRequestBuilder pageRequest = aPageRequest()
-                                         .addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId)
-                                         .addFilter("memberIds", Operator.HAS, user.getUuid());
+                                         .addFilter(UserGroupKeys.accountId, Operator.EQ, accountId)
+                                         .addFilter(UserGroupKeys.memberIds, Operator.HAS, user.getUuid());
 
     return list(accountId, pageRequest.build(), true).getResponse();
   }
 
   @Override
   public List<UserGroup> getUserGroupsByAccountId(String accountId) {
-    PageRequestBuilder pageRequest = aPageRequest().addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId);
+    PageRequestBuilder pageRequest = aPageRequest().addFilter(UserGroupKeys.accountId, Operator.EQ, accountId);
 
     return list(accountId, pageRequest.build(), true).getResponse();
   }
@@ -592,16 +590,16 @@ public class UserGroupServiceImpl implements UserGroupService {
     List<UserGroup> userGroupList;
     if (isNotBlank(accountId)) {
       userGroupList = wingsPersistence.createQuery(UserGroup.class)
-                          .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
+                          .filter(UserGroupKeys.accountId, accountId)
                           .field(UserGroup.ID_KEY)
                           .in(userGroupIds)
-                          .project(UserGroup.MEMBER_IDS_KEY, true)
+                          .project(UserGroupKeys.memberIds, true)
                           .asList();
     } else {
       userGroupList = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
                           .field(UserGroup.ID_KEY)
                           .in(userGroupIds)
-                          .project(UserGroup.MEMBER_IDS_KEY, true)
+                          .project(UserGroupKeys.memberIds, true)
                           .asList();
     }
 
@@ -620,7 +618,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     return wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
         .field(UserGroup.ID_KEY)
         .in(userGroupIds)
-        .project(UserGroup.NAME_KEY, true)
+        .project(UserGroupKeys.name, true)
         .project(UserGroup.ID_KEY, true)
         .asList()
         .stream()
@@ -637,7 +635,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     return wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
         .field(UserGroup.ID_KEY)
         .in(userGroupIds)
-        .project(UserGroup.NAME_KEY, true)
+        .project(UserGroupKeys.name, true)
         .project(UserGroup.ID_KEY, true)
         .asList(new FindOptions().readPreference(ReadPreference.secondaryPreferred()))
         .stream()
@@ -731,9 +729,9 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public List<UserGroup> getUserGroupsBySsoId(String accountId, String ssoId) {
     PageRequest<UserGroup> pageRequest = aPageRequest()
-                                             .addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId)
-                                             .addFilter("isSsoLinked", Operator.EQ, true)
-                                             .addFilter("linkedSsoId", Operator.EQ, ssoId)
+                                             .addFilter(UserGroupKeys.accountId, Operator.EQ, accountId)
+                                             .addFilter(UserGroupKeys.isSsoLinked, Operator.EQ, true)
+                                             .addFilter(UserGroupKeys.linkedSsoId, Operator.EQ, ssoId)
                                              .build();
     PageResponse<UserGroup> pageResponse = list(accountId, pageRequest, true);
     return pageResponse.getResponse();
@@ -742,8 +740,8 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public UserGroup fetchUserGroupByName(String accountId, String groupName) {
     return wingsPersistence.createQuery(UserGroup.class)
-        .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
-        .filter(UserGroup.NAME_KEY, groupName)
+        .filter(UserGroupKeys.accountId, accountId)
+        .filter(UserGroupKeys.name, groupName)
         .get();
   }
 
@@ -751,8 +749,8 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup getAdminUserGroup(String accountId) {
     PageRequest<UserGroup> pageRequest =
         aPageRequest()
-            .addFilter(UserGroup.NAME_KEY, Operator.EQ, UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
-            .addFilter(UserGroup.IS_DEFAULT_KEY, Operator.EQ, true)
+            .addFilter(UserGroupKeys.name, Operator.EQ, UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
+            .addFilter(UserGroupKeys.isDefault, Operator.EQ, true)
             .build();
 
     return list(accountId, pageRequest, true).getResponse().get(0);

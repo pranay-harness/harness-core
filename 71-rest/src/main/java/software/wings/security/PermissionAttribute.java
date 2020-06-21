@@ -291,15 +291,15 @@ public class PermissionAttribute {
      */
     DELETE,
     /**
-     * Execute action.
+     * Deprecated Execute action.
      */
-    EXECUTE,
+    @Deprecated EXECUTE,
     /**
-     * Execute action.
+     * Execute Workflow action.
      */
     EXECUTE_WORKFLOW,
     /**
-     * Execute action.
+     * Execute Pipeline action.
      */
     EXECUTE_PIPELINE,
     /**
