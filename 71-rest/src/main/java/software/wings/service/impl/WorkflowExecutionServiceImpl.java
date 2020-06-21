@@ -60,7 +60,6 @@ import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
-import static software.wings.beans.FeatureName.WE_STATUS_UPDATE;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER;
@@ -720,14 +719,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                    pipelineStageExecution -> pipelineStageExecution.getStatus() == WAITING)) {
       pipelineExecution.setStatus(WAITING);
     } else if (stageExecutionDataList.stream().anyMatch(pipelineStageExecution
-                   -> pipelineStageExecution.getStatus() == PAUSED || pipelineStageExecution.getStatus() == PAUSING)) {
-      if (!featureFlagService.isEnabled(WE_STATUS_UPDATE, workflowExecution.getAccountId())) {
-        pipelineExecution.setStatus(PAUSED);
-      } else if (stageExecutionDataList.stream().noneMatch(se -> RUNNING == se.getStatus())) {
-        pipelineExecution.setStatus(PAUSED);
-      } else {
-        pipelineExecution.setStatus(workflowExecution.getStatus());
-      }
+                   -> pipelineStageExecution.getStatus() == PAUSED || pipelineStageExecution.getStatus() == PAUSING)
+        && stageExecutionDataList.stream().noneMatch(se -> RUNNING == se.getStatus())) {
+      pipelineExecution.setStatus(PAUSED);
     } else {
       pipelineExecution.setStatus(workflowExecution.getStatus());
     }
@@ -903,9 +897,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     try (AutoLogContext ignore = new WorkflowExecutionLogContext(updateInfo.getWorkflowExecutionId(), OVERRIDE_NESTS);
          AutoLogContext ignore2 =
              new StateExecutionInstanceLogContext(updateInfo.getStateExecutionInstanceId(), OVERRIDE_NESTS)) {
-      if (!featureFlagService.isEnabled(WE_STATUS_UPDATE, appService.getAccountIdByAppId(updateInfo.getAppId()))) {
-        return;
-      }
       WorkflowStatusPropagator workflowStatusPropagator =
           workflowStatusPropagatorFactory.obtainHandler(updateInfo.getStatus());
       workflowStatusPropagator.handleStatusUpdate(updateInfo);
@@ -934,25 +925,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     WorkflowTreeBuilder workflowTreeBuilder =
         WorkflowTree.builder().key(workflowExecutionId).params(params).contextOrder(lastUpdate);
-    if (featureFlagService.isEnabled(WE_STATUS_UPDATE, appService.getAccountIdByAppId(appId))) {
-      if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
-        workflowTreeBuilder.overrideStatus(ExecutionStatus.WAITING);
-      }
-    } else {
-      if (allInstancesIdMap.values().stream().anyMatch(
-              i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
-        workflowTreeBuilder.overrideStatus(ExecutionStatus.PAUSED);
-      } else if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
-        workflowTreeBuilder.overrideStatus(ExecutionStatus.WAITING);
-      } else {
-        List<ExecutionInterrupt> executionInterrupts =
-            executionInterruptManager.checkForExecutionInterrupt(appId, workflowExecutionId);
-        if (executionInterrupts != null
-            && executionInterrupts.stream().anyMatch(
-                   e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL && !e.isSeized())) {
-          workflowTreeBuilder.overrideStatus(ExecutionStatus.PAUSED);
-        }
-      }
+    if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
+      workflowTreeBuilder.overrideStatus(ExecutionStatus.WAITING);
     }
 
     workflowTreeBuilder.graph(graphRenderer.generateHierarchyNode(allInstancesIdMap));
