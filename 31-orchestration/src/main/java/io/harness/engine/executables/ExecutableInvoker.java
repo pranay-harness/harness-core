@@ -4,9 +4,15 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import lombok.AllArgsConstructor;
 
 @OwnedBy(CDC)
 @Redesign
-public interface ExecutableInvoker {
-  void invokeExecutable(InvokerPackage invokerPackage);
+@AllArgsConstructor
+public class ExecutableInvoker {
+  InvokeStrategy invokeStrategy;
+
+  public void invokeExecutable(InvokerPackage invokerPackage) {
+    invokeStrategy.invoke(invokerPackage);
+  }
 }

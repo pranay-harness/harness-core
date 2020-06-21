@@ -6,7 +6,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.engine.executables.ExecutableInvoker;
+import io.harness.engine.executables.InvokeStrategy;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
@@ -23,13 +23,13 @@ import lombok.NonNull;
 
 import java.util.Map;
 
-public class TaskExecutableInvoker implements ExecutableInvoker {
+public class TaskStrategy implements InvokeStrategy {
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
-  public void invokeExecutable(InvokerPackage invokerPackage) {
+  public void invoke(InvokerPackage invokerPackage) {
     TaskExecutable taskExecutable = (TaskExecutable) invokerPackage.getStep();
     Ambiance ambiance = invokerPackage.getAmbiance();
     Task task = taskExecutable.obtainTask(ambiance, invokerPackage.getParameters(), invokerPackage.getInputs());

@@ -13,7 +13,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.ExecutionEngineDispatcher;
-import io.harness.engine.executables.ExecutableInvoker;
+import io.harness.engine.executables.InvokeStrategy;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -36,7 +36,7 @@ import java.util.concurrent.ExecutorService;
 
 @OwnedBy(CDC)
 @Redesign
-public class ChildrenExecutableInvoker implements ExecutableInvoker {
+public class ChildrenStrategy implements InvokeStrategy {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private ExecutionEngine engine;
   @Inject private NodeExecutionService nodeExecutionService;
@@ -44,7 +44,7 @@ public class ChildrenExecutableInvoker implements ExecutableInvoker {
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
   @Override
-  public void invokeExecutable(InvokerPackage invokerPackage) {
+  public void invoke(InvokerPackage invokerPackage) {
     Ambiance ambiance = invokerPackage.getAmbiance();
     ChildrenExecutable childrenExecutable = (ChildrenExecutable) invokerPackage.getStep();
     ChildrenExecutableResponse response =
