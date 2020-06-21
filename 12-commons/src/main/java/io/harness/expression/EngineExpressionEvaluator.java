@@ -28,6 +28,7 @@ import javax.validation.constraints.NotNull;
 public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, ExpressionEvaluatorUtils.ResolveFunctor {
   // TODO(gpahal): Both of these patterns need to be changed later
   private static final Pattern variablePattern = Pattern.compile("\\$\\{[^{}]*}");
+  private static final Pattern secretVariablePattern = Pattern.compile("\\$\\{secretManager.[^{}]*}");
   private static final Pattern validVariableNamePattern = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
 
   private final JexlEngine engine;
@@ -177,6 +178,27 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
 
     List<String> matches = new ArrayList<>();
     Matcher matcher = variablePattern.matcher(str);
+    while (matcher.find()) {
+      matches.add(matcher.group(0));
+    }
+    return matches;
+  }
+
+  public static boolean hasSecretExpressions(String str) {
+    if (EmptyPredicate.isEmpty(str)) {
+      return false;
+    }
+
+    return secretVariablePattern.matcher(str).find();
+  }
+
+  public static List<String> findSecretExpressions(String str) {
+    if (EmptyPredicate.isEmpty(str)) {
+      return Collections.emptyList();
+    }
+
+    List<String> matches = new ArrayList<>();
+    Matcher matcher = secretVariablePattern.matcher(str);
     while (matcher.find()) {
       matches.add(matcher.group(0));
     }
