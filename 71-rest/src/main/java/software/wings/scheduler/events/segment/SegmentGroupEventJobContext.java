@@ -5,6 +5,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.Indexed;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.UpdatedAtAccess;
 import lombok.Value;
@@ -12,7 +13,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
 import software.wings.jersey.JsonViews;
 
 import java.util.List;

@@ -9,6 +9,11 @@ import com.google.protobuf.Message;
 import io.harness.annotation.StoreIn;
 import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
 import io.harness.exception.DataFormatException;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -21,12 +26,7 @@ import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PostLoad;
 
 import java.time.OffsetDateTime;
@@ -37,7 +37,7 @@ import java.util.Map;
 @Data
 @Entity(value = "publishedMessages", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "accountId_type_CreatedAt_occurredAt", background = true), fields = {
+  @Index(name = "accountId_type_CreatedAt_occurredAt", fields = {
     @Field(PublishedMessageKeys.accountId)
     , @Field(PublishedMessageKeys.type), @Field(PublishedMessageKeys.createdAt), @Field(PublishedMessageKeys.occurredAt)
   })

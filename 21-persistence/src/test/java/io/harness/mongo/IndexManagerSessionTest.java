@@ -146,4 +146,19 @@ public class IndexManagerSessionTest extends PersistenceTest {
     assertThat(createCollectionSession(collection).isOkToDropIndexes(IndexManagerSession.tooNew(), accesses)).isFalse();
     assertThat(createCollectionSession(collection).isOkToDropIndexes(afterCreatingIndexes, accesses)).isTrue();
   }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void testCreateIndexCompositeIndexWithIdEntity() {
+    Morphia morphia = new Morphia();
+    morphia.map(TestCompositeIndexWithIdEntity.class);
+    Collection<MappedClass> mappedClasses = morphia.getMapper().getMappedClasses();
+    MappedClass mappedClass = mappedClasses.iterator().next();
+    DBCollection collection = persistence.getCollection(mappedClass.getClazz());
+    assertThatThrownBy(() -> IndexManager.indexCreators(mappedClass, collection))
+        .isInstanceOf(IndexManagerInspectException.class)
+        .hasMessageContaining("collection key in a composite index");
+  }
 }

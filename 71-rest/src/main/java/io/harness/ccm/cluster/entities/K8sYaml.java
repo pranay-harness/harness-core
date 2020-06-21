@@ -6,6 +6,12 @@ import com.google.common.hash.Hashing;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.K8sYaml.K8sYamlKeys;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -17,13 +23,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 
 import java.util.Base64;
 
@@ -32,17 +32,13 @@ import java.util.Base64;
 @StoreIn("events")
 @Entity(value = "k8sYaml", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "accountId_uuid_resourceVersion", background = true),
-      fields =
-      {
-        @Field(K8sYamlKeys.accountId)
-        , @Field(K8sYamlKeys.uuid), @Field(value = K8sYamlKeys.resourceVersion, type = IndexType.DESC)
-      })
+  @Index(name = "accountId_uuid_resourceVersion",
+      fields = { @Field(K8sYamlKeys.accountId)
+                 , @Field(value = K8sYamlKeys.resourceVersion, type = IndexType.DESC) })
   ,
-      @Index(options = @IndexOptions(name = "accountId_clusterId_uid_resourceVersion", background = true), fields = {
+      @Index(name = "accountId_clusterId_uid_resourceVersion", fields = {
         @Field(K8sYamlKeys.accountId)
-        , @Field(K8sYamlKeys.clusterId), @Field(K8sYamlKeys.uuid),
-            @Field(value = K8sYamlKeys.resourceVersion, type = IndexType.DESC)
+        , @Field(K8sYamlKeys.clusterId), @Field(value = K8sYamlKeys.resourceVersion, type = IndexType.DESC)
       })
 })
 @FieldNameConstants(innerTypeName = "K8sYamlKeys")

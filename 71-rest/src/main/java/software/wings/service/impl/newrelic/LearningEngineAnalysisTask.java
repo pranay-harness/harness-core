@@ -6,6 +6,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.version.ServiceApiVersion;
 import lombok.Builder;
@@ -14,12 +20,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
             @Field("ml_analysis_type"), @Field("cluster_level"), @Field("group_name"), @Field("version"),
             @Field(value = "createdAt", type = IndexType.DESC)
       },
-      options = @IndexOptions(name = "task_fetch_idx"))
+      name = "task_fetch_idx")
   ,
       @Index(fields =
           {
@@ -52,14 +52,14 @@ import java.util.concurrent.TimeUnit;
                 @Field("cluster_level"), @Field("group_name"), @Field("version"),
                 @Field(value = "createdAt", type = IndexType.DESC)
           },
-          options = @IndexOptions(name = "task_fetch_priority_idx"))
+          name = "task_fetch_priority_idx")
 
       , @Index(fields = {
         @Field("cvConfigId"), @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus")
-      }, options = @IndexOptions(name = "cvConfigStatusIdx")), @Index(fields = {
+      }, name = "cvConfigStatusIdx"), @Index(fields = {
         @Field("executionStatus")
         , @Field("ml_analysis_type"), @Field(value = "is24x7Task"), @Field(value = "createdAt", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "usageMetricsIndex"))
+      }, name = "usageMetricsIndex")
 })
 @Data
 @Builder

@@ -11,17 +11,16 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.Service;
@@ -37,15 +36,14 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "owners"), fields = { @Field("artifactStreamId")
-                                                              , @Field("appId") })
-  , @Index(options = @IndexOptions(name = "artifactStream_buildNo"), fields = {
-    @Field("artifactStreamId"), @Field("metadata.buildNo")
-  }), @Index(options = @IndexOptions(name = "artifactStream_artifactPath"), fields = {
-    @Field("artifactStreamId"), @Field("metadata.artifactPath")
-  }), @Index(options = @IndexOptions(name = "artifactStream_revision"), fields = {
-    @Field("artifactStreamId"), @Field("revision")
-  })
+  @Index(name = "owners", fields = { @Field("artifactStreamId")
+                                     , @Field("appId") })
+  , @Index(name = "artifactStream_buildNo", fields = { @Field("artifactStreamId")
+                                                       , @Field("metadata.buildNo") }),
+      @Index(name = "artifactStream_artifactPath", fields = {
+        @Field("artifactStreamId"), @Field("metadata.artifactPath")
+      }), @Index(name = "artifactStream_revision", fields = { @Field("artifactStreamId")
+                                                              , @Field("revision") })
 })
 @FieldNameConstants(innerTypeName = "ArtifactKeys")
 @Entity(value = "artifacts", noClassnameStored = true)

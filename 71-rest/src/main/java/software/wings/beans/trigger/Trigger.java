@@ -10,6 +10,11 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.NameAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -19,11 +24,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
@@ -55,12 +55,12 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "triggers")
 @HarnessEntity(exportable = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
+  @Index(name = "yaml", options = @IndexOptions(unique = true), fields = { @Field("appId")
                                                                            , @Field("name") })
-  , @Index(options = @IndexOptions(name = "conditionArtifactStreamId"), fields = {
+  , @Index(name = "conditionArtifactStreamId", fields = {
     @Field(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType)
     , @Field(TriggerKeys.condition + "." + ArtifactTriggerConditionKeys.artifactStreamId)
-  }), @Index(options = @IndexOptions(name = "artifactSelectionsArtifactStreamId"), fields = {
+  }), @Index(name = "artifactSelectionsArtifactStreamId", fields = {
     @Field(TriggerKeys.artifactSelections + "." + ArtifactSelectionKeys.artifactStreamId)
   })
 })

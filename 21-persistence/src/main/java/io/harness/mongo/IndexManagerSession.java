@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSession;
+import static io.harness.reflection.ReflectionUtils.fetchAnnotations;
 import static java.lang.String.join;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofDays;
@@ -24,15 +25,17 @@ import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.govern.Switch;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.IndexManager.IndexCreator;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.threading.Morpheus;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappedField;
 
@@ -158,17 +161,22 @@ public class IndexManagerSession {
 
   public static Map<String, IndexCreator> indexCreators(MappedClass mc, DBCollection collection) {
     Map<String, IndexCreator> creators = new HashMap<>();
+    creatorsForFieldIndexes(mc, collection, creators);
+    creatorsForCompositeIndexes(mc, collection, creators);
+    return creators;
+  }
 
+  private static void creatorsForFieldIndexes(
+      MappedClass mc, DBCollection collection, Map<String, IndexCreator> creators) {
     // Read field level "Indexed" annotation
     for (MappedField mf : mc.getPersistenceFields()) {
-      if (!mf.hasAnnotation(Indexed.class)) {
+      Indexed indexed = mf.getField().getAnnotation(Indexed.class);
+      if (indexed == null) {
         continue;
       }
 
-      Indexed indexed = mf.getAnnotation(Indexed.class);
-
       int direction = 1;
-      String name = isNotEmpty(indexed.options().name()) ? indexed.options().name() : mf.getNameToStore();
+      String name = mf.getNameToStore();
 
       String indexName = name + "_" + direction;
       BasicDBObject dbObject = new BasicDBObject(name, direction);
@@ -190,11 +198,24 @@ public class IndexManagerSession {
       putCreator(
           creators, indexName, IndexCreator.builder().collection(collection).keys(dbObject).options(options).build());
     }
+  }
 
-    // Read Entity level "Indexes" annotation
-    List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
-    if (indexesAnnotations != null) {
-      indexesAnnotations.stream().distinct().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
+  private static String indexedFieldName(MappedClass mc) {
+    for (MappedField mf : mc.getPersistenceFields()) {
+      if (mf.hasAnnotation(Id.class)) {
+        return mf.getJavaFieldName();
+      }
+    }
+    throw new IndexManagerInspectException();
+  }
+
+  private static void creatorsForCompositeIndexes(
+      MappedClass mc, DBCollection collection, Map<String, IndexCreator> creators) {
+    String id = indexedFieldName(mc);
+
+    Set<Indexes> indexesSet = fetchAnnotations(mc.getClazz(), Indexes.class);
+    for (Indexes indexes : indexesSet) {
+      for (Index index : indexes.value()) {
         BasicDBObject keys = new BasicDBObject();
 
         if (index.fields().length == 1 && !index.fields()[0].value().contains(".")) {
@@ -202,13 +223,16 @@ public class IndexManagerSession {
         }
 
         for (Field field : index.fields()) {
+          if (field.value().equals(id)) {
+            throw new IndexManagerInspectException("There is no point of having collection key in a composite index."
+                + "\nIf in the query there is a unique value it will always fetch exactly one item");
+          }
           keys.append(field.value(), field.type().toIndexValue());
         }
 
-        String indexName = index.options().name();
+        String indexName = index.name();
         if (isEmpty(indexName)) {
-          logger.error("Do not use default index name. WARNING: this index will not be created!!!");
-          return;
+          throw new IndexManagerInspectException("Do not use default index name.");
         }
 
         BasicDBObject options = new BasicDBObject();
@@ -227,10 +251,8 @@ public class IndexManagerSession {
         checkWithTheOthers(creators, newCreator);
 
         putCreator(creators, indexName, newCreator);
-      });
+      }
     }
-
-    return creators;
   }
 
   private static void putCreator(Map<String, IndexCreator> creators, String indexName, IndexCreator newCreator) {

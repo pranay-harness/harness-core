@@ -5,26 +5,22 @@ import static java.util.Arrays.asList;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.entityinterface.KeywordsAware;
 
 import java.util.Set;
 
-@Indexes({
-  @Index(options = @IndexOptions(name = "account_gallery_key_idx"), fields = {
-    @Field("accountId"), @Field("galleryKey")
-  })
-})
+@Indexes({ @Index(name = "account_gallery_key_idx", fields = { @Field("accountId")
+                                                               , @Field("galleryKey") }) })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)

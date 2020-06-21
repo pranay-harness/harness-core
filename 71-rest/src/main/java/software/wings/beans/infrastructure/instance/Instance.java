@@ -2,6 +2,10 @@ package software.wings.beans.infrastructure.instance;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -10,11 +14,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.entityinterface.ApplicationAccess;
@@ -33,26 +32,24 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
 @EqualsAndHashCode(callSuper = true)
 @Indexes({
   @Index(fields = { @Field("appId")
-                    , @Field("isDeleted"), @Field("deletedAt") },
-      options = @IndexOptions(name = "instance_index1", background = true))
-  ,
-      @Index(fields = {
-        @Field("appId"), @Field("infraMappingId"), @Field("isDeleted"), @Field("deletedAt")
-      }, options = @IndexOptions(name = "instance_index2"), background = true), @Index(fields = {
-        @Field("accountId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
-      }, options = @IndexOptions(name = "instance_index3", background = true)), @Index(fields = {
-        @Field("appId"), @Field("serviceId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
-      }, options = @IndexOptions(name = "instance_index5", background = true)), @Index(fields = {
-        @Field("accountId"), @Field("isDeleted")
-      }, options = @IndexOptions(name = "instance_index6", background = true)), @Index(fields = {
-        @Field("accountId"), @Field("createdAt"), @Field("deletedAt")
-      }, options = @IndexOptions(name = "instance_index7", background = true)), @Index(fields = {
-        @Field("appId"), @Field("serviceId"), @Field("isDeleted")
-      }, options = @IndexOptions(name = "instance_index8", background = true)), @Index(fields = {
-        @Field("accountId"), @Field("isDeleted"), @Field("deletedAt")
-      }, options = @IndexOptions(name = "instance_index9", background = true)), @Index(fields = {
-        @Field("accountId"), @Field("infraMappingId")
-      }, options = @IndexOptions(name = "instance_index10", background = true))
+                    , @Field("isDeleted"), @Field("deletedAt") }, name = "instance_index1")
+  , @Index(fields = {
+    @Field("appId"), @Field("infraMappingId"), @Field("isDeleted"), @Field("deletedAt")
+  }, name = "instance_index2"), @Index(fields = {
+    @Field("accountId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
+  }, name = "instance_index3"), @Index(fields = {
+    @Field("appId"), @Field("serviceId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
+  }, name = "instance_index5"), @Index(fields = {
+    @Field("accountId"), @Field("isDeleted")
+  }, name = "instance_index6"), @Index(fields = {
+    @Field("accountId"), @Field("createdAt"), @Field("deletedAt")
+  }, name = "instance_index7"), @Index(fields = {
+    @Field("appId"), @Field("serviceId"), @Field("isDeleted")
+  }, name = "instance_index8"), @Index(fields = {
+    @Field("accountId"), @Field("isDeleted"), @Field("deletedAt")
+  }, name = "instance_index9"), @Index(fields = {
+    @Field("accountId"), @Field("infraMappingId")
+  }, name = "instance_index10")
 })
 @FieldNameConstants(innerTypeName = "InstanceKeys")
 @Entity(value = "instance", noClassnameStored = true)
@@ -96,7 +93,7 @@ public class Instance extends Base implements AccountAccess, ApplicationAccess {
 
   private InstanceInfo instanceInfo;
 
-  @Indexed(background = true) private boolean isDeleted;
+  @Indexed private boolean isDeleted;
   private long deletedAt;
 
   @Builder

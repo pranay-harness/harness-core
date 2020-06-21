@@ -8,12 +8,14 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -166,5 +168,17 @@ public class ReflectionUtils {
       logger.error("Unable to access field {} in object {}", field.getName(), obj.getClass(), e);
     }
     return null;
+  }
+
+  public static <A extends Annotation> Set<A> fetchAnnotations(Class<?> clazz, Class<A> annotationClass) {
+    Set<A> annotations = new HashSet<>();
+
+    for (Class<?> type = clazz; type != null; type = type.getSuperclass()) {
+      A annotation = type.getAnnotation(annotationClass);
+      if (annotation != null) {
+        annotations.add(annotation);
+      }
+    }
+    return annotations;
   }
 }

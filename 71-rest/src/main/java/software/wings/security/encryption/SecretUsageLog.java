@@ -4,6 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -20,12 +25,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.entityinterface.ApplicationAccess;
 
@@ -44,11 +44,8 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "secretUsageLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "SecretUsageLogKeys")
-@Indexes({
-  @Index(fields = {
-    @Field("accountId"), @Field("encryptedDataId")
-  }, options = @IndexOptions(name = "acctEncryptedDataIdx"))
-})
+@Indexes({ @Index(fields = { @Field("accountId")
+                             , @Field("encryptedDataId") }, name = "acctEncryptedDataIdx") })
 public class SecretUsageLog implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                        UpdatedByAware, ApplicationAccess, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;

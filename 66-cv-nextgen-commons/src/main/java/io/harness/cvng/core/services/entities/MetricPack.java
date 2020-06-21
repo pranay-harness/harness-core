@@ -8,6 +8,11 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -23,12 +28,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +36,9 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @Indexes({
-  @Index(fields = {
+  @Index(name = "unique_Idx", fields = {
     @Field("projectIdentifier"), @Field("dataSourceType"), @Field("identifier")
-  }, options = @IndexOptions(name = "unique_Idx", unique = true))
+  }, options = @IndexOptions(unique = true))
 })
 @Data
 @Builder

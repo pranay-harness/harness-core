@@ -2,6 +2,10 @@ package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData.BatchJobScheduledDataKeys;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -12,19 +16,14 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 
 import java.time.Instant;
 
 @Data
 @Entity(value = "batchJobScheduledData", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "accountId_batchJobType_endAt", background = true), fields = {
+  @Index(name = "accountId_batchJobType_endAt", fields = {
     @Field(BatchJobScheduledDataKeys.accountId)
     , @Field(BatchJobScheduledDataKeys.batchJobType),
         @Field(value = BatchJobScheduledDataKeys.endAt, type = IndexType.DESC)

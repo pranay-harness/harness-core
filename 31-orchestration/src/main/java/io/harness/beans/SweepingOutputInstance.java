@@ -5,6 +5,11 @@ import io.harness.beans.SweepingOutputInstance.SweepingOutputConverter;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.KryoConverter;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -18,12 +23,7 @@ import lombok.experimental.NonFinal;
 import lombok.experimental.Wither;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.converters.SimpleValueConverter;
 
 import java.time.OffsetDateTime;
@@ -35,19 +35,19 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Wither
 @Indexes({
-  @Index(options = @IndexOptions(name = "uniquePipelineExecution", unique = true),
+  @Index(name = "uniquePipelineExecution", options = @IndexOptions(unique = true),
       fields =
       {
         @Field(SweepingOutputKeys.appId)
         , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.pipelineExecutionId)
       })
   ,
-      @Index(options = @IndexOptions(name = "uniqueWorkflowExecution", unique = true), fields = {
+      @Index(name = "uniqueWorkflowExecution", options = @IndexOptions(unique = true), fields = {
         @Field(SweepingOutputKeys.appId)
         , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.workflowExecutionIds)
-      }), @Index(options = @IndexOptions(name = "uniquePhaseExecution", unique = true), fields = {
+      }), @Index(name = "uniquePhaseExecution", options = @IndexOptions(unique = true), fields = {
         @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.phaseExecutionId)
-      }), @Index(options = @IndexOptions(name = "uniqueStateExecution", unique = true), fields = {
+      }), @Index(name = "uniqueStateExecution", options = @IndexOptions(unique = true), fields = {
         @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.stateExecutionId)
       })
 })

@@ -1,6 +1,10 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
@@ -9,12 +13,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 
 @Value
@@ -23,7 +22,7 @@ import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "EntityYamlRecordKeys")
 @Indexes({
-  @Index(options = @IndexOptions(name = "index_1"), fields = {
+  @Index(name = "index_1", fields = {
     @Field(EntityYamlRecordKeys.accountId)
     , @Field(EntityYamlRecordKeys.entityId), @Field(EntityYamlRecordKeys.entityType),
         @Field(value = EntityYamlRecordKeys.createdAt, type = IndexType.DESC)

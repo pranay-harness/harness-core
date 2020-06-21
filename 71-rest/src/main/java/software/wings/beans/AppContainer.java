@@ -5,13 +5,13 @@ import com.google.common.base.MoreObjects;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ChecksumType;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import lombok.experimental.FieldNameConstants;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
 
@@ -23,7 +23,7 @@ import java.util.Objects;
  * @author Rishi
  */
 @Indexes(
-    @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
+    @Index(name = "yaml", options = @IndexOptions(unique = true), fields = { @Field("accountId")
                                                                              , @Field("name") }))
 @Entity(value = "appContainers", noClassnameStored = true)
 @HarnessEntity(exportable = true)

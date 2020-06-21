@@ -2,14 +2,14 @@ package software.wings.beans.infrastructure.instance;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
 /**
@@ -20,12 +20,13 @@ import software.wings.beans.Base;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Indexes({
-  @Index(fields = { @Field("appId")
-                    , @Field("serviceId"), @Field("envId"), @Field("infraMappingId") },
-      options = @IndexOptions(name = "compositeIdx1", unique = true))
+  @Index(name = "compositeIdx1",
+      fields = { @Field("appId")
+                 , @Field("serviceId"), @Field("envId"), @Field("infraMappingId") },
+      options = @IndexOptions(unique = true))
   ,
       @Index(fields = { @Field("appId")
-                        , @Field("infraMappingId") }, options = @IndexOptions(name = "compositeIdx2"))
+                        , @Field("infraMappingId") }, name = "compositeIdx2")
 })
 @Entity(value = "syncStatus", noClassnameStored = true)
 @HarnessEntity(exportable = false)

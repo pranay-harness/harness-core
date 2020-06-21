@@ -4,6 +4,11 @@ import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -20,12 +25,7 @@ import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.InvocationCount.InvocationCountKey;
 
@@ -38,9 +38,9 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity(value = "serverless-instance-stats", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Indexes(@Index(fields = { @Field("accountId")
-                           , @Field("timestamp") },
-    options = @IndexOptions(unique = true, name = "accountId_timestamp_unique_idx", background = true)))
+@Indexes(@Index(name = "accountId_timestamp_unique_idx", fields = { @Field("accountId")
+                                                                    , @Field("timestamp") },
+    options = @IndexOptions(unique = true)))
 @FieldNameConstants(innerTypeName = "ServerlessInstanceStatsKeys")
 public class ServerlessInstanceStats implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                                                 UpdatedAtAware, UpdatedByAware, AccountAccess {

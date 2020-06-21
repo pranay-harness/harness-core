@@ -1,6 +1,9 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -12,11 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
 
@@ -31,9 +30,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "gitFileActivitySummary", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "GitFileActivitySummaryKeys")
 @Indexes({
-  @Index(fields = {
-    @Field("accountId"), @Field("appId"), @Field("gitToHarness")
-  }, options = @IndexOptions(name = "gitCommits_for_appId_indx"))
+  @Index(fields = { @Field("accountId"), @Field("appId"), @Field("gitToHarness") }, name = "gitCommits_for_appId_indx")
 })
 @HarnessEntity(exportable = true)
 public class GitFileActivitySummary

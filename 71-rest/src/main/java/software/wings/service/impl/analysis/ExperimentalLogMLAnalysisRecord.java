@@ -8,17 +8,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
@@ -31,7 +31,7 @@ import java.util.Map;
 
 @Indexes(@Index(fields = { @Field("stateExecutionId")
                            , @Field(value = "logCollectionMinute", type = IndexType.DESC) },
-    options = @IndexOptions(name = "stateExecutionIdx")))
+    name = "stateExecutionIdx"))
 @Data
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @JsonIgnoreProperties(ignoreUnknown = true)

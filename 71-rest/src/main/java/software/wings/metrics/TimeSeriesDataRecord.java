@@ -24,6 +24,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -38,15 +44,9 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Transient;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.verification.generated.TimeSeriesMetricRecordProto.MetricDeeplinks;
@@ -72,16 +72,16 @@ import java.util.Set;
       {
         @Field("stateExecutionId"), @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
       },
-      options = @IndexOptions(name = "stateExIdx"))
+      name = "stateExIdx")
   ,
       @Index(fields = {
         @Field("workflowExecutionId")
         , @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "workflowExIdx")), @Index(fields = {
+      }, name = "workflowExIdx"), @Index(fields = {
         @Field(value = "dataCollectionMinute", type = IndexType.DESC), @Field("cvConfigId")
-      }, options = @IndexOptions(name = "serviceGuardIdx")), @Index(fields = {
+      }, name = "serviceGuardIdx"), @Index(fields = {
         @Field("cvConfigId"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "service_guard_idx"))
+      }, name = "service_guard_idx")
 })
 @Data
 @Builder

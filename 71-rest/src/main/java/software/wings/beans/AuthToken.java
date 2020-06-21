@@ -4,13 +4,13 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.CryptoUtils.secureRandAlphaNumString;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import org.simpleframework.xml.Transient;
 
 import java.time.OffsetDateTime;

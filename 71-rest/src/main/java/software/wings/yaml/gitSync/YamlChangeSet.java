@@ -3,6 +3,11 @@ package software.wings.yaml.gitSync;
 import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -10,12 +15,6 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.beans.yaml.GitFileChange;
 
@@ -30,23 +29,22 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @Indexes({
   @Index(fields = { @Field("accountId")
-                    , @Field("status"), @Field("retryCount") },
-      options = @IndexOptions(name = "searchIdx_1", background = true))
+                    , @Field("status"), @Field("retryCount") }, name = "searchIdx_1")
   ,
       @Index(fields = { @Field("accountId")
                         , @Field(value = "createdAt", type = IndexType.DESC) },
-          options = @IndexOptions(name = "accountId_createdAt_index", background = true)),
+          name = "accountId_createdAt_index"),
 
       @Index(fields =
           {
             @Field("accountId"), @Field(value = "status"), @Field(value = "gitToHarness"), @Field(value = "createdAt")
           },
-          options = @IndexOptions(name = "accountId_status_gitToHarness_createdAt_index", background = true)),
+          name = "accountId_status_gitToHarness_createdAt_index"),
 
       @Index(fields = {
         @Field("accountId")
         , @Field(value = "queueKey"), @Field(value = "status"), @Field(value = "createdAt", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "accountId_queuekey_status_createdAt_index", background = true)),
+      }, name = "accountId_queuekey_status_createdAt_index"),
 })
 @FieldNameConstants(innerTypeName = "YamlChangeSetKeys")
 @Entity(value = "yamlChangeSet")

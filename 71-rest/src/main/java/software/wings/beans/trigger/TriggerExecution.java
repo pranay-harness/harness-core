@@ -6,13 +6,13 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.beans.ExecutionArgs;
 

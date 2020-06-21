@@ -8,6 +8,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.distribution.constraint.Constraint;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -22,12 +27,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -35,7 +35,7 @@ import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Indexes(@Index(
-    options = @IndexOptions(unique = true, name = "uniqueName"), fields = { @Field("accountId")
+    name = "uniqueName", options = @IndexOptions(unique = true), fields = { @Field("accountId")
                                                                             , @Field("name") }))
 @Data
 @Builder

@@ -3,6 +3,7 @@ package software.wings.beans;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ChecksumType;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.mongo.index.Indexed;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +13,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
 
 import java.util.Map;
 

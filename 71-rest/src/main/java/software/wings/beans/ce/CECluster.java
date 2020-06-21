@@ -1,5 +1,9 @@
 package software.wings.beans.ce;
 
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -11,11 +15,7 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.ce.CECluster.CEClusterKeys;
 
 @Data
@@ -23,7 +23,7 @@ import software.wings.beans.ce.CECluster.CEClusterKeys;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceCluster", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "no_dup", unique = true), fields = {
+  @Index(name = "no_dup", options = @IndexOptions(unique = true), fields = {
     @Field(CEClusterKeys.accountId)
     , @Field(CEClusterKeys.infraAccountId), @Field(CEClusterKeys.region), @Field(CEClusterKeys.clusterName)
   })

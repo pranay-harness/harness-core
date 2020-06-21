@@ -3,6 +3,11 @@ package software.wings.service.impl.analysis;
 import com.google.common.collect.Sets;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -10,11 +15,6 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.metrics.TimeSeriesCustomThresholdType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -24,11 +24,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 @Indexes({
-  @Index(fields = {
+  @Index(name = "timeseriesThresholdsQueryIndex", fields = {
     @Field("appId")
     , @Field("serviceId"), @Field("stateType"), @Field("groupName"), @Field("transactionName"), @Field("metricName"),
         @Field("cvConfigId"), @Field("thresholdType")
-  }, options = @IndexOptions(unique = false, name = "timeseriesThresholdsQueryIndex"))
+  }, options = @IndexOptions(unique = false))
 })
 @Data
 @Builder

@@ -5,26 +5,23 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import io.harness.context.GlobalContext;
 import io.harness.context.GlobalContextData;
 import io.harness.manage.GlobalContextManager;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.PersistentEntity;
 import io.harness.queue.Queuable.QueuableKeys;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PrePersist;
 
 import java.util.Date;
 
-@Indexes({
-  @Index(options = @IndexOptions(name = "next4"), fields = {
-    @Field(QueuableKeys.topic), @Field(QueuableKeys.earliestGet)
-  })
-})
+@Indexes({ @Index(name = "next4", fields = { @Field(QueuableKeys.topic)
+                                             , @Field(QueuableKeys.earliestGet) }) })
 @FieldNameConstants(innerTypeName = "QueuableKeys")
 public abstract class Queuable implements PersistentEntity {
   @Getter @Setter @Id private String id;

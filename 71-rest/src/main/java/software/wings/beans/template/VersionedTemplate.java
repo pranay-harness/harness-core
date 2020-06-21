@@ -4,16 +4,16 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.Variable;
 
@@ -22,12 +22,12 @@ import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
 @Indexes({
-  @Index(fields = { @Field("accountId")
-                    , @Field("templateId"), @Field("version") },
-      options = @IndexOptions(name = "yaml", unique = true))
+  @Index(name = "yaml", fields = { @Field("accountId")
+                                   , @Field("templateId"), @Field("version") },
+      options = @IndexOptions(unique = true))
   ,
       @Index(fields = { @Field("templateObject.referencedTemplateList.templateReference.templateUuid") },
-          options = @IndexOptions(name = "referencedTemplates"))
+          name = "referencedTemplates")
 })
 @Data
 @Builder

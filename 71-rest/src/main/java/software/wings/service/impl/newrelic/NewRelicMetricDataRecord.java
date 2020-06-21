@@ -19,6 +19,12 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.serializer.JsonUtils;
@@ -30,13 +36,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
@@ -57,14 +57,14 @@ import java.util.Map;
       {
         @Field("stateExecutionId"), @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
       },
-      options = @IndexOptions(name = "stateExIdx"))
+      name = "stateExIdx")
   ,
       @Index(fields = {
         @Field("workflowExecutionId")
         , @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "workflowExIdx")), @Index(fields = {
+      }, name = "workflowExIdx"), @Index(fields = {
         @Field(value = "dataCollectionMinute", type = IndexType.DESC), @Field("cvConfigId")
-      }, options = @IndexOptions(name = "serviceGuardIdx"))
+      }, name = "serviceGuardIdx")
 })
 @Data
 @NoArgsConstructor

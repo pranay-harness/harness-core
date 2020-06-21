@@ -3,6 +3,11 @@ package io.harness.cdng.artifact.bean.artifactsource;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -15,12 +20,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 
 import javax.validation.constraints.NotNull;
 
@@ -31,7 +31,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Indexes({ @Index(options = @IndexOptions(name = "uniqueHash", unique = true), fields = { @Field("uniqueHash") }) })
+@Indexes({ @Index(name = "uniqueHash", options = @IndexOptions(unique = true), fields = { @Field("uniqueHash") }) })
 @FieldNameConstants(innerTypeName = "ArtifactSourceKeys")
 @Entity(value = "artifactSourceNG")
 @HarnessEntity(exportable = true)

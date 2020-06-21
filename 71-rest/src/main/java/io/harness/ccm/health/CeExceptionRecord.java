@@ -2,6 +2,10 @@ package io.harness.ccm.health;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.health.CeExceptionRecord.CeExceptionRecordKeys;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -13,12 +17,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 
 @Data
 @Builder
@@ -26,7 +25,7 @@ import org.mongodb.morphia.utils.IndexType;
 @Entity(value = "ceExceptionRecord", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "CeExceptionRecordKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Indexes(@Index(options = @IndexOptions(name = "accountId_clusterId_createdAt", background = true),
+@Indexes(@Index(name = "accountId_clusterId_createdAt",
     fields =
     {
       @Field(value = CeExceptionRecordKeys.accountId)

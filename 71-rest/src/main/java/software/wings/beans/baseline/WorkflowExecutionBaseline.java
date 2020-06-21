@@ -1,6 +1,11 @@
 package software.wings.beans.baseline;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -9,20 +14,15 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
 /**
  * Created by rsingh on 2/16/18.
  */
 @Indexes({
-  @Index(fields = {
+  @Index(name = "baselineUniqueIndex", fields = {
     @Field("workflowId"), @Field("envId"), @Field("serviceId")
-  }, options = @IndexOptions(unique = true, name = "baselineUniqueIndex"))
+  }, options = @IndexOptions(unique = true))
 })
 @Data
 @Builder

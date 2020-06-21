@@ -1,6 +1,9 @@
 package software.wings.yaml.gitSync;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -10,11 +13,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.yaml.Change.ChangeType;
 
@@ -26,15 +25,15 @@ import javax.ws.rs.DefaultValue;
 @Indexes({
   @Index(fields = { @Field("accountId")
                     , @Field("processingCommitId"), @Field("filePath"), @Field("status") },
-      options = @IndexOptions(background = true, name = "accountId_procCommitId_filePath_status"))
+      name = "accountId_procCommitId_filePath_status")
   ,
-      @Index(fields = {
-        @Field("accountId"), @Field("processingCommitId"), @Field("status")
-      }, options = @IndexOptions(background = true, name = "accountId_procCommitId_status")), @Index(fields = {
-        @Field("accountId"), @Field("filePath")
-      }, options = @IndexOptions(background = true, name = "accountId_filePath")), @Index(fields = {
-        @Field("accountId"), @Field("commitId")
-      }, options = @IndexOptions(background = true, name = "accountId_commitId_Idx"))
+      @Index(fields = { @Field("accountId")
+                        , @Field("processingCommitId"), @Field("status") },
+          name = "accountId_procCommitId_status"),
+      @Index(fields = { @Field("accountId")
+                        , @Field("filePath") }, name = "accountId_filePath"),
+      @Index(fields = { @Field("accountId")
+                        , @Field("commitId") }, name = "accountId_commitId_Idx")
 })
 @Data
 @Builder

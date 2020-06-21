@@ -2,6 +2,11 @@ package io.harness.event.reconciliation.deployment;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord.DeploymentReconRecordKeys;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -11,12 +16,7 @@ import lombok.Data;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -28,11 +28,11 @@ import java.util.Date;
 @Entity(value = "deploymentReconciliation", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @Indexes({
-  @Index(options = @IndexOptions(name = "accountId_durationEndTs"),
+  @Index(name = "accountId_durationEndTs",
       fields = { @Field(DeploymentReconRecordKeys.accountId)
                  , @Field(DeploymentReconRecordKeys.durationEndTs) })
   ,
-      @Index(options = @IndexOptions(name = "accountId_reconciliationStatus"), fields = {
+      @Index(name = "accountId_reconciliationStatus", fields = {
         @Field(DeploymentReconRecordKeys.accountId), @Field(DeploymentReconRecordKeys.reconciliationStatus)
       }),
 })

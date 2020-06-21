@@ -8,6 +8,11 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -19,11 +24,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.Variable;
 import software.wings.beans.entityinterface.KeywordsAware;
@@ -35,13 +35,12 @@ import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
 @Indexes({
-  @Index(options = @IndexOptions(name = "yaml", unique = true),
+  @Index(name = "yaml", options = @IndexOptions(unique = true),
       fields = { @Field("accountId")
                  , @Field("name"), @Field("folderId"), @Field("appId") })
   ,
-      @Index(options = @IndexOptions(name = "account_gallery_app_idx"), fields = {
-        @Field("accountId"), @Field("galleryId"), @Field("appId")
-      })
+      @Index(name = "account_gallery_app_idx", fields = { @Field("accountId")
+                                                          , @Field("galleryId"), @Field("appId") })
 })
 @Data
 @NoArgsConstructor

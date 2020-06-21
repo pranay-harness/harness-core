@@ -6,6 +6,7 @@ import static io.harness.mongo.IndexManager.Mode.MANUAL;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
+import io.harness.mongo.index.IndexType;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
@@ -13,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.mapping.MappedClass;
-import org.mongodb.morphia.utils.IndexType;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -69,16 +69,6 @@ public class IndexManager {
       return !iterator2.hasNext();
     }
 
-    public static IndexType indexTypeFromValue(Object directionObject) {
-      if (directionObject instanceof Double) {
-        directionObject = (int) ((Double) directionObject).doubleValue();
-      } else if (directionObject instanceof Float) {
-        directionObject = (int) ((Float) directionObject).floatValue();
-      }
-
-      return IndexType.fromValue(directionObject);
-    }
-
     public static boolean compareKeysOrderAndValues(BasicDBObject keys1, BasicDBObject keys2) {
       Iterator<Entry<String, Object>> iterator1 = keys1.entrySet().iterator();
       Iterator<Entry<String, Object>> iterator2 = keys2.entrySet().iterator();
@@ -91,7 +81,7 @@ public class IndexManager {
         if (!item1.getKey().equals(item2.getKey())) {
           return false;
         }
-        if (indexTypeFromValue(item1.getValue()) != indexTypeFromValue(item2.getValue())) {
+        if (IndexType.fromValue(item1.getValue()) != IndexType.fromValue(item2.getValue())) {
           return false;
         }
       }

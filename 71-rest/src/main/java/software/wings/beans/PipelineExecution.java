@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
+import io.harness.mongo.index.Indexed;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -16,7 +17,6 @@ import io.harness.validation.Update;
 import lombok.Data;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.entityinterface.ApplicationAccess;
 
 import java.util.ArrayList;

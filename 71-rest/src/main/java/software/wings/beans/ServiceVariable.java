@@ -12,6 +12,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityName;
 import io.harness.encryption.Encrypted;
 import io.harness.encryption.EncryptionReflectUtils;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
@@ -24,13 +30,7 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -45,20 +45,19 @@ import javax.validation.constraints.NotNull;
  */
 @OwnedBy(CDC)
 @Indexes({
-  @Index(fields =
+  @Index(name = "serviceVariableUniqueIdx",
+      fields =
       {
         @Field("entityId")
         , @Field("templateId"), @Field("overrideType"), @Field("instances"), @Field("expression"), @Field("type"),
             @Field("name")
       },
-      options = @IndexOptions(unique = true, name = "serviceVariableUniqueIdx"))
+      options = @IndexOptions(unique = true))
   ,
       @Index(fields = { @Field("appId")
-                        , @Field("entityId") }, options = @IndexOptions(name = "app_entityId")),
-      @Index(fields = { @Field("appId")
-                        , @Field("envId"), @Field("templateId") },
-          options = @IndexOptions(name = "app_env_templateId")),
-      @Index(options = @IndexOptions(name = "appEntityIdx"), fields = {
+                        , @Field("entityId") }, name = "app_entityId"), @Index(fields = {
+        @Field("appId"), @Field("envId"), @Field("templateId")
+      }, name = "app_env_templateId"), @Index(name = "appEntityIdx", fields = {
         @Field("appId"), @Field("entityId"), @Field(value = "createdAt", type = IndexType.DESC),
       })
 })

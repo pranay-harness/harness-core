@@ -12,13 +12,13 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
+import io.harness.mongo.index.IndexType;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.utils.IndexType;
 
 public class IndexManagerTest extends PersistenceTest {
   @Inject HPersistence persistence;
@@ -70,8 +70,8 @@ public class IndexManagerTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testIndexTypeFromValue() {
-    assertThat(IndexManager.IndexCreator.indexTypeFromValue(Integer.valueOf(1))).isEqualTo(IndexType.ASC);
-    assertThat(IndexManager.IndexCreator.indexTypeFromValue(Float.valueOf(1))).isEqualTo(IndexType.ASC);
-    assertThat(IndexManager.IndexCreator.indexTypeFromValue(Double.valueOf(1.0))).isEqualTo(IndexType.ASC);
+    assertThat(IndexType.fromValue(Integer.valueOf(1))).isEqualTo(IndexType.ASC);
+    assertThat(IndexType.fromValue(Float.valueOf(1))).isEqualTo(IndexType.ASC);
+    assertThat(IndexType.fromValue(Double.valueOf(1.0))).isEqualTo(IndexType.ASC);
   }
 }

@@ -2,6 +2,9 @@ package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.InstanceData.InstanceDataKeys;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -13,11 +16,7 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.time.Instant;
@@ -27,7 +26,7 @@ import java.util.Map;
 @Builder
 @Entity(value = "instanceData", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "accountId_clusterId_instanceId"), fields = {
+  @Index(name = "accountId_clusterId_instanceId", fields = {
     @Field(InstanceDataKeys.accountId), @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceId)
   })
 })

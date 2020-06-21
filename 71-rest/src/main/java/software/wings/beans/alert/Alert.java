@@ -4,6 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -16,12 +21,7 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertSeverity;
 import software.wings.alerts.AlertStatus;
@@ -37,17 +37,17 @@ import javax.validation.constraints.NotNull;
   @Index(fields =
       { @Field(AlertKeys.accountId)
         , @Field(AlertKeys.appId), @Field(AlertKeys.type), @Field(AlertKeys.status) },
-      options = @IndexOptions(name = "accountAppTypeStatusIdx"))
+      name = "accountAppTypeStatusIdx")
   ,
       @Index(fields = {
         @Field(AlertKeys.accountId), @Field(AlertKeys.type), @Field(AlertKeys.status)
-      }, options = @IndexOptions(name = "accountTypeStatusIdx")), @Index(fields = {
+      }, name = "accountTypeStatusIdx"), @Index(fields = {
         @Field(AlertKeys.type), @Field(AlertKeys.createdAt)
-      }, options = @IndexOptions(name = "createdAtTypeIndex")), @Index(fields = {
+      }, name = "createdAtTypeIndex"), @Index(fields = {
         @Field(AlertKeys.status)
         , @Field(AlertKeys.alertReconciliation + "." + AlertReconciliationKeys.needed),
             @Field(AlertKeys.alertReconciliation + "." + AlertReconciliationKeys.nextIteration)
-      }, options = @IndexOptions(name = "reconciliationIterator")),
+      }, name = "reconciliationIterator"),
 })
 @Data
 @Builder

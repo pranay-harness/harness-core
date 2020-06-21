@@ -6,6 +6,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -14,12 +20,6 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.sm.StateType;
 
@@ -36,13 +36,13 @@ import java.util.Date;
         @Field("workflowId")
         , @Field("stateType"), @Field("executionStatus"), @Field(value = "workflowStartTs", type = IndexType.DESC)
       },
-      options = @IndexOptions(name = "stateHostIdx"))
+      name = "stateHostIdx")
   ,
-      @Index(fields = {
-        @Field("workflowExecutionId"), @Field(value = "createdAt", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "workflowExec_idx")), @Index(fields = {
-        @Field("pipelineExecutionId"), @Field(value = "accountId")
-      }, options = @IndexOptions(name = "cv_certified_index"))
+      @Index(fields = { @Field("workflowExecutionId")
+                        , @Field(value = "createdAt", type = IndexType.DESC) },
+          name = "workflowExec_idx"),
+      @Index(fields = { @Field("pipelineExecutionId")
+                        , @Field(value = "accountId") }, name = "cv_certified_index")
 })
 @Entity(value = "cvExecutionData", noClassnameStored = true)
 @HarnessEntity(exportable = false)

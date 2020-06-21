@@ -16,6 +16,12 @@ import com.google.cloud.datastore.Key;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.AllArgsConstructor;
@@ -27,12 +33,6 @@ import lombok.experimental.FieldNameConstants;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
@@ -47,21 +47,19 @@ import java.util.List;
  */
 @Indexes({
   @Index(fields = { @Field("stateExecutionId")
-                    , @Field("logCollectionMinute") },
-      options = @IndexOptions(name = "stateHostIdx"))
-  ,
-      @Index(fields = {
-        @Field("stateExecutionId")
-        , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host")
-      }, options = @IndexOptions(name = "stateBumpIdx")), @Index(fields = {
-        @Field("workflowExecutionId"), @Field("clusterLevel"), @Field("stateType")
-      }, options = @IndexOptions(name = "state_Prev_Ex_Idx")), @Index(fields = {
-        @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.ASC), @Field("clusterLevel")
-      }, options = @IndexOptions(name = "cvRawRecordIdx")), @Index(fields = {
-        @Field("cvConfigId")
-        , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host"),
-            @Field(value = "createdAt", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "cv_bump_idx"))
+                    , @Field("logCollectionMinute") }, name = "stateHostIdx")
+  , @Index(fields = {
+    @Field("stateExecutionId")
+    , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host")
+  }, name = "stateBumpIdx"), @Index(fields = {
+    @Field("workflowExecutionId"), @Field("clusterLevel"), @Field("stateType")
+  }, name = "state_Prev_Ex_Idx"), @Index(fields = {
+    @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.ASC), @Field("clusterLevel")
+  }, name = "cvRawRecordIdx"), @Index(fields = {
+    @Field("cvConfigId")
+    , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host"),
+        @Field(value = "createdAt", type = IndexType.DESC)
+  }, name = "cv_bump_idx")
 })
 @Data
 @Builder

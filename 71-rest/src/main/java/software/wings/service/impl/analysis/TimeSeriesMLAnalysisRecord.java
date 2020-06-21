@@ -2,15 +2,14 @@ package software.wings.service.impl.analysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 
 /**
  * Class representing entity for TimeSeries Analysis Record.
@@ -20,13 +19,13 @@ import org.mongodb.morphia.utils.IndexType;
   @Index(fields =
       { @Field("stateExecutionId")
         , @Field("groupName"), @Field(value = "analysisMinute", type = IndexType.DESC) },
-      options = @IndexOptions(name = "stateExIdx"))
+      name = "stateExIdx")
   ,
-      @Index(fields = {
-        @Field("cvConfigId"), @Field(value = "analysisMinute", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "service_guard_idx")), @Index(fields = {
-        @Field("workflowExecutionId"), @Field(value = "appId")
-      }, options = @IndexOptions(name = "workflow_exec_appId_index"))
+      @Index(fields = { @Field("cvConfigId")
+                        , @Field(value = "analysisMinute", type = IndexType.DESC) },
+          name = "service_guard_idx"),
+      @Index(fields = { @Field("workflowExecutionId")
+                        , @Field(value = "appId") }, name = "workflow_exec_appId_index")
 })
 @Data
 @Builder

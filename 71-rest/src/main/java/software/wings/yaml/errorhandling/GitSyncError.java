@@ -2,6 +2,11 @@ package software.wings.yaml.errorhandling;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,11 +15,6 @@ import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.service.impl.yaml.GitSyncErrorStatus;
@@ -27,22 +27,23 @@ import javax.ws.rs.DefaultValue;
  * @author rktummala on 12/15/17
  */
 @Indexes({
-  @Index(fields = { @Field("accountId")
-                    , @Field("yamlFilePath"), @Field("gitSyncDirection") },
-      options = @IndexOptions(unique = true, background = true, name = "account_filepath_direction_idx"))
+  @Index(name = "account_filepath_direction_idx",
+      fields = { @Field("accountId")
+                 , @Field("yamlFilePath"), @Field("gitSyncDirection") },
+      options = @IndexOptions(unique = true))
   ,
       @Index(fields = {
         @Field("accountId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.gitCommitId")
-      }, options = @IndexOptions(background = true, name = "gitCommitId_idx")), @Index(fields = {
+      }, name = "gitCommitId_idx"), @Index(fields = {
         @Field("accountId"), @Field("appId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.gitCommitId")
-      }, options = @IndexOptions(background = true, name = "gitCommitId_idx_for_app_filter")), @Index(fields = {
+      }, name = "gitCommitId_idx_for_app_filter"), @Index(fields = {
         @Field("accountId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.previousCommitIdsWithError")
-      }, options = @IndexOptions(background = true, name = "previousErrors_idx")), @Index(fields = {
+      }, name = "previousErrors_idx"), @Index(fields = {
         @Field("accountId")
         , @Field("appId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.previousCommitIdsWithError")
-      }, options = @IndexOptions(background = true, name = "previousErrors_idx_for_app_filter")), @Index(fields = {
+      }, name = "previousErrors_idx_for_app_filter"), @Index(fields = {
         @Field("accountId"), @Field("createdAt")
-      }, options = @IndexOptions(background = true, name = "accountId_createdAt")),
+      }, name = "accountId_createdAt"),
 })
 @Data
 @NoArgsConstructor

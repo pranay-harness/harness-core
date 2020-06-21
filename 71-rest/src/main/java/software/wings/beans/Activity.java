@@ -16,6 +16,12 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -31,14 +37,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Version;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.api.InstanceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.beans.Activity.ActivityKeys;
@@ -66,7 +66,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @Entity(value = "activities", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Indexes(@Index(options = @IndexOptions(name = "app_status_createdAt"),
+@Indexes(@Index(name = "app_status_createdAt",
     fields =
     {
       @Field(value = ActivityKeys.appId)

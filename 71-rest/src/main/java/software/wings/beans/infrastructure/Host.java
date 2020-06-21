@@ -8,14 +8,13 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
 import java.util.Map;
@@ -28,9 +27,9 @@ import java.util.Objects;
 @HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "HostKeys")
-@Indexes(@Index(options = @IndexOptions(name = "app_inframappingid"),
-    fields = { @Field(value = HostKeys.appId)
-               , @Field(value = HostKeys.infraMappingId) }))
+@Indexes(@Index(
+    name = "app_inframappingid", fields = { @Field(value = HostKeys.appId)
+                                            , @Field(value = HostKeys.infraMappingId) }))
 public class Host extends Base {
   @NotEmpty private String envId;
   @Indexed private String serviceTemplateId;

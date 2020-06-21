@@ -1,11 +1,11 @@
 package software.wings.beans;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.mongo.index.Indexed;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.mongodb.morphia.annotations.Indexed;
 import software.wings.yaml.BaseEntityYaml;
 
 /**

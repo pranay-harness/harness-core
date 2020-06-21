@@ -18,6 +18,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Getter;
@@ -25,13 +30,7 @@ import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
@@ -51,7 +50,7 @@ import javax.validation.constraints.NotNull;
  */
 @OwnedBy(CDC)
 @Entity(value = "workflows", noClassnameStored = true)
-@Indexes(@Index(options = @IndexOptions(name = "accountIdCreatedAt"),
+@Indexes(@Index(name = "accountIdCreatedAt",
     fields = { @Field(WorkflowKeys.accountId)
                , @Field(value = WorkflowKeys.createdAt, type = IndexType.DESC) }))
 @HarnessEntity(exportable = true)

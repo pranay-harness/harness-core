@@ -5,6 +5,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +14,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 
 /**

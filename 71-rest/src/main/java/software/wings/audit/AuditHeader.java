@@ -3,6 +3,11 @@ package software.wings.audit;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -10,12 +15,6 @@ import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -35,28 +34,28 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AuditHeaderKeys")
 @Indexes({
-  @Index(fields =
+  @Index(name = "entityRecordIndex_1",
+      fields =
       {
         @Field(AuditHeaderKeys.accountId)
         , @Field(AuditHeaderKeys.appIdEntityRecord), @Field(AuditHeaderKeys.affectedResourceType),
             @Field(AuditHeaderKeys.affectedResourceOp),
             @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
-      },
-      options = @IndexOptions(name = "entityRecordIndex_1"))
+      })
   ,
-      @Index(fields = {
+      @Index(name = "entityRecordIndex_2", fields = {
         @Field(AuditHeaderKeys.accountId)
         , @Field(AuditHeaderKeys.appIdEntityRecord), @Field(AuditHeaderKeys.affectedResourceId),
             @Field(AuditHeaderKeys.affectedResourceOp),
             @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
-      }, options = @IndexOptions(name = "entityRecordIndex_2")), @Index(fields = {
+      }), @Index(name = "entityRecordIndex_3", fields = {
         @Field(AuditHeaderKeys.accountId)
         , @Field(AuditHeaderKeys.affectedResourceType), @Field(AuditHeaderKeys.affectedResourceOp),
             @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
-      }, options = @IndexOptions(name = "entityRecordIndex_3")), @Index(fields = {
+      }), @Index(name = "entityRecordIndex_4", fields = {
         @Field(AuditHeaderKeys.accountId)
         , @Field(AuditHeaderKeys.appIdEntityRecord), @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
-      }, options = @IndexOptions(name = "entityRecordIndex_4"))
+      })
 })
 @Entity(value = "audits", noClassnameStored = true)
 @HarnessEntity(exportable = false)

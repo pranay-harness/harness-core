@@ -2,12 +2,12 @@ package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 
 import java.util.Date;
 
@@ -20,7 +20,7 @@ import java.util.Date;
 @HarnessEntity(exportable = false)
 public class Permit extends Base {
   public static final String PERMIT_KEY_ID = "key";
-  @Indexed(options = @IndexOptions(unique = true, background = true)) private String key;
+  @Indexed(options = @IndexOptions(unique = true)) private String key;
   private String group;
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date expireAt;
   private long leaseDuration;

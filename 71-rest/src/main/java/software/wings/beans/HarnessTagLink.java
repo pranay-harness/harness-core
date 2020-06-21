@@ -9,6 +9,10 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -21,11 +25,7 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
 import software.wings.jersey.JsonViews;
 
@@ -33,12 +33,12 @@ import javax.validation.constraints.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "entityTagIdx", unique = true),
+  @Index(name = "entityTagIdx", options = @IndexOptions(unique = true),
       fields =
       { @Field(HarnessTagLinkKeys.accountId)
         , @Field(HarnessTagLinkKeys.entityId), @Field(HarnessTagLinkKeys.key) })
   ,
-      @Index(options = @IndexOptions(name = "tagValueIdx"), fields = {
+      @Index(name = "tagValueIdx", fields = {
         @Field(HarnessTagLinkKeys.accountId), @Field(HarnessTagLinkKeys.key), @Field(HarnessTagLinkKeys.value)
       })
 })

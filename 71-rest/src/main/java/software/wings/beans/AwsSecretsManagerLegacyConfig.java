@@ -6,6 +6,10 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.encryption.Encrypted;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
@@ -17,10 +21,6 @@ import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.delegatetasks.validation.AbstractSecretManagerValidation;
 
@@ -34,7 +34,7 @@ import software.wings.delegatetasks.validation.AbstractSecretManagerValidation;
 @ToString(exclude = {"secretKey"})
 @EqualsAndHashCode(callSuper = false)
 @Indexes({
-  @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
+  @Index(name = "uniqueIdx", fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true))
 })
 @Entity(value = "awsSecretsManagerConfig", noClassnameStored = true)
 @HarnessEntity(exportable = false)

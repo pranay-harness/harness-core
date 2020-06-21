@@ -1,22 +1,22 @@
 package software.wings.service.impl.newrelic;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.service.impl.analysis.MLAnalysisType;
 
 @Indexes({
-  @Index(fields = {
+  @Index(name = "expUniqueIdx", fields = {
     @Field("ml_analysis_type"), @Field("experimentName")
-  }, options = @IndexOptions(unique = true, name = "expUniqueIdx"))
+  }, options = @IndexOptions(unique = true))
 })
 @Data
 @FieldNameConstants(innerTypeName = "MLExperimentsKeys")

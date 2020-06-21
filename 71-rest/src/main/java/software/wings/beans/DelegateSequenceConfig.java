@@ -3,25 +3,26 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Indexes({
-  @Index(fields = { @Field("accountId")
-                    , @Field("hostName"), @Field("sequenceNum") },
+  @Index(name = "uniqueDelegateSequenceIdx",
+      fields = { @Field("accountId")
+                 , @Field("hostName"), @Field("sequenceNum") },
 
-      options = @IndexOptions(unique = true, name = "uniqueDelegateSequenceIdx"))
+      options = @IndexOptions(unique = true))
 })
 @FieldNameConstants(innerTypeName = "DelegateSequenceConfigKeys")
 @Entity(value = "delegateSequenceConfig", noClassnameStored = true)

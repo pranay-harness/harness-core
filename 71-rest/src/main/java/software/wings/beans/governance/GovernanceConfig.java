@@ -8,6 +8,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.WeeklyFreezeConfig;
+import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedByAware;
@@ -19,7 +20,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
 
 import java.util.List;
 import javax.annotation.Nonnull;

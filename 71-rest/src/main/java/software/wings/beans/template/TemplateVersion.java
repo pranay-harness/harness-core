@@ -1,6 +1,11 @@
 package software.wings.beans.template;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,23 +14,18 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
 
 @FieldNameConstants(innerTypeName = "TemplateVersionKeys")
 @Indexes({
-  @Index(fields = { @Field("templateUuid")
-                    , @Field("version") }, options = @IndexOptions(name = "yaml", unique = true))
-  , @Index(options = @IndexOptions(name = "account_template_version"), fields = {
+  @Index(name = "yaml", fields = { @Field("templateUuid")
+                                   , @Field("version") }, options = @IndexOptions(unique = true))
+  , @Index(name = "account_template_version", fields = {
     @Field(value = TemplateVersionKeys.accountId)
     , @Field(value = TemplateVersionKeys.templateUuid),
         @Field(value = TemplateVersionKeys.version, type = IndexType.DESC)
-  }), @Index(options = @IndexOptions(name = "account_imported_template_version"), fields = {
+  }), @Index(name = "account_imported_template_version", fields = {
     @Field(value = TemplateVersionKeys.accountId)
     , @Field(value = TemplateVersionKeys.templateUuid), @Field(value = TemplateVersionKeys.importedTemplateVersion)
   }),

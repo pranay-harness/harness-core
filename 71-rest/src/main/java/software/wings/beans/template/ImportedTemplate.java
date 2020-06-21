@@ -5,6 +5,11 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -19,12 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.entityinterface.ApplicationAccess;
 
 import java.util.Set;
@@ -36,11 +36,11 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ImportedTemplateKeys")
 @Indexes({
-  @Index(options = @IndexOptions(name = "account_app_command_idx"),
+  @Index(name = "account_app_command_idx",
       fields = { @Field("accountId")
                  , @Field("appId"), @Field("commandStoreName"), @Field("commandName") })
   ,
-      @Index(options = @IndexOptions(name = "template_idx", unique = true), fields = { @Field("templateId") })
+      @Index(name = "template_idx", options = @IndexOptions(unique = true), fields = { @Field("templateId") })
 })
 @Entity(value = "importedTemplates", noClassnameStored = true)
 @HarnessEntity(exportable = true)

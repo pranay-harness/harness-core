@@ -10,6 +10,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Builder;
@@ -20,15 +26,9 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.annotations.Version;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.artifact.ArtifactStream;
@@ -52,9 +52,9 @@ import java.util.Set;
 @OwnedBy(CDC)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
+  @Index(name = "yaml", options = @IndexOptions(unique = true), fields = { @Field("appId")
                                                                            , @Field("name") })
-  , @Index(options = @IndexOptions(name = "accountCreatedAtIndex"), fields = {
+  , @Index(name = "accountCreatedAtIndex", fields = {
     @Field(ServiceKeys.accountId), @Field(value = ServiceKeys.createdAt, type = IndexType.DESC)
   })
 })

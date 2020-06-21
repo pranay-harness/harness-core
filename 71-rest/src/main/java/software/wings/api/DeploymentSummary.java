@@ -2,17 +2,16 @@ package software.wings.api;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.api.DeploymentSummary.DeploymentSummaryKeys;
 import software.wings.beans.Base;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
@@ -35,7 +34,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
             @Field(DeploymentSummaryKeys.CONTAINER_SVC_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES),
             @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
       },
-      options = @IndexOptions(name = "accountId_containerDeploymentInfo", background = true))
+      name = "accountId_containerDeploymentInfo")
   ,
       @Index(fields =
           {
@@ -43,7 +42,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
             , @Field(DeploymentSummaryKeys.infraMappingId),
                 @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
           },
-          options = @IndexOptions(name = "containerSvcName_inframappingId_createdAt", background = true)),
+          name = "containerSvcName_inframappingId_createdAt"),
 
       @Index(fields =
           {
@@ -51,7 +50,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
             , @Field(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_INFO),
                 @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
           },
-          options = @IndexOptions(name = "accountId_k8sDeploymentInfo", background = true)),
+          name = "accountId_k8sDeploymentInfo"),
 
       @Index(fields =
           {
@@ -60,14 +59,14 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
                 @Field(DeploymentSummaryKeys.RELEASE_NUMBER_K8S_DEPLOYMENT_KEY),
                 @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
           },
-          options = @IndexOptions(name = "infraMappingId_k8sDeploymentKeyReleaseNameAndNumber", background = true)),
+          name = "infraMappingId_k8sDeploymentKeyReleaseNameAndNumber"),
 
       @Index(fields =
           {
             @Field(DeploymentSummaryKeys.accountId)
             , @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.ASC)
           },
-          options = @IndexOptions(name = "accountId_createdAtAsc", background = true)),
+          name = "accountId_createdAtAsc"),
 
       @Index(fields =
           {
@@ -75,13 +74,13 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
             , @Field(DeploymentSummaryKeys.infraMappingId),
                 @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
           },
-          options = @IndexOptions(name = "accountId_infraMappingId_createdAtDesc", background = true)),
+          name = "accountId_infraMappingId_createdAtDesc"),
 
       @Index(fields = {
         @Field(DeploymentSummaryKeys.infraMappingId)
         , @Field(DeploymentSummaryKeys.CONTAINER_KEY_LABELS), @Field(DeploymentSummaryKeys.CONTAINER_KEY_NEW_VERSION),
             @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
-      }, options = @IndexOptions(name = "inframappingId_containerlabelsAndVersion", background = true))
+      }, name = "inframappingId_containerlabelsAndVersion")
 })
 @FieldNameConstants(innerTypeName = "DeploymentSummaryKeys")
 public class DeploymentSummary extends Base {
