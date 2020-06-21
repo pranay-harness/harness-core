@@ -12,9 +12,8 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
@@ -44,9 +43,8 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 
-@Index(name = "yaml", options = @IndexOptions(unique = true),
-    fields = { @Field(EnvironmentKeys.appId)
-               , @Field(EnvironmentKeys.name) })
+@UniqueIndex(name = "yaml", fields = { @Field(EnvironmentKeys.appId)
+                                       , @Field(EnvironmentKeys.name) })
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)

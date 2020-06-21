@@ -1,7 +1,6 @@
 package software.wings.beans.container;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
 import lombok.Builder;
 import lombok.Data;
@@ -24,7 +23,7 @@ import javax.validation.constraints.NotNull;
 @Entity("userDataSpecifications")
 @HarnessEntity(exportable = true)
 public class UserDataSpecification extends DeploymentSpecification {
-  @NotEmpty @Indexed(options = @IndexOptions(unique = true)) private String serviceId;
+  @NotEmpty @Indexed(unique = true) private String serviceId;
   @NotNull private String data;
 
   @Data

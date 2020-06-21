@@ -31,6 +31,10 @@ public class IndexManager {
     private BasicDBObject keys;
     private BasicDBObject options;
 
+    public String name() {
+      return (String) options.get("name");
+    }
+
     public static boolean subsequenceKeys(BasicDBObject base, BasicDBObject subsequence) {
       if (base.size() <= subsequence.size()) {
         return false;

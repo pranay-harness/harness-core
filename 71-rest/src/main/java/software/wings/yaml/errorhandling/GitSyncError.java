@@ -4,8 +4,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,10 +26,9 @@ import javax.ws.rs.DefaultValue;
  * @author rktummala on 12/15/17
  */
 
-@Index(name = "account_filepath_direction_idx",
+@UniqueIndex(name = "account_filepath_direction_idx",
     fields = { @Field("accountId")
-               , @Field("yamlFilePath"), @Field("gitSyncDirection") },
-    options = @IndexOptions(unique = true))
+               , @Field("yamlFilePath"), @Field("gitSyncDirection") })
 @Index(name = "gitCommitId_idx",
     fields = { @Field("accountId")
                , @Field("gitSyncDirection"), @Field("additionalErrorDetails.gitCommitId") })

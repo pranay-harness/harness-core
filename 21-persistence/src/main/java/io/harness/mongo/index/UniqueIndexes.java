@@ -10,9 +10,7 @@ import java.lang.annotation.Target;
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD})
-public @interface Indexed {
-  boolean unique() default false;
-  boolean sparse() default false;
-  IndexOptions options() default @IndexOptions();
+@Target({ElementType.TYPE})
+public @interface UniqueIndexes {
+  UniqueIndex[] value();
 }

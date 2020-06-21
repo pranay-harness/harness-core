@@ -4,9 +4,8 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -30,7 +29,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Index(name = "uniqueHash", options = @IndexOptions(unique = true), fields = { @Field("uniqueHash") })
+@UniqueIndex(name = "uniqueHash", fields = { @Field("uniqueHash") })
 @FieldNameConstants(innerTypeName = "ArtifactSourceKeys")
 @Entity(value = "artifactSourceNG")
 @HarnessEntity(exportable = true)

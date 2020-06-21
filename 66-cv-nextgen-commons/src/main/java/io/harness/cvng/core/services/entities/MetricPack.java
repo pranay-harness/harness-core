@@ -9,9 +9,8 @@ import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -34,9 +33,9 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
-@Index(name = "unique_Idx", fields = { @Field("projectIdentifier")
-                                       , @Field("dataSourceType"), @Field("identifier") },
-    options = @IndexOptions(unique = true))
+@UniqueIndex(
+    name = "unique_Idx", fields = { @Field("projectIdentifier")
+                                    , @Field("dataSourceType"), @Field("identifier") })
 @Data
 @Builder
 @NoArgsConstructor

@@ -20,7 +20,7 @@ import java.util.Date;
 @HarnessEntity(exportable = false)
 public class Permit extends Base {
   public static final String PERMIT_KEY_ID = "key";
-  @Indexed(options = @IndexOptions(unique = true)) private String key;
+  @Indexed(unique = true) private String key;
   private String group;
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date expireAt;
   private long leaseDuration;

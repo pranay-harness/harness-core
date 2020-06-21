@@ -17,8 +17,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,9 +32,9 @@ import software.wings.sm.StateType;
  * 4/9/2019
  */
 
-@Index(name = "analysisMinIndex", fields = { @Field("serviceId")
-                                             , @Field("cvConfigId"), @Field("analysisMinute") },
-    options = @IndexOptions(unique = true))
+@UniqueIndex(
+    name = "analysisMinIndex", fields = { @Field("serviceId")
+                                          , @Field("cvConfigId"), @Field("analysisMinute") })
 @Data
 @Builder
 @NoArgsConstructor

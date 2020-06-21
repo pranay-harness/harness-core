@@ -6,9 +6,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -28,9 +28,8 @@ import java.util.Map;
  * Created by rsingh on 08/30/17.
  */
 
-@Index(name = "unique_Idx", fields = { @Field("stateExecutionId")
-                                       , @Field("cvConfigId") },
-    options = @IndexOptions(unique = true))
+@UniqueIndex(name = "unique_Idx", fields = { @Field("stateExecutionId")
+                                             , @Field("cvConfigId") })
 @Data
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "TimeSeriesMetricTemplatesKeys")

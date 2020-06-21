@@ -5,7 +5,6 @@ import com.google.common.collect.Sets;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
@@ -28,8 +27,7 @@ import java.util.HashMap;
       @Field("appId")
       , @Field("serviceId"), @Field("stateType"), @Field("groupName"), @Field("transactionName"), @Field("metricName"),
           @Field("cvConfigId"), @Field("thresholdType")
-    },
-    options = @IndexOptions(unique = false))
+    })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

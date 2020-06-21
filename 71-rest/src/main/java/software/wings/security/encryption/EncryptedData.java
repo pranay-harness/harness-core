@@ -9,8 +9,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptedDataParams;
@@ -56,8 +56,8 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 
-@Index(name = "acctNameIdx", fields = { @Field("accountId")
-                                        , @Field("name") }, options = @IndexOptions(unique = true))
+@UniqueIndex(name = "acctNameIdx", fields = { @Field("accountId")
+                                              , @Field("name") })
 @Index(name = "acctKmsIdx", fields = { @Field("accountId")
                                        , @Field("kmsId") })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")

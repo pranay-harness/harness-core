@@ -8,8 +8,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.UniqueIndex;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -26,9 +25,8 @@ import java.util.regex.Pattern;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "deploymentType")
-@Index(name = "service", options = @IndexOptions(unique = true),
-    fields = { @Field("serviceId")
-               , @Field("deploymentType") })
+@UniqueIndex(name = "service", fields = { @Field("serviceId")
+                                          , @Field("deploymentType") })
 @Entity("containerTasks")
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ContainerTaskKeys")

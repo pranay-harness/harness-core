@@ -1,7 +1,6 @@
 package io.harness.limits;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import lombok.EqualsAndHashCode;
@@ -18,7 +17,7 @@ import software.wings.beans.Base;
 @FieldNameConstants(innerTypeName = "CounterKeys")
 @HarnessEntity(exportable = true)
 public class Counter extends Base implements AccountAccess {
-  @Indexed(options = @IndexOptions(unique = true)) private final String key;
+  @Indexed(unique = true) private final String key;
   private final Long value;
   @Indexed private String accountId;
 

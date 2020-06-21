@@ -5,9 +5,9 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -26,9 +26,8 @@ import java.util.Map;
  * Created by rsingh on 08/30/17.
  */
 
-@Index(name = "uniqueIdx", fields = { @Field("stateType")
-                                      , @Field("stateExecutionId") },
-    options = @IndexOptions(unique = true))
+@UniqueIndex(name = "uniqueIdx", fields = { @Field("stateType")
+                                            , @Field("stateExecutionId") })
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "timeSeriesMetricGroup", noClassnameStored = true)

@@ -4,9 +4,8 @@ import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -30,9 +29,8 @@ import java.util.List;
 @Entity(value = "instanceStats", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 
-@Index(name = "accountId_timestamp_unique_idx", fields = { @Field("accountId")
-                                                           , @Field("timestamp") },
-    options = @IndexOptions(unique = true))
+@UniqueIndex(name = "accountId_timestamp_unique_idx", fields = { @Field("accountId")
+                                                                 , @Field("timestamp") })
 @FieldNameConstants(innerTypeName = "InstanceStatsSnapshotKeys")
 public class InstanceStatsSnapshot extends Base {
   private static final List<EntityType> ENTITY_TYPES_TO_AGGREGATE_ON = Arrays.asList(EntityType.APPLICATION);

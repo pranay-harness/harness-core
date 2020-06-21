@@ -3,7 +3,6 @@ package io.harness.waiter;
 import com.google.common.base.MoreObjects;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
 import io.harness.queue.Queuable;
 import lombok.Data;
@@ -19,7 +18,7 @@ import java.util.Date;
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "NotifyEventKeys")
 public class NotifyEvent extends Queuable {
-  @Indexed(options = @IndexOptions(unique = true)) private String waitInstanceId;
+  @Indexed(unique = true) private String waitInstanceId;
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this).add(NotifyEventKeys.waitInstanceId, waitInstanceId).toString();

@@ -12,7 +12,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.ANNOTATION_TYPE})
 public @interface IndexOptions {
-  boolean unique() default false;
   int expireAfterSeconds() default - 1;
-  boolean sparse() default false;
 }

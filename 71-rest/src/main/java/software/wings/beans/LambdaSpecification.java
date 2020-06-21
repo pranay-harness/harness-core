@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.trim;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
 import lombok.Builder;
 import lombok.Data;
@@ -26,7 +25,7 @@ import javax.validation.Valid;
 @Entity("lambdaSpecifications")
 @HarnessEntity(exportable = true)
 public class LambdaSpecification extends DeploymentSpecification {
-  @NotEmpty @Indexed(options = @IndexOptions(unique = true)) private String serviceId;
+  @NotEmpty @Indexed(unique = true) private String serviceId;
   private DefaultSpecification defaults;
   @Valid private List<FunctionSpecification> functions;
 

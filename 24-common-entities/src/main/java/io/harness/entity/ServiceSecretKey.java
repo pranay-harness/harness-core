@@ -3,7 +3,6 @@ package io.harness.entity;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -28,7 +27,7 @@ public class ServiceSecretKey implements PersistentEntity, CreatedAtAware, Updat
   private long lastUpdatedAt;
   private String serviceSecret;
 
-  @Indexed(options = @IndexOptions(unique = true)) private ServiceType serviceType;
+  @Indexed(unique = true) private ServiceType serviceType;
 
   public enum ServiceType { LEARNING_ENGINE }
 

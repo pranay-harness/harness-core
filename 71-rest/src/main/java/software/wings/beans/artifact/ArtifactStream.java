@@ -15,8 +15,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.AllArgsConstructor;
@@ -49,9 +49,8 @@ import java.util.regex.Pattern;
 @OwnedBy(CDC)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
 
-@Index(name = "yaml", options = @IndexOptions(unique = true),
-    fields = { @Field("appId")
-               , @Field("serviceId"), @Field("name") })
+@UniqueIndex(name = "yaml", fields = { @Field("appId")
+                                       , @Field("serviceId"), @Field("name") })
 @Index(name = "artifactStream_cleanup", fields = { @Field("artifactStreamType")
                                                    , @Field("nextCleanupIteration") })
 // TODO: ASR: add compound index with setting_id + name

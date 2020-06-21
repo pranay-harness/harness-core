@@ -12,8 +12,8 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.NameAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -53,9 +53,8 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "TriggerKeys")
 @Entity(value = "triggers")
 @HarnessEntity(exportable = true)
-
-@Index(name = "yaml", options = @IndexOptions(unique = true), fields = { @Field("appId")
-                                                                         , @Field("name") })
+@UniqueIndex(name = "yaml", fields = { @Field("appId")
+                                       , @Field("name") })
 @Index(name = "conditionArtifactStreamId",
     fields =
     {

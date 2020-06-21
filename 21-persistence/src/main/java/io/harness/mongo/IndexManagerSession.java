@@ -1,9 +1,11 @@
 package io.harness.mongo;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSession;
+import static io.harness.mongo.IndexManagerSession.Type.NORMAL_INDEX;
+import static io.harness.mongo.IndexManagerSession.Type.SPARSE_INDEX;
+import static io.harness.mongo.IndexManagerSession.Type.UNIQUE_INDEX;
 import static io.harness.reflection.ReflectionUtils.fetchAnnotations;
 import static java.lang.String.join;
 import static java.lang.System.currentTimeMillis;
@@ -25,9 +27,12 @@ import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.govern.Switch;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.IndexManager.IndexCreator;
+import io.harness.mongo.IndexManager.IndexCreator.IndexCreatorBuilder;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.SparseIndex;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.threading.Morpheus;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -182,12 +187,12 @@ public class IndexManagerSession {
 
       BasicDBObject options = new BasicDBObject();
       options.put(NAME, indexName);
-      if (indexed.options().unique()) {
+      if (indexed.unique()) {
         options.put(UNIQUE, Boolean.TRUE);
       } else {
         options.put(BACKGROUND, Boolean.TRUE);
       }
-      if (indexed.options().sparse()) {
+      if (indexed.sparse()) {
         options.put(SPARSE, Boolean.TRUE);
       }
       if (indexed.options().expireAfterSeconds() != -1) {
@@ -208,48 +213,62 @@ public class IndexManagerSession {
     throw new IndexManagerInspectException();
   }
 
+  enum Type { NORMAL_INDEX, UNIQUE_INDEX, SPARSE_INDEX }
+
   private static void creatorsForCompositeIndexes(
       MappedClass mc, DBCollection collection, Map<String, IndexCreator> creators) {
     String id = indexedFieldName(mc);
 
     Set<Index> indexes = fetchAnnotations(mc.getClazz(), Index.class);
     for (Index index : indexes) {
-      BasicDBObject keys = new BasicDBObject();
-
-      if (index.fields().length == 1 && !index.fields()[0].value().contains(".")) {
-        logger.error("Composite index with only one field {}", index.fields()[0].value());
-      }
-
-      for (Field field : index.fields()) {
-        if (field.value().equals(id)) {
-          throw new IndexManagerInspectException("There is no point of having collection key in a composite index."
-              + "\nIf in the query there is a unique value it will always fetch exactly one item");
-        }
-        keys.append(field.value(), field.type().toIndexValue());
-      }
-
-      String indexName = index.name();
-      if (isEmpty(indexName)) {
-        throw new IndexManagerInspectException("Do not use default index name.");
-      }
-
-      BasicDBObject options = new BasicDBObject();
-      options.put(NAME, indexName);
-      if (index.options().unique()) {
-        options.put(UNIQUE, Boolean.TRUE);
-      } else {
-        options.put(BACKGROUND, Boolean.TRUE);
-      }
-      if (index.options().sparse()) {
-        options.put(SPARSE, Boolean.TRUE);
-      }
-
-      IndexCreator newCreator = IndexCreator.builder().collection(collection).keys(keys).options(options).build();
-
+      IndexCreator newCreator =
+          buildtIndexCreator(index.name(), id, index.fields(), NORMAL_INDEX).collection(collection).build();
       checkWithTheOthers(creators, newCreator);
-
-      putCreator(creators, indexName, newCreator);
+      putCreator(creators, newCreator.name(), newCreator);
     }
+    Set<UniqueIndex> uniqueIndexes = fetchAnnotations(mc.getClazz(), UniqueIndex.class);
+    for (UniqueIndex index : uniqueIndexes) {
+      IndexCreator newCreator =
+          buildtIndexCreator(index.name(), id, index.fields(), UNIQUE_INDEX).collection(collection).build();
+      checkWithTheOthers(creators, newCreator);
+      putCreator(creators, newCreator.name(), newCreator);
+    }
+    Set<SparseIndex> sparceIndexes = fetchAnnotations(mc.getClazz(), SparseIndex.class);
+    for (SparseIndex index : sparceIndexes) {
+      IndexCreator newCreator =
+          buildtIndexCreator(index.name(), id, index.fields(), SPARSE_INDEX).collection(collection).build();
+      checkWithTheOthers(creators, newCreator);
+      putCreator(creators, newCreator.name(), newCreator);
+    }
+  }
+
+  private static IndexCreatorBuilder buildtIndexCreator(String indexName, String id, Field[] fields, Type type) {
+    BasicDBObject keys = new BasicDBObject();
+
+    if (fields.length == 1 && !fields[0].value().contains(".")) {
+      logger.error("Composite index with only one field {}", fields[0].value());
+    }
+
+    for (Field field : fields) {
+      if (field.value().equals(id)) {
+        throw new IndexManagerInspectException("There is no point of having collection key in a composite index."
+            + "\nIf in the query there is a unique value it will always fetch exactly one item");
+      }
+      keys.append(field.value(), field.type().toIndexValue());
+    }
+
+    BasicDBObject options = new BasicDBObject();
+    options.put(NAME, indexName);
+    if (type == UNIQUE_INDEX) {
+      options.put(UNIQUE, Boolean.TRUE);
+    } else {
+      options.put(BACKGROUND, Boolean.TRUE);
+    }
+    if (type == SPARSE_INDEX) {
+      options.put(SPARSE, Boolean.TRUE);
+    }
+
+    return IndexCreator.builder().keys(keys).options(options);
   }
 
   private static void putCreator(Map<String, IndexCreator> creators, String indexName, IndexCreator newCreator) {
