@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -68,7 +68,7 @@ public class ApprovalPollingJobEntity implements PersistentRegularIterable, Acco
     return fields;
   }
 
-  @Indexed private Long nextIteration;
+  @FdIndex private Long nextIteration;
 
   @Override
   public Long obtainNextIteration(String fieldName) {

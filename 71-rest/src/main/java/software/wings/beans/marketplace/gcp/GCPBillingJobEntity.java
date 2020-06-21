@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.UpdatedAtAccess;
@@ -28,9 +28,9 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = true)
 public class GCPBillingJobEntity implements PersistentRegularIterable, CreatedAtAccess, UpdatedAtAccess, AccountAccess {
   @Id private String uuid;
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
   private String gcpAccountId;
-  @Setter @Indexed private Long nextIteration;
+  @Setter @FdIndex private Long nextIteration;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @NotNull private long createdAt;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @NotNull private long lastUpdatedAt;

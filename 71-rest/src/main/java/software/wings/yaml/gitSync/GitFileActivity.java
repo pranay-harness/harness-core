@@ -1,8 +1,8 @@
 package software.wings.yaml.gitSync;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -22,16 +22,16 @@ import javax.ws.rs.DefaultValue;
  * @author vardanb
  */
 
-@Index(name = "accountId_procCommitId_filePath_status",
+@CdIndex(name = "accountId_procCommitId_filePath_status",
     fields = { @Field("accountId")
                , @Field("processingCommitId"), @Field("filePath"), @Field("status") })
-@Index(name = "accountId_procCommitId_status",
+@CdIndex(name = "accountId_procCommitId_status",
     fields = { @Field("accountId")
                , @Field("processingCommitId"), @Field("status") })
-@Index(name = "accountId_filePath", fields = { @Field("accountId")
-                                               , @Field("filePath") })
-@Index(name = "accountId_commitId_Idx", fields = { @Field("accountId")
-                                                   , @Field("commitId") })
+@CdIndex(name = "accountId_filePath", fields = { @Field("accountId")
+                                                 , @Field("filePath") })
+@CdIndex(name = "accountId_commitId_Idx", fields = { @Field("accountId")
+                                                     , @Field("commitId") })
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "GitFileActivityKeys")

@@ -1,6 +1,6 @@
 package software.wings.beans.infrastructure.instance.key.deployment;
 
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +17,6 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class ContainerDeploymentKey extends DeploymentKey {
   private String containerServiceName;
-  @Indexed private List<Label> labels;
+  @FdIndex private List<Label> labels;
   private String newVersion;
 }

@@ -2,7 +2,7 @@ package software.wings.beans.infrastructure;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -27,9 +27,9 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "CloudFormationRollbackConfigKeys")
 public class CloudFormationRollbackConfig implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-  @Indexed private String accountId;
-  @Indexed @NotNull @SchemaIgnore protected String appId;
-  @SchemaIgnore @Indexed private long createdAt;
+  @FdIndex private String accountId;
+  @FdIndex @NotNull @SchemaIgnore protected String appId;
+  @SchemaIgnore @FdIndex private long createdAt;
 
   private String url;
   private String body;
@@ -40,5 +40,5 @@ public class CloudFormationRollbackConfig implements PersistentEntity, UuidAware
   private String awsConfigId;
   private String customStackName;
   private String workflowExecutionId;
-  @Indexed private String entityId;
+  @FdIndex private String entityId;
 }

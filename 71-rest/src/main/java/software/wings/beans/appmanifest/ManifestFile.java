@@ -1,9 +1,9 @@
 package software.wings.beans.appmanifest;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,8 +14,8 @@ import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 import software.wings.yaml.BaseEntityYaml;
 
-@UniqueIndex(name = "manifestFileIdx", fields = { @Field("applicationManifestId")
-                                                  , @Field("fileName") })
+@CdUniqueIndex(name = "manifestFileIdx", fields = { @Field("applicationManifestId")
+                                                    , @Field("fileName") })
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ManifestFileKeys")
@@ -28,7 +28,7 @@ public class ManifestFile extends Base {
   @NotEmpty String fileName;
   private String fileContent;
   private String applicationManifestId;
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   public ManifestFile cloneInternal() {
     ManifestFile manifestFile = ManifestFile.builder().fileName(this.fileName).fileContent(this.fileContent).build();

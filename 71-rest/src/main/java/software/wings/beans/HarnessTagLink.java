@@ -9,9 +9,9 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -32,11 +32,11 @@ import javax.validation.constraints.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 
-@UniqueIndex(name = "entityTagIdx",
+@CdUniqueIndex(name = "entityTagIdx",
     fields =
     { @Field(HarnessTagLinkKeys.accountId)
       , @Field(HarnessTagLinkKeys.entityId), @Field(HarnessTagLinkKeys.key) })
-@Index(name = "tagValueIdx",
+@CdIndex(name = "tagValueIdx",
     fields = { @Field(HarnessTagLinkKeys.accountId)
                , @Field(HarnessTagLinkKeys.key), @Field(HarnessTagLinkKeys.value) })
 @Data

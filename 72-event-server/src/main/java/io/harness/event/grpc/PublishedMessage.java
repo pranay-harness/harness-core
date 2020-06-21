@@ -9,9 +9,9 @@ import com.google.protobuf.Message;
 import io.harness.annotation.StoreIn;
 import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
 import io.harness.exception.DataFormatException;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -35,7 +35,7 @@ import java.util.Map;
 @Data
 @Entity(value = "publishedMessages", noClassnameStored = true)
 
-@Index(name = "accountId_type_CreatedAt_occurredAt",
+@CdIndex(name = "accountId_type_CreatedAt_occurredAt",
     fields =
     {
       @Field(PublishedMessageKeys.accountId)
@@ -50,7 +50,7 @@ public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidA
 
   @EqualsAndHashCode.Exclude
   @Builder.Default
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(14).toInstant());
 
   private final long occurredAt;

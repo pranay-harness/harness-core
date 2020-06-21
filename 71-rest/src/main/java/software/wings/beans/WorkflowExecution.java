@@ -19,11 +19,12 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdSparseIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -68,19 +69,19 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "workflowExecutions", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 
-@Index(name = "search", fields = { @Field(WorkflowExecutionKeys.workflowId)
-                                   , @Field(WorkflowExecutionKeys.status) })
-@Index(name = "app_pipExecutionId_createdAt",
+@CdIndex(name = "search", fields = { @Field(WorkflowExecutionKeys.workflowId)
+                                     , @Field(WorkflowExecutionKeys.status) })
+@CdIndex(name = "app_pipExecutionId_createdAt",
     fields =
     {
       @Field(WorkflowExecutionKeys.appId)
       , @Field(WorkflowExecutionKeys.pipelineExecutionId),
           @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
     })
-@Index(name = "service_guard",
+@CdIndex(name = "service_guard",
     fields = { @Field(WorkflowExecutionKeys.appId)
                , @Field(value = WorkflowExecutionKeys.startTs) })
-@Index(name = "lastDeployedSearch",
+@CdIndex(name = "lastDeployedSearch",
     fields =
     {
       @Field(WorkflowExecutionKeys.appId)
@@ -88,10 +89,10 @@ import javax.validation.constraints.NotNull;
           @Field(WorkflowExecutionKeys.infraMappingIds),
           @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
     })
-@Index(
+@CdIndex(
     name = "appId_endTs", fields = { @Field(WorkflowExecutionKeys.appId)
                                      , @Field(value = WorkflowExecutionKeys.endTs) })
-@Index(name = "lastInfraMappingSearch",
+@CdIndex(name = "lastInfraMappingSearch",
     fields =
     {
       @Field(WorkflowExecutionKeys.appId)
@@ -99,25 +100,25 @@ import javax.validation.constraints.NotNull;
           @Field(WorkflowExecutionKeys.infraMappingIds),
           @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
     })
-@Index(name = "accountId_endTs",
+@CdIndex(name = "accountId_endTs",
     fields =
     { @Field(WorkflowExecutionKeys.accountId)
       , @Field(value = WorkflowExecutionKeys.endTs, type = IndexType.DESC) })
-@Index(name = "accountId_createdAt2",
+@CdIndex(name = "accountId_createdAt2",
     fields =
     { @Field(WorkflowExecutionKeys.accountId)
       , @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC) })
-@Index(name = "workflowExecutionMonitor",
+@CdIndex(name = "workflowExecutionMonitor",
     fields = { @Field(WorkflowExecutionKeys.status)
                , @Field(WorkflowExecutionKeys.nextIteration) })
-@Index(name = "accountId_pipExecutionId_createdAt",
+@CdIndex(name = "accountId_pipExecutionId_createdAt",
     fields =
     {
       @Field(WorkflowExecutionKeys.accountId)
       , @Field(WorkflowExecutionKeys.pipelineExecutionId),
           @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
     })
-@Index(name = "searchByServiceIds",
+@CdIndex(name = "searchByServiceIds",
     fields =
     {
       @Field(WorkflowExecutionKeys.appId)
@@ -125,27 +126,27 @@ import javax.validation.constraints.NotNull;
           @Field(WorkflowExecutionKeys.serviceIds),
           @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
     })
-@Index(name = "accountId_tags_createdAt",
+@CdIndex(name = "accountId_tags_createdAt",
     fields =
     {
       @Field(WorkflowExecutionKeys.accountId)
       , @Field("tags.name"), @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
     })
-@Index(name = "accountId_appId_tags_createdAt",
+@CdIndex(name = "accountId_appId_tags_createdAt",
     fields =
     {
       @Field(WorkflowExecutionKeys.accountId)
       , @Field(WorkflowExecutionKeys.appId), @Field("tags.name"),
           @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
     })
-@Index(name = "appid_workflowid_status_createdat",
+@CdIndex(name = "appid_workflowid_status_createdat",
     fields =
     {
       @Field(WorkflowExecutionKeys.appId)
       , @Field(WorkflowExecutionKeys.workflowId), @Field(WorkflowExecutionKeys.status),
           @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC),
     })
-@Index(name = "accountId_pipExecutionId_keywords_createdAt",
+@CdIndex(name = "accountId_pipExecutionId_keywords_createdAt",
     fields =
     {
       @Field(WorkflowExecutionKeys.accountId)
@@ -159,11 +160,11 @@ public class WorkflowExecution
   public static final Duration EXPIRY = Duration.ofDays(7);
 
   @Id @NotNull(groups = {Update.class}) private String uuid;
-  @Indexed @NotNull protected String appId;
+  @FdIndex @NotNull protected String appId;
   private EmbeddedUser createdBy;
   private CreatedByType createdByType;
-  @Indexed private long createdAt;
-  @Indexed private String accountId;
+  @FdIndex private long createdAt;
+  @FdIndex private String accountId;
 
   private String workflowId;
 
@@ -173,20 +174,20 @@ public class WorkflowExecution
   private List<String> envIds;
   private List<String> workflowIds;
   private List<String> cloudProviderIds;
-  @Indexed private List<String> serviceIds;
-  @Indexed private List<String> infraMappingIds;
-  @Indexed private List<String> infraDefinitionIds;
+  @FdIndex private List<String> serviceIds;
+  @FdIndex private List<String> infraMappingIds;
+  @FdIndex private List<String> infraDefinitionIds;
   private String appName;
   private String envName;
   private EnvironmentType envType;
   private WorkflowType workflowType;
-  @Indexed private ExecutionStatus status;
+  @FdIndex private ExecutionStatus status;
   @Transient private Graph graph;
 
   @Transient private GraphNode executionNode; // used for workflow details.
   private PipelineExecution pipelineExecution; // used for pipeline details.
 
-  @Indexed private String pipelineExecutionId;
+  @FdIndex private String pipelineExecutionId;
   private String stageName;
   private ErrorStrategy errorStrategy;
 
@@ -242,7 +243,7 @@ public class WorkflowExecution
   // pipelineResumeId is the pipeline execution id of the very first execution.
   // It makes getting the history very simple. Just filter by the same
   // pipelineResumeId and sort by createdAt.
-  @Indexed(sparse = true) private String pipelineResumeId;
+  @FdSparseIndex private String pipelineResumeId;
   // latestPipelineResume is true only for the latest resumed execution.
   // It is required to make the list execution call efficient to fetch only
   // the latest execution.
@@ -252,7 +253,7 @@ public class WorkflowExecution
   private List<NameValuePair> tags;
   private String message;
 
-  @Default @JsonIgnore @TtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+  @Default @JsonIgnore @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
   public String normalizedName() {
     if (isBlank(name)) {

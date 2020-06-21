@@ -8,10 +8,10 @@ import com.google.common.base.Preconditions;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -38,8 +38,8 @@ import javax.validation.constraints.NotNull;
  * 05/Oct/2018
  */
 
-@UniqueIndex(name = "nameUniqueIndex", fields = { @Field("appId")
-                                                  , @Field("envId"), @Field("name") })
+@CdUniqueIndex(name = "nameUniqueIndex", fields = { @Field("appId")
+                                                    , @Field("envId"), @Field("name") })
 @Data
 @FieldNameConstants(innerTypeName = "CVConfigurationKeys")
 @NoArgsConstructor
@@ -48,10 +48,10 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = true)
 public class CVConfiguration extends Base implements NameAccess {
   @NotNull private String name;
-  @NotNull @Indexed private String accountId;
+  @NotNull @FdIndex private String accountId;
   @NotNull private String connectorId;
-  @NotNull @Indexed private String envId;
-  @NotNull @Indexed private String serviceId;
+  @NotNull @FdIndex private String envId;
+  @NotNull @FdIndex private String serviceId;
   @NotNull private StateType stateType;
   @NotNull private AnalysisTolerance analysisTolerance;
   private String customThresholdRefId;
@@ -70,7 +70,7 @@ public class CVConfiguration extends Base implements NameAccess {
   @Transient @SchemaIgnore private String envName;
   @Transient @SchemaIgnore private String appName;
 
-  @JsonIgnore @SchemaIgnore @TtlIndex private Date validUntil;
+  @JsonIgnore @SchemaIgnore @FdTtlIndex private Date validUntil;
 
   public AnalysisComparisonStrategy getComparisonStrategy() {
     return comparisonStrategy == null ? AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS : comparisonStrategy;

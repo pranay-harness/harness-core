@@ -3,7 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -29,9 +29,9 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = true)
 public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore @FdIndex private long createdAt;
   // Will be used by ECS delegate, when hostName is mentioned in TaskSpec.
-  @NotEmpty @Indexed private String accountId;
+  @NotEmpty @FdIndex private String accountId;
   @Default private Status status = Status.ENABLED;
   private String description;
   private String ip;

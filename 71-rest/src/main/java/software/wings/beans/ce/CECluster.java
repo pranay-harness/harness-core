@@ -1,7 +1,7 @@
 package software.wings.beans.ce;
 
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -20,7 +20,7 @@ import software.wings.beans.ce.CECluster.CEClusterKeys;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceCluster", noClassnameStored = true)
-@UniqueIndex(name = "no_dup",
+@CdUniqueIndex(name = "no_dup",
     fields =
     {
       @Field(CEClusterKeys.accountId)

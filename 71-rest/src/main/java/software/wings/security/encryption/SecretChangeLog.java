@@ -2,8 +2,8 @@ package software.wings.security.encryption;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,8 +27,8 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "secretChangeLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Index(name = "acctEncryptedDataIdx", fields = { @Field("accountId")
-                                                 , @Field("encryptedDataId") })
+@CdIndex(name = "acctEncryptedDataIdx", fields = { @Field("accountId")
+                                                   , @Field("encryptedDataId") })
 @FieldNameConstants(innerTypeName = "SecretChangeLogKeys")
 public class SecretChangeLog extends Base implements AccountAccess {
   @NotEmpty private String accountId;

@@ -2,8 +2,8 @@ package io.harness.cdng.environment.beans;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.common.beans.Tag;
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -22,7 +22,7 @@ import java.util.List;
 
 @Data
 @Builder
-@UniqueIndex(
+@CdUniqueIndex(
     name = "envNGIdx", fields = { @Field("accountId")
                                   , @Field("orgId"), @Field("projectId"), @Field("identifier") })
 @Entity("environmentsNG")

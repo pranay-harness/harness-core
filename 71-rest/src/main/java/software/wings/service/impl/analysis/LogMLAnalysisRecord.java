@@ -13,11 +13,11 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.encoding.EncodingUtils;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.Builder;
@@ -54,34 +54,34 @@ import java.util.Map;
  * Created by rsingh on 6/23/17.
  */
 
-@Index(name = "cvConfigId_1_analysisStatus_1_logCollectionMinute_-1",
+@CdIndex(name = "cvConfigId_1_analysisStatus_1_logCollectionMinute_-1",
     fields =
     { @Field("cvConfigId")
       , @Field("analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC) })
-@Index(name = "cvConfigId_1_deprecated_1_logCollectionMinute_-1_lastUpdatedAt_-1",
+@CdIndex(name = "cvConfigId_1_deprecated_1_logCollectionMinute_-1_lastUpdatedAt_-1",
     fields =
     {
       @Field("cvConfigId")
       , @Field("deprecated"), @Field(value = "logCollectionMinute", type = IndexType.DESC),
           @Field(value = "lastUpdatedAt", type = IndexType.DESC)
     })
-@Index(name = "analysisSummaryIdx",
+@CdIndex(name = "analysisSummaryIdx",
     fields =
     {
       @Field("stateExecutionId")
       , @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("analysisStatus"),
           @Field(value = "lastUpdatedAt", type = IndexType.DESC)
     })
-@Index(name = "cvConfigLogCollectionMinAnalysisStatusDeprecatedIndx",
+@CdIndex(name = "cvConfigLogCollectionMinAnalysisStatusDeprecatedIndx",
     fields =
     {
       @Field("cvConfigId")
       , @Field(value = "analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC),
           @Field("deprecated"),
     })
-@Index(name = "stateExecStatusIdx", fields = { @Field("stateExecutionId")
-                                               , @Field("analysisStatus") })
-@Index(name = "stateExecutionId_1_analysisStatus_1_logCollectionMinute_-1",
+@CdIndex(name = "stateExecStatusIdx", fields = { @Field("stateExecutionId")
+                                                 , @Field("analysisStatus") })
+@CdIndex(name = "stateExecutionId_1_analysisStatus_1_logCollectionMinute_-1",
     fields =
     {
       @Field("stateExecutionId"), @Field("analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
@@ -96,8 +96,8 @@ import java.util.Map;
 public class LogMLAnalysisRecord extends Base implements AccountAccess {
   @NotEmpty private String stateExecutionId;
   private String cvConfigId;
-  @Indexed private String workflowExecutionId;
-  @Indexed private String accountId;
+  @FdIndex private String workflowExecutionId;
+  @FdIndex private String accountId;
 
   @NotEmpty private StateType stateType;
 
@@ -131,7 +131,7 @@ public class LogMLAnalysisRecord extends Base implements AccountAccess {
 
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 
   @Builder

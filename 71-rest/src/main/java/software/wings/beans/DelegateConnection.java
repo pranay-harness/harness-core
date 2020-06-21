@@ -7,9 +7,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -32,7 +32,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Entity(value = "delegateConnections", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Index(name = "index2",
+@CdIndex(name = "index2",
     fields =
     {
       @Field(DelegateConnectionKeys.accountId)
@@ -50,5 +50,5 @@ public class DelegateConnection implements PersistentEntity, UuidAware, AccountA
   private long lastHeartbeat;
   private boolean disconnected;
 
-  @JsonIgnore @SchemaIgnore @TtlIndex private Date validUntil;
+  @JsonIgnore @SchemaIgnore @FdTtlIndex private Date validUntil;
 }

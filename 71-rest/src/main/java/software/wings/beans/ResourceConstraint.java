@@ -8,9 +8,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.distribution.constraint.Constraint;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -32,8 +32,8 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
-@UniqueIndex(name = "uniqueName", fields = { @Field("accountId")
-                                             , @Field("name") })
+@CdUniqueIndex(name = "uniqueName", fields = { @Field("accountId")
+                                               , @Field("name") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -47,7 +47,7 @@ public class ResourceConstraint implements PersistentEntity, UuidAware, CreatedA
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @SchemaIgnore private EmbeddedUser createdBy;
-  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore @FdIndex private long createdAt;
 
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;

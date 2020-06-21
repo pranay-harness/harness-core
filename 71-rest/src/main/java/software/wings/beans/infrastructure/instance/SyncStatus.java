@@ -2,9 +2,9 @@ package software.wings.beans.infrastructure.instance;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.UniqueIndex;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,11 +18,11 @@ import software.wings.beans.Base;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@UniqueIndex(name = "compositeIdx1",
+@CdUniqueIndex(name = "compositeIdx1",
     fields = { @Field("appId")
                , @Field("serviceId"), @Field("envId"), @Field("infraMappingId") })
-@Index(name = "compositeIdx2", fields = { @Field("appId")
-                                          , @Field("infraMappingId") })
+@CdIndex(name = "compositeIdx2", fields = { @Field("appId")
+                                            , @Field("infraMappingId") })
 @Entity(value = "syncStatus", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class SyncStatus extends Base {

@@ -11,9 +11,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -35,14 +35,14 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = true)
 
-@Index(name = "owners", fields = { @Field("artifactStreamId")
-                                   , @Field("appId") })
-@Index(name = "artifactStream_buildNo", fields = { @Field("artifactStreamId")
-                                                   , @Field("metadata.buildNo") })
-@Index(name = "artifactStream_artifactPath", fields = { @Field("artifactStreamId")
-                                                        , @Field("metadata.artifactPath") })
-@Index(name = "artifactStream_revision", fields = { @Field("artifactStreamId")
-                                                    , @Field("revision") })
+@CdIndex(name = "owners", fields = { @Field("artifactStreamId")
+                                     , @Field("appId") })
+@CdIndex(name = "artifactStream_buildNo", fields = { @Field("artifactStreamId")
+                                                     , @Field("metadata.buildNo") })
+@CdIndex(name = "artifactStream_artifactPath", fields = { @Field("artifactStreamId")
+                                                          , @Field("metadata.artifactPath") })
+@CdIndex(name = "artifactStream_revision", fields = { @Field("artifactStreamId")
+                                                      , @Field("revision") })
 @FieldNameConstants(innerTypeName = "ArtifactKeys")
 @Entity(value = "artifacts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
@@ -97,7 +97,7 @@ public class Artifact extends Base {
   private ContentStatus contentStatus;
   private Map<String, String> source;
   private String settingId;
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
   private String artifactStreamType;
   private String uiDisplayName;
   private String buildIdentity;

@@ -10,9 +10,9 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.mongo.KryoConverter;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -48,15 +48,15 @@ import javax.validation.constraints.NotNull;
 @Converters({ParametersConverter.class, ResponseDataConverter.class})
 @FieldNameConstants(innerTypeName = "DelegateTaskKeys")
 
-@Index(name = "index", fields = { @Field(DelegateTaskKeys.status)
-                                  , @Field(DelegateTaskKeys.expiry) })
-@Index(name = "pulling",
+@CdIndex(name = "index", fields = { @Field(DelegateTaskKeys.status)
+                                    , @Field(DelegateTaskKeys.expiry) })
+@CdIndex(name = "pulling",
     fields =
     {
       @Field(DelegateTaskKeys.accountId)
       , @Field(DelegateTaskKeys.status), @Field("data.async"), @Field(DelegateTaskKeys.expiry),
     })
-@Index(name = "data_async", fields = { @Field("data.async") })
+@CdIndex(name = "data_async", fields = { @Field("data.async") })
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, Task {
   public static final String TASK_IDENTIFIER = "DELEGATE_TASK";
 
@@ -105,7 +105,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
 
   private long expiry;
 
-  @TtlIndex @Default private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
+  @FdTtlIndex @Default private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
 
   @Override
   @JsonIgnore

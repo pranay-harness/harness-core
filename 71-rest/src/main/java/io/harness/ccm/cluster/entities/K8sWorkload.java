@@ -2,9 +2,9 @@ package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.K8sWorkload.K8sWorkloadKeys;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -31,21 +31,21 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
 @Entity(value = "k8sWorkload", noClassnameStored = true)
-@UniqueIndex(name = "no_dup_cluster", fields = { @Field(K8sWorkloadKeys.clusterId)
-                                                 , @Field(K8sWorkloadKeys.uid) })
-@Index(name = "accountId_clusterId_labels",
+@CdUniqueIndex(name = "no_dup_cluster", fields = { @Field(K8sWorkloadKeys.clusterId)
+                                                   , @Field(K8sWorkloadKeys.uid) })
+@CdIndex(name = "accountId_clusterId_labels",
     fields = { @Field(K8sWorkloadKeys.accountId)
                , @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.labels) })
-@Index(name = "accountId_clusterId_uid",
+@CdIndex(name = "accountId_clusterId_uid",
     fields = { @Field(K8sWorkloadKeys.accountId)
                , @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.uid) })
-@Index(name = "accountId_name_clusterId_namespace",
+@CdIndex(name = "accountId_name_clusterId_namespace",
     fields =
     {
       @Field(K8sWorkloadKeys.accountId)
       , @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.namespace)
     })
-@Index(name = "accountId_name_labels",
+@CdIndex(name = "accountId_name_labels",
     fields = { @Field(K8sWorkloadKeys.accountId)
                , @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.labels) })
 @FieldNameConstants(innerTypeName = "K8sWorkloadKeys")

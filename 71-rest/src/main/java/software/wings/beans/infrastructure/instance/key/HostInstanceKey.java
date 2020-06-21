@@ -1,6 +1,6 @@
 package software.wings.beans.infrastructure.instance.key;
 
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +17,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class HostInstanceKey extends InstanceKey {
-  @Indexed private String hostName;
-  @Indexed private String infraMappingId;
+  @FdIndex private String hostName;
+  @FdIndex private String infraMappingId;
 }

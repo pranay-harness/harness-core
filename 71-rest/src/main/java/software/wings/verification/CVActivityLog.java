@@ -12,11 +12,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -42,7 +42,7 @@ import java.util.List;
 @Entity(value = "cvActivityLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 
-@Index(name = "service_guard_idx",
+@CdIndex(name = "service_guard_idx",
     fields =
     {
       @Field("cvConfigId")
@@ -50,20 +50,20 @@ import java.util.List;
     })
 public class CVActivityLog implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
-  @Indexed private String cvConfigId;
-  @Indexed private String stateExecutionId;
+  @FdIndex private String cvConfigId;
+  @FdIndex private String stateExecutionId;
   @JsonProperty(value = "timestamp") private long createdAt;
   private long lastUpdatedAt;
-  @Indexed private long dataCollectionMinute;
+  @FdIndex private long dataCollectionMinute;
   @NonNull private String log;
   @NonNull private LogLevel logLevel;
   private List<Long> timestampParams;
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   @Default
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(ACTIVITY_LOG_TTL_WEEKS).toInstant());
 
   @Override

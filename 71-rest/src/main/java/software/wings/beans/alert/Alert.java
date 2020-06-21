@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -33,15 +33,15 @@ import javax.validation.constraints.NotNull;
 
 @FieldNameConstants(innerTypeName = "AlertKeys")
 
-@Index(name = "accountAppTypeStatusIdx",
+@CdIndex(name = "accountAppTypeStatusIdx",
     fields = { @Field(AlertKeys.accountId)
                , @Field(AlertKeys.appId), @Field(AlertKeys.type), @Field(AlertKeys.status) })
-@Index(name = "accountTypeStatusIdx",
+@CdIndex(name = "accountTypeStatusIdx",
     fields = { @Field(AlertKeys.accountId)
                , @Field(AlertKeys.type), @Field(AlertKeys.status) })
-@Index(name = "createdAtTypeIndex", fields = { @Field(AlertKeys.type)
-                                               , @Field(AlertKeys.createdAt) })
-@Index(name = "reconciliationIterator",
+@CdIndex(name = "createdAtTypeIndex", fields = { @Field(AlertKeys.type)
+                                                 , @Field(AlertKeys.createdAt) })
+@CdIndex(name = "reconciliationIterator",
     fields =
     {
       @Field(AlertKeys.status)
@@ -55,7 +55,7 @@ import javax.validation.constraints.NotNull;
 public class Alert
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-  @Indexed @NotNull @SchemaIgnore protected String appId;
+  @FdIndex @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private long createdAt;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
   private String accountId;
@@ -72,11 +72,11 @@ public class Alert
 
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   @Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(14).toInstant());
 
-  @Indexed private Long cvCleanUpIteration;
+  @FdIndex private Long cvCleanUpIteration;
 
   @Override
   public void updateNextIteration(String fieldName, Long nextIteration) {

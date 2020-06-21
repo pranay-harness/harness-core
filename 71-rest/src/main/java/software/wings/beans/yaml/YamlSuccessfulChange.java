@@ -2,9 +2,9 @@ package software.wings.beans.yaml;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.TtlIndex;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -25,8 +25,8 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
-@UniqueIndex(name = "uniqueIdx", fields = { @Field("accountId")
-                                            , @Field("yamlFilePath") })
+@CdUniqueIndex(name = "uniqueIdx", fields = { @Field("accountId")
+                                              , @Field("yamlFilePath") })
 @FieldNameConstants(innerTypeName = "YamlSuccessfulChangeKeys")
 @Entity(value = "yamlSuccessfulChange", noClassnameStored = true)
 @HarnessEntity(exportable = false)
@@ -44,7 +44,7 @@ public class YamlSuccessfulChange implements PersistentEntity, UuidAware, Create
   private EmbeddedUser lastUpdatedBy;
   private long lastUpdatedAt;
 
-  @TtlIndex(24 * 60 * 60) @Default private Date validUntil = new Date();
+  @FdTtlIndex(24 * 60 * 60) @Default private Date validUntil = new Date();
 
   public enum ChangeSource { GIT, HARNESS }
 }

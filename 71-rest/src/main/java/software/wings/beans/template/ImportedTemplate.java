@@ -5,10 +5,10 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -35,21 +35,21 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ImportedTemplateKeys")
 
-@Index(name = "account_app_command_idx",
+@CdIndex(name = "account_app_command_idx",
     fields = { @Field("accountId")
                , @Field("appId"), @Field("commandStoreName"), @Field("commandName") })
-@UniqueIndex(name = "template_idx", fields = { @Field("templateId") })
+@CdUniqueIndex(name = "template_idx", fields = { @Field("templateId") })
 @Entity(value = "importedTemplates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class ImportedTemplate implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                          UpdatedByAware, ApplicationAccess {
   @Id @NotNull(groups = {Update.class}) private String uuid;
 
-  @Indexed @NotNull protected String appId;
+  @FdIndex @NotNull protected String appId;
 
   private EmbeddedUser createdBy;
 
-  @Indexed private long createdAt;
+  @FdIndex private long createdAt;
 
   private EmbeddedUser lastUpdatedBy;
 

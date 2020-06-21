@@ -9,11 +9,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
@@ -35,10 +35,10 @@ import java.util.Map;
  * Created by Praveen.
  */
 
-@UniqueIndex(
+@CdUniqueIndex(
     name = "uniqueIdx", fields = { @Field("appId")
                                    , @Field("cvConfigId"), @Field("analysisMinute"), @Field("tag") })
-@Index(name = "service_gd_idx",
+@CdIndex(name = "service_gd_idx",
     fields = { @Field("cvConfigId")
                , @Field(value = "analysisMinute", type = IndexType.DESC), @Field("tag") })
 @Data
@@ -51,11 +51,11 @@ import java.util.Map;
 @Entity(value = "timeSeriesCumulativeSums", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class TimeSeriesCumulativeSums extends Base implements AccountAccess {
-  @NotEmpty @Indexed private String cvConfigId;
-  @NotEmpty @Indexed private int analysisMinute;
+  @NotEmpty @FdIndex private String cvConfigId;
+  @NotEmpty @FdIndex private int analysisMinute;
   @Transient private Map<String, Map<String, Map<String, Double>>> transactionMetricSums;
   @JsonIgnore private byte[] compressedMetricSums;
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   private String tag;
 

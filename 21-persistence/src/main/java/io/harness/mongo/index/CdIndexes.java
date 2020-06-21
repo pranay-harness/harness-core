@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD})
-public @interface TtlIndex {
-  int value() default 0;
+@Target({ElementType.TYPE})
+public @interface CdIndexes {
+  CdIndex[] value();
 }

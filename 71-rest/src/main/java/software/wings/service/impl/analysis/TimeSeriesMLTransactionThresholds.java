@@ -3,9 +3,9 @@ package software.wings.service.impl.analysis;
 import com.google.common.collect.Sets;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +21,7 @@ import software.wings.sm.StateType;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-@Index(name = "timeseriesThresholdsQueryIndex",
+@CdIndex(name = "timeseriesThresholdsQueryIndex",
     fields =
     {
       @Field("appId")
@@ -49,7 +49,7 @@ public class TimeSeriesMLTransactionThresholds extends Base implements AccountAc
 
   @NotEmpty private String cvConfigId;
 
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   TimeSeriesMetricDefinition thresholds;
 

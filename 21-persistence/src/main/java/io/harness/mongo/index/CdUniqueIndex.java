@@ -9,8 +9,8 @@ import java.lang.annotation.RetentionPolicy;
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Repeatable(SparseIndexes.class)
-public @interface SparseIndex {
+@Repeatable(CdUniqueIndexes.class)
+public @interface CdUniqueIndex {
   String name();
   Field[] fields();
 }

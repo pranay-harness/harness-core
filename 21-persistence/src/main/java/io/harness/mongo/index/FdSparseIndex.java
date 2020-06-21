@@ -1,16 +1,14 @@
 package io.harness.mongo.index;
 
 import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
-import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Repeatable(Indexes.class)
-public @interface Index {
-  String name();
-  Field[] fields();
-}
+@Target({ElementType.FIELD})
+public @interface FdSparseIndex {}

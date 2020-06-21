@@ -10,10 +10,10 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.NameAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -53,15 +53,15 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "TriggerKeys")
 @Entity(value = "triggers")
 @HarnessEntity(exportable = true)
-@UniqueIndex(name = "yaml", fields = { @Field("appId")
-                                       , @Field("name") })
-@Index(name = "conditionArtifactStreamId",
+@CdUniqueIndex(name = "yaml", fields = { @Field("appId")
+                                         , @Field("name") })
+@CdIndex(name = "conditionArtifactStreamId",
     fields =
     {
       @Field(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType)
       , @Field(TriggerKeys.condition + "." + ArtifactTriggerConditionKeys.artifactStreamId)
     })
-@Index(name = "artifactSelectionsArtifactStreamId",
+@CdIndex(name = "artifactSelectionsArtifactStreamId",
     fields = { @Field(TriggerKeys.artifactSelections + "." + ArtifactSelectionKeys.artifactStreamId) })
 public class Trigger extends Base implements NameAccess, TagAware, ApplicationAccess {
   @NotEmpty private String name;
@@ -72,7 +72,7 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
   private String workflowId;
   private String workflowName;
   private List<ArtifactSelection> artifactSelections = new ArrayList<>();
-  @JsonIgnore @Indexed private String webHookToken;
+  @JsonIgnore @FdIndex private String webHookToken;
   private WorkflowType workflowType;
   private Map<String, String> workflowVariables;
   private List<ServiceInfraWorkflow> serviceInfraWorkflows;

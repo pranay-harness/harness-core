@@ -3,7 +3,7 @@ package io.harness.beans.sweepingoutputs;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -26,5 +26,5 @@ public class K8PodDetails implements PersistentEntity, UuidAware, ContextElement
   private String podName;
   private long lastUpdatedAt;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 }

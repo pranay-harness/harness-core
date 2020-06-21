@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
@@ -48,7 +48,7 @@ public abstract class InfrastructureProvisioner
   @NotEmpty private String infrastructureProvisionerType;
   private List<NameValuePair> variables;
   @Valid List<InfrastructureMappingBlueprint> mappingBlueprints;
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
   private transient List<HarnessTagLink> tagLinks;
 
   public InfrastructureProvisioner(String name, String description, String infrastructureProvisionerType,

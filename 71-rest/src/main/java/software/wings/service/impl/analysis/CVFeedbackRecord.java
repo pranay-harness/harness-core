@@ -16,7 +16,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.serializer.JsonUtils;
@@ -45,15 +45,15 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 @HarnessEntity(exportable = false)
 public class CVFeedbackRecord implements GoogleDataStoreAware, AccountAccess {
   @Id private String uuid;
-  @NotEmpty @Indexed private String accountId;
+  @NotEmpty @FdIndex private String accountId;
 
-  @NotEmpty @Indexed private String serviceId;
+  @NotEmpty @FdIndex private String serviceId;
 
-  @NotEmpty @Indexed private String envId;
+  @NotEmpty @FdIndex private String envId;
 
-  @Indexed private String stateExecutionId;
+  @FdIndex private String stateExecutionId;
 
-  @Indexed private String cvConfigId;
+  @FdIndex private String cvConfigId;
 
   @NotEmpty private int clusterLabel;
 

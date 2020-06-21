@@ -19,11 +19,11 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.serializer.JsonUtils;
@@ -52,16 +52,16 @@ import java.util.Map;
  * Created by rsingh on 08/30/17.
  */
 
-@Index(name = "stateExIdx",
+@CdIndex(name = "stateExIdx",
     fields =
     { @Field("stateExecutionId")
       , @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC) })
-@Index(name = "workflowExIdx",
+@CdIndex(name = "workflowExIdx",
     fields =
     {
       @Field("workflowExecutionId"), @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
     })
-@Index(name = "serviceGuardIdx",
+@CdIndex(name = "serviceGuardIdx",
     fields = { @Field(value = "dataCollectionMinute", type = IndexType.DESC)
                , @Field("cvConfigId") })
 @Data
@@ -86,7 +86,7 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
 
   private String serviceId;
 
-  @Indexed private String cvConfigId;
+  @FdIndex private String cvConfigId;
 
   private String stateExecutionId;
 
@@ -108,7 +108,7 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
 
   private transient Map<String, String> deeplinkUrl;
 
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   public Map<String, Double> getValues() {
     if (values == null) {
@@ -119,7 +119,7 @@ public class NewRelicMetricDataRecord extends Base implements GoogleDataStoreAwa
 
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 
   @Builder

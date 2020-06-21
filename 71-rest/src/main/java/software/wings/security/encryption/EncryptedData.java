@@ -7,10 +7,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptedDataParams;
@@ -56,31 +56,31 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 
-@UniqueIndex(name = "acctNameIdx", fields = { @Field("accountId")
-                                              , @Field("name") })
-@Index(name = "acctKmsIdx", fields = { @Field("accountId")
-                                       , @Field("kmsId") })
+@CdUniqueIndex(name = "acctNameIdx", fields = { @Field("accountId")
+                                                , @Field("name") })
+@CdIndex(name = "acctKmsIdx", fields = { @Field("accountId")
+                                         , @Field("kmsId") })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
 public class EncryptedData
     extends Base implements EncryptedRecord, NameAccess, PersistentRegularIterable, AccountAccess, ScopedEntity {
   public static final String PARENT_ID_KEY =
       String.format("%s.%s", EncryptedDataKeys.parents, EncryptedDataParentKeys.id);
 
-  @NotEmpty @Indexed private String name;
+  @NotEmpty @FdIndex private String name;
 
-  @NotEmpty @Indexed private String encryptionKey;
+  @NotEmpty @FdIndex private String encryptionKey;
 
   @NotEmpty private char[] encryptedValue;
 
   // When 'path' value is set, no actual encryption is needed since it's just referring to a secret in a Secret Manager
   // path.
-  @Indexed private String path;
+  @FdIndex private String path;
 
   private Set<EncryptedDataParams> parameters;
 
   @NotEmpty private SettingVariableTypes type;
 
-  @NotEmpty @Default @Indexed private Set<EncryptedDataParent> parents = new HashSet<>();
+  @NotEmpty @Default @FdIndex private Set<EncryptedDataParent> parents = new HashSet<>();
 
   @NotEmpty private String accountId;
 
@@ -114,9 +114,9 @@ public class EncryptedData
 
   private UsageRestrictions usageRestrictions;
 
-  @Indexed private Long nextMigrationIteration;
+  @FdIndex private Long nextMigrationIteration;
 
-  @Indexed private Long nextAwsToGcpKmsMigrationIteration;
+  @FdIndex private Long nextAwsToGcpKmsMigrationIteration;
 
   @SchemaIgnore private boolean base64Encoded;
 
@@ -128,7 +128,7 @@ public class EncryptedData
 
   @SchemaIgnore @Transient private transient int changeLog;
 
-  @SchemaIgnore @Indexed private List<String> keywords;
+  @SchemaIgnore @FdIndex private List<String> keywords;
 
   public void addParent(@NotNull EncryptedDataParent encryptedDataParent) {
     parents.add(encryptedDataParent);

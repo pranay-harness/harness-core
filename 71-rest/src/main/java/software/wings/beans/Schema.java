@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -32,7 +32,7 @@ public class Schema implements PersistentEntity, UuidAware, CreatedAtAware, Upda
   public static final String TIMESCALEDB_DATA_VERSION = "timescaleDBDataVersion";
   public static final String ON_PRIMARY_MANAGER_VERSION = "onPrimaryManagerVersion";
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore @FdIndex private long createdAt;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   private int version;

@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -31,7 +31,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "delegateProfiles", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "DelegateProfileKeys")
-@UniqueIndex(name = "uniqueName",
+@CdUniqueIndex(name = "uniqueName",
     fields = { @Field(value = DelegateProfileKeys.accountId)
                , @Field(value = DelegateProfileKeys.name) })
 public class DelegateProfile implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
@@ -50,7 +50,7 @@ public class DelegateProfile implements PersistentEntity, UuidAware, CreatedAtAw
   private String startupScript;
 
   @SchemaIgnore private EmbeddedUser createdBy;
-  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore @FdIndex private long createdAt;
 
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;

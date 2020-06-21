@@ -3,8 +3,8 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
@@ -34,8 +34,8 @@ import javax.validation.constraints.NotNull;
  * This has been deprecated in favor of {@link software.wings.beans.security.UserGroup#notificationSettings}
  */
 @Entity(value = "notificationGroups", noClassnameStored = true)
-@UniqueIndex(name = "yaml", fields = { @Field("accountId")
-                                       , @Field("name") })
+@CdUniqueIndex(name = "yaml", fields = { @Field("accountId")
+                                         , @Field("name") })
 @HarnessEntity(exportable = true)
 @Deprecated
 public class NotificationGroup extends Base implements NotificationReceiverInfo, NameAccess, AccountAccess {

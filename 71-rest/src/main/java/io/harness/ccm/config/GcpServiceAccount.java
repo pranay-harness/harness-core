@@ -1,8 +1,8 @@
 package io.harness.ccm.config;
 
 import io.harness.ccm.config.GcpServiceAccount.GcpServiceAccountKeys;
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -21,7 +21,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "GcpServiceAccountKeys")
 @Entity(value = "gcpServiceAccount", noClassnameStored = true)
-@UniqueIndex(name = "no_dup",
+@CdUniqueIndex(name = "no_dup",
     fields = { @Field(GcpServiceAccountKeys.accountId)
                , @Field(GcpServiceAccountKeys.serviceAccountId) })
 public class GcpServiceAccount implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {

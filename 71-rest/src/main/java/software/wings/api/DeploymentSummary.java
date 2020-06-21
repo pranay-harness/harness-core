@@ -2,10 +2,10 @@ package software.wings.api;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,7 +26,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
 @Entity(value = "deploymentSummary", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 
-@Index(name = "accountId_containerDeploymentInfo",
+@CdIndex(name = "accountId_containerDeploymentInfo",
     fields =
     {
       @Field(DeploymentSummaryKeys.accountId)
@@ -34,21 +34,21 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
           @Field(DeploymentSummaryKeys.CONTAINER_SVC_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES),
           @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
     })
-@Index(name = "containerSvcName_inframappingId_createdAt",
+@CdIndex(name = "containerSvcName_inframappingId_createdAt",
     fields =
     {
       @Field(DeploymentSummaryKeys.CONTAINER_KEY_SERVICE_NAME)
       , @Field(DeploymentSummaryKeys.infraMappingId),
           @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
     })
-@Index(name = "accountId_k8sDeploymentInfo",
+@CdIndex(name = "accountId_k8sDeploymentInfo",
     fields =
     {
       @Field(DeploymentSummaryKeys.accountId)
       , @Field(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_INFO),
           @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
     })
-@Index(name = "infraMappingId_k8sDeploymentKeyReleaseNameAndNumber",
+@CdIndex(name = "infraMappingId_k8sDeploymentKeyReleaseNameAndNumber",
     fields =
     {
       @Field(DeploymentSummaryKeys.infraMappingId)
@@ -56,18 +56,18 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
           @Field(DeploymentSummaryKeys.RELEASE_NUMBER_K8S_DEPLOYMENT_KEY),
           @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
     })
-@Index(name = "accountId_createdAtAsc",
+@CdIndex(name = "accountId_createdAtAsc",
     fields =
     { @Field(DeploymentSummaryKeys.accountId)
       , @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.ASC) })
-@Index(name = "accountId_infraMappingId_createdAtDesc",
+@CdIndex(name = "accountId_infraMappingId_createdAtDesc",
     fields =
     {
       @Field(DeploymentSummaryKeys.accountId)
       , @Field(DeploymentSummaryKeys.infraMappingId),
           @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
     })
-@Index(name = "inframappingId_containerlabelsAndVersion",
+@CdIndex(name = "inframappingId_containerlabelsAndVersion",
     fields =
     {
       @Field(DeploymentSummaryKeys.infraMappingId)
@@ -77,7 +77,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
 @FieldNameConstants(innerTypeName = "DeploymentSummaryKeys")
 public class DeploymentSummary extends Base {
   private String accountId;
-  @Indexed private String infraMappingId;
+  @FdIndex private String infraMappingId;
   private String workflowId;
   private String workflowExecutionId;
   private String workflowExecutionName;

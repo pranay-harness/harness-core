@@ -1,7 +1,7 @@
 package io.harness.mongo;
 
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -18,7 +18,7 @@ public class SampleEntity
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   @Id private String uuid;
   private EmbeddedUser createdBy;
-  @Indexed private long createdAt;
+  @FdIndex private long createdAt;
 
   private EmbeddedUser lastUpdatedBy;
   private long lastUpdatedAt;

@@ -2,9 +2,9 @@ package io.harness.event.reconciliation.deployment;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord.DeploymentReconRecordKeys;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -26,10 +26,10 @@ import java.util.Date;
 @Entity(value = "deploymentReconciliation", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 
-@Index(name = "accountId_durationEndTs",
+@CdIndex(name = "accountId_durationEndTs",
     fields = { @Field(DeploymentReconRecordKeys.accountId)
                , @Field(DeploymentReconRecordKeys.durationEndTs) })
-@Index(name = "accountId_reconciliationStatus",
+@CdIndex(name = "accountId_reconciliationStatus",
     fields = { @Field(DeploymentReconRecordKeys.accountId)
                , @Field(DeploymentReconRecordKeys.reconciliationStatus) })
 public class DeploymentReconRecord implements PersistentEntity, UuidAware, AccountAccess {
@@ -42,5 +42,5 @@ public class DeploymentReconRecord implements PersistentEntity, UuidAware, Accou
   private ReconcilationAction reconcilationAction;
   private long reconStartTs;
   private long reconEndTs;
-  @Default @TtlIndex private Date ttl = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+  @Default @FdTtlIndex private Date ttl = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 }

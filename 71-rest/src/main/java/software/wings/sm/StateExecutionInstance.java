@@ -12,10 +12,10 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -50,13 +50,13 @@ import javax.annotation.Nullable;
 @FieldNameConstants(innerTypeName = "StateExecutionInstanceKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 
-@Index(name = "stateTypes2",
+@CdIndex(name = "stateTypes2",
     fields =
     {
       @Field(StateExecutionInstanceKeys.executionUuid)
       , @Field(StateExecutionInstanceKeys.stateType), @Field(StateExecutionInstanceKeys.createdAt)
     })
-@Index(name = "parentInstances2",
+@CdIndex(name = "parentInstances2",
     fields =
     {
       @Field(StateExecutionInstanceKeys.executionUuid)
@@ -67,8 +67,8 @@ import javax.annotation.Nullable;
 public class StateExecutionInstance
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, ApplicationAccess {
   @Id private String uuid;
-  @Indexed protected String appId;
-  @Indexed private long createdAt;
+  @FdIndex protected String appId;
+  @FdIndex private long createdAt;
   private long lastUpdatedAt;
 
   private String childStateMachineId;
@@ -101,9 +101,9 @@ public class StateExecutionInstance
 
   private WorkflowType executionType;
 
-  @Indexed private String executionUuid;
+  @FdIndex private String executionUuid;
 
-  @Indexed private String parentInstanceId;
+  @FdIndex private String parentInstanceId;
 
   private String subGraphFilterId;
 
@@ -139,7 +139,7 @@ public class StateExecutionInstance
 
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
   public StateExecutionData fetchStateExecutionData() {

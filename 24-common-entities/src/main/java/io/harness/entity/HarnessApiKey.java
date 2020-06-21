@@ -2,7 +2,7 @@ package io.harness.entity;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ClientType;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
@@ -21,7 +21,7 @@ import org.mongodb.morphia.annotations.Id;
 public class HarnessApiKey implements PersistentEntity, UuidAware {
   @Id private String uuid;
   @NotEmpty private byte[] encryptedKey;
-  @Indexed @NotEmpty private ClientType clientType;
+  @FdIndex @NotEmpty private ClientType clientType;
 
   @Builder
   private HarnessApiKey(String uuid, byte[] encryptedKey, ClientType clientType) {

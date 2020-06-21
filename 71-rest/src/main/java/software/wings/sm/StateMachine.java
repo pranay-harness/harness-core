@@ -26,9 +26,9 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -79,17 +79,17 @@ import javax.validation.constraints.NotNull;
 @OwnedBy(CDC)
 @Data
 @Entity(value = "stateMachines", noClassnameStored = true)
-@Index(name = "appId_origin", fields = { @Field("appId")
-                                         , @Field("originId"), @Field("originVersion") })
+@CdIndex(name = "appId_origin", fields = { @Field("appId")
+                                           , @Field("originId"), @Field("originVersion") })
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "StateMachineKeys")
 @Slf4j
 public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware, ApplicationAccess {
   @Id private String uuid;
-  @Indexed @NotNull protected String appId;
-  @Indexed private long createdAt;
+  @FdIndex @NotNull protected String appId;
+  @FdIndex private long createdAt;
 
-  @Indexed private String originId;
+  @FdIndex private String originId;
 
   private Integer originVersion;
 

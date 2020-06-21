@@ -3,7 +3,7 @@ package software.wings.beans.infrastructure.instance;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,7 +40,7 @@ public class ContainerDeploymentInfo extends Base {
    * This has the revision number in it.
    */
   private String containerSvcName;
-  @Indexed private String containerSvcNameNoRevision;
+  @FdIndex private String containerSvcNameNoRevision;
 
   @Builder
   public ContainerDeploymentInfo(String uuid, String appId, EmbeddedUser createdBy, long createdAt,

@@ -2,9 +2,9 @@ package software.wings.beans;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -24,22 +24,22 @@ import javax.validation.constraints.NotNull;
 
 @FieldNameConstants(innerTypeName = "ResourceLookupKeys")
 
-@Index(name = "resourceIndex_1",
+@CdIndex(name = "resourceIndex_1",
     fields =
     {
       @Field(ResourceLookupKeys.accountId)
       , @Field(ResourceLookupKeys.resourceType), @Field(ResourceLookupKeys.appId),
           @Field(ResourceLookupKeys.resourceName)
     })
-@Index(name = "resourceIndex_3",
+@CdIndex(name = "resourceIndex_3",
     fields =
     {
       @Field(ResourceLookupKeys.accountId)
       , @Field(ResourceLookupKeys.resourceName), @Field(ResourceLookupKeys.resourceType)
     })
-@Index(name = "tagsNameResourceLookupIndex", fields = { @Field(ResourceLookupKeys.accountId)
-                                                        , @Field("tags.name") })
-@Index(name = "resourceIdResourceLookupIndex",
+@CdIndex(name = "tagsNameResourceLookupIndex", fields = { @Field(ResourceLookupKeys.accountId)
+                                                          , @Field("tags.name") })
+@CdIndex(name = "resourceIdResourceLookupIndex",
     fields = { @Field(ResourceLookupKeys.accountId)
                , @Field(ResourceLookupKeys.resourceId) })
 @Data
@@ -52,10 +52,10 @@ public class ResourceLookup implements PersistentEntity, UuidAware, CreatedAtAwa
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @NotEmpty private String accountId;
   @NotEmpty private String appId;
-  @Indexed @NotEmpty private String resourceId;
+  @FdIndex @NotEmpty private String resourceId;
   @NotEmpty private String resourceType;
   private String resourceName;
   private List<NameValuePair> tags;
-  @Indexed private long createdAt;
+  @FdIndex private long createdAt;
   private long lastUpdatedAt;
 }

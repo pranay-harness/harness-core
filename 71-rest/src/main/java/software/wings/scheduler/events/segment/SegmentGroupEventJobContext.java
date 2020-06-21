@@ -5,7 +5,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.UpdatedAtAccess;
 import lombok.Value;
@@ -37,7 +37,7 @@ public class SegmentGroupEventJobContext implements PersistentRegularIterable, C
     this.nextIteration = nextIteration;
   }
 
-  @Indexed @NonFinal private Long nextIteration;
+  @FdIndex @NonFinal private Long nextIteration;
 
   @Override
   public void updateNextIteration(String fieldName, Long nextIteration) {

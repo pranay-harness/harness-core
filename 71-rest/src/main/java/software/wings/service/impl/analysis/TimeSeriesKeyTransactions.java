@@ -1,7 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -30,8 +30,8 @@ public class TimeSeriesKeyTransactions implements PersistentEntity, UuidAware, C
   private EmbeddedUser createdBy;
   private EmbeddedUser lastUpdatedBy;
 
-  @Indexed private String cvConfigId;
-  @Indexed private String serviceId;
-  @Indexed private String accountId;
+  @FdIndex private String cvConfigId;
+  @FdIndex private String serviceId;
+  @FdIndex private String accountId;
   private Set<String> keyTransactions;
 }

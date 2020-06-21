@@ -8,7 +8,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.WeeklyFreezeConfig;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedByAware;
@@ -37,7 +37,7 @@ import javax.annotation.Nonnull;
 public class GovernanceConfig implements PersistentEntity, UuidAware, UpdatedByAware, AccountAccess {
   @Id private String uuid;
 
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
   private boolean deploymentFreeze;
   private EmbeddedUser lastUpdatedBy;
   private List<TimeRangeBasedFreezeConfig> timeRangeBasedFreezeConfigs;

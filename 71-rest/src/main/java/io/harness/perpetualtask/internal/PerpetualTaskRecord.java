@@ -2,7 +2,7 @@ package io.harness.perpetualtask.internal;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskClientContext.PerpetualTaskClientContextKeys;
 import io.harness.persistence.AccountAccess;
@@ -32,17 +32,17 @@ import org.mongodb.morphia.annotations.Id;
 public class PerpetualTaskRecord
     implements PersistentEntity, UuidAware, PersistentRegularIterable, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
-  @Indexed String accountId;
+  @FdIndex String accountId;
   String perpetualTaskType;
   PerpetualTaskClientContext clientContext;
   long intervalSeconds;
   long timeoutMillis;
-  @Indexed String delegateId;
+  @FdIndex String delegateId;
   String state;
   long lastHeartbeat;
 
-  @Indexed Long assignerIteration;
-  @Indexed Long resetterIteration;
+  @FdIndex Long assignerIteration;
+  @FdIndex Long resetterIteration;
 
   long createdAt;
   long lastUpdatedAt;

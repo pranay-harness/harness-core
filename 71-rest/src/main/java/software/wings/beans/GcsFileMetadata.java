@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ChecksumType;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -37,11 +37,11 @@ import java.util.Map;
 @FieldNameConstants(innerTypeName = "GcsFileMetadataKeys")
 public class GcsFileMetadata extends Base {
   @NotEmpty private String accountId;
-  @NotEmpty @Indexed private String fileId; // Mongo GridFs fileId.
-  @NotEmpty @Indexed private String gcsFileId;
+  @NotEmpty @FdIndex private String fileId; // Mongo GridFs fileId.
+  @NotEmpty @FdIndex private String gcsFileId;
   @NotEmpty private String fileName;
   @NotEmpty private FileBucket fileBucket;
-  @Indexed private String entityId;
+  @FdIndex private String entityId;
   private int version;
   private long fileLength;
   private String mimeType;

@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -14,7 +14,7 @@ import software.wings.yaml.BaseEntityYaml;
  */
 
 public abstract class DeploymentSpecification extends Base {
-  @Setter @Indexed private String accountId;
+  @Setter @FdIndex private String accountId;
 
   @SchemaIgnore
   public String getAccountId() {

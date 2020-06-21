@@ -101,10 +101,10 @@
 
 
             <!-- Do not use morphia Embedded. We do not need to change the name of the field and we
-                 would like better control for the indexes. -->
+                 would like better control for the cdIndices. -->
             <property name="illegalClasses" value="org.mongodb.morphia.annotations.Embedded"/>
 
-            <!-- use io.harness.mongo.index instead -->
+            <!-- use io.harness.mongo.cdIndex instead -->
             <property name="illegalClasses" value="org.mongodb.morphia.annotations.Field,
                                                    org.mongodb.morphia.annotations.Index,
                                                    org.mongodb.morphia.annotations.Indexed,

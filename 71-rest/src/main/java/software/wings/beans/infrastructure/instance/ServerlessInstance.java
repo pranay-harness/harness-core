@@ -2,9 +2,9 @@ package software.wings.beans.infrastructure.instance;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -29,21 +29,21 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
 
-@Index(name = "serverless_instance_index1", fields = { @Field("appId")
-                                                       , @Field("isDeleted"), @Field("deletedAt") })
-@Index(name = "serverless_instance_index2",
+@CdIndex(name = "serverless_instance_index1", fields = { @Field("appId")
+                                                         , @Field("isDeleted"), @Field("deletedAt") })
+@CdIndex(name = "serverless_instance_index2",
     fields = { @Field("appId")
                , @Field("infraMappingId"), @Field("isDeleted"), @Field("deletedAt") })
-@Index(name = "serverless_instance_index3",
+@CdIndex(name = "serverless_instance_index3",
     fields = { @Field("accountId")
                , @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt") })
-@Index(name = "serverless_instance_index5",
+@CdIndex(name = "serverless_instance_index5",
     fields = { @Field("appId")
                , @Field("serviceId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt") })
-@Index(name = "serverless_instance_index7", fields = { @Field("accountId")
-                                                       , @Field("isDeleted") })
-@Index(name = "serverless_instance_index8", fields = { @Field("appId")
-                                                       , @Field("serviceId"), @Field("isDeleted") })
+@CdIndex(name = "serverless_instance_index7", fields = { @Field("accountId")
+                                                         , @Field("isDeleted") })
+@CdIndex(name = "serverless_instance_index8", fields = { @Field("appId")
+                                                         , @Field("serviceId"), @Field("isDeleted") })
 @FieldNameConstants(innerTypeName = "ServerlessInstanceKeys")
 @Entity(value = "serverless-instance", noClassnameStored = true)
 @HarnessEntity(exportable = false)
@@ -51,11 +51,11 @@ public class ServerlessInstance implements PersistentEntity, UuidAware, CreatedA
                                            UpdatedByAware, ApplicationAccess {
   @Id @NotNull(groups = {Update.class}) private String uuid;
 
-  @Indexed @NotNull protected String appId;
+  @FdIndex @NotNull protected String appId;
 
   private EmbeddedUser createdBy;
 
-  @Indexed private long createdAt;
+  @FdIndex private long createdAt;
 
   private EmbeddedUser lastUpdatedBy;
 
@@ -96,7 +96,7 @@ public class ServerlessInstance implements PersistentEntity, UuidAware, CreatedA
 
   private ServerlessInstanceInfo instanceInfo;
 
-  @Indexed private boolean isDeleted;
+  @FdIndex private boolean isDeleted;
   private long deletedAt;
 
   @Builder(toBuilder = true)

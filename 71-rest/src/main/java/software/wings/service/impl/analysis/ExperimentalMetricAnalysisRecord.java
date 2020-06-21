@@ -3,11 +3,11 @@ package software.wings.service.impl.analysis;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,15 +21,15 @@ import org.mongodb.morphia.annotations.Entity;
  * Created by Pranjal on 08/14/2018
  */
 
-@UniqueIndex(name = "MetricAnalysisUniqueIdx",
+@CdUniqueIndex(name = "MetricAnalysisUniqueIdx",
     fields =
     { @Field("workflowExecutionId")
       , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName") })
-@Index(name = "ExperimentalMetricListIdx",
+@CdIndex(name = "ExperimentalMetricListIdx",
     fields = { @Field("analysisMinute")
                , @Field("mismatched"), @Field(value = "createdAt", type = IndexType.DESC) })
-@Index(name = "analysisMinStateExecutionIdIndex", fields = { @Field("analysisMinute")
-                                                             , @Field("stateExecutionId") })
+@CdIndex(name = "analysisMinStateExecutionIdIndex", fields = { @Field("analysisMinute")
+                                                               , @Field("stateExecutionId") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -40,7 +40,7 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = false)
 public class ExperimentalMetricAnalysisRecord extends MetricAnalysisRecord {
   private String envId;
-  @Builder.Default @Indexed private boolean mismatched = true;
+  @Builder.Default @FdIndex private boolean mismatched = true;
   @Builder.Default private ExperimentStatus experimentStatus = ExperimentStatus.UNDETERMINED;
   @NotEmpty private String experimentName;
 }

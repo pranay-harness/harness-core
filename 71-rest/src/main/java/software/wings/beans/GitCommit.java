@@ -3,11 +3,11 @@ package software.wings.beans;
 import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,18 +33,18 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "gitCommits", noClassnameStored = true)
 
-@UniqueIndex(name = "gitCommitIdx", fields = { @Field(GitCommitKeys.accountId)
-                                               , @Field(GitCommitKeys.commitId) })
-@Index(name = "gitCommitStatusLastUpdatedIdx",
+@CdUniqueIndex(name = "gitCommitIdx", fields = { @Field(GitCommitKeys.accountId)
+                                                 , @Field(GitCommitKeys.commitId) })
+@CdIndex(name = "gitCommitStatusLastUpdatedIdx",
     fields =
     {
       @Field(GitCommitKeys.accountId)
       , @Field(GitCommitKeys.status), @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC)
     })
-@Index(name = "gitCommitAccountIdLastUpdatedAT",
+@CdIndex(name = "gitCommitAccountIdLastUpdatedAT",
     fields = { @Field(GitCommitKeys.accountId)
                , @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC) })
-@Index(name = "gitCommitAccountIdCreatedAtDesc",
+@CdIndex(name = "gitCommitAccountIdCreatedAtDesc",
     fields = { @Field(GitCommitKeys.accountId)
                , @Field(value = GitCommitKeys.createdAt, type = IndexType.DESC), })
 @HarnessEntity(exportable = true)
@@ -55,7 +55,7 @@ public class GitCommit extends Base {
   private String commitId;
   private YamlChangeSet yamlChangeSet;
   private GitCommandResult gitCommandResult;
-  @Indexed private Status status;
+  @FdIndex private Status status;
   private FailureReason failureReason;
   private List<String> yamlChangeSetsProcessed;
   private List<String> yamlGitConfigIds;

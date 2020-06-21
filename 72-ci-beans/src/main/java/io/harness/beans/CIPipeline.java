@@ -6,7 +6,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -45,7 +45,7 @@ public class CIPipeline implements Pipeline, WithNonYamlInfo<CIPipelineEntityInf
 
   private long lastUpdatedAt;
 
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 

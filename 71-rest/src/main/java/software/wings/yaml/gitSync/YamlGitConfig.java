@@ -7,8 +7,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.UniqueIndex;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,8 +26,8 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import javax.validation.constraints.NotNull;
 
-@UniqueIndex(name = "locate", fields = { @Field("accountId")
-                                         , @Field("entityId"), @Field("entityType") })
+@CdUniqueIndex(name = "locate", fields = { @Field("accountId")
+                                           , @Field("entityId"), @Field("entityType") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

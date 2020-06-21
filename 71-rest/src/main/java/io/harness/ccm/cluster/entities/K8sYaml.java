@@ -6,10 +6,10 @@ import com.google.common.hash.Hashing;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.K8sYaml.K8sYamlKeys;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -30,10 +30,10 @@ import java.util.Base64;
 @StoreIn("events")
 @Entity(value = "k8sYaml", noClassnameStored = true)
 
-@Index(name = "accountId_uuid_resourceVersion",
+@CdIndex(name = "accountId_uuid_resourceVersion",
     fields = { @Field(K8sYamlKeys.accountId)
                , @Field(value = K8sYamlKeys.resourceVersion, type = IndexType.DESC) })
-@Index(name = "accountId_clusterId_uid_resourceVersion",
+@CdIndex(name = "accountId_clusterId_uid_resourceVersion",
     fields =
     {
       @Field(K8sYamlKeys.accountId)
@@ -51,7 +51,7 @@ public class K8sYaml implements PersistentEntity, UuidAware, CreatedAtAware, Acc
   private String resourceVersion;
   private String yaml;
 
-  @Indexed(unique = true) @Setter(AccessLevel.NONE) private String hash;
+  @FdUniqueIndex @Setter(AccessLevel.NONE) private String hash;
 
   @Builder(toBuilder = true)
   private K8sYaml(String accountId, String clusterId, String uid, String resourceVersion, String yaml) {

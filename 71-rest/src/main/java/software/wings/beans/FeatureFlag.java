@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
@@ -23,7 +23,7 @@ import java.util.Set;
 public class FeatureFlag implements PersistentEntity, UuidAware, UpdatedAtAware {
   @Id private String uuid;
 
-  @Indexed private String name;
+  @FdIndex private String name;
   public enum Scope {
     GLOBAL,
     PER_ACCOUNT,

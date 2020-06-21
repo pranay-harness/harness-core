@@ -6,11 +6,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.version.ServiceApiVersion;
 import lombok.Builder;
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 1/8/18.
  */
 
-@Index(name = "task_fetch_idx",
+@CdIndex(name = "task_fetch_idx",
     fields =
     {
       @Field("state_execution_id")
@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
           @Field("cluster_level"), @Field("group_name"), @Field("version"),
           @Field(value = "createdAt", type = IndexType.DESC)
     })
-@Index(name = "task_fetch_priority_idx",
+@CdIndex(name = "task_fetch_priority_idx",
     fields =
     {
       @Field("state_execution_id")
@@ -51,11 +51,11 @@ import java.util.concurrent.TimeUnit;
           @Field("cluster_level"), @Field("group_name"), @Field("version"),
           @Field(value = "createdAt", type = IndexType.DESC)
     })
-@Index(name = "cvConfigStatusIdx",
+@CdIndex(name = "cvConfigStatusIdx",
     fields =
     { @Field("cvConfigId")
       , @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus") })
-@Index(name = "usageMetricsIndex",
+@CdIndex(name = "usageMetricsIndex",
     fields =
     {
       @Field("executionStatus")
@@ -112,13 +112,13 @@ public class LearningEngineAnalysisTask extends Base implements AccountAccess {
   @JsonProperty("log_ml_result_url") private String logMLResultUrl;
   @JsonProperty("use_supervised_model") private boolean shouldUseSupervisedModel;
   private String feature_name;
-  @Indexed private ExecutionStatus executionStatus;
+  @FdIndex private ExecutionStatus executionStatus;
   private String cvConfigId;
   private boolean is24x7Task;
   private String tag = "default";
   private int service_guard_backoff_count;
   private Double alertThreshold;
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
   @JsonProperty("new_node_traffic_split_percentage") private Integer newInstanceTrafficSplitPercentage;
 
   @Builder.Default private int priority = 1;
@@ -131,6 +131,6 @@ public class LearningEngineAnalysisTask extends Base implements AccountAccess {
   @Default
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(7).toInstant());
 }

@@ -4,8 +4,8 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.persistence.AccountAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,8 +22,8 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "SSOSettingsKeys")
 @Entity(value = "ssoSettings")
 @HarnessEntity(exportable = true)
-@Index(name = "accountIdTypeIdx", fields = { @Field("accountId")
-                                             , @Field(SSOSettingsKeys.type) })
+@CdIndex(name = "accountIdTypeIdx", fields = { @Field("accountId")
+                                               , @Field(SSOSettingsKeys.type) })
 public abstract class SSOSettings extends Base implements AccountAccess {
   @NotNull protected SSOType type;
   @NotEmpty protected String displayName;

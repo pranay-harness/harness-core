@@ -2,7 +2,7 @@ package software.wings.testutils.encryptionsamples;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.encryption.Encrypted;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
@@ -20,10 +20,10 @@ public class SampleEncryptableSetting implements EncryptableSetting, PersistentE
   private SettingVariableTypes type;
 
   @Encrypted(fieldName = ENCRYPTED_ANNOTATION_VALUE_FIELD, isReference = true) private char[] value;
-  @SchemaIgnore @Indexed private String encryptedValue;
+  @SchemaIgnore @FdIndex private String encryptedValue;
 
   @Encrypted(fieldName = ENCRYPTED_ANNOTATION_KEY_FIELD) private char[] key;
-  @SchemaIgnore @Indexed private String encryptedKey;
+  @SchemaIgnore @FdIndex private String encryptedKey;
 
   @Override
   public String getUuid() {

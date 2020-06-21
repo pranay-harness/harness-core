@@ -4,8 +4,8 @@ import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.persistence.AccountAccess;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -22,8 +22,8 @@ import java.util.List;
  */
 @Entity(value = "roles", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Index(name = "roleType_accountId_1", fields = { @Field("roleType")
-                                                 , @Field("accountId") })
+@CdIndex(name = "roleType_accountId_1", fields = { @Field("roleType")
+                                                   , @Field("accountId") })
 @FieldNameConstants(innerTypeName = "RoleKeys")
 public class Role extends Base implements AccountAccess {
   @NotEmpty private String name;

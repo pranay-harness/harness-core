@@ -8,9 +8,9 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
-@UniqueIndex(
+@CdUniqueIndex(
     name = "unique_Idx", fields = { @Field("projectIdentifier")
                                     , @Field("dataSourceType"), @Field("identifier") })
 @Data
@@ -50,7 +50,7 @@ public class MetricPack
   private long createdAt;
   private long lastUpdatedAt;
   private EmbeddedUser lastUpdatedBy;
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
   @NotEmpty private String projectIdentifier;
   @NotNull private DataSourceType dataSourceType;
   @Trimmed @NotEmpty private String identifier;

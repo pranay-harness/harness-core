@@ -5,10 +5,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -28,8 +28,8 @@ import java.util.Map;
  * Created by rsingh on 08/30/17.
  */
 
-@UniqueIndex(name = "unique_Idx", fields = { @Field("stateExecutionId")
-                                             , @Field("cvConfigId") })
+@CdUniqueIndex(name = "unique_Idx", fields = { @Field("stateExecutionId")
+                                               , @Field("cvConfigId") })
 @Data
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "TimeSeriesMetricTemplatesKeys")
@@ -40,13 +40,13 @@ public class TimeSeriesMetricTemplates extends Base implements AccountAccess {
 
   @NotEmpty private String stateExecutionId;
 
-  @Indexed private String cvConfigId;
+  @FdIndex private String cvConfigId;
 
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   @NotEmpty private Map<String, TimeSeriesMetricDefinition> metricTemplates;
 
-  @JsonIgnore @SchemaIgnore @TtlIndex private Date validUntil;
+  @JsonIgnore @SchemaIgnore @FdTtlIndex private Date validUntil;
 
   @Builder
   public TimeSeriesMetricTemplates(StateType stateType, String stateExecutionId, String cvConfigId, String accountId,

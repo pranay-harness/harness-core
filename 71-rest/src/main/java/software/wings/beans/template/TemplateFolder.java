@@ -11,9 +11,9 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -36,10 +36,11 @@ import java.util.Set;
 @NoArgsConstructor
 @JsonInclude(NON_NULL)
 @EqualsAndHashCode(callSuper = false)
-@UniqueIndex(name = "duplicateKey", fields = { @Field("accountId")
-                                               , @Field("name"), @Field("pathId"), @Field("appId") })
-@Index(name = "account_gallery_app_idx", fields = { @Field("accountId")
-                                                    , @Field("galleryId"), @Field("appId") })
+@CdUniqueIndex(
+    name = "duplicateKey", fields = { @Field("accountId")
+                                      , @Field("name"), @Field("pathId"), @Field("appId") })
+@CdIndex(name = "account_gallery_app_idx", fields = { @Field("accountId")
+                                                      , @Field("galleryId"), @Field("appId") })
 @FieldNameConstants(innerTypeName = "TemplateFolderKeys")
 @Entity(value = "templateFolders", noClassnameStored = true)
 @HarnessEntity(exportable = true)

@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance;
 
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -28,8 +28,8 @@ import java.util.List;
 public class InstanceSyncPerpetualTaskInfo implements PersistentEntity, UuidAware, UuidAccess, AccountAccess,
                                                       CreatedAtAccess, CreatedAtAware, UpdatedAtAware, UpdatedAtAccess {
   @Id String uuid;
-  @Indexed String accountId;
-  @Indexed String infrastructureMappingId;
+  @FdIndex String accountId;
+  @FdIndex String infrastructureMappingId;
   @Singular List<String> perpetualTaskIds;
   long createdAt;
   long lastUpdatedAt;

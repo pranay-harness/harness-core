@@ -1,5 +1,8 @@
 package io.harness.data.structure;
 
+import static io.harness.data.structure.ListUtils.OneAndOnlyOne.MANY;
+import static io.harness.data.structure.ListUtils.OneAndOnlyOne.NONE;
+import static io.harness.data.structure.ListUtils.OneAndOnlyOne.ONE;
 import static java.util.stream.Collectors.toList;
 
 import lombok.experimental.UtilityClass;
@@ -40,5 +43,22 @@ public class ListUtils {
       return arrayList;
     }
     return list;
+  }
+
+  public enum OneAndOnlyOne { NONE, ONE, MANY }
+
+  public static OneAndOnlyOne oneAndOnlyOne(Object... values) {
+    int count = 0;
+    for (Object value : values) {
+      if (value != null) {
+        if (++count > 1) {
+          return MANY;
+        }
+      }
+    }
+    if (count == 0) {
+      return NONE;
+    }
+    return ONE;
   }
 }

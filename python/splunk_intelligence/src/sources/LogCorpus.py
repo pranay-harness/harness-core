@@ -355,43 +355,43 @@ class LogCorpus(object):
         return tags
 
     def set_xy(self, dist_matrix):
-        index = 0
+        cdIndex = 0
         for key, value in self.control_clusters.items():
             for host, val in value.items():
-                val['x'] = dist_matrix[index, 0]
-                val['y'] = dist_matrix[index, 1]
-            index = index + 1
+                val['x'] = dist_matrix[cdIndex, 0]
+                val['y'] = dist_matrix[cdIndex, 1]
+            cdIndex = cdIndex + 1
 
         for key, value in self.test_clusters.items():
             for host, val in value.items():
-                val['x'] = dist_matrix[index, 0]
-                val['y'] = dist_matrix[index, 1]
-            index = index + 1
+                val['x'] = dist_matrix[cdIndex, 0]
+                val['y'] = dist_matrix[cdIndex, 1]
+            cdIndex = cdIndex + 1
 
         for key, value in self.anom_clusters.items():
             for host, val in value.items():
-                val['x'] = dist_matrix[index, 0]
-                val['y'] = dist_matrix[index, 1]
-            index = index + 1
+                val['x'] = dist_matrix[cdIndex, 0]
+                val['y'] = dist_matrix[cdIndex, 1]
+            cdIndex = cdIndex + 1
 
         for key, value in self.ignore_clusters.items():
             for host, val in value.items():
-                val['x'] = dist_matrix[index, 0]
-                val['y'] = dist_matrix[index, 1]
-            index = index + 1
+                val['x'] = dist_matrix[cdIndex, 0]
+                val['y'] = dist_matrix[cdIndex, 1]
+            cdIndex = cdIndex + 1
 
     def create_anom_clusters(self, clusters):
-        for index, anomal in enumerate(self.anomalies):
-            if clusters[index] not in self.anom_clusters:
-                self.anom_clusters[clusters[index]] = {}
-                self.cluster_scores['unknown'][clusters[index]] = {'control_score': 1.0, 'test_score': 1.0}
+        for cdIndex, anomal in enumerate(self.anomalies):
+            if clusters[cdIndex] not in self.anom_clusters:
+                self.anom_clusters[clusters[cdIndex]] = {}
+                self.cluster_scores['unknown'][clusters[cdIndex]] = {'control_score': 1.0, 'test_score': 1.0}
             for anom in anomal:
                 host = anom.get('message_frequencies')[0].get('host')
-                if host not in self.anom_clusters[clusters[index]]:
-                    self.anom_clusters[clusters[index]][host] = dict(text=anom.get('text'),
+                if host not in self.anom_clusters[clusters[cdIndex]]:
+                    self.anom_clusters[clusters[cdIndex]][host] = dict(text=anom.get('text'),
                                                                                  control_label=anom.get(
                                                                                      'cluster_label'),
-                                                                                 cluster_label=clusters[index],
+                                                                                 cluster_label=clusters[cdIndex],
                                                                                  message_frequencies=[],
                                                                                  test_scores=[],
                                                                                  control_score=anom.get(
@@ -399,10 +399,10 @@ class LogCorpus(object):
                                                                                  test_score=0
                                                                                  )
 
-                self.anom_clusters[clusters[index]][host]['test_scores'].append(
+                self.anom_clusters[clusters[cdIndex]][host]['test_scores'].append(
                     [anom.get('test_score'),
                      np.mean(np.asarray([val['count'] for val in anom.get('message_frequencies')]))])
-                self.anom_clusters[clusters[index]][host].get('message_frequencies').extend(
+                self.anom_clusters[clusters[cdIndex]][host].get('message_frequencies').extend(
                     anom.get('message_frequencies'))
 
         self.score_unknown_events()
@@ -437,9 +437,9 @@ class LogCorpus(object):
                         feature_names,
                         predictions):
         ignore_dict = {}
-        for index, (key, value) in enumerate(self.control_events.items()):
+        for cdIndex, (key, value) in enumerate(self.control_events.items()):
             for val in value:
-                val['cluster_label'] = clusters[index]
+                val['cluster_label'] = clusters[cdIndex]
 
                 if val.get('feedback_id'):
                     ignore_dict[val.get('cluster_label')] = val.get('feedback_id')
@@ -475,14 +475,14 @@ class LogCorpus(object):
                 # remove control event that should be ignored from control cluster
                 del self.control_clusters[label]
         anomaly_index = 1000000
-        for index, (key, value) in enumerate(self.test_events.items()):
+        for cdIndex, (key, value) in enumerate(self.test_events.items()):
             anomal = []
             for val in value:
-                val['test_score'] = predictions[index].get('score')
-                val['control_score'] = predictions[index].get('cluster_score')
-                test_label = predictions[index].get('cluster_label')
+                val['test_score'] = predictions[cdIndex].get('score')
+                val['control_score'] = predictions[cdIndex].get('cluster_score')
+                test_label = predictions[cdIndex].get('cluster_label')
                 ## adding ignore test to ignore cluster
-                if test_label in ignore_dict.keys() and predictions[index].get('anomaly') == 1:
+                if test_label in ignore_dict.keys() and predictions[cdIndex].get('anomaly') == 1:
                     val['cluster_label'] = test_label
                     if test_label not in self.ignore_clusters:
                         self.ignore_clusters[test_label] = {}
@@ -498,7 +498,7 @@ class LogCorpus(object):
                                                                          feature_names,
                                                                          5))
 
-                elif predictions[index].get('anomaly') == 1:
+                elif predictions[cdIndex].get('anomaly') == 1:
                     val['cluster_label'] = test_label
                     if test_label not in self.test_clusters:
                         self.test_clusters[test_label] = {}
@@ -576,7 +576,7 @@ class LogCorpus(object):
         tooltips = []
         sizes = []
         ind = 0
-        for index, (key, value) in enumerate(self.control_clusters.items()):
+        for cdIndex, (key, value) in enumerate(self.control_clusters.items()):
             for host, val in value.items():
                 x.append(val.get('x'))
                 y.append(val.get('y'))
@@ -588,7 +588,7 @@ class LogCorpus(object):
                     size = size + int(freq.get('count'))
                     sizes.append(size)
 
-        for index, (key, value) in enumerate(self.test_clusters.items()):
+        for cdIndex, (key, value) in enumerate(self.test_clusters.items()):
             for host, val in value.items():
                 x.append(val.get('x'))
                 y.append(val.get('y'))
@@ -621,7 +621,7 @@ class LogCorpus(object):
     def count_hist_plot(self):
 
         data = {}
-        for index, (key, value) in enumerate(self.control_clusters.items()):
+        for cdIndex, (key, value) in enumerate(self.control_clusters.items()):
             for host, val in value.items():
                 for freq in val.get('message_frequencies'):
                     if key not in data:
@@ -630,7 +630,7 @@ class LogCorpus(object):
                         data[key]['test'] = []
                     data[key]['control'].append(freq.get('count'))
 
-        for index, (key, value) in enumerate(self.test_clusters.items()):
+        for cdIndex, (key, value) in enumerate(self.test_clusters.items()):
             for host, val in value.items():
                 for freq in val.get('message_frequencies'):
                     data[key]['test'].append(freq.get('count'))
@@ -645,7 +645,7 @@ class LogCorpus(object):
         tooltips = []
         ind = 0
         sizes = []
-        for index, (key, value) in enumerate(self.test_clusters.items()):
+        for cdIndex, (key, value) in enumerate(self.test_clusters.items()):
             for host, val in value.items():
                 x.append(val.get('x'))
                 y.append(val.get('y'))
@@ -671,7 +671,7 @@ class LogCorpus(object):
         tooltips = []
         ind = 0
         clusters = []
-        for index, (key, value) in enumerate(self.control_clusters.items()):
+        for cdIndex, (key, value) in enumerate(self.control_clusters.items()):
             for host, val in value.items():
                 for freq in val.get('message_frequencies'):
                     x.append(val.get('x'))
@@ -682,7 +682,7 @@ class LogCorpus(object):
                     clusters.append(key)
                 ind = ind + 1
 
-        for index, (key, value) in enumerate(self.test_clusters.items()):
+        for cdIndex, (key, value) in enumerate(self.test_clusters.items()):
             for host, val in value.items():
                 for idx, freq in enumerate(val.get('message_frequencies')):
                     x.append(val.get('x'))
@@ -700,11 +700,11 @@ class LogCorpus(object):
 
     def get_all_events_for_notebook(self):
         texts = []
-        for index, (key, value) in enumerate(self.control_clusters.items()):
+        for cdIndex, (key, value) in enumerate(self.control_clusters.items()):
             for host, val in value.items():
                 texts.append(val)
 
-        for index, (key, value) in enumerate(self.test_clusters.items()):
+        for cdIndex, (key, value) in enumerate(self.test_clusters.items()):
             for host, val in value.items():
                 texts.append(val)
 

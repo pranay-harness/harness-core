@@ -2,8 +2,8 @@ package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData.BatchJobScheduledDataKeys;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -22,7 +22,7 @@ import java.time.Instant;
 @Data
 @Entity(value = "batchJobScheduledData", noClassnameStored = true)
 
-@Index(name = "accountId_batchJobType_endAt",
+@CdIndex(name = "accountId_batchJobType_endAt",
     fields =
     {
       @Field(BatchJobScheduledDataKeys.accountId)

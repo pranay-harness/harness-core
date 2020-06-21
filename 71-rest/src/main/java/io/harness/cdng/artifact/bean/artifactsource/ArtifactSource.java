@@ -3,9 +3,9 @@ package io.harness.cdng.artifact.bean.artifactsource;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -29,7 +29,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@UniqueIndex(name = "uniqueHash", fields = { @Field("uniqueHash") })
+@CdUniqueIndex(name = "uniqueHash", fields = { @Field("uniqueHash") })
 @FieldNameConstants(innerTypeName = "ArtifactSourceKeys")
 @Entity(value = "artifactSourceNG")
 @HarnessEntity(exportable = true)
@@ -38,7 +38,7 @@ public abstract class ArtifactSource implements PersistentEntity, UuidAware, Cre
   @Id private String uuid;
   @NotNull private String accountId;
   @SchemaIgnore private EmbeddedUser createdBy;
-  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore @FdIndex private long createdAt;
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
   /** It gives the artifact source type.*/

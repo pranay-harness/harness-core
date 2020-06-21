@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,7 +25,7 @@ import software.wings.beans.Preference.PreferenceKeys;
 })
 @FieldNameConstants(innerTypeName = "PreferenceKeys")
 
-@Index(name = "preference_index",
+@CdIndex(name = "preference_index",
     fields = { @Field(PreferenceKeys.accountId)
                , @Field(PreferenceKeys.userId), @Field(PreferenceKeys.name) })
 

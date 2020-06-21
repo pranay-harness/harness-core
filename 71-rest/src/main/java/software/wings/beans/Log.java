@@ -23,10 +23,10 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -58,9 +58,9 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "commandLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 
-@Index(name = "appId_activityId", fields = { @Field(value = LogKeys.appId)
-                                             , @Field(value = LogKeys.activityId) })
-@Index(name = "activityIdCreatedAt",
+@CdIndex(name = "appId_activityId", fields = { @Field(value = LogKeys.appId)
+                                               , @Field(value = LogKeys.activityId) })
+@CdIndex(name = "activityIdCreatedAt",
     fields = { @Field(value = LogKeys.activityId)
                , @Field(value = CreatedAtAware.CREATED_AT_KEY) })
 public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
@@ -70,7 +70,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;
-  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore @FdIndex private long createdAt;
 
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
@@ -84,7 +84,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
 
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
   @Override

@@ -3,10 +3,10 @@ package software.wings.yaml.gitSync;
 import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -27,16 +27,16 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(callSuper = false)
 
-@Index(name = "searchIdx_1", fields = { @Field("accountId")
-                                        , @Field("status"), @Field("retryCount") })
-@Index(name = "accountId_createdAt_index",
+@CdIndex(name = "searchIdx_1", fields = { @Field("accountId")
+                                          , @Field("status"), @Field("retryCount") })
+@CdIndex(name = "accountId_createdAt_index",
     fields = { @Field("accountId")
                , @Field(value = "createdAt", type = IndexType.DESC) })
-@Index(name = "accountId_status_gitToHarness_createdAt_index",
+@CdIndex(name = "accountId_status_gitToHarness_createdAt_index",
     fields =
     { @Field("accountId")
       , @Field(value = "status"), @Field(value = "gitToHarness"), @Field(value = "createdAt") })
-@Index(name = "accountId_queuekey_status_createdAt_index",
+@CdIndex(name = "accountId_queuekey_status_createdAt_index",
     fields =
     {
       @Field("accountId")
@@ -51,7 +51,7 @@ public class YamlChangeSet extends Base {
 
   @NotEmpty private String accountId;
   @NotNull private List<GitFileChange> gitFileChanges = new ArrayList<>();
-  @Indexed @NotNull private Status status;
+  @FdIndex @NotNull private Status status;
   private boolean gitToHarness;
   private boolean forcePush;
   private long queuedOn = System.currentTimeMillis();

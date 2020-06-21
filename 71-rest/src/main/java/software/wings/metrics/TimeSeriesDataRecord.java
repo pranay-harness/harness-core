@@ -24,11 +24,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -67,19 +67,19 @@ import java.util.Set;
  * Created by rsingh on 08/30/17.
  */
 
-@Index(name = "stateExIdx",
+@CdIndex(name = "stateExIdx",
     fields =
     { @Field("stateExecutionId")
       , @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC) })
-@Index(name = "workflowExIdx",
+@CdIndex(name = "workflowExIdx",
     fields =
     {
       @Field("workflowExecutionId"), @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
     })
-@Index(name = "serviceGuardIdx",
+@CdIndex(name = "serviceGuardIdx",
     fields = { @Field(value = "dataCollectionMinute", type = IndexType.DESC)
                , @Field("cvConfigId") })
-@Index(name = "service_guard_idx",
+@CdIndex(name = "service_guard_idx",
     fields = { @Field("cvConfigId")
                , @Field(value = "dataCollectionMinute", type = IndexType.DESC) })
 @Data
@@ -103,7 +103,7 @@ public class TimeSeriesDataRecord
 
   private String serviceId;
 
-  @Indexed private String cvConfigId;
+  @FdIndex private String cvConfigId;
 
   private String stateExecutionId;
 
@@ -131,12 +131,12 @@ public class TimeSeriesDataRecord
 
   private long lastUpdatedAt;
 
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   @JsonIgnore
   @SchemaIgnore
   @Default
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 
   public void compress() {

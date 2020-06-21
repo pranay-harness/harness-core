@@ -8,10 +8,10 @@ import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -34,20 +34,20 @@ import java.util.Map;
 @Builder
 @Entity(value = "instanceData", noClassnameStored = true)
 
-@Index(name = "accountId_clusterId_instanceId_instanceState",
+@CdIndex(name = "accountId_clusterId_instanceId_instanceState",
     fields =
     {
       @Field(InstanceDataKeys.accountId)
       , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceId), @Field(InstanceDataKeys.instanceState)
     })
-@Index(name = "accountId_clusterId_instanceName_usageStartTime",
+@CdIndex(name = "accountId_clusterId_instanceName_usageStartTime",
     fields =
     {
       @Field(InstanceDataKeys.accountId)
       , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceName),
           @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.DESC)
     })
-@Index(name = "accountId_usageStartTime",
+@CdIndex(name = "accountId_usageStartTime",
     fields =
     { @Field(InstanceDataKeys.accountId)
       , @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.ASC) })
@@ -58,7 +58,7 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
   @Id String uuid;
   String accountId;
   String settingId;
-  @Indexed String instanceId;
+  @FdIndex String instanceId;
   String instanceName;
   String clusterName;
   String clusterId;
