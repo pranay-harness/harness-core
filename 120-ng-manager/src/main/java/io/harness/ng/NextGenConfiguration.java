@@ -20,6 +20,7 @@ import javax.ws.rs.Path;
 @Getter
 public class NextGenConfiguration extends Configuration {
   public static final String BASE_PACKAGE = "io.harness.ng";
+  public static final String CONNECTOR_PACKAGE = "io.harness.connector.apis.resource";
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
@@ -42,7 +43,7 @@ public class NextGenConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(BASE_PACKAGE);
+    Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
