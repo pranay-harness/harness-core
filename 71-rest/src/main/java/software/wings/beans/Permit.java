@@ -2,8 +2,8 @@ package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,7 +22,7 @@ public class Permit extends Base {
   public static final String PERMIT_KEY_ID = "key";
   @Indexed(unique = true) private String key;
   private String group;
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date expireAt;
+  @TtlIndex private Date expireAt;
   private long leaseDuration;
 
   @Builder

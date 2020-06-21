@@ -2,8 +2,7 @@ package io.harness.cache;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
@@ -27,5 +26,5 @@ public class CacheEntity implements PersistentEntity {
 
   byte[] entity;
 
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) Date validUntil;
+  @TtlIndex Date validUntil;
 }

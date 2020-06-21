@@ -6,8 +6,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -60,7 +60,7 @@ public class BarrierInstance implements PersistentEntity, UuidAware, PersistentR
 
   @JsonIgnore
   @SchemaIgnore
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @TtlIndex
   @Builder.Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 

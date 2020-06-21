@@ -4,8 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord.DeploymentReconRecordKeys;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -43,7 +42,5 @@ public class DeploymentReconRecord implements PersistentEntity, UuidAware, Accou
   private ReconcilationAction reconcilationAction;
   private long reconStartTs;
   private long reconEndTs;
-  @Default
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date ttl = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+  @Default @TtlIndex private Date ttl = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 }

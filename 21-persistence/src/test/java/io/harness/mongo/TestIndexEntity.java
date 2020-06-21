@@ -4,6 +4,7 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.Indexed;
 import io.harness.mongo.index.SparseIndex;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.AllArgsConstructor;
@@ -29,4 +30,5 @@ public class TestIndexEntity implements PersistentEntity, UuidAccess {
   private String name;
   @Indexed private String test;
   @Indexed(sparse = true) private String sparseTest;
+  @TtlIndex(11) private String ttlTest;
 }

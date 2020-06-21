@@ -12,8 +12,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.mongo.KryoConverter;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -106,9 +105,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
 
   private long expiry;
 
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  @Default
-  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
+  @TtlIndex @Default private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
 
   @Override
   @JsonIgnore

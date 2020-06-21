@@ -6,8 +6,7 @@ import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.KryoConverter;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -78,6 +77,5 @@ public class SweepingOutputInstance implements PersistentEntity, UuidAccess, Cre
 
   public enum Scope { PIPELINE, WORKFLOW, PHASE, STATE }
 
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+  @TtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 }

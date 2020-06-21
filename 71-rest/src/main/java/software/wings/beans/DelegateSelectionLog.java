@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
@@ -51,7 +50,5 @@ public class DelegateSelectionLog implements PersistentEntity, UuidAware, Accoun
    * */
   @NotEmpty private String groupId;
 
-  @Builder.Default
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+  @Builder.Default @TtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 }

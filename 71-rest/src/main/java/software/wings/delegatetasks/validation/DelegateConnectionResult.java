@@ -3,8 +3,8 @@ package software.wings.delegatetasks.validation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
@@ -46,7 +46,7 @@ public class DelegateConnectionResult implements PersistentEntity, UuidAware, Up
   private boolean validated;
   private long duration;
 
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) @Default private Date validUntil = getValidUntilTime();
+  @TtlIndex @Default private Date validUntil = getValidUntilTime();
 
   public static Date getValidUntilTime() {
     return Date.from(OffsetDateTime.now().plusDays(30).toInstant());

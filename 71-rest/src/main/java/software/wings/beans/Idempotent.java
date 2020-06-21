@@ -2,8 +2,7 @@ package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.distribution.idempotence.IdempotentResult;
-import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -30,7 +29,5 @@ public class Idempotent implements PersistentEntity {
   private String state;
   private List<IdempotentResult> result;
 
-  @Default
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(3).toInstant());
+  @Default @TtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusDays(3).toInstant());
 }

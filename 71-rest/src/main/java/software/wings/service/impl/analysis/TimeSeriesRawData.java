@@ -15,8 +15,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
-import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.persistence.UuidAware;
@@ -72,7 +71,7 @@ public class TimeSeriesRawData implements GoogleDataStoreAware, UuidAware, Accou
 
   @JsonIgnore
   @SchemaIgnore
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @TtlIndex
   @Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 

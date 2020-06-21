@@ -9,8 +9,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
@@ -70,7 +70,7 @@ public class CVConfiguration extends Base implements NameAccess {
   @Transient @SchemaIgnore private String envName;
   @Transient @SchemaIgnore private String appName;
 
-  @JsonIgnore @SchemaIgnore @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date validUntil;
+  @JsonIgnore @SchemaIgnore @TtlIndex private Date validUntil;
 
   public AnalysisComparisonStrategy getComparisonStrategy() {
     return comparisonStrategy == null ? AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS : comparisonStrategy;

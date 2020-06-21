@@ -32,6 +32,7 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.Indexed;
 import io.harness.mongo.index.SparseIndex;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.mongo.index.UniqueIndex;
 import io.harness.threading.Morpheus;
 import lombok.AllArgsConstructor;
@@ -175,7 +176,8 @@ public class IndexManagerSession {
     // Read field level "Indexed" annotation
     for (MappedField mf : mc.getPersistenceFields()) {
       Indexed indexed = mf.getField().getAnnotation(Indexed.class);
-      if (indexed == null) {
+      TtlIndex ttlIndex = mf.getField().getAnnotation(TtlIndex.class);
+      if (indexed == null && ttlIndex == null) {
         continue;
       }
 
@@ -185,18 +187,11 @@ public class IndexManagerSession {
       String indexName = name + "_" + direction;
       BasicDBObject dbObject = new BasicDBObject(name, direction);
 
-      BasicDBObject options = new BasicDBObject();
-      options.put(NAME, indexName);
-      if (indexed.unique()) {
-        options.put(UNIQUE, Boolean.TRUE);
-      } else {
-        options.put(BACKGROUND, Boolean.TRUE);
-      }
-      if (indexed.sparse()) {
-        options.put(SPARSE, Boolean.TRUE);
-      }
-      if (indexed.options().expireAfterSeconds() != -1) {
-        options.put(EXPIRE_AFTER_SECONDS, indexed.options().expireAfterSeconds());
+      BasicDBObject options = indexOptions(indexName,
+          indexed == null ? NORMAL_INDEX
+                          : indexed.unique() ? UNIQUE_INDEX : indexed.sparse() ? SPARSE_INDEX : NORMAL_INDEX);
+      if (ttlIndex != null) {
+        options.put(EXPIRE_AFTER_SECONDS, ttlIndex.value());
       }
 
       putCreator(
@@ -222,27 +217,28 @@ public class IndexManagerSession {
     Set<Index> indexes = fetchAnnotations(mc.getClazz(), Index.class);
     for (Index index : indexes) {
       IndexCreator newCreator =
-          buildtIndexCreator(index.name(), id, index.fields(), NORMAL_INDEX).collection(collection).build();
+          buildtCompoundIndexCreator(index.name(), id, index.fields(), NORMAL_INDEX).collection(collection).build();
       checkWithTheOthers(creators, newCreator);
       putCreator(creators, newCreator.name(), newCreator);
     }
     Set<UniqueIndex> uniqueIndexes = fetchAnnotations(mc.getClazz(), UniqueIndex.class);
     for (UniqueIndex index : uniqueIndexes) {
       IndexCreator newCreator =
-          buildtIndexCreator(index.name(), id, index.fields(), UNIQUE_INDEX).collection(collection).build();
+          buildtCompoundIndexCreator(index.name(), id, index.fields(), UNIQUE_INDEX).collection(collection).build();
       checkWithTheOthers(creators, newCreator);
       putCreator(creators, newCreator.name(), newCreator);
     }
     Set<SparseIndex> sparceIndexes = fetchAnnotations(mc.getClazz(), SparseIndex.class);
     for (SparseIndex index : sparceIndexes) {
       IndexCreator newCreator =
-          buildtIndexCreator(index.name(), id, index.fields(), SPARSE_INDEX).collection(collection).build();
+          buildtCompoundIndexCreator(index.name(), id, index.fields(), SPARSE_INDEX).collection(collection).build();
       checkWithTheOthers(creators, newCreator);
       putCreator(creators, newCreator.name(), newCreator);
     }
   }
 
-  private static IndexCreatorBuilder buildtIndexCreator(String indexName, String id, Field[] fields, Type type) {
+  private static IndexCreatorBuilder buildtCompoundIndexCreator(
+      String indexName, String id, Field[] fields, Type type) {
     BasicDBObject keys = new BasicDBObject();
 
     if (fields.length == 1 && !fields[0].value().contains(".")) {
@@ -257,6 +253,12 @@ public class IndexManagerSession {
       keys.append(field.value(), field.type().toIndexValue());
     }
 
+    BasicDBObject options = indexOptions(indexName, type);
+
+    return IndexCreator.builder().keys(keys).options(options);
+  }
+
+  private static BasicDBObject indexOptions(String indexName, Type type) {
     BasicDBObject options = new BasicDBObject();
     options.put(NAME, indexName);
     if (type == UNIQUE_INDEX) {
@@ -267,8 +269,7 @@ public class IndexManagerSession {
     if (type == SPARSE_INDEX) {
       options.put(SPARSE, Boolean.TRUE);
     }
-
-    return IndexCreator.builder().keys(keys).options(options);
+    return options;
   }
 
   private static void putCreator(Map<String, IndexCreator> creators, String indexName, IndexCreator newCreator) {

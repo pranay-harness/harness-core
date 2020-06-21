@@ -14,5 +14,4 @@ import java.lang.annotation.Target;
 public @interface Indexed {
   boolean unique() default false;
   boolean sparse() default false;
-  IndexOptions options() default @IndexOptions();
 }

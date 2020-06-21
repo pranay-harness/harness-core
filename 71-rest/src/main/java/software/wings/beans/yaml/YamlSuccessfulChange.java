@@ -3,8 +3,7 @@ package software.wings.beans.yaml;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -45,7 +44,7 @@ public class YamlSuccessfulChange implements PersistentEntity, UuidAware, Create
   private EmbeddedUser lastUpdatedBy;
   private long lastUpdatedAt;
 
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 24 * 60 * 60)) @Default private Date validUntil = new Date();
+  @TtlIndex(24 * 60 * 60) @Default private Date validUntil = new Date();
 
   public enum ChangeSource { GIT, HARNESS }
 }
