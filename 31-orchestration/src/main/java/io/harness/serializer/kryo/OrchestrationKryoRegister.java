@@ -1,7 +1,10 @@
 package io.harness.serializer.kryo;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.advisers.retry.RetryAdviserParameters;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
@@ -19,6 +22,7 @@ import io.harness.state.core.dummy.DummySectionStepTransput;
 import io.harness.waiter.ListNotifyResponseData;
 import io.harness.waiter.StringNotifyResponseData;
 
+@OwnedBy(CDC)
 public class OrchestrationKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {

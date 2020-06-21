@@ -1,10 +1,12 @@
 package io.harness.engine.interrupts.handlers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.execution.status.Status.retryableStatuses;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
@@ -14,6 +16,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
 
+@OwnedBy(CDC)
 public class RetryInterruptHandler implements InterruptHandler {
   @Inject private RetryHelper retryHelper;
   @Inject private NodeExecutionService nodeExecutionService;

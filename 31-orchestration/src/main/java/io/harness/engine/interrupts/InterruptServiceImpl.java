@@ -1,5 +1,6 @@
 package io.harness.engine.interrupts;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.interrupts.ExecutionInterruptType.planLevelInterrupts;
 import static io.harness.interrupts.Interrupt.State;
@@ -10,6 +11,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.handlers.PauseAllInterruptHandler;
 import io.harness.engine.interrupts.handlers.ResumeAllInterruptHandler;
 import io.harness.exception.InvalidRequestException;
@@ -25,6 +27,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@OwnedBy(CDC)
 @Slf4j
 public class InterruptServiceImpl implements InterruptService {
   @Inject private InterruptRepository interruptRepository;

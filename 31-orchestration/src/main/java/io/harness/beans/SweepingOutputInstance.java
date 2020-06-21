@@ -1,6 +1,9 @@
 package io.harness.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputConverter;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
 import io.harness.data.validator.Trimmed;
@@ -29,6 +32,7 @@ import java.util.Date;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @Wither

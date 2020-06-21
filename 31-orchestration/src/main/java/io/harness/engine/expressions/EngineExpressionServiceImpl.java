@@ -1,10 +1,14 @@
 package io.harness.engine.expressions;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.annotations.dev.OwnedBy;
 
+@OwnedBy(CDC)
 public class EngineExpressionServiceImpl implements EngineExpressionService {
   @Inject private Injector injector;
 

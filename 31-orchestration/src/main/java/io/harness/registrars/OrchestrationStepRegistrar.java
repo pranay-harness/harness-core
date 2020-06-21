@@ -1,5 +1,8 @@
 package io.harness.registrars;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.Step;
 import io.harness.state.StepType;
@@ -12,6 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Set;
 
+@OwnedBy(CDC)
 public class OrchestrationStepRegistrar implements StepRegistrar {
   @Override
   public void register(Set<Pair<StepType, Class<? extends Step>>> stateClasses) {

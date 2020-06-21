@@ -1,8 +1,10 @@
 package io.harness.engine.expressions.functors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Arrays.asList;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.outcomes.OutcomeException;
@@ -35,6 +37,7 @@ import java.util.function.Function;
  * 3. Then we try to find an outcome in node1's scope with name `child1`
  * 4. Then we try to find an sweeping output in node1's scope with name `child1`
  */
+@OwnedBy(CDC)
 @Value
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class NodeExecutionMap extends LateBindingMap {

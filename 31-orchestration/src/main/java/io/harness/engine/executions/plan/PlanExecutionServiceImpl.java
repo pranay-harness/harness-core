@@ -1,10 +1,12 @@
 package io.harness.engine.executions.plan;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.status.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
@@ -20,6 +22,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import java.util.EnumSet;
 import java.util.function.Consumer;
 
+@OwnedBy(CDC)
 @Slf4j
 public class PlanExecutionServiceImpl implements PlanExecutionService {
   @Inject private PlanExecutionRepository planExecutionRepository;

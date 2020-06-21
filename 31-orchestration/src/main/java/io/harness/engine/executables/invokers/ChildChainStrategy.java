@@ -1,5 +1,6 @@
 package io.harness.engine.executables.invokers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.execution.status.Status.QUEUED;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
@@ -9,6 +10,7 @@ import com.google.inject.name.Named;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.executables.InvokeStrategy;
@@ -28,6 +30,7 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import java.util.concurrent.ExecutorService;
 
+@OwnedBy(CDC)
 public class ChildChainStrategy implements InvokeStrategy {
   @Inject private ExecutionEngine engine;
   @Inject private WaitNotifyEngine waitNotifyEngine;

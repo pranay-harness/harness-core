@@ -1,8 +1,11 @@
 package io.harness.serializer.morphia;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.advisers.ignore.IgnoreAdviserParameters;
 import io.harness.advisers.retry.RetryAdviserParameters;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
@@ -29,6 +32,7 @@ import io.harness.waiter.WaitInstance;
 
 import java.util.Set;
 
+@OwnedBy(CDC)
 public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {

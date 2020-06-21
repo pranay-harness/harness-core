@@ -1,5 +1,8 @@
 package io.harness.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 
 import java.util.EnumSet;
@@ -8,6 +11,7 @@ import java.util.Set;
 /**
  * Describes possible execution statuses for a state.
  */
+@OwnedBy(CDC)
 public enum ExecutionStatus {
   ABORTED,
   DISCONTINUING,

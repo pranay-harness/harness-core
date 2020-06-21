@@ -1,5 +1,6 @@
 package io.harness.engine.interrupts.handlers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.CollectionUtils.isPresent;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.ABORT_ALL_ALREADY;
@@ -14,6 +15,7 @@ import static io.harness.interrupts.Interrupt.State.PROCESSING;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import javax.validation.Valid;
 
+@OwnedBy(CDC)
 @Slf4j
 public class AbortAllInterruptHandler implements InterruptHandler {
   @Inject private InterruptService interruptService;

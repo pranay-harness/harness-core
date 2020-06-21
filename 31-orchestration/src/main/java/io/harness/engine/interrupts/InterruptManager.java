@@ -1,9 +1,13 @@
 package io.harness.engine.interrupts;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.Interrupt;
 
+@OwnedBy(CDC)
 public class InterruptManager {
   @Inject private InterruptHandlerFactory interruptHandlerFactory;
 

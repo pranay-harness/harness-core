@@ -1,7 +1,11 @@
 package io.harness.tasks;
 
-import io.harness.ambiance.Ambiance;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.ambiance.Ambiance;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDC)
 public interface TaskExecutor {
   String queueTask(Ambiance ambiance, Task task);
 
