@@ -3,8 +3,7 @@ package software.wings.beans;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.UniqueIndex;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -15,9 +14,8 @@ import software.wings.yaml.BaseYaml;
 /**
  * Created by peeyushaggarwal on 11/2/16.
  */
-@Index(name = "locate", options = @IndexOptions(unique = true),
-    fields = { @Field("entityType")
-               , @Field("entityUuid"), @Field("version") })
+@UniqueIndex(name = "locate", fields = { @Field("entityType")
+                                         , @Field("entityUuid"), @Field("version") })
 @Entity(value = "entityVersions", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "EntityVersionCollectionKeys")

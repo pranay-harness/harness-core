@@ -3,9 +3,9 @@ package software.wings.delegatetasks.validation;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -27,14 +27,12 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Entity(value = "delegateConnectionResults", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-
-@Index(name = "delegateConnectionResultsIdx",
+@UniqueIndex(name = "delegateConnectionResultsIdx",
     fields =
     {
       @Field(DelegateConnectionResultKeys.accountId)
       , @Field(DelegateConnectionResultKeys.delegateId), @Field(DelegateConnectionResultKeys.criteria)
-    },
-    options = @IndexOptions(unique = true))
+    })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "DelegateConnectionResultKeys")
 public class DelegateConnectionResult implements PersistentEntity, UuidAware, UpdatedAtAware, AccountAccess {

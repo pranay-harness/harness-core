@@ -2,8 +2,7 @@ package io.harness.ccm.config;
 
 import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -22,8 +21,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "GcpBillingAccountKeys")
 @Entity(value = "gcpBillingAccount", noClassnameStored = true)
-
-@Index(name = "no_dup", options = @IndexOptions(unique = true),
+@UniqueIndex(name = "no_dup",
     fields = { @Field(GcpBillingAccountKeys.accountId)
                , @Field(GcpBillingAccountKeys.organizationSettingId) })
 public class GcpBillingAccount implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {

@@ -12,9 +12,9 @@ import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Builder;
@@ -50,9 +50,8 @@ import java.util.Set;
  */
 @OwnedBy(CDC)
 @JsonIgnoreProperties(ignoreUnknown = true)
-
-@Index(name = "yaml", options = @IndexOptions(unique = true), fields = { @Field("appId")
-                                                                         , @Field("name") })
+@UniqueIndex(name = "yaml", fields = { @Field("appId")
+                                       , @Field("name") })
 @Index(name = "accountCreatedAtIndex",
     fields = { @Field(ServiceKeys.accountId)
                , @Field(value = ServiceKeys.createdAt, type = IndexType.DESC) })

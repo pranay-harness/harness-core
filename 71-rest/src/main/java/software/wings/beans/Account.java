@@ -11,7 +11,6 @@ import io.harness.encryption.Encrypted;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
 import io.harness.security.EncryptionInterface;
 import io.harness.security.SimpleEncryption;
@@ -52,7 +51,7 @@ public class Account extends Base implements PersistentRegularIterable {
 
   @NotNull private String companyName;
 
-  @Indexed(options = @IndexOptions(unique = true)) @NotNull private String accountName;
+  @Indexed(unique = true) @NotNull private String accountName;
 
   private Set<String> whitelistedDomains = new HashSet<>();
 

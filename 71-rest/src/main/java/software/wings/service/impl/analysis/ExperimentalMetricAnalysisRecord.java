@@ -5,9 +5,9 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,11 +21,10 @@ import org.mongodb.morphia.annotations.Entity;
  * Created by Pranjal on 08/14/2018
  */
 
-@Index(name = "MetricAnalysisUniqueIdx",
+@UniqueIndex(name = "MetricAnalysisUniqueIdx",
     fields =
     { @Field("workflowExecutionId")
-      , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName") },
-    options = @IndexOptions(unique = true))
+      , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName") })
 @Index(name = "ExperimentalMetricListIdx",
     fields = { @Field("analysisMinute")
                , @Field("mismatched"), @Field(value = "createdAt", type = IndexType.DESC) })

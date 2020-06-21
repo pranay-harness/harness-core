@@ -11,7 +11,6 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
 import lombok.Getter;
 import lombok.Setter;
@@ -58,7 +57,7 @@ public class User extends Base implements Principal {
 
   private String familyName;
 
-  @Indexed(options = @IndexOptions(unique = true)) @Email private String email;
+  @Indexed(unique = true) @Email private String email;
 
   @JsonIgnore private String passwordHash;
 

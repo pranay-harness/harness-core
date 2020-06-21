@@ -7,8 +7,8 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.NameAccess;
@@ -35,11 +35,9 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-@Index(name = "infraDefinitionIdx", options = @IndexOptions(unique = true),
-    fields = { @Field("appId")
-               , @Field("envId"), @Field("name") })
+@UniqueIndex(name = "infraDefinitionIdx", fields = { @Field("appId")
+                                                     , @Field("envId"), @Field("name") })
 @Index(name = "infrastructure_cloudProviderId", fields = { @Field("infrastructure.cloudProviderId") })
-
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

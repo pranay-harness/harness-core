@@ -3,8 +3,8 @@ package software.wings.beans.template;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.UniqueIndex;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,9 +17,8 @@ import software.wings.beans.Base;
 import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
 
 @FieldNameConstants(innerTypeName = "TemplateVersionKeys")
-
-@Index(name = "yaml", fields = { @Field("templateUuid")
-                                 , @Field("version") }, options = @IndexOptions(unique = true))
+@UniqueIndex(name = "yaml", fields = { @Field("templateUuid")
+                                       , @Field("version") })
 @Index(name = "account_template_version",
     fields =
     {

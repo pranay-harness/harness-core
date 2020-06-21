@@ -7,8 +7,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -38,7 +38,7 @@ import javax.validation.constraints.NotNull;
 @Index(name = "account_app_command_idx",
     fields = { @Field("accountId")
                , @Field("appId"), @Field("commandStoreName"), @Field("commandName") })
-@Index(name = "template_idx", options = @IndexOptions(unique = true), fields = { @Field("templateId") })
+@UniqueIndex(name = "template_idx", fields = { @Field("templateId") })
 @Entity(value = "importedTemplates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class ImportedTemplate implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,

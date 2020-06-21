@@ -13,7 +13,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -36,10 +36,8 @@ import java.util.Set;
 @NoArgsConstructor
 @JsonInclude(NON_NULL)
 @EqualsAndHashCode(callSuper = false)
-
-@Index(name = "duplicateKey", options = @IndexOptions(unique = true),
-    fields = { @Field("accountId")
-               , @Field("name"), @Field("pathId"), @Field("appId") })
+@UniqueIndex(name = "duplicateKey", fields = { @Field("accountId")
+                                               , @Field("name"), @Field("pathId"), @Field("appId") })
 @Index(name = "account_gallery_app_idx", fields = { @Field("accountId")
                                                     , @Field("galleryId"), @Field("appId") })
 @FieldNameConstants(innerTypeName = "TemplateFolderKeys")

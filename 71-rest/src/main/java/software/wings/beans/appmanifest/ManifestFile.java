@@ -2,9 +2,8 @@ package software.wings.beans.appmanifest;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,9 +14,8 @@ import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 import software.wings.yaml.BaseEntityYaml;
 
-@Index(name = "manifestFileIdx", options = @IndexOptions(unique = true),
-    fields = { @Field("applicationManifestId")
-               , @Field("fileName") })
+@UniqueIndex(name = "manifestFileIdx", fields = { @Field("applicationManifestId")
+                                                  , @Field("fileName") })
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ManifestFileKeys")

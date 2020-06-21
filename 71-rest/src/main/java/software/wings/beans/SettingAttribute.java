@@ -63,8 +63,8 @@ import io.harness.data.validator.Trimmed;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptionType;
 import lombok.Data;
@@ -93,7 +93,7 @@ import javax.validation.Valid;
  */
 @OwnedBy(CDC)
 
-@Index(name = "locate", options = @IndexOptions(unique = true),
+@UniqueIndex(name = "locate",
     fields = { @Field("accountId")
                , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") })
 @Index(name = "acctCatTypeIdx", fields = { @Field("accountId")

@@ -7,8 +7,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.encryption.Encrypted;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
@@ -32,9 +31,8 @@ import software.wings.delegatetasks.validation.AbstractSecretManagerValidation;
 @AllArgsConstructor
 @ToString(exclude = {"secretKey"})
 @EqualsAndHashCode(callSuper = false)
-
-@Index(name = "uniqueIdx", fields = { @Field("name")
-                                      , @Field("accountId") }, options = @IndexOptions(unique = true))
+@UniqueIndex(name = "uniqueIdx", fields = { @Field("name")
+                                            , @Field("accountId") })
 @Entity(value = "awsSecretsManagerConfig", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)

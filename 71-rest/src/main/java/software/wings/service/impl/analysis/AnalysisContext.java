@@ -16,6 +16,7 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.version.ServiceApiVersion;
 import lombok.AllArgsConstructor;
@@ -39,9 +40,8 @@ import java.util.Map;
  * Created by sriram_parthasarathy on 8/23/17.
  */
 
-@Index(name = "task_Unique_Idx", fields = { @Field("stateExecutionId")
-                                            , @Field("executionStatus") },
-    options = @IndexOptions(unique = true))
+@UniqueIndex(name = "task_Unique_Idx", fields = { @Field("stateExecutionId")
+                                                  , @Field("executionStatus") })
 @Index(name = "timeSeriesAnalysisIterationIdx",
     fields = { @Field("analysisType")
                , @Field("executionStatus"), @Field("timeSeriesAnalysisIteration") })

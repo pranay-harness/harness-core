@@ -8,7 +8,6 @@ import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.K8sYaml.K8sYamlKeys;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
@@ -52,7 +51,7 @@ public class K8sYaml implements PersistentEntity, UuidAware, CreatedAtAware, Acc
   private String resourceVersion;
   private String yaml;
 
-  @Indexed(options = @IndexOptions(unique = true)) @Setter(AccessLevel.NONE) private String hash;
+  @Indexed(unique = true) @Setter(AccessLevel.NONE) private String hash;
 
   @Builder(toBuilder = true)
   private K8sYaml(String accountId, String clusterId, String uid, String resourceVersion, String yaml) {

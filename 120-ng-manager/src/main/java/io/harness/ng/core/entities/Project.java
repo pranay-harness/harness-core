@@ -4,8 +4,7 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
@@ -30,8 +29,7 @@ import javax.validation.constraints.Size;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ProjectKeys")
-
-@Index(name = "unique_orgIdentifier_projectIdentifier", options = @IndexOptions(unique = true),
+@UniqueIndex(name = "unique_orgIdentifier_projectIdentifier",
     fields = { @Field(ProjectKeys.orgId)
                , @Field(ProjectKeys.identifier) })
 @Entity(value = "projects", noClassnameStored = true)

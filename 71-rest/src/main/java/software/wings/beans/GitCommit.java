@@ -5,9 +5,9 @@ import com.google.common.collect.ImmutableList;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,9 +33,8 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "gitCommits", noClassnameStored = true)
 
-@Index(name = "gitCommitIdx", fields = { @Field(GitCommitKeys.accountId)
-                                         , @Field(GitCommitKeys.commitId) },
-    options = @IndexOptions(unique = true))
+@UniqueIndex(name = "gitCommitIdx", fields = { @Field(GitCommitKeys.accountId)
+                                               , @Field(GitCommitKeys.commitId) })
 @Index(name = "gitCommitStatusLastUpdatedIdx",
     fields =
     {

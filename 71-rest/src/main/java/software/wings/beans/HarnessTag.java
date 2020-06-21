@@ -10,8 +10,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -37,9 +36,8 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Index(name = "tagIdx", options = @IndexOptions(unique = true),
-    fields = { @Field(HarnessTagKeys.accountId)
-               , @Field(HarnessTagKeys.key) })
+@UniqueIndex(name = "tagIdx", fields = { @Field(HarnessTagKeys.accountId)
+                                         , @Field(HarnessTagKeys.key) })
 @Data
 @Builder
 @JsonInclude(Include.NON_NULL)

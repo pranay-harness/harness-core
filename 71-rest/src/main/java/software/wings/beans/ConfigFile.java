@@ -7,7 +7,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
@@ -38,14 +38,13 @@ import javax.ws.rs.DefaultValue;
  * Created by anubhaw on 4/12/16.
  */
 
-@Index(name = "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1",
+@UniqueIndex(name = "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1",
     fields =
     {
       @Field("entityId")
       , @Field("templateId"), @Field("relativeFilePath"), @Field("configOverrideType"), @Field("instances"),
           @Field("configOverrideExpression")
-    },
-    options = @IndexOptions(unique = true))
+    })
 @Index(name = "app_template_entityId", fields = { @Field("appId")
                                                   , @Field("templateId"), @Field("entityId") })
 @Data

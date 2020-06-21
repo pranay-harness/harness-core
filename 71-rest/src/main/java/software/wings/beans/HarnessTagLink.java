@@ -11,7 +11,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -32,7 +32,7 @@ import javax.validation.constraints.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 
-@Index(name = "entityTagIdx", options = @IndexOptions(unique = true),
+@UniqueIndex(name = "entityTagIdx",
     fields =
     { @Field(HarnessTagLinkKeys.accountId)
       , @Field(HarnessTagLinkKeys.entityId), @Field(HarnessTagLinkKeys.key) })

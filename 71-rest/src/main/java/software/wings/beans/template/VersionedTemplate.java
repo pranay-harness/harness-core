@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.UniqueIndex;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,10 +20,8 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
-
-@Index(name = "yaml", fields = { @Field("accountId")
-                                 , @Field("templateId"), @Field("version") },
-    options = @IndexOptions(unique = true))
+@UniqueIndex(name = "yaml", fields = { @Field("accountId")
+                                       , @Field("templateId"), @Field("version") })
 @Index(name = "referencedTemplates",
     fields = { @Field("templateObject.referencedTemplateList.templateReference.templateUuid") })
 @Data

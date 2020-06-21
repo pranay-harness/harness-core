@@ -17,8 +17,8 @@ import io.harness.data.validator.EntityName;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Update;
 import lombok.Data;
@@ -48,10 +48,8 @@ import javax.annotation.Nullable;
 @NoArgsConstructor
 @RequiredArgsConstructor
 @Entity(value = "infrastructureMapping")
-
-@Index(name = "yaml", options = @IndexOptions(unique = true),
-    fields = { @Field("appId")
-               , @Field("envId"), @Field("name") })
+@UniqueIndex(name = "yaml", fields = { @Field("appId")
+                                       , @Field("envId"), @Field("name") })
 @Index(name = "app_infratype", fields = { @Field("appId")
                                           , @Field("infraMappingType") })
 @HarnessEntity(exportable = true)

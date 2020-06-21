@@ -15,8 +15,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.serializer.MapperUtils;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -49,10 +48,8 @@ import java.util.Set;
 @Attributes(title = "Command")
 @Entity(value = "commands")
 @HarnessEntity(exportable = true)
-
-@Index(name = "yaml", options = @IndexOptions(unique = true),
-    fields = { @Field("appId")
-               , @Field("originEntityId"), @Field("version") })
+@UniqueIndex(name = "yaml", fields = { @Field("appId")
+                                       , @Field("originEntityId"), @Field("version") })
 @FieldNameConstants(innerTypeName = "CommandKeys")
 public class Command extends Base implements CommandUnit {
   @NotEmpty @SchemaIgnore private String name;

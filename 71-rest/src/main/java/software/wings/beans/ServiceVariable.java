@@ -14,9 +14,9 @@ import io.harness.encryption.Encrypted;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
@@ -44,14 +44,13 @@ import javax.validation.constraints.NotNull;
  */
 @OwnedBy(CDC)
 
-@Index(name = "serviceVariableUniqueIdx",
+@UniqueIndex(name = "serviceVariableUniqueIdx",
     fields =
     {
       @Field("entityId")
       , @Field("templateId"), @Field("overrideType"), @Field("instances"), @Field("expression"), @Field("type"),
           @Field("name")
-    },
-    options = @IndexOptions(unique = true))
+    })
 @Index(name = "app_entityId", fields = { @Field("appId")
                                          , @Field("entityId") })
 @Index(name = "app_env_templateId", fields = { @Field("appId")

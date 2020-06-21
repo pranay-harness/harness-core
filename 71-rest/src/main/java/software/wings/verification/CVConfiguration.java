@@ -9,9 +9,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -38,9 +38,8 @@ import javax.validation.constraints.NotNull;
  * 05/Oct/2018
  */
 
-@Index(name = "nameUniqueIndex", fields = { @Field("appId")
-                                            , @Field("envId"), @Field("name") },
-    options = @IndexOptions(unique = true))
+@UniqueIndex(name = "nameUniqueIndex", fields = { @Field("appId")
+                                                  , @Field("envId"), @Field("name") })
 @Data
 @FieldNameConstants(innerTypeName = "CVConfigurationKeys")
 @NoArgsConstructor

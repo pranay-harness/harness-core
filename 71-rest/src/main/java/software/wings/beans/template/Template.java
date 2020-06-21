@@ -10,8 +10,8 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -34,9 +34,8 @@ import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
 
-@Index(name = "yaml", options = @IndexOptions(unique = true),
-    fields = { @Field("accountId")
-               , @Field("name"), @Field("folderId"), @Field("appId") })
+@UniqueIndex(name = "yaml", fields = { @Field("accountId")
+                                       , @Field("name"), @Field("folderId"), @Field("appId") })
 @Index(name = "account_gallery_app_idx", fields = { @Field("accountId")
                                                     , @Field("galleryId"), @Field("appId") })
 @Data
