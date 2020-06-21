@@ -6,7 +6,7 @@ import static java.lang.System.currentTimeMillis;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -56,9 +56,9 @@ public class Base implements PersistentEntity, UuidAware, CreatedAtAware, Create
   public static final String LAST_UPDATED_AT_KEY = "lastUpdatedAt";
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-  @Indexed @NotNull @SchemaIgnore protected String appId;
+  @FdIndex @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;
-  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore @FdIndex private long createdAt;
 
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;

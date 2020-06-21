@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -26,8 +26,8 @@ import java.util.Map;
  * Created by rsingh on 08/30/17.
  */
 
-@UniqueIndex(name = "uniqueIdx", fields = { @Field("stateType")
-                                            , @Field("stateExecutionId") })
+@CdUniqueIndex(name = "uniqueIdx", fields = { @Field("stateType")
+                                              , @Field("stateExecutionId") })
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "timeSeriesMetricGroup", noClassnameStored = true)
@@ -36,15 +36,15 @@ import java.util.Map;
 public class TimeSeriesMetricGroup extends Base implements AccountAccess {
   @NotEmpty private StateType stateType;
 
-  @NotEmpty @Indexed private String stateExecutionId;
+  @NotEmpty @FdIndex private String stateExecutionId;
 
   @NotEmpty private Map<String, TimeSeriesMlAnalysisGroupInfo> groups;
 
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
 
   @Builder

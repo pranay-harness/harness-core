@@ -2,10 +2,10 @@ package software.wings.yaml.errorhandling;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,28 +26,28 @@ import javax.ws.rs.DefaultValue;
  * @author rktummala on 12/15/17
  */
 
-@UniqueIndex(name = "account_filepath_direction_idx",
+@CdUniqueIndex(name = "account_filepath_direction_idx",
     fields = { @Field("accountId")
                , @Field("yamlFilePath"), @Field("gitSyncDirection") })
-@Index(name = "gitCommitId_idx",
+@CdIndex(name = "gitCommitId_idx",
     fields = { @Field("accountId")
                , @Field("gitSyncDirection"), @Field("additionalErrorDetails.gitCommitId") })
-@Index(name = "gitCommitId_idx_for_app_filter",
+@CdIndex(name = "gitCommitId_idx_for_app_filter",
     fields =
     { @Field("accountId")
       , @Field("appId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.gitCommitId") })
-@Index(name = "previousErrors_idx",
+@CdIndex(name = "previousErrors_idx",
     fields =
     { @Field("accountId")
       , @Field("gitSyncDirection"), @Field("additionalErrorDetails.previousCommitIdsWithError") })
-@Index(name = "previousErrors_idx_for_app_filter",
+@CdIndex(name = "previousErrors_idx_for_app_filter",
     fields =
     {
       @Field("accountId")
       , @Field("appId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.previousCommitIdsWithError")
     })
-@Index(name = "accountId_createdAt", fields = { @Field("accountId")
-                                                , @Field("createdAt") })
+@CdIndex(name = "accountId_createdAt", fields = { @Field("accountId")
+                                                  , @Field("createdAt") })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -61,7 +61,7 @@ public class GitSyncError extends Base implements PersistentRegularIterable {
   private String failureReason;
   @Deprecated private String yamlContent;
   @Deprecated private String gitCommitId;
-  @Setter @Indexed private Long nextIteration;
+  @Setter @FdIndex private Long nextIteration;
   // TODO @deepak All other fields of this collection will be marked depreceated and will no longer be in db, but
   // fullSyncPath variable will be there in db as it is boolean, so will need one more migration to remove it
   private boolean fullSyncPath;

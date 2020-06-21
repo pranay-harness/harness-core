@@ -3,8 +3,8 @@ package io.harness.waiter;
 import static java.time.Duration.ofDays;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
@@ -31,11 +31,11 @@ public class WaitInstance implements PersistentEntity, UuidAccess {
   public static final Duration TTL = ofDays(21);
 
   @Id private String uuid;
-  @Indexed private List<String> correlationIds;
-  @Indexed private List<String> waitingOnCorrelationIds;
+  @FdIndex private List<String> correlationIds;
+  @FdIndex private List<String> waitingOnCorrelationIds;
   private String publisher;
   private NotifyCallback callback;
   private long callbackProcessingAt;
 
-  @Default @TtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
+  @Default @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 }

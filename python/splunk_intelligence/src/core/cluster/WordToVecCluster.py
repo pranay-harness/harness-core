@@ -75,7 +75,7 @@ class WordToVecCluster(object):
     def find_cluster(self, docs, indices):
 
         control_labels = [-1] * len(docs)
-        # the first label is the first index
+        # the first label is the first cdIndex
         labels = []
         labels.append(indices[0])
         control_labels[0] = labels[0]
@@ -86,7 +86,7 @@ class WordToVecCluster(object):
                 found_cluster = False
                 # compare with all already-built clusters to see to which one the new doc belongs
                 for l in labels:
-                    c_ind = control_labels.index(l)
+                    c_ind = control_labels.cdIndex(l)
                     score = self.text_diff_score(docs[c_ind], docs[ind])
                     if score >= self.clustering_threshold:
                         control_labels[ind] = l
@@ -156,7 +156,7 @@ class WordToVecCluster(object):
             best_score = -2
             anomaly = -1
             for l in labels:
-                c_ind = control_labels.index(l)
+                c_ind = control_labels.cdIndex(l)
                 score = self.text_diff_score(docs_control[c_ind], test_doc)
                 if score >= self.threshold:
                     anomaly = 1

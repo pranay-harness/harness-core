@@ -3,7 +3,7 @@ package io.harness.dashboard;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -34,7 +34,7 @@ public class DashboardSettings implements NameAccess, PersistentEntity, UuidAwar
   private EmbeddedUser lastUpdatedBy;
   private long createdAt;
   private long lastUpdatedAt;
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
   private String data;
   private String description;
   private String name;

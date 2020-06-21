@@ -10,9 +10,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
@@ -33,8 +33,8 @@ import java.util.Map;
  * Class representing an entity of cumulative sums and risk for each window of analysis.
  * Created by Praveen.
  */
-@Index(name = "minute_idx", fields = { @Field("cvConfigId")
-                                       , @Field("analysisMinute"), @Field("tag") })
+@CdIndex(name = "minute_idx", fields = { @Field("cvConfigId")
+                                         , @Field("analysisMinute"), @Field("tag") })
 @Data
 @Builder
 @NoArgsConstructor
@@ -53,7 +53,7 @@ public class TimeSeriesRiskSummary extends Base implements AccountAccess {
   @JsonIgnore private byte[] compressedMetricRisk;
   @JsonIgnore private byte[] compressedLongTermPattern;
   @JsonIgnore private byte[] compressedRiskData;
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   private String tag;
 

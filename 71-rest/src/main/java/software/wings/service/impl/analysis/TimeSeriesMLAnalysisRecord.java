@@ -2,8 +2,8 @@ package software.wings.service.impl.analysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
 import lombok.Builder;
 import lombok.Data;
@@ -15,15 +15,15 @@ import org.mongodb.morphia.annotations.Entity;
  * Created by sriram_parthasarathy on 9/22/17.
  */
 
-@Index(name = "stateExIdx",
+@CdIndex(name = "stateExIdx",
     fields =
     { @Field("stateExecutionId")
       , @Field("groupName"), @Field(value = "analysisMinute", type = IndexType.DESC) })
-@Index(name = "service_guard_idx",
+@CdIndex(name = "service_guard_idx",
     fields = { @Field("cvConfigId")
                , @Field(value = "analysisMinute", type = IndexType.DESC) })
-@Index(name = "workflow_exec_appId_index", fields = { @Field("workflowExecutionId")
-                                                      , @Field(value = "appId") })
+@CdIndex(name = "workflow_exec_appId_index", fields = { @Field("workflowExecutionId")
+                                                        , @Field(value = "appId") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)

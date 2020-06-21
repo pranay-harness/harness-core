@@ -2,7 +2,7 @@ package io.harness.beans;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.repo.RepoConfiguration;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.UpdatedAtAware;
@@ -23,7 +23,7 @@ public class CIPipelineEntityInfo implements NonYamlInfo, UuidAware, CreatedAtAw
 
   private long lastUpdatedAt;
 
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 

@@ -1,8 +1,8 @@
 package software.wings.beans.peronalization;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
@@ -17,8 +17,8 @@ import software.wings.beans.peronalization.PersonalizationTemplates.Personalizat
 
 @Value
 @Builder
-@UniqueIndex(name = "identification", fields = { @Field("accountId")
-                                                 , @Field("userId") })
+@CdUniqueIndex(name = "identification", fields = { @Field("accountId")
+                                                   , @Field("userId") })
 @FieldNameConstants(innerTypeName = "PersonalizationKeys")
 @Entity(value = "personalization", noClassnameStored = true)
 @HarnessEntity(exportable = true)

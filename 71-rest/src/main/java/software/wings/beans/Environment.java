@@ -11,9 +11,9 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
@@ -43,8 +43,8 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 
-@UniqueIndex(name = "yaml", fields = { @Field(EnvironmentKeys.appId)
-                                       , @Field(EnvironmentKeys.name) })
+@CdUniqueIndex(name = "yaml", fields = { @Field(EnvironmentKeys.appId)
+                                         , @Field(EnvironmentKeys.name) })
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)
@@ -67,7 +67,7 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
   @Transient private List<InfrastructureDefinition> infrastructureDefinitions;
   @Transient private int infraDefinitionsCount;
   @SchemaIgnore private Set<String> keywords;
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
   private boolean sample;
 
   private transient List<HarnessTagLink> tagLinks;

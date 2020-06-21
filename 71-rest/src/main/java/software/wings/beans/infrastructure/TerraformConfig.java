@@ -2,7 +2,7 @@ package software.wings.beans.infrastructure;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -28,9 +28,9 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "TerraformConfigKeys")
 public class TerraformConfig implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-  @Indexed @NotNull @SchemaIgnore protected String appId;
-  @SchemaIgnore @Indexed private long createdAt;
-  @Indexed private String accountId;
+  @FdIndex @NotNull @SchemaIgnore protected String appId;
+  @SchemaIgnore @FdIndex private long createdAt;
+  @FdIndex private String accountId;
 
   private final String sourceRepoSettingId;
   /**
@@ -48,7 +48,7 @@ public class TerraformConfig implements PersistentEntity, UuidAware, CreatedAtAw
   private final List<String> tfVarFiles;
   private final TerraformCommand command;
 
-  @Indexed private final String entityId;
+  @FdIndex private final String entityId;
   private final String workflowExecutionId;
   private final String delegateTag;
 }

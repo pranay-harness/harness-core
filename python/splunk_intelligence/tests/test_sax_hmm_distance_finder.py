@@ -57,25 +57,25 @@ def run_analysis(filename, make_nan=False, comparison_unit_window=1):
 
             results = shd.compute_dist()
             if 'results' in metric_data:
-                for index, (host, host_data) in enumerate(metric_data['results'].items()):
-                    assert str_equal(host_data['test_cuts'], results['test_cuts'][index])
-                    assert str_equal(host_data['control_cuts'], results['control_cuts'][index])
+                for cdIndex, (host, host_data) in enumerate(metric_data['results'].items()):
+                    assert str_equal(host_data['test_cuts'], results['test_cuts'][cdIndex])
+                    assert str_equal(host_data['control_cuts'], results['control_cuts'][cdIndex])
                     if host_data['risk'] == -1:
                         for metric_id, metric_values in  txn_data['metrics'].items():
                             if 'requestsPerMinute' in metric_values['metric_name']:
                                 break
-                        if np.nansum(metric_values['test']['data'][index]) < 10:
+                        if np.nansum(metric_values['test']['data'][cdIndex]) < 10:
                             assert compare(host_data['risk'], "-1")
                         else:
                             assert False
                     else:
-                        assert compare(host_data['risk'], results['risk'][index])
-                    assert compare(host_data['score'], results['score'][index])
-                    assert host_data['nn'] == metric_data['control']['host_names'][results['nn'][index]]
-                    assert lists_equal(host_data['distance'], results['distances'][index])
-                    if len(results['optimal_test_cuts'][index]) in results:
-                        assert str_equal(host_data['optimal_cuts'], results['optimal_test_cuts'][index])
-                        assert lists_equal(host_data['optimal_data'], results['optimal_test_data'][index])
+                        assert compare(host_data['risk'], results['risk'][cdIndex])
+                    assert compare(host_data['score'], results['score'][cdIndex])
+                    assert host_data['nn'] == metric_data['control']['host_names'][results['nn'][cdIndex]]
+                    assert lists_equal(host_data['distance'], results['distances'][cdIndex])
+                    if len(results['optimal_test_cuts'][cdIndex]) in results:
+                        assert str_equal(host_data['optimal_cuts'], results['optimal_test_cuts'][cdIndex])
+                        assert lists_equal(host_data['optimal_data'], results['optimal_test_data'][cdIndex])
 
 #
 def test_1():

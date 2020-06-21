@@ -1,9 +1,9 @@
 package software.wings.beans.baseline;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -18,8 +18,8 @@ import software.wings.beans.Base;
  * Created by rsingh on 2/16/18.
  */
 
-@UniqueIndex(name = "baselineUniqueIndex", fields = { @Field("workflowId")
-                                                      , @Field("envId"), @Field("serviceId") })
+@CdUniqueIndex(name = "baselineUniqueIndex", fields = { @Field("workflowId")
+                                                        , @Field("envId"), @Field("serviceId") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false, exclude = {"workflowExecutionId"})
@@ -34,8 +34,8 @@ public class WorkflowExecutionBaseline extends Base implements AccountAccess {
   @NotEmpty private String workflowId;
   @NotEmpty private String envId;
   @NotEmpty private String serviceId;
-  @NotEmpty @Indexed private String workflowExecutionId;
-  @Indexed private String accountId;
+  @NotEmpty @FdIndex private String workflowExecutionId;
+  @FdIndex private String accountId;
   private String pipelineExecutionId;
 
   @UtilityClass

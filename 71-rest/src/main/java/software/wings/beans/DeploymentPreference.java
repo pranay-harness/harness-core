@@ -4,7 +4,7 @@ import static software.wings.beans.PreferenceType.DEPLOYMENT_PREFERENCE;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -31,7 +31,7 @@ public class DeploymentPreference extends Preference {
   HarnessTagFilter harnessTagFilter;
   private transient String uiDisplayTagString;
 
-  @SchemaIgnore @Indexed private List<String> keywords;
+  @SchemaIgnore @FdIndex private List<String> keywords;
 
   public DeploymentPreference() {
     super(DEPLOYMENT_PREFERENCE.name());

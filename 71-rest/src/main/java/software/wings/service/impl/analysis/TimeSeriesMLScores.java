@@ -2,7 +2,7 @@ package software.wings.service.impl.analysis;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -32,11 +32,11 @@ public class TimeSeriesMLScores extends Base implements AccountAccess {
 
   @NotEmpty private String workflowExecutionId;
 
-  @NotEmpty @Indexed private String stateExecutionId;
+  @NotEmpty @FdIndex private String stateExecutionId;
 
   @NotEmpty private int analysisMinute;
 
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   private Map<String, TimeSeriesMLTxnScores> scoresMap;
 

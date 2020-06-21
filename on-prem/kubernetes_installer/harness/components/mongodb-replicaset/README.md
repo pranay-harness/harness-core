@@ -360,7 +360,7 @@ Scaling should be managed by `helm upgrade`, which is the recommended way.
 ### Indexes and Maintenance
 
 You can run Mongo in standalone mode and execute Javascript code on each replica at initContainer time using `initMongodStandalone`.
-This allows you to create indexes on replicasets following [best practices](https://docs.mongodb.com/manual/tutorial/build-indexes-on-replica-sets/).
+This allows you to create cdIndices on replicasets following [best practices](https://docs.mongodb.com/manual/tutorial/build-cdIndices-on-replica-sets/).
 
 #### Example: Creating Indexes
 
@@ -370,7 +370,7 @@ initMongodStandalone: |+
   db.my_users.createIndex({email: 1})
 ```
 
-Tail the logs to debug running indexes or to follow their progress
+Tail the logs to debug running cdIndices or to follow their progress
 
 ```sh
 kubectl exec -it $RELEASE-mongodb-replicaset-0 -c bootstrap -- tail -f /work-dir/log.txt

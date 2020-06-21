@@ -10,7 +10,5 @@ import java.lang.annotation.Target;
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
-public @interface SparseIndexes {
-  SparseIndex[] value();
-}
+@Target({ElementType.FIELD})
+public @interface FdIndex {}

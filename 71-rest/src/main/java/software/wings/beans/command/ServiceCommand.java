@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
@@ -34,7 +34,7 @@ public class ServiceCommand extends Base {
   public static final String TEMPLATE_UUID_KEY = "templateUuid";
 
   private String name;
-  @Indexed private String serviceId;
+  @FdIndex private String serviceId;
   private Map<String, EntityVersion> envIdVersionMap = new HashMap<>();
   private Integer defaultVersion;
 
@@ -48,7 +48,7 @@ public class ServiceCommand extends Base {
 
   @JsonIgnore private double order;
 
-  @Indexed @SchemaIgnore private String templateUuid;
+  @FdIndex @SchemaIgnore private String templateUuid;
 
   @SchemaIgnore private String templateVersion;
 

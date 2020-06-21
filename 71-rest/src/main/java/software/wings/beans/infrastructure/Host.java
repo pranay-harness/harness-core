@@ -8,9 +8,9 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -26,16 +26,16 @@ import java.util.Objects;
 @HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "HostKeys")
-@Index(
+@CdIndex(
     name = "app_inframappingid", fields = { @Field(value = HostKeys.appId)
                                             , @Field(value = HostKeys.infraMappingId) })
 public class Host extends Base {
   @NotEmpty private String envId;
-  @Indexed private String serviceTemplateId;
+  @FdIndex private String serviceTemplateId;
   private String infraMappingId;
   private String infraDefinitionId;
   private String computeProviderId;
-  @Indexed @NotEmpty private String hostName;
+  @FdIndex @NotEmpty private String hostName;
   // In the case of EC2, publicDns could be either the public or private DNS name, depending on the setting in AWS_SSH
   // infrastructure mapping.
   private String publicDns;

@@ -49,7 +49,7 @@ class SAXHMMDistance(object):
                 elif cols - 1 == j:
                     dist[j] = np.nan
                 else:
-                    # cutpoints are indexed from 1
+                    # cutpoints are fdIndex from 1
                     dist[j] = 0 if abs(j - i) == 0 else cutpoints[no_of_alphabets][max(i + 1, j + 1) - 1] \
                                                         - cutpoints[no_of_alphabets][min(i + 1, j + 1)]
                     if dist[j] > max_dist:
@@ -266,8 +266,8 @@ class SAXHMMDistanceFinder(object):
         """
         Returns the adjusted distance between a control and test value
 
-        :param control_i: the index of the control value
-        :param test_i: the index of the test value
+        :param control_i: the cdIndex of the control value
+        :param test_i: the cdIndex of the test value
         :param control_letter: the letter for the value from the alphabet
         :param test_letter: the letter for the value from the alphabet
         :return:

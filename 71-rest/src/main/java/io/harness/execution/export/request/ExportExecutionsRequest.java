@@ -9,8 +9,8 @@ import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.execution.export.request.ExportExecutionsRequest.ExportExecutionsRequestKeys;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -31,13 +31,13 @@ import java.util.List;
 @Entity(value = "exportExecutionsRequests", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 
-@Index(name = "accountId_status",
+@CdIndex(name = "accountId_status",
     fields = { @Field(ExportExecutionsRequestKeys.accountId)
                , @Field(ExportExecutionsRequestKeys.status) })
-@Index(name = "status_nextIteration",
+@CdIndex(name = "status_nextIteration",
     fields = { @Field(ExportExecutionsRequestKeys.status)
                , @Field(ExportExecutionsRequestKeys.nextIteration) })
-@Index(name = "status_expiresAt_nextCleanupIteration",
+@CdIndex(name = "status_expiresAt_nextCleanupIteration",
     fields =
     {
       @Field(ExportExecutionsRequestKeys.status)

@@ -13,10 +13,10 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.AllArgsConstructor;
@@ -49,10 +49,10 @@ import java.util.regex.Pattern;
 @OwnedBy(CDC)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
 
-@UniqueIndex(name = "yaml", fields = { @Field("appId")
-                                       , @Field("serviceId"), @Field("name") })
-@Index(name = "artifactStream_cleanup", fields = { @Field("artifactStreamType")
-                                                   , @Field("nextCleanupIteration") })
+@CdUniqueIndex(name = "yaml", fields = { @Field("appId")
+                                         , @Field("serviceId"), @Field("name") })
+@CdIndex(name = "artifactStream_cleanup", fields = { @Field("artifactStreamType")
+                                                     , @Field("nextCleanupIteration") })
 // TODO: ASR: add compound index with setting_id + name
 // TODO: ASR: change all apis to work with Service.artifactStreamIds instead of serviceId - including UI
 // TODO: ASR: migrate the index and name of existing artifact streams (name + service name + app name + setting name)
@@ -77,15 +77,15 @@ public abstract class ArtifactStream
   @Transient private String artifactServerName;
   @EntityName private String name;
   private boolean autoPopulate;
-  @Indexed private String serviceId;
+  @FdIndex private String serviceId;
   @Transient private Service service;
   @Deprecated private transient boolean autoDownload;
   @Deprecated private transient boolean autoApproveForProduction;
   private boolean metadataOnly;
   private int failedCronAttempts;
-  @Indexed private Long nextIteration;
-  @Indexed private Long nextCleanupIteration;
-  @Indexed private String templateUuid;
+  @FdIndex private Long nextIteration;
+  @FdIndex private Long nextCleanupIteration;
+  @FdIndex private String templateUuid;
   private String templateVersion;
   private List<Variable> templateVariables = new ArrayList<>();
   private String accountId;
@@ -96,7 +96,7 @@ public abstract class ArtifactStream
 
   // perpetualTaskId is the reference to the perpetual task. If no task has yet been created for this artifact stream,
   // this field will not exist.
-  @Indexed String perpetualTaskId;
+  @FdIndex String perpetualTaskId;
 
   // Collection status denotes whether the first-time collection of the artifact stream is completed. If it's completed
   // we mark the status as STABLE, otherwise it is by default UNSTABLE when the stream is created or the artifact source

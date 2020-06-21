@@ -2,8 +2,8 @@ package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage.LastReceivedPublishedMessageKeys;
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -23,7 +23,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
 @Entity(value = "lastReceivedPublishedMessage", noClassnameStored = true)
-@UniqueIndex(name = "no_dup",
+@CdUniqueIndex(name = "no_dup",
     fields =
     { @Field(LastReceivedPublishedMessageKeys.accountId)
       , @Field(LastReceivedPublishedMessageKeys.identifier) })

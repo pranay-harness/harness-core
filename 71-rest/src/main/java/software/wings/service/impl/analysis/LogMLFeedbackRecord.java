@@ -12,9 +12,9 @@ import com.google.cloud.datastore.Key;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +28,7 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.LogMLFeedbackType;
 import software.wings.sm.StateType;
 
-@UniqueIndex(name = "logFeedbackUniqueIdx",
+@CdUniqueIndex(name = "logFeedbackUniqueIdx",
     fields = { @Field("applicationId")
                , @Field("stateExecutionId"), @Field("clusterType"), @Field("clusterLabel") })
 @Data
@@ -39,15 +39,15 @@ import software.wings.sm.StateType;
 @Entity(value = "logMlFeedbackRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
-  @NotEmpty @Indexed private String serviceId;
+  @NotEmpty @FdIndex private String serviceId;
 
   private String envId;
 
   private String workflowId;
 
-  @Indexed private String workflowExecutionId;
+  @FdIndex private String workflowExecutionId;
 
-  @Indexed private String stateExecutionId;
+  @FdIndex private String stateExecutionId;
 
   private StateType stateType;
 

@@ -10,8 +10,8 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.Builder;
@@ -82,13 +82,13 @@ public class MetricAnalysisRecord extends Base implements Comparable<MetricAnaly
 
   private String failFastErrorMsg;
 
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   private double riskScore;
 
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 
   /**

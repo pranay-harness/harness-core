@@ -3,7 +3,8 @@ package software.wings.beans;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -31,7 +32,7 @@ public class MarketPlace implements PersistentEntity, UuidAware, CreatedAtAware,
                                     UpdatedByAware, AccountAccess {
   private MarketPlaceType type;
 
-  @Indexed(unique = true) private String customerIdentificationCode;
+  @FdUniqueIndex private String customerIdentificationCode;
 
   // harness account Id
   private String accountId;
@@ -44,7 +45,7 @@ public class MarketPlace implements PersistentEntity, UuidAware, CreatedAtAware,
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   @SchemaIgnore private EmbeddedUser createdBy;
-  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore @FdIndex private long createdAt;
 
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;

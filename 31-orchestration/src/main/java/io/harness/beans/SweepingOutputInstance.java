@@ -8,9 +8,9 @@ import io.harness.beans.SweepingOutputInstance.SweepingOutputConverter;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.KryoConverter;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.TtlIndex;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -36,22 +36,22 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 @Wither
-@UniqueIndex(name = "uniquePipelineExecution",
+@CdUniqueIndex(name = "uniquePipelineExecution",
     fields =
     {
       @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.pipelineExecutionId)
     })
 
-@UniqueIndex(name = "uniqueWorkflowExecution",
+@CdUniqueIndex(name = "uniqueWorkflowExecution",
     fields =
     {
       @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.workflowExecutionIds)
     })
-@UniqueIndex(name = "uniquePhaseExecution",
+@CdUniqueIndex(name = "uniquePhaseExecution",
     fields =
     { @Field(SweepingOutputKeys.appId)
       , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.phaseExecutionId) })
-@UniqueIndex(name = "uniqueStateExecution",
+@CdUniqueIndex(name = "uniqueStateExecution",
     fields =
     { @Field(SweepingOutputKeys.appId)
       , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.stateExecutionId) })
@@ -81,5 +81,5 @@ public class SweepingOutputInstance implements PersistentEntity, UuidAccess, Cre
 
   public enum Scope { PIPELINE, WORKFLOW, PHASE, STATE }
 
-  @TtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+  @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 }

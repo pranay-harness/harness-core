@@ -3,7 +3,7 @@ package io.harness.ccm.budget.entities;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -27,7 +27,7 @@ import org.mongodb.morphia.annotations.Id;
 public class Budget
     implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable {
   @Id String uuid;
-  @NotBlank @Indexed String accountId;
+  @NotBlank @FdIndex String accountId;
   @NotBlank String name;
   @NotBlank BudgetScope scope; // referred to as "Applies to" in the UI
   @NotBlank BudgetType type;
@@ -37,7 +37,7 @@ public class Budget
   @SchemaIgnore long createdAt;
   @SchemaIgnore long lastUpdatedAt;
 
-  @Indexed Long alertIteration;
+  @FdIndex Long alertIteration;
 
   @Override
   public Long obtainNextIteration(String fieldName) {

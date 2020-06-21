@@ -15,7 +15,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.validator.EntityName;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.AllArgsConstructor;
@@ -81,7 +81,7 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAwar
   private transient List<String> infraMappingIds = new ArrayList<>();
   private transient List<String> infraDefinitionIds = new ArrayList<>();
   @SchemaIgnore private Set<String> keywords;
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
   private boolean sample;
   private transient List<HarnessTagLink> tagLinks;
 

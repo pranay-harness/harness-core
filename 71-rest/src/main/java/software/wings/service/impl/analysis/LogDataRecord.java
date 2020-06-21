@@ -16,11 +16,11 @@ import com.google.cloud.datastore.Key;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.AllArgsConstructor;
@@ -45,22 +45,22 @@ import java.util.List;
  * Created by rsingh on 6/20/17.
  */
 
-@Index(name = "stateHostIdx", fields = { @Field("stateExecutionId")
-                                         , @Field("logCollectionMinute") })
-@Index(name = "stateBumpIdx",
+@CdIndex(name = "stateHostIdx", fields = { @Field("stateExecutionId")
+                                           , @Field("logCollectionMinute") })
+@CdIndex(name = "stateBumpIdx",
     fields =
     {
       @Field("stateExecutionId")
       , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host")
     })
-@Index(
+@CdIndex(
     name = "state_Prev_Ex_Idx", fields = { @Field("workflowExecutionId")
                                            , @Field("clusterLevel"), @Field("stateType") })
-@Index(name = "cvRawRecordIdx",
+@CdIndex(name = "cvRawRecordIdx",
     fields =
     { @Field("cvConfigId")
       , @Field(value = "logCollectionMinute", type = IndexType.ASC), @Field("clusterLevel") })
-@Index(name = "cv_bump_idx",
+@CdIndex(name = "cv_bump_idx",
     fields =
     {
       @Field("cvConfigId")
@@ -82,7 +82,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware, Account
 
   @NotEmpty private String workflowExecutionId;
 
-  @NotEmpty @Indexed private String serviceId;
+  @NotEmpty @FdIndex private String serviceId;
 
   @NotEmpty private String stateExecutionId;
 
@@ -103,11 +103,11 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware, Account
   @NotEmpty private ClusterLevel clusterLevel;
   @NotEmpty private long logCollectionMinute;
 
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
 
   public static List<LogDataRecord> generateDataRecords(StateType stateType, String applicationId, String cvConfigId,

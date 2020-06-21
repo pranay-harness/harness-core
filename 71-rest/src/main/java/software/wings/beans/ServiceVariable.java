@@ -12,11 +12,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityName;
 import io.harness.encryption.Encrypted;
 import io.harness.encryption.EncryptionReflectUtils;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
@@ -44,18 +44,18 @@ import javax.validation.constraints.NotNull;
  */
 @OwnedBy(CDC)
 
-@UniqueIndex(name = "serviceVariableUniqueIdx",
+@CdUniqueIndex(name = "serviceVariableUniqueIdx",
     fields =
     {
       @Field("entityId")
       , @Field("templateId"), @Field("overrideType"), @Field("instances"), @Field("expression"), @Field("type"),
           @Field("name")
     })
-@Index(name = "app_entityId", fields = { @Field("appId")
-                                         , @Field("entityId") })
-@Index(name = "app_env_templateId", fields = { @Field("appId")
-                                               , @Field("envId"), @Field("templateId") })
-@Index(name = "appEntityIdx",
+@CdIndex(name = "app_entityId", fields = { @Field("appId")
+                                           , @Field("entityId") })
+@CdIndex(name = "app_env_templateId", fields = { @Field("appId")
+                                                 , @Field("envId"), @Field("templateId") })
+@CdIndex(name = "appEntityIdx",
     fields = { @Field("appId")
                , @Field("entityId"), @Field(value = "createdAt", type = IndexType.DESC), })
 @Data
@@ -104,7 +104,7 @@ public class ServiceVariable extends Base implements EncryptableSetting {
   // NOTE: This field is used for service variables of type artifact.
   private List<String> allowedList;
 
-  @Indexed @SchemaIgnore private String encryptedValue;
+  @FdIndex @SchemaIgnore private String encryptedValue;
 
   @SchemaIgnore @Transient private String secretTextName;
 

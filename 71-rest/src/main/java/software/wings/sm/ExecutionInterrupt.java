@@ -7,7 +7,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.interrupts.ExecutionInterruptType;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -36,9 +36,9 @@ import javax.validation.constraints.NotNull;
 public class ExecutionInterrupt implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                            UpdatedByAware, ApplicationAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-  @Indexed @NotNull @SchemaIgnore protected String appId;
+  @FdIndex @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;
-  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore @FdIndex private long createdAt;
 
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
@@ -48,8 +48,8 @@ public class ExecutionInterrupt implements PersistentEntity, UuidAware, CreatedA
   // If true, means this interruption is no longer in effect
   private boolean seized;
   private String envId;
-  @NotNull @Indexed private String executionUuid;
-  @Indexed private String stateExecutionInstanceId;
+  @NotNull @FdIndex private String executionUuid;
+  @FdIndex private String stateExecutionInstanceId;
 
   private Map<String, Object> properties;
 

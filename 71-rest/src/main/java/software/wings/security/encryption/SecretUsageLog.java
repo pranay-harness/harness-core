@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -43,14 +43,14 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "secretUsageLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "SecretUsageLogKeys")
-@Index(name = "acctEncryptedDataIdx", fields = { @Field("accountId")
-                                                 , @Field("encryptedDataId") })
+@CdIndex(name = "acctEncryptedDataIdx", fields = { @Field("accountId")
+                                                   , @Field("encryptedDataId") })
 public class SecretUsageLog implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                        UpdatedByAware, ApplicationAccess, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-  @Indexed @NotNull @SchemaIgnore protected String appId;
+  @FdIndex @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;
-  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore @FdIndex private long createdAt;
 
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
@@ -70,7 +70,7 @@ public class SecretUsageLog implements PersistentEntity, UuidAware, CreatedAtAwa
 
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   @Builder.Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 }

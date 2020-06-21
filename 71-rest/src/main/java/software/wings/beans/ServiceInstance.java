@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
@@ -32,10 +32,10 @@ public class ServiceInstance extends Base {
 
   private String serviceName;
 
-  @Indexed private String hostId;
+  @FdIndex private String hostId;
   private String hostName;
-  @Indexed private String publicDns;
-  @Indexed private String infraMappingId;
+  @FdIndex private String publicDns;
+  @FdIndex private String infraMappingId;
   private String infraMappingType;
 
   private String artifactStreamId;

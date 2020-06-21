@@ -11,7 +11,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,7 +40,7 @@ import java.util.List;
 public class VaultConfig extends SecretManagerConfig implements ExecutionCapabilityDemander {
   @Attributes(title = "Name", required = true) private String name;
 
-  @Attributes(title = "Vault Url", required = true) @Indexed private String vaultUrl;
+  @Attributes(title = "Vault Url", required = true) @FdIndex private String vaultUrl;
 
   @Attributes(title = "Auth token") @Encrypted(fieldName = "auth_token") private String authToken;
 

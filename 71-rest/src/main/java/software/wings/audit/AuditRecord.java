@@ -2,10 +2,10 @@ package software.wings.audit;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -27,7 +27,7 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "AuditRecordKeys")
 
-@Index(name = "entityRecordIndex_1",
+@CdIndex(name = "entityRecordIndex_1",
     fields =
     { @Field(AuditRecordKeys.auditHeaderId)
       , @Field(value = AuditRecordKeys.createdAt, type = IndexType.DESC), })
@@ -37,7 +37,7 @@ public class AuditRecord
   @NotEmpty String auditHeaderId;
   @NotNull EntityAuditRecord entityAuditRecord;
   private long createdAt;
-  @Setter @Indexed private Long nextIteration;
+  @Setter @FdIndex private Long nextIteration;
   private String accountId;
 
   @Override

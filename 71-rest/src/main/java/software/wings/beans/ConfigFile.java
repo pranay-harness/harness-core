@@ -5,9 +5,9 @@ import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
@@ -38,15 +38,15 @@ import javax.ws.rs.DefaultValue;
  * Created by anubhaw on 4/12/16.
  */
 
-@UniqueIndex(name = "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1",
+@CdUniqueIndex(name = "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1",
     fields =
     {
       @Field("entityId")
       , @Field("templateId"), @Field("relativeFilePath"), @Field("configOverrideType"), @Field("instances"),
           @Field("configOverrideExpression")
     })
-@Index(name = "app_template_entityId", fields = { @Field("appId")
-                                                  , @Field("templateId"), @Field("entityId") })
+@CdIndex(name = "app_template_entityId", fields = { @Field("appId")
+                                                    , @Field("templateId"), @Field("entityId") })
 @Data
 @Builder
 @NoArgsConstructor

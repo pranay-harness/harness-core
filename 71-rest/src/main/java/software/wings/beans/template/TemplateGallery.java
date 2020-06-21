@@ -5,8 +5,8 @@ import static java.util.Arrays.asList;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,8 +18,8 @@ import software.wings.beans.entityinterface.KeywordsAware;
 
 import java.util.Set;
 
-@Index(name = "account_gallery_key_idx", fields = { @Field("accountId")
-                                                    , @Field("galleryKey") })
+@CdIndex(name = "account_gallery_key_idx", fields = { @Field("accountId")
+                                                      , @Field("galleryKey") })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)

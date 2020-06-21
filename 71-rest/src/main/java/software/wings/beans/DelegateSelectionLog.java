@@ -3,9 +3,9 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.TtlIndex;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -29,7 +29,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "delegateSelectionLogRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "DelegateSelectionLogKeys")
-@UniqueIndex(name = "selectionLogsGroup",
+@CdUniqueIndex(name = "selectionLogsGroup",
     fields =
     {
       @Field(value = DelegateSelectionLogKeys.accountId)
@@ -50,5 +50,5 @@ public class DelegateSelectionLog implements PersistentEntity, UuidAware, Accoun
    * */
   @NotEmpty private String groupId;
 
-  @Builder.Default @TtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+  @Builder.Default @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 }

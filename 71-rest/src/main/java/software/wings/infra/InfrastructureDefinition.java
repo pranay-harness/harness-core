@@ -5,10 +5,10 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.NameAccess;
@@ -35,9 +35,9 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-@UniqueIndex(name = "infraDefinitionIdx", fields = { @Field("appId")
-                                                     , @Field("envId"), @Field("name") })
-@Index(name = "infrastructure_cloudProviderId", fields = { @Field("infrastructure.cloudProviderId") })
+@CdUniqueIndex(name = "infraDefinitionIdx", fields = { @Field("appId")
+                                                       , @Field("envId"), @Field("name") })
+@CdIndex(name = "infrastructure_cloudProviderId", fields = { @Field("infrastructure.cloudProviderId") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -60,7 +60,7 @@ public class InfrastructureDefinition implements PersistentEntity, UuidAware, Na
   private List<String> scopedToServices;
   @NotNull private String envId;
   private boolean sample;
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   @JsonIgnore
   public InfrastructureMapping getInfraMapping() {

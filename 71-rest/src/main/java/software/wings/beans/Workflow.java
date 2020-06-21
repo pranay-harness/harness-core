@@ -18,10 +18,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Getter;
@@ -49,7 +49,7 @@ import javax.validation.constraints.NotNull;
  */
 @OwnedBy(CDC)
 @Entity(value = "workflows", noClassnameStored = true)
-@Index(name = "accountIdCreatedAt",
+@CdIndex(name = "accountIdCreatedAt",
     fields = { @Field(WorkflowKeys.accountId)
                , @Field(value = WorkflowKeys.createdAt, type = IndexType.DESC) })
 @HarnessEntity(exportable = true)
@@ -97,12 +97,12 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
 
   private transient List<String> templatizedServiceIds = new ArrayList<>();
 
-  @Indexed private List<String> linkedTemplateUuids = new ArrayList<>();
+  @FdIndex private List<String> linkedTemplateUuids = new ArrayList<>();
 
-  @Indexed private List<String> linkedArtifactStreamIds = new ArrayList<>();
+  @FdIndex private List<String> linkedArtifactStreamIds = new ArrayList<>();
 
   @Getter @Setter private transient List<DeploymentType> deploymentTypes = new ArrayList<>();
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
   private boolean sample;
 
   @Override

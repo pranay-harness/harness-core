@@ -6,11 +6,11 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.ExecutionStatus;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.version.ServiceApiVersion;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 1/8/18.
  */
 
-@Index(name = "taskQueueIdx",
+@CdIndex(name = "taskQueueIdx",
     fields =
     {
       @Field("state_execution_id")
@@ -42,17 +42,17 @@ import java.util.concurrent.TimeUnit;
           @Field("cluster_level"), @Field("group_name"), @Field("version"),
           @Field(value = "createdAt", type = IndexType.DESC)
     })
-@Index(name = "cvConfigStatusIdx",
+@CdIndex(name = "cvConfigStatusIdx",
     fields =
     { @Field("cvConfigId")
       , @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus") })
-@Index(name = "usageMetricsIndex",
+@CdIndex(name = "usageMetricsIndex",
     fields =
     {
       @Field("executionStatus")
       , @Field("ml_analysis_type"), @Field(value = "is24x7Task"), @Field(value = "createdAt", type = IndexType.DESC)
     })
-@Index(name = "taskFetchIdx",
+@CdIndex(name = "taskFetchIdx",
     fields =
     {
       @Field("experiment_name")
@@ -71,7 +71,7 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
 
   private String workflow_id;
   private String workflow_execution_id;
-  @Indexed private String state_execution_id;
+  @FdIndex private String state_execution_id;
   private String service_id;
   private String auth_token;
   private int analysis_start_min;
@@ -108,7 +108,7 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
   private boolean is24x7Task;
   private String tag;
   private AnalysisComparisonStrategy analysis_comparison_strategy;
-  @Indexed private ExecutionStatus executionStatus;
+  @FdIndex private ExecutionStatus executionStatus;
   private Double alertThreshold;
   @JsonProperty("log_ml_result_url") private String logMLResultUrl;
   @JsonProperty("use_supervised_model") private boolean shouldUseSupervisedModel;
@@ -122,6 +122,6 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
   @Default
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusHours(8).toInstant());
 }

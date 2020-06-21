@@ -4,11 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
@@ -26,11 +26,11 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import javax.validation.constraints.NotNull;
 
-@UniqueIndex(
+@CdUniqueIndex(
     name = "search2", fields = { @Field("name")
                                  , @Field("pipeline.executionId"), @Field("pipeline.parallelIndex") })
-@Index(name = "next", fields = { @Field("state")
-                                 , @Field("nextIteration") })
+@CdIndex(name = "next", fields = { @Field("state")
+                                   , @Field("nextIteration") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -39,10 +39,10 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = false)
 public class BarrierInstance implements PersistentEntity, UuidAware, PersistentRegularIterable, ApplicationAccess {
   @Id private String uuid;
-  @Indexed @NotNull protected String appId;
+  @FdIndex @NotNull protected String appId;
 
   private String name;
-  @Indexed private String state;
+  @FdIndex private String state;
 
   private Long nextIteration;
 
@@ -60,7 +60,7 @@ public class BarrierInstance implements PersistentEntity, UuidAware, PersistentR
 
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   @Builder.Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 

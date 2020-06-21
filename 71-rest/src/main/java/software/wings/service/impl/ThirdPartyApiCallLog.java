@@ -24,11 +24,11 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -65,7 +65,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "ThirdPartyApiCallLogKeys")
 
-@Index(name = "queryIdx",
+@CdIndex(name = "queryIdx",
     fields = { @Field("stateExecutionId")
                , @Field(value = CreatedAtAware.CREATED_AT_KEY, type = IndexType.DESC) })
 @Entity(value = "thirdPartyApiCallLog", noClassnameStored = true)
@@ -78,7 +78,7 @@ public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAwar
   public static final String STATUS_CODE = "Status Code";
 
   @NotEmpty private String stateExecutionId;
-  @Indexed @NotEmpty private String accountId;
+  @FdIndex @NotEmpty private String accountId;
   @NotEmpty private String delegateId;
   @NotEmpty private String delegateTaskId;
   private String title;
@@ -92,7 +92,7 @@ public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAwar
   @Default
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(2).toInstant());
 
   public ThirdPartyApiCallLog copy() {

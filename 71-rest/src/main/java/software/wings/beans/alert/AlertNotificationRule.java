@@ -2,7 +2,7 @@ package software.wings.beans.alert;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -30,8 +30,8 @@ import java.util.Set;
 public class AlertNotificationRule extends Base implements AccountAccess {
   public static final String ALERT_CATEGORY = "alertCategory";
 
-  @Indexed @Setter String accountId;
-  @Indexed AlertCategory alertCategory;
+  @FdIndex @Setter String accountId;
+  @FdIndex AlertCategory alertCategory;
   AlertFilter alertFilter;
   @NonNull Set<String> userGroupsToNotify = Collections.emptySet();
 

@@ -8,11 +8,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -28,7 +28,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-@Index(name = "stateExecutionIdx",
+@CdIndex(name = "stateExecutionIdx",
     fields = { @Field("stateExecutionId")
                , @Field(value = "logCollectionMinute", type = IndexType.DESC) })
 @Data
@@ -39,7 +39,7 @@ import java.util.Map;
 @Entity(value = "experimentalLogAnalysisRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class ExperimentalLogMLAnalysisRecord extends Base {
-  @NotEmpty @Indexed private String stateExecutionId;
+  @NotEmpty @FdIndex private String stateExecutionId;
 
   @NotEmpty private StateType stateType;
   @NotEmpty private String experiment_name;
@@ -62,7 +62,7 @@ public class ExperimentalLogMLAnalysisRecord extends Base {
   private Map<String, Map<String, SplunkAnalysisCluster>> test_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters;
   private LogMLAnalysisStatus analysisStatus;
-  @Indexed private String cvConfigId;
+  @FdIndex private String cvConfigId;
   private LogMLClusterScores cluster_scores;
   @JsonProperty("comparison_msg_pairs") private transient List<ExperimentalMessageComparisonResult> comparisonMsgPairs;
   @JsonProperty("model_version") private String modelVersion;
@@ -70,6 +70,6 @@ public class ExperimentalLogMLAnalysisRecord extends Base {
 
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 }

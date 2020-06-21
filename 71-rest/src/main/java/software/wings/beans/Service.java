@@ -10,11 +10,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Builder;
@@ -50,9 +50,9 @@ import java.util.Set;
  */
 @OwnedBy(CDC)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@UniqueIndex(name = "yaml", fields = { @Field("appId")
-                                       , @Field("name") })
-@Index(name = "accountCreatedAtIndex",
+@CdUniqueIndex(name = "yaml", fields = { @Field("appId")
+                                         , @Field("name") })
+@CdIndex(name = "accountCreatedAtIndex",
     fields = { @Field(ServiceKeys.accountId)
                , @Field(value = ServiceKeys.createdAt, type = IndexType.DESC) })
 @Data
@@ -91,8 +91,8 @@ public class Service extends Base implements KeywordsAware, NameAccess, TagAware
   private boolean isK8sV2;
   private boolean isPcfV2;
   private HelmVersion helmVersion;
-  @Indexed private String accountId;
-  @Indexed private List<String> artifactStreamIds;
+  @FdIndex private String accountId;
+  @FdIndex private List<String> artifactStreamIds;
   @Transient private List<ArtifactStreamBinding> artifactStreamBindings;
   private boolean sample;
 

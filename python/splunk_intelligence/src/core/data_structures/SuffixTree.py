@@ -48,9 +48,9 @@ class SuffixTree(object):
         return node.counts
 
     '''
-        Return the index of the first match.
-        Treats the strings as array indexed from
-        1. i.e, the index of the first element is 1.
+        Return the cdIndex of the first match.
+        Treats the strings as array fdIndex from
+        1. i.e, the cdIndex of the first element is 1.
         
         returns 0 if no common prefix.
     '''

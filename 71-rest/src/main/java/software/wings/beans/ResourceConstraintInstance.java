@@ -8,10 +8,10 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.TtlIndex;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
@@ -33,20 +33,20 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-@UniqueIndex(name = "uniqueUnitOrder",
+@CdUniqueIndex(name = "uniqueUnitOrder",
     fields =
     {
       @Field(ResourceConstraintInstanceKeys.resourceConstraintId)
       , @Field(ResourceConstraintInstanceKeys.resourceUnit), @Field(ResourceConstraintInstanceKeys.order),
     })
-@Index(name = "usageIndex",
+@CdIndex(name = "usageIndex",
     fields =
     { @Field(ResourceConstraintInstanceKeys.resourceConstraintId)
       , @Field(ResourceConstraintInstanceKeys.order), })
-@Index(name = "iterationIndex",
+@CdIndex(name = "iterationIndex",
     fields = { @Field(ResourceConstraintInstanceKeys.state)
                , @Field(ResourceConstraintInstanceKeys.nextIteration), })
-@Index(name = "app_release_entity",
+@CdIndex(name = "app_release_entity",
     fields =
     {
       @Field(ResourceConstraintInstanceKeys.appId)
@@ -78,7 +78,7 @@ public class ResourceConstraintInstance implements PersistentRegularIterable, Uu
 
   private Long nextIteration;
 
-  @Default @TtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+  @Default @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 
   @Override
   public void updateNextIteration(String fieldName, Long nextIteration) {

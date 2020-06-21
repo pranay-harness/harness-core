@@ -83,7 +83,7 @@ func (b *Builder) WithFields(kvps ...interface{}) *Builder {
 		panic("odd number of key values provided to WithFields when building logger")
 	}
 
-	// store odd index content as key, even index content as value
+	// store odd cdIndex content as key, even cdIndex content as value
 	for i := 0; i < len(kvps)-1; i += 2 {
 		key, ok := kvps[i].(string)
 		if !ok {

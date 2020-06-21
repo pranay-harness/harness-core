@@ -61,10 +61,10 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptionType;
 import lombok.Data;
@@ -93,18 +93,18 @@ import javax.validation.Valid;
  */
 @OwnedBy(CDC)
 
-@UniqueIndex(name = "locate",
+@CdUniqueIndex(name = "locate",
     fields = { @Field("accountId")
                , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") })
-@Index(name = "acctCatTypeIdx", fields = { @Field("accountId")
-                                           , @Field("category"), @Field("value.type") })
-@Index(name = "acctValTypeIdx", fields = { @Field("accountId")
-                                           , @Field("value.type") })
-@Index(name = "value.type_1_nextIteration_1", fields = { @Field("value.type")
-                                                         , @Field("nextIteration") })
-@Index(name = "secretsMigrationIdx", fields = { @Field("value.type")
-                                                , @Field("nextSecretMigrationIteration") })
-@Index(name = "secretsMigrationPerAccountIdx",
+@CdIndex(name = "acctCatTypeIdx", fields = { @Field("accountId")
+                                             , @Field("category"), @Field("value.type") })
+@CdIndex(name = "acctValTypeIdx", fields = { @Field("accountId")
+                                             , @Field("value.type") })
+@CdIndex(name = "value.type_1_nextIteration_1", fields = { @Field("value.type")
+                                                           , @Field("nextIteration") })
+@CdIndex(name = "secretsMigrationIdx", fields = { @Field("value.type")
+                                                  , @Field("nextSecretMigrationIteration") })
+@CdIndex(name = "secretsMigrationPerAccountIdx",
     fields = { @Field("value.type")
                , @Field("secretsMigrated"), @Field("accountId") })
 @Data
@@ -130,7 +130,7 @@ public class SettingAttribute extends Base implements NameAccess, PersistentRegu
   private transient List<ArtifactStreamSummary> artifactStreams;
   private boolean sample;
 
-  @Indexed private Long nextIteration;
+  @FdIndex private Long nextIteration;
   private Long nextSecretMigrationIteration;
   private boolean secretsMigrated;
   private String connectivityError;

@@ -15,10 +15,10 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Update;
 import lombok.Data;
@@ -48,10 +48,10 @@ import javax.annotation.Nullable;
 @NoArgsConstructor
 @RequiredArgsConstructor
 @Entity(value = "infrastructureMapping")
-@UniqueIndex(name = "yaml", fields = { @Field("appId")
-                                       , @Field("envId"), @Field("name") })
-@Index(name = "app_infratype", fields = { @Field("appId")
-                                          , @Field("infraMappingType") })
+@CdUniqueIndex(name = "yaml", fields = { @Field("appId")
+                                         , @Field("envId"), @Field("name") })
+@CdIndex(name = "app_infratype", fields = { @Field("appId")
+                                            , @Field("infraMappingType") })
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "InfrastructureMappingKeys")
@@ -64,10 +64,10 @@ public abstract class InfrastructureMapping
   public static final String INFRA_MAPPING_TYPE_KEY = "infraMappingType";
   public static final String APP_ID_KEY = "appId";
 
-  @SchemaIgnore @NotEmpty @NonNull @Indexed String accountId;
+  @SchemaIgnore @NotEmpty @NonNull @FdIndex String accountId;
   @NotEmpty @NonNull String infraMappingType;
   @NotEmpty @NonNull String computeProviderType;
-  @NotEmpty @NonNull @Indexed String computeProviderSettingId;
+  @NotEmpty @NonNull @FdIndex String computeProviderSettingId;
   @NotEmpty @NonNull String envId;
 
   @NotEmpty @NonNull String deploymentType;
@@ -86,7 +86,7 @@ public abstract class InfrastructureMapping
 
   @Nullable private String provisionerId;
 
-  @Indexed private Long nextIteration;
+  @FdIndex private Long nextIteration;
 
   private Map<String, Object> blueprints;
   private String infrastructureDefinitionId;

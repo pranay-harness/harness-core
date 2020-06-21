@@ -8,10 +8,10 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -34,10 +34,10 @@ import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
 
-@UniqueIndex(name = "yaml", fields = { @Field("accountId")
-                                       , @Field("name"), @Field("folderId"), @Field("appId") })
-@Index(name = "account_gallery_app_idx", fields = { @Field("accountId")
-                                                    , @Field("galleryId"), @Field("appId") })
+@CdUniqueIndex(name = "yaml", fields = { @Field("accountId")
+                                         , @Field("name"), @Field("folderId"), @Field("appId") })
+@CdIndex(name = "account_gallery_app_idx", fields = { @Field("accountId")
+                                                      , @Field("galleryId"), @Field("appId") })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
@@ -56,10 +56,10 @@ public class Template extends Base implements KeywordsAware, NameAccess {
   public static final String REFERENCED_TEMPLATE_ID_KEY = "referencedTemplateId";
   public static final String APP_ID_KEY = "appId";
 
-  @Indexed @NotNull @EntityName(groups = {Create.class, Update.class}) private String name;
+  @FdIndex @NotNull @EntityName(groups = {Create.class, Update.class}) private String name;
   @NotEmpty private String accountId;
   private String type;
-  @Indexed private String folderId;
+  @FdIndex private String folderId;
   Long version;
   private transient String versionDetails;
   private String description;

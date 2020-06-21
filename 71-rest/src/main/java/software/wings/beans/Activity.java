@@ -16,11 +16,11 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -65,7 +65,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @Entity(value = "activities", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Index(name = "app_status_createdAt",
+@CdIndex(name = "app_status_createdAt",
     fields =
     {
       @Field(value = ActivityKeys.appId)
@@ -75,9 +75,9 @@ import javax.validation.constraints.NotNull;
 public class Activity implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                  UpdatedByAware, ApplicationAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-  @Indexed @NotNull @SchemaIgnore protected String appId;
+  @FdIndex @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;
-  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore @FdIndex private long createdAt;
 
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
@@ -119,7 +119,7 @@ public class Activity implements PersistentEntity, UuidAware, CreatedAtAware, Cr
 
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   @Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 

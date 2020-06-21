@@ -11,10 +11,10 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SortOrder;
 import io.harness.exception.WingsException;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -38,7 +38,7 @@ import java.util.List;
  * Created by rsingh on 08/30/17.
  */
 
-@UniqueIndex(name = "analysisUniqueIdx",
+@CdUniqueIndex(name = "analysisUniqueIdx",
     fields =
     { @Field("workflowExecutionId")
       , @Field("stateExecutionId"), @Field("groupName"), @Field("analysisMinute") })
@@ -59,9 +59,9 @@ public class NewRelicMetricAnalysisRecord
 
   @NotEmpty private String workflowExecutionId;
 
-  @NotEmpty @Indexed private String stateExecutionId;
+  @NotEmpty @FdIndex private String stateExecutionId;
 
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
 
   private String cvConfigId;
 
@@ -83,7 +83,7 @@ public class NewRelicMetricAnalysisRecord
 
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 
   @Builder

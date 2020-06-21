@@ -9,9 +9,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -45,19 +46,19 @@ import javax.security.auth.Subject;
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "UserKeys")
 
-@Index(name = "accountsIdx", fields = { @Field(UserKeys.accounts) })
-@Index(name = "pendingAccountsIdx", fields = { @Field(UserKeys.pendingAccounts) })
+@CdIndex(name = "accountsIdx", fields = { @Field(UserKeys.accounts) })
+@CdIndex(name = "pendingAccountsIdx", fields = { @Field(UserKeys.pendingAccounts) })
 public class User extends Base implements Principal {
   public static final String EMAIL_KEY = "email";
   public static final String ROLES_KEY = "roles";
 
-  @NotEmpty @Indexed private String name;
+  @NotEmpty @FdIndex private String name;
 
   private String givenName;
 
   private String familyName;
 
-  @Indexed(unique = true) @Email private String email;
+  @FdUniqueIndex @Email private String email;
 
   @JsonIgnore private String passwordHash;
 

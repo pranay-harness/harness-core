@@ -5,9 +5,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import io.harness.context.GlobalContext;
 import io.harness.context.GlobalContextData;
 import io.harness.manage.GlobalContextManager;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.queue.Queuable.QueuableKeys;
 import lombok.Getter;
@@ -18,8 +18,8 @@ import org.mongodb.morphia.annotations.PrePersist;
 
 import java.util.Date;
 
-@Index(name = "next4", fields = { @Field(QueuableKeys.topic)
-                                  , @Field(QueuableKeys.earliestGet) })
+@CdIndex(name = "next4", fields = { @Field(QueuableKeys.topic)
+                                    , @Field(QueuableKeys.earliestGet) })
 @FieldNameConstants(innerTypeName = "QueuableKeys")
 public abstract class Queuable implements PersistentEntity {
   @Getter @Setter @Id private String id;
@@ -27,7 +27,7 @@ public abstract class Queuable implements PersistentEntity {
   @Getter
   @Setter
   // Old earliestGet is an indication of event that is abandoned. No need to keep it around.
-  @TtlIndex(24 * 60 * 60)
+  @FdTtlIndex(24 * 60 * 60)
   private Date earliestGet = new Date();
 
   @Getter @Setter private int retries;

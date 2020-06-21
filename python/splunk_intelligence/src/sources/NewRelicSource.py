@@ -88,10 +88,10 @@ class NewRelicSource(object):
                               "&from=" + str(from_time) + "&to=" + str(to_time)
                         data, ret_code = self.get_request(url, headers)
                         for metric in data['metric_data']['metrics']:
-                            for index, timeslice in enumerate(metric['timeslices']):
+                            for cdIndex, timeslice in enumerate(metric['timeslices']):
                                 if 'average_response_time' in timeslice['values']:
                                     result.append(
-                                        dict(name=metric['name'], host=node['host'], dataCollectionMinute=index,
+                                        dict(name=metric['name'], host=node['host'], dataCollectionMinute=cdIndex,
                                              values= dict(throughput=timeslice['values']['requests_per_minute']
                                              if 'requests_per_minute' in timeslice['values'] else -1,
                                              averageResponseTime=timeslice['values']['average_response_time'],

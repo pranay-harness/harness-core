@@ -217,7 +217,7 @@
            Control caching of de-serialized values. Caching makes query evaluation faster, but it cost memory.
            Possible Values:
                         NEVER: Never cache deserialized object
-                        INDEX-ONLY: Caches values only when they are inserted into an index.
+                        INDEX-ONLY: Caches values only when they are inserted into an cdIndex.
                         ALWAYS: Always cache deserialized values.
         -->
     </map>

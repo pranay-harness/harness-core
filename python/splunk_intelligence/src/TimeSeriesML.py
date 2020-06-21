@@ -332,7 +332,7 @@ class TSAnomlyDetector(object):
             start = deployment_index - time_step_in + 1
             end = deployment_index + 1
             pred_ind = end + 1
-            # TODO: should remove 0 index input should be 1d
+            # TODO: should remove 0 cdIndex input should be 1d
             all_data = np.copy(data_dict['data'])[0]
             input_data = np.copy(all_data)
             if self.validate_prediction_input(txn_name, metric_name, input_data[0:deployment_index]):
@@ -498,15 +498,15 @@ class TSAnomlyDetector(object):
                     "max_risk" : -1
             }    
             """
-            for index, host in enumerate(test_txn_data_dict[metric_name].keys()):
+            for cdIndex, host in enumerate(test_txn_data_dict[metric_name].keys()):
                 response['results'][host] = {}
 
-                response['results'][host]['test_data'] = np.ma.masked_array(analysis_output['test_values'][index],
+                response['results'][host]['test_data'] = np.ma.masked_array(analysis_output['test_values'][cdIndex],
                                                                             np.isnan(
-                                                                                analysis_output['test_values'][index])) \
+                                                                                analysis_output['test_values'][cdIndex])) \
                     .filled(-1).tolist()
-                response['results'][host]['score'] = analysis_output['score'][index]
-                response['results'][host]['distance'] = analysis_output['distances'][index].tolist()
+                response['results'][host]['score'] = analysis_output['score'][cdIndex]
+                response['results'][host]['distance'] = analysis_output['distances'][cdIndex].tolist()
                 if fast_analysis:
                     response['results'][host]['control_data'] = np.ma.masked_array(
                         analysis_output['control_values'],
@@ -515,30 +515,30 @@ class TSAnomlyDetector(object):
                     response['results'][host]['control_index'] = 0
                 else:
                     response['results'][host]['control_data'] = np.ma.masked_array(
-                        analysis_output['control_values'][index],
+                        analysis_output['control_values'][cdIndex],
                         np.isnan(analysis_output['control_values'][
-                                     index])).filled(-1).tolist()
+                                     cdIndex])).filled(-1).tolist()
 
                     response['results'][host]['nn'] = control_txn_data_dict[metric_name].keys()[
-                        analysis_output['nn'][index]]
-                    response['results'][host]['test_cuts'] = analysis_output['test_cuts'][index].tolist()
-                    response['results'][host]['optimal_cuts'] = analysis_output['optimal_test_cuts'][index]
+                        analysis_output['nn'][cdIndex]]
+                    response['results'][host]['test_cuts'] = analysis_output['test_cuts'][cdIndex].tolist()
+                    response['results'][host]['optimal_cuts'] = analysis_output['optimal_test_cuts'][cdIndex]
                     response['results'][host]['optimal_data'] = np.ma.masked_array(
-                        analysis_output['optimal_test_data'][index],
+                        analysis_output['optimal_test_data'][cdIndex],
                         np.isnan(analysis_output['optimal_test_data'][
-                                     index])).filled(
+                                     cdIndex])).filled(
                         -1).tolist()
-                    response['results'][host]['control_cuts'] = analysis_output['control_cuts'][index].tolist()
-                    response['results'][host]['control_index'] = analysis_output['nn'][index]
+                    response['results'][host]['control_cuts'] = analysis_output['control_cuts'][cdIndex].tolist()
+                    response['results'][host]['control_index'] = analysis_output['nn'][cdIndex]
                 throughput_metric_name = self.metric_template.get_metric_name(MetricType.THROUGHPUT)
                 if throughput_metric_name is not None and throughput_metric_name in test_txn_data_dict \
                         and host in test_txn_data_dict[throughput_metric_name] \
                         and test_txn_data_dict[throughput_metric_name][host]['skip']:
                     response['results'][host]['risk'] = RiskLevel.NA.value
                 else:
-                    response['results'][host]['risk'] = analysis_output['risk'][index]
+                    response['results'][host]['risk'] = analysis_output['risk'][cdIndex]
                     response['max_risk'] = max(response['max_risk'], response['results'][host]['risk'])
-                response['results'][host]['test_index'] = index
+                response['results'][host]['test_index'] = cdIndex
         if 'data' in control_data_dict:
             response['control_avg'] = simple_average(control_data_dict['data'].flatten(), -1)
             response['control'] = self.make_jsonable(control_data_dict)
@@ -832,10 +832,10 @@ def parallelize_processing(options, metric_template, control_metrics, test_metri
     test_metrics_batch = [[] for i in range(workers)]
     jobs = []
     for transaction in control_metrics:
-        control_metrics_batch[transaction_names.index(transaction['name']) % workers].append(transaction)
+        control_metrics_batch[transaction_names.cdIndex(transaction['name']) % workers].append(transaction)
 
     for transaction in test_metrics:
-        test_metrics_batch[transaction_names.index(transaction['name']) % workers].append(transaction)
+        test_metrics_batch[transaction_names.cdIndex(transaction['name']) % workers].append(transaction)
 
     queue = multiprocessing.Queue()
     job_id = 0

@@ -8,9 +8,9 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -42,8 +42,8 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(callSuper = false, exclude = {"createdBy", "createdAt", "lastUpdatedBy", "lastUpdatedAt"})
 @Entity(value = "secretManagers")
-@UniqueIndex(name = "uniqueIdx", fields = { @Field("name")
-                                            , @Field("accountId"), @Field("encryptionType") })
+@CdUniqueIndex(name = "uniqueIdx", fields = { @Field("name")
+                                              , @Field("accountId"), @Field("encryptionType") })
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "SecretManagerConfigKeys")
@@ -56,7 +56,7 @@ public abstract class SecretManagerConfig
 
   private boolean isDefault;
 
-  @NotEmpty @Indexed private String accountId;
+  @NotEmpty @FdIndex private String accountId;
 
   @SchemaIgnore @Transient private int numOfEncryptedValue;
 
@@ -64,13 +64,13 @@ public abstract class SecretManagerConfig
 
   @SchemaIgnore private EmbeddedUser createdBy;
 
-  @SchemaIgnore @Indexed private long createdAt;
+  @SchemaIgnore @FdIndex private long createdAt;
 
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
 
   @SchemaIgnore @NotNull private long lastUpdatedAt;
 
-  @Indexed private Long nextTokenRenewIteration;
+  @FdIndex private Long nextTokenRenewIteration;
 
   private List<String> templatizedFields;
 

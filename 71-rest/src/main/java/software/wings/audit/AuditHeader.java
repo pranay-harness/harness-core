@@ -3,10 +3,10 @@ package software.wings.audit;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,28 +33,28 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AuditHeaderKeys")
 
-@Index(name = "entityRecordIndex_1",
+@CdIndex(name = "entityRecordIndex_1",
     fields =
     {
       @Field(AuditHeaderKeys.accountId)
       , @Field(AuditHeaderKeys.appIdEntityRecord), @Field(AuditHeaderKeys.affectedResourceType),
           @Field(AuditHeaderKeys.affectedResourceOp), @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
     })
-@Index(name = "entityRecordIndex_2",
+@CdIndex(name = "entityRecordIndex_2",
     fields =
     {
       @Field(AuditHeaderKeys.accountId)
       , @Field(AuditHeaderKeys.appIdEntityRecord), @Field(AuditHeaderKeys.affectedResourceId),
           @Field(AuditHeaderKeys.affectedResourceOp), @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
     })
-@Index(name = "entityRecordIndex_3",
+@CdIndex(name = "entityRecordIndex_3",
     fields =
     {
       @Field(AuditHeaderKeys.accountId)
       , @Field(AuditHeaderKeys.affectedResourceType), @Field(AuditHeaderKeys.affectedResourceOp),
           @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
     })
-@Index(name = "entityRecordIndex_4",
+@CdIndex(name = "entityRecordIndex_4",
     fields =
     {
       @Field(AuditHeaderKeys.accountId)
@@ -100,7 +100,7 @@ public class AuditHeader extends Base implements AccountAccess {
   private String failureStatusMsg;
 
   // For Audit Headers created by Git user actions
-  @Getter @Setter @Indexed private String accountId;
+  @Getter @Setter @FdIndex private String accountId;
   @Getter @Setter private GitAuditDetails gitAuditDetails;
   @Getter @Setter private List<EntityAuditRecord> entityAuditRecords;
   @Getter @Setter private ApiKeyAuditDetails apiKeyAuditDetails;

@@ -4,9 +4,9 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.UniqueIndex;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,9 +20,9 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
-@UniqueIndex(name = "yaml", fields = { @Field("accountId")
-                                       , @Field("templateId"), @Field("version") })
-@Index(name = "referencedTemplates",
+@CdUniqueIndex(name = "yaml", fields = { @Field("accountId")
+                                         , @Field("templateId"), @Field("version") })
+@CdIndex(name = "referencedTemplates",
     fields = { @Field("templateObject.referencedTemplateList.templateReference.templateUuid") })
 @Data
 @Builder

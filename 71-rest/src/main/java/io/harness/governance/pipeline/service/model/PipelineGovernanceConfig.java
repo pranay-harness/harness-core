@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.annotation.HarnessEntity;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -32,7 +32,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class PipelineGovernanceConfig implements PersistentEntity, UuidAccess, AccountAccess {
   @Id private String uuid;
-  @Nonnull @Indexed private String accountId;
+  @Nonnull @FdIndex private String accountId;
   @Nonnull private String name;
   @Nonnull private String description;
   @Nonnull private List<PipelineGovernanceRule> rules;

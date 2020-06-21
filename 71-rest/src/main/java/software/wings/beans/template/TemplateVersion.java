@@ -1,10 +1,10 @@
 package software.wings.beans.template;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.UniqueIndex;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,16 +17,16 @@ import software.wings.beans.Base;
 import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
 
 @FieldNameConstants(innerTypeName = "TemplateVersionKeys")
-@UniqueIndex(name = "yaml", fields = { @Field("templateUuid")
-                                       , @Field("version") })
-@Index(name = "account_template_version",
+@CdUniqueIndex(name = "yaml", fields = { @Field("templateUuid")
+                                         , @Field("version") })
+@CdIndex(name = "account_template_version",
     fields =
     {
       @Field(value = TemplateVersionKeys.accountId)
       , @Field(value = TemplateVersionKeys.templateUuid),
           @Field(value = TemplateVersionKeys.version, type = IndexType.DESC)
     })
-@Index(name = "account_imported_template_version",
+@CdIndex(name = "account_imported_template_version",
     fields =
     {
       @Field(value = TemplateVersionKeys.accountId)

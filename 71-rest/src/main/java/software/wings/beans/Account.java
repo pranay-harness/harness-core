@@ -9,9 +9,10 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.encryption.Encrypted;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
 import io.harness.security.EncryptionInterface;
 import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
@@ -42,7 +43,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "accounts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 
-@Index(name = "next_iteration_license_info2",
+@CdIndex(name = "next_iteration_license_info2",
     fields = { @Field("licenseExpiryCheckIteration")
                , @Field("encryptedLicenseInfo") })
 
@@ -51,7 +52,7 @@ public class Account extends Base implements PersistentRegularIterable {
 
   @NotNull private String companyName;
 
-  @Indexed(unique = true) @NotNull private String accountName;
+  @FdUniqueIndex @NotNull private String accountName;
 
   private Set<String> whitelistedDomains = new HashSet<>();
 
@@ -98,13 +99,13 @@ public class Account extends Base implements PersistentRegularIterable {
 
   private boolean oauthEnabled;
 
-  @Indexed private Long serviceGuardDataCollectionIteration;
-  @Indexed private Long serviceGuardDataAnalysisIteration;
-  @Indexed private Long workflowDataCollectionIteration;
-  @Indexed private Long usageMetricsTaskIteration;
-  @Indexed private Long licenseExpiryCheckIteration;
-  @Indexed private Long gitSyncExpiryCheckIteration;
-  @Indexed private Long secretManagerValidationIterator;
+  @FdIndex private Long serviceGuardDataCollectionIteration;
+  @FdIndex private Long serviceGuardDataAnalysisIteration;
+  @FdIndex private Long workflowDataCollectionIteration;
+  @FdIndex private Long usageMetricsTaskIteration;
+  @FdIndex private Long licenseExpiryCheckIteration;
+  @FdIndex private Long gitSyncExpiryCheckIteration;
+  @FdIndex private Long secretManagerValidationIterator;
   @Getter private boolean cloudCostEnabled;
   @Getter @Setter private boolean ceAutoCollectK8sEvents;
 

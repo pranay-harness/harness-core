@@ -133,8 +133,10 @@ public class IndexManagerSessionTest extends PersistenceTest {
 
     Map<String, IndexCreator> creators = IndexManager.indexCreators(mappedClass, collection);
 
-    assertThat(creators).hasSize(5);
+    assertThat(creators).hasSize(6);
     assertThat(creators.get("sparse_index").getOptions().get(IndexManagerSession.SPARSE)).isEqualTo(Boolean.TRUE);
+
+    assertThat(creators.get("uniqueTest_1").getOptions().get(IndexManagerSession.UNIQUE)).isEqualTo(Boolean.TRUE);
     assertThat(creators.get("sparseTest_1").getOptions().get(IndexManagerSession.SPARSE)).isEqualTo(Boolean.TRUE);
     assertThat(creators.get("ttlTest_1").getOptions().get(IndexManagerSession.EXPIRE_AFTER_SECONDS))
         .isEqualTo(Integer.valueOf(11));
@@ -162,5 +164,20 @@ public class IndexManagerSessionTest extends PersistenceTest {
     assertThatThrownBy(() -> IndexManager.indexCreators(mappedClass, collection))
         .isInstanceOf(IndexManagerInspectException.class)
         .hasMessageContaining("collection key in a composite index");
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void testCreateTwoFieldIndexesEntity() {
+    Morphia morphia = new Morphia();
+    morphia.map(TestTwoFieldIndexesEntity.class);
+    Collection<MappedClass> mappedClasses = morphia.getMapper().getMappedClasses();
+    MappedClass mappedClass = mappedClasses.iterator().next();
+    DBCollection collection = persistence.getCollection(mappedClass.getClazz());
+    assertThatThrownBy(() -> IndexManager.indexCreators(mappedClass, collection))
+        .isInstanceOf(IndexManagerInspectException.class)
+        .hasMessageContaining("Only one field index can be used");
   }
 }

@@ -1,8 +1,8 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
@@ -21,7 +21,7 @@ import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "EntityYamlRecordKeys")
 
-@Index(name = "index_1",
+@CdIndex(name = "index_1",
     fields =
     {
       @Field(EntityYamlRecordKeys.accountId)

@@ -8,8 +8,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.persistence.AccountAccess;
 import io.harness.validation.Update;
 import lombok.Getter;
@@ -30,8 +30,8 @@ import java.util.List;
  */
 @Entity(value = "userInvites", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@Index(name = "accountId_email_1", fields = { @Field("accountId")
-                                              , @Field("email") })
+@CdIndex(name = "accountId_email_1", fields = { @Field("accountId")
+                                                , @Field("email") })
 @FieldNameConstants(innerTypeName = "UserInviteKeys")
 public class UserInvite extends Base implements AccountAccess {
   public static final String UUID_KEY = "uuid";

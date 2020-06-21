@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
@@ -29,8 +29,8 @@ public class ApiKeyEntry implements PersistentEntity, UuidAccess, CreatedAtAcces
   private String name;
   private List<String> userGroupIds;
   private List<UserGroup> userGroups;
-  @Indexed private long createdAt;
-  @Indexed @NotEmpty private String accountId;
+  @FdIndex private long createdAt;
+  @FdIndex @NotEmpty private String accountId;
   @JsonView(JsonViews.Internal.class) @NotEmpty private char[] encryptedKey;
   @Transient private String decryptedKey;
   @JsonView(JsonViews.Internal.class) @NotEmpty private String hashOfKey;

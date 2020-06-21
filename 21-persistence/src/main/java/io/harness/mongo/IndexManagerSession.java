@@ -1,6 +1,9 @@
 package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.ListUtils.OneAndOnlyOne.MANY;
+import static io.harness.data.structure.ListUtils.OneAndOnlyOne.NONE;
+import static io.harness.data.structure.ListUtils.oneAndOnlyOne;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSession;
 import static io.harness.mongo.IndexManagerSession.Type.NORMAL_INDEX;
@@ -24,16 +27,19 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
 import io.harness.annotation.IgnoreUnusedIndex;
+import io.harness.data.structure.ListUtils.OneAndOnlyOne;
 import io.harness.govern.Switch;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.IndexManager.IndexCreator;
 import io.harness.mongo.IndexManager.IndexCreator.IndexCreatorBuilder;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdSparseIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdSparseIndex;
+import io.harness.mongo.index.FdTtlIndex;
+import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.SparseIndex;
-import io.harness.mongo.index.TtlIndex;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.threading.Morpheus;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -175,23 +181,31 @@ public class IndexManagerSession {
       MappedClass mc, DBCollection collection, Map<String, IndexCreator> creators) {
     // Read field level "Indexed" annotation
     for (MappedField mf : mc.getPersistenceFields()) {
-      Indexed indexed = mf.getField().getAnnotation(Indexed.class);
-      TtlIndex ttlIndex = mf.getField().getAnnotation(TtlIndex.class);
-      if (indexed == null && ttlIndex == null) {
+      FdIndex fdIndex = mf.getField().getAnnotation(FdIndex.class);
+      FdUniqueIndex fdUniqueIndex = mf.getField().getAnnotation(FdUniqueIndex.class);
+      FdSparseIndex fdSparseIndex = mf.getField().getAnnotation(FdSparseIndex.class);
+      FdTtlIndex fdTtlIndex = mf.getField().getAnnotation(FdTtlIndex.class);
+      OneAndOnlyOne oneAndOnlyOne = oneAndOnlyOne(fdIndex, fdUniqueIndex, fdSparseIndex, fdTtlIndex);
+      if (oneAndOnlyOne == NONE) {
         continue;
+      } else if (oneAndOnlyOne == MANY) {
+        throw new IndexManagerInspectException("Only one field index can be used");
       }
 
-      int direction = 1;
       String name = mf.getNameToStore();
+      String indexName = name + "_1";
+      BasicDBObject dbObject = new BasicDBObject(name, 1);
 
-      String indexName = name + "_" + direction;
-      BasicDBObject dbObject = new BasicDBObject(name, direction);
+      Type type = NORMAL_INDEX;
+      if (fdUniqueIndex != null) {
+        type = UNIQUE_INDEX;
+      } else if (fdSparseIndex != null) {
+        type = SPARSE_INDEX;
+      }
 
-      BasicDBObject options = indexOptions(indexName,
-          indexed == null ? NORMAL_INDEX
-                          : indexed.unique() ? UNIQUE_INDEX : indexed.sparse() ? SPARSE_INDEX : NORMAL_INDEX);
-      if (ttlIndex != null) {
-        options.put(EXPIRE_AFTER_SECONDS, ttlIndex.value());
+      BasicDBObject options = indexOptions(indexName, type);
+      if (fdTtlIndex != null) {
+        options.put(EXPIRE_AFTER_SECONDS, fdTtlIndex.value());
       }
 
       putCreator(
@@ -214,22 +228,22 @@ public class IndexManagerSession {
       MappedClass mc, DBCollection collection, Map<String, IndexCreator> creators) {
     String id = indexedFieldName(mc);
 
-    Set<Index> indexes = fetchAnnotations(mc.getClazz(), Index.class);
-    for (Index index : indexes) {
+    Set<CdIndex> cdIndices = fetchAnnotations(mc.getClazz(), CdIndex.class);
+    for (CdIndex cdIndex : cdIndices) {
       IndexCreator newCreator =
-          buildtCompoundIndexCreator(index.name(), id, index.fields(), NORMAL_INDEX).collection(collection).build();
+          buildtCompoundIndexCreator(cdIndex.name(), id, cdIndex.fields(), NORMAL_INDEX).collection(collection).build();
       checkWithTheOthers(creators, newCreator);
       putCreator(creators, newCreator.name(), newCreator);
     }
-    Set<UniqueIndex> uniqueIndexes = fetchAnnotations(mc.getClazz(), UniqueIndex.class);
-    for (UniqueIndex index : uniqueIndexes) {
+    Set<CdUniqueIndex> cdUniqueIndices = fetchAnnotations(mc.getClazz(), CdUniqueIndex.class);
+    for (CdUniqueIndex index : cdUniqueIndices) {
       IndexCreator newCreator =
           buildtCompoundIndexCreator(index.name(), id, index.fields(), UNIQUE_INDEX).collection(collection).build();
       checkWithTheOthers(creators, newCreator);
       putCreator(creators, newCreator.name(), newCreator);
     }
-    Set<SparseIndex> sparceIndexes = fetchAnnotations(mc.getClazz(), SparseIndex.class);
-    for (SparseIndex index : sparceIndexes) {
+    Set<CdSparseIndex> sparceIndexes = fetchAnnotations(mc.getClazz(), CdSparseIndex.class);
+    for (CdSparseIndex index : sparceIndexes) {
       IndexCreator newCreator =
           buildtCompoundIndexCreator(index.name(), id, index.fields(), SPARSE_INDEX).collection(collection).build();
       checkWithTheOthers(creators, newCreator);

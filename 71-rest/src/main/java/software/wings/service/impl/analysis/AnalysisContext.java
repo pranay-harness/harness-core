@@ -12,11 +12,11 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.version.ServiceApiVersion;
 import lombok.AllArgsConstructor;
@@ -40,16 +40,16 @@ import java.util.Map;
  * Created by sriram_parthasarathy on 8/23/17.
  */
 
-@UniqueIndex(name = "task_Unique_Idx", fields = { @Field("stateExecutionId")
-                                                  , @Field("executionStatus") })
-@Index(name = "timeSeriesAnalysisIterationIdx",
+@CdUniqueIndex(name = "task_Unique_Idx", fields = { @Field("stateExecutionId")
+                                                    , @Field("executionStatus") })
+@CdIndex(name = "timeSeriesAnalysisIterationIdx",
     fields = { @Field("analysisType")
                , @Field("executionStatus"), @Field("timeSeriesAnalysisIteration") })
-@Index(name = "logAnalysisIterationIdx",
+@CdIndex(name = "logAnalysisIterationIdx",
     fields = { @Field("analysisType")
                , @Field("executionStatus"), @Field("logAnalysisIteration") })
-@Index(name = "cvTaskCreationIndex", fields = { @Field("cvTasksCreated")
-                                                , @Field("cvTaskCreationIteration") })
+@CdIndex(name = "cvTaskCreationIndex", fields = { @Field("cvTasksCreated")
+                                                  , @Field("cvTaskCreationIteration") })
 @Data
 @FieldNameConstants(innerTypeName = "AnalysisContextKeys")
 @NoArgsConstructor
@@ -58,10 +58,10 @@ import java.util.Map;
 @Entity(value = "verificationServiceTask", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class AnalysisContext extends Base implements PersistentRegularIterable, AccountAccess {
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
   private String workflowId;
   private String workflowExecutionId;
-  @Indexed private String stateExecutionId;
+  @FdIndex private String stateExecutionId;
   private String serviceId;
   private String predictiveCvConfigId;
   private int predictiveHistoryMinutes;
@@ -87,7 +87,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
   private String envId;
   private String hostNameField;
   private MLAnalysisType analysisType;
-  @Indexed private ExecutionStatus executionStatus;
+  @FdIndex private ExecutionStatus executionStatus;
   private long startDataCollectionMinute;
   // Collection interval in minutes
   private int collectionInterval;
@@ -100,11 +100,11 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
   private int retry;
   // This needs to be String to boolean map because FeatureFlags can be removed which can cause deserialization issue.
   private final Map<String, Boolean> featureFlags = new HashMap<>();
-  @Indexed private Long timeSeriesAnalysisIteration;
-  @Indexed private Long logAnalysisIteration;
-  @Indexed private Long logClusterIteration;
-  @Indexed private Long cvTaskCreationIteration;
-  @Indexed private Long feedbackIteration;
+  @FdIndex private Long timeSeriesAnalysisIteration;
+  @FdIndex private Long logAnalysisIteration;
+  @FdIndex private Long logClusterIteration;
+  @FdIndex private Long cvTaskCreationIteration;
+  @FdIndex private Long feedbackIteration;
   private int initialDelaySeconds;
   private int dataCollectionIntervalMins;
   private boolean isHistoricalDataCollection;
@@ -113,7 +113,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
 
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 
   private String managerVersion;

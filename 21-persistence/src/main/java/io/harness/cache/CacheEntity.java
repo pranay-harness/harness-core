@@ -1,9 +1,9 @@
 package io.harness.cache;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.TtlIndex;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
 import lombok.Value;
@@ -13,8 +13,8 @@ import org.mongodb.morphia.annotations.Id;
 
 import java.util.Date;
 
-@UniqueIndex(name = "commutativeIdx", fields = { @Field("_id")
-                                                 , @Field("contextValue") })
+@CdUniqueIndex(name = "commutativeIdx", fields = { @Field("_id")
+                                                   , @Field("contextValue") })
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "CacheEntityKeys")
@@ -26,5 +26,5 @@ public class CacheEntity implements PersistentEntity {
 
   byte[] entity;
 
-  @TtlIndex Date validUntil;
+  @FdTtlIndex Date validUntil;
 }

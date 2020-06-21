@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.persistence.PersistentEntity;
@@ -42,8 +42,8 @@ import java.util.Map;
 @HarnessEntity(exportable = false)
 public class ExperimentalMessageComparisonResult
     implements PersistentEntity, UuidAware, GoogleDataStoreAware, CreatedAtAware {
-  @NotEmpty @Indexed private String stateExecutionId;
-  @Indexed private String cvConfigId;
+  @NotEmpty @FdIndex private String stateExecutionId;
+  @FdIndex private String cvConfigId;
   @NotEmpty private int logCollectionMinute;
   int numVotes;
   private String message1;

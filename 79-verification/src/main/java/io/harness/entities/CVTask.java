@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -34,14 +34,14 @@ import java.util.Date;
 public class CVTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
 
-  @NonNull @Indexed private String accountId;
+  @NonNull @FdIndex private String accountId;
   private String cvConfigId;
-  @Indexed private String stateExecutionId;
+  @FdIndex private String stateExecutionId;
   private String nextTaskId;
-  @Indexed @NonNull private ExecutionStatus status;
+  @FdIndex @NonNull private ExecutionStatus status;
 
   private long createdAt;
-  @Indexed private long lastUpdatedAt;
+  @FdIndex private long lastUpdatedAt;
 
   private int retryCount;
 
@@ -50,7 +50,7 @@ public class CVTask implements PersistentEntity, UuidAware, CreatedAtAware, Upda
   private String correlationId;
   private DataCollectionInfoV2 dataCollectionInfo;
 
-  @JsonIgnore @SchemaIgnore @TtlIndex private Date validUntil;
+  @JsonIgnore @SchemaIgnore @FdTtlIndex private Date validUntil;
   @PrePersist
   public void onUpdate() {
     // better to add days as plus month can vary and add complications to testing etc.

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -33,10 +33,10 @@ import java.util.Set;
 public class TimeSeriesRecord implements UuidAware, CreatedAtAware, AccountAccess, PersistentEntity {
   @Id private String uuid;
 
-  @Indexed private String accountId;
-  @Indexed private String cvConfigId;
-  @Indexed private String host;
-  @Indexed private String metricName;
+  @FdIndex private String accountId;
+  @FdIndex private String cvConfigId;
+  @FdIndex private String host;
+  @FdIndex private String metricName;
   private long hourStartBoundary;
   private long createdAt;
   @Default private Set<TimeSeriesGroupValue> timeSeriesGroupValues = new HashSet<>();
@@ -44,7 +44,7 @@ public class TimeSeriesRecord implements UuidAware, CreatedAtAware, AccountAcces
   @JsonIgnore
   @SchemaIgnore
   @Default
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(31).toInstant());
 
   @Data

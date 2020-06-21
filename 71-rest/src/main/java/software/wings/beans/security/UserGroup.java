@@ -10,9 +10,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexed;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
@@ -46,12 +46,12 @@ import javax.annotation.Nullable;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 
-@Index(name = "accountIdAndImportedByScim", fields = { @Field("accountId")
-                                                       , @Field("importedByScim") })
-@Index(name = "accountAndMemberIds", fields = { @Field("accountId")
-                                                , @Field("memberIds") })
-@Index(name = "accountIdAndName", fields = { @Field("accountId")
-                                             , @Field("name") })
+@CdIndex(name = "accountIdAndImportedByScim", fields = { @Field("accountId")
+                                                         , @Field("importedByScim") })
+@CdIndex(name = "accountAndMemberIds", fields = { @Field("accountId")
+                                                  , @Field("memberIds") })
+@CdIndex(name = "accountIdAndName", fields = { @Field("accountId")
+                                               , @Field("name") })
 @FieldNameConstants(innerTypeName = "UserGroupKeys")
 @Entity(value = "userGroups", noClassnameStored = true)
 @HarnessEntity(exportable = true)
@@ -83,7 +83,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo, Account
       ImmutableSet.of(DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME, DEFAULT_PROD_SUPPORT_USER_GROUP_NAME,
           DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME, DEFAULT_READ_ONLY_USER_GROUP_NAME);
 
-  @NotEmpty @Indexed private String name;
+  @NotEmpty @FdIndex private String name;
   private String description;
 
   private boolean isSsoLinked;
@@ -94,7 +94,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo, Account
   private String ssoGroupName;
   private boolean importedByScim;
 
-  @Indexed private String accountId;
+  @FdIndex private String accountId;
   private List<String> memberIds;
 
   @Transient private List<User> members;

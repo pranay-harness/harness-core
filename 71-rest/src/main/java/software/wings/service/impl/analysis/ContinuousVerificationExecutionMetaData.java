@@ -6,11 +6,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -30,30 +30,30 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @FieldNameConstants(innerTypeName = "ContinuousVerificationExecutionMetaDataKeys")
 
-@Index(name = "stateHostIdx",
+@CdIndex(name = "stateHostIdx",
     fields =
     {
       @Field("workflowId")
       , @Field("stateType"), @Field("executionStatus"), @Field(value = "workflowStartTs", type = IndexType.DESC)
     })
-@Index(name = "workflowExec_idx",
+@CdIndex(name = "workflowExec_idx",
     fields = { @Field("workflowExecutionId")
                , @Field(value = "createdAt", type = IndexType.DESC) })
-@Index(name = "cv_certified_index", fields = { @Field("pipelineExecutionId")
-                                               , @Field(value = "accountId") })
+@CdIndex(name = "cv_certified_index", fields = { @Field("pipelineExecutionId")
+                                                 , @Field(value = "accountId") })
 @Entity(value = "cvExecutionData", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class ContinuousVerificationExecutionMetaData extends Base implements AccountAccess {
-  @NotEmpty @Indexed private long workflowStartTs;
+  @NotEmpty @FdIndex private long workflowStartTs;
   @NotEmpty private long pipelineStartTs;
 
-  @NotEmpty @Indexed private String accountId;
+  @NotEmpty @FdIndex private String accountId;
   @NotEmpty private String envId;
-  @NotEmpty @Indexed private String applicationId;
+  @NotEmpty @FdIndex private String applicationId;
   @NotEmpty private String serviceId;
   @NotEmpty private String workflowId;
   @NotEmpty private String workflowExecutionId;
-  @NotEmpty @Indexed private String stateExecutionId;
+  @NotEmpty @FdIndex private String stateExecutionId;
   @NotEmpty private StateType stateType;
   private String pipelineId;
   @NotEmpty private String pipelineExecutionId;
@@ -75,6 +75,6 @@ public class ContinuousVerificationExecutionMetaData extends Base implements Acc
   @Default
   @JsonIgnore
   @SchemaIgnore
-  @TtlIndex
+  @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 }

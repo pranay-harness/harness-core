@@ -2,10 +2,10 @@ package software.wings.delegatetasks.validation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.TtlIndex;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -27,7 +27,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Entity(value = "delegateConnectionResults", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@UniqueIndex(name = "delegateConnectionResultsIdx",
+@CdUniqueIndex(name = "delegateConnectionResultsIdx",
     fields =
     {
       @Field(DelegateConnectionResultKeys.accountId)
@@ -41,12 +41,12 @@ public class DelegateConnectionResult implements PersistentEntity, UuidAware, Up
   @NotNull private long lastUpdatedAt;
 
   @NotEmpty private String accountId;
-  @Indexed @NotEmpty private String delegateId;
-  @Indexed @NotEmpty private String criteria;
+  @FdIndex @NotEmpty private String delegateId;
+  @FdIndex @NotEmpty private String criteria;
   private boolean validated;
   private long duration;
 
-  @TtlIndex @Default private Date validUntil = getValidUntilTime();
+  @FdTtlIndex @Default private Date validUntil = getValidUntilTime();
 
   public static Date getValidUntilTime() {
     return Date.from(OffsetDateTime.now().plusDays(30).toInstant());
