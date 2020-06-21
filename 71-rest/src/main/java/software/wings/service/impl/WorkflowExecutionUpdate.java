@@ -243,11 +243,9 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       }
 
       try {
-        if (featureFlagService.isEnabled(FeatureName.WE_STATUS_UPDATE, context.getAccountId())) {
-          WorkflowExecution workflowExecution =
-              Preconditions.checkNotNull(workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId));
-          statusPropagatorHelper.shouldPausePipeline(appId, workflowExecution.getPipelineExecutionId());
-        }
+        WorkflowExecution workflowExecution =
+            Preconditions.checkNotNull(workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId));
+        statusPropagatorHelper.shouldPausePipeline(appId, workflowExecution.getPipelineExecutionId());
       } catch (Exception e) {
         logger.error("Error in Status Propagation", e);
       }
