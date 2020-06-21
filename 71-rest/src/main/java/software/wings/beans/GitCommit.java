@@ -3,6 +3,12 @@ package software.wings.beans;
 import com.google.common.collect.ImmutableList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,12 +17,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.beans.yaml.GitCommandResult;
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
@@ -34,18 +34,18 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "gitCommits", noClassnameStored = true)
 @Indexes({
-  @Index(fields = { @Field(GitCommitKeys.accountId)
-                    , @Field(GitCommitKeys.commitId) },
-      options = @IndexOptions(name = "gitCommitIdx", unique = true, dropDups = true))
+  @Index(name = "gitCommitIdx", fields = { @Field(GitCommitKeys.accountId)
+                                           , @Field(GitCommitKeys.commitId) },
+      options = @IndexOptions(unique = true))
   ,
       @Index(fields = {
         @Field(GitCommitKeys.accountId)
         , @Field(GitCommitKeys.status), @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC)
-      }, options = @IndexOptions(name = "gitCommitStatusLastUpdatedIdx")), @Index(fields = {
+      }, name = "gitCommitStatusLastUpdatedIdx"), @Index(fields = {
         @Field(GitCommitKeys.accountId), @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC)
-      }, options = @IndexOptions(name = "gitCommitAccountIdLastUpdatedAT")), @Index(fields = {
+      }, name = "gitCommitAccountIdLastUpdatedAT"), @Index(fields = {
         @Field(GitCommitKeys.accountId), @Field(value = GitCommitKeys.createdAt, type = IndexType.DESC),
-      }, options = @IndexOptions(name = "gitCommitAccountIdCreatedAtDesc"))
+      }, name = "gitCommitAccountIdCreatedAtDesc")
 })
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GitCommitKeys")

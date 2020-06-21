@@ -6,6 +6,10 @@ import com.google.common.base.MoreObjects;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.LogKeyUtils;
 import io.harness.persistence.NameAccess;
@@ -18,10 +22,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.entityinterface.KeywordsAware;
@@ -44,7 +44,7 @@ import java.util.Set;
 @Entity(value = "applications", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ApplicationKeys")
-@Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
+@Indexes(@Index(name = "yaml", options = @IndexOptions(unique = true),
     fields = { @Field(ApplicationKeys.accountId)
                , @Field(ApplicationKeys.name) }))
 public class Application extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess {

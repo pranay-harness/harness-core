@@ -10,6 +10,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
@@ -20,11 +24,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.NotificationChannelType;
@@ -50,14 +49,11 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode(callSuper = false)
 @Indexes({
   @Index(fields = { @Field("accountId")
-                    , @Field("importedByScim") },
-      options = @IndexOptions(name = "accountIdAndImportedByScim", background = true))
-  ,
-      @Index(fields = {
-        @Field("accountId"), @Field("memberIds")
-      }, options = @IndexOptions(name = "accountAndMemberIds", background = true)), @Index(fields = {
-        @Field("accountId"), @Field("name")
-      }, options = @IndexOptions(name = "accountIdAndName", background = true))
+                    , @Field("importedByScim") }, name = "accountIdAndImportedByScim")
+  , @Index(fields = { @Field("accountId")
+                      , @Field("memberIds") }, name = "accountAndMemberIds"),
+      @Index(fields = { @Field("accountId")
+                        , @Field("name") }, name = "accountIdAndName")
 })
 @FieldNameConstants(innerTypeName = "UserGroupKeys")
 @Entity(value = "userGroups", noClassnameStored = true)

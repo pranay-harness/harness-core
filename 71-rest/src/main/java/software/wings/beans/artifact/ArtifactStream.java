@@ -13,6 +13,11 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.AllArgsConstructor;
@@ -22,11 +27,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.NameValuePair;
@@ -50,13 +50,12 @@ import java.util.regex.Pattern;
 @OwnedBy(CDC)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
 @Indexes({
-  @Index(options = @IndexOptions(name = "yaml", unique = true),
+  @Index(name = "yaml", options = @IndexOptions(unique = true),
       fields = { @Field("appId")
                  , @Field("serviceId"), @Field("name") })
   ,
-      @Index(options = @IndexOptions(name = "artifactStream_cleanup"), fields = {
-        @Field("artifactStreamType"), @Field("nextCleanupIteration")
-      })
+      @Index(name = "artifactStream_cleanup", fields = { @Field("artifactStreamType")
+                                                         , @Field("nextCleanupIteration") })
 })
 // TODO: ASR: add compound index with setting_id + name
 // TODO: ASR: change all apis to work with Service.artifactStreamIds instead of serviceId - including UI

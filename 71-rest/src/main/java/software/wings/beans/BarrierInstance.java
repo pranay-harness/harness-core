@@ -4,6 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
@@ -12,12 +17,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.BarrierInstancePipeline.BarrierInstancePipelineKeys;
 import software.wings.beans.BarrierInstanceWorkflow.BarrierInstanceWorkflowKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
@@ -27,12 +27,12 @@ import java.util.Date;
 import javax.validation.constraints.NotNull;
 
 @Indexes({
-  @Index(options = @IndexOptions(name = "search2", unique = true),
+  @Index(name = "search2", options = @IndexOptions(unique = true),
       fields = { @Field("name")
                  , @Field("pipeline.executionId"), @Field("pipeline.parallelIndex") })
   ,
-      @Index(options = @IndexOptions(name = "next"), fields = { @Field("state")
-                                                                , @Field("nextIteration") })
+      @Index(name = "next", fields = { @Field("state")
+                                       , @Field("nextIteration") })
 })
 @Data
 @Builder

@@ -12,6 +12,11 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -20,12 +25,7 @@ import io.harness.serializer.KryoUtils;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.simpleframework.xml.Transient;
 import software.wings.api.PhaseElement;
 import software.wings.beans.LoopEnvStateParams;
@@ -51,14 +51,14 @@ import javax.annotation.Nullable;
 @FieldNameConstants(innerTypeName = "StateExecutionInstanceKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "stateTypes2"),
+  @Index(name = "stateTypes2",
       fields =
       {
         @Field(StateExecutionInstanceKeys.executionUuid)
         , @Field(StateExecutionInstanceKeys.stateType), @Field(StateExecutionInstanceKeys.createdAt)
       })
   ,
-      @Index(options = @IndexOptions(name = "parentInstances2"), fields = {
+      @Index(name = "parentInstances2", fields = {
         @Field(StateExecutionInstanceKeys.executionUuid)
         , @Field(StateExecutionInstanceKeys.parentInstanceId), @Field(StateExecutionInstanceKeys.createdAt)
       })

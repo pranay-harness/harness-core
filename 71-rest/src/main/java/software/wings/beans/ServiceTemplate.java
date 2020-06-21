@@ -8,18 +8,18 @@ import com.google.common.base.MoreObjects;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexes;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -32,11 +32,11 @@ import java.util.Objects;
 @OwnedBy(CDC)
 @Entity(value = "serviceTemplates", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "yaml", unique = true),
+  @Index(name = "yaml", options = @IndexOptions(unique = true),
       fields = { @Field("appId")
                  , @Field("envId"), @Field("name") })
   ,
-      @Index(options = @IndexOptions(name = "app_env_createdAt"), fields = {
+      @Index(name = "app_env_createdAt", fields = {
         @Field(ServiceTemplateKeys.appId)
         , @Field(ServiceTemplateKeys.envId), @Field(value = ServiceTemplateKeys.createdAt, type = IndexType.DESC)
       })

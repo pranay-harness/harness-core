@@ -1,6 +1,10 @@
 package io.harness.ccm.config;
 
 import io.harness.ccm.config.GcpServiceAccount.GcpServiceAccountKeys;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -13,18 +17,14 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "GcpServiceAccountKeys")
 @Entity(value = "gcpServiceAccount", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "no_dup", unique = true), fields = {
+  @Index(name = "no_dup", options = @IndexOptions(unique = true), fields = {
     @Field(GcpServiceAccountKeys.accountId), @Field(GcpServiceAccountKeys.serviceAccountId)
   })
 })

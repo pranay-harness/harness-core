@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -26,7 +25,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
-
 import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.service.impl.ContainerMetadata;

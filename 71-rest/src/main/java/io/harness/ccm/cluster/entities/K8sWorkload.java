@@ -2,6 +2,10 @@ package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.K8sWorkload.K8sWorkloadKeys;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -15,11 +19,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PostLoad;
 import org.mongodb.morphia.annotations.PrePersist;
 
@@ -33,18 +33,18 @@ import java.util.stream.Collectors;
 @StoreIn("events")
 @Entity(value = "k8sWorkload", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "no_dup_cluster", unique = true),
+  @Index(name = "no_dup_cluster", options = @IndexOptions(unique = true),
       fields = { @Field(K8sWorkloadKeys.clusterId)
                  , @Field(K8sWorkloadKeys.uid) })
   ,
-      @Index(options = @IndexOptions(name = "accountId_clusterId_labels", background = true), fields = {
+      @Index(name = "accountId_clusterId_labels", fields = {
         @Field(K8sWorkloadKeys.accountId), @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.labels)
-      }), @Index(options = @IndexOptions(name = "accountId_clusterId_uid", background = true), fields = {
+      }), @Index(name = "accountId_clusterId_uid", fields = {
         @Field(K8sWorkloadKeys.accountId), @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.uid)
-      }), @Index(options = @IndexOptions(name = "accountId_name_clusterId_namespace", background = true), fields = {
+      }), @Index(name = "accountId_name_clusterId_namespace", fields = {
         @Field(K8sWorkloadKeys.accountId)
         , @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.namespace)
-      }), @Index(options = @IndexOptions(name = "accountId_name_labels", background = true), fields = {
+      }), @Index(name = "accountId_name_labels", fields = {
         @Field(K8sWorkloadKeys.accountId), @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.labels)
       })
 })

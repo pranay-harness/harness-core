@@ -7,6 +7,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptedDataParams;
@@ -23,11 +28,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.security.encryption.EncryptedDataParent.EncryptedDataParentKeys;
@@ -57,10 +57,10 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes({
-  @Index(fields = { @Field("accountId")
-                    , @Field("name") }, options = @IndexOptions(unique = true, name = "acctNameIdx"))
-  , @Index(fields = { @Field("accountId")
-                      , @Field("kmsId") }, options = @IndexOptions(name = "acctKmsIdx"))
+  @Index(name = "acctNameIdx", fields = { @Field("accountId")
+                                          , @Field("name") }, options = @IndexOptions(unique = true))
+  , @Index(name = "acctKmsIdx", fields = { @Field("accountId")
+                                           , @Field("kmsId") })
 })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
 public class EncryptedData

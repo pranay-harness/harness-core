@@ -10,6 +10,11 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.mongo.KryoConverter;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -25,12 +30,7 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.converters.SimpleValueConverter;
 
 import java.time.OffsetDateTime;
@@ -50,14 +50,12 @@ import javax.validation.constraints.NotNull;
 @Converters({ParametersConverter.class, ResponseDataConverter.class})
 @FieldNameConstants(innerTypeName = "DelegateTaskKeys")
 @Indexes({
-  @Index(options = @IndexOptions(name = "index"),
-      fields = { @Field(DelegateTaskKeys.status)
-                 , @Field(DelegateTaskKeys.expiry) })
-  ,
-      @Index(options = @IndexOptions(name = "pulling"), fields = {
-        @Field(DelegateTaskKeys.accountId)
-        , @Field(DelegateTaskKeys.status), @Field("data.async"), @Field(DelegateTaskKeys.expiry),
-      }), @Index(options = @IndexOptions(name = "data_async"), fields = { @Field("data.async") })
+  @Index(name = "index", fields = { @Field(DelegateTaskKeys.status)
+                                    , @Field(DelegateTaskKeys.expiry) })
+  , @Index(name = "pulling", fields = {
+    @Field(DelegateTaskKeys.accountId)
+    , @Field(DelegateTaskKeys.status), @Field("data.async"), @Field(DelegateTaskKeys.expiry),
+  }), @Index(name = "data_async", fields = { @Field("data.async") })
 })
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, Task {
   public static final String TASK_IDENTIFIER = "DELEGATE_TASK";

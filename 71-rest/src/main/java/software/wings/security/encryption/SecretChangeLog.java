@@ -2,6 +2,9 @@ package software.wings.security.encryption;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,10 +14,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 
 import javax.validation.constraints.NotNull;
@@ -29,11 +28,8 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "secretChangeLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Indexes({
-  @Index(fields = {
-    @Field("accountId"), @Field("encryptedDataId")
-  }, options = @IndexOptions(name = "acctEncryptedDataIdx"))
-})
+@Indexes({ @Index(fields = { @Field("accountId")
+                             , @Field("encryptedDataId") }, name = "acctEncryptedDataIdx") })
 @FieldNameConstants(innerTypeName = "SecretChangeLogKeys")
 public class SecretChangeLog extends Base implements AccountAccess {
   @NotEmpty private String accountId;

@@ -8,6 +8,11 @@ import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -19,13 +24,7 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.time.Instant;
@@ -36,7 +35,7 @@ import java.util.Map;
 @Builder
 @Entity(value = "instanceData", noClassnameStored = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "accountId_clusterId_instanceId_instanceState"),
+  @Index(name = "accountId_clusterId_instanceId_instanceState",
       fields =
       {
         @Field(InstanceDataKeys.accountId)
@@ -44,14 +43,11 @@ import java.util.Map;
             @Field(InstanceDataKeys.instanceState)
       })
   ,
-      @Index(options = @IndexOptions(name = "accountId_clusterId_instanceName_usageStartTime", background = true),
-          fields =
-          {
-            @Field(InstanceDataKeys.accountId)
-            , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceName),
-                @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.DESC)
-          }),
-      @Index(options = @IndexOptions(name = "accountId_usageStartTime", background = true), fields = {
+      @Index(name = "accountId_clusterId_instanceName_usageStartTime", fields = {
+        @Field(InstanceDataKeys.accountId)
+        , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceName),
+            @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.DESC)
+      }), @Index(name = "accountId_usageStartTime", fields = {
         @Field(InstanceDataKeys.accountId), @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.ASC)
       })
 })

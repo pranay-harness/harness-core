@@ -3,6 +3,10 @@ package io.harness.limits;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.limits.lib.Limit;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.validation.Update;
@@ -11,11 +15,7 @@ import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 
 import javax.validation.constraints.NotNull;
 
@@ -23,8 +23,8 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(exclude = "id", callSuper = false)
 @Entity(value = "allowedLimits", noClassnameStored = true)
 @Indexes(
-    @Index(fields = { @Field("key")
-                      , @Field("accountId") }, options = @IndexOptions(name = "key_idx", unique = true)))
+    @Index(name = "key_idx", fields = { @Field("key")
+                                        , @Field("accountId") }, options = @IndexOptions(unique = true)))
 @FieldNameConstants(innerTypeName = "ConfiguredLimitKeys")
 @HarnessEntity(exportable = true)
 public class ConfiguredLimit<T extends Limit> implements PersistentEntity, AccountAccess {

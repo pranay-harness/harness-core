@@ -26,6 +26,10 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -35,12 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PostLoad;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.ExecutionStrategy;
@@ -81,11 +80,8 @@ import javax.validation.constraints.NotNull;
 @OwnedBy(CDC)
 @Data
 @Entity(value = "stateMachines", noClassnameStored = true)
-@Indexes({
-  @Index(options = @IndexOptions(name = "appId_origin"), fields = {
-    @Field("appId"), @Field("originId"), @Field("originVersion")
-  })
-})
+@Indexes({ @Index(name = "appId_origin", fields = { @Field("appId")
+                                                    , @Field("originId"), @Field("originVersion") }) })
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "StateMachineKeys")
 @Slf4j

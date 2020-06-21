@@ -1,6 +1,7 @@
 package io.harness.mongo;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Indexed;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -10,7 +11,6 @@ import io.harness.persistence.UuidAware;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
 
 @Data
 @FieldNameConstants(innerTypeName = "SampleEntityKeys")

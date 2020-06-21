@@ -2,6 +2,10 @@ package software.wings.beans.infrastructure.instance;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -15,12 +19,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.infrastructure.instance.info.ServerlessInstanceInfo;
@@ -32,20 +31,18 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
 @Indexes({
   @Index(fields = { @Field("appId")
-                    , @Field("isDeleted"), @Field("deletedAt") },
-      options = @IndexOptions(name = "serverless_instance_index1", background = true))
-  ,
-      @Index(fields = {
-        @Field("appId"), @Field("infraMappingId"), @Field("isDeleted"), @Field("deletedAt")
-      }, options = @IndexOptions(name = "serverless_instance_index2", background = true)), @Index(fields = {
-        @Field("accountId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
-      }, options = @IndexOptions(name = "serverless_instance_index3", background = true)), @Index(fields = {
-        @Field("appId"), @Field("serviceId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
-      }, options = @IndexOptions(name = "serverless_instance_index5", background = true)), @Index(fields = {
-        @Field("accountId"), @Field("isDeleted")
-      }, options = @IndexOptions(name = "serverless_instance_index7", background = true)), @Index(fields = {
-        @Field("appId"), @Field("serviceId"), @Field("isDeleted")
-      }, options = @IndexOptions(name = "serverless_instance_index8", background = true))
+                    , @Field("isDeleted"), @Field("deletedAt") }, name = "serverless_instance_index1")
+  , @Index(fields = {
+    @Field("appId"), @Field("infraMappingId"), @Field("isDeleted"), @Field("deletedAt")
+  }, name = "serverless_instance_index2"), @Index(fields = {
+    @Field("accountId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
+  }, name = "serverless_instance_index3"), @Index(fields = {
+    @Field("appId"), @Field("serviceId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
+  }, name = "serverless_instance_index5"), @Index(fields = {
+    @Field("accountId"), @Field("isDeleted")
+  }, name = "serverless_instance_index7"), @Index(fields = {
+    @Field("appId"), @Field("serviceId"), @Field("isDeleted")
+  }, name = "serverless_instance_index8")
 })
 @FieldNameConstants(innerTypeName = "ServerlessInstanceKeys")
 @Entity(value = "serverless-instance", noClassnameStored = true)
@@ -99,7 +96,7 @@ public class ServerlessInstance implements PersistentEntity, UuidAware, CreatedA
 
   private ServerlessInstanceInfo instanceInfo;
 
-  @Indexed(options = @IndexOptions(background = true)) private boolean isDeleted;
+  @Indexed private boolean isDeleted;
   private long deletedAt;
 
   @Builder(toBuilder = true)

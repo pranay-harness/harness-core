@@ -2,6 +2,10 @@ package software.wings.beans;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -13,12 +17,7 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.ResourceLookup.ResourceLookupKeys;
 
 import java.util.List;
@@ -26,7 +25,7 @@ import javax.validation.constraints.NotNull;
 
 @FieldNameConstants(innerTypeName = "ResourceLookupKeys")
 @Indexes({
-  @Index(options = @IndexOptions(name = "resourceIndex_1"),
+  @Index(name = "resourceIndex_1",
       fields =
       {
         @Field(ResourceLookupKeys.accountId)
@@ -34,18 +33,18 @@ import javax.validation.constraints.NotNull;
             @Field(ResourceLookupKeys.resourceName)
       })
   ,
-      @Index(options = @IndexOptions(name = "resourceIndex_3"),
+      @Index(name = "resourceIndex_3",
           fields =
           {
             @Field(ResourceLookupKeys.accountId)
             , @Field(ResourceLookupKeys.resourceName), @Field(ResourceLookupKeys.resourceType)
           }),
 
-      @Index(options = @IndexOptions(name = "tagsNameResourceLookupIndex"),
-          fields = { @Field(ResourceLookupKeys.accountId)
-                     , @Field("tags.name") }),
+      @Index(
+          name = "tagsNameResourceLookupIndex", fields = { @Field(ResourceLookupKeys.accountId)
+                                                           , @Field("tags.name") }),
 
-      @Index(options = @IndexOptions(name = "resourceIdResourceLookupIndex"), fields = {
+      @Index(name = "resourceIdResourceLookupIndex", fields = {
         @Field(ResourceLookupKeys.accountId), @Field(ResourceLookupKeys.resourceId)
       }),
 })

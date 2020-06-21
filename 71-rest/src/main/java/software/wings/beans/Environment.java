@@ -11,6 +11,11 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
@@ -20,11 +25,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
@@ -45,7 +45,7 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Indexes({
-  @Index(options = @IndexOptions(name = "yaml", unique = true), fields = {
+  @Index(name = "yaml", options = @IndexOptions(unique = true), fields = {
     @Field(EnvironmentKeys.appId), @Field(EnvironmentKeys.name)
   })
 })

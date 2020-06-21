@@ -2,6 +2,7 @@ package software.wings.beans.alert;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -12,7 +13,6 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
 import software.wings.alerts.AlertCategory;
 import software.wings.beans.Base;
 

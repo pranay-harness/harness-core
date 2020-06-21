@@ -11,6 +11,10 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -22,10 +26,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.entityinterface.KeywordsAware;
 
@@ -38,13 +38,12 @@ import java.util.Set;
 @JsonInclude(NON_NULL)
 @EqualsAndHashCode(callSuper = false)
 @Indexes({
-  @Index(options = @IndexOptions(name = "duplicateKey", unique = true),
+  @Index(name = "duplicateKey", options = @IndexOptions(unique = true),
       fields = { @Field("accountId")
                  , @Field("name"), @Field("pathId"), @Field("appId") })
   ,
-      @Index(options = @IndexOptions(name = "account_gallery_app_idx"), fields = {
-        @Field("accountId"), @Field("galleryId"), @Field("appId")
-      })
+      @Index(name = "account_gallery_app_idx", fields = { @Field("accountId")
+                                                          , @Field("galleryId"), @Field("appId") })
 })
 @FieldNameConstants(innerTypeName = "TemplateFolderKeys")
 @Entity(value = "templateFolders", noClassnameStored = true)

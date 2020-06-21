@@ -2,6 +2,7 @@ package io.harness.beans;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.repo.RepoConfiguration;
+import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.UpdatedAtAware;
@@ -11,7 +12,6 @@ import io.harness.yaml.core.nonyaml.NonYamlInfo;
 import lombok.Builder;
 import lombok.Data;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
 
 import javax.validation.constraints.NotNull;
 

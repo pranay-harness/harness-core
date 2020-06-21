@@ -3,6 +3,10 @@ package io.harness.ng.core.entities;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
@@ -13,10 +17,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -32,9 +32,9 @@ import javax.validation.constraints.Size;
 @Builder
 @FieldNameConstants(innerTypeName = "ProjectKeys")
 @Indexes({
-  @Index(options = @IndexOptions(name = "unique_orgIdentifier_projectIdentifier", unique = true, background = true),
-      fields = { @Field(ProjectKeys.orgId)
-                 , @Field(ProjectKeys.identifier) })
+  @Index(name = "unique_orgIdentifier_projectIdentifier", options = @IndexOptions(unique = true), fields = {
+    @Field(ProjectKeys.orgId), @Field(ProjectKeys.identifier)
+  })
 })
 @Entity(value = "projects", noClassnameStored = true)
 @Document("projects")

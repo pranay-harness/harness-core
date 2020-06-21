@@ -3,6 +3,10 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
@@ -12,10 +16,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.yaml.BaseEntityYaml;
@@ -37,7 +37,7 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "notificationGroups", noClassnameStored = true)
 @Indexes(
-    @Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("accountId")
+    @Index(name = "yaml", options = @IndexOptions(unique = true), fields = { @Field("accountId")
                                                                              , @Field("name") }))
 @HarnessEntity(exportable = true)
 @Deprecated

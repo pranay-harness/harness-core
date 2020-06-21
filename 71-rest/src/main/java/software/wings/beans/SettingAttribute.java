@@ -61,6 +61,11 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptionType;
 import lombok.Data;
@@ -71,11 +76,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.settings.SettingValue;
@@ -94,19 +94,19 @@ import javax.validation.Valid;
  */
 @OwnedBy(CDC)
 @Indexes({
-  @Index(options = @IndexOptions(name = "locate", unique = true),
+  @Index(name = "locate", options = @IndexOptions(unique = true),
       fields = { @Field("accountId")
                  , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") })
   ,
-      @Index(options = @IndexOptions(name = "acctCatTypeIdx"), fields = {
-        @Field("accountId"), @Field("category"), @Field("value.type")
-      }), @Index(options = @IndexOptions(name = "acctValTypeIdx"), fields = {
-        @Field("accountId"), @Field("value.type")
-      }), @Index(options = @IndexOptions(name = "value.type_1_nextIteration_1"), fields = {
-        @Field("value.type"), @Field("nextIteration")
-      }), @Index(options = @IndexOptions(name = "secretsMigrationIdx"), fields = {
-        @Field("value.type"), @Field("nextSecretMigrationIteration")
-      }), @Index(options = @IndexOptions(name = "secretsMigrationPerAccountIdx"), fields = {
+      @Index(name = "acctCatTypeIdx", fields = { @Field("accountId")
+                                                 , @Field("category"), @Field("value.type") }),
+      @Index(name = "acctValTypeIdx", fields = { @Field("accountId")
+                                                 , @Field("value.type") }),
+      @Index(name = "value.type_1_nextIteration_1", fields = { @Field("value.type")
+                                                               , @Field("nextIteration") }),
+      @Index(name = "secretsMigrationIdx", fields = { @Field("value.type")
+                                                      , @Field("nextSecretMigrationIteration") }),
+      @Index(name = "secretsMigrationPerAccountIdx", fields = {
         @Field("value.type"), @Field("secretsMigrated"), @Field("accountId")
       })
 })

@@ -6,6 +6,12 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.ExecutionStatus;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.version.ServiceApiVersion;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -13,12 +19,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -42,17 +42,17 @@ import java.util.concurrent.TimeUnit;
             @Field("ml_analysis_type"), @Field("cluster_level"), @Field("group_name"), @Field("version"),
             @Field(value = "createdAt", type = IndexType.DESC)
       },
-      options = @IndexOptions(name = "taskQueueIdx"))
+      name = "taskQueueIdx")
   ,
       @Index(fields = {
         @Field("cvConfigId"), @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus")
-      }, options = @IndexOptions(name = "cvConfigStatusIdx")), @Index(fields = {
+      }, name = "cvConfigStatusIdx"), @Index(fields = {
         @Field("executionStatus")
         , @Field("ml_analysis_type"), @Field(value = "is24x7Task"), @Field(value = "createdAt", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "usageMetricsIndex")), @Index(fields = {
+      }, name = "usageMetricsIndex"), @Index(fields = {
         @Field("experiment_name")
         , @Field("executionStatus"), @Field(value = "retry"), @Field(value = "createdAt", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "taskFetchIdx"))
+      }, name = "taskFetchIdx")
 })
 @Data
 @Builder

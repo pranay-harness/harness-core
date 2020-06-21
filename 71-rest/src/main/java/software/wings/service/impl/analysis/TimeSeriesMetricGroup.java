@@ -4,6 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -11,11 +16,6 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.sm.StateType;
 
@@ -27,9 +27,9 @@ import java.util.Map;
  * Created by rsingh on 08/30/17.
  */
 @Indexes({
-  @Index(fields = {
+  @Index(name = "uniqueIdx", fields = {
     @Field("stateType"), @Field("stateExecutionId")
-  }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
+  }, options = @IndexOptions(unique = true))
 })
 @Data
 @EqualsAndHashCode(callSuper = false)

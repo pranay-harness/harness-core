@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,10 +15,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Preference.PreferenceKeys;
 
 @Data
@@ -27,7 +26,7 @@ import software.wings.beans.Preference.PreferenceKeys;
 })
 @FieldNameConstants(innerTypeName = "PreferenceKeys")
 @Indexes({
-  @Index(options = @IndexOptions(name = "preference_index"), fields = {
+  @Index(name = "preference_index", fields = {
     @Field(PreferenceKeys.accountId), @Field(PreferenceKeys.userId), @Field(PreferenceKeys.name)
   })
 })

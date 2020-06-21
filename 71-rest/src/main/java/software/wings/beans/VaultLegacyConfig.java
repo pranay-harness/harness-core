@@ -8,6 +8,10 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
@@ -20,10 +24,6 @@ import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.Arrays;
@@ -40,11 +40,11 @@ import java.util.List;
 @ToString(exclude = {"authToken"})
 @EqualsAndHashCode(callSuper = false)
 @Indexes({
-  @Index(fields = { @Field("name")
-                    , @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
-  , @Index(fields = {
+  @Index(name = "uniqueIdx", fields = { @Field("name")
+                                        , @Field("accountId") }, options = @IndexOptions(unique = true))
+  , @Index(name = "uniqueUrlIdx", fields = {
     @Field("vaultUrl"), @Field("accountId")
-  }, options = @IndexOptions(unique = true, name = "uniqueUrlIdx"))
+  }, options = @IndexOptions(unique = true))
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "vaultConfig", noClassnameStored = true)

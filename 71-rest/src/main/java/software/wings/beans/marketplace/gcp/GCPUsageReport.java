@@ -3,6 +3,10 @@ package software.wings.beans.marketplace.gcp;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
@@ -12,19 +16,15 @@ import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.jersey.JsonViews;
 
 import java.time.Instant;
 import javax.validation.constraints.NotNull;
 
-@Indexes(@Index(fields = { @Field("accountId")
-                           , @Field("startTimestamp") },
-    options = @IndexOptions(unique = true, name = "accountId_startTimestamp_unique_idx", background = true)))
+@Indexes(@Index(name = "accountId_startTimestamp_unique_idx",
+    fields = { @Field("accountId")
+               , @Field("startTimestamp") }, options = @IndexOptions(unique = true)))
 @Value
 @FieldNameConstants(innerTypeName = "GCPUsageReportKeys")
 @Entity(value = "gcpUsageReport", noClassnameStored = true)

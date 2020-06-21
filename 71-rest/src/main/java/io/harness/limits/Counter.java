@@ -1,14 +1,14 @@
 package io.harness.limits;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
 import io.harness.persistence.AccountAccess;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 
 @Getter

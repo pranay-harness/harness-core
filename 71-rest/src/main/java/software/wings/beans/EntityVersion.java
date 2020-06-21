@@ -1,13 +1,12 @@
 package software.wings.beans;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexes;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.EntityVersion.EntityVersionKeys;
 
 /**
@@ -17,7 +16,7 @@ import software.wings.beans.EntityVersion.EntityVersionKeys;
 @FieldNameConstants(innerTypeName = "EntityVersionKeys")
 
 @Indexes({
-  @Index(options = @IndexOptions(name = "app_type_uuid_createdAt"),
+  @Index(name = "app_type_uuid_createdAt",
       fields =
       {
         @Field(value = EntityVersionKeys.appId)
@@ -25,7 +24,7 @@ import software.wings.beans.EntityVersion.EntityVersionKeys;
             @Field(value = EntityVersionKeys.createdAt, type = IndexType.DESC)
       })
   ,
-      @Index(options = @IndexOptions(name = "app_type_uuid_version"), fields = {
+      @Index(name = "app_type_uuid_version", fields = {
         @Field(value = EntityVersionKeys.appId)
         , @Field(value = EntityVersionKeys.entityType), @Field(value = EntityVersionKeys.entityUuid),
             @Field(value = EntityVersionKeys.version, type = IndexType.DESC)

@@ -11,6 +11,11 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SortOrder;
 import io.harness.exception.WingsException;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -20,11 +25,6 @@ import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.metrics.RiskLevel;
@@ -39,9 +39,9 @@ import java.util.List;
  * Created by rsingh on 08/30/17.
  */
 @Indexes({
-  @Index(fields = {
+  @Index(name = "analysisUniqueIdx", fields = {
     @Field("workflowExecutionId"), @Field("stateExecutionId"), @Field("groupName"), @Field("analysisMinute")
-  }, options = @IndexOptions(unique = true, name = "analysisUniqueIdx"))
+  }, options = @IndexOptions(unique = true))
 })
 @Data
 @NoArgsConstructor

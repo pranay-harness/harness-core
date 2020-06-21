@@ -23,6 +23,11 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -36,12 +41,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Log.LogKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
 
@@ -59,13 +59,11 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "commandLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @Indexes({
-  @Index(options = @IndexOptions(name = "appId_activityId"),
-      fields = { @Field(value = LogKeys.appId)
-                 , @Field(value = LogKeys.activityId) })
-  ,
-      @Index(options = @IndexOptions(name = "activityIdCreatedAt"), fields = {
-        @Field(value = LogKeys.activityId), @Field(value = CreatedAtAware.CREATED_AT_KEY)
-      })
+  @Index(name = "appId_activityId", fields = { @Field(value = LogKeys.appId)
+                                               , @Field(value = LogKeys.activityId) })
+  , @Index(name = "activityIdCreatedAt", fields = {
+    @Field(value = LogKeys.activityId), @Field(value = CreatedAtAware.CREATED_AT_KEY)
+  })
 })
 public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                             UpdatedAtAware, UpdatedByAware, ApplicationAccess {

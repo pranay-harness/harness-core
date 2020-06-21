@@ -24,6 +24,12 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -40,13 +46,7 @@ import lombok.experimental.FieldNameConstants;
 import org.apache.http.HttpStatus;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -68,7 +68,7 @@ import java.util.List;
 @Indexes({
   @Index(fields = {
     @Field("stateExecutionId"), @Field(value = CreatedAtAware.CREATED_AT_KEY, type = IndexType.DESC)
-  }, options = @IndexOptions(name = "queryIdx"))
+  }, name = "queryIdx")
 })
 @Entity(value = "thirdPartyApiCallLog", noClassnameStored = true)
 @HarnessEntity(exportable = false)

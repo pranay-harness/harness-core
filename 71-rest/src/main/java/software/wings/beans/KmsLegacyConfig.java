@@ -9,6 +9,10 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
@@ -21,10 +25,6 @@ import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.delegatetasks.validation.AbstractSecretManagerValidation;
 
@@ -41,7 +41,7 @@ import java.util.List;
 @ToString(exclude = {"secretKey", "kmsArn"})
 @EqualsAndHashCode(callSuper = false)
 @Indexes({
-  @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
+  @Index(name = "uniqueIdx", fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true))
 })
 @Entity(value = "kmsConfig", noClassnameStored = true)
 @HarnessEntity(exportable = false)

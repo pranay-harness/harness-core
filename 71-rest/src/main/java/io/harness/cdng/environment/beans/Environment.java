@@ -2,6 +2,10 @@ package io.harness.cdng.environment.beans;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.common.beans.Tag;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -14,18 +18,14 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 
 import java.util.List;
 
 @Data
 @Builder
 @Indexes({
-  @Index(options = @IndexOptions(name = "envNGIdx", unique = true), fields = {
+  @Index(name = "envNGIdx", options = @IndexOptions(unique = true), fields = {
     @Field("accountId"), @Field("orgId"), @Field("projectId"), @Field("identifier")
   })
 })

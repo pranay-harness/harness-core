@@ -14,14 +14,14 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.serializer.MapperUtils;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
@@ -51,7 +51,7 @@ import java.util.Set;
 @Entity(value = "commands")
 @HarnessEntity(exportable = true)
 @Indexes({
-  @Index(options = @IndexOptions(name = "yaml", unique = true), fields = {
+  @Index(name = "yaml", options = @IndexOptions(unique = true), fields = {
     @Field("appId"), @Field("originEntityId"), @Field("version")
   })
 })

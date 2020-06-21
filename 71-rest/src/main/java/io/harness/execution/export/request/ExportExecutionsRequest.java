@@ -9,6 +9,9 @@ import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.execution.export.request.ExportExecutionsRequest.ExportExecutionsRequestKeys;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -18,11 +21,7 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 
 import java.util.List;
 
@@ -33,13 +32,13 @@ import java.util.List;
 @Entity(value = "exportExecutionsRequests", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @Indexes({
-  @Index(options = @IndexOptions(name = "accountId_status"),
+  @Index(name = "accountId_status",
       fields = { @Field(ExportExecutionsRequestKeys.accountId)
                  , @Field(ExportExecutionsRequestKeys.status) })
   ,
-      @Index(options = @IndexOptions(name = "status_nextIteration"), fields = {
+      @Index(name = "status_nextIteration", fields = {
         @Field(ExportExecutionsRequestKeys.status), @Field(ExportExecutionsRequestKeys.nextIteration)
-      }), @Index(options = @IndexOptions(name = "status_expiresAt_nextCleanupIteration"), fields = {
+      }), @Index(name = "status_expiresAt_nextCleanupIteration", fields = {
         @Field(ExportExecutionsRequestKeys.status)
         , @Field(ExportExecutionsRequestKeys.expiresAt), @Field(ExportExecutionsRequestKeys.nextCleanupIteration)
       })

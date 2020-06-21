@@ -3,18 +3,18 @@ package software.wings.service.impl.analysis;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 
 /**
  * ExperimentalMetricAnalysisRecord is the payload send after ML Analysis of Experimental Task.
@@ -22,16 +22,17 @@ import org.mongodb.morphia.utils.IndexType;
  * Created by Pranjal on 08/14/2018
  */
 @Indexes({
-  @Index(fields =
+  @Index(name = "MetricAnalysisUniqueIdx",
+      fields =
       { @Field("workflowExecutionId")
         , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName") },
-      options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx"))
+      options = @IndexOptions(unique = true))
   ,
       @Index(fields = {
         @Field("analysisMinute"), @Field("mismatched"), @Field(value = "createdAt", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "ExperimentalMetricListIdx")), @Index(fields = {
+      }, name = "ExperimentalMetricListIdx"), @Index(fields = {
         @Field("analysisMinute"), @Field("stateExecutionId")
-      }, options = @IndexOptions(name = "analysisMinStateExecutionIdIndex"))
+      }, name = "analysisMinStateExecutionIdIndex")
 })
 @Data
 @Builder

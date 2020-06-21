@@ -1,6 +1,10 @@
 package software.wings.beans.peronalization;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
@@ -9,17 +13,13 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.peronalization.PersonalizationSteps.PersonalizationStepsKeys;
 import software.wings.beans.peronalization.PersonalizationTemplates.PersonalizationTemplatesKeys;
 
 @Value
 @Builder
-@Indexes(@Index(options = @IndexOptions(name = "identification", unique = true),
+@Indexes(@Index(name = "identification", options = @IndexOptions(unique = true),
     fields = { @Field("accountId")
                , @Field("userId") }))
 @FieldNameConstants(innerTypeName = "PersonalizationKeys")

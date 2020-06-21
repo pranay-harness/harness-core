@@ -5,6 +5,11 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.NameAccess;
@@ -19,12 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
@@ -37,12 +37,11 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Indexes({
-  @Index(options = @IndexOptions(name = "infraDefinitionIdx", unique = true),
+  @Index(name = "infraDefinitionIdx", options = @IndexOptions(unique = true),
       fields = { @Field("appId")
                  , @Field("envId"), @Field("name") })
   ,
-      @Index(options = @IndexOptions(name = "infrastructure_cloudProviderId"),
-          fields = { @Field("infrastructure.cloudProviderId") })
+      @Index(name = "infrastructure_cloudProviderId", fields = { @Field("infrastructure.cloudProviderId") })
 })
 
 @Data

@@ -2,6 +2,11 @@ package software.wings.audit;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -12,13 +17,7 @@ import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.utils.IndexType;
 import software.wings.audit.AuditRecord.AuditRecordKeys;
 
 import javax.validation.constraints.NotNull;
@@ -31,7 +30,7 @@ import javax.validation.constraints.NotNull;
 @Indexes({
   @Index(fields = {
     @Field(AuditRecordKeys.auditHeaderId), @Field(value = AuditRecordKeys.createdAt, type = IndexType.DESC),
-  }, options = @IndexOptions(name = "entityRecordIndex_1"))
+  }, name = "entityRecordIndex_1")
 })
 public class AuditRecord
     implements PersistentEntity, CreatedAtAware, UuidAware, PersistentRegularIterable, AccountAccess {

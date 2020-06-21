@@ -12,6 +12,11 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.version.ServiceApiVersion;
 import lombok.AllArgsConstructor;
@@ -21,11 +26,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.FeatureName;
 import software.wings.sm.StateType;
@@ -40,17 +40,17 @@ import java.util.Map;
  * Created by sriram_parthasarathy on 8/23/17.
  */
 @Indexes({
-  @Index(fields = { @Field("stateExecutionId")
-                    , @Field("executionStatus") },
-      options = @IndexOptions(unique = true, name = "task_Unique_Idx"))
+  @Index(name = "task_Unique_Idx", fields = { @Field("stateExecutionId")
+                                              , @Field("executionStatus") },
+      options = @IndexOptions(unique = true))
   ,
       @Index(fields = {
         @Field("analysisType"), @Field("executionStatus"), @Field("timeSeriesAnalysisIteration")
-      }, options = @IndexOptions(name = "timeSeriesAnalysisIterationIdx")), @Index(fields = {
+      }, name = "timeSeriesAnalysisIterationIdx"), @Index(fields = {
         @Field("analysisType"), @Field("executionStatus"), @Field("logAnalysisIteration")
-      }, options = @IndexOptions(name = "logAnalysisIterationIdx")), @Index(fields = {
+      }, name = "logAnalysisIterationIdx"), @Index(fields = {
         @Field("cvTasksCreated"), @Field("cvTaskCreationIteration")
-      }, options = @IndexOptions(name = "cvTaskCreationIndex"))
+      }, name = "cvTaskCreationIndex")
 })
 @Data
 @FieldNameConstants(innerTypeName = "AnalysisContextKeys")

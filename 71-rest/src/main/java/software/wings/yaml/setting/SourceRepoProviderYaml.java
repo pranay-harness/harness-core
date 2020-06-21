@@ -5,7 +5,6 @@ import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 

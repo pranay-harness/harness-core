@@ -15,6 +15,11 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.Index;
+import io.harness.mongo.index.IndexOptions;
+import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.Indexes;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Update;
 import lombok.Data;
@@ -26,11 +31,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -50,12 +50,12 @@ import javax.annotation.Nullable;
 @RequiredArgsConstructor
 @Entity(value = "infrastructureMapping")
 @Indexes({
-  @Index(options = @IndexOptions(name = "yaml", unique = true),
+  @Index(name = "yaml", options = @IndexOptions(unique = true),
       fields = { @Field("appId")
                  , @Field("envId"), @Field("name") })
   ,
-      @Index(options = @IndexOptions(name = "app_infratype"), fields = { @Field("appId")
-                                                                         , @Field("infraMappingType") })
+      @Index(name = "app_infratype", fields = { @Field("appId")
+                                                , @Field("infraMappingType") })
 })
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
