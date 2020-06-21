@@ -24,7 +24,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -68,58 +67,91 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "WorkflowExecutionKeys")
 @Entity(value = "workflowExecutions", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Indexes({
-  @Index(name = "search", fields = { @Field(WorkflowExecutionKeys.workflowId)
-                                     , @Field(WorkflowExecutionKeys.status) })
-  , @Index(name = "app_pipExecutionId_createdAt", fields = {
-    @Field(WorkflowExecutionKeys.appId)
-    , @Field(WorkflowExecutionKeys.pipelineExecutionId),
-        @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
-  }), @Index(name = "service_guard", fields = {
-    @Field(WorkflowExecutionKeys.appId), @Field(value = WorkflowExecutionKeys.startTs)
-  }), @Index(name = "lastDeployedSearch", fields = {
-    @Field(WorkflowExecutionKeys.appId)
-    , @Field(WorkflowExecutionKeys.status), @Field(WorkflowExecutionKeys.workflowId),
-        @Field(WorkflowExecutionKeys.infraMappingIds),
-        @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
-  }), @Index(name = "appId_endTs", fields = {
-    @Field(WorkflowExecutionKeys.appId), @Field(value = WorkflowExecutionKeys.endTs)
-  }), @Index(name = "lastInfraMappingSearch", fields = {
-    @Field(WorkflowExecutionKeys.appId)
-    , @Field(WorkflowExecutionKeys.workflowType), @Field(WorkflowExecutionKeys.status),
-        @Field(WorkflowExecutionKeys.infraMappingIds),
-        @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
-  }), @Index(name = "accountId_endTs", fields = {
-    @Field(WorkflowExecutionKeys.accountId), @Field(value = WorkflowExecutionKeys.endTs, type = IndexType.DESC)
-  }), @Index(name = "accountId_createdAt2", fields = {
-    @Field(WorkflowExecutionKeys.accountId), @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
-  }), @Index(name = "workflowExecutionMonitor", fields = {
-    @Field(WorkflowExecutionKeys.status), @Field(WorkflowExecutionKeys.nextIteration)
-  }), @Index(name = "accountId_pipExecutionId_createdAt", fields = {
-    @Field(WorkflowExecutionKeys.accountId)
-    , @Field(WorkflowExecutionKeys.pipelineExecutionId),
-        @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
-  }), @Index(name = "searchByServiceIds", fields = {
-    @Field(WorkflowExecutionKeys.appId)
-    , @Field(WorkflowExecutionKeys.workflowId), @Field(WorkflowExecutionKeys.status),
-        @Field(WorkflowExecutionKeys.serviceIds), @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
-  }), @Index(name = "accountId_tags_createdAt", fields = {
-    @Field(WorkflowExecutionKeys.accountId)
-    , @Field("tags.name"), @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
-  }), @Index(name = "accountId_appId_tags_createdAt", fields = {
-    @Field(WorkflowExecutionKeys.accountId)
-    , @Field(WorkflowExecutionKeys.appId), @Field("tags.name"),
-        @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
-  }), @Index(name = "appid_workflowid_status_createdat", fields = {
-    @Field(WorkflowExecutionKeys.appId)
-    , @Field(WorkflowExecutionKeys.workflowId), @Field(WorkflowExecutionKeys.status),
-        @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC),
-  }), @Index(name = "accountId_pipExecutionId_keywords_createdAt", fields = {
-    @Field(WorkflowExecutionKeys.accountId)
-    , @Field(WorkflowExecutionKeys.pipelineExecutionId), @Field(WorkflowExecutionKeys.keywords),
-        @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC),
-  })
-})
+
+@Index(name = "search", fields = { @Field(WorkflowExecutionKeys.workflowId)
+                                   , @Field(WorkflowExecutionKeys.status) })
+@Index(name = "app_pipExecutionId_createdAt",
+    fields =
+    {
+      @Field(WorkflowExecutionKeys.appId)
+      , @Field(WorkflowExecutionKeys.pipelineExecutionId),
+          @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
+    })
+@Index(name = "service_guard",
+    fields = { @Field(WorkflowExecutionKeys.appId)
+               , @Field(value = WorkflowExecutionKeys.startTs) })
+@Index(name = "lastDeployedSearch",
+    fields =
+    {
+      @Field(WorkflowExecutionKeys.appId)
+      , @Field(WorkflowExecutionKeys.status), @Field(WorkflowExecutionKeys.workflowId),
+          @Field(WorkflowExecutionKeys.infraMappingIds),
+          @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
+    })
+@Index(
+    name = "appId_endTs", fields = { @Field(WorkflowExecutionKeys.appId)
+                                     , @Field(value = WorkflowExecutionKeys.endTs) })
+@Index(name = "lastInfraMappingSearch",
+    fields =
+    {
+      @Field(WorkflowExecutionKeys.appId)
+      , @Field(WorkflowExecutionKeys.workflowType), @Field(WorkflowExecutionKeys.status),
+          @Field(WorkflowExecutionKeys.infraMappingIds),
+          @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
+    })
+@Index(name = "accountId_endTs",
+    fields =
+    { @Field(WorkflowExecutionKeys.accountId)
+      , @Field(value = WorkflowExecutionKeys.endTs, type = IndexType.DESC) })
+@Index(name = "accountId_createdAt2",
+    fields =
+    { @Field(WorkflowExecutionKeys.accountId)
+      , @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC) })
+@Index(name = "workflowExecutionMonitor",
+    fields = { @Field(WorkflowExecutionKeys.status)
+               , @Field(WorkflowExecutionKeys.nextIteration) })
+@Index(name = "accountId_pipExecutionId_createdAt",
+    fields =
+    {
+      @Field(WorkflowExecutionKeys.accountId)
+      , @Field(WorkflowExecutionKeys.pipelineExecutionId),
+          @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
+    })
+@Index(name = "searchByServiceIds",
+    fields =
+    {
+      @Field(WorkflowExecutionKeys.appId)
+      , @Field(WorkflowExecutionKeys.workflowId), @Field(WorkflowExecutionKeys.status),
+          @Field(WorkflowExecutionKeys.serviceIds),
+          @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
+    })
+@Index(name = "accountId_tags_createdAt",
+    fields =
+    {
+      @Field(WorkflowExecutionKeys.accountId)
+      , @Field("tags.name"), @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
+    })
+@Index(name = "accountId_appId_tags_createdAt",
+    fields =
+    {
+      @Field(WorkflowExecutionKeys.accountId)
+      , @Field(WorkflowExecutionKeys.appId), @Field("tags.name"),
+          @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC)
+    })
+@Index(name = "appid_workflowid_status_createdat",
+    fields =
+    {
+      @Field(WorkflowExecutionKeys.appId)
+      , @Field(WorkflowExecutionKeys.workflowId), @Field(WorkflowExecutionKeys.status),
+          @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC),
+    })
+@Index(name = "accountId_pipExecutionId_keywords_createdAt",
+    fields =
+    {
+      @Field(WorkflowExecutionKeys.accountId)
+      , @Field(WorkflowExecutionKeys.pipelineExecutionId), @Field(WorkflowExecutionKeys.keywords),
+          @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC),
+    })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkflowExecution
     implements PersistentRegularIterable, UuidAware, CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {

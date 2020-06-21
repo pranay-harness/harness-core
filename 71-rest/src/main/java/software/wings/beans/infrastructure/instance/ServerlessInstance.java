@@ -5,7 +5,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -29,21 +28,22 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
-@Indexes({
-  @Index(fields = { @Field("appId")
-                    , @Field("isDeleted"), @Field("deletedAt") }, name = "serverless_instance_index1")
-  , @Index(fields = {
-    @Field("appId"), @Field("infraMappingId"), @Field("isDeleted"), @Field("deletedAt")
-  }, name = "serverless_instance_index2"), @Index(fields = {
-    @Field("accountId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
-  }, name = "serverless_instance_index3"), @Index(fields = {
-    @Field("appId"), @Field("serviceId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
-  }, name = "serverless_instance_index5"), @Index(fields = {
-    @Field("accountId"), @Field("isDeleted")
-  }, name = "serverless_instance_index7"), @Index(fields = {
-    @Field("appId"), @Field("serviceId"), @Field("isDeleted")
-  }, name = "serverless_instance_index8")
-})
+
+@Index(name = "serverless_instance_index1", fields = { @Field("appId")
+                                                       , @Field("isDeleted"), @Field("deletedAt") })
+@Index(name = "serverless_instance_index2",
+    fields = { @Field("appId")
+               , @Field("infraMappingId"), @Field("isDeleted"), @Field("deletedAt") })
+@Index(name = "serverless_instance_index3",
+    fields = { @Field("accountId")
+               , @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt") })
+@Index(name = "serverless_instance_index5",
+    fields = { @Field("appId")
+               , @Field("serviceId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt") })
+@Index(name = "serverless_instance_index7", fields = { @Field("accountId")
+                                                       , @Field("isDeleted") })
+@Index(name = "serverless_instance_index8", fields = { @Field("appId")
+                                                       , @Field("serviceId"), @Field("isDeleted") })
 @FieldNameConstants(innerTypeName = "ServerlessInstanceKeys")
 @Entity(value = "serverless-instance", noClassnameStored = true)
 @HarnessEntity(exportable = false)

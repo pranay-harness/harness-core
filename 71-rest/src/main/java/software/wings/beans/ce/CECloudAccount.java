@@ -3,7 +3,6 @@ package software.wings.beans.ce;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -23,13 +22,14 @@ import software.wings.beans.ce.CECloudAccount.CECloudAccountKeys;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceCloudAccount", noClassnameStored = true)
-@Indexes({
-  @Index(name = "no_dup_account", options = @IndexOptions(unique = true), fields = {
-    @Field(CECloudAccountKeys.accountId)
-    , @Field(CECloudAccountKeys.infraAccountId), @Field(CECloudAccountKeys.infraMasterAccountId),
-        @Field(CECloudAccountKeys.masterAccountSettingId)
-  })
-})
+
+@Index(name = "no_dup_account", options = @IndexOptions(unique = true),
+    fields =
+    {
+      @Field(CECloudAccountKeys.accountId)
+      , @Field(CECloudAccountKeys.infraAccountId), @Field(CECloudAccountKeys.infraMasterAccountId),
+          @Field(CECloudAccountKeys.masterAccountSettingId)
+    })
 @FieldNameConstants(innerTypeName = "CECloudAccountKeys")
 public class CECloudAccount implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;

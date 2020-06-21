@@ -6,7 +6,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -27,15 +26,13 @@ import java.util.Date;
 @ToString
 @Entity(value = "deploymentReconciliation", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Indexes({
-  @Index(name = "accountId_durationEndTs",
-      fields = { @Field(DeploymentReconRecordKeys.accountId)
-                 , @Field(DeploymentReconRecordKeys.durationEndTs) })
-  ,
-      @Index(name = "accountId_reconciliationStatus", fields = {
-        @Field(DeploymentReconRecordKeys.accountId), @Field(DeploymentReconRecordKeys.reconciliationStatus)
-      }),
-})
+
+@Index(name = "accountId_durationEndTs",
+    fields = { @Field(DeploymentReconRecordKeys.accountId)
+               , @Field(DeploymentReconRecordKeys.durationEndTs) })
+@Index(name = "accountId_reconciliationStatus",
+    fields = { @Field(DeploymentReconRecordKeys.accountId)
+               , @Field(DeploymentReconRecordKeys.reconciliationStatus) })
 public class DeploymentReconRecord implements PersistentEntity, UuidAware, AccountAccess {
   @Id private String uuid;
   private String accountId;

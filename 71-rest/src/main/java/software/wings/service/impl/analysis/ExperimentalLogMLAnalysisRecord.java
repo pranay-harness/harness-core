@@ -13,7 +13,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -29,9 +28,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-@Indexes(@Index(fields = { @Field("stateExecutionId")
-                           , @Field(value = "logCollectionMinute", type = IndexType.DESC) },
-    name = "stateExecutionIdx"))
+@Index(name = "stateExecutionIdx",
+    fields = { @Field("stateExecutionId")
+               , @Field(value = "logCollectionMinute", type = IndexType.DESC) })
 @Data
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @JsonIgnoreProperties(ignoreUnknown = true)

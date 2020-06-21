@@ -8,7 +8,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -33,9 +32,9 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "delegateProfiles", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "DelegateProfileKeys")
-@Indexes(@Index(name = "uniqueName", options = @IndexOptions(unique = true),
+@Index(name = "uniqueName", options = @IndexOptions(unique = true),
     fields = { @Field(value = DelegateProfileKeys.accountId)
-               , @Field(value = DelegateProfileKeys.name) }))
+               , @Field(value = DelegateProfileKeys.name) })
 public class DelegateProfile implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                         UpdatedByAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;

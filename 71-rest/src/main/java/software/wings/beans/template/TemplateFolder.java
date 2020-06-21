@@ -14,7 +14,6 @@ import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -37,14 +36,12 @@ import java.util.Set;
 @NoArgsConstructor
 @JsonInclude(NON_NULL)
 @EqualsAndHashCode(callSuper = false)
-@Indexes({
-  @Index(name = "duplicateKey", options = @IndexOptions(unique = true),
-      fields = { @Field("accountId")
-                 , @Field("name"), @Field("pathId"), @Field("appId") })
-  ,
-      @Index(name = "account_gallery_app_idx", fields = { @Field("accountId")
-                                                          , @Field("galleryId"), @Field("appId") })
-})
+
+@Index(name = "duplicateKey", options = @IndexOptions(unique = true),
+    fields = { @Field("accountId")
+               , @Field("name"), @Field("pathId"), @Field("appId") })
+@Index(name = "account_gallery_app_idx", fields = { @Field("accountId")
+                                                    , @Field("galleryId"), @Field("appId") })
 @FieldNameConstants(innerTypeName = "TemplateFolderKeys")
 @Entity(value = "templateFolders", noClassnameStored = true)
 @HarnessEntity(exportable = true)

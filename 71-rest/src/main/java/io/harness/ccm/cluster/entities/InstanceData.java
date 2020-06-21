@@ -4,7 +4,6 @@ import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.InstanceData.InstanceDataKeys;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -25,11 +24,11 @@ import java.util.Map;
 @Data
 @Builder
 @Entity(value = "instanceData", noClassnameStored = true)
-@Indexes({
-  @Index(name = "accountId_clusterId_instanceId", fields = {
-    @Field(InstanceDataKeys.accountId), @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceId)
-  })
-})
+
+@Index(name = "accountId_clusterId_instanceId",
+    fields =
+    { @Field(InstanceDataKeys.accountId)
+      , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceId) })
 @FieldNameConstants(innerTypeName = "InstanceDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")

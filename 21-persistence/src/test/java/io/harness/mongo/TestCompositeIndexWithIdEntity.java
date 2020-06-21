@@ -3,7 +3,6 @@ package io.harness.mongo;
 import io.harness.mongo.TestCompositeIndexWithIdEntity.TestCompositeIndexWithIdEntityKeys;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.AllArgsConstructor;
@@ -18,11 +17,10 @@ import org.mongodb.morphia.annotations.Id;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldNameConstants(innerTypeName = "TestCompositeIndexWithIdEntityKeys")
-@Indexes({
-  @Index(name = "index", fields = {
-    @Field(TestCompositeIndexWithIdEntityKeys.uuid), @Field(TestCompositeIndexWithIdEntityKeys.name)
-  })
-})
+
+@Index(name = "index",
+    fields = { @Field(TestCompositeIndexWithIdEntityKeys.uuid)
+               , @Field(TestCompositeIndexWithIdEntityKeys.name) })
 public class TestCompositeIndexWithIdEntity implements PersistentEntity, UuidAccess {
   @Id private String uuid;
   private String name;

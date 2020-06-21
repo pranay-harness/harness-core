@@ -5,7 +5,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -30,27 +29,28 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Indexes({
-  @Index(fields = { @Field("appId")
-                    , @Field("isDeleted"), @Field("deletedAt") }, name = "instance_index1")
-  , @Index(fields = {
-    @Field("appId"), @Field("infraMappingId"), @Field("isDeleted"), @Field("deletedAt")
-  }, name = "instance_index2"), @Index(fields = {
-    @Field("accountId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
-  }, name = "instance_index3"), @Index(fields = {
-    @Field("appId"), @Field("serviceId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
-  }, name = "instance_index5"), @Index(fields = {
-    @Field("accountId"), @Field("isDeleted")
-  }, name = "instance_index6"), @Index(fields = {
-    @Field("accountId"), @Field("createdAt"), @Field("deletedAt")
-  }, name = "instance_index7"), @Index(fields = {
-    @Field("appId"), @Field("serviceId"), @Field("isDeleted")
-  }, name = "instance_index8"), @Index(fields = {
-    @Field("accountId"), @Field("isDeleted"), @Field("deletedAt")
-  }, name = "instance_index9"), @Index(fields = {
-    @Field("accountId"), @Field("infraMappingId")
-  }, name = "instance_index10")
-})
+
+@Index(name = "instance_index1", fields = { @Field("appId")
+                                            , @Field("isDeleted"), @Field("deletedAt") })
+@Index(name = "instance_index2",
+    fields = { @Field("appId")
+               , @Field("infraMappingId"), @Field("isDeleted"), @Field("deletedAt") })
+@Index(name = "instance_index3",
+    fields = { @Field("accountId")
+               , @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt") })
+@Index(name = "instance_index5",
+    fields = { @Field("appId")
+               , @Field("serviceId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt") })
+@Index(name = "instance_index6", fields = { @Field("accountId")
+                                            , @Field("isDeleted") })
+@Index(name = "instance_index7", fields = { @Field("accountId")
+                                            , @Field("createdAt"), @Field("deletedAt") })
+@Index(name = "instance_index8", fields = { @Field("appId")
+                                            , @Field("serviceId"), @Field("isDeleted") })
+@Index(name = "instance_index9", fields = { @Field("accountId")
+                                            , @Field("isDeleted"), @Field("deletedAt") })
+@Index(name = "instance_index10", fields = { @Field("accountId")
+                                             , @Field("infraMappingId") })
 @FieldNameConstants(innerTypeName = "InstanceKeys")
 @Entity(value = "instance", noClassnameStored = true)
 @HarnessEntity(exportable = false)

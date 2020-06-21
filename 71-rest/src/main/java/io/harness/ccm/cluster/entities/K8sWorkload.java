@@ -5,7 +5,6 @@ import io.harness.ccm.cluster.entities.K8sWorkload.K8sWorkloadKeys;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -32,22 +31,25 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
 @Entity(value = "k8sWorkload", noClassnameStored = true)
-@Indexes({
-  @Index(name = "no_dup_cluster", options = @IndexOptions(unique = true),
-      fields = { @Field(K8sWorkloadKeys.clusterId)
-                 , @Field(K8sWorkloadKeys.uid) })
-  ,
-      @Index(name = "accountId_clusterId_labels", fields = {
-        @Field(K8sWorkloadKeys.accountId), @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.labels)
-      }), @Index(name = "accountId_clusterId_uid", fields = {
-        @Field(K8sWorkloadKeys.accountId), @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.uid)
-      }), @Index(name = "accountId_name_clusterId_namespace", fields = {
-        @Field(K8sWorkloadKeys.accountId)
-        , @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.namespace)
-      }), @Index(name = "accountId_name_labels", fields = {
-        @Field(K8sWorkloadKeys.accountId), @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.labels)
-      })
-})
+
+@Index(name = "no_dup_cluster", options = @IndexOptions(unique = true),
+    fields = { @Field(K8sWorkloadKeys.clusterId)
+               , @Field(K8sWorkloadKeys.uid) })
+@Index(name = "accountId_clusterId_labels",
+    fields = { @Field(K8sWorkloadKeys.accountId)
+               , @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.labels) })
+@Index(name = "accountId_clusterId_uid",
+    fields = { @Field(K8sWorkloadKeys.accountId)
+               , @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.uid) })
+@Index(name = "accountId_name_clusterId_namespace",
+    fields =
+    {
+      @Field(K8sWorkloadKeys.accountId)
+      , @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.namespace)
+    })
+@Index(name = "accountId_name_labels",
+    fields = { @Field(K8sWorkloadKeys.accountId)
+               , @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.labels) })
 @FieldNameConstants(innerTypeName = "K8sWorkloadKeys")
 public class K8sWorkload implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;

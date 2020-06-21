@@ -11,7 +11,6 @@ import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
@@ -39,13 +38,12 @@ import java.util.List;
 @AllArgsConstructor
 @ToString(exclude = {"authToken"})
 @EqualsAndHashCode(callSuper = false)
-@Indexes({
-  @Index(name = "uniqueIdx", fields = { @Field("name")
-                                        , @Field("accountId") }, options = @IndexOptions(unique = true))
-  , @Index(name = "uniqueUrlIdx", fields = {
-    @Field("vaultUrl"), @Field("accountId")
-  }, options = @IndexOptions(unique = true))
-})
+
+@Index(name = "uniqueIdx", fields = { @Field("name")
+                                      , @Field("accountId") }, options = @IndexOptions(unique = true))
+@Index(
+    name = "uniqueUrlIdx", fields = { @Field("vaultUrl")
+                                      , @Field("accountId") }, options = @IndexOptions(unique = true))
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "vaultConfig", noClassnameStored = true)
 @HarnessEntity(exportable = false)

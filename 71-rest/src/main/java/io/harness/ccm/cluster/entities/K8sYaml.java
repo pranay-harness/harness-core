@@ -11,7 +11,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -31,16 +30,16 @@ import java.util.Base64;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
 @Entity(value = "k8sYaml", noClassnameStored = true)
-@Indexes({
-  @Index(name = "accountId_uuid_resourceVersion",
-      fields = { @Field(K8sYamlKeys.accountId)
-                 , @Field(value = K8sYamlKeys.resourceVersion, type = IndexType.DESC) })
-  ,
-      @Index(name = "accountId_clusterId_uid_resourceVersion", fields = {
-        @Field(K8sYamlKeys.accountId)
-        , @Field(K8sYamlKeys.clusterId), @Field(value = K8sYamlKeys.resourceVersion, type = IndexType.DESC)
-      })
-})
+
+@Index(name = "accountId_uuid_resourceVersion",
+    fields = { @Field(K8sYamlKeys.accountId)
+               , @Field(value = K8sYamlKeys.resourceVersion, type = IndexType.DESC) })
+@Index(name = "accountId_clusterId_uid_resourceVersion",
+    fields =
+    {
+      @Field(K8sYamlKeys.accountId)
+      , @Field(K8sYamlKeys.clusterId), @Field(value = K8sYamlKeys.resourceVersion, type = IndexType.DESC)
+    })
 @FieldNameConstants(innerTypeName = "K8sYamlKeys")
 public class K8sYaml implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id private String uuid;

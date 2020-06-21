@@ -6,7 +6,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,62 +25,55 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "deploymentSummary", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Indexes({
-  @Index(fields =
-      {
-        @Field(DeploymentSummaryKeys.accountId)
-        , @Field(DeploymentSummaryKeys.CLUSTER_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES),
-            @Field(DeploymentSummaryKeys.CONTAINER_SVC_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES),
-            @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
-      },
-      name = "accountId_containerDeploymentInfo")
-  ,
-      @Index(fields =
-          {
-            @Field(DeploymentSummaryKeys.CONTAINER_KEY_SERVICE_NAME)
-            , @Field(DeploymentSummaryKeys.infraMappingId),
-                @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
-          },
-          name = "containerSvcName_inframappingId_createdAt"),
 
-      @Index(fields =
-          {
-            @Field(DeploymentSummaryKeys.accountId)
-            , @Field(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_INFO),
-                @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
-          },
-          name = "accountId_k8sDeploymentInfo"),
-
-      @Index(fields =
-          {
-            @Field(DeploymentSummaryKeys.infraMappingId)
-            , @Field(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_KEY),
-                @Field(DeploymentSummaryKeys.RELEASE_NUMBER_K8S_DEPLOYMENT_KEY),
-                @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
-          },
-          name = "infraMappingId_k8sDeploymentKeyReleaseNameAndNumber"),
-
-      @Index(fields =
-          {
-            @Field(DeploymentSummaryKeys.accountId)
-            , @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.ASC)
-          },
-          name = "accountId_createdAtAsc"),
-
-      @Index(fields =
-          {
-            @Field(DeploymentSummaryKeys.accountId)
-            , @Field(DeploymentSummaryKeys.infraMappingId),
-                @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
-          },
-          name = "accountId_infraMappingId_createdAtDesc"),
-
-      @Index(fields = {
-        @Field(DeploymentSummaryKeys.infraMappingId)
-        , @Field(DeploymentSummaryKeys.CONTAINER_KEY_LABELS), @Field(DeploymentSummaryKeys.CONTAINER_KEY_NEW_VERSION),
-            @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
-      }, name = "inframappingId_containerlabelsAndVersion")
-})
+@Index(name = "accountId_containerDeploymentInfo",
+    fields =
+    {
+      @Field(DeploymentSummaryKeys.accountId)
+      , @Field(DeploymentSummaryKeys.CLUSTER_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES),
+          @Field(DeploymentSummaryKeys.CONTAINER_SVC_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES),
+          @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
+    })
+@Index(name = "containerSvcName_inframappingId_createdAt",
+    fields =
+    {
+      @Field(DeploymentSummaryKeys.CONTAINER_KEY_SERVICE_NAME)
+      , @Field(DeploymentSummaryKeys.infraMappingId),
+          @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
+    })
+@Index(name = "accountId_k8sDeploymentInfo",
+    fields =
+    {
+      @Field(DeploymentSummaryKeys.accountId)
+      , @Field(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_INFO),
+          @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
+    })
+@Index(name = "infraMappingId_k8sDeploymentKeyReleaseNameAndNumber",
+    fields =
+    {
+      @Field(DeploymentSummaryKeys.infraMappingId)
+      , @Field(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_KEY),
+          @Field(DeploymentSummaryKeys.RELEASE_NUMBER_K8S_DEPLOYMENT_KEY),
+          @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
+    })
+@Index(name = "accountId_createdAtAsc",
+    fields =
+    { @Field(DeploymentSummaryKeys.accountId)
+      , @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.ASC) })
+@Index(name = "accountId_infraMappingId_createdAtDesc",
+    fields =
+    {
+      @Field(DeploymentSummaryKeys.accountId)
+      , @Field(DeploymentSummaryKeys.infraMappingId),
+          @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
+    })
+@Index(name = "inframappingId_containerlabelsAndVersion",
+    fields =
+    {
+      @Field(DeploymentSummaryKeys.infraMappingId)
+      , @Field(DeploymentSummaryKeys.CONTAINER_KEY_LABELS), @Field(DeploymentSummaryKeys.CONTAINER_KEY_NEW_VERSION),
+          @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
+    })
 @FieldNameConstants(innerTypeName = "DeploymentSummaryKeys")
 public class DeploymentSummary extends Base {
   private String accountId;

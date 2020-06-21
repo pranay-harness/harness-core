@@ -8,7 +8,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import lombok.experimental.FieldNameConstants;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.mongodb.morphia.annotations.Entity;
@@ -22,9 +21,9 @@ import java.util.Objects;
  *
  * @author Rishi
  */
-@Indexes(
-    @Index(name = "yaml", options = @IndexOptions(unique = true), fields = { @Field("accountId")
-                                                                             , @Field("name") }))
+
+@Index(name = "yaml", options = @IndexOptions(unique = true), fields = { @Field("accountId")
+                                                                         , @Field("name") })
 @Entity(value = "appContainers", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "AppContainerKeys")

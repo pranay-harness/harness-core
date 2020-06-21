@@ -29,7 +29,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -65,11 +64,10 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "ThirdPartyApiCallLogKeys")
-@Indexes({
-  @Index(fields = {
-    @Field("stateExecutionId"), @Field(value = CreatedAtAware.CREATED_AT_KEY, type = IndexType.DESC)
-  }, name = "queryIdx")
-})
+
+@Index(name = "queryIdx",
+    fields = { @Field("stateExecutionId")
+               , @Field(value = CreatedAtAware.CREATED_AT_KEY, type = IndexType.DESC) })
 @Entity(value = "thirdPartyApiCallLog", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAware, UuidAware, AccountAccess {

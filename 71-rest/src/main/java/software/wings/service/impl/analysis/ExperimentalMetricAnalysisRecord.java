@@ -8,7 +8,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,19 +20,17 @@ import org.mongodb.morphia.annotations.Entity;
  *
  * Created by Pranjal on 08/14/2018
  */
-@Indexes({
-  @Index(name = "MetricAnalysisUniqueIdx",
-      fields =
-      { @Field("workflowExecutionId")
-        , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName") },
-      options = @IndexOptions(unique = true))
-  ,
-      @Index(fields = {
-        @Field("analysisMinute"), @Field("mismatched"), @Field(value = "createdAt", type = IndexType.DESC)
-      }, name = "ExperimentalMetricListIdx"), @Index(fields = {
-        @Field("analysisMinute"), @Field("stateExecutionId")
-      }, name = "analysisMinStateExecutionIdIndex")
-})
+
+@Index(name = "MetricAnalysisUniqueIdx",
+    fields =
+    { @Field("workflowExecutionId")
+      , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName") },
+    options = @IndexOptions(unique = true))
+@Index(name = "ExperimentalMetricListIdx",
+    fields = { @Field("analysisMinute")
+               , @Field("mismatched"), @Field(value = "createdAt", type = IndexType.DESC) })
+@Index(name = "analysisMinStateExecutionIdIndex", fields = { @Field("analysisMinute")
+                                                             , @Field("stateExecutionId") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

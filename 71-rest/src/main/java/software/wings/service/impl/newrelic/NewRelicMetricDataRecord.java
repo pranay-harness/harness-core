@@ -24,7 +24,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.serializer.JsonUtils;
@@ -52,20 +51,19 @@ import java.util.Map;
 /**
  * Created by rsingh on 08/30/17.
  */
-@Indexes({
-  @Index(fields =
-      {
-        @Field("stateExecutionId"), @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
-      },
-      name = "stateExIdx")
-  ,
-      @Index(fields = {
-        @Field("workflowExecutionId")
-        , @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
-      }, name = "workflowExIdx"), @Index(fields = {
-        @Field(value = "dataCollectionMinute", type = IndexType.DESC), @Field("cvConfigId")
-      }, name = "serviceGuardIdx")
-})
+
+@Index(name = "stateExIdx",
+    fields =
+    { @Field("stateExecutionId")
+      , @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC) })
+@Index(name = "workflowExIdx",
+    fields =
+    {
+      @Field("workflowExecutionId"), @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
+    })
+@Index(name = "serviceGuardIdx",
+    fields = { @Field(value = "dataCollectionMinute", type = IndexType.DESC)
+               , @Field("cvConfigId") })
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

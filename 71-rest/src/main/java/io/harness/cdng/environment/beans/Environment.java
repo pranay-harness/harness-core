@@ -5,7 +5,6 @@ import io.harness.cdng.common.beans.Tag;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -24,11 +23,10 @@ import java.util.List;
 
 @Data
 @Builder
-@Indexes({
-  @Index(name = "envNGIdx", options = @IndexOptions(unique = true), fields = {
-    @Field("accountId"), @Field("orgId"), @Field("projectId"), @Field("identifier")
-  })
-})
+
+@Index(name = "envNGIdx", options = @IndexOptions(unique = true),
+    fields = { @Field("accountId")
+               , @Field("orgId"), @Field("projectId"), @Field("identifier") })
 @Entity("environmentsNG")
 @FieldNameConstants(innerTypeName = "EnvironmentKeys")
 public class Environment

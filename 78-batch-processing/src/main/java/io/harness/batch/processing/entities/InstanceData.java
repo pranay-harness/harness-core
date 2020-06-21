@@ -12,7 +12,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -34,23 +33,24 @@ import java.util.Map;
 @Data
 @Builder
 @Entity(value = "instanceData", noClassnameStored = true)
-@Indexes({
-  @Index(name = "accountId_clusterId_instanceId_instanceState",
-      fields =
-      {
-        @Field(InstanceDataKeys.accountId)
-        , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceId),
-            @Field(InstanceDataKeys.instanceState)
-      })
-  ,
-      @Index(name = "accountId_clusterId_instanceName_usageStartTime", fields = {
-        @Field(InstanceDataKeys.accountId)
-        , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceName),
-            @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.DESC)
-      }), @Index(name = "accountId_usageStartTime", fields = {
-        @Field(InstanceDataKeys.accountId), @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.ASC)
-      })
-})
+
+@Index(name = "accountId_clusterId_instanceId_instanceState",
+    fields =
+    {
+      @Field(InstanceDataKeys.accountId)
+      , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceId), @Field(InstanceDataKeys.instanceState)
+    })
+@Index(name = "accountId_clusterId_instanceName_usageStartTime",
+    fields =
+    {
+      @Field(InstanceDataKeys.accountId)
+      , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceName),
+          @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.DESC)
+    })
+@Index(name = "accountId_usageStartTime",
+    fields =
+    { @Field(InstanceDataKeys.accountId)
+      , @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.ASC) })
 @FieldNameConstants(innerTypeName = "InstanceDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn(EVENTS_DB)

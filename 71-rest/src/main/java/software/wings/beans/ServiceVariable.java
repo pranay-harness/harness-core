@@ -17,7 +17,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
@@ -44,23 +43,22 @@ import javax.validation.constraints.NotNull;
  * Created by peeyushaggarwal on 9/14/16.
  */
 @OwnedBy(CDC)
-@Indexes({
-  @Index(name = "serviceVariableUniqueIdx",
-      fields =
-      {
-        @Field("entityId")
-        , @Field("templateId"), @Field("overrideType"), @Field("instances"), @Field("expression"), @Field("type"),
-            @Field("name")
-      },
-      options = @IndexOptions(unique = true))
-  ,
-      @Index(fields = { @Field("appId")
-                        , @Field("entityId") }, name = "app_entityId"), @Index(fields = {
-        @Field("appId"), @Field("envId"), @Field("templateId")
-      }, name = "app_env_templateId"), @Index(name = "appEntityIdx", fields = {
-        @Field("appId"), @Field("entityId"), @Field(value = "createdAt", type = IndexType.DESC),
-      })
-})
+
+@Index(name = "serviceVariableUniqueIdx",
+    fields =
+    {
+      @Field("entityId")
+      , @Field("templateId"), @Field("overrideType"), @Field("instances"), @Field("expression"), @Field("type"),
+          @Field("name")
+    },
+    options = @IndexOptions(unique = true))
+@Index(name = "app_entityId", fields = { @Field("appId")
+                                         , @Field("entityId") })
+@Index(name = "app_env_templateId", fields = { @Field("appId")
+                                               , @Field("envId"), @Field("templateId") })
+@Index(name = "appEntityIdx",
+    fields = { @Field("appId")
+               , @Field("entityId"), @Field(value = "createdAt", type = IndexType.DESC), })
 @Data
 @Builder
 @NoArgsConstructor

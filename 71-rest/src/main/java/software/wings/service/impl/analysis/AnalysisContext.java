@@ -16,7 +16,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.version.ServiceApiVersion;
 import lombok.AllArgsConstructor;
@@ -39,19 +38,18 @@ import java.util.Map;
 /**
  * Created by sriram_parthasarathy on 8/23/17.
  */
-@Indexes({
-  @Index(name = "task_Unique_Idx", fields = { @Field("stateExecutionId")
-                                              , @Field("executionStatus") },
-      options = @IndexOptions(unique = true))
-  ,
-      @Index(fields = {
-        @Field("analysisType"), @Field("executionStatus"), @Field("timeSeriesAnalysisIteration")
-      }, name = "timeSeriesAnalysisIterationIdx"), @Index(fields = {
-        @Field("analysisType"), @Field("executionStatus"), @Field("logAnalysisIteration")
-      }, name = "logAnalysisIterationIdx"), @Index(fields = {
-        @Field("cvTasksCreated"), @Field("cvTaskCreationIteration")
-      }, name = "cvTaskCreationIndex")
-})
+
+@Index(name = "task_Unique_Idx", fields = { @Field("stateExecutionId")
+                                            , @Field("executionStatus") },
+    options = @IndexOptions(unique = true))
+@Index(name = "timeSeriesAnalysisIterationIdx",
+    fields = { @Field("analysisType")
+               , @Field("executionStatus"), @Field("timeSeriesAnalysisIteration") })
+@Index(name = "logAnalysisIterationIdx",
+    fields = { @Field("analysisType")
+               , @Field("executionStatus"), @Field("logAnalysisIteration") })
+@Index(name = "cvTaskCreationIndex", fields = { @Field("cvTasksCreated")
+                                                , @Field("cvTaskCreationIteration") })
 @Data
 @FieldNameConstants(innerTypeName = "AnalysisContextKeys")
 @NoArgsConstructor

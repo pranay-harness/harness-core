@@ -16,7 +16,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -50,19 +49,19 @@ import javax.annotation.Nullable;
 @Data
 @FieldNameConstants(innerTypeName = "StateExecutionInstanceKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Indexes({
-  @Index(name = "stateTypes2",
-      fields =
-      {
-        @Field(StateExecutionInstanceKeys.executionUuid)
-        , @Field(StateExecutionInstanceKeys.stateType), @Field(StateExecutionInstanceKeys.createdAt)
-      })
-  ,
-      @Index(name = "parentInstances2", fields = {
-        @Field(StateExecutionInstanceKeys.executionUuid)
-        , @Field(StateExecutionInstanceKeys.parentInstanceId), @Field(StateExecutionInstanceKeys.createdAt)
-      })
-})
+
+@Index(name = "stateTypes2",
+    fields =
+    {
+      @Field(StateExecutionInstanceKeys.executionUuid)
+      , @Field(StateExecutionInstanceKeys.stateType), @Field(StateExecutionInstanceKeys.createdAt)
+    })
+@Index(name = "parentInstances2",
+    fields =
+    {
+      @Field(StateExecutionInstanceKeys.executionUuid)
+      , @Field(StateExecutionInstanceKeys.parentInstanceId), @Field(StateExecutionInstanceKeys.createdAt)
+    })
 @Entity(value = "stateExecutionInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class StateExecutionInstance

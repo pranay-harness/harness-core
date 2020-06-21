@@ -21,7 +21,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -66,13 +65,13 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @Entity(value = "activities", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Indexes(@Index(name = "app_status_createdAt",
+@Index(name = "app_status_createdAt",
     fields =
     {
       @Field(value = ActivityKeys.appId)
       , @Field(value = ActivityKeys.serviceInstanceId), @Field(value = ActivityKeys.status),
           @Field(value = ActivityKeys.createdAt, type = IndexType.DESC)
-    }))
+    })
 public class Activity implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                  UpdatedByAware, ApplicationAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;

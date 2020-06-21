@@ -7,7 +7,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -23,13 +22,14 @@ import software.wings.sm.StateType;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-@Indexes({
-  @Index(name = "timeseriesThresholdsQueryIndex", fields = {
-    @Field("appId")
-    , @Field("serviceId"), @Field("stateType"), @Field("groupName"), @Field("transactionName"), @Field("metricName"),
-        @Field("cvConfigId"), @Field("thresholdType")
-  }, options = @IndexOptions(unique = false))
-})
+@Index(name = "timeseriesThresholdsQueryIndex",
+    fields =
+    {
+      @Field("appId")
+      , @Field("serviceId"), @Field("stateType"), @Field("groupName"), @Field("transactionName"), @Field("metricName"),
+          @Field("cvConfigId"), @Field("thresholdType")
+    },
+    options = @IndexOptions(unique = false))
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

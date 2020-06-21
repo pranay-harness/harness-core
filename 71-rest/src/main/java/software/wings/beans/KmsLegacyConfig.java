@@ -12,7 +12,6 @@ import io.harness.encryption.Encrypted;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
@@ -40,9 +39,9 @@ import java.util.List;
 @AllArgsConstructor
 @ToString(exclude = {"secretKey", "kmsArn"})
 @EqualsAndHashCode(callSuper = false)
-@Indexes({
-  @Index(name = "uniqueIdx", fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true))
-})
+
+@Index(name = "uniqueIdx", fields = { @Field("name")
+                                      , @Field("accountId") }, options = @IndexOptions(unique = true))
 @Entity(value = "kmsConfig", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "KmsConfigKeys")

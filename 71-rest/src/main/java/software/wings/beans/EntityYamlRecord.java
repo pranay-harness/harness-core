@@ -4,7 +4,6 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
@@ -21,13 +20,14 @@ import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 @Entity(value = "entityYamlRecord", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "EntityYamlRecordKeys")
-@Indexes({
-  @Index(name = "index_1", fields = {
-    @Field(EntityYamlRecordKeys.accountId)
-    , @Field(EntityYamlRecordKeys.entityId), @Field(EntityYamlRecordKeys.entityType),
-        @Field(value = EntityYamlRecordKeys.createdAt, type = IndexType.DESC)
-  })
-})
+
+@Index(name = "index_1",
+    fields =
+    {
+      @Field(EntityYamlRecordKeys.accountId)
+      , @Field(EntityYamlRecordKeys.entityId), @Field(EntityYamlRecordKeys.entityType),
+          @Field(value = EntityYamlRecordKeys.createdAt, type = IndexType.DESC)
+    })
 public class EntityYamlRecord implements PersistentEntity, UuidAccess, CreatedAtAccess, AccountAccess {
   @Id private String uuid;
   private String accountId;

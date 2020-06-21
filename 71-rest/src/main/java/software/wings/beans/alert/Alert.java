@@ -8,7 +8,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -33,22 +32,22 @@ import java.util.Date;
 import javax.validation.constraints.NotNull;
 
 @FieldNameConstants(innerTypeName = "AlertKeys")
-@Indexes({
-  @Index(fields =
-      { @Field(AlertKeys.accountId)
-        , @Field(AlertKeys.appId), @Field(AlertKeys.type), @Field(AlertKeys.status) },
-      name = "accountAppTypeStatusIdx")
-  ,
-      @Index(fields = {
-        @Field(AlertKeys.accountId), @Field(AlertKeys.type), @Field(AlertKeys.status)
-      }, name = "accountTypeStatusIdx"), @Index(fields = {
-        @Field(AlertKeys.type), @Field(AlertKeys.createdAt)
-      }, name = "createdAtTypeIndex"), @Index(fields = {
-        @Field(AlertKeys.status)
-        , @Field(AlertKeys.alertReconciliation + "." + AlertReconciliationKeys.needed),
-            @Field(AlertKeys.alertReconciliation + "." + AlertReconciliationKeys.nextIteration)
-      }, name = "reconciliationIterator"),
-})
+
+@Index(name = "accountAppTypeStatusIdx",
+    fields = { @Field(AlertKeys.accountId)
+               , @Field(AlertKeys.appId), @Field(AlertKeys.type), @Field(AlertKeys.status) })
+@Index(name = "accountTypeStatusIdx",
+    fields = { @Field(AlertKeys.accountId)
+               , @Field(AlertKeys.type), @Field(AlertKeys.status) })
+@Index(name = "createdAtTypeIndex", fields = { @Field(AlertKeys.type)
+                                               , @Field(AlertKeys.createdAt) })
+@Index(name = "reconciliationIterator",
+    fields =
+    {
+      @Field(AlertKeys.status)
+      , @Field(AlertKeys.alertReconciliation + "." + AlertReconciliationKeys.needed),
+          @Field(AlertKeys.alertReconciliation + "." + AlertReconciliationKeys.nextIteration)
+    })
 @Data
 @Builder
 @Entity(value = "alerts")

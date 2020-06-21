@@ -6,7 +6,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,13 +16,11 @@ import org.mongodb.morphia.annotations.Entity;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Indexes({
-  @Index(name = "uniqueDelegateSequenceIdx",
-      fields = { @Field("accountId")
-                 , @Field("hostName"), @Field("sequenceNum") },
 
-      options = @IndexOptions(unique = true))
-})
+@Index(name = "uniqueDelegateSequenceIdx", fields = { @Field("accountId")
+                                                      , @Field("hostName"), @Field("sequenceNum") },
+
+    options = @IndexOptions(unique = true))
 @FieldNameConstants(innerTypeName = "DelegateSequenceConfigKeys")
 @Entity(value = "delegateSequenceConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)

@@ -3,7 +3,6 @@ package software.wings.beans.ce;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -22,12 +21,13 @@ import software.wings.beans.ce.CECluster.CEClusterKeys;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceCluster", noClassnameStored = true)
-@Indexes({
-  @Index(name = "no_dup", options = @IndexOptions(unique = true), fields = {
-    @Field(CEClusterKeys.accountId)
-    , @Field(CEClusterKeys.infraAccountId), @Field(CEClusterKeys.region), @Field(CEClusterKeys.clusterName)
-  })
-})
+
+@Index(name = "no_dup", options = @IndexOptions(unique = true),
+    fields =
+    {
+      @Field(CEClusterKeys.accountId)
+      , @Field(CEClusterKeys.infraAccountId), @Field(CEClusterKeys.region), @Field(CEClusterKeys.clusterName)
+    })
 @FieldNameConstants(innerTypeName = "CEClusterKeys")
 public class CECluster implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;

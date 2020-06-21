@@ -5,7 +5,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,18 +17,22 @@ import software.wings.beans.Base;
 import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
 
 @FieldNameConstants(innerTypeName = "TemplateVersionKeys")
-@Indexes({
-  @Index(name = "yaml", fields = { @Field("templateUuid")
-                                   , @Field("version") }, options = @IndexOptions(unique = true))
-  , @Index(name = "account_template_version", fields = {
-    @Field(value = TemplateVersionKeys.accountId)
-    , @Field(value = TemplateVersionKeys.templateUuid),
-        @Field(value = TemplateVersionKeys.version, type = IndexType.DESC)
-  }), @Index(name = "account_imported_template_version", fields = {
-    @Field(value = TemplateVersionKeys.accountId)
-    , @Field(value = TemplateVersionKeys.templateUuid), @Field(value = TemplateVersionKeys.importedTemplateVersion)
-  }),
-})
+
+@Index(name = "yaml", fields = { @Field("templateUuid")
+                                 , @Field("version") }, options = @IndexOptions(unique = true))
+@Index(name = "account_template_version",
+    fields =
+    {
+      @Field(value = TemplateVersionKeys.accountId)
+      , @Field(value = TemplateVersionKeys.templateUuid),
+          @Field(value = TemplateVersionKeys.version, type = IndexType.DESC)
+    })
+@Index(name = "account_imported_template_version",
+    fields =
+    {
+      @Field(value = TemplateVersionKeys.accountId)
+      , @Field(value = TemplateVersionKeys.templateUuid), @Field(value = TemplateVersionKeys.importedTemplateVersion)
+    })
 // TODO(abhinav): May have to look at ordering for importedTemplateVersion later.
 @Data
 @Builder

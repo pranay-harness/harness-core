@@ -8,7 +8,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -26,11 +25,10 @@ import java.util.Map;
 /**
  * Created by rsingh on 08/30/17.
  */
-@Indexes({
-  @Index(name = "uniqueIdx", fields = {
-    @Field("stateType"), @Field("stateExecutionId")
-  }, options = @IndexOptions(unique = true))
-})
+
+@Index(name = "uniqueIdx", fields = { @Field("stateType")
+                                      , @Field("stateExecutionId") },
+    options = @IndexOptions(unique = true))
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "timeSeriesMetricGroup", noClassnameStored = true)

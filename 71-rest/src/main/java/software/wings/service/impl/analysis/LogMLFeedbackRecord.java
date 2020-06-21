@@ -16,7 +16,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.Builder;
 import lombok.Data;
@@ -30,11 +29,10 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.LogMLFeedbackType;
 import software.wings.sm.StateType;
 
-@Indexes({
-  @Index(name = "logFeedbackUniqueIdx", fields = {
-    @Field("applicationId"), @Field("stateExecutionId"), @Field("clusterType"), @Field("clusterLabel")
-  }, options = @IndexOptions(unique = true))
-})
+@Index(name = "logFeedbackUniqueIdx",
+    fields = { @Field("applicationId")
+               , @Field("stateExecutionId"), @Field("clusterType"), @Field("clusterLabel") },
+    options = @IndexOptions(unique = true))
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)

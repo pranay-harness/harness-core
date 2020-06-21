@@ -18,7 +18,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.Builder;
@@ -54,31 +53,39 @@ import java.util.Map;
 /**
  * Created by rsingh on 6/23/17.
  */
-@Indexes({
-  @Index(fields =
-      { @Field("cvConfigId")
-        , @Field("analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC) },
-      name = "cvConfigId_1_analysisStatus_1_logCollectionMinute_-1")
-  ,
-      @Index(fields = {
-        @Field("cvConfigId")
-        , @Field("deprecated"), @Field(value = "logCollectionMinute", type = IndexType.DESC),
-            @Field(value = "lastUpdatedAt", type = IndexType.DESC)
-      }, name = "cvConfigId_1_deprecated_1_logCollectionMinute_-1_lastUpdatedAt_-1"), @Index(fields = {
-        @Field("stateExecutionId")
-        , @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("analysisStatus"),
-            @Field(value = "lastUpdatedAt", type = IndexType.DESC)
-      }, name = "analysisSummaryIdx"), @Index(fields = {
-        @Field("cvConfigId")
-        , @Field(value = "analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC),
-            @Field("deprecated"),
-      }, name = "cvConfigLogCollectionMinAnalysisStatusDeprecatedIndx"), @Index(fields = {
-        @Field("stateExecutionId"), @Field("analysisStatus")
-      }, name = "stateExecStatusIdx"), @Index(fields = {
-        @Field("stateExecutionId")
-        , @Field("analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
-      }, name = "stateExecutionId_1_analysisStatus_1_logCollectionMinute_-1")
-})
+
+@Index(name = "cvConfigId_1_analysisStatus_1_logCollectionMinute_-1",
+    fields =
+    { @Field("cvConfigId")
+      , @Field("analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC) })
+@Index(name = "cvConfigId_1_deprecated_1_logCollectionMinute_-1_lastUpdatedAt_-1",
+    fields =
+    {
+      @Field("cvConfigId")
+      , @Field("deprecated"), @Field(value = "logCollectionMinute", type = IndexType.DESC),
+          @Field(value = "lastUpdatedAt", type = IndexType.DESC)
+    })
+@Index(name = "analysisSummaryIdx",
+    fields =
+    {
+      @Field("stateExecutionId")
+      , @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("analysisStatus"),
+          @Field(value = "lastUpdatedAt", type = IndexType.DESC)
+    })
+@Index(name = "cvConfigLogCollectionMinAnalysisStatusDeprecatedIndx",
+    fields =
+    {
+      @Field("cvConfigId")
+      , @Field(value = "analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC),
+          @Field("deprecated"),
+    })
+@Index(name = "stateExecStatusIdx", fields = { @Field("stateExecutionId")
+                                               , @Field("analysisStatus") })
+@Index(name = "stateExecutionId_1_analysisStatus_1_logCollectionMinute_-1",
+    fields =
+    {
+      @Field("stateExecutionId"), @Field("analysisStatus"), @Field(value = "logCollectionMinute", type = IndexType.DESC)
+    })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)

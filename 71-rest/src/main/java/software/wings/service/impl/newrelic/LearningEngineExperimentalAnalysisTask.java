@@ -11,7 +11,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.version.ServiceApiVersion;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -34,26 +33,31 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by rsingh on 1/8/18.
  */
-@Indexes({
-  @Index(fields =
-      {
-        @Field("state_execution_id")
-        , @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus"),
-            @Field("ml_analysis_type"), @Field("cluster_level"), @Field("group_name"), @Field("version"),
-            @Field(value = "createdAt", type = IndexType.DESC)
-      },
-      name = "taskQueueIdx")
-  ,
-      @Index(fields = {
-        @Field("cvConfigId"), @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus")
-      }, name = "cvConfigStatusIdx"), @Index(fields = {
-        @Field("executionStatus")
-        , @Field("ml_analysis_type"), @Field(value = "is24x7Task"), @Field(value = "createdAt", type = IndexType.DESC)
-      }, name = "usageMetricsIndex"), @Index(fields = {
-        @Field("experiment_name")
-        , @Field("executionStatus"), @Field(value = "retry"), @Field(value = "createdAt", type = IndexType.DESC)
-      }, name = "taskFetchIdx")
-})
+
+@Index(name = "taskQueueIdx",
+    fields =
+    {
+      @Field("state_execution_id")
+      , @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus"), @Field("ml_analysis_type"),
+          @Field("cluster_level"), @Field("group_name"), @Field("version"),
+          @Field(value = "createdAt", type = IndexType.DESC)
+    })
+@Index(name = "cvConfigStatusIdx",
+    fields =
+    { @Field("cvConfigId")
+      , @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus") })
+@Index(name = "usageMetricsIndex",
+    fields =
+    {
+      @Field("executionStatus")
+      , @Field("ml_analysis_type"), @Field(value = "is24x7Task"), @Field(value = "createdAt", type = IndexType.DESC)
+    })
+@Index(name = "taskFetchIdx",
+    fields =
+    {
+      @Field("experiment_name")
+      , @Field("executionStatus"), @Field(value = "retry"), @Field(value = "createdAt", type = IndexType.DESC)
+    })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})

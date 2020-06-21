@@ -4,7 +4,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexes;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import software.wings.beans.EntityVersion.EntityVersionKeys;
@@ -15,21 +14,20 @@ import software.wings.beans.EntityVersion.EntityVersionKeys;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "EntityVersionKeys")
 
-@Indexes({
-  @Index(name = "app_type_uuid_createdAt",
-      fields =
-      {
-        @Field(value = EntityVersionKeys.appId)
-        , @Field(value = EntityVersionKeys.entityType), @Field(value = EntityVersionKeys.entityUuid),
-            @Field(value = EntityVersionKeys.createdAt, type = IndexType.DESC)
-      })
-  ,
-      @Index(name = "app_type_uuid_version", fields = {
-        @Field(value = EntityVersionKeys.appId)
-        , @Field(value = EntityVersionKeys.entityType), @Field(value = EntityVersionKeys.entityUuid),
-            @Field(value = EntityVersionKeys.version, type = IndexType.DESC)
-      })
-})
+@Index(name = "app_type_uuid_createdAt",
+    fields =
+    {
+      @Field(value = EntityVersionKeys.appId)
+      , @Field(value = EntityVersionKeys.entityType), @Field(value = EntityVersionKeys.entityUuid),
+          @Field(value = EntityVersionKeys.createdAt, type = IndexType.DESC)
+    })
+@Index(name = "app_type_uuid_version",
+    fields =
+    {
+      @Field(value = EntityVersionKeys.appId)
+      , @Field(value = EntityVersionKeys.entityType), @Field(value = EntityVersionKeys.entityUuid),
+          @Field(value = EntityVersionKeys.version, type = IndexType.DESC)
+    })
 public class EntityVersion extends Base {
   public static final Integer INITIAL_VERSION = 1;
 

@@ -12,7 +12,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -34,9 +33,8 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
-@Indexes(@Index(
-    name = "uniqueName", options = @IndexOptions(unique = true), fields = { @Field("accountId")
-                                                                            , @Field("name") }))
+@Index(name = "uniqueName", options = @IndexOptions(unique = true), fields = { @Field("accountId")
+                                                                               , @Field("name") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

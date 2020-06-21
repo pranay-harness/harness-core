@@ -5,7 +5,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,15 +18,13 @@ import software.wings.beans.Base;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Indexes({
-  @Index(name = "compositeIdx1",
-      fields = { @Field("appId")
-                 , @Field("serviceId"), @Field("envId"), @Field("infraMappingId") },
-      options = @IndexOptions(unique = true))
-  ,
-      @Index(fields = { @Field("appId")
-                        , @Field("infraMappingId") }, name = "compositeIdx2")
-})
+
+@Index(name = "compositeIdx1",
+    fields = { @Field("appId")
+               , @Field("serviceId"), @Field("envId"), @Field("infraMappingId") },
+    options = @IndexOptions(unique = true))
+@Index(name = "compositeIdx2", fields = { @Field("appId")
+                                          , @Field("infraMappingId") })
 @Entity(value = "syncStatus", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class SyncStatus extends Base {

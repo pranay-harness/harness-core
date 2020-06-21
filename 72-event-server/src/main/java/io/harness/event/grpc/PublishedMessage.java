@@ -13,7 +13,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -36,12 +35,14 @@ import java.util.Map;
 @StoreIn(EVENTS_DB)
 @Data
 @Entity(value = "publishedMessages", noClassnameStored = true)
-@Indexes({
-  @Index(name = "accountId_type_CreatedAt_occurredAt", fields = {
-    @Field(PublishedMessageKeys.accountId)
-    , @Field(PublishedMessageKeys.type), @Field(PublishedMessageKeys.createdAt), @Field(PublishedMessageKeys.occurredAt)
-  })
-})
+
+@Index(name = "accountId_type_CreatedAt_occurredAt",
+    fields =
+    {
+      @Field(PublishedMessageKeys.accountId)
+      , @Field(PublishedMessageKeys.type), @Field(PublishedMessageKeys.createdAt),
+          @Field(PublishedMessageKeys.occurredAt)
+    })
 @FieldNameConstants(innerTypeName = "PublishedMessageKeys")
 @Slf4j
 public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidAware, AccountAccess {

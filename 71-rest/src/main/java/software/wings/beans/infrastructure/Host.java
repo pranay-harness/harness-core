@@ -11,7 +11,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -27,9 +26,9 @@ import java.util.Objects;
 @HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "HostKeys")
-@Indexes(@Index(
+@Index(
     name = "app_inframappingid", fields = { @Field(value = HostKeys.appId)
-                                            , @Field(value = HostKeys.infraMappingId) }))
+                                            , @Field(value = HostKeys.infraMappingId) })
 public class Host extends Base {
   @NotEmpty private String envId;
   @Indexed private String serviceTemplateId;

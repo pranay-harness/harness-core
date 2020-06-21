@@ -4,7 +4,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.AllArgsConstructor;
@@ -19,15 +18,13 @@ import org.mongodb.morphia.annotations.Id;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldNameConstants(innerTypeName = "TestEntityKeys")
-@Indexes({
-  @Index(name = "index",
-      fields = { @Field(TestIndexEntity.TestEntityKeys.name)
-                 , @Field(TestIndexEntity.TestEntityKeys.test) })
-  ,
-      @Index(name = "sparse_index", options = @IndexOptions(sparse = true), fields = {
-        @Field(TestIndexEntity.TestEntityKeys.name), @Field(TestIndexEntity.TestEntityKeys.sparseTest)
-      })
-})
+
+@Index(name = "index",
+    fields = { @Field(TestIndexEntity.TestEntityKeys.name)
+               , @Field(TestIndexEntity.TestEntityKeys.test) })
+@Index(name = "sparse_index", options = @IndexOptions(sparse = true),
+    fields = { @Field(TestIndexEntity.TestEntityKeys.name)
+               , @Field(TestIndexEntity.TestEntityKeys.sparseTest) })
 public class TestIndexEntity implements PersistentEntity, UuidAccess {
   @Id private String uuid;
   private String name;

@@ -5,7 +5,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,9 +18,9 @@ import software.wings.beans.HelmChartConfig;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.yaml.BaseEntityYaml;
 
-@Indexes(@Index(name = "appManifestIdx", options = @IndexOptions(unique = true),
+@Index(name = "appManifestIdx", options = @IndexOptions(unique = true),
     fields = { @Field("appId")
-               , @Field("envId"), @Field("serviceId"), @Field("kind") }))
+               , @Field("envId"), @Field("serviceId"), @Field("kind") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

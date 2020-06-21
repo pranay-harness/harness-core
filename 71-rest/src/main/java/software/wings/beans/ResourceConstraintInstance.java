@@ -12,7 +12,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
@@ -34,24 +33,26 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-@Indexes({
-  @Index(name = "uniqueUnitOrder", options = @IndexOptions(unique = true),
-      fields =
-      {
-        @Field(ResourceConstraintInstanceKeys.resourceConstraintId)
-        , @Field(ResourceConstraintInstanceKeys.resourceUnit), @Field(ResourceConstraintInstanceKeys.order),
-      })
-  ,
-      @Index(name = "usageIndex", fields = {
-        @Field(ResourceConstraintInstanceKeys.resourceConstraintId), @Field(ResourceConstraintInstanceKeys.order),
-      }), @Index(name = "iterationIndex", fields = {
-        @Field(ResourceConstraintInstanceKeys.state), @Field(ResourceConstraintInstanceKeys.nextIteration),
-      }), @Index(name = "app_release_entity", fields = {
-        @Field(ResourceConstraintInstanceKeys.appId)
-        , @Field(ResourceConstraintInstanceKeys.releaseEntityType),
-            @Field(ResourceConstraintInstanceKeys.releaseEntityId)
-      })
-})
+
+@Index(name = "uniqueUnitOrder", options = @IndexOptions(unique = true),
+    fields =
+    {
+      @Field(ResourceConstraintInstanceKeys.resourceConstraintId)
+      , @Field(ResourceConstraintInstanceKeys.resourceUnit), @Field(ResourceConstraintInstanceKeys.order),
+    })
+@Index(name = "usageIndex",
+    fields =
+    { @Field(ResourceConstraintInstanceKeys.resourceConstraintId)
+      , @Field(ResourceConstraintInstanceKeys.order), })
+@Index(name = "iterationIndex",
+    fields = { @Field(ResourceConstraintInstanceKeys.state)
+               , @Field(ResourceConstraintInstanceKeys.nextIteration), })
+@Index(name = "app_release_entity",
+    fields =
+    {
+      @Field(ResourceConstraintInstanceKeys.appId)
+      , @Field(ResourceConstraintInstanceKeys.releaseEntityType), @Field(ResourceConstraintInstanceKeys.releaseEntityId)
+    })
 @FieldNameConstants(innerTypeName = "ResourceConstraintInstanceKeys")
 @Entity(value = "resourceConstraintInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)

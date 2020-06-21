@@ -14,7 +14,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
@@ -36,17 +35,12 @@ import java.util.Map;
  * Created by Praveen.
  */
 
-@Indexes({
-  @Index(name = "uniqueIdx",
-      fields = { @Field("appId")
-                 , @Field("cvConfigId"), @Field("analysisMinute"), @Field("tag") },
-      options = @IndexOptions(unique = true))
-  ,
-
-      @Index(fields = {
-        @Field("cvConfigId"), @Field(value = "analysisMinute", type = IndexType.DESC), @Field("tag")
-      }, name = "service_gd_idx")
-})
+@Index(name = "uniqueIdx", fields = { @Field("appId")
+                                      , @Field("cvConfigId"), @Field("analysisMinute"), @Field("tag") },
+    options = @IndexOptions(unique = true))
+@Index(name = "service_gd_idx",
+    fields = { @Field("cvConfigId")
+               , @Field(value = "analysisMinute", type = IndexType.DESC), @Field("tag") })
 @Data
 @Builder
 @NoArgsConstructor

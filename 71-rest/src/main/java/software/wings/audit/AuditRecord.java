@@ -6,7 +6,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -27,11 +26,11 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "entityAuditRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "AuditRecordKeys")
-@Indexes({
-  @Index(fields = {
-    @Field(AuditRecordKeys.auditHeaderId), @Field(value = AuditRecordKeys.createdAt, type = IndexType.DESC),
-  }, name = "entityRecordIndex_1")
-})
+
+@Index(name = "entityRecordIndex_1",
+    fields =
+    { @Field(AuditRecordKeys.auditHeaderId)
+      , @Field(value = AuditRecordKeys.createdAt, type = IndexType.DESC), })
 public class AuditRecord
     implements PersistentEntity, CreatedAtAware, UuidAware, PersistentRegularIterable, AccountAccess {
   @Id @NotNull private String uuid;

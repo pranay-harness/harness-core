@@ -65,7 +65,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptionType;
 import lombok.Data;
@@ -93,23 +92,21 @@ import javax.validation.Valid;
  * Created by anubhaw on 5/16/16.
  */
 @OwnedBy(CDC)
-@Indexes({
-  @Index(name = "locate", options = @IndexOptions(unique = true),
-      fields = { @Field("accountId")
-                 , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") })
-  ,
-      @Index(name = "acctCatTypeIdx", fields = { @Field("accountId")
-                                                 , @Field("category"), @Field("value.type") }),
-      @Index(name = "acctValTypeIdx", fields = { @Field("accountId")
-                                                 , @Field("value.type") }),
-      @Index(name = "value.type_1_nextIteration_1", fields = { @Field("value.type")
-                                                               , @Field("nextIteration") }),
-      @Index(name = "secretsMigrationIdx", fields = { @Field("value.type")
-                                                      , @Field("nextSecretMigrationIteration") }),
-      @Index(name = "secretsMigrationPerAccountIdx", fields = {
-        @Field("value.type"), @Field("secretsMigrated"), @Field("accountId")
-      })
-})
+
+@Index(name = "locate", options = @IndexOptions(unique = true),
+    fields = { @Field("accountId")
+               , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") })
+@Index(name = "acctCatTypeIdx", fields = { @Field("accountId")
+                                           , @Field("category"), @Field("value.type") })
+@Index(name = "acctValTypeIdx", fields = { @Field("accountId")
+                                           , @Field("value.type") })
+@Index(name = "value.type_1_nextIteration_1", fields = { @Field("value.type")
+                                                         , @Field("nextIteration") })
+@Index(name = "secretsMigrationIdx", fields = { @Field("value.type")
+                                                , @Field("nextSecretMigrationIteration") })
+@Index(name = "secretsMigrationPerAccountIdx",
+    fields = { @Field("value.type")
+               , @Field("secretsMigrated"), @Field("accountId") })
 @Data
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "SettingAttributeKeys")
