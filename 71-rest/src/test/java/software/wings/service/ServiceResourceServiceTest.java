@@ -88,6 +88,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.REFERENCED_WORKFLOW;
 import static software.wings.utils.WingsTestConstants.SERVICE_COMMAND_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
@@ -223,6 +224,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -496,15 +498,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByWorkflow() {
+    List<String> referencedWorkflows = Collections.singletonList(REFERENCED_WORKFLOW);
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
     when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
-    when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID))
-        .thenReturn(asList("Referenced Workflow"));
+    when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID)).thenReturn(referencedWorkflows);
 
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage("Service SERVICE_ID is referenced by 1 workflow [Referenced Workflow].");
+        .hasMessage("Service " + SERVICE_NAME + " is referenced by 1 workflow " + referencedWorkflows + ".");
 
     verify(workflowService).obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID);
   }
