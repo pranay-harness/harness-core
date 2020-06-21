@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
+import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -32,13 +33,14 @@ import java.util.Date;
 @Builder
 @Redesign
 @FieldNameConstants(innerTypeName = "PlanExecutionKeys")
+@Entity(value = "planExecutions")
 @Document("planExecutions")
 @TypeAlias("planExecutions")
 @JsonIgnoreProperties(ignoreUnknown = true, value = {"plan"})
 public class PlanExecution implements PersistentEntity, CreatedByAccess, UuidAccess {
   public static final Duration TTL = ofDays(21);
 
-  @Wither @Id String uuid;
+  @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
   EmbeddedUser createdBy;
   @Wither @CreatedDate Long createdAt;
   Plan plan;

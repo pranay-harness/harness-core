@@ -5,6 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.adviser.AdviserParameters;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
+import io.harness.data.OutcomeInstance;
+import io.harness.execution.NodeExecution;
+import io.harness.execution.PlanExecution;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.PassThroughData;
@@ -14,6 +17,7 @@ import io.harness.facilitator.modes.chain.task.TaskChainResponse;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.task.TaskExecutableResponse;
+import io.harness.interrupts.Interrupt;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.references.OutcomeRefObject;
@@ -28,6 +32,10 @@ import java.util.Set;
 public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
+    set.add(NodeExecution.class);
+    set.add(PlanExecution.class);
+    set.add(Interrupt.class);
+    set.add(OutcomeInstance.class);
     set.add(StepTransput.class);
     set.add(FacilitatorParameters.class);
     set.add(AdviserParameters.class);

@@ -16,6 +16,7 @@ import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
 import lombok.experimental.Wither;
+import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -28,13 +29,14 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 @Redesign
+@Entity(value = "interrupts")
 @Document(value = "interrupts")
 @TypeAlias(value = "interrupts")
 @FieldNameConstants(innerTypeName = "InterruptKeys")
 public class Interrupt implements PersistentEntity, UuidAccess, CreatedByAccess {
   public enum State { REGISTERED, PROCESSING, PROCESSED_SUCCESSFULLY, PROCESSED_UNSUCCESSFULLY, DISCARDED }
 
-  @Wither @Id @NotNull String uuid;
+  @Wither @Id @org.mongodb.morphia.annotations.Id @NotNull String uuid;
   @NonNull ExecutionInterruptType type;
   @NonNull String planExecutionId;
   String nodeExecutionId;
