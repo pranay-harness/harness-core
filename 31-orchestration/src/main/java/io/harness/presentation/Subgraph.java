@@ -1,5 +1,8 @@
 package io.harness.presentation;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.modes.ExecutionMode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,6 +13,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+@OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode

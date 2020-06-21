@@ -1,6 +1,9 @@
 package io.harness.presentation;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.execution.status.Status;
 import io.harness.interrupts.InterruptEffect;
@@ -14,6 +17,7 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.util.List;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @NoArgsConstructor

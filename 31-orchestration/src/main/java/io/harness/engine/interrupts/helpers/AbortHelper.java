@@ -1,5 +1,6 @@
 package io.harness.engine.interrupts.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.execution.status.Status.DISCONTINUING;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
@@ -12,6 +13,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.client.result.UpdateResult;
 import io.harness.ambiance.Ambiance;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.AmbianceHelper;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -39,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @Slf4j
 public class AbortHelper {
   @Inject private StepRegistry stepRegistry;

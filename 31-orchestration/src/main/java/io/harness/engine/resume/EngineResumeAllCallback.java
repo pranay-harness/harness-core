@@ -1,7 +1,10 @@
 package io.harness.engine.resume;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.ExecutionEngine;
 import io.harness.waiter.NotifyCallback;
@@ -9,6 +12,7 @@ import lombok.Builder;
 
 import java.util.Map;
 
+@OwnedBy(CDC)
 public class EngineResumeAllCallback implements NotifyCallback {
   @Inject ExecutionEngine executionEngine;
 

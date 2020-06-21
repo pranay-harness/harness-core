@@ -1,5 +1,6 @@
 package io.harness.engine.interrupts.handlers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.CollectionUtils.filterAndGetFirst;
 import static io.harness.data.structure.CollectionUtils.isPresent;
 import static io.harness.eraro.ErrorCode.RESUME_ALL_ALREADY;
@@ -12,6 +13,7 @@ import static io.harness.interrupts.Interrupt.State.PROCESSING;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
@@ -29,6 +31,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import java.util.List;
 import java.util.Optional;
 
+@OwnedBy(CDC)
 public class ResumeAllInterruptHandler implements InterruptHandler {
   @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;

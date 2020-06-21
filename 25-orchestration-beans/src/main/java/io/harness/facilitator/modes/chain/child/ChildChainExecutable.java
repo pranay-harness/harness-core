@@ -1,6 +1,9 @@
 package io.harness.facilitator.modes.chain.child;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.ambiance.Ambiance;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.facilitator.PassThroughData;
 import io.harness.state.io.StepParameters;
@@ -35,6 +38,7 @@ import java.util.Map;
  * finalizeExecution : This is where the step concludes and responds with step response.
  *
  */
+@OwnedBy(CDC)
 public interface ChildChainExecutable {
   ChildChainResponse executeFirstChild(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs);
 

@@ -1,7 +1,10 @@
 package io.harness.presentation;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.Distributable;
 import io.harness.cache.Ordinal;
 import io.harness.execution.status.Status;
@@ -11,6 +14,7 @@ import lombok.Value;
 import java.io.ObjectStreamClass;
 import java.util.List;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)

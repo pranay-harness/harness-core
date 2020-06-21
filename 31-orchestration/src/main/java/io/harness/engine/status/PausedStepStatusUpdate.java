@@ -1,5 +1,6 @@
 package io.harness.engine.status;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.execution.status.Status.PAUSED;
 import static io.harness.execution.status.Status.flowingStatuses;
@@ -8,6 +9,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
@@ -19,6 +21,7 @@ import org.springframework.data.mongodb.core.query.Query;
 
 import java.util.List;
 
+@OwnedBy(CDC)
 public class PausedStepStatusUpdate implements StepStatusUpdate {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private NodeExecutionService nodeExecutionService;

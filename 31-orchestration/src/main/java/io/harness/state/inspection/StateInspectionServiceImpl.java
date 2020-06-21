@@ -1,5 +1,6 @@
 package io.harness.state.inspection;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
@@ -8,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.ReadPreference;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
 import io.harness.state.inspection.StateInspection.StateInspectionKeys;
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class StateInspectionServiceImpl implements StateInspectionService {

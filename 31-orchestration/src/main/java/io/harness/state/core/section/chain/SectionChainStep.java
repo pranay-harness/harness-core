@@ -1,8 +1,10 @@
 package io.harness.state.core.section.chain;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.execution.status.Status.SUCCEEDED;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.child.ChildChainExecutable;
@@ -16,6 +18,7 @@ import io.harness.state.io.StepTransput;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDC)
 public class SectionChainStep implements Step, ChildChainExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("SECTION_CHAIN").build();
 

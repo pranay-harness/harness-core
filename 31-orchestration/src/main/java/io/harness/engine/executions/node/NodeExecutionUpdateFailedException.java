@@ -1,11 +1,14 @@
 package io.harness.engine.executions.node;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.ENGINE_ENTITY_UPDATE_EXCEPTION;
 import static io.harness.eraro.ErrorCode.ENGINE_OUTCOME_EXCEPTION;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 
+@OwnedBy(CDC)
 @SuppressWarnings("squid:CallToDeprecatedMethod")
 public class NodeExecutionUpdateFailedException extends WingsException {
   private static final String DETAILS_KEY = "details";

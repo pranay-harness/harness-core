@@ -1,7 +1,11 @@
 package io.harness.engine.expressions;
 
-import io.harness.ambiance.Ambiance;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.ambiance.Ambiance;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDC)
 public interface EngineExpressionService {
   String renderExpression(Ambiance ambiance, String expression);
   Object evaluateExpression(Ambiance ambiance, String expression);

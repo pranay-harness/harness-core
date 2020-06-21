@@ -1,11 +1,13 @@
 package io.harness.engine.executables.invokers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executables.InvokeStrategy;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -23,6 +25,7 @@ import lombok.NonNull;
 
 import java.util.Map;
 
+@OwnedBy(CDC)
 public class TaskStrategy implements InvokeStrategy {
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
   @Inject private WaitNotifyEngine waitNotifyEngine;

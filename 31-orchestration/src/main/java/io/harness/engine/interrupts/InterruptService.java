@@ -1,11 +1,15 @@
 package io.harness.engine.interrupts;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
 
 import java.util.List;
 import javax.validation.Valid;
 
+@OwnedBy(CDC)
 public interface InterruptService {
   List<Interrupt> fetchActiveInterrupts(String planExecutionId);
 
