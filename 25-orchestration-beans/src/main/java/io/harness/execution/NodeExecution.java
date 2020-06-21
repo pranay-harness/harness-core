@@ -10,6 +10,7 @@ import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.mongo.index.Indexed;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.plan.PlanNode;
@@ -22,11 +23,11 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Duration;
@@ -38,16 +39,17 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Redesign
 @FieldNameConstants(innerTypeName = "NodeExecutionKeys")
+@Entity(value = "nodeExecutions")
 @Document("nodeExecutions")
 @TypeAlias("nodeExecutions")
 public final class NodeExecution implements PersistentEntity, UuidAware {
   // Immutable
-  @Id String uuid;
+  @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotNull String planExecutionId;
   @Singular List<Level> levels;
   @NotNull PlanNode node;
   @NotNull ExecutionMode mode;
-  @Default @Indexed(name = "createdAt_1") @CreatedDate Long createdAt = System.currentTimeMillis();
+  @Default @Indexed @CreatedDate Long createdAt = System.currentTimeMillis();
   private Long startTs;
   private Long endTs;
   private Duration initialWaitDuration;

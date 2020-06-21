@@ -215,6 +215,8 @@ executionInterrupts {"name": "executionUuid_1", "background": true} {"executionU
 executionInterrupts {"name": "stateExecutionInstanceId_1", "background": true} {"stateExecutionInstanceId": 1}
 executionQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 executionQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
+executionSweepingOutput {"name": "levelRuntimeIdUniqueIdx2", "unique": true} {"planExecutionId": 1, "levelRuntimeIdIdx": 1, "name": 1}
+executionSweepingOutput {"name": "validUntil_1", "background": true} {"validUntil": 1}
 experimentalLogAnalysisRecords {"name": "appId_1", "background": true} {"appId": 1}
 experimentalLogAnalysisRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}
 experimentalLogAnalysisRecords {"name": "cvConfigId_1", "background": true} {"cvConfigId": 1}
@@ -424,6 +426,7 @@ newRelicMetricRecords {"name": "serviceGuardIdx", "background": true} {"dataColl
 newRelicMetricRecords {"name": "stateExIdx", "background": true} {"stateExecutionId": 1, "groupName": 1, "dataCollectionMinute": -1}
 newRelicMetricRecords {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 newRelicMetricRecords {"name": "workflowExIdx", "background": true} {"workflowExecutionId": 1, "groupName": 1, "dataCollectionMinute": -1}
+nodeExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notificationBatch {"name": "appId_1", "background": true} {"appId": 1}
 notificationBatch {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notificationGroups {"name": "appId_1", "background": true} {"appId": 1}
@@ -436,6 +439,9 @@ notifyQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 notifyQueue {"name": "waitInstanceId_1", "unique": true} {"waitInstanceId": 1}
 notifyResponses {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notifyResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+outcomeInstances {"name": "levelRuntimeIdUniqueIdx", "unique": true} {"planExecutionId": 1, "levelRuntimeIdIdx": 1, "name": 1}
+outcomeInstances {"name": "planExecutionIdIdx", "background": true} {"planExecutionId": 1}
+outcomeInstances {"name": "producedBySetupIdIdx", "background": true} {"planExecutionId": 1, "producedBy.setupId": 1, "name": 1}
 pcfServiceSpecification {"name": "accountId_1", "background": true} {"accountId": 1}
 pcfServiceSpecification {"name": "appId_1", "background": true} {"appId": 1}
 pcfServiceSpecification {"name": "createdAt_1", "background": true} {"createdAt": 1}
