@@ -12,7 +12,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.Indexes;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -31,16 +30,16 @@ import java.util.Objects;
 
 @OwnedBy(CDC)
 @Entity(value = "serviceTemplates", noClassnameStored = true)
-@Indexes({
-  @Index(name = "yaml", options = @IndexOptions(unique = true),
-      fields = { @Field("appId")
-                 , @Field("envId"), @Field("name") })
-  ,
-      @Index(name = "app_env_createdAt", fields = {
-        @Field(ServiceTemplateKeys.appId)
-        , @Field(ServiceTemplateKeys.envId), @Field(value = ServiceTemplateKeys.createdAt, type = IndexType.DESC)
-      })
-})
+
+@Index(name = "yaml", options = @IndexOptions(unique = true),
+    fields = { @Field("appId")
+               , @Field("envId"), @Field("name") })
+@Index(name = "app_env_createdAt",
+    fields =
+    {
+      @Field(ServiceTemplateKeys.appId)
+      , @Field(ServiceTemplateKeys.envId), @Field(value = ServiceTemplateKeys.createdAt, type = IndexType.DESC)
+    })
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ServiceTemplateKeys")
 public class ServiceTemplate extends Base {

@@ -14,7 +14,6 @@ import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -35,16 +34,15 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Indexes({
-  @Index(name = "owners", fields = { @Field("artifactStreamId")
-                                     , @Field("appId") })
-  , @Index(name = "artifactStream_buildNo", fields = { @Field("artifactStreamId")
-                                                       , @Field("metadata.buildNo") }),
-      @Index(name = "artifactStream_artifactPath", fields = {
-        @Field("artifactStreamId"), @Field("metadata.artifactPath")
-      }), @Index(name = "artifactStream_revision", fields = { @Field("artifactStreamId")
-                                                              , @Field("revision") })
-})
+
+@Index(name = "owners", fields = { @Field("artifactStreamId")
+                                   , @Field("appId") })
+@Index(name = "artifactStream_buildNo", fields = { @Field("artifactStreamId")
+                                                   , @Field("metadata.buildNo") })
+@Index(name = "artifactStream_artifactPath", fields = { @Field("artifactStreamId")
+                                                        , @Field("metadata.artifactPath") })
+@Index(name = "artifactStream_revision", fields = { @Field("artifactStreamId")
+                                                    , @Field("revision") })
 @FieldNameConstants(innerTypeName = "ArtifactKeys")
 @Entity(value = "artifacts", noClassnameStored = true)
 @HarnessEntity(exportable = true)

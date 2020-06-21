@@ -7,7 +7,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -27,25 +26,22 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@Indexes({
-  @Index(fields = { @Field("accountId")
-                    , @Field("status"), @Field("retryCount") }, name = "searchIdx_1")
-  ,
-      @Index(fields = { @Field("accountId")
-                        , @Field(value = "createdAt", type = IndexType.DESC) },
-          name = "accountId_createdAt_index"),
 
-      @Index(fields =
-          {
-            @Field("accountId"), @Field(value = "status"), @Field(value = "gitToHarness"), @Field(value = "createdAt")
-          },
-          name = "accountId_status_gitToHarness_createdAt_index"),
-
-      @Index(fields = {
-        @Field("accountId")
-        , @Field(value = "queueKey"), @Field(value = "status"), @Field(value = "createdAt", type = IndexType.DESC)
-      }, name = "accountId_queuekey_status_createdAt_index"),
-})
+@Index(name = "searchIdx_1", fields = { @Field("accountId")
+                                        , @Field("status"), @Field("retryCount") })
+@Index(name = "accountId_createdAt_index",
+    fields = { @Field("accountId")
+               , @Field(value = "createdAt", type = IndexType.DESC) })
+@Index(name = "accountId_status_gitToHarness_createdAt_index",
+    fields =
+    { @Field("accountId")
+      , @Field(value = "status"), @Field(value = "gitToHarness"), @Field(value = "createdAt") })
+@Index(name = "accountId_queuekey_status_createdAt_index",
+    fields =
+    {
+      @Field("accountId")
+      , @Field(value = "queueKey"), @Field(value = "status"), @Field(value = "createdAt", type = IndexType.DESC)
+    })
 @FieldNameConstants(innerTypeName = "YamlChangeSetKeys")
 @Entity(value = "yamlChangeSet")
 @HarnessEntity(exportable = false)

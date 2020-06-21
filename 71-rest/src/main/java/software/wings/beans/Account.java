@@ -13,7 +13,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.security.EncryptionInterface;
 import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
@@ -43,11 +42,10 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@Indexes({
-  @Index(name = "next_iteration_license_info2", fields = {
-    @Field("licenseExpiryCheckIteration"), @Field("encryptedLicenseInfo")
-  })
-})
+
+@Index(name = "next_iteration_license_info2",
+    fields = { @Field("licenseExpiryCheckIteration")
+               , @Field("encryptedLicenseInfo") })
 
 public class Account extends Base implements PersistentRegularIterable {
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";

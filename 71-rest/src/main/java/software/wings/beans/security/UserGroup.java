@@ -13,7 +13,6 @@ import io.harness.data.structure.CollectionUtils;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
@@ -47,14 +46,13 @@ import javax.annotation.Nullable;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Indexes({
-  @Index(fields = { @Field("accountId")
-                    , @Field("importedByScim") }, name = "accountIdAndImportedByScim")
-  , @Index(fields = { @Field("accountId")
-                      , @Field("memberIds") }, name = "accountAndMemberIds"),
-      @Index(fields = { @Field("accountId")
-                        , @Field("name") }, name = "accountIdAndName")
-})
+
+@Index(name = "accountIdAndImportedByScim", fields = { @Field("accountId")
+                                                       , @Field("importedByScim") })
+@Index(name = "accountAndMemberIds", fields = { @Field("accountId")
+                                                , @Field("memberIds") })
+@Index(name = "accountIdAndName", fields = { @Field("accountId")
+                                             , @Field("name") })
 @FieldNameConstants(innerTypeName = "UserGroupKeys")
 @Entity(value = "userGroups", noClassnameStored = true)
 @HarnessEntity(exportable = true)

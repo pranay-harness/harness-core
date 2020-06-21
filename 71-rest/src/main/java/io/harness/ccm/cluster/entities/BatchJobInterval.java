@@ -5,7 +5,6 @@ import io.harness.ccm.cluster.entities.BatchJobInterval.BatchJobIntervalKeys;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -22,11 +21,10 @@ import java.time.temporal.ChronoUnit;
 
 @Data
 @Entity(value = "batchJobInterval", noClassnameStored = true)
-@Indexes({
-  @Index(name = "accountId_batchJobType", options = @IndexOptions(unique = true), fields = {
-    @Field(BatchJobIntervalKeys.accountId), @Field(BatchJobIntervalKeys.batchJobType)
-  })
-})
+
+@Index(name = "accountId_batchJobType", options = @IndexOptions(unique = true),
+    fields = { @Field(BatchJobIntervalKeys.accountId)
+               , @Field(BatchJobIntervalKeys.batchJobType) })
 @FieldNameConstants(innerTypeName = "BatchJobIntervalKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")

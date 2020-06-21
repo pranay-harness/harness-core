@@ -22,7 +22,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Getter;
@@ -50,9 +49,9 @@ import javax.validation.constraints.NotNull;
  */
 @OwnedBy(CDC)
 @Entity(value = "workflows", noClassnameStored = true)
-@Indexes(@Index(name = "accountIdCreatedAt",
+@Index(name = "accountIdCreatedAt",
     fields = { @Field(WorkflowKeys.accountId)
-               , @Field(value = WorkflowKeys.createdAt, type = IndexType.DESC) }))
+               , @Field(value = WorkflowKeys.createdAt, type = IndexType.DESC) })
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "WorkflowKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)

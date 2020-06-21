@@ -21,7 +21,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.AllArgsConstructor;
@@ -45,22 +44,29 @@ import java.util.List;
 /**
  * Created by rsingh on 6/20/17.
  */
-@Indexes({
-  @Index(fields = { @Field("stateExecutionId")
-                    , @Field("logCollectionMinute") }, name = "stateHostIdx")
-  , @Index(fields = {
-    @Field("stateExecutionId")
-    , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host")
-  }, name = "stateBumpIdx"), @Index(fields = {
-    @Field("workflowExecutionId"), @Field("clusterLevel"), @Field("stateType")
-  }, name = "state_Prev_Ex_Idx"), @Index(fields = {
-    @Field("cvConfigId"), @Field(value = "logCollectionMinute", type = IndexType.ASC), @Field("clusterLevel")
-  }, name = "cvRawRecordIdx"), @Index(fields = {
-    @Field("cvConfigId")
-    , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host"),
-        @Field(value = "createdAt", type = IndexType.DESC)
-  }, name = "cv_bump_idx")
-})
+
+@Index(name = "stateHostIdx", fields = { @Field("stateExecutionId")
+                                         , @Field("logCollectionMinute") })
+@Index(name = "stateBumpIdx",
+    fields =
+    {
+      @Field("stateExecutionId")
+      , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host")
+    })
+@Index(
+    name = "state_Prev_Ex_Idx", fields = { @Field("workflowExecutionId")
+                                           , @Field("clusterLevel"), @Field("stateType") })
+@Index(name = "cvRawRecordIdx",
+    fields =
+    { @Field("cvConfigId")
+      , @Field(value = "logCollectionMinute", type = IndexType.ASC), @Field("clusterLevel") })
+@Index(name = "cv_bump_idx",
+    fields =
+    {
+      @Field("cvConfigId")
+      , @Field("clusterLevel"), @Field(value = "logCollectionMinute", type = IndexType.DESC), @Field("host"),
+          @Field(value = "createdAt", type = IndexType.DESC)
+    })
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "LogDataRecordKeys")

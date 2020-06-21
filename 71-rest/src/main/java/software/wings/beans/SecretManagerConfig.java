@@ -12,7 +12,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -44,11 +43,10 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(callSuper = false, exclude = {"createdBy", "createdAt", "lastUpdatedBy", "lastUpdatedAt"})
 @Entity(value = "secretManagers")
-@Indexes({
-  @Index(name = "uniqueIdx", fields = {
-    @Field("name"), @Field("accountId"), @Field("encryptionType")
-  }, options = @IndexOptions(unique = true))
-})
+
+@Index(name = "uniqueIdx", fields = { @Field("name")
+                                      , @Field("accountId"), @Field("encryptionType") },
+    options = @IndexOptions(unique = true))
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "SecretManagerConfigKeys")

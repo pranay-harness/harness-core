@@ -5,7 +5,6 @@ import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage.LastReceived
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -25,11 +24,11 @@ import org.mongodb.morphia.annotations.Id;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
 @Entity(value = "lastReceivedPublishedMessage", noClassnameStored = true)
-@Indexes({
-  @Index(name = "no_dup", options = @IndexOptions(unique = true), fields = {
-    @Field(LastReceivedPublishedMessageKeys.accountId), @Field(LastReceivedPublishedMessageKeys.identifier)
-  })
-})
+
+@Index(name = "no_dup", options = @IndexOptions(unique = true),
+    fields =
+    { @Field(LastReceivedPublishedMessageKeys.accountId)
+      , @Field(LastReceivedPublishedMessageKeys.identifier) })
 @FieldNameConstants(innerTypeName = "LastReceivedPublishedMessageKeys")
 public class LastReceivedPublishedMessage
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {

@@ -9,7 +9,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.PersistentEntity;
 import io.harness.queue.Queuable.QueuableKeys;
 import lombok.Getter;
@@ -20,8 +19,8 @@ import org.mongodb.morphia.annotations.PrePersist;
 
 import java.util.Date;
 
-@Indexes({ @Index(name = "next4", fields = { @Field(QueuableKeys.topic)
-                                             , @Field(QueuableKeys.earliestGet) }) })
+@Index(name = "next4", fields = { @Field(QueuableKeys.topic)
+                                  , @Field(QueuableKeys.earliestGet) })
 @FieldNameConstants(innerTypeName = "QueuableKeys")
 public abstract class Queuable implements PersistentEntity {
   @Getter @Setter @Id private String id;

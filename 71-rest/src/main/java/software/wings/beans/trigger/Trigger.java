@@ -14,7 +14,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.NameAccess;
 import lombok.Builder;
 import lombok.Data;
@@ -54,16 +53,17 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "TriggerKeys")
 @Entity(value = "triggers")
 @HarnessEntity(exportable = true)
-@Indexes({
-  @Index(name = "yaml", options = @IndexOptions(unique = true), fields = { @Field("appId")
-                                                                           , @Field("name") })
-  , @Index(name = "conditionArtifactStreamId", fields = {
-    @Field(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType)
-    , @Field(TriggerKeys.condition + "." + ArtifactTriggerConditionKeys.artifactStreamId)
-  }), @Index(name = "artifactSelectionsArtifactStreamId", fields = {
-    @Field(TriggerKeys.artifactSelections + "." + ArtifactSelectionKeys.artifactStreamId)
-  })
-})
+
+@Index(name = "yaml", options = @IndexOptions(unique = true), fields = { @Field("appId")
+                                                                         , @Field("name") })
+@Index(name = "conditionArtifactStreamId",
+    fields =
+    {
+      @Field(TriggerKeys.condition + "." + TriggerConditionKeys.conditionType)
+      , @Field(TriggerKeys.condition + "." + ArtifactTriggerConditionKeys.artifactStreamId)
+    })
+@Index(name = "artifactSelectionsArtifactStreamId",
+    fields = { @Field(TriggerKeys.artifactSelections + "." + ArtifactSelectionKeys.artifactStreamId) })
 public class Trigger extends Base implements NameAccess, TagAware, ApplicationAccess {
   @NotEmpty private String name;
   private String description;

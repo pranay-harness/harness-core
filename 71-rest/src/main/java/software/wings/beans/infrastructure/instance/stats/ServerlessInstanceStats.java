@@ -8,7 +8,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -38,9 +37,9 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity(value = "serverless-instance-stats", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Indexes(@Index(name = "accountId_timestamp_unique_idx", fields = { @Field("accountId")
-                                                                    , @Field("timestamp") },
-    options = @IndexOptions(unique = true)))
+@Index(name = "accountId_timestamp_unique_idx", fields = { @Field("accountId")
+                                                           , @Field("timestamp") },
+    options = @IndexOptions(unique = true))
 @FieldNameConstants(innerTypeName = "ServerlessInstanceStatsKeys")
 public class ServerlessInstanceStats implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                                                 UpdatedAtAware, UpdatedByAware, AccountAccess {

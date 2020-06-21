@@ -13,7 +13,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -46,10 +45,9 @@ import javax.security.auth.Subject;
 @Entity(value = "users", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "UserKeys")
-@Indexes({
-  @Index(name = "accountsIdx", fields = { @Field(UserKeys.accounts) })
-  , @Index(name = "pendingAccountsIdx", fields = { @Field(UserKeys.pendingAccounts) })
-})
+
+@Index(name = "accountsIdx", fields = { @Field(UserKeys.accounts) })
+@Index(name = "pendingAccountsIdx", fields = { @Field(UserKeys.pendingAccounts) })
 public class User extends Base implements Principal {
   public static final String EMAIL_KEY = "email";
   public static final String ROLES_KEY = "roles";

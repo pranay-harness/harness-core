@@ -7,7 +7,6 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,14 +20,12 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @JsonInclude(NON_NULL)
-@Indexes({
-  @Index(name = "yaml", fields = { @Field("accountId")
-                                   , @Field("templateId"), @Field("version") },
-      options = @IndexOptions(unique = true))
-  ,
-      @Index(fields = { @Field("templateObject.referencedTemplateList.templateReference.templateUuid") },
-          name = "referencedTemplates")
-})
+
+@Index(name = "yaml", fields = { @Field("accountId")
+                                 , @Field("templateId"), @Field("version") },
+    options = @IndexOptions(unique = true))
+@Index(name = "referencedTemplates",
+    fields = { @Field("templateObject.referencedTemplateList.templateReference.templateUuid") })
 @Data
 @Builder
 @NoArgsConstructor

@@ -9,7 +9,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -34,23 +33,26 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 @Wither
-@Indexes({
-  @Index(name = "uniquePipelineExecution", options = @IndexOptions(unique = true),
-      fields =
-      {
-        @Field(SweepingOutputKeys.appId)
-        , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.pipelineExecutionId)
-      })
-  ,
-      @Index(name = "uniqueWorkflowExecution", options = @IndexOptions(unique = true), fields = {
-        @Field(SweepingOutputKeys.appId)
-        , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.workflowExecutionIds)
-      }), @Index(name = "uniquePhaseExecution", options = @IndexOptions(unique = true), fields = {
-        @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.phaseExecutionId)
-      }), @Index(name = "uniqueStateExecution", options = @IndexOptions(unique = true), fields = {
-        @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.stateExecutionId)
-      })
-})
+
+@Index(name = "uniquePipelineExecution", options = @IndexOptions(unique = true),
+    fields =
+    {
+      @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.pipelineExecutionId)
+    })
+
+@Index(name = "uniqueWorkflowExecution", options = @IndexOptions(unique = true),
+    fields =
+    {
+      @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.workflowExecutionIds)
+    })
+@Index(name = "uniquePhaseExecution", options = @IndexOptions(unique = true),
+    fields =
+    { @Field(SweepingOutputKeys.appId)
+      , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.phaseExecutionId) })
+@Index(name = "uniqueStateExecution", options = @IndexOptions(unique = true),
+    fields =
+    { @Field(SweepingOutputKeys.appId)
+      , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.stateExecutionId) })
 @Entity(value = "sweepingOutput2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @Converters({SweepingOutputConverter.class})

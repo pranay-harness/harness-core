@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,11 +24,10 @@ import software.wings.beans.Preference.PreferenceKeys;
   , @Type(value = AuditPreference.class, name = "AUDIT_PREFERENCE")
 })
 @FieldNameConstants(innerTypeName = "PreferenceKeys")
-@Indexes({
-  @Index(name = "preference_index", fields = {
-    @Field(PreferenceKeys.accountId), @Field(PreferenceKeys.userId), @Field(PreferenceKeys.name)
-  })
-})
+
+@Index(name = "preference_index",
+    fields = { @Field(PreferenceKeys.accountId)
+               , @Field(PreferenceKeys.userId), @Field(PreferenceKeys.name) })
 
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "preferences")

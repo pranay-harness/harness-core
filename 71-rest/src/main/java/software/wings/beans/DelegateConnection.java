@@ -11,7 +11,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -34,12 +33,12 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Entity(value = "delegateConnections", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Indexes({
-  @Index(fields = {
-    @Field(DelegateConnectionKeys.accountId)
-    , @Field(DelegateConnectionKeys.delegateId), @Field(DelegateConnectionKeys.version)
-  }, name = "index2")
-})
+@Index(name = "index2",
+    fields =
+    {
+      @Field(DelegateConnectionKeys.accountId)
+      , @Field(DelegateConnectionKeys.delegateId), @Field(DelegateConnectionKeys.version)
+    })
 public class DelegateConnection implements PersistentEntity, UuidAware, AccountAccess {
   public static final Duration TTL = ofDays(15);
   public static final Duration EXPIRY_TIME = ofMinutes(5);

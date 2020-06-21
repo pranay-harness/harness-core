@@ -5,7 +5,6 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -24,30 +23,25 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @FieldNameConstants(innerTypeName = "ResourceLookupKeys")
-@Indexes({
-  @Index(name = "resourceIndex_1",
-      fields =
-      {
-        @Field(ResourceLookupKeys.accountId)
-        , @Field(ResourceLookupKeys.resourceType), @Field(ResourceLookupKeys.appId),
-            @Field(ResourceLookupKeys.resourceName)
-      })
-  ,
-      @Index(name = "resourceIndex_3",
-          fields =
-          {
-            @Field(ResourceLookupKeys.accountId)
-            , @Field(ResourceLookupKeys.resourceName), @Field(ResourceLookupKeys.resourceType)
-          }),
 
-      @Index(
-          name = "tagsNameResourceLookupIndex", fields = { @Field(ResourceLookupKeys.accountId)
-                                                           , @Field("tags.name") }),
-
-      @Index(name = "resourceIdResourceLookupIndex", fields = {
-        @Field(ResourceLookupKeys.accountId), @Field(ResourceLookupKeys.resourceId)
-      }),
-})
+@Index(name = "resourceIndex_1",
+    fields =
+    {
+      @Field(ResourceLookupKeys.accountId)
+      , @Field(ResourceLookupKeys.resourceType), @Field(ResourceLookupKeys.appId),
+          @Field(ResourceLookupKeys.resourceName)
+    })
+@Index(name = "resourceIndex_3",
+    fields =
+    {
+      @Field(ResourceLookupKeys.accountId)
+      , @Field(ResourceLookupKeys.resourceName), @Field(ResourceLookupKeys.resourceType)
+    })
+@Index(name = "tagsNameResourceLookupIndex", fields = { @Field(ResourceLookupKeys.accountId)
+                                                        , @Field("tags.name") })
+@Index(name = "resourceIdResourceLookupIndex",
+    fields = { @Field(ResourceLookupKeys.accountId)
+               , @Field(ResourceLookupKeys.resourceId) })
 @Data
 @Builder
 @Entity(value = "resourceLookup", noClassnameStored = true)

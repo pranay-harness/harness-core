@@ -19,7 +19,6 @@ import io.harness.exception.WingsException;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,10 +33,9 @@ import software.wings.sm.StateType;
  * 4/9/2019
  */
 
-@Indexes(
-    @Index(name = "analysisMinIndex", fields = { @Field("serviceId")
-                                                 , @Field("cvConfigId"), @Field("analysisMinute") },
-        options = @IndexOptions(unique = true)))
+@Index(name = "analysisMinIndex", fields = { @Field("serviceId")
+                                             , @Field("cvConfigId"), @Field("analysisMinute") },
+    options = @IndexOptions(unique = true))
 @Data
 @Builder
 @NoArgsConstructor

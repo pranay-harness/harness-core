@@ -7,7 +7,6 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,8 +18,8 @@ import software.wings.beans.entityinterface.KeywordsAware;
 
 import java.util.Set;
 
-@Indexes({ @Index(name = "account_gallery_key_idx", fields = { @Field("accountId")
-                                                               , @Field("galleryKey") }) })
+@Index(name = "account_gallery_key_idx", fields = { @Field("accountId")
+                                                    , @Field("galleryKey") })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)

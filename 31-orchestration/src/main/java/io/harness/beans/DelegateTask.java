@@ -14,7 +14,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -49,14 +48,16 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = false)
 @Converters({ParametersConverter.class, ResponseDataConverter.class})
 @FieldNameConstants(innerTypeName = "DelegateTaskKeys")
-@Indexes({
-  @Index(name = "index", fields = { @Field(DelegateTaskKeys.status)
-                                    , @Field(DelegateTaskKeys.expiry) })
-  , @Index(name = "pulling", fields = {
-    @Field(DelegateTaskKeys.accountId)
-    , @Field(DelegateTaskKeys.status), @Field("data.async"), @Field(DelegateTaskKeys.expiry),
-  }), @Index(name = "data_async", fields = { @Field("data.async") })
-})
+
+@Index(name = "index", fields = { @Field(DelegateTaskKeys.status)
+                                  , @Field(DelegateTaskKeys.expiry) })
+@Index(name = "pulling",
+    fields =
+    {
+      @Field(DelegateTaskKeys.accountId)
+      , @Field(DelegateTaskKeys.status), @Field("data.async"), @Field(DelegateTaskKeys.expiry),
+    })
+@Index(name = "data_async", fields = { @Field("data.async") })
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, Task {
   public static final String TASK_IDENTIFIER = "DELEGATE_TASK";
 

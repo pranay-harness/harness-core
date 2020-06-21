@@ -6,7 +6,6 @@ import io.harness.limits.lib.Limit;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.validation.Update;
@@ -22,9 +21,8 @@ import javax.validation.constraints.NotNull;
 @Getter
 @EqualsAndHashCode(exclude = "id", callSuper = false)
 @Entity(value = "allowedLimits", noClassnameStored = true)
-@Indexes(
-    @Index(name = "key_idx", fields = { @Field("key")
-                                        , @Field("accountId") }, options = @IndexOptions(unique = true)))
+@Index(name = "key_idx", fields = { @Field("key")
+                                    , @Field("accountId") }, options = @IndexOptions(unique = true))
 @FieldNameConstants(innerTypeName = "ConfiguredLimitKeys")
 @HarnessEntity(exportable = true)
 public class ConfiguredLimit<T extends Limit> implements PersistentEntity, AccountAccess {

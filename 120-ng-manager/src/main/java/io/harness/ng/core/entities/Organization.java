@@ -6,7 +6,6 @@ import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import lombok.Builder;
 import lombok.Data;
@@ -32,11 +31,10 @@ import javax.validation.constraints.Size;
 @Entity(value = "organizations", noClassnameStored = true)
 @Document("organizations")
 @TypeAlias("organizations")
-@Indexes({
-  @Index(name = "unique_accountIdentifier_orgIdentifier", options = @IndexOptions(unique = true), fields = {
-    @Field(OrganizationKeys.accountId), @Field(OrganizationKeys.identifier)
-  })
-})
+
+@Index(name = "unique_accountIdentifier_orgIdentifier", options = @IndexOptions(unique = true),
+    fields = { @Field(OrganizationKeys.accountId)
+               , @Field(OrganizationKeys.identifier) })
 public class Organization {
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   @Trimmed @NotEmpty String accountId;

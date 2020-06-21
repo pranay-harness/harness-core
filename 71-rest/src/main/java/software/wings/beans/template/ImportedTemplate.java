@@ -9,7 +9,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -35,13 +34,11 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ImportedTemplateKeys")
-@Indexes({
-  @Index(name = "account_app_command_idx",
-      fields = { @Field("accountId")
-                 , @Field("appId"), @Field("commandStoreName"), @Field("commandName") })
-  ,
-      @Index(name = "template_idx", options = @IndexOptions(unique = true), fields = { @Field("templateId") })
-})
+
+@Index(name = "account_app_command_idx",
+    fields = { @Field("accountId")
+               , @Field("appId"), @Field("commandStoreName"), @Field("commandName") })
+@Index(name = "template_idx", options = @IndexOptions(unique = true), fields = { @Field("templateId") })
 @Entity(value = "importedTemplates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class ImportedTemplate implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,

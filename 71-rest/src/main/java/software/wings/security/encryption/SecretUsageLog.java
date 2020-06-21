@@ -8,7 +8,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -44,8 +43,8 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "secretUsageLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "SecretUsageLogKeys")
-@Indexes({ @Index(fields = { @Field("accountId")
-                             , @Field("encryptedDataId") }, name = "acctEncryptedDataIdx") })
+@Index(name = "acctEncryptedDataIdx", fields = { @Field("accountId")
+                                                 , @Field("encryptedDataId") })
 public class SecretUsageLog implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                        UpdatedByAware, ApplicationAccess, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;

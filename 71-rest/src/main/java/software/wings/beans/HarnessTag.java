@@ -12,7 +12,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -38,9 +37,9 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Indexes(@Index(name = "tagIdx", options = @IndexOptions(unique = true),
+@Index(name = "tagIdx", options = @IndexOptions(unique = true),
     fields = { @Field(HarnessTagKeys.accountId)
-               , @Field(HarnessTagKeys.key) }))
+               , @Field(HarnessTagKeys.key) })
 @Data
 @Builder
 @JsonInclude(Include.NON_NULL)

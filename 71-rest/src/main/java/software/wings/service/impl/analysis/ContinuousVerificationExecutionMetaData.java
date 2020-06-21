@@ -11,7 +11,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -30,20 +29,18 @@ import java.util.Date;
 @Builder
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @FieldNameConstants(innerTypeName = "ContinuousVerificationExecutionMetaDataKeys")
-@Indexes({
-  @Index(fields =
-      {
-        @Field("workflowId")
-        , @Field("stateType"), @Field("executionStatus"), @Field(value = "workflowStartTs", type = IndexType.DESC)
-      },
-      name = "stateHostIdx")
-  ,
-      @Index(fields = { @Field("workflowExecutionId")
-                        , @Field(value = "createdAt", type = IndexType.DESC) },
-          name = "workflowExec_idx"),
-      @Index(fields = { @Field("pipelineExecutionId")
-                        , @Field(value = "accountId") }, name = "cv_certified_index")
-})
+
+@Index(name = "stateHostIdx",
+    fields =
+    {
+      @Field("workflowId")
+      , @Field("stateType"), @Field("executionStatus"), @Field(value = "workflowStartTs", type = IndexType.DESC)
+    })
+@Index(name = "workflowExec_idx",
+    fields = { @Field("workflowExecutionId")
+               , @Field(value = "createdAt", type = IndexType.DESC) })
+@Index(name = "cv_certified_index", fields = { @Field("pipelineExecutionId")
+                                               , @Field(value = "accountId") })
 @Entity(value = "cvExecutionData", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class ContinuousVerificationExecutionMetaData extends Base implements AccountAccess {

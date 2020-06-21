@@ -19,7 +19,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Update;
 import lombok.Data;
@@ -49,14 +48,12 @@ import javax.annotation.Nullable;
 @NoArgsConstructor
 @RequiredArgsConstructor
 @Entity(value = "infrastructureMapping")
-@Indexes({
-  @Index(name = "yaml", options = @IndexOptions(unique = true),
-      fields = { @Field("appId")
-                 , @Field("envId"), @Field("name") })
-  ,
-      @Index(name = "app_infratype", fields = { @Field("appId")
-                                                , @Field("infraMappingType") })
-})
+
+@Index(name = "yaml", options = @IndexOptions(unique = true),
+    fields = { @Field("appId")
+               , @Field("envId"), @Field("name") })
+@Index(name = "app_infratype", fields = { @Field("appId")
+                                          , @Field("infraMappingType") })
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "InfrastructureMappingKeys")

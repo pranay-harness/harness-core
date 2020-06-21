@@ -11,7 +11,6 @@ import io.harness.execution.export.request.ExportExecutionsRequest.ExportExecuti
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -31,18 +30,19 @@ import java.util.List;
 @FieldNameConstants(innerTypeName = "ExportExecutionsRequestKeys")
 @Entity(value = "exportExecutionsRequests", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Indexes({
-  @Index(name = "accountId_status",
-      fields = { @Field(ExportExecutionsRequestKeys.accountId)
-                 , @Field(ExportExecutionsRequestKeys.status) })
-  ,
-      @Index(name = "status_nextIteration", fields = {
-        @Field(ExportExecutionsRequestKeys.status), @Field(ExportExecutionsRequestKeys.nextIteration)
-      }), @Index(name = "status_expiresAt_nextCleanupIteration", fields = {
-        @Field(ExportExecutionsRequestKeys.status)
-        , @Field(ExportExecutionsRequestKeys.expiresAt), @Field(ExportExecutionsRequestKeys.nextCleanupIteration)
-      })
-})
+
+@Index(name = "accountId_status",
+    fields = { @Field(ExportExecutionsRequestKeys.accountId)
+               , @Field(ExportExecutionsRequestKeys.status) })
+@Index(name = "status_nextIteration",
+    fields = { @Field(ExportExecutionsRequestKeys.status)
+               , @Field(ExportExecutionsRequestKeys.nextIteration) })
+@Index(name = "status_expiresAt_nextCleanupIteration",
+    fields =
+    {
+      @Field(ExportExecutionsRequestKeys.status)
+      , @Field(ExportExecutionsRequestKeys.expiresAt), @Field(ExportExecutionsRequestKeys.nextCleanupIteration)
+    })
 public class ExportExecutionsRequest
     implements PersistentRegularIterable, UuidAware, CreatedAtAware, CreatedByAware, AccountAccess {
   public enum OutputFormat { JSON }

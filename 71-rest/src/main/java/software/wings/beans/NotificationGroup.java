@@ -6,7 +6,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
@@ -36,9 +35,9 @@ import javax.validation.constraints.NotNull;
  * This has been deprecated in favor of {@link software.wings.beans.security.UserGroup#notificationSettings}
  */
 @Entity(value = "notificationGroups", noClassnameStored = true)
-@Indexes(
-    @Index(name = "yaml", options = @IndexOptions(unique = true), fields = { @Field("accountId")
-                                                                             , @Field("name") }))
+
+@Index(name = "yaml", options = @IndexOptions(unique = true), fields = { @Field("accountId")
+                                                                         , @Field("name") })
 @HarnessEntity(exportable = true)
 @Deprecated
 public class NotificationGroup extends Base implements NotificationReceiverInfo, NameAccess, AccountAccess {

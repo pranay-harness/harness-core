@@ -6,7 +6,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,25 +25,30 @@ import javax.ws.rs.DefaultValue;
 /**
  * @author rktummala on 12/15/17
  */
-@Indexes({
-  @Index(name = "account_filepath_direction_idx",
-      fields = { @Field("accountId")
-                 , @Field("yamlFilePath"), @Field("gitSyncDirection") },
-      options = @IndexOptions(unique = true))
-  ,
-      @Index(fields = {
-        @Field("accountId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.gitCommitId")
-      }, name = "gitCommitId_idx"), @Index(fields = {
-        @Field("accountId"), @Field("appId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.gitCommitId")
-      }, name = "gitCommitId_idx_for_app_filter"), @Index(fields = {
-        @Field("accountId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.previousCommitIdsWithError")
-      }, name = "previousErrors_idx"), @Index(fields = {
-        @Field("accountId")
-        , @Field("appId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.previousCommitIdsWithError")
-      }, name = "previousErrors_idx_for_app_filter"), @Index(fields = {
-        @Field("accountId"), @Field("createdAt")
-      }, name = "accountId_createdAt"),
-})
+
+@Index(name = "account_filepath_direction_idx",
+    fields = { @Field("accountId")
+               , @Field("yamlFilePath"), @Field("gitSyncDirection") },
+    options = @IndexOptions(unique = true))
+@Index(name = "gitCommitId_idx",
+    fields = { @Field("accountId")
+               , @Field("gitSyncDirection"), @Field("additionalErrorDetails.gitCommitId") })
+@Index(name = "gitCommitId_idx_for_app_filter",
+    fields =
+    { @Field("accountId")
+      , @Field("appId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.gitCommitId") })
+@Index(name = "previousErrors_idx",
+    fields =
+    { @Field("accountId")
+      , @Field("gitSyncDirection"), @Field("additionalErrorDetails.previousCommitIdsWithError") })
+@Index(name = "previousErrors_idx_for_app_filter",
+    fields =
+    {
+      @Field("accountId")
+      , @Field("appId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.previousCommitIdsWithError")
+    })
+@Index(name = "accountId_createdAt", fields = { @Field("accountId")
+                                                , @Field("createdAt") })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

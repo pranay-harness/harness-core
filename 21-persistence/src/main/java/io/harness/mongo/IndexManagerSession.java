@@ -28,7 +28,6 @@ import io.harness.mongo.IndexManager.IndexCreator;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.threading.Morpheus;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -213,45 +212,43 @@ public class IndexManagerSession {
       MappedClass mc, DBCollection collection, Map<String, IndexCreator> creators) {
     String id = indexedFieldName(mc);
 
-    Set<Indexes> indexesSet = fetchAnnotations(mc.getClazz(), Indexes.class);
-    for (Indexes indexes : indexesSet) {
-      for (Index index : indexes.value()) {
-        BasicDBObject keys = new BasicDBObject();
+    Set<Index> indexes = fetchAnnotations(mc.getClazz(), Index.class);
+    for (Index index : indexes) {
+      BasicDBObject keys = new BasicDBObject();
 
-        if (index.fields().length == 1 && !index.fields()[0].value().contains(".")) {
-          logger.error("Composite index with only one field {}", index.fields()[0].value());
-        }
-
-        for (Field field : index.fields()) {
-          if (field.value().equals(id)) {
-            throw new IndexManagerInspectException("There is no point of having collection key in a composite index."
-                + "\nIf in the query there is a unique value it will always fetch exactly one item");
-          }
-          keys.append(field.value(), field.type().toIndexValue());
-        }
-
-        String indexName = index.name();
-        if (isEmpty(indexName)) {
-          throw new IndexManagerInspectException("Do not use default index name.");
-        }
-
-        BasicDBObject options = new BasicDBObject();
-        options.put(NAME, indexName);
-        if (index.options().unique()) {
-          options.put(UNIQUE, Boolean.TRUE);
-        } else {
-          options.put(BACKGROUND, Boolean.TRUE);
-        }
-        if (index.options().sparse()) {
-          options.put(SPARSE, Boolean.TRUE);
-        }
-
-        IndexCreator newCreator = IndexCreator.builder().collection(collection).keys(keys).options(options).build();
-
-        checkWithTheOthers(creators, newCreator);
-
-        putCreator(creators, indexName, newCreator);
+      if (index.fields().length == 1 && !index.fields()[0].value().contains(".")) {
+        logger.error("Composite index with only one field {}", index.fields()[0].value());
       }
+
+      for (Field field : index.fields()) {
+        if (field.value().equals(id)) {
+          throw new IndexManagerInspectException("There is no point of having collection key in a composite index."
+              + "\nIf in the query there is a unique value it will always fetch exactly one item");
+        }
+        keys.append(field.value(), field.type().toIndexValue());
+      }
+
+      String indexName = index.name();
+      if (isEmpty(indexName)) {
+        throw new IndexManagerInspectException("Do not use default index name.");
+      }
+
+      BasicDBObject options = new BasicDBObject();
+      options.put(NAME, indexName);
+      if (index.options().unique()) {
+        options.put(UNIQUE, Boolean.TRUE);
+      } else {
+        options.put(BACKGROUND, Boolean.TRUE);
+      }
+      if (index.options().sparse()) {
+        options.put(SPARSE, Boolean.TRUE);
+      }
+
+      IndexCreator newCreator = IndexCreator.builder().collection(collection).keys(keys).options(options).build();
+
+      checkWithTheOthers(creators, newCreator);
+
+      putCreator(creators, indexName, newCreator);
     }
   }
 

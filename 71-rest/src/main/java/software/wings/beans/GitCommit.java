@@ -8,7 +8,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,20 +32,22 @@ import java.util.List;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "gitCommits", noClassnameStored = true)
-@Indexes({
-  @Index(name = "gitCommitIdx", fields = { @Field(GitCommitKeys.accountId)
-                                           , @Field(GitCommitKeys.commitId) },
-      options = @IndexOptions(unique = true))
-  ,
-      @Index(fields = {
-        @Field(GitCommitKeys.accountId)
-        , @Field(GitCommitKeys.status), @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC)
-      }, name = "gitCommitStatusLastUpdatedIdx"), @Index(fields = {
-        @Field(GitCommitKeys.accountId), @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC)
-      }, name = "gitCommitAccountIdLastUpdatedAT"), @Index(fields = {
-        @Field(GitCommitKeys.accountId), @Field(value = GitCommitKeys.createdAt, type = IndexType.DESC),
-      }, name = "gitCommitAccountIdCreatedAtDesc")
-})
+
+@Index(name = "gitCommitIdx", fields = { @Field(GitCommitKeys.accountId)
+                                         , @Field(GitCommitKeys.commitId) },
+    options = @IndexOptions(unique = true))
+@Index(name = "gitCommitStatusLastUpdatedIdx",
+    fields =
+    {
+      @Field(GitCommitKeys.accountId)
+      , @Field(GitCommitKeys.status), @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC)
+    })
+@Index(name = "gitCommitAccountIdLastUpdatedAT",
+    fields = { @Field(GitCommitKeys.accountId)
+               , @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC) })
+@Index(name = "gitCommitAccountIdCreatedAtDesc",
+    fields = { @Field(GitCommitKeys.accountId)
+               , @Field(value = GitCommitKeys.createdAt, type = IndexType.DESC), })
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GitCommitKeys")
 public class GitCommit extends Base {

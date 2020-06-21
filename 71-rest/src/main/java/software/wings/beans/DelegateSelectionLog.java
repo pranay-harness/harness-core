@@ -7,7 +7,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -31,13 +30,13 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "delegateSelectionLogRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "DelegateSelectionLogKeys")
-@Indexes(@Index(name = "selectionLogsGroup", options = @IndexOptions(unique = true),
+@Index(name = "selectionLogsGroup", options = @IndexOptions(unique = true),
     fields =
     {
       @Field(value = DelegateSelectionLogKeys.accountId)
       , @Field(value = DelegateSelectionLogKeys.taskId), @Field(value = DelegateSelectionLogKeys.message),
           @Field(value = DelegateSelectionLogKeys.groupId)
-    }))
+    })
 public class DelegateSelectionLog implements PersistentEntity, UuidAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 

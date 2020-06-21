@@ -10,7 +10,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -27,9 +26,9 @@ import java.util.regex.Pattern;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "deploymentType")
-@Indexes(@Index(name = "service", options = @IndexOptions(unique = true),
+@Index(name = "service", options = @IndexOptions(unique = true),
     fields = { @Field("serviceId")
-               , @Field("deploymentType") }))
+               , @Field("deploymentType") })
 @Entity("containerTasks")
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ContainerTaskKeys")

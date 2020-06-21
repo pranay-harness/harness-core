@@ -11,7 +11,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptedDataParams;
@@ -56,12 +55,11 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "encryptedRecords", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Indexes({
-  @Index(name = "acctNameIdx", fields = { @Field("accountId")
-                                          , @Field("name") }, options = @IndexOptions(unique = true))
-  , @Index(name = "acctKmsIdx", fields = { @Field("accountId")
-                                           , @Field("kmsId") })
-})
+
+@Index(name = "acctNameIdx", fields = { @Field("accountId")
+                                        , @Field("name") }, options = @IndexOptions(unique = true))
+@Index(name = "acctKmsIdx", fields = { @Field("accountId")
+                                       , @Field("kmsId") })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
 public class EncryptedData
     extends Base implements EncryptedRecord, NameAccess, PersistentRegularIterable, AccountAccess, ScopedEntity {

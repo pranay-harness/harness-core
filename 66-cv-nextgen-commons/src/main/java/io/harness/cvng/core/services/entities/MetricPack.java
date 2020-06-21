@@ -12,7 +12,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -35,11 +34,9 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
-@Indexes({
-  @Index(name = "unique_Idx", fields = {
-    @Field("projectIdentifier"), @Field("dataSourceType"), @Field("identifier")
-  }, options = @IndexOptions(unique = true))
-})
+@Index(name = "unique_Idx", fields = { @Field("projectIdentifier")
+                                       , @Field("dataSourceType"), @Field("identifier") },
+    options = @IndexOptions(unique = true))
 @Data
 @Builder
 @NoArgsConstructor

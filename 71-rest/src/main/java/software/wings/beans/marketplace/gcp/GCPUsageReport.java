@@ -6,7 +6,6 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
@@ -22,9 +21,9 @@ import software.wings.jersey.JsonViews;
 import java.time.Instant;
 import javax.validation.constraints.NotNull;
 
-@Indexes(@Index(name = "accountId_startTimestamp_unique_idx",
-    fields = { @Field("accountId")
-               , @Field("startTimestamp") }, options = @IndexOptions(unique = true)))
+@Index(name = "accountId_startTimestamp_unique_idx", fields = { @Field("accountId")
+                                                                , @Field("startTimestamp") },
+    options = @IndexOptions(unique = true))
 @Value
 @FieldNameConstants(innerTypeName = "GCPUsageReportKeys")
 @Entity(value = "gcpUsageReport", noClassnameStored = true)

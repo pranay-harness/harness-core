@@ -4,7 +4,6 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,8 +27,8 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "secretChangeLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Indexes({ @Index(fields = { @Field("accountId")
-                             , @Field("encryptedDataId") }, name = "acctEncryptedDataIdx") })
+@Index(name = "acctEncryptedDataIdx", fields = { @Field("accountId")
+                                                 , @Field("encryptedDataId") })
 @FieldNameConstants(innerTypeName = "SecretChangeLogKeys")
 public class SecretChangeLog extends Base implements AccountAccess {
   @NotEmpty private String accountId;

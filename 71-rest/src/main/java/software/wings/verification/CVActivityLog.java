@@ -17,7 +17,6 @@ import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -42,12 +41,13 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "cvActivityLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Indexes({
-  @Index(fields = {
-    @Field("cvConfigId")
-    , @Field(value = "dataCollectionMinute", type = IndexType.DESC), @Field(value = "createdAt", type = IndexType.ASC)
-  }, name = "service_guard_idx")
-})
+
+@Index(name = "service_guard_idx",
+    fields =
+    {
+      @Field("cvConfigId")
+      , @Field(value = "dataCollectionMinute", type = IndexType.DESC), @Field(value = "createdAt", type = IndexType.ASC)
+    })
 public class CVActivityLog implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
   @Indexed private String cvConfigId;

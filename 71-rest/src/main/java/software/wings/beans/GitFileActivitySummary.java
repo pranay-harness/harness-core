@@ -3,7 +3,6 @@ package software.wings.beans;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -29,9 +28,9 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @Entity(value = "gitFileActivitySummary", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "GitFileActivitySummaryKeys")
-@Indexes({
-  @Index(fields = { @Field("accountId"), @Field("appId"), @Field("gitToHarness") }, name = "gitCommits_for_appId_indx")
-})
+
+@Index(name = "gitCommits_for_appId_indx", fields = { @Field("accountId")
+                                                      , @Field("appId"), @Field("gitToHarness") })
 @HarnessEntity(exportable = true)
 public class GitFileActivitySummary
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {

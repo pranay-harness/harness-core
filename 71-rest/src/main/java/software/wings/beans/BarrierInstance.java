@@ -8,7 +8,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
@@ -26,14 +25,11 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import javax.validation.constraints.NotNull;
 
-@Indexes({
-  @Index(name = "search2", options = @IndexOptions(unique = true),
-      fields = { @Field("name")
-                 , @Field("pipeline.executionId"), @Field("pipeline.parallelIndex") })
-  ,
-      @Index(name = "next", fields = { @Field("state")
-                                       , @Field("nextIteration") })
-})
+@Index(name = "search2", options = @IndexOptions(unique = true),
+    fields = { @Field("name")
+               , @Field("pipeline.executionId"), @Field("pipeline.parallelIndex") })
+@Index(name = "next", fields = { @Field("state")
+                                 , @Field("nextIteration") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

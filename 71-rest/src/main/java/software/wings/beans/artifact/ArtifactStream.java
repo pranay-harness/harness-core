@@ -17,7 +17,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.AllArgsConstructor;
@@ -49,14 +48,12 @@ import java.util.regex.Pattern;
  */
 @OwnedBy(CDC)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
-@Indexes({
-  @Index(name = "yaml", options = @IndexOptions(unique = true),
-      fields = { @Field("appId")
-                 , @Field("serviceId"), @Field("name") })
-  ,
-      @Index(name = "artifactStream_cleanup", fields = { @Field("artifactStreamType")
-                                                         , @Field("nextCleanupIteration") })
-})
+
+@Index(name = "yaml", options = @IndexOptions(unique = true),
+    fields = { @Field("appId")
+               , @Field("serviceId"), @Field("name") })
+@Index(name = "artifactStream_cleanup", fields = { @Field("artifactStreamType")
+                                                   , @Field("nextCleanupIteration") })
 // TODO: ASR: add compound index with setting_id + name
 // TODO: ASR: change all apis to work with Service.artifactStreamIds instead of serviceId - including UI
 // TODO: ASR: migrate the index and name of existing artifact streams (name + service name + app name + setting name)

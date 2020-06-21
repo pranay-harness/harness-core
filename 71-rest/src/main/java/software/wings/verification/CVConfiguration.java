@@ -12,7 +12,6 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -39,11 +38,9 @@ import javax.validation.constraints.NotNull;
  * 05/Oct/2018
  */
 
-@Indexes({
-  @Index(name = "nameUniqueIndex", fields = {
-    @Field("appId"), @Field("envId"), @Field("name")
-  }, options = @IndexOptions(unique = true))
-})
+@Index(name = "nameUniqueIndex", fields = { @Field("appId")
+                                            , @Field("envId"), @Field("name") },
+    options = @IndexOptions(unique = true))
 @Data
 @FieldNameConstants(innerTypeName = "CVConfigurationKeys")
 @NoArgsConstructor

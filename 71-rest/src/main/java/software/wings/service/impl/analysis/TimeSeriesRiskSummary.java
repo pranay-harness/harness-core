@@ -13,7 +13,6 @@ import io.harness.exception.WingsException;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
 import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.Indexes;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 import lombok.AllArgsConstructor;
@@ -34,8 +33,8 @@ import java.util.Map;
  * Class representing an entity of cumulative sums and risk for each window of analysis.
  * Created by Praveen.
  */
-@Indexes(@Index(fields = { @Field("cvConfigId")
-                           , @Field("analysisMinute"), @Field("tag") }, name = "minute_idx"))
+@Index(name = "minute_idx", fields = { @Field("cvConfigId")
+                                       , @Field("analysisMinute"), @Field("tag") })
 @Data
 @Builder
 @NoArgsConstructor
