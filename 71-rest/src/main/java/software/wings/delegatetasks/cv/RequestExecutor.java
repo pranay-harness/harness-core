@@ -67,7 +67,6 @@ public class RequestExecutor {
         }
       } catch (Exception e) {
         if (retryCount == MAX_RETRIES) {
-          logger.error("Request did not succeed after " + MAX_RETRIES + "  retries", e);
           throw new DataCollectionException(e);
         }
       }
