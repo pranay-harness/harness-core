@@ -3,7 +3,6 @@ package migrations.all;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.audit.ResourceType.APPLICATION;
-import static software.wings.audit.ResourceType.ENCRYPTED_RECORDS;
 import static software.wings.audit.ResourceType.ENVIRONMENT;
 import static software.wings.audit.ResourceType.PIPELINE;
 import static software.wings.audit.ResourceType.PROVISIONER;
@@ -49,8 +48,6 @@ import software.wings.beans.template.TemplateFolder.TemplateFolderKeys;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.settings.SettingValue;
 
 import java.util.HashMap;
@@ -146,29 +143,12 @@ public class ResourceLookupMigration implements Migration {
              new HIterator<>(wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
                                  .project(UserGroupKeys.accountId, true)
                                  .project(UserGroupKeys.name, true)
-                                 .project(UserGroupKeys.uuid, true)
+                                 .project("uuid", true)
                                  .fetch())) {
       while (userGroupIterator.hasNext()) {
         UserGroup userGroup = userGroupIterator.next();
         addResourceLookupRecord(userGroup.getAccountId(), Application.GLOBAL_APP_ID, userGroup.getUuid(),
             userGroup.getName(), USER_GROUP.name());
-      }
-    }
-  }
-
-  private void addExistingencryptedRecordsToResourceMap() {
-    try (HIterator<EncryptedData> encryptedDataIterator =
-             new HIterator<>(wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                                 .project(EncryptedDataKeys.accountId, true)
-                                 .project(EncryptedDataKeys.uuid, true)
-                                 .project(EncryptedDataKeys.name, true)
-                                 .project(EncryptedDataKeys.type, true)
-                                 .fetch())) {
-      EncryptedData encryptedData = null;
-      while (encryptedDataIterator.hasNext()) {
-        encryptedData = encryptedDataIterator.next();
-        addResourceLookupRecord(encryptedData.getAccountId(), Application.GLOBAL_APP_ID, encryptedData.getUuid(),
-            encryptedData.getName(), ENCRYPTED_RECORDS.name());
       }
     }
   }

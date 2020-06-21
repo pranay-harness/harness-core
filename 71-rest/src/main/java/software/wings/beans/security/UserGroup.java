@@ -20,7 +20,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
-import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
@@ -87,8 +86,6 @@ public class UserGroup extends Base implements NotificationReceiverInfo, Account
   @NotEmpty @Indexed private String name;
   private String description;
 
-  // TODO: User composition with SSOInfo class to store this info
-  public static final String LINKED_SSO_ID_KEY = "linkedSsoId";
   private boolean isSsoLinked;
   private SSOType linkedSsoType;
   private String linkedSsoId;
@@ -199,16 +196,5 @@ public class UserGroup extends Base implements NotificationReceiverInfo, Account
   @JsonIgnore
   public List<String> getEmailAddresses() {
     return null != notificationSettings ? notificationSettings.getEmailAddresses() : Collections.emptyList();
-  }
-
-  @UtilityClass
-  public static final class UserGroupKeys {
-    // Temporary
-    public static final String createdAt = "createdAt";
-    public static final String uuid = "uuid";
-    public static final String name = "name";
-    public static final String accountId = "accountId";
-    public static final String memberIds = "memberIds";
-    public static final String importedByScim = "importedByScim";
   }
 }

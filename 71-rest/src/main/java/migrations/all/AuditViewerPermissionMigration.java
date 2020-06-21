@@ -69,9 +69,7 @@ public class AuditViewerPermissionMigration implements Migration {
         DBObject dbObject = morphia.toDBObject(accountLevelPermissions);
         dbObject.removeField("className");
         bulkWriteOperation
-            .find(wingsPersistence.createQuery(UserGroup.class)
-                      .filter(UserGroupKeys.uuid, userGroup.getUuid())
-                      .getQueryObject())
+            .find(wingsPersistence.createQuery(UserGroup.class).filter("uuid", userGroup.getUuid()).getQueryObject())
             .updateOne(new BasicDBObject("$set", new BasicDBObject(UserGroupKeys.accountPermissions, dbObject)));
       }
     } catch (Exception ex) {
