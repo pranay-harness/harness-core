@@ -343,6 +343,8 @@ public interface WingsTestConstants {
 
   String PARENT = "parent";
 
+  String REFERENCED_WORKFLOW = "Referenced Workflow";
+
   /**
    * The constant URL.
    */

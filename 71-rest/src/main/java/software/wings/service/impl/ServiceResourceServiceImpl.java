@@ -1166,7 +1166,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     if (isNotEmpty(referencingWorkflowNames)) {
       throw new InvalidRequestException(
-          format("Service %s is referenced by %s %s [%s].", service.getUuid(), referencingWorkflowNames.size(),
+          format("Service %s is referenced by %s %s [%s].", service.getName(), referencingWorkflowNames.size(),
               plural("workflow", referencingWorkflowNames.size()), join(", ", referencingWorkflowNames)),
           USER);
     }
