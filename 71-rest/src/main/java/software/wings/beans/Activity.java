@@ -18,9 +18,9 @@ import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -119,7 +119,7 @@ public class Activity implements PersistentEntity, UuidAware, CreatedAtAware, Cr
 
   @JsonIgnore
   @SchemaIgnore
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @TtlIndex
   @Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 

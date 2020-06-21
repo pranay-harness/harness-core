@@ -11,8 +11,7 @@ import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
 import io.harness.exception.DataFormatException;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -51,7 +50,7 @@ public class PublishedMessage implements PersistentEntity, CreatedAtAware, UuidA
 
   @EqualsAndHashCode.Exclude
   @Builder.Default
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @TtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(14).toInstant());
 
   private final long occurredAt;

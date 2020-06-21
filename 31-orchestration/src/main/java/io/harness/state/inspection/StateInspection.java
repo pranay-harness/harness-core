@@ -1,8 +1,7 @@
 package io.harness.state.inspection;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.state.StateInspectionUtils;
 import lombok.Builder;
@@ -24,6 +23,5 @@ public class StateInspection implements PersistentEntity {
   @Id private String stateExecutionInstanceId;
   private Map<String, StateInspectionData> data;
 
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plus(StateInspectionUtils.TTL).toInstant());
+  @TtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plus(StateInspectionUtils.TTL).toInstant());
 }

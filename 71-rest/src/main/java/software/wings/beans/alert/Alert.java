@@ -6,8 +6,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -72,7 +72,7 @@ public class Alert
 
   @JsonIgnore
   @SchemaIgnore
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @TtlIndex
   @Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(14).toInstant());
 

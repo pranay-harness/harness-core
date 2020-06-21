@@ -21,9 +21,9 @@ import io.harness.beans.WorkflowType;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -252,10 +252,7 @@ public class WorkflowExecution
   private List<NameValuePair> tags;
   private String message;
 
-  @Default
-  @JsonIgnore
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+  @Default @JsonIgnore @TtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
   public String normalizedName() {
     if (isBlank(name)) {

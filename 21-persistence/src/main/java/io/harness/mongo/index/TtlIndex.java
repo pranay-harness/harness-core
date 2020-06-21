@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.ANNOTATION_TYPE})
-public @interface IndexOptions {
-  int expireAfterSeconds() default - 1;
+@Target({ElementType.FIELD})
+public @interface TtlIndex {
+  int value() default 0;
 }

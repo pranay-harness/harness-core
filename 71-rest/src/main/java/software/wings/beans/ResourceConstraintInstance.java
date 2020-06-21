@@ -10,8 +10,7 @@ import io.harness.distribution.constraint.Consumer.State;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.UuidAware;
@@ -79,9 +78,7 @@ public class ResourceConstraintInstance implements PersistentRegularIterable, Uu
 
   private Long nextIteration;
 
-  @Default
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+  @Default @TtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 
   @Override
   public void updateNextIteration(String fieldName, Long nextIteration) {

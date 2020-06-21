@@ -4,8 +4,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.CryptoUtils.secureRandAlphaNumString;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.IndexOptions;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,8 +28,7 @@ public class AuthToken extends Base implements AccountAccess {
   private String jwtToken;
   private boolean refreshed;
 
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(7).toInstant());
+  @TtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusDays(7).toInstant());
 
   /**
    * Instantiates a new auth token.

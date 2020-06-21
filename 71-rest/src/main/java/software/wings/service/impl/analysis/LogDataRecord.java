@@ -18,9 +18,9 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.GoogleDataStoreAware;
 import lombok.AllArgsConstructor;
@@ -107,7 +107,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware, Account
 
   @JsonIgnore
   @SchemaIgnore
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @TtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
 
   public static List<LogDataRecord> generateDataRecords(StateType stateType, String applicationId, String cvConfigId,

@@ -8,9 +8,9 @@ import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.beans.ExecutionStatus;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.Index;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.version.ServiceApiVersion;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -122,6 +122,6 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
   @Default
   @JsonIgnore
   @SchemaIgnore
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @TtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusHours(8).toInstant());
 }

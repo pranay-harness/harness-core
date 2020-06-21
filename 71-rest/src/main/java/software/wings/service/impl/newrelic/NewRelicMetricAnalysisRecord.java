@@ -12,8 +12,8 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SortOrder;
 import io.harness.exception.WingsException;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.AccountAccess;
 import lombok.Builder;
@@ -83,7 +83,7 @@ public class NewRelicMetricAnalysisRecord
 
   @JsonIgnore
   @SchemaIgnore
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @TtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 
   @Builder

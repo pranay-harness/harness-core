@@ -13,5 +13,4 @@ import java.lang.annotation.RetentionPolicy;
 public @interface Index {
   String name();
   Field[] fields();
-  IndexOptions options() default @IndexOptions();
 }

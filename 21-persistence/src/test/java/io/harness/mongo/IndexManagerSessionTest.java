@@ -133,9 +133,11 @@ public class IndexManagerSessionTest extends PersistenceTest {
 
     Map<String, IndexCreator> creators = IndexManager.indexCreators(mappedClass, collection);
 
-    assertThat(creators).hasSize(4);
+    assertThat(creators).hasSize(5);
     assertThat(creators.get("sparse_index").getOptions().get(IndexManagerSession.SPARSE)).isEqualTo(Boolean.TRUE);
     assertThat(creators.get("sparseTest_1").getOptions().get(IndexManagerSession.SPARSE)).isEqualTo(Boolean.TRUE);
+    assertThat(creators.get("ttlTest_1").getOptions().get(IndexManagerSession.EXPIRE_AFTER_SECONDS))
+        .isEqualTo(Integer.valueOf(11));
 
     IndexManagerSession session = new IndexManagerSession(AUTO);
     assertThat(session.createNewIndexes(createCollectionSession(collection), creators)).isEqualTo(creators.size());

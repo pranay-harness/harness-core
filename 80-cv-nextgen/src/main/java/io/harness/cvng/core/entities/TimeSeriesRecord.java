@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.IndexOptions;
 import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.TtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -44,7 +44,7 @@ public class TimeSeriesRecord implements UuidAware, CreatedAtAware, AccountAcces
   @JsonIgnore
   @SchemaIgnore
   @Default
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @TtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(31).toInstant());
 
   @Data
