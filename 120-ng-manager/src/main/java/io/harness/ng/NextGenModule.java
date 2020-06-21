@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
+import io.harness.connector.ConnectorModule;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.CoreModule;
@@ -46,6 +47,7 @@ public class NextGenModule extends AbstractModule {
     install(new ValidationModule(getValidatorFactory()));
     install(new PersistenceModule());
     install(new CoreModule());
+    install(new ConnectorModule());
   }
 
   private ValidatorFactory getValidatorFactory() {
