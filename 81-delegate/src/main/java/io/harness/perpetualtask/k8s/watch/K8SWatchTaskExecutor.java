@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
+import static org.apache.commons.lang3.StringUtils.contains;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -12,6 +13,7 @@ import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.CeExceptionMessage;
 import io.harness.grpc.utils.AnyUtils;
@@ -101,7 +103,10 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
         logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
       }
     } catch (Exception e) {
-      logger.error(String.format("Encountered exceptions when executing perpetual task with id=%s", taskId), e);
+      // suppress metrics server not present error.
+      if (!(e instanceof KubernetesClientException && contains(e.getMessage(), "Message: 404 page not found"))) {
+        logger.error(String.format("Encountered exceptions when executing perpetual task with id=%s", taskId), e);
+      }
       try {
         String message = e.getMessage().substring(0, Math.min(e.getMessage().length(), 280));
         eventPublisher.publishMessage(
