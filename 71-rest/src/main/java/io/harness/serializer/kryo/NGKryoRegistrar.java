@@ -13,16 +13,22 @@ import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
+import io.harness.cdng.environment.yaml.EnvironmentYaml;
+import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.manifest.state.ManifestListConfig;
+import io.harness.cdng.manifest.yaml.FetchType;
 import io.harness.cdng.manifest.yaml.GitStore;
-import io.harness.cdng.manifest.yaml.K8Manifest;
 import io.harness.cdng.manifest.yaml.StoreConfig;
+import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.service.OverrideConfig;
 import io.harness.cdng.service.Service;
 import io.harness.cdng.service.ServiceSpec;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.Artifacts;
 import io.harness.cdng.service.steps.ServiceStepParameters;
+import io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig;
+import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
+import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome;
 import io.harness.serializer.KryoRegistrar;
 
 public class NGKryoRegistrar implements KryoRegistrar {
@@ -46,9 +52,15 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceOutcome.class, 8018);
     kryo.register(Artifacts.class, 8019);
     kryo.register(ManifestListConfig.class, 8020);
-    kryo.register(K8Manifest.class, 8021);
+    kryo.register(K8sManifest.class, 8021);
     kryo.register(StoreConfig.class, 8022);
     kryo.register(GitStore.class, 8023);
     kryo.register(OverrideConfig.class, 8024);
+    kryo.register(GitFetchRequest.class, 8025);
+    kryo.register(GitFetchFilesConfig.class, 8026);
+    kryo.register(ManifestFetchOutcome.class, 8027);
+    kryo.register(K8SDirectInfrastructure.class, 8028);
+    kryo.register(EnvironmentYaml.class, 8029);
+    kryo.register(FetchType.class, 8030);
   }
 }

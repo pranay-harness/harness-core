@@ -26,13 +26,16 @@ import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
+import io.harness.cdng.manifest.ManifestStoreType;
+import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.state.ManifestListConfig;
 import io.harness.cdng.manifest.state.ManifestStep;
 import io.harness.cdng.manifest.state.ManifestStepParameters;
+import io.harness.cdng.manifest.yaml.FetchType;
 import io.harness.cdng.manifest.yaml.GitStore;
-import io.harness.cdng.manifest.yaml.K8Manifest;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
+import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
@@ -43,6 +46,8 @@ import io.harness.cdng.service.Service;
 import io.harness.cdng.service.ServiceSpec;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
+import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
+import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchStep;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -1211,31 +1216,31 @@ public class CustomExecutionUtils {
   private static ManifestStepParameters getManifestStepParameters() {
     ManifestConfigWrapper manifestConfig1 = ManifestConfig.builder()
                                                 .identifier("specsManifest")
-                                                .manifestAttributes(K8Manifest.builder()
+                                                .manifestAttributes(K8sManifest.builder()
                                                                         .identifier("specsManifest")
 
                                                                         .storeConfig(GitStore.builder()
                                                                                          .connectorId("connector")
                                                                                          .fetchValue("master")
-                                                                                         .fetchType("branch")
-                                                                                         .paths(Arrays.asList("path1"))
+                                                                                         .path("path1")
+                                                                                         .fetchType(FetchType.BRANCH)
                                                                                          .build())
                                                                         .build())
                                                 .build();
 
-    ManifestConfigWrapper manifestConfig2 =
-        ManifestConfig.builder()
-            .identifier("valuesManifest")
-            .manifestAttributes(K8Manifest.builder()
-                                    .identifier("valuesManifest")
-                                    .storeConfig(GitStore.builder()
-                                                     .connectorId("connector")
-                                                     .fetchValue("master")
-                                                     .fetchType("branch")
-                                                     .paths(Arrays.asList("override/path1"))
-                                                     .build())
-                                    .build())
-            .build();
+    ManifestConfigWrapper manifestConfig2 = ManifestConfig.builder()
+                                                .identifier("valuesManifest")
+                                                .manifestAttributes(K8sManifest.builder()
+                                                                        .identifier("valuesManifest")
+
+                                                                        .storeConfig(GitStore.builder()
+                                                                                         .connectorId("connector")
+                                                                                         .path("override/path1")
+                                                                                         .fetchValue("master")
+                                                                                         .fetchType(FetchType.BRANCH)
+                                                                                         .build())
+                                                                        .build())
+                                                .build();
 
     ManifestListConfig overrideConfigList = getOverrideManifestListConfig();
 
@@ -1277,6 +1282,39 @@ public class CustomExecutionUtils {
                                        .build())
             .build();
 
+    K8sManifest fetchManifest = K8sManifest.builder()
+                                    .identifier("id1")
+                                    .valuesFilePath("test/values1.yaml")
+                                    .storeConfig(GitStore.builder()
+                                                     .path("test")
+                                                     .fetchType(FetchType.BRANCH)
+                                                     .fetchValue("master")
+                                                     .kind(ManifestStoreType.GIT)
+                                                     .connectorId("6NY8BQ-0T_mqYE3Uoo6WHg")
+                                                     .build())
+                                    .kind(ManifestType.K8Manifest)
+                                    .build();
+
+    String manifestFetchId = generateUuid();
+    PlanNode manifestFetchNode =
+        PlanNode.builder()
+            .uuid(manifestFetchId)
+            .name("MANIFEST_FETCH")
+            .identifier("MANIFEST_FETCH_1")
+            .stepType(ManifestFetchStep.STEP_TYPE)
+            .stepParameters(ManifestFetchParameters.builder()
+                                .fetchValuesOnly(false)
+                                .serviceSpecManifestAttributes(Arrays.asList(fetchManifest))
+                                .build())
+            .facilitatorObtainment(FacilitatorObtainment.builder()
+                                       .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
+                                       .build())
+            .adviserObtainment(AdviserObtainment.builder()
+                                   .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                   .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
+                                   .build())
+            .build();
+
     CDPipeline cdPipeline = getCdPipeline(service);
 
     List<String> childNodeIds = new ArrayList<>();
@@ -1295,7 +1333,7 @@ public class CustomExecutionUtils {
                                        .build())
             .adviserObtainment(AdviserObtainment.builder()
                                    .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
-                                   .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId).build())
+                                   .parameters(OnSuccessAdviserParameters.builder().nextNodeId(manifestFetchId).build())
                                    .build())
             .build();
 
@@ -1319,6 +1357,7 @@ public class CustomExecutionUtils {
                   .build())
         .node(manifestPlanNode)
         .node(serviceNode)
+        .node(manifestFetchNode)
         .node(PlanNode.builder()
                   .uuid(dummyNodeId)
                   .name("Dummy Node 1")
@@ -1336,14 +1375,13 @@ public class CustomExecutionUtils {
     ManifestConfigWrapper manifestConfigOverride =
         ManifestConfig.builder()
             .identifier("overrideManifest")
-            .manifestAttributes(K8Manifest.builder()
+            .manifestAttributes(K8sManifest.builder()
                                     .identifier("overrideManifest")
-
                                     .storeConfig(GitStore.builder()
                                                      .connectorId("connector")
+                                                     .path("overridePath")
                                                      .fetchValue("master")
-                                                     .fetchType("branch")
-                                                     .paths(Arrays.asList("overridePath"))
+                                                     .fetchType(FetchType.BRANCH)
                                                      .build())
                                     .build())
             .build();

@@ -6,6 +6,8 @@ import com.google.inject.Injector;
 
 import io.harness.beans.DelegateTask;
 import io.harness.cdng.artifact.delegate.task.ArtifactCollectTask;
+import io.harness.cdng.tasks.manifestFetch.GitFetchTaskNG;
+import io.harness.cdng.tasks.manifestFetch.GitFetchValidationNG;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.perpetualtask.internal.AssignmentTask;
@@ -395,6 +397,7 @@ public enum TaskType {
       TaskGroup.CONNECTIVITY_VALIDATION, ConnectivityValidationTask.class, ConnectivityBasicValidation.class),
   GIT_COMMAND(TaskGroup.GIT, GitCommandTask.class, GitValidation.class),
   GIT_FETCH_FILES_TASK(TaskGroup.GIT, GitFetchFilesTask.class, GitFetchFilesValidation.class),
+  GIT_FETCH_NEXT_GEN_TASK(TaskGroup.GIT, GitFetchTaskNG.class, GitFetchValidationNG.class),
   BUILD_SOURCE_TASK(TaskGroup.BUILD_SOURCE, BuildSourceTask.class, BuildSourceTaskValidation.class),
   ARTIFACT_COLLECT_TASK(TaskGroup.ARTIFACT_COLLECT, ArtifactCollectTask.class, AlwaysTrueValidation.class),
   AWS_ROUTE53_TASK(TaskGroup.AWS, AwsRoute53Task.class, AwsConnectionValidation.class),

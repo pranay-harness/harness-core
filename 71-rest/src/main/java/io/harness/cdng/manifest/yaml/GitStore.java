@@ -18,7 +18,11 @@ import java.util.List;
 public class GitStore implements StoreConfig {
   private String connectorId;
   @Singular private List<String> paths;
-  private String fetchType;
+  private FetchType fetchType;
   private String fetchValue;
   @Builder.Default private String kind = ManifestStoreType.GIT;
+
+  public GitStore cloneInternal() {
+    return GitStore.builder().connectorId(connectorId).fetchType(fetchType).fetchValue(fetchValue).paths(paths).build();
+  }
 }
