@@ -7,9 +7,9 @@ import io.harness.ambiance.Level.LevelKeys;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance.OutcomeInstanceKeys;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Index;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -32,19 +32,19 @@ import java.util.List;
 @Builder
 @FieldNameConstants(innerTypeName = "OutcomeInstanceKeys")
 
-@UniqueIndex(name = "levelRuntimeIdUniqueIdx",
+@CdUniqueIndex(name = "levelRuntimeIdUniqueIdx",
     fields =
     {
       @Field(OutcomeInstanceKeys.planExecutionId)
       , @Field(OutcomeInstanceKeys.levelRuntimeIdIdx), @Field(OutcomeInstanceKeys.name)
     })
-@Index(name = "producedBySetupIdIdx",
+@CdIndex(name = "producedBySetupIdIdx",
     fields =
     {
       @Field(OutcomeInstanceKeys.planExecutionId)
       , @Field(OutcomeInstanceKeys.producedBy + "." + LevelKeys.setupId), @Field(OutcomeInstanceKeys.name)
     })
-@Index(name = "planExecutionIdIdx", fields = { @Field(OutcomeInstanceKeys.planExecutionId) })
+@CdIndex(name = "planExecutionIdIdx", fields = { @Field(OutcomeInstanceKeys.planExecutionId) })
 @Entity(value = "outcomeInstances")
 @Document("outcomeInstances")
 @TypeAlias("outcomeInstances")
