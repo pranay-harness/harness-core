@@ -18,11 +18,11 @@ pipeline:
             spec:
               authScheme:
                 type: ssh
-                sshKey: git-ssh
+                sshKey: gitSsh
               repo: master
           container:
             identifier: jenkinsSlaveImage
-            connector: "np-quotecenter"
+            connector: "npquotecenter"
             imagePath: "us.gcr.io/platform-205701/jenkins-slave-portal-oracle-8u191:12" #if version
           customVariables: #users can specify both in the pipeline & stage level. these vars are available as env vars
             - name: internalPath

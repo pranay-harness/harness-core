@@ -19,7 +19,7 @@ public class K8sRollingStepInfo implements CDStepInfo {
   private K8sRollingStepParameters k8sRolling;
 
   @Override
-  public String getName() {
+  public String getDisplayName() {
     return displayName;
   }
 
