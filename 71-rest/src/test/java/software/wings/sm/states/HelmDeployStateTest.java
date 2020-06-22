@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static java.util.Collections.emptyList;
@@ -168,6 +169,18 @@ public class HelmDeployStateTest extends WingsBaseTest {
   private static final String CHART_VERSION = "0.1.0";
   private static final String CHART_URL = "http://google.com";
   private static final String GIT_CONNECTOR_ID = "connectorId";
+  public static final String GIT_BRANCH = "git_branch";
+  public static final String GIT_COMMIT_ID = "commit_id";
+  public static final String GIT_FILE_PATH_DIRECTORY = "templates/";
+  public static final String GIT_FILE_PATH_FULL_DIRECTORY = "/templates/";
+  public static final String GIT_YAML_FILE_PATH = "templates/values.yaml";
+  public static final String GIT_YML_FILE_PATH = "templates/values.yml";
+  public static final String GIT_NOT_YML_FILE_PATH = "templates/values";
+  public static final String FILE_PATH_VALIDATION_MSG_KEY = "File path";
+  public static final String FILE_PATH_DIRECTORY_VALIDATION_MSG_VALUE =
+      "File path cannot be directory if git connector is selected";
+  public static final String FILE_PATH_NOT_YAML_FILE_VALIDATION_MSG_VALUE =
+      "File path has to be YAML file if git connector is selected";
   private static final String COMMAND_FLAGS = "--tls";
   private static final String PHASE_NAME = "phaseName";
 
@@ -490,6 +503,78 @@ public class HelmDeployStateTest extends WingsBaseTest {
     assertThat(helmDeployStateExecutionData.getChartName()).isEqualTo(null);
     assertThat(helmDeployStateExecutionData.getChartRepositoryUrl()).isEqualTo(null);
     verify(delegateService).queueTask(any());
+  }
+
+  @Test()
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testHelmChartSpecWithGitDirectoryFilePath() {
+    helmDeployState.setGitFileConfig(GitFileConfig.builder()
+                                         .connectorId(GIT_CONNECTOR_ID)
+                                         .commitId(GIT_COMMIT_ID)
+                                         .filePath(GIT_FILE_PATH_DIRECTORY)
+                                         .build());
+
+    Map<String, String> invalidFields = helmDeployState.validateFields();
+
+    assertThat(invalidFields).containsKey(FILE_PATH_VALIDATION_MSG_KEY);
+    assertThat(invalidFields).containsValue(FILE_PATH_DIRECTORY_VALIDATION_MSG_VALUE);
+  }
+
+  @Test()
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testHelmChartSpecWithGitFullDirectoryFilePath() {
+    helmDeployState.setGitFileConfig(GitFileConfig.builder()
+                                         .connectorId(GIT_CONNECTOR_ID)
+                                         .branch(GIT_BRANCH)
+                                         .filePath(GIT_FILE_PATH_FULL_DIRECTORY)
+                                         .build());
+
+    Map<String, String> invalidFields = helmDeployState.validateFields();
+
+    assertThat(invalidFields).containsKey(FILE_PATH_VALIDATION_MSG_KEY);
+    assertThat(invalidFields).containsValue(FILE_PATH_DIRECTORY_VALIDATION_MSG_VALUE);
+  }
+
+  @Test()
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testHelmChartSpecWithGitYAMLFilePath() {
+    helmDeployState.setGitFileConfig(
+        GitFileConfig.builder().connectorId(GIT_CONNECTOR_ID).branch(GIT_BRANCH).filePath(GIT_YAML_FILE_PATH).build());
+
+    Map<String, String> invalidFields = helmDeployState.validateFields();
+
+    assertThat(invalidFields).isEmpty();
+  }
+
+  @Test()
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testHelmChartSpecWithGitYMLFilePath() {
+    helmDeployState.setGitFileConfig(
+        GitFileConfig.builder().connectorId(GIT_CONNECTOR_ID).branch(GIT_BRANCH).filePath(GIT_YML_FILE_PATH).build());
+
+    Map<String, String> invalidFields = helmDeployState.validateFields();
+
+    assertThat(invalidFields).isEmpty();
+  }
+
+  @Test()
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testHelmChartSpecWithGitNotYAMLFilePath() {
+    helmDeployState.setGitFileConfig(GitFileConfig.builder()
+                                         .connectorId(GIT_CONNECTOR_ID)
+                                         .branch(GIT_BRANCH)
+                                         .filePath(GIT_NOT_YML_FILE_PATH)
+                                         .build());
+
+    Map<String, String> invalidFields = helmDeployState.validateFields();
+
+    assertThat(invalidFields).containsKey(FILE_PATH_VALIDATION_MSG_KEY);
+    assertThat(invalidFields).containsValue(FILE_PATH_NOT_YAML_FILE_VALIDATION_MSG_VALUE);
   }
 
   @Test
