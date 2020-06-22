@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.yaml.extended.CustomVariables;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.yaml.core.Artifact;
 import io.harness.yaml.core.Execution;
 import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.core.intfc.Infrastructure;
@@ -27,7 +26,7 @@ public class IntegrationStage implements CIStage {
   private static final CIStageType type = CIStageType.INTEGRATION;
 
   @NotNull @EntityIdentifier private String identifier;
-  private String name;
+  private String displayName;
   private Integration ci;
 
   @Override
@@ -43,13 +42,11 @@ public class IntegrationStage implements CIStage {
     private String description;
 
     private Infrastructure infrastructure;
-    private Connector connector;
-    private Artifact artifact;
+    private Connector gitConnector;
     private Container container;
+    private String workingDirectory;
 
     private List<CustomVariables> customVariables;
-
-    private String workingDirectory;
 
     @NotNull private Execution execution;
   }

@@ -35,10 +35,10 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
     final String nodeId = generateUuid();
     String nodeName;
 
-    if (EmptyPredicate.isEmpty(genericStepInfo.getName())) {
+    if (EmptyPredicate.isEmpty(genericStepInfo.getDisplayName())) {
       nodeName = genericStepInfo.getIdentifier();
     } else {
-      nodeName = genericStepInfo.getName();
+      nodeName = genericStepInfo.getDisplayName();
     }
     return PlanNode.builder()
         .uuid(nodeId)

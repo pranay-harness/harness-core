@@ -1,35 +1,27 @@
 pipeline:
   identifier: cipipeline
-  name: Integration Pipeline
+  displayName: Integration Pipeline
   description: sample pipeline used for testing
   stages:
     - stage:
-        identifier: master-build-upload
+        identifier: masterBuildUpload
         ci:
           description: This stage is run hourly to build binaries from master and upload
           infrastructure:
             type: kubernetes-direct
             spec:
-              k8s-connector: MyKubeCluster1
+              kubernetesCluster: MyKubeCluster1
               namespace: ShoppingCart
-          connector:
+          gitConnector:
             type: git
             identifier: gitRepo
             spec:
-              auth-scheme:
+              authScheme:
                 type: ssh
-                ssh-key: git-ssh
+                sshKey: git-ssh
               repo: master
-          artifact:
-            identifier: artifact
-            artifact-stream:
-              type: docker-hub
-              spec:
-                dockerhub-connector: "My docker registry"
-                image-path: "customer/provided/image"
-                tag: 1.1
           container:
-            identifier: jenkins-slave-image
+            identifier: jenkinsSlaveImage
             connector: "np-quotecenter"
             imagePath: "us.gcr.io/platform-205701/jenkins-slave-portal-oracle-8u191:12" #if version
           customVariables: #users can specify both in the pipeline & stage level. these vars are available as env vars
@@ -42,49 +34,51 @@ pipeline:
           execution:
             steps:
               - step:
-                  identifier: git-clone
+                  identifier: gitClone
                   gitClone:
-                    gitConnector: git-global
+                    gitConnector: gitGlobal
                     path: portal
                     branch: master
               - parallel:
                   - step:
-                      identifier: run-lint
+                      identifier: runLint
                       retryCount: 2
                       timeout: 30
                       run:
                         command:
                           - ./run lint
                   - step:
-                      identifier: run-unit-tests
+                      identifier: runUnitTests
                       retryCount: 2
                       timeout: 30
                       run:
                         command:
                           - mvn -U clean package -Dbuild.number=${BUILD_NUMBER} -DgitBranch=master -DforkMode=perthread -DthreadCount=3 -DargLine="-Xmx2048m"
               - step:
-                  identifier: generate-report
+                  identifier: generateReport
                   timeout: 30
                   retryCount: 2
                   run:
                     command:
                       - ./ci/generate_report.sh
               - step:
-                  identifier: build-master
+                  identifier: buildMaster
                   retryCount: 2
                   timeout: 75
                   run:
                     command:
                       - mvn clean install
               - step:
-                  identifier: upload-artifact1
+                  identifier: uploadArtifact
                   publishArtifacts:
                     - dockerFile: ~/Dockerfile
                       image: ui
                       tag: 1.0.0
                       buildArguments:
-                        key1: value1
-                        key2: value2
-                      destination:
+                        - key : key1
+                          value: value1
+                        - key: key2
+                          value: value2
+                      gcr:
                         location: eu.gcr.io/harness/ui:latest
                         connector: myDockerRepoConnector

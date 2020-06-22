@@ -13,8 +13,8 @@ public class ArtifactDeserializer extends PropertyBindingPolymorphicDeserializer
   }
 
   private void init() {
-    registerBinding(ArtifactType.FILE_PATTERN.getPropertyName(), FilePatternArtifact.class);
-    registerBinding(ArtifactType.DOCKER_FILE.getPropertyName(), DockerFileArtifact.class);
-    registerBinding(ArtifactType.DOCKER_IMAGE.getPropertyName(), DockerImageArtifact.class);
+    registerBinding(Artifact.FILE_PATTERN_PROPERTY, FilePatternArtifact.class);
+    registerBinding(Artifact.DOCKER_FILE_PROPERTY, DockerFileArtifact.class);
+    registerBinding(Artifact.DOCKER_IMAGE_PROPERTY, DockerImageArtifact.class);
   }
 }

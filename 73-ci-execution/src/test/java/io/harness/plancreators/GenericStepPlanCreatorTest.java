@@ -35,7 +35,7 @@ public class GenericStepPlanCreatorTest extends CIExecutionTest {
   public void setUp() {
     stepInfo = GitCloneStepInfo.builder()
                    .identifier("testIdentifier")
-                   .name("testName")
+                   .displayName("testName")
                    .gitClone(GitCloneStepInfo.GitClone.builder()
                                  .branch("testBranch")
                                  .gitConnector("testGitConnector")

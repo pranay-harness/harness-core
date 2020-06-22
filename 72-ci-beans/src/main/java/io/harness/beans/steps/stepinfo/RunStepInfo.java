@@ -34,17 +34,17 @@ public class RunStepInfo implements CIStepInfo, GenericStepInfo {
                                               .build();
 
   @NotNull @EntityIdentifier String identifier;
-  String name;
+  String displayName;
   @Min(MIN_RETRY) @Max(MAX_RETRY) int retry;
   @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) int timeout;
 
   @NotNull Run run;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "timeout", "run"})
-  public RunStepInfo(String identifier, String name, Integer retry, Integer timeout, Run run) {
+  @ConstructorProperties({"identifier", "displayName", "retry", "timeout", "run"})
+  public RunStepInfo(String identifier, String displayName, Integer retry, Integer timeout, Run run) {
     this.identifier = identifier;
-    this.name = name;
+    this.displayName = displayName;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
     this.run = run;

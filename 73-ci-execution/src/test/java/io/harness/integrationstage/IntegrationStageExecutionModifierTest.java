@@ -53,9 +53,8 @@ public class IntegrationStageExecutionModifierTest extends CIExecutionTest {
     IntegrationStage stage = IntegrationStage.builder()
                                  .ci(IntegrationStage.Integration.builder()
                                          .execution(ciExecutionPlanTestHelper.getExecution())
-                                         .connector(GitConnectorYaml.builder().type("***").build())
+                                         .gitConnector(GitConnectorYaml.builder().type("***").build())
                                          .container(ciExecutionPlanTestHelper.getContainer())
-                                         .artifact(ciExecutionPlanTestHelper.getArtifact())
                                          .build())
                                  .build();
 
@@ -73,9 +72,8 @@ public class IntegrationStageExecutionModifierTest extends CIExecutionTest {
                     .execution(Execution.builder()
                                    .steps(new ArrayList<>(Arrays.asList(RunStepInfo.builder().build())))
                                    .build())
-                    .connector(ciExecutionPlanTestHelper.getConnector())
+                    .gitConnector(ciExecutionPlanTestHelper.getConnector())
                     .container(ciExecutionPlanTestHelper.getContainer())
-                    .artifact(ciExecutionPlanTestHelper.getArtifact())
                     .build())
             .build();
 

@@ -36,7 +36,7 @@ import javax.validation.constraints.NotNull;
 public class CIPipeline implements Pipeline, WithNonYamlInfo<CIPipelineEntityInfo>, PersistentEntity, UuidAware,
                                    CreatedAtAware, UpdatedAtAware, AccountAccess {
   @EntityIdentifier private String identifier;
-  private String name;
+  private String displayName;
   private String description;
   List<Tag> tags;
   private List<StageWrapper> stages;

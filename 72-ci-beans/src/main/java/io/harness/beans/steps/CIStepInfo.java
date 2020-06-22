@@ -14,7 +14,7 @@ public interface CIStepInfo extends StepInfo, StepParameters, WithNonYamlInfo<Ty
   int MIN_TIMEOUT = 1;
   int MAX_TIMEOUT = 999;
 
-  String getName();
+  String getDisplayName();
 
   int getRetry();
   int getTimeout();
