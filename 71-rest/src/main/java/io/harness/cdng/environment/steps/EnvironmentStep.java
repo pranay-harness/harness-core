@@ -10,7 +10,6 @@ import io.harness.execution.status.Status;
 import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
-import io.harness.plan.input.InputArgs;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
@@ -42,10 +41,9 @@ public class EnvironmentStep implements Step, SyncExecutable {
   }
 
   private Environment getEnvironmentObject(EnvironmentYaml environmentYaml, Ambiance ambiance) {
-    InputArgs inputArgs = ambiance.getInputArgs();
-    String accountId = (String) inputArgs.get("accountId");
-    String projectId = (String) inputArgs.get("projectId");
-    String orgId = (String) inputArgs.get("orgId");
+    String accountId = ambiance.getSetupAbstractions().get("accountId");
+    String projectId = ambiance.getSetupAbstractions().get("projectId");
+    String orgId = ambiance.getSetupAbstractions().get("orgId");
 
     return Environment.builder()
         .displayName(environmentYaml.getDisplayName())

@@ -25,14 +25,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 public class RetryAdviseHandlerTest extends OrchestrationTest {
   @InjectMocks @Inject private RetryAdviseHandler retryAdviseHandler;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;
+  @Mock private ExecutorService executorService;
 
   private static final String PLAN_EXECUTION_ID = generateUuid();
   private static final String NODE_EXECUTION_ID = generateUuid();
@@ -55,8 +58,7 @@ public class RetryAdviseHandlerTest extends OrchestrationTest {
 
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .uuid(NODE_EXECUTION_ID)
-                                      .planExecutionId(ambiance.getPlanExecutionId())
-                                      .levels(ambiance.getLevels())
+                                      .ambiance(ambiance)
                                       .node(PlanNode.builder()
                                                 .uuid(NODE_SETUP_ID)
                                                 .name("DUMMY")

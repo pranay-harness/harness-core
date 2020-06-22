@@ -8,6 +8,7 @@ import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
@@ -20,7 +21,6 @@ import io.harness.engine.interrupts.InterruptTestHelper;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
-import io.harness.plan.input.InputArgs;
 import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
@@ -51,7 +51,7 @@ public class AbortAllInterruptHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestHandleInterrupt() {
     PlanExecution execution = engineService.startExecution(PlanRepo.planWithBigWait(),
-        InputArgs.builder().put("accountId", generateUuid()).put("appId", generateUuid()).build(), EMBEDDED_USER);
+        ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid()), EMBEDDED_USER);
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 
     Interrupt handledInterrupt = interruptManager.register(InterruptPackage.builder()

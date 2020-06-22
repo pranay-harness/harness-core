@@ -314,15 +314,15 @@ public class ShellScriptStep implements Step, TaskExecutable {
   }
 
   private String getAccountId(Ambiance ambiance) {
-    return (String) ambiance.getInputArgs().get("accountId");
+    return ambiance.getSetupAbstractions().get("accountId");
   }
 
   private String getAppId(Ambiance ambiance) {
-    return (String) ambiance.getInputArgs().get("appId");
+    return ambiance.getSetupAbstractions().get("appId");
   }
 
   private String createActivity(Ambiance ambiance) {
-    String appId = (String) ambiance.getInputArgs().get("appId");
+    String appId = ambiance.getSetupAbstractions().get("appId");
     return activityService
         .save(Activity.builder()
                   .appId(appId)

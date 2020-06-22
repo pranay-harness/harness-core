@@ -19,7 +19,6 @@ import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
-import io.harness.plan.input.InputArgs;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -37,7 +36,6 @@ public class BuildStepTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Mock private ManagerCIResource managerCIResource;
   @Mock private Ambiance ambiance;
-  @Mock private InputArgs inputArgs;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
 
   @Before
@@ -55,8 +53,6 @@ public class BuildStepTest extends CIExecutionTest {
     when(requestCall.execute())
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(managerCIResource.podCommandExecutionTask(any(), any())).thenReturn(requestCall);
-    when(ambiance.getInputArgs()).thenReturn(inputArgs);
-    when(inputArgs.get(any())).thenReturn("abc");
     when(executionSweepingOutputResolver.resolve(any(), any()))
         .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
 
@@ -78,9 +74,6 @@ public class BuildStepTest extends CIExecutionTest {
     when(requestCall.execute())
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(managerCIResource.podCommandExecutionTask(any(), any())).thenThrow(new RuntimeException());
-
-    when(ambiance.getInputArgs()).thenReturn(inputArgs);
-    when(inputArgs.get(any())).thenReturn("abc");
     when(executionSweepingOutputResolver.resolve(any(), any()))
         .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
 

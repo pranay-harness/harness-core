@@ -3,6 +3,7 @@ package io.harness.redesign.services;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -19,13 +20,13 @@ import io.harness.execution.PlanExecution;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
-import io.harness.plan.input.InputArgs;
 import io.harness.presentation.Graph;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 
 import java.io.IOException;
+import java.util.Map;
 
 @OwnedBy(CDC)
 @Redesign
@@ -42,77 +43,80 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Override
   public PlanExecution executeHttpSwitch() {
     return engineService.startExecution(
-        CustomExecutionUtils.provideHttpSwitchPlan(), getInputArgs(), getEmbeddedUser());
+        CustomExecutionUtils.provideHttpSwitchPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeHttpFork() {
-    return engineService.startExecution(CustomExecutionUtils.provideHttpForkPlan(), getInputArgs(), getEmbeddedUser());
+    return engineService.startExecution(
+        CustomExecutionUtils.provideHttpForkPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeSectionPlan() {
     return engineService.startExecution(
-        CustomExecutionUtils.provideHttpSectionPlan(), getInputArgs(), getEmbeddedUser());
+        CustomExecutionUtils.provideHttpSectionPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeRetryIgnorePlan() {
     return engineService.startExecution(
-        CustomExecutionUtils.provideHttpRetryIgnorePlan(), getInputArgs(), getEmbeddedUser());
+        CustomExecutionUtils.provideHttpRetryIgnorePlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeRetryAbortPlan() {
     return engineService.startExecution(
-        CustomExecutionUtils.provideHttpRetryAbortPlan(), getInputArgs(), getEmbeddedUser());
+        CustomExecutionUtils.provideHttpRetryAbortPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeRollbackPlan() {
     User user = UserThreadLocal.get();
-    return engineService.startExecution(CustomExecutionUtils.provideHttpRollbackPlan(), getInputArgs(),
+    return engineService.startExecution(CustomExecutionUtils.provideHttpRollbackPlan(), getAbstractions(),
         EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
   }
 
   @Override
   public PlanExecution executeSimpleShellScriptPlan(String accountId, String appId) {
     return engineService.startExecution(
-        CustomExecutionUtils.provideSimpleShellScriptPlan(), getInputArgs(accountId, appId), getEmbeddedUser());
+        CustomExecutionUtils.provideSimpleShellScriptPlan(), getAbstractions(accountId, appId), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeTaskChainPlan() {
-    return engineService.startExecution(CustomExecutionUtils.provideTaskChainPlan(), getInputArgs(), getEmbeddedUser());
+    return engineService.startExecution(
+        CustomExecutionUtils.provideTaskChainPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeSectionChainPlan() {
     return engineService.startExecution(
-        CustomExecutionUtils.provideSectionChainPlan(), getInputArgs(), getEmbeddedUser());
+        CustomExecutionUtils.provideSectionChainPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution testInfraState() throws IOException {
     return engineService.startExecution(
-        CustomExecutionUtils.provideInfraStateTestPlan(), getInputArgs(), getEmbeddedUser());
+        CustomExecutionUtils.provideInfraStateTestPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution testGraphPlan() {
-    return engineService.startExecution(CustomExecutionUtils.provideGraphTestPlan(), getInputArgs(), getEmbeddedUser());
+    return engineService.startExecution(
+        CustomExecutionUtils.provideGraphTestPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution testArtifactState() {
     return engineService.startExecution(
-        CustomExecutionUtils.provideArtifactStateTestPlan(), getInputArgs(), getEmbeddedUser());
+        CustomExecutionUtils.provideArtifactStateTestPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution testServiceState() {
     return engineService.startExecution(
-        CustomExecutionUtils.provideServiceStateTestPlan(), getInputArgs(), getEmbeddedUser());
+        CustomExecutionUtils.provideServiceStateTestPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
@@ -135,8 +139,8 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
     try {
       cdPipeline = YamlPipelineUtils.read(pipelineYaml, CDPipeline.class);
       final Plan planForPipeline = executionPlanCreatorService.createPlanForPipeline(cdPipeline, accountId);
-      return engineService.startExecution(planForPipeline,
-          InputArgs.builder().put("accountId", accountId).put("appId", appId).build(), getEmbeddedUser());
+      return engineService.startExecution(
+          planForPipeline, ImmutableMap.of("accountId", accountId, "appId", appId), getEmbeddedUser());
     } catch (IOException e) {
       throw new GeneralException("error while testing execution plan", e);
     }
@@ -147,11 +151,11 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
     return EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
   }
 
-  private InputArgs getInputArgs() {
-    return getInputArgs(ACCOUNT_ID, APP_ID);
+  private Map<String, String> getAbstractions() {
+    return getAbstractions(ACCOUNT_ID, APP_ID);
   }
 
-  private InputArgs getInputArgs(String accountId, String appId) {
-    return InputArgs.builder().put("accountId", accountId).put("appId", appId).build();
+  private Map<String, String> getAbstractions(String accountId, String appId) {
+    return ImmutableMap.of("accountId", accountId, "appId", appId);
   }
 }

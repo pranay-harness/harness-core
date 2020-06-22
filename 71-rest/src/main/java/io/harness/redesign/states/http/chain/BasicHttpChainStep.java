@@ -74,9 +74,9 @@ public class BasicHttpChainStep implements Step, TaskChainExecutable {
 
     String waitId = generateUuid();
     return DelegateTask.builder()
-        .accountId((String) ambiance.getInputArgs().get("accountId"))
+        .accountId(ambiance.getSetupAbstractions().get("accountId"))
         .waitId(waitId)
-        .appId((String) ambiance.getInputArgs().get("appId"))
+        .appId(ambiance.getSetupAbstractions().get("appId"))
         .data(TaskData.builder()
                   .taskType(TaskType.HTTP.name())
                   .parameters(new Object[] {httpTaskParameters})

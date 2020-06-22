@@ -42,10 +42,10 @@ public class CIPipelineExecutionServiceImplTest extends CIExecutionTest {
   public void executePipeline() {
     CIPipeline ciPipeline = executionPlanTestHelper.getCIPipeline();
 
-    when(engineService.startExecution(any(), any(), any())).thenReturn(PlanExecution.builder().status(RUNNING).build());
+    when(engineService.startExecution(any(), any())).thenReturn(PlanExecution.builder().status(RUNNING).build());
 
     PlanExecution planExecution = ciPipelineExecutionService.executePipeline(ciPipeline);
     assertThat(planExecution).isNotNull();
-    verify(engineService, times(1)).startExecution(any(), any(), any());
+    verify(engineService, times(1)).startExecution(any(), any());
   }
 }

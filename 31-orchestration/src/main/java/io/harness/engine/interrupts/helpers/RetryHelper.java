@@ -13,7 +13,6 @@ import com.mongodb.client.result.UpdateResult;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.AmbianceHelper;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -33,7 +32,6 @@ import java.util.concurrent.ExecutorService;
 @OwnedBy(CDC)
 @Slf4j
 public class RetryHelper {
-  @Inject private AmbianceHelper ambianceHelper;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private ExecutionEngine engine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
@@ -44,7 +42,7 @@ public class RetryHelper {
     PlanNode node = nodeExecution.getNode();
     NodeExecution newNodeExecution = cloneForRetry(nodeExecution);
 
-    Ambiance ambiance = ambianceHelper.fetchAmbianceForRetry(nodeExecution);
+    Ambiance ambiance = newNodeExecution.getAmbiance();
     ambiance.addLevel(Level.builder()
                           .setupId(node.getUuid())
                           .runtimeId(newNodeExecution.getUuid())
@@ -52,7 +50,7 @@ public class RetryHelper {
                           .identifier(node.getIdentifier())
                           .group(node.getGroup())
                           .build());
-    newNodeExecution.setLevels(ambiance.getLevels());
+    newNodeExecution.setAmbiance(ambiance);
     NodeExecution savedNodeExecution = nodeExecutionService.save(newNodeExecution);
     updateRelationShips(nodeExecution, savedNodeExecution.getUuid());
     updateOldExecution(nodeExecution);

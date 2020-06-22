@@ -60,7 +60,6 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(managerCIResource.createK8PodTask(any(), any(), any(), any())).thenReturn(requestCall);
     when(engineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
-    when(ambiance.getInputArgs()).thenReturn(inputArgs);
     when(inputArgs.get(any())).thenReturn("abc");
     when(executionSweepingOutputResolver.resolve(any(), any()))
         .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());

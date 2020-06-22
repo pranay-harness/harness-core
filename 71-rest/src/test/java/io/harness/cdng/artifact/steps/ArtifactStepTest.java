@@ -54,7 +54,7 @@ public class ArtifactStepTest extends CategoryTest {
   @Before
   public void beforeClass() {
     responseDataMap = new HashMap<>();
-    when(ambiance.getInputArgs().get("accountId")).thenReturn(ACCOUNT_ID);
+    when(ambiance.getSetupAbstractions().get("accountId")).thenReturn(ACCOUNT_ID);
   }
 
   @Test

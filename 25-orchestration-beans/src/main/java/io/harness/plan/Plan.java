@@ -16,6 +16,7 @@ import lombok.experimental.FieldNameConstants;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -42,6 +43,8 @@ public class Plan implements PersistentEntity {
   @Singular List<PlanNode> nodes;
 
   @NotNull String startingNodeId;
+
+  Map<String, String> setupAbstractions;
 
   public boolean isEmpty() {
     return EmptyPredicate.isEmpty(nodes);

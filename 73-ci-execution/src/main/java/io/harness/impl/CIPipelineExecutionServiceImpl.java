@@ -9,7 +9,6 @@ import io.harness.execution.PlanExecution;
 import io.harness.executionplan.BasicExecutionPlanGenerator;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.plan.Plan;
-import io.harness.plan.input.InputArgs;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -19,12 +18,10 @@ public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionServic
   @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
 
   public PlanExecution executePipeline(CIPipeline ciPipeline) {
-    InputArgs inputArgs = InputArgs.builder().build();
-
     Plan plan = executionPlanCreatorService.createPlanForPipeline(ciPipeline, ciPipeline.getAccountId());
     // TODO set user before execution which will be available once we build authentication
     // User user = UserThreadLocal.get()
-    return engineService.startExecution(plan, inputArgs,
-        EmbeddedUser.builder().uuid("harsh").email("harsh.jain@harness.io").name("harsh jain").build());
+    return engineService.startExecution(
+        plan, EmbeddedUser.builder().uuid("harsh").email("harsh.jain@harness.io").name("harsh jain").build());
   }
 }

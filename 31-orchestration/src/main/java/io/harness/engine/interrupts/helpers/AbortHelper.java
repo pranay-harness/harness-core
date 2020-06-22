@@ -14,7 +14,6 @@ import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.AmbianceHelper;
 import io.harness.engine.ExecutionEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
@@ -45,7 +44,6 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 public class AbortHelper {
   @Inject private StepRegistry stepRegistry;
-  @Inject private AmbianceHelper ambianceHelper;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
   @Inject private MongoTemplate mongoTemplate;
@@ -53,7 +51,7 @@ public class AbortHelper {
 
   public void discontinueMarkedInstance(NodeExecution nodeExecution, Status finalStatus) {
     try {
-      Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
+      Ambiance ambiance = nodeExecution.getAmbiance();
       PlanNode node = nodeExecution.getNode();
       Step currentState = Preconditions.checkNotNull(stepRegistry.obtain(node.getStepType()));
       ExecutableResponse executableResponse = nodeExecution.obtainLatestExecutableResponse();
@@ -72,7 +70,7 @@ public class AbortHelper {
       engine.endTransition(updatedNodeExecution, finalStatus, null, null);
     } catch (NodeExecutionUpdateFailedException ex) {
       throw new InterruptProcessingFailedException(ABORT_ALL,
-          "Abort failed for execution Plan :" + nodeExecution.getPlanExecutionId()
+          "Abort failed for execution Plan :" + nodeExecution.getAmbiance().getPlanExecutionId()
               + "for NodeExecutionId: " + nodeExecution.getUuid(),
           ex);
     } catch (Exception e) {

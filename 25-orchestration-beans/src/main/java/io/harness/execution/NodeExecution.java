@@ -3,7 +3,8 @@ package io.harness.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.ambiance.Level;
+import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.Ambiance.AmbianceKeys;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.status.Status;
@@ -23,6 +24,7 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -45,8 +47,7 @@ import javax.validation.constraints.NotNull;
 public final class NodeExecution implements PersistentEntity, UuidAware {
   // Immutable
   @Id @org.mongodb.morphia.annotations.Id String uuid;
-  @NotNull String planExecutionId;
-  @Singular List<Level> levels;
+  @NotNull Ambiance ambiance;
   @NotNull PlanNode node;
   @NotNull ExecutionMode mode;
   @Default @FdIndex @CreatedDate Long createdAt = System.currentTimeMillis();
@@ -106,5 +107,10 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   public NodeExecution deepCopy() {
     return KryoUtils.clone(this);
+  }
+
+  @UtilityClass
+  public static class NodeExecutionKeys {
+    public final String planExecutionId = NodeExecutionKeys.ambiance + "." + AmbianceKeys.planExecutionId;
   }
 }

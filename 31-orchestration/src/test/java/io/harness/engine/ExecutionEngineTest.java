@@ -7,6 +7,7 @@ import static io.harness.utils.steps.TestAsyncStep.ASYNC_STEP_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
@@ -30,7 +31,6 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
-import io.harness.plan.input.InputArgs;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
@@ -48,6 +48,7 @@ import org.junit.experimental.categories.Category;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
 public class ExecutionEngineTest extends OrchestrationTest {
   @Inject private AdviserRegistry adviserRegistry;
@@ -214,11 +215,8 @@ public class ExecutionEngineTest extends OrchestrationTest {
         .hasMessageStartingWith(exceptionStartMessage);
   }
 
-  private static InputArgs prepareInputArgs() {
-    return InputArgs.builder()
-        .put("accountId", "kmpySmUISimoRrJL6NL73w")
-        .put("appId", "XEsfW6D_RJm1IaGpDidD3g")
-        .build();
+  private static Map<String, String> prepareInputArgs() {
+    return ImmutableMap.of("accountId", "kmpySmUISimoRrJL6NL73w", "appId", "XEsfW6D_RJm1IaGpDidD3g");
   }
 
   private static class TestHttpResponseCodeSwitchAdviser implements Adviser {
