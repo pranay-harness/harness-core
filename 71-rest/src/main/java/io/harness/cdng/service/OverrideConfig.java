@@ -7,9 +7,11 @@ import io.harness.cdng.manifest.state.ManifestListConfig;
 import lombok.Builder;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
 @Builder
-public class OverrideConfig {
+public class OverrideConfig implements Serializable {
   private ManifestListConfig manifestListConfig;
   private ArtifactListConfig artifactListConfig;
 

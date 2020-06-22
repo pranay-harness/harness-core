@@ -10,7 +10,10 @@ import com.google.inject.Singleton;
 
 import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
-import io.harness.cdng.service.Service;
+import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
+import io.harness.cdng.pipeline.CDStage;
+import io.harness.cdng.pipeline.DeploymentStage;
+import io.harness.cdng.service.ServiceConfig;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.data.structure.EmptyPredicate;
@@ -34,15 +37,16 @@ import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
-public class ServiceStepPlanCreator implements SupportDefinedExecutorPlanCreator<Service> {
+public class ServiceStepPlanCreator implements SupportDefinedExecutorPlanCreator<ServiceConfig> {
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
 
   @Override
-  public CreateExecutionPlanResponse createPlan(Service service, CreateExecutionPlanContext context) {
+  public CreateExecutionPlanResponse createPlan(ServiceConfig serviceConfig, CreateExecutionPlanContext context) {
+    ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, context);
     final List<CreateExecutionPlanResponse> planForArtifacts =
-        getPlanForArtifacts(context, service.getServiceSpec().getArtifacts());
+        getPlanForArtifacts(context, actualServiceConfig.getServiceSpec().getArtifacts());
 
-    final CreateExecutionPlanResponse planForManifests = getPlanForManifests(context, service);
+    final CreateExecutionPlanResponse planForManifests = getPlanForManifests(context, actualServiceConfig);
 
     // Add artifactNodes and ManifestNode as children
     List<String> childNodeIds =
@@ -52,7 +56,7 @@ public class ServiceStepPlanCreator implements SupportDefinedExecutorPlanCreator
     List<PlanNode> planNodes = getPlanNodes(planForArtifacts);
     planNodes.addAll(planForManifests.getPlanNodes());
 
-    final PlanNode serviceExecutionNode = prepareServiceNode(service, childNodeIds);
+    final PlanNode serviceExecutionNode = prepareServiceNode(actualServiceConfig, childNodeIds);
     return CreateExecutionPlanResponse.builder()
         .planNode(serviceExecutionNode)
         .planNodes(planNodes)
@@ -60,17 +64,18 @@ public class ServiceStepPlanCreator implements SupportDefinedExecutorPlanCreator
         .build();
   }
 
-  private PlanNode prepareServiceNode(Service service, List<String> childNodeIds) {
+  private PlanNode prepareServiceNode(ServiceConfig serviceConfig, List<String> childNodeIds) {
     final String serviceNodeUid = generateUuid();
 
-    service.setDisplayName(StringUtils.defaultIfEmpty(service.getDisplayName(), service.getIdentifier()));
+    serviceConfig.setDisplayName(
+        StringUtils.defaultIfEmpty(serviceConfig.getDisplayName(), serviceConfig.getIdentifier()));
 
     return PlanNode.builder()
         .uuid(serviceNodeUid)
-        .name(service.getDisplayName())
-        .identifier(service.getIdentifier())
+        .name(serviceConfig.getDisplayName())
+        .identifier(serviceConfig.getIdentifier())
         .stepType(ServiceStep.STEP_TYPE)
-        .stepParameters(ServiceStepParameters.builder().parallelNodeIds(childNodeIds).service(service).build())
+        .stepParameters(ServiceStepParameters.builder().parallelNodeIds(childNodeIds).service(serviceConfig).build())
         .facilitatorObtainment(FacilitatorObtainment.builder()
                                    .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
                                    .build())
@@ -102,22 +107,41 @@ public class ServiceStepPlanCreator implements SupportDefinedExecutorPlanCreator
     return planResponseList;
   }
 
+  /** Method returns actual Service object by resolving useFromStage if present. */
+  private ServiceConfig getActualServiceConfig(ServiceConfig serviceConfig, CreateExecutionPlanContext context) {
+    if (serviceConfig.getUseFromStage() != null) {
+      //  Add validation for not chaining of stages
+      CDStage previousStage = PlanCreatorConfigUtils.getGivenDeploymentStageFromPipeline(
+          context, serviceConfig.getUseFromStage().getStage());
+      if (previousStage != null) {
+        DeploymentStage deploymentStage = (DeploymentStage) previousStage;
+        return deploymentStage.getDeployment().getService().mergeNonNullProperties(serviceConfig);
+      } else {
+        throw new IllegalArgumentException("Stage identifier given in useFromStage doesn't exist.");
+      }
+    }
+    return serviceConfig;
+  }
+
   private ExecutionPlanCreator<ArtifactConfigWrapper> getPlanCreatorForArtifact(
       CreateExecutionPlanContext context, ArtifactConfigWrapper artifactConfigWrapper) {
     return executionPlanCreatorHelper.getExecutionPlanCreator(ARTIFACT_PLAN_CREATOR.getName(), artifactConfigWrapper,
         context, "No execution plan creator found for artifact execution");
   }
 
-  private CreateExecutionPlanResponse getPlanForManifests(CreateExecutionPlanContext context, Service service) {
-    final ExecutionPlanCreator<Service> executionPlanCreator = executionPlanCreatorHelper.getExecutionPlanCreator(
-        MANIFEST_PLAN_CREATOR.getName(), service, context, "No execution plan creator found for Manifests execution");
+  private CreateExecutionPlanResponse getPlanForManifests(
+      CreateExecutionPlanContext context, ServiceConfig serviceConfig) {
+    final ExecutionPlanCreator<ServiceConfig> executionPlanCreator =
+        executionPlanCreatorHelper.getExecutionPlanCreator(MANIFEST_PLAN_CREATOR.getName(), serviceConfig, context,
+            "No execution plan creator found for Manifests execution");
 
-    return executionPlanCreator.createPlan(service, context);
+    return executionPlanCreator.createPlan(serviceConfig, context);
   }
 
   @Override
   public boolean supports(PlanCreatorSearchContext<?> searchContext) {
-    return getSupportedTypes().contains(searchContext.getType()) && searchContext.getObjectToPlan() instanceof Service;
+    return getSupportedTypes().contains(searchContext.getType())
+        && searchContext.getObjectToPlan() instanceof ServiceConfig;
   }
 
   @Override

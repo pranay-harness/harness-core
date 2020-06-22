@@ -12,7 +12,7 @@ import com.google.inject.Singleton;
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
-import io.harness.cdng.service.Service;
+import io.harness.cdng.service.ServiceConfig;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.ExecutionPlanCreator;
@@ -99,10 +99,12 @@ public class DeploymentStagePlanCreator implements SupportDefinedExecutorPlanCre
         .build();
   }
 
-  private CreateExecutionPlanResponse createPlanForService(Service service, CreateExecutionPlanContext context) {
-    final ExecutionPlanCreator<Service> executionPlanCreator = executionPlanCreatorHelper.getExecutionPlanCreator(
-        SERVICE_PLAN_CREATOR.getName(), service, context, "No execution plan creator found for Service Execution.");
-    return executionPlanCreator.createPlan(service, context);
+  private CreateExecutionPlanResponse createPlanForService(
+      ServiceConfig serviceConfig, CreateExecutionPlanContext context) {
+    final ExecutionPlanCreator<ServiceConfig> executionPlanCreator =
+        executionPlanCreatorHelper.getExecutionPlanCreator(SERVICE_PLAN_CREATOR.getName(), serviceConfig, context,
+            "No execution plan creator found for Service Execution.");
+    return executionPlanCreator.createPlan(serviceConfig, context);
   }
 
   private CreateExecutionPlanResponse createPlanForExecution(

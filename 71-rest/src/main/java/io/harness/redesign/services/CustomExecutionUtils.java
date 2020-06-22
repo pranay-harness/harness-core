@@ -42,7 +42,7 @@ import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.steps.PipelineSetupStep;
 import io.harness.cdng.service.OverrideConfig;
-import io.harness.cdng.service.Service;
+import io.harness.cdng.service.ServiceConfig;
 import io.harness.cdng.service.ServiceSpec;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
@@ -1258,8 +1258,8 @@ public class CustomExecutionUtils {
 
     ManifestStepParameters manifestStepParameters = getManifestStepParameters();
 
-    Service service =
-        Service.builder()
+    ServiceConfig serviceConfig =
+        ServiceConfig.builder()
             .identifier("service")
             .displayName("k8s")
             .serviceSpec(ServiceSpec.builder()
@@ -1315,7 +1315,7 @@ public class CustomExecutionUtils {
                                    .build())
             .build();
 
-    CDPipeline cdPipeline = getCdPipeline(service);
+    CDPipeline cdPipeline = getCdPipeline(serviceConfig);
 
     List<String> childNodeIds = new ArrayList<>();
     childNodeIds.add(manifestPlanNode.getUuid());
@@ -1323,10 +1323,11 @@ public class CustomExecutionUtils {
     PlanNode serviceNode =
         PlanNode.builder()
             .uuid(serviceNodeId)
-            .name(service.getDisplayName())
-            .identifier(service.getIdentifier())
+            .name(serviceConfig.getDisplayName())
+            .identifier(serviceConfig.getIdentifier())
             .stepType(ServiceStep.STEP_TYPE)
-            .stepParameters(ServiceStepParameters.builder().parallelNodeIds(childNodeIds).service(service).build())
+            .stepParameters(
+                ServiceStepParameters.builder().parallelNodeIds(childNodeIds).service(serviceConfig).build())
             .group(StepGroup.STAGE.name())
             .facilitatorObtainment(FacilitatorObtainment.builder()
                                        .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
@@ -1388,7 +1389,7 @@ public class CustomExecutionUtils {
     return ManifestListConfig.builder().manifests(Arrays.asList(manifestConfigOverride)).build();
   }
 
-  private static CDPipeline getCdPipeline(Service service) {
+  private static CDPipeline getCdPipeline(ServiceConfig serviceConfig) {
     K8SDirectInfrastructure k8sDirectInfraDefinition = K8SDirectInfrastructure.builder().namespace("namespace").build();
 
     PipelineInfrastructure pipelineInfrastructure =
@@ -1399,7 +1400,7 @@ public class CustomExecutionUtils {
     return CDPipeline.builder()
         .stage(DeploymentStage.builder()
                    .deployment(DeploymentStage.Deployment.builder()
-                                   .service(service)
+                                   .service(serviceConfig)
                                    .infrastructure(pipelineInfrastructure)
                                    .build())
                    .build())

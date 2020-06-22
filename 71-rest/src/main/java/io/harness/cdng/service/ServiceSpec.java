@@ -5,9 +5,11 @@ import io.harness.cdng.manifest.state.ManifestListConfig;
 import lombok.Builder;
 import lombok.Value;
 
+import java.io.Serializable;
+
 @Value
 @Builder
-public class ServiceSpec {
+public class ServiceSpec implements Serializable {
   String deploymentType;
   ArtifactListConfig artifacts;
   private ManifestListConfig manifests;

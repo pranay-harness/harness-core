@@ -12,7 +12,7 @@ import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
-import io.harness.cdng.service.Service;
+import io.harness.cdng.service.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.Artifacts;
 import io.harness.cdng.service.beans.ServiceOutcome.Artifacts.ArtifactsBuilder;
@@ -95,11 +95,12 @@ public class ServiceStep implements Step, ChildrenExecutable {
   }
 
   @VisibleForTesting
-  ServiceOutcome createServiceOutcome(Service service, List<StepResponseNotifyData> responseNotifyDataList) {
+  ServiceOutcome createServiceOutcome(
+      ServiceConfig serviceConfig, List<StepResponseNotifyData> responseNotifyDataList) {
     ServiceOutcomeBuilder outcomeBuilder = ServiceOutcome.builder()
-                                               .displayName(service.getDisplayName())
-                                               .identifier(service.getIdentifier())
-                                               .deploymentType(service.getServiceSpec().getDeploymentType());
+                                               .displayName(serviceConfig.getDisplayName())
+                                               .identifier(serviceConfig.getIdentifier())
+                                               .deploymentType(serviceConfig.getServiceSpec().getDeploymentType());
 
     // Fetch all outcomes of the children.
     List<String> outcomeInstanceIds = responseNotifyDataList.stream()

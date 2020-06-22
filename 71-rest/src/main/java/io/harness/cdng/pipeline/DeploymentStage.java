@@ -1,7 +1,7 @@
 package io.harness.cdng.pipeline;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.cdng.service.Service;
+import io.harness.cdng.service.ServiceConfig;
 import io.harness.cdng.variables.StageVariables;
 import io.harness.yaml.core.auxiliary.intfc.PhaseWrapper;
 import lombok.Builder;
@@ -25,7 +25,7 @@ public class DeploymentStage implements CDStage {
     String skipCondition;
     String description;
     PipelineInfrastructure infrastructure;
-    Service service;
+    ServiceConfig service;
     StageVariables stageVariables;
     List<PhaseWrapper> execution;
   }

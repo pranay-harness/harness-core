@@ -13,7 +13,7 @@ import io.harness.cdng.manifest.yaml.FetchType;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
-import io.harness.cdng.service.Service;
+import io.harness.cdng.service.ServiceConfig;
 import io.harness.cdng.service.ServiceSpec;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.engine.outcomes.OutcomeService;
@@ -66,7 +66,7 @@ public class ServiceStepTest extends CategoryTest {
 
     Reflect.on(serviceState).set("outcomeService", outcomeService);
     ServiceOutcome serviceOutcome = serviceState.createServiceOutcome(
-        Service.builder()
+        ServiceConfig.builder()
             .identifier("s1")
             .displayName("s1")
             .serviceSpec(ServiceSpec.builder().deploymentType("kubernetes").build())

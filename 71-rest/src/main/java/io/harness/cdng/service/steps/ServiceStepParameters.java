@@ -1,6 +1,6 @@
 package io.harness.cdng.service.steps;
 
-import io.harness.cdng.service.Service;
+import io.harness.cdng.service.ServiceConfig;
 import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Singular;
@@ -11,6 +11,6 @@ import java.util.List;
 @Value
 @Builder
 public class ServiceStepParameters implements StepParameters {
-  Service service;
+  ServiceConfig service;
   @Singular List<String> parallelNodeIds;
 }
