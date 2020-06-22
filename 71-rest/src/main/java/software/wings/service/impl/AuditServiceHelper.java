@@ -64,7 +64,6 @@ public class AuditServiceHelper {
           + entityOperationIdentifier.toString());
       return;
     }
-
     auditGlobalContextData.getEntityOperationIdentifierSet().add(entityOperationIdentifier);
   }
 }

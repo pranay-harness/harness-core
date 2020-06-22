@@ -149,6 +149,7 @@ public interface UserService extends OwnedByAccount {
    * @param adminOverrideTwoFactorEnabled boolean
    */
   boolean overrideTwoFactorforAccount(String accountId, boolean adminOverrideTwoFactorEnabled);
+
   boolean isTwoFactorEnabled(String accountId, String usedId);
 
   /**

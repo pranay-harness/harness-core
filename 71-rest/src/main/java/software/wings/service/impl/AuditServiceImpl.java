@@ -420,7 +420,6 @@ public class AuditServiceImpl implements AuditService {
     try {
       return Optional.ofNullable(getAuditHeaderIdFromGlobalContext());
     } catch (InvalidActivityException iae) {
-      logger.error("InvalidActivityException thrown : ", iae);
       return Optional.empty();
     }
   }
