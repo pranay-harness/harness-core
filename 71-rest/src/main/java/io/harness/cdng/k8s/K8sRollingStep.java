@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTask;
-import io.harness.cdng.common.beans.AmbianceHelper;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.manifest.ManifestStoreType;
@@ -144,7 +143,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
       }
     }
 
-    String accountId = AmbianceHelper.getAccountId(ambiance);
+    String accountId = ambiance.getSetupAbstractions().get("accountId");
     GitFetchRequest gitFetchRequest =
         GitFetchRequest.builder().gitFetchFilesConfigs(gitFetchFilesConfigs).accountId(accountId).build();
 
@@ -206,7 +205,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
             .localOverrideFeatureFlag(false)
             .timeoutIntervalInMin(stepParameters.getTimeout())
             .valuesYamlList(renderedValuesList)
-            .accountId(AmbianceHelper.getAccountId(ambiance))
+            .accountId(ambiance.getSetupAbstractions().get("accountId"))
             .k8sClusterConfig(k8sClusterConfig)
             .activityId(UUIDGenerator.generateUuid())
             .build();
@@ -220,7 +219,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
 
     DelegateTask delegateTask = DelegateTask.builder()
                                     .data(taskData)
-                                    .accountId(AmbianceHelper.getAccountId(ambiance))
+                                    .accountId(ambiance.getSetupAbstractions().get("accountId"))
                                     .waitId(UUIDGenerator.generateUuid())
                                     .build();
 

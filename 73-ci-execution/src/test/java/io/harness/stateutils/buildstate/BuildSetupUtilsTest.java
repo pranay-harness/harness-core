@@ -18,7 +18,6 @@ import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
-import io.harness.plan.input.InputArgs;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -38,7 +37,6 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Mock private ManagerCIResource managerCIResource;
   @Mock private EngineExpressionService engineExpressionService;
   @Mock private Ambiance ambiance;
-  @Mock private InputArgs inputArgs;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
 
   private static final String CLUSTER_NAME = "K8";
@@ -60,7 +58,6 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(managerCIResource.createK8PodTask(any(), any(), any(), any())).thenReturn(requestCall);
     when(engineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
-    when(inputArgs.get(any())).thenReturn("abc");
     when(executionSweepingOutputResolver.resolve(any(), any()))
         .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
 

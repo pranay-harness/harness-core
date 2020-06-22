@@ -63,7 +63,6 @@ import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -95,7 +94,6 @@ public class ExecutionEngine {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private InterruptService interruptService;
-  @Inject private MongoTemplate mongoTemplate;
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
